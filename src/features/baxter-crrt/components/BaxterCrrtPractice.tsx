@@ -49,8 +49,7 @@ export function BaxterCrrtPractice({
   const routeCaseId = resolvePracticeCaseId(initialCaseId)
   const requestedCaseUnavailable =
     initialCaseId !== undefined && !validPracticeCaseId(initialCaseId)
-  const [selectedCaseId, setSelectedCaseId] = useState<CrrtCaseId>(routeCaseId)
-  const [lastRouteCaseId, setLastRouteCaseId] = useState<CrrtCaseId>(routeCaseId)
+  const selectedCaseId = routeCaseId
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
   const [progress, setProgress] = useState(() => readCrrtSelfPacedProgress(null))
   const [hydrated, setHydrated] = useState(false)
@@ -69,14 +68,10 @@ export function BaxterCrrtPractice({
     createCrrtLearningSession,
   )
 
-  // The address bar is the case identity. A route change — Next recommended,
-  // a direct link, reload, back or forward — moves the rendered case with it.
-  // A same-case or unrelated query update changes nothing, so the run survives.
-  if (routeCaseId !== lastRouteCaseId) {
-    setLastRouteCaseId(routeCaseId)
-    setSelectedCaseId(routeCaseId)
-  }
-
+  // Render and load only the committed route identity. An optimistic local
+  // selection can finish before router.push updates the URL; a reload in that
+  // interval would reopen the previous case despite showing the new case.
+  // Same-case query updates leave the current run intact.
   const selectedDefinition = getBaxterCrrtCase(selectedCaseId)
   const selectedCatalogEntry = getBaxterCrrtCaseCatalogEntry(selectedCaseId)
   const selectedIsAdditional = baxterCrrtAdditionalCaseIds.includes(selectedCaseId)
@@ -123,12 +118,8 @@ export function BaxterCrrtPractice({
   function chooseCase(caseId: CrrtCaseId) {
     if (!(baxterCrrtPracticeCaseIds as readonly string[]).includes(caseId)) return
     if (caseId === selectedCaseId) return
-    // `lastRouteCaseId` mirrors the route only. Leaving it alone here is what
-    // lets the local choice stand until the router catches up, and still lets a
-    // later back/forward route change win.
-    setSelectedCaseId(caseId)
-    // Keep the shareable URL on the case actually shown, including the
-    // additional cases, so a link, reload, back and forward all agree.
+    // The new heading, session and visit appear together once this navigation
+    // commits, so the visible case is already shareable and reloadable.
     router.push({ pathname: `${baxterCrrtNavBase}/practice`, query: { case: caseId } })
   }
 

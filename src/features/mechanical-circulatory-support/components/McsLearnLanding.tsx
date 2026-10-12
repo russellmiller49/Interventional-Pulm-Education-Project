@@ -22,7 +22,7 @@ export function McsLearnLanding() {
         <p>
           Every section is read on the same simulated circulation: first the pressure apart from the
           flow, then the loop every device is drawn on, then each device one at a time, then the
-          assessment of the supported patient. Temporary support and assessment of an existing
+          evaluation of the supported patient. Temporary support and evaluation of an existing
           durable LVAD are distinct clinical contexts; this is not a treatment ladder. Move in
           order, or open any section from the map below.
         </p>
@@ -34,13 +34,6 @@ export function McsLearnLanding() {
         <summary>Open the lesson map</summary>
         <McsStoredPathwayAccordion id="mcs-learn-landing-pathway" />
       </details>
-      <aside role="note" className={styles.releaseReview}>
-        <strong>Educational model · pending clinical review</strong>
-        <p>
-          Device responses are bounded teaching approximations. Device selection, timing, and
-          escalation remain team decisions under current instructions and local protocol.
-        </p>
-      </aside>
     </div>
   )
 }

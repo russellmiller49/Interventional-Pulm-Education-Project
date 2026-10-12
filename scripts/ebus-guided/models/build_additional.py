@@ -1,5 +1,6 @@
 """Course-authored A3-A6 Blender sources; GLB coordinates in meters, runtime in mm.
 Run Blender --background --factory-startup --python this_file.py.
+The needle assembly (A3) has its own script, build_needle_assembly.py.
 """
 import bpy
 import hashlib
@@ -84,36 +85,14 @@ def export(name,notes):
         'triangles':sum(len(p.vertices)-2 for o in bpy.context.scene.objects if o.type=='MESH' for p in o.data.polygons),
         'units':'m','notes':notes,'reviewStatus':'faculty review pending'})
 
-reset()
-steel=mat('steel',(.6,.72,.8)); blue=mat('control_blue',(.12,.4,.65)); teal=mat('active_teal',(.1,.74,.67))
-wall=mat('airway_wall',(.73,.42,.36),.36); tissue=mat('example_tissue',(.65,.55,.83)); vessel=mat('vessel_red',(.75,.18,.24))
-sheath=mat('sheath',(.84,.86,.8),.5); dark=mat('scope_body',(.1,.15,.22),.45)
-# A compressed longitudinal diagram, not a scaled commercial needle or endoscope.
-tube('mount_connector',[-59,-8,0],[-50,-8,0],4,blue,'Mount / connector')
-box('sheath_adjuster',[-44,-8,0],[10,10,10],blue,'Sheath adjuster')
-box('sheath_lock',[-43,-1,0],[4,4,5],teal,'Sheath lock')
-box('extension_stop',[-63,-8,0],[3,13,13],teal,'Needle extension stop')
-handle=tube('needle_handle',[-81,-8,0],[-65,-8,0],4,blue,'Needle handle')
-stylet=tube('stylet',[-90,-8,0],[-72,-8,0],.45,steel,'Stylet, shown seated')
-group('handle_motion',[handle,stylet])
-tube('suction_connection',[-84,-8,0],[-81,-8,0],2,blue,'Optional suction connection')
-box('working_channel_cutaway',[-28,-5,0],[35,7,7],dark,'Cutaway working channel')
-tube('channel_outlet',[-12,-8,0],[-6,2.392,0],1.7,dark,'Working-channel outlet')
-# All distal movement is along a single axis registered to the outlet.
+# The needle assembly is built by build_needle_assembly.py (a detailed true-scale model). This
+# script keeps the three numbers the contract takes from it and carries its manifest record over.
 a=Vector((-10,-4,0)); d=Vector((.5,math.sqrt(3)/2,0)); end=a+d*8
-s=tube('sheath',a,end,1.05,sheath,'Sheath'); group('sheath_motion',[s])
 needle_end=end-d
-needle=tube('needle_shaft',a,needle_end,.24,steel,'Needle shaft')
-needle['fixedBaseWebMm']=list(a)
-needle['spanMm']=7
-tube('protected_needle_in_channel',[-42,-5,0],a,.24,steel,'Protected proximal needle, cutaway')
-tip=sphere('needle_tip',needle_end,[.33,.33,.33],steel,'True needle tip (teaching view)')
-group('needle_motion',[needle,tip])
-sphere('transducer',[0,1,0],[5,1.8,3.5],teal,'Transducer')
-box('airway_wall',[5,8,0],[54,3,20],wall,'Airway wall')
-sphere('target_node',[6,23,0],[10,8,6],tissue,'Example node')
-tube('adjacent_vessel',[25,15,-12],[25,15,12],4,vessel,'Adjacent vessel')
-export('ebus-needle-assembly','Generic compressed assembly, not device CAD. Distal needle + sheath share an outlet axis. No prescribed extension, force, or puncture safety result.')
+previous=json.loads((OUT/'asset-manifest.json').read_text()) if (OUT/'asset-manifest.json').exists() else {'assets':[]}
+needle_record=next((r for r in previous['assets'] if r['path']=='ebus-needle-assembly.glb'),None)
+assert needle_record, 'Run build_needle_assembly.py after this script: the needle model has no manifest record yet.'
+assets.append(needle_record)
 
 reset()
 teal=mat('transducer_teal',(.12,.7,.68)); wall=mat('wall',(.78,.46,.4)); fluid=mat('fluid',(.25,.66,.91),.32)

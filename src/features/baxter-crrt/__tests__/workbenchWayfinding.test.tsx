@@ -87,11 +87,11 @@ describe('CRRT workbench evidence (F-11 / F-12)', () => {
     // Batch-01 containment statement, not the evolving pool.
     expect(panel).toHaveTextContent(/K 6\.9 mmol\/L · HCO₃ 10(?:\.0)? mmol\/L · pH 7\.08/)
     expect(panel).toHaveTextContent('not modeled over time')
-    // Safety constraints and device identity stay one named disclosure away.
-    const more = within(panel)
-      .getByText('Device profile and safety constraints')
-      .closest('details')!
-    expect(within(more).getByRole('list', { name: 'Safety constraints' })).toBeInTheDocument()
+    // Device identity stays one named disclosure away, with no per-surface boundary note in it.
+    const more = within(panel).getByText('Device profile').closest('details')!
+    expect(more).toHaveTextContent(/Device profile: \S/)
+    expect(within(more).queryByRole('list', { name: 'Safety constraints' })).toBeNull()
+    expect(more).not.toHaveTextContent(/invented for teaching/i)
   })
 
   it('keeps blood flow set and blood flow through the circuit as two separate readings', async () => {
@@ -216,7 +216,7 @@ describe('CRRT Cases control (F-09)', () => {
   })
 
   it('steps to the previous and next core case through the canonical URL', async () => {
-    render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-02" />)
+    const view = render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-02" />)
     await settle()
     const nav = screen.getByRole('navigation', { name: 'Practice cases' })
     fireEvent.click(within(nav).getByRole('button', { name: /^Next case: / }))
@@ -224,6 +224,8 @@ describe('CRRT Cases control (F-09)', () => {
       pathname: '/baxter-crrt/practice',
       query: { case: baxterCrrtCoreCaseIds[2] },
     })
+    expect(within(nav).getByRole('combobox', { name: 'Cases' })).toHaveValue('CRRT-02')
+    view.rerender(<BaxterCrrtPractice locale="en" initialCaseId={baxterCrrtCoreCaseIds[2]} />)
     await settle()
     fireEvent.click(
       within(screen.getByRole('navigation', { name: 'Practice cases' })).getByRole('button', {

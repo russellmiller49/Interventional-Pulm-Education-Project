@@ -7,10 +7,17 @@
  * live simulation state rather than drawn as static art, carries a computed `aria-label`, and is
  * followed by a text equivalent.
  *
- * Deliberately no numeric targets or threshold tables anywhere in these panels: this module's
- * source reconciliation is still pending, so every teaching claim is about the relationship
- * between signals, or defers to the engine's own alarm logic rather than restating a limit.
+ * A panel that shows a live value also shows the number a fellow compares it with, through
+ * `ReferenceValues`. Those numbers come from the module's register, each with its source.
  */
+import { ventilationEvidenceById } from '../../content/evidence'
+import {
+  PEEP_FIO2_HIGHER_PEEP,
+  PEEP_FIO2_LOWER_PEEP,
+  VENTILATION_NUMBERS,
+  type PeepFio2Step,
+  type VentilationNumberId,
+} from '../../content/teachingNumbers'
 import type { WaveformSample } from '../../engine'
 import styles from '../mechanical-ventilation-teaching.module.css'
 
@@ -129,8 +136,109 @@ export function TextEquivalent({ children }: { readonly children: string }) {
   )
 }
 
+/** A model note, used only where a simulated value could be taken for a measured one. */
 export function ModelBoundary({ children }: { readonly children: string }) {
   return <p className={styles.boundary}>{children}</p>
+}
+
+/** "ARDS Network 2000", from the registered source a row cites. */
+function shortSource(sourceId: string, year: number): string {
+  const names: Readonly<Record<string, string>> = {
+    'ardsnet-arma-2000': 'ARDS Network',
+    'ardsnet-alveoli-2004': 'ARDS Network ALVEOLI',
+    'ats-esicm-sccm-ards-2017': 'ATS/ESICM/SCCM',
+    'amato-driving-pressure-2015': 'Amato',
+    'tobin-3e-severe-asthma': 'Leatherman, in Tobin',
+  }
+  const name = names[sourceId] ?? ventilationEvidenceById.get(sourceId)?.title ?? sourceId
+  return `${name} ${year}`
+}
+
+/**
+ * The numbers a fellow holds a live reading against, each with where it comes from.
+ *
+ * `title` says which patient the numbers are for, because a plateau limit written for ARDS is not
+ * a setting for every ventilated patient.
+ */
+export function ReferenceValues({
+  title,
+  ids,
+  children,
+}: {
+  readonly title: string
+  readonly ids: readonly VentilationNumberId[]
+  readonly children?: React.ReactNode
+}) {
+  return (
+    <section className={styles.referenceValues} data-reference-values>
+      <h4>{title}</h4>
+      <dl>
+        {ids.map((id) => {
+          const row = VENTILATION_NUMBERS.get(id)
+          return (
+            <div key={id} data-teaching-number={id}>
+              <dt>{row.label}</dt>
+              <dd>
+                <strong>{row.value}</strong>
+                <small>
+                  {row.sources
+                    .map((source) => shortSource(source.sourceId, source.year))
+                    .join('; ')}
+                </small>
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+      {children}
+    </section>
+  )
+}
+
+function PeepFio2Rows({
+  caption,
+  steps,
+}: {
+  readonly caption: string
+  readonly steps: readonly PeepFio2Step[]
+}) {
+  return (
+    <table className={styles.peepTable}>
+      <caption>{caption}</caption>
+      <tbody>
+        <tr>
+          <th scope="row">FiO₂</th>
+          {steps.map((step, index) => (
+            <td key={index}>{step.fio2}</td>
+          ))}
+        </tr>
+        <tr>
+          <th scope="row">PEEP</th>
+          {steps.map((step, index) => (
+            <td key={index}>{step.peep}</td>
+          ))}
+        </tr>
+      </tbody>
+    </table>
+  )
+}
+
+/** The two ARDS Network tables. Read left to right as oxygenation worsens. */
+export function PeepFio2Tables() {
+  return (
+    <details className={styles.peepTables} data-peep-fio2-tables>
+      <summary>PEEP and FiO₂ tables (ARDS Network)</summary>
+      <p>
+        Move one step right when oxygenation is under goal and one step left when it is over. Most
+        units start on the lower PEEP table; the higher PEEP table is an option in moderate to
+        severe ARDS. The trial comparing them found no difference in mortality.
+      </p>
+      <div className={styles.peepTableScroll}>
+        <PeepFio2Rows caption="Lower PEEP, higher FiO₂" steps={PEEP_FIO2_LOWER_PEEP} />
+        <PeepFio2Rows caption="Higher PEEP, lower FiO₂" steps={PEEP_FIO2_HIGHER_PEEP} />
+      </div>
+    </details>
+  )
 }
 
 /** The empty state every panel shows before the simulation has produced a readable breath. */

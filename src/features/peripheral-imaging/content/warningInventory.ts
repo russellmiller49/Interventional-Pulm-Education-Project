@@ -9,8 +9,12 @@
  * lands) and in Help, and shortened on the steps after. The other three classes stay exactly where
  * they qualify the teaching.
  *
- * This is data so a test can hold the classes to their treatment: nothing in classes 2–4 is removed,
- * and the consolidated class is still present in full on a section's first step.
+ * This is data so a test can hold the classes to their treatment.
+ *
+ * Teaching-first redo (2026-10-08): the general statement now renders once per module — on the hub,
+ * in Help and on the closing screen — and review-status labels no longer render at all, so the
+ * `unresolved-status` class is empty. A figure limit stays only where a learner could take a
+ * modeled value or drawing for a real one.
  */
 export type WarningCategory =
   | 'general-provenance'
@@ -35,10 +39,10 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'shared-model-boundary',
     category: 'general-provenance',
-    where: 'The "Model limitations" aside on every step of every section',
-    selector: '[data-teaching-block="boundary"]',
+    where: 'The hub, Help, and the closing screen of the last section',
+    selector: '[data-module-statement], [data-help-models], [data-closing-statement]',
     treatment: 'consolidated',
-    note: 'The shared sentence (CT anatomy plus authored target, instrument and numbers) is printed in full on the first step and in Help; later steps keep the section-specific limit and a one-line reminder.',
+    note: 'The module’s one teaching-simulator statement. The per-step "Model limitations" aside, the "Before an exposure" cue, the lab badge and the frame notice’s second sentence were removed on 2026-10-08 (teaching-first rules).',
   },
   {
     id: 'demonstration-kicker',
@@ -46,7 +50,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The kicker over every worked demonstration',
     selector: '[data-lesson-demonstration] [data-demonstration-kicker]',
     treatment: 'consolidated',
-    note: '"Worked demonstration · authored teaching example" duplicated the scene header "Authored teaching model" on the same screen; the kicker now says "Worked demonstration".',
+    note: 'The kicker says "Worked demonstration" and nothing about how the example was made.',
   },
   {
     id: 'modeled-not-fictional',
@@ -55,14 +59,6 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     selector: '[data-look-for], [data-model-controls] legend',
     treatment: 'reworded',
     note: '"Fictional" became "modeled", the word the DTS overlay already uses; the statement that these are not real devices stays where it qualifies a figure.',
-  },
-  {
-    id: 'section-model-boundary',
-    category: 'figure-limitation',
-    where: 'The section-specific limit in the "Model limitations" aside',
-    selector: '[data-teaching-block="boundary"] [data-boundary-specific]',
-    treatment: 'kept',
-    note: 'What this section’s model does not represent, on every step.',
   },
   {
     id: 'held-example-banner',
@@ -89,14 +85,6 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     note: 'Plain-language legend that keeps the teaching tolerance and the not-a-clearance-check limit.',
   },
   {
-    id: 'before-an-exposure',
-    category: 'immediate-safety',
-    where: 'The amber cue on a section’s first step',
-    selector: '[data-safety-cue]',
-    treatment: 'kept',
-    note: 'State the imaging question; coordinate care, clearance and protection with the team.',
-  },
-  {
     id: 'primary-beam-callout',
     category: 'immediate-safety',
     where: 'Section 17, "Keep hands out of the primary beam"',
@@ -112,8 +100,6 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     treatment: 'kept',
     note: 'Checklist confirmations are learner-declared; the scene detects no collision.',
   },
-  // Prompt 04 (OD4-04, OD4-06, OD4-09, OD4-10): each new figure and aid says what it is before
-  // anything else, on its own surface; none of these is folded into the shared sentence.
   {
     id: 'case-figure-model-label',
     category: 'figure-limitation',
@@ -136,7 +122,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'Under the fixed and mobile comparison (Sections 13 and 14)',
     selector: '[data-fixed-mobile-comparison] [data-model-note]',
     treatment: 'kept',
-    note: 'The scenes draw the same field for both; they are authored illustrations, not a device comparison.',
+    note: 'The scenes draw the same field for both, so a learner does not read a device difference into them.',
   },
   {
     id: 'readiness-aid-status',
@@ -144,16 +130,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The first line of the team-readiness aid (Section 12)',
     selector: '[data-team-readiness] [data-readiness-status]',
     treatment: 'kept',
-    note: 'A teaching aid, not an institutional, anesthesia or credentialing protocol or a universal checklist.',
-  },
-  {
-    id: 'draft-illustrations',
-    category: 'unresolved-status',
-    where: 'The conceptual signal illustrations and the fictional dose record',
-    selector:
-      '[data-signal-comparison] [data-draft-status], [data-dose-record] [data-draft-status]',
-    treatment: 'kept',
-    note: 'Draft illustrations and an authored, fictional report: their review status is stated once each.',
+    note: 'One line: a team check by role, which a unit’s own checklist may add to.',
   },
 ]
 

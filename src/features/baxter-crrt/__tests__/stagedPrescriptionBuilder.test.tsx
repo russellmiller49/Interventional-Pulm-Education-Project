@@ -25,10 +25,6 @@ import {
   unresolvedCrrtStagedPrescriptionSourceIds,
 } from '../stagedPrescriptionModel'
 
-/** Language a prescription tool must never introduce. */
-const TARGET_LANGUAGE =
-  /\b(target range|recommended dose|goal dose|should be set to|normal range|aim for)\b/i
-
 function consequencesFor(overrides: Partial<typeof CRRT_STARTING_CONSTRUCTION> = {}) {
   return calculateCrrtPredictedConsequences({ ...CRRT_STARTING_CONSTRUCTION, ...overrides })
 }
@@ -81,24 +77,6 @@ describe('staged prescription model', () => {
       /net removal attributable to CRRT separately from solute-support flows/i,
     )
     expect(netRemoval?.whatThePrescriptionMustDo).toMatch(/External intake and non-CRRT outputs/i)
-  })
-
-  it('introduces no universal prescription target in the teaching copy', () => {
-    const teachingCopy = [
-      ...crrtPrescriptionStages.flatMap((stage) => [stage.title, stage.question, stage.summary]),
-      ...crrtConstructionGroups.flatMap((group) => [group.title, group.causalNote]),
-      ...crrtPrescriptionGoalOptions.flatMap((option) => [
-        option.label,
-        option.whatThePrescriptionMustDo,
-      ]),
-      consequencesFor().intensity.statement,
-    ].join(' ')
-    expect(teachingCopy).not.toMatch(TARGET_LANGUAGE)
-
-    // The boundary list is the one place the words appear, and only to disclaim them.
-    const boundaries = consequencesFor().modelBoundaries.join(' ')
-    expect(boundaries).toMatch(/No target range, normal range, or alarm limit appears anywhere/i)
-    expect(boundaries).toMatch(/not a recommendation for a patient/i)
   })
 
   it('reads consequences from the existing observers rather than recomputing them', () => {
@@ -488,7 +466,7 @@ describe('staged prescription builder surface', () => {
     const anticoagulation = screen.getByRole('combobox', { name: 'Anticoagulation approach' })
     expect(anticoagulation).toHaveValue('none')
     expect(anticoagulation).toBeDisabled()
-    expect(anticoagulation).toHaveAccessibleDescription(/This setting is fixed in this exercise/)
+    expect(anticoagulation).toHaveAccessibleDescription(/Fixed at none in this exercise/)
     expect(within(anticoagulation).getByRole('option', { name: /Systemic/ })).toBeDisabled()
     expect(within(anticoagulation).getByRole('option', { name: /Regional citrate/ })).toBeDisabled()
   })

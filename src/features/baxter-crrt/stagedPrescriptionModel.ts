@@ -61,6 +61,9 @@ import {
   type QualitativePrePostDilutionResult,
   type UnavailableWorkbenchOutput,
 } from './prescriptionWorkbenchModel'
+import { CRRT_NUMBERS } from './content/teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 /* ------------------------------------------------------------------ *
  * Stages
@@ -111,7 +114,7 @@ export const crrtPrescriptionStages: readonly CrrtPrescriptionStage[] = Object.f
     title: 'What does this construction predict?',
     question: 'What follows from these entries — and what still does not follow from them?',
     summary:
-      'Everything here is read back from the same circuit and the same source-pinned expressions used everywhere else in the module. A prediction about this construction is not a recommendation for a patient.',
+      'Each result is calculated from your entries with the same expressions the rest of the module uses.',
   }),
 ])
 
@@ -413,8 +416,7 @@ export const crrtConstructionGroups: readonly CrrtConstructionGroup[] = Object.f
     id: 'how-the-circuit-is-protected' as const,
     ordinal: 5,
     title: 'How the circuit is protected',
-    causalNote:
-      'Named as a concept only. This module carries no medication quantity, and the circuit-protection decision belongs to the authorised local protocol and the responsible clinical team.',
+    causalNote: `Regional citrate is the first choice when nothing contraindicates it. It is followed by two calcium values: post-filter ${N('postfilter-ica')} for the circuit and systemic ${N('systemic-ica')} for the patient.`,
     fieldIds: Object.freeze(['anticoagulationConcept'] as const),
   }),
   Object.freeze({
@@ -886,10 +888,9 @@ function predictedPressureImplications(): readonly CrrtPredictedPressureImplicat
 }
 
 const MODEL_BOUNDARIES: readonly string[] = Object.freeze([
-  'These are predictions about a set of entries, not a recommendation for a patient. No entry combination here is marked correct, preferred, or adequate.',
-  'No target range, normal range, or alarm limit appears anywhere in this builder, and none should be inferred from the practice starting values.',
-  'The whole-patient fluid balance is not calculated: it also needs the patient’s other inputs, non-machine outputs, actual machine removal, and downtime, which are not entered here.',
-  'Nothing here is a device screen, an operating instruction, or a substitute for current manufacturer instructions and the authorised local protocol.',
+  `Guidelines recommend a delivered dose of ${N('dose-delivered')} (KDIGO 2012, grade 1A). Prescribe ${N('dose-prescribed')} to deliver it once downtime and pre-dilution are counted.`,
+  `Keep the filtration fraction under ${N('filtration-fraction-ceiling')}. Above that, the blood leaving the filter is concentrated enough to clot it.`,
+  'The whole-patient fluid balance is not calculated here: it also needs the patient’s other inputs and outputs and the downtime, which are not entered.',
 ])
 
 /**

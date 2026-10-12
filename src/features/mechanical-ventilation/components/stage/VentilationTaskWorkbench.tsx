@@ -18,6 +18,7 @@ import { interventionLabels, quickControlId } from './VentilationSimulatorPane'
 import { VentilationResponseTimeline } from './VentilationResponseTimeline'
 import styles from './task-flow.module.css'
 import controls from './ventilation-stage.module.css'
+import { VENTILATION_NUMBERS } from '../../content/teachingNumbers'
 
 /** All operations go to the host's single session. Local capture/native-view state is visual only. */
 export function VentilationTaskWorkbench({
@@ -263,7 +264,7 @@ export function VentilationTaskWorkbench({
               </section>
               {presentation.patient === 'protection' ? (
                 <section className={styles.block} data-pbw-context>
-                  <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
+                  <h3>Patient · PBW {definition.predictedBodyWeightKg} kg</h3>
                   {state.measurements.exhaledVtSource === 'trace' ? (
                     <p>
                       Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
@@ -277,9 +278,10 @@ export function VentilationTaskWorkbench({
                     <p>Delivered VT: awaiting a completed breath on the trace.</p>
                   )}
                   <p className={styles.note}>
-                    The case supplies PBW; a height input is not supplied. Verify height and the
-                    applicable PBW reference at the bedside. Assess effort, gas exchange, and an
-                    acquired interpretable pressure together.
+                    Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
+                    {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
+                    {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure{' '}
+                    {VENTILATION_NUMBERS.value('driving-pressure-limit')}.
                   </p>
                 </section>
               ) : null}

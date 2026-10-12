@@ -1,7 +1,5 @@
 import type { Lesson } from './types'
 import { question as q, matching } from './authoring'
-const boundary =
-  'Station names follow anatomical boundaries, not the apparent shape of a single node. The teaching library contains representative views; the 3D model assists position and does not establish independent station-identification competence.'
 export const locateLessons: Lesson[] = [
   {
     id: 'ct-map',
@@ -15,7 +13,7 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'Read CT in a consistent orientation, then use adjacent planes to establish the craniocaudal level and the relationship to the airway and vessels. An axial slice alone can obscure a station boundary.',
       'The IASLC map names compartments. A node’s station is determined by where it lies, not by its size, PET uptake, or sonographic appearance. Record the station before collecting and labeling a specimen.',
-      'Review the clinical CT reference before the lab. In the linked workbench, Model section samples the same label volume as the simulated ultrasound; it is not CT and is not registered to the separate clinical reference. Use it to relate the main carina to the scope plane.',
+      'Review the CT before the lab. In the lab, use Model section to relate the main carina to the scope plane.',
     ],
     checklist: [
       'Confirm CT orientation and level.',
@@ -37,11 +35,11 @@ export const locateLessons: Lesson[] = [
           'Multiplanar review helps locate the compartment when a single slice is ambiguous.',
         ],
         [
-          'To decide malignancy from the plane alone',
-          'CT plane selection does not establish histology.',
+          'To measure the node’s true short axis',
+          'Short axis is measured on the axial image; the reformats are used here to fix the level against the station boundary.',
         ],
         [
-          'To replace all ultrasound landmarks',
+          'To fix the station without rechecking at EBUS',
           'CT guides the map, but live procedural anatomy still requires confirmation.',
         ],
       ),
@@ -55,7 +53,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and superior vena cava in the unnamed Anatomy model, checking each selection. Open Model section to compare the airway and vascular level. Then slowly sweep through the target until it leaves the sector on the far side and return to a visible section. These model sections are separate from the clinical CT reference.',
+        'Identify the main carina and superior vena cava in the unnamed Anatomy model, checking each selection. Open Model section to compare the airway and vascular level. Then slowly sweep through the target until it leaves the sector on the far side and return to a visible section.',
     },
     observation: {
       ...q(
@@ -65,10 +63,13 @@ export const locateLessons: Lesson[] = [
           'Its anatomical compartment',
           'Use the IASLC boundaries and document uncertainty if the compartment is unresolved.',
         ],
-        ['The number of passes performed', 'Pass count describes sampling, not location.'],
         [
-          'Whether its aspirate is malignant',
-          'Pathology does not move a node to a different station.',
+          'Its short-axis diameter on CT',
+          'Size informs suspicion; it does not place the node in a compartment.',
+        ],
+        [
+          'Its FDG avidity on PET',
+          'PET uptake informs suspicion and target selection; it does not define the station.',
         ],
       ),
       imagePolicy: 'none',
@@ -83,8 +84,8 @@ export const locateLessons: Lesson[] = [
         ],
         ['Together under the larger node’s station', 'Pooling can erase staging information.'],
         [
-          'By their brightness instead of location',
-          'Echo appearance cannot substitute for anatomical source.',
+          'Under the station where the needle crossed the airway wall',
+          'The puncture site describes the approach; each specimen is labeled by the compartment its node occupies.',
         ],
       ),
       imagePolicy: 'none',
@@ -96,7 +97,6 @@ export const locateLessons: Lesson[] = [
       'Keep anatomical source and specimen identity linked.',
     ],
     sources: ['atlas', 'iaslc9'],
-    boundary,
   },
   {
     id: 'station-seven',
@@ -110,7 +110,7 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'Station 7 begins at the carina and occupies the subcarinal space. Its inferior limits differ by side: the upper border of the left lower-lobe bronchus on the left and the lower border of the bronchus intermedius on the right. Use multiplanar anatomy when a caudal target is near a boundary.',
       'A subcarinal target can be viewed from either main bronchus. The airway approach does not create a “right station 7” or “left station 7.” For lung-cancer nodal classification, station 7 is an N2 station for either lung.',
-      'During the lab, locate the main carina and sweep through the same modeled subcarinal node from both main bronchi. The approach controls load the two calibrated starts; each approach requires your own rotation sweep.',
+      'During the lab, locate the main carina and sweep through the same subcarinal node from both main bronchi, making your own rotation sweep from each side.',
     ],
     checklist: [
       'Find the main carina.',
@@ -147,12 +147,12 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and each main bronchus in the unnamed Anatomy model. From each assisted bronchial start, sweep slowly from outside the target, through several sections, and beyond its other edge; then return to a visible section. Pause for each image. The same modeled node remains between the main bronchi.',
+        'Identify the main carina and each main bronchus in the unnamed Anatomy model. From each main bronchus, sweep slowly from outside the target, through several sections, and beyond its other edge; then return to a visible section. Pause for each image. The same node remains between the main bronchi.',
     },
     observation: {
       ...q(
         'seven-observe',
-        'What ties the rendered target to station 7 in this activity?',
+        'What ties the target you imaged to station 7?',
         [
           'Its subcarinal anatomical location in the model',
           'The location supplies the station identity; the sector supplies one view.',
@@ -163,7 +163,7 @@ export const locateLessons: Lesson[] = [
         ],
         [
           'The amount of rotation needed to find it',
-          'A control angle is specific to the model and is not an anatomical definition.',
+          'The rotation needed depends on where the scope sits; it is not an anatomical definition.',
         ],
       ),
       imagePolicy: 'retained-acquisition',
@@ -171,7 +171,7 @@ export const locateLessons: Lesson[] = [
     transfer: {
       ...q(
         'seven-window-transfer-v2',
-        'You acquired the same modeled target from a changed position in the left main bronchus. Which relationship should determine its station assignment?',
+        'You imaged the same target from a different position in the left main bronchus. Which relationship should determine its station assignment?',
         [
           'Its position relative to the carina and medial main-bronchus boundaries',
           'The target remains in the same subcarinal compartment when the scope position changes. Correlate the full anatomical boundaries; the sector is only one section.',
@@ -196,7 +196,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'Acquire the same modeled target from a changed position in the left main bronchus. Identify the carina and both main bronchi again, then make a new gradual sweep and return to a visible section. Hold this acquisition before answering the changed anatomical situation.',
+        'Image the same target from a different position in the left main bronchus. Identify the carina and both main bronchi again, then make a new gradual sweep and return to a visible section. Continue with this image before answering.',
     },
     diagram: 'stations',
     station: '7',
@@ -205,7 +205,6 @@ export const locateLessons: Lesson[] = [
       'Below the carina does not automatically mean subcarinal.',
     ],
     sources: ['atlas', 'iaslc9', 'simulation'],
-    boundary,
   },
   {
     id: 'right-paratracheal',
@@ -218,7 +217,7 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'The lower border of 2R, and upper border of 4R, is where the caudal margin of the left brachiocephalic (innominate) vein intersects the trachea. The lower border of 4R is the lower border of the azygos vein.',
       'The right–left division of stations 2 and 4 lies at the left lateral tracheal border. Thus tissue anterior to the trachea is not assigned by simply drawing a line through the center of the tracheal lumen.',
-      'Use the reference station selector to compare 2R with 4R. On ultrasound, correlate vascular landmarks before interpreting or sampling a nearby dark structure. The guided scan focuses on the calibrated 4R example.',
+      'Use the reference station selector to compare 2R with 4R. On ultrasound, correlate vascular landmarks before interpreting or sampling a nearby dark structure. The guided scan uses a 4R example.',
     ],
     checklist: [
       'Find the brachiocephalic-vein crossing.',
@@ -240,8 +239,8 @@ export const locateLessons: Lesson[] = [
           'This is the inferior boundary of 4R and the superior boundary of 10R.',
         ],
         [
-          'The center of the tracheal lumen',
-          'The tracheal midline is not this craniocaudal boundary.',
+          'The caudal margin of the left brachiocephalic vein',
+          'That crossing is the 2R/4R boundary, at the top of 4R rather than the bottom.',
         ],
         [
           'The upper border of the left pulmonary artery',
@@ -258,23 +257,23 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the azygos vein, superior vena cava and left brachiocephalic vein in the unnamed Anatomy model. Check each selection. Slowly sweep through the paratracheal target until it leaves on the far side, then return to a visible section. The displayed node is an example; it is not a complete station compartment.',
+        'Identify the azygos vein, superior vena cava and left brachiocephalic vein in the unnamed Anatomy model. Check each selection. Slowly sweep through the paratracheal target until it leaves on the far side, then return to a visible section.',
     },
     observation: {
       ...q(
         'right-observe',
-        'The model shows a target at the selected 4R location. What must still be resolved in a clinical examination?',
+        'A target is in view at the expected 4R location. What must still be resolved in a clinical examination?',
         [
           'The live anatomical relationships and vascular path',
-          'A calibrated teaching target does not validate an individual patient’s station or puncture path.',
+          'Seeing a node in the expected place does not confirm its station or a safe puncture path in the patient in front of you.',
         ],
         [
-          'Whether all right-sided nodes share the same station',
-          'Right-sided nodes occupy several distinct compartments.',
+          'Only its size, because CT already fixed the station',
+          'CT proposes the station; the live relationship to the azygos and brachiocephalic veins confirms it, and the path still has to be checked.',
         ],
         [
-          'Whether a teaching preset itself proves sampling adequacy',
-          'No specimen has been obtained.',
+          'Nothing more once a right paratracheal node is seen',
+          'Seeing a right paratracheal node does not separate 2R from 4R or 10R, and it does not clear the needle path.',
         ],
       ),
       imagePolicy: 'retained-acquisition',
@@ -288,8 +287,8 @@ export const locateLessons: Lesson[] = [
           'Changing the plane changes appearance without moving the target across a station boundary. The azygos and brachiocephalic-vein levels must be correlated with the trachea; the SVC helps orient the venous anatomy.',
         ],
         [
-          'The new rotation-control number',
-          'A control number describes this authored acquisition. It is not an anatomical boundary.',
+          'The scope rotation at which it now appears',
+          'Rotation describes the scope position, not an anatomical boundary.',
         ],
         [
           'Its apparent diameter on the latest section',
@@ -307,7 +306,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'The scope now starts at a different longitudinal position in the same anatomy model. Re-identify the three vein landmarks and acquire a fresh gradual sweep through the target. Return to a visible section and hold it before interpreting the changed anatomical situation.',
+        'The scope now starts at a different longitudinal position in the same anatomy. Re-identify the three vein landmarks and make a fresh gradual sweep through the target. Return to a visible section and continue with that image before interpreting the new position.',
     },
     diagram: 'stations',
     station: '4R',
@@ -316,7 +315,6 @@ export const locateLessons: Lesson[] = [
       'The paratracheal side boundary is the left lateral tracheal wall.',
     ],
     sources: ['atlas', 'simulation'],
-    boundary,
   },
   {
     id: 'left-paratracheal',
@@ -352,8 +350,8 @@ export const locateLessons: Lesson[] = [
       ],
       ['The lower border of the azygos vein', 'The azygos landmark applies to 4R on the right.'],
       [
-        'The right upper-lobe bronchial origin',
-        'That airway landmark does not define the lower 4L boundary.',
+        'The superior border of the aortic arch',
+        'That is the upper boundary of 4L, separating it from 2L.',
       ],
     ),
     lab: {
@@ -363,7 +361,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 55,
       instruction:
-        'Use Anatomy to inspect the left paratracheal target and adjacent vessels. Return to Ultrasound and adjust Scope rotation to bring the target into the sector. This is an assisted scan, not an access or needle simulation.',
+        'Use Anatomy to inspect the left paratracheal target and adjacent vessels. Return to Ultrasound and adjust Scope rotation to bring the target into the sector.',
     },
     observation: q(
       'left-observe',
@@ -373,12 +371,12 @@ export const locateLessons: Lesson[] = [
         'Vessels supply both anatomical landmarks and procedural constraints.',
       ],
       [
-        'A nearby artery guarantees benign pathology',
-        'Location beside a vessel does not determine histology.',
+        'The vessels fix the station; the path is judged separately on CT',
+        'The live vascular relationship is also what shows whether a needle path exists; CT alone does not clear it.',
       ],
       [
-        'Vascular anatomy is only relevant after a pass',
-        'The path must be assessed before puncture.',
+        'The vessels matter for the needle path but not for the station',
+        'On the left, the arch and pulmonary artery are the station boundaries as well as the hazards.',
       ],
     ),
     transfer: q(
@@ -404,7 +402,6 @@ export const locateLessons: Lesson[] = [
       'Distinguish 4L from the lateral subaortic compartment.',
     ],
     sources: ['atlas', 'ics2023', 'simulation'],
-    boundary,
   },
   {
     id: 'hilar-interlobar',
@@ -435,7 +432,7 @@ export const locateLessons: Lesson[] = [
       'A target lies between the left upper- and lower-lobe bronchi. Which station fits this location?',
       ['11L', 'This is the left interlobar compartment.'],
       ['4L', '4L is lower paratracheal, above the defined hilar boundary.'],
-      ['7', 'A lobar bifurcation on the left is not the medial subcarinal space.'],
+      ['10L', '10L is hilar, beside the left main bronchus and proximal to the lobar division.'],
     ),
     matching: matching(
       'Match the bronchial relationship with the station.',
@@ -454,8 +451,8 @@ export const locateLessons: Lesson[] = [
         'Anatomical relationships distinguish the sublocations.',
       ],
       [
-        'An assumption that all interlobar nodes are malignant',
-        'Pathology was not part of the matching task.',
+        'The distance of each node from the main carina',
+        'Distance from the carina does not separate hilar from interlobar or 11Rs from 11Ri; the named branches do.',
       ],
       [
         'The relative sizes of the nodes',
@@ -471,8 +468,8 @@ export const locateLessons: Lesson[] = [
         'EBUS can reach both mediastinal and hilar/interlobar stations.',
       ],
       [
-        'N3 because the node is between lobes',
-        'The interlobar location does not make it contralateral.',
+        'N2a, as a single involved station',
+        'N2a counts a single ipsilateral mediastinal or subcarinal station; 11L is interlobar, which is N1.',
       ],
     ),
     diagram: 'stations',
@@ -482,6 +479,5 @@ export const locateLessons: Lesson[] = [
       'An accessible node is not necessarily a mediastinal node.',
     ],
     sources: ['atlas', 'iaslc9'],
-    boundary,
   },
 ]

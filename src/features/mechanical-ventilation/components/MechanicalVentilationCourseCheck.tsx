@@ -6,16 +6,34 @@ import {
   ventilationPlacementQuestions,
   ventilationFinalQuestions,
   ventilationUnitQuestions,
+  type VentilationQuestion,
 } from '../content/learningQuestions'
+import { ventilationGenericQuestionPurpose } from '../content/learningCurriculum'
 import {
-  ventilationGenericQuestionPurpose,
-  ventilationUnitById,
-} from '../content/learningCurriculum'
+  ventilationApplicationConceptUnit,
+  ventilationApplicationCoverageNote,
+  ventilationSectionLabel,
+} from '../content/learnerMap'
 import { ventilationQuestionTeachingById } from '../content/questionTeaching'
 import { VentilationReinforcement } from './VentilationReinforcement'
 import { VentilationWorkedComparison } from './VentilationWorkedComparison'
 import { VentilationLearningSources } from './VentilationLearningVisuals'
 import styles from './ventilation-course.module.css'
+
+/**
+ * The chooser names each item by the section it draws on (A1). Where a section has more than one
+ * item in the list, the items are told apart by their order within that section.
+ */
+function optionLabel(questions: readonly VentilationQuestion[], index: number): string {
+  const conceptId = ventilationApplicationConceptUnit(questions[index]).id
+  const siblings = questions
+    .map((item, position) => ({ position, id: ventilationApplicationConceptUnit(item).id }))
+    .filter((entry) => entry.id === conceptId)
+  const label = ventilationSectionLabel(conceptId)
+  if (siblings.length < 2) return label
+  const order = siblings.findIndex((entry) => entry.position === index) + 1
+  return `${label} — item ${order} of ${siblings.length}`
+}
 
 /**
  * Saved placement, final and review URLs open optional questions and worked comparisons. Nothing
@@ -34,7 +52,8 @@ export function MechanicalVentilationCourseCheck({
         : ventilationUnitQuestions
   const [index, setIndex] = useState(0)
   const question = questions[index]
-  const unit = ventilationUnitById.get(question.unitId)!
+  /* The section the item is shown under and links back to (A2); its id and purpose are untouched. */
+  const conceptUnit = ventilationApplicationConceptUnit(question)
   const best = question.choices.find((choice) => choice.id === question.correctId)!
   const teaching = ventilationQuestionTeachingById.get(question.id)
   return (
@@ -52,6 +71,7 @@ export function MechanicalVentilationCourseCheck({
             Try a question, open its explanation before answering, or read a worked comparison.
             Nothing you choose here is saved, and none of it controls access to the lessons.
           </p>
+          <p data-application-coverage>{ventilationApplicationCoverageNote(questions)}</p>
           <Link href="/mechanical-ventilation/learn">Open any lesson</Link>
         </header>
         <label className={styles.settings}>
@@ -63,7 +83,7 @@ export function MechanicalVentilationCourseCheck({
           >
             {questions.map((item, i) => (
               <option key={item.id} value={i}>
-                {i + 1}. {ventilationUnitById.get(item.unitId)?.title}
+                {optionLabel(questions, i)}
                 {ventilationQuestionTeachingById.get(item.id)?.presentation === 'worked-comparison'
                   ? ' (worked comparison)'
                   : ''}
@@ -82,10 +102,10 @@ export function MechanicalVentilationCourseCheck({
             <VentilationReinforcement
               key={question.id}
               id={question.id}
-              purpose={teaching?.purpose ?? ventilationGenericQuestionPurpose(unit)}
+              purpose={teaching?.purpose ?? ventilationGenericQuestionPurpose(conceptUnit)}
               prompt={question.prompt}
               choices={question.choices}
-              hint={teaching?.hint ?? unit.explanation}
+              hint={teaching?.hint ?? conceptUnit.explanation}
               explanation={teaching?.explanation ?? best.label + '. ' + best.rationale}
               nextCheck={teaching?.nextCheck}
               bestChoiceId={question.correctId}
@@ -108,9 +128,12 @@ export function MechanicalVentilationCourseCheck({
               Continue
             </button>
             <Link
-              href={{ pathname: '/mechanical-ventilation/learn', query: { activity: unit.id } }}
+              href={{
+                pathname: '/mechanical-ventilation/learn',
+                query: { activity: conceptUnit.id },
+              }}
             >
-              Review {unit.title}
+              Review {ventilationSectionLabel(conceptUnit.id)}
             </Link>
           </div>
           <VentilationLearningSources evidenceIds={teaching?.evidenceIds ?? question.evidenceIds} />

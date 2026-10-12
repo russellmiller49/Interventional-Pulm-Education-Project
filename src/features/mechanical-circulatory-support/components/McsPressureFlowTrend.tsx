@@ -69,7 +69,7 @@ function monitorSeries(deviceKind: McsDeviceKind): readonly McsTrendSeries[] {
       effective,
       {
         id: 'durable-pump',
-        label: 'Durable pump flow (modeled transfer)',
+        label: 'Displayed pump flow (estimate)',
         unit: 'L/min',
         read: (sample) => sample.deviceFlowLMin,
         dash: '6 5',

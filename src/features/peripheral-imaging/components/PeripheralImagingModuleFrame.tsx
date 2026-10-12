@@ -45,13 +45,7 @@ export const peripheralImagingModuleNavItems: readonly ModuleNavItem[] = [
 
 export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (
   <>
-    <strong>Learn the reasoning. Build the practical skill under supervision.</strong>{' '}
-    <span>
-      For education only. The models combine CT-derived anatomy with authored targets and
-      illustrative values, and do not predict patient dose, safe tool placement, diagnostic yield or
-      actual equipment performance. Follow current device instructions, local protocols, and
-      operator, anesthesia and medical-physics judgment.
-    </span>
+    <strong>Learn the reasoning. Build the practical skill under supervision.</strong>
   </>
 )
 
@@ -61,8 +55,8 @@ export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (
  * site, so the label says so rather than implying an account is required.
  *
  * Keep it to a few words. The shared frame renders this badge `white-space: nowrap`, so a long
- * label does not wrap — it widens the document and every section under it. Publication alone
- * does not establish clinical review; the education-only boundary remains in the safety notice.
+ * label does not wrap — it widens the document and every section under it. The module's one
+ * teaching-simulator statement is on the hub, in Help and on the closing screen.
  */
 const releaseLabel =
   PERIPHERAL_IMAGING_RELEASE_STAGE === 'unlisted-preview'

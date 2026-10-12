@@ -56,8 +56,8 @@ export function MatchingActivity({
             {state ? (
               <span id={'matching-row-' + p.id} className={styles.rowFeedback}>
                 {state === 'matched'
-                  ? 'Matches the authored pairing.'
-                  : 'Not the authored pairing for this one. Change this match and check again, or show the matches.'}
+                  ? 'Correct.'
+                  : 'Not this one. Change this match and check again, or show the matches.'}
               </span>
             ) : null}
           </label>
@@ -66,6 +66,7 @@ export function MatchingActivity({
       <div className={styles.checkActions}>
         <button
           type="button"
+          className={styles.button}
           disabled={Object.keys(answers).length < activity.pairs.length || settled}
           onClick={() => {
             setChecked(true)
@@ -88,16 +89,12 @@ export function MatchingActivity({
           </button>
         )}
       </div>
-      {shown && (
-        <p role="status">
-          These are the authored matches, shown on request. {activity.explanation}
-        </p>
-      )}
+      {shown && <p role="status">{activity.explanation}</p>}
       {checked && !shown && (
         <p role="status">
           {correct
             ? activity.explanation
-            : 'Each row above says whether it matches the authored pairing. Revise the ones marked for another look and check again, or show the matches.'}
+            : 'Each row above says whether it is correct. Revise the ones marked for another look and check again, or show the matches.'}
         </p>
       )}
     </div>

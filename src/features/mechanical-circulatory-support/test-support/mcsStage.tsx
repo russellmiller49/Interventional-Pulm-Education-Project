@@ -317,9 +317,7 @@ const transferDrivers: Readonly<Record<string, () => void>> = {
     })
   },
   'iabp-efficacy-limits': () => {
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Escalate to the shock / mechanical-support team' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Call the shock or LVAD team' }))
   },
   'impella-unloading-placement': () => {
     fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
@@ -333,9 +331,7 @@ const transferDrivers: Readonly<Record<string, () => void>> = {
     fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
   },
   'lvad-alarms-emergencies': () => {
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Escalate to the shock / mechanical-support team' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Call the shock or LVAD team' }))
   },
   'mcs-device-selection-integration': () => {
     for (const label of [

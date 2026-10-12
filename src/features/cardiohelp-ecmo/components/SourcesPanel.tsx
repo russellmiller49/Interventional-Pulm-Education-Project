@@ -12,39 +12,26 @@ import {
   cardiohelpDeviceProfile,
   type CardiohelpEcmoPublicationStatus,
 } from '../content/deviceProfile'
-import { cardiohelpEvidence } from '../content/evidence'
 import {
   ecmoEvidenceIdsBySourceClass,
   ecmoSourceClassLabels,
   ecmoSourceClasses,
   type EcmoSourceClass,
 } from '../content/evidenceResolver'
-import {
-  ECMO_LOCAL_PROTOCOL_LINE,
-  ECMO_MODULE_REVIEW_LINE,
-  ecmoSourceReviewMetadata,
-} from '../content/sourceReviewMetadata'
+import { ECMO_NUMBER_ONLY_SOURCES } from '../content/teachingNumbers'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoSourceList } from './evidence/EcmoSourceList'
+import {
+  EcmoAnticoagulationReference,
+  EcmoCircuitPressureReference,
+  EcmoStartingSupportReference,
+  EcmoVenousCellReference,
+} from './teaching/EcmoReferenceValues'
 import evidenceStyles from './evidence/evidence.module.css'
 
 /**
- * The hub's evidence boundary: the device profile, the registry grouped by source class, and the
- * reviewer checklist.
- *
- * The registry is rendered through the shared source list rather than a card grid of its own, so
- * the title, badge, claim scope, link and copy control here are the same ones a learner meets beside
- * a circuit-walk stop or a localization row. Grouping by source class keeps the boundary the panel's
- * introduction draws — manual versus curriculum versus simplified model — visible in the structure
- * and not only in the badges.
- *
- * Publication and review are separate facts. The publication flag says whether the module is
- * listed; it has never been evidence that anyone reviewed it, and no clinical or device review is
- * recorded, so the review line is the same whichever way the flag is set.
- *
- * Local policy is a third, separate fact. The module's clinical copy repeatedly defers to local
- * protocol, and holds none of it, so the profile says so rather than leaving a learner to read
- * those deferrals as a protocol this module has seen (ECMO-HONESTY-02).
+ * The hub's sources: the device profile, the numbers the module teaches, and the registry grouped
+ * by source class, rendered through the shared source list.
  */
 
 const sourceIcons: Readonly<Record<EcmoSourceClass, LucideIcon>> = {
@@ -58,20 +45,19 @@ const sourceIcons: Readonly<Record<EcmoSourceClass, LucideIcon>> = {
 export function SourcesPanel({
   publicationStatus,
 }: {
-  publicationStatus: CardiohelpEcmoPublicationStatus
+  publicationStatus?: CardiohelpEcmoPublicationStatus
 }) {
-  const published = publicationStatus === 'published'
-  const ifuCheck = ecmoSourceReviewMetadata('ifu-us-2025-scope')?.checks[0]
   return (
-    <section className={styles.sourcesSection} aria-labelledby="sources-heading">
+    <section
+      className={styles.sourcesSection}
+      aria-labelledby="sources-heading"
+      data-publication-status={publicationStatus}
+    >
       <div className={styles.sectionTitleRow}>
         <div>
-          <span className={styles.kicker}>Clinical review & source notes</span>
-          <h2 id="sources-heading">Evidence boundary and review status</h2>
+          <span className={styles.kicker}>Sources</span>
+          <h2 id="sources-heading">Sources and reference values</h2>
         </div>
-        <span className={styles.draftBadge} data-review-status>
-          {published ? 'PUBLISHED' : 'UNLISTED DRAFT'} · {ECMO_MODULE_REVIEW_LINE}
-        </span>
       </div>
 
       <div className={styles.scopeBoundary}>
@@ -79,13 +65,11 @@ export function SourcesPanel({
         <div>
           <strong>The device manual and ECMO curriculum answer different questions.</strong>
           <p>
-            This facsimile’s console behavior follows the U.S. IFU, revision{' '}
-            {cardiohelpDeviceProfile.ifuRevision}, issued {cardiohelpDeviceProfile.ifuDate}; whether
-            a later revision exists has not been checked. Its labeled indication is partial
-            cardiopulmonary bypass or temporary surgical circulatory bypass for less than six
-            hours—not prolonged ECMO management. Adult VV and peripheral VA physiology and
-            management reasoning come from the supplied textbook chapters and mode-specific ELSO
-            guidance. Every response curve is labeled simulated and is not a patient digital twin.
+            Console behavior follows the U.S. IFU, revision {cardiohelpDeviceProfile.ifuRevision},
+            issued {cardiohelpDeviceProfile.ifuDate}. Its labeled indication is partial
+            cardiopulmonary bypass or temporary surgical circulatory bypass for less than six hours,
+            not prolonged ECMO. Adult VV and peripheral VA physiology and management come from
+            textbook chapters and mode-specific ELSO guidance.
           </p>
         </div>
       </div>
@@ -102,10 +86,6 @@ export function SourcesPanel({
           </dd>
         </div>
         <div>
-          <dt>IFU document check</dt>
-          <dd>{ifuCheck ? `${ifuCheck.on}; currency not checked` : 'None recorded'}</dd>
-        </div>
-        <div>
           <dt>Software</dt>
           <dd>≥ {cardiohelpDeviceProfile.minimumSoftwareVersion}</dd>
         </div>
@@ -114,38 +94,25 @@ export function SourcesPanel({
           <dd>{cardiohelpDeviceProfile.thApp}</dd>
         </div>
         <div>
-          <dt>Draft support modes</dt>
+          <dt>Support modes</dt>
           <dd>Adult VV + peripheral femoral VA</dd>
-        </div>
-        <div>
-          <dt>Publication</dt>
-          <dd>{published ? 'Public release' : 'Unlisted draft'}</dd>
-        </div>
-        <div>
-          <dt>Clinical and device review</dt>
-          <dd>None recorded</dd>
-        </div>
-        <div className={styles.deviceProfileWide}>
-          <dt>Local protocol</dt>
-          <dd>{ECMO_LOCAL_PROTOCOL_LINE}</dd>
         </div>
       </dl>
 
-      {/*
-        OV-2 (ECMO-FELLOW-04). The registry printed "Clinical and device review of how this module
-        uses it: none recorded yet" once per source, fifteen times down the hub. The fact itself is
-        not folded: it stays in the badge and the profile above, and the summary of this disclosure
-        line above this disclosure says it again for the whole registry. Only the per-source
-        repetition and the provenance detail sit behind the disclosure, where every row still
-        carries its own line unchanged.
-      */}
-      <p className={styles.externalBoundary} data-source-registry-status>
-        {/*
-          One string, so the space after the count is in the text itself: the production build
-          drops a leading space that only the JSX layout implies (the "serieswith" trap).
-        */}
-        {`${cardiohelpEvidence.length} sources are registered. No source has a clinical or device review on record; the registry below gives each source’s own claim, limits and document check.`}
-      </p>
+      <h3 className="mt-3 text-sm font-semibold">Reference values</h3>
+      <EcmoCircuitPressureReference />
+      <EcmoStartingSupportReference />
+      <EcmoAnticoagulationReference />
+      <EcmoVenousCellReference />
+      <section className="mt-3 text-xs leading-5" data-number-sources>
+        <h3 className="text-xs font-semibold">Textbooks cited for the reference values</h3>
+        <ul className="mt-1 list-disc pl-5">
+          {ECMO_NUMBER_ONLY_SOURCES.map((source) => (
+            <li key={source.id}>{source.title}</li>
+          ))}
+        </ul>
+      </section>
+
       <details className={styles.reviewChecklist} data-source-registry>
         <summary className={evidenceStyles.checklistSummary}>
           <h3>Source registry and provenance</h3>
@@ -171,35 +138,6 @@ export function SourcesPanel({
             </section>
           )
         })}
-      </details>
-
-      <details className={styles.reviewChecklist}>
-        <summary className={evidenceStyles.checklistSummary}>
-          <h3>Publication checklist</h3>
-        </summary>
-        <ul>
-          <li>
-            <span aria-hidden="true">□</span> CARDIOHELP-trained reviewer verifies screen labels,
-            workflows, interventions, and target software behavior.
-          </li>
-          <li>
-            <span aria-hidden="true">□</span> Adult ECMO clinician verifies VV and peripheral VA
-            scenarios, response direction, debriefs, and safety-critical errors.
-          </li>
-          <li>
-            <span aria-hidden="true">□</span> VA reviewer verifies right-arm monitoring,
-            mixed-circulation, LV-loading, and cannulated-limb boundaries without implying a
-            universal intervention.
-          </li>
-          <li>
-            <span aria-hidden="true">□</span> Local faculty maps emergency recognition exercises to
-            hands-on supervised performance and local escalation policy.
-          </li>
-          <li>
-            <span aria-hidden="true">□</span> Spanish and Simplified Chinese clinical translations
-            receive separate review before the English fallback is removed.
-          </li>
-        </ul>
       </details>
     </section>
   )

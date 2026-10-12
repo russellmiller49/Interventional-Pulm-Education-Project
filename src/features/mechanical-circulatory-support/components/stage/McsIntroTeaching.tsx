@@ -53,7 +53,7 @@ export function McsIntroTeaching({
             calculate a full oxygen transport balance; its SvO2 value is a flow-linked teaching
             surrogate.
           </dd>
-          <dt>Clinical perfusion assessment</dt>
+          <dt>Clinical perfusion evaluation</dt>
           <dd>
             Mentation, urine output, skin perfusion and lactate trend require patient observations
             and context. These organ responses are not simulated here.
@@ -93,40 +93,38 @@ export function McsIntroTeaching({
             {parameter === 0 ? (
               <>
                 <dt>Speed · {state.device.kind === 'lvad' ? state.device.speedRpm : '—'} rpm</dt>
-                <dd>The prescribed rotation setting. It does not set an invariant flow.</dd>
+                <dd>
+                  The setting you prescribe. Flow at that speed depends on filling and afterload.
+                </dd>
               </>
             ) : null}
             {parameter === 1 ? (
               <>
-                <dt>Estimated pump flow · {state.metrics.deviceFlowLMin.toFixed(2)} L/min</dt>
-                <dd>
-                  In this model, generated from speed and loading. Clinical estimation methods
-                  depend on the device; this is not a flow-probe reading.
-                </dd>
+                <dt>
+                  Displayed pump flow ·{' '}
+                  {(state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(2)}{' '}
+                  L/min
+                </dt>
+                <dd>The flow the controller displays. It is not a flow-probe reading.</dd>
               </>
             ) : null}
             {parameter === 2 ? (
               <>
                 <dt>Electrical pump power · {state.metrics.pumpPowerW?.toFixed(1)} W</dt>
-                <dd>
-                  Represents pump electrical demand. Here it is derived from modeled flow, speed and
-                  the power-fault term.
-                </dd>
+                <dd>The watts the motor draws to hold the set speed.</dd>
               </>
             ) : null}
             {parameter === 3 ? (
               <>
                 <dt>Pulsatility index · {state.metrics.pulsatilityIndex?.toFixed(1)}</dt>
                 <dd>
-                  A unitless controller parameter related to pulsatility. Here it is an authored
-                  function of native flow, pump flow and preload, not a measured clinical PI or
-                  flow-estimator input.
+                  How much the flow through the pump swings with each heartbeat. It has no unit.
                 </dd>
               </>
             ) : null}
             {parameter === 4 ? (
               <>
-                <dt>Separate patient assessment</dt>
+                <dt>Separate patient evaluation</dt>
                 <dd>
                   Blood pressure, filling pressures, echocardiography and clinical perfusion
                   findings supply information beyond the controller. Modeled LV volume (mL)
@@ -178,9 +176,6 @@ export function McsIntroTeaching({
           ]}
         />
       ) : null}
-      <p className={styles.footnote} data-draft-status>
-        Draft teaching copy for faculty review · see Limits of this simulation, above.
-      </p>
     </section>
   )
 }

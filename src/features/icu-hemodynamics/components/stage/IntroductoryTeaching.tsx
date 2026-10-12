@@ -3,8 +3,10 @@
 import { HEMODYNAMICS_QUESTION_SORT } from '../../content/questionSort'
 import { measurementOrigins } from '../../content/introductoryTeaching'
 import { waveformAtlasById } from '../../content/waveformAtlas'
+import { ventricleArteryModelNotes } from '../../content/waveformModelLimits'
 import type { IntroTeaching } from '../../content/stageLessons'
 import type { HemodynamicSimulationState } from '../../engine/types'
+import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
 import { NormalWaveformReference } from '../NormalWaveformReference'
 import { WaveformAtlasFigure } from '../WaveformAtlasFigure'
 import styles from './hemodynamics-stage.module.css'
@@ -34,6 +36,7 @@ export function IntroductoryTeaching({
               </div>
             ))}
           </dl>
+          <PacComponentSchematic />
           <h4>Worked example · pressure and flow</h4>
           <p>
             Two illustrative patients have the same valid arterial mean pressure of 60 mmHg.
@@ -45,9 +48,6 @@ export function IntroductoryTeaching({
             help evaluate the contributions of output and vascular resistance; examination,
             perfusion findings and echocardiography supply the clinical context. Neither reading
             alone establishes the cause, predicts benefit from fluid, or determines treatment.
-          </p>
-          <p className={styles.dockNote}>
-            These are authored comparison values. They are not treatment targets.
           </p>
           <p>
             Hypotension alone is not an indication to place a PAC. The monitoring method depends on
@@ -168,25 +168,7 @@ export function IntroductoryTeaching({
         </section>
       )
     case 'rv-pa':
-      return (
-        <section className={styles.teachingCard}>
-          <h3>Right ventricle versus pulmonary artery</h3>
-          <p>
-            Reference examples · shared 0–40 mmHg axis. Compare the low RV diastolic pressure with
-            the PA diastolic step-up and valve-closure notch. Systolic height alone cannot
-            distinguish them.
-          </p>
-          {['rv-normal', 'pa-normal'].map((id) => (
-            <WaveformAtlasFigure
-              key={id}
-              entry={waveformAtlasById.get(id)!}
-              scaleMaxMmHg={40}
-              ecgLandmarks
-              readable
-            />
-          ))}
-        </section>
-      )
+      return <VentricleArteryComparison />
     case 'components':
       return (
         <section className={styles.teachingCard}>
@@ -213,9 +195,9 @@ export function IntroductoryTeaching({
         <section className={styles.teachingCard}>
           <h3>Contrasting abnormal atrial patterns</h3>
           <p>
-            Authored right-atrial pressure patterns on a shared axis illustrate altered atrial
-            contraction. Rhythm-specific ECG timing is not modeled in these examples. Interpret the
-            pressure pattern alongside the patient and echocardiography.
+            Right-atrial pressure patterns on a shared axis show altered atrial contraction. The ECG
+            is not drawn for these examples. Read the pressure pattern alongside the patient and the
+            echo.
           </p>
           {['ra-cannon-a-wave', 'ra-atrial-fibrillation'].map((id) => (
             <div key={id}>
@@ -261,4 +243,90 @@ export function IntroductoryTeaching({
         </section>
       )
   }
+}
+
+/**
+ * Right ventricle beside pulmonary artery.
+ *
+ * The task is to compare two tracings, and they used to be two full-width figures one above the
+ * other, each taller than the window, so the comparison was made from memory (report L3-06). They
+ * now share a row: the same axis, the same three beats, the same width, so a height on one is the
+ * same pressure on the other and the eye can move straight across. Where the card is too narrow
+ * for two readable plots they stack, each keeping its own axis and labels. The labels' meanings are
+ * given once, beneath both, as the three things to compare.
+ *
+ * Two things this model draws are said outright rather than left to be discovered: the change of
+ * slope where right-ventricular ejection ends (it is not a notch — report L3-03), and that the
+ * onset of each upstroke against the QRS is schematic (report L3-07).
+ */
+function VentricleArteryComparison() {
+  const ventricle = waveformAtlasById.get('rv-normal')!
+  const artery = waveformAtlasById.get('pa-normal')!
+  const describe = (entry: typeof ventricle, id: string) =>
+    entry.annotations.find((annotation) => annotation.id === id)?.description ?? ''
+  const rows = [
+    {
+      feature: 'Diastole',
+      ventricle: describe(ventricle, 'diastole').split('. ')[0] + '.',
+      artery: describe(artery, 'diastole'),
+    },
+    {
+      feature: 'After the peak',
+      ventricle:
+        'One fall to a low early-diastolic pressure. No valve-closure notch: the pressure does not dip and then rise again on the way down.',
+      artery: describe(artery, 'notch'),
+    },
+    {
+      feature: 'Systolic peak',
+      ventricle: describe(ventricle, 'peak'),
+      artery: describe(artery, 'peak'),
+    },
+  ]
+  return (
+    <section className={styles.teachingCard} data-ventricle-artery-comparison>
+      <h3>Right ventricle versus pulmonary artery</h3>
+      <p>
+        Reference examples, side by side on one 0–40 mmHg axis and one time base. Compare the low RV
+        diastolic pressure with the PA diastolic step-up and valve-closure notch. Systolic height
+        alone cannot distinguish them.
+      </p>
+      <div className={styles.alignedFigures}>
+        {[ventricle, artery].map((entry) => (
+          <WaveformAtlasFigure
+            key={entry.id}
+            entry={entry}
+            scaleMaxMmHg={40}
+            ecgLandmarks
+            readable
+            showLegend={false}
+            alignLabelRowsWith={[ventricle, artery]}
+          />
+        ))}
+      </div>
+      <table className={styles.comparisonKey} data-comparison-key>
+        <caption>What to compare, feature by feature</caption>
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col">Right ventricle</th>
+            <th scope="col">Pulmonary artery</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.feature}>
+              <th scope="row">{row.feature}</th>
+              <td>{row.ventricle}</td>
+              <td>{row.artery}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className={styles.dockNote} data-model-drawing-note>
+        Two things about how this model draws these tracings.{' '}
+        {ventricleArteryModelNotes.ventricularSlopeChange}{' '}
+        {ventricleArteryModelNotes.ecgTimingSchematic}
+      </p>
+    </section>
+  )
 }

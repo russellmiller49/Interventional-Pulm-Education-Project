@@ -105,7 +105,7 @@ test('reload and return use the topic boundary without retaining an invented mod
     .getByRole('list', { name: 'All lesson tasks' })
     .getByRole('button', { name: 'Guided example: ventricular unloading' })
     .click()
-  await expect(page.locator('[data-session-identity]')).toContainText('Provided model comparison')
+  await expect(page.locator('[data-session-identity]')).toContainText('Worked comparison')
   await expect(page.getByRole('button', { name: 'P6', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -133,8 +133,8 @@ for (const [width, height] of [
       expect(lines, 'A physiological number must not wrap across lines').toBe(1)
     }
     for (const card of await page.locator('[data-unloading-condition]').all()) {
-      await card.getByText('Starting state and model assumptions', { exact: true }).click()
-      await expect(card.getByText(/Seed 417/)).toBeVisible()
+      await card.getByText('Starting state', { exact: true }).click()
+      await expect(card.getByText(/eight simulated seconds of observation/)).toBeVisible()
     }
     await page.getByRole('button', { name: 'P8', exact: true }).focus()
     await page.keyboard.press('Tab')

@@ -30,7 +30,7 @@ it('does not render a green all-clear badge for a quiet held AF trigger alarm', 
   const bar = view.container.querySelector('[data-monitor-target="monitor:alarms"]')!
   expect(bar.querySelector('[data-priority="clear"]')).toBeNull()
   expect(bar).not.toHaveTextContent('NO ACTIVE MODEL ALARMS')
-  expect(bar).toHaveTextContent('Model limit held')
+  expect(bar).toHaveTextContent('Simulator limit')
 })
 
 it.each(['IABP-02', 'CAP-IABP-01'])(
@@ -47,13 +47,13 @@ it.each(['IABP-02', 'CAP-IABP-01'])(
       target: { value: 'pressure' },
     })
     const label = screen.getByText('Active alarm / limitation')
-    expect(label.parentElement).toHaveTextContent('Model limit held')
+    expect(label.parentElement).toHaveTextContent('Simulator limit')
     expect(label.parentElement).not.toHaveTextContent('No active modeled alarm')
     fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
-    expect(label.parentElement).toHaveTextContent('Model limit held')
+    expect(label.parentElement).toHaveTextContent('Simulator limit')
     const condition = document.querySelector('[data-condition-held="true"]')!
-    expect(condition).toHaveTextContent('not treated as an outcome')
-    expect(condition).toHaveTextContent('MCS-03-05')
+    expect(condition).toHaveTextContent('Not used as a result')
+    expect(condition).not.toHaveTextContent('MCS-03-05')
     // Actual alarms are still inspectable and selecting ECG still raises the model warning.
     fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
       target: { value: 'ecg' },

@@ -67,7 +67,7 @@ export function SequenceActivity({
           move to it with Tab and press Enter or Space. Clear the sequence to start again.
         </p>
       )}
-      <ol aria-label={shown ? 'The authored sequence' : 'Your sequence so far'} data-sequence-order>
+      <ol aria-label={shown ? 'The correct sequence' : 'Your sequence so far'} data-sequence-order>
         {selected.map((id) => (
           <li key={id}>{textFor(id)}</li>
         ))}
@@ -92,6 +92,7 @@ export function SequenceActivity({
         {!checked && !shown && selected.length === sequence.steps.length && (
           <button
             type="button"
+            className={styles.button}
             onClick={() => {
               setChecked(true)
               if (correct) onComplete()
@@ -132,16 +133,14 @@ export function SequenceActivity({
             : remaining + ' steps left to place; the check opens once the order is complete.'}
         </p>
       )}
-      {shown && (
-        <p role="status">This is the authored sequence, shown on request. {sequence.explanation}</p>
-      )}
+      {shown && <p role="status">{sequence.explanation}</p>}
       {checked && !shown && (
         <p role="status">
           {correct
             ? 'The sequence is complete. ' + sequence.explanation
             : 'Reconsider the order. Your step ' +
               firstDifference +
-              ' is the first that differs from the authored order; the steps before it are in place. ' +
+              ' is the first that is out of order; the steps before it are in place. ' +
               sequence.explanation}
         </p>
       )}

@@ -169,7 +169,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
     render(<McsWorkbench section="practice" initialDevice="iabp" />)
-    expect(screen.getByText(/Educational model—not a clinical device/i)).toBeInTheDocument()
+    expect(screen.getByText(/Teaching simulator\./i)).toBeInTheDocument()
     expect(
       screen.getByRole('region', { name: /Synchronized mechanical-support bedside monitor/i }),
     ).toBeInTheDocument()
@@ -320,7 +320,7 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   it('shows the English fallback on non-English routes', () => {
     render(<McsWorkbench section="practice" locale="es" />)
-    expect(screen.getByText(/English fallback/i)).toBeInTheDocument()
+    expect(screen.getByText(/Shown in English/i)).toBeInTheDocument()
   })
 
   describe('the module front door (M0/M1)', () => {
@@ -406,22 +406,16 @@ describe('Mechanical Circulatory Support learner interface', () => {
       }
     })
 
-    it('keeps the release checklist behind a reviewer layer and the preview warning in front', async () => {
+    it('states that this is a teaching simulator in front, with no release checklist', async () => {
       const { container } = await renderHub()
       const governance = container.querySelector('[data-review-governance]')
       expect(governance).not.toBeNull()
-      // The warning a learner must see is not inside the collapsed layer.
-      const warning = within(governance as HTMLElement).getByText(
-        /bounded teaching approximations/i,
+      const statement = within(governance as HTMLElement).getByText(
+        /This is a teaching simulator\./i,
       )
-      expect(warning.closest('details')).toBeNull()
-      // The gate list is.
-      const reviewerLayer = governance!.querySelector('[data-reviewer-layer]')
-      expect(reviewerLayer).not.toBeNull()
-      expect(reviewerLayer!.querySelectorAll('li').length).toBeGreaterThan(0)
-      expect(
-        within(reviewerLayer as HTMLElement).getByText(/Publication awaits review/i),
-      ).toBeInTheDocument()
+      expect(statement.closest('details')).toBeNull()
+      expect(container.querySelector('[data-reviewer-layer]')).toBeNull()
+      expect(container.textContent).not.toMatch(/Publication awaits review/i)
     })
   })
 })

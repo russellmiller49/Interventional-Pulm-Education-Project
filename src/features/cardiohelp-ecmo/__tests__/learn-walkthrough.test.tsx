@@ -294,14 +294,17 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     // Isolate: the clamp steps auto-complete when the real clamp buttons reach the requested
     // state, and guided help highlights the matching button.
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
-    const returnClamp = await screen.findByRole('button', { name: /Return clamp/i })
+    // Anchored: the resume control and the resume step now name the return clamp too ("…open the
+    // return clamp last"), so an unanchored match is no longer unique. The clamp's own name starts
+    // with its limb.
+    const returnClamp = await screen.findByRole('button', { name: /^Return clamp/i })
     await waitFor(() => {
       expect(returnClamp).toHaveAttribute('data-guided-help', 'true')
     })
     fireEvent.click(returnClamp)
     await awaitDoneAndAdvance()
 
-    fireEvent.click(screen.getByRole('button', { name: /Drainage clamp/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Drainage clamp/i }))
     await awaitDoneAndAdvance()
 
     performAndAdvance(/Correct the source and clear the circuit/i)

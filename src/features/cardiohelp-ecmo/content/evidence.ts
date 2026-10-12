@@ -15,7 +15,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Need for trained staff and independent patient monitoring',
     ],
     limitations:
-      'The U.S. indication in revision 2.3 (page 13) is partial cardiopulmonary bypass or temporary circulatory bypass during open surgical procedures, for periods of less than six hours. It is used here only for console behavior, not as prolonged-ECMO clinical guidance. Whether a later revision exists has not been checked.',
+      'The U.S. indication in revision 2.3 (page 13) is partial cardiopulmonary bypass or temporary circulatory bypass during open surgical procedures, for periods of less than six hours. It is used here only for console behavior, not as prolonged-ECMO clinical guidance.',
   },
   {
     id: 'ifu-console-workflow',
@@ -46,7 +46,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Pressure-drop display as a trend without a fixed alarm-priority claim',
     ],
     limitations:
-      'The supplied instructions do not give one bubble size or one pressure-drop alarm priority. Page 20 warns that bubbles of 5 mm or less can also stop the pump or trigger backflow prevention, while the technical data on page 199 list a pump stop for bubbles of 5 mm or more; page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. Neither value is encoded here pending device review.',
+      'The supplied instructions do not give one bubble size or one pressure-drop alarm priority. Page 20 warns that bubbles of 5 mm or less can also stop the pump or trigger backflow prevention, while the technical data on page 199 list a pump stop for bubbles of 5 mm or more; page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. The console’s factory pressure-drop limit and the low-priority description are taught; no bubble size is.',
   },
   {
     id: 'ecmo-book-ch9',
@@ -200,14 +200,13 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
   {
     id: 'attached-ecmo-case-curriculum',
     sourceClass: 'supplied-curriculum',
-    title: 'ECMO CASES clinical simulation curriculum draft',
+    title: 'ECMO CASES clinical simulation curriculum',
     citation: 'Unpublished case curriculum supplied by the course author (Word document).',
     supports: [
       'Original clinical presentation structure and signature clues for Practice cases',
       'Case progression, expected team actions, response patterns, and debrief prompts',
     ],
-    limitations:
-      'Curriculum source only, not independent clinical evidence. Every case remains draft-gated and requires adult ECMO and device review before publication.',
+    limitations: 'Curriculum source only, not independent clinical evidence.',
   },
   {
     id: 'bounded-educational-model',

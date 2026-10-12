@@ -1,20 +1,13 @@
 import { mcsDerivedValueGuides } from '../../content/derivedValueGuides'
-import {
-  MCS_OXYGEN_DELIVERY_BOUNDARY,
-  beforeAfterReadings,
-  flowAccountView,
-  reading,
-} from './selectors'
+import { beforeAfterReadings, flowAccountView, reading } from './selectors'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import type { McsTeachingPanelProps } from './panelProps'
 import {
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
+  FigureCaption,
   FlowAccount,
   GuidedValue,
   LiveValue,
-  ModelBoundary,
   PanelSection,
   TextEquivalent,
   TransferState,
@@ -144,7 +137,7 @@ export function SignalToPerfusionPanel({
             className="min-w-0 rounded-xl border-l-4 border-solid p-3"
             data-ladder-rung="oxygen-delivery"
           >
-            <p className="text-sm font-semibold">3. Oxygen delivery — not directly calculated</p>
+            <p className="text-sm font-semibold">3. Oxygen delivery</p>
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Mixed venous saturation"
@@ -152,7 +145,7 @@ export function SignalToPerfusionPanel({
                 unit="%"
                 digits={0}
                 kind="modeled"
-                note="A modeled delivery–consumption balance signal. Not a measurement of oxygen delivery."
+                note="Falls when oxygen delivery falls short of consumption."
               />
               <div
                 className="min-w-0 rounded-xl border border-dashed p-3"
@@ -162,45 +155,32 @@ export function SignalToPerfusionPanel({
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   Whole-body oxygen delivery
                 </p>
-                <p className="text-sm font-semibold">not calculated by this simulation</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">not modeled</p>
+                <p className="text-sm font-semibold">not in the simulator</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Cardiac output × arterial oxygen content. The simulator has no hemoglobin.
+                </p>
               </div>
             </div>
             <p className="mt-2 text-xs leading-5" data-rung-scope>
               <span className="font-semibold">Answers: </span>which way the balance between delivery
-              and consumption is leaning in this model.{' '}
-              <span className="font-semibold">Does not answer: </span>how much oxygen is delivered,
-              or whether it is enough.
+              and consumption is leaning. <span className="font-semibold">Does not answer: </span>
+              how much oxygen is delivered, or whether it is enough.
             </p>
-            <details className="mt-2 text-xs leading-5" data-rung-detail="oxygen-delivery">
-              <summary className="cursor-pointer font-semibold">
-                More about this value, and what it is not
-              </summary>
-              <p className="mt-1 text-muted-foreground">
-                Mixed venous saturation moves with the modeled balance among blood flow, oxygen
-                availability assumptions, and tissue consumption and extraction assumptions. It is
-                not a measurement of oxygen delivery, not a calculation of it, not proof that
-                delivery is adequate, and this module sets no value for it to be driven toward.
-                Hemoglobin and arterial oxygen content are not modeled, so the product that would
-                make an oxygen-delivery figure does not exist here.
-              </p>
-              <ModelBoundary>{MCS_OXYGEN_DELIVERY_BOUNDARY}</ModelBoundary>
-            </details>
           </li>
 
           <li
             className="min-w-0 rounded-xl border-l-4 border-dashed p-3"
             data-ladder-rung="organ-response"
           >
-            <p className="text-sm font-semibold">4. Organ response — empty in this simulation</p>
+            <p className="text-sm font-semibold">4. Organ response</p>
             <p className="mt-1 text-xs leading-5" data-rung-scope>
               <span className="font-semibold">The top rung, and the goal of support. </span>
-              Mentation, urine output, skin perfusion and the lactate trend answer here, at the
-              bedside. This simulation models none of them, so this rung has no value.
+              Mentation, urine output, skin perfusion and the lactate trend answer here. Read them
+              at the bedside; the simulator has none of them.
             </p>
             <details className="mt-2 text-xs leading-5" data-rung-detail="organ-response">
               <summary className="cursor-pointer font-semibold">
-                Why each organ finding matters, and what is not modeled
+                Why each organ finding matters
               </summary>
               <UnmodeledOrganResponse />
             </details>
@@ -208,35 +188,20 @@ export function SignalToPerfusionPanel({
         </ol>
 
         <TextEquivalent>
-          The simulation directly populates pressure and flow. It does not calculate whole-body
-          oxygen delivery because hemoglobin and arterial oxygen content are not modeled. It
-          provides a modeled downstream delivery–consumption balance signal through mixed venous
-          saturation, and it does not model organ response. Pressure: {reading(metrics.mapMmHg, 0)}{' '}
-          mm Hg mean arterial pressure, with a wedge pressure of {reading(metrics.pcwpMmHg, 0)} and
-          a right atrial pressure of {reading(metrics.rapMmHg, 0)} mm Hg. Flow:{' '}
+          Pressure: {reading(metrics.mapMmHg, 0)} mm Hg mean arterial pressure, with a wedge
+          pressure of {reading(metrics.pcwpMmHg, 0)} and a right atrial pressure of{' '}
+          {reading(metrics.rapMmHg, 0)} mm Hg. Flow:{' '}
           {withholdFlowAccount
             ? 'covered until the prediction is committed.'
             : flowAccountSentence(account, disclosed)}{' '}
-          The modeled balance signal reads {reading(metrics.svo2Percent, 0)} percent. Organ
-          response: nothing at all.
+          Mixed venous saturation: {reading(metrics.svo2Percent, 0)} percent. Organ response: read
+          at the bedside.
         </TextEquivalent>
 
-        <FigureScope
-          establishes="Which question each reading on this screen answers, and which of the three flow numbers is the one the circulation actually experiences."
-          doesNotEstablish="Whether this circulation is adequate. Nothing on the ladder answers at the organ level: the top rung is empty here by construction."
-        />
-
-        <details className="mt-2 text-xs leading-5" data-ladder-model-note>
-          <summary className="cursor-pointer font-semibold">
-            How this model produces the four values
-          </summary>
-          <ModelBoundary>
-            The four rungs are a teaching order, not a measurement chain. Each value is produced
-            independently by the model rather than derived from the rung below it, and the reason
-            they are drawn in one column is that a learner reading one rung tends to answer at
-            another.
-          </ModelBoundary>
-        </details>
+        <FigureCaption>
+          Each reading answers its own rung&rsquo;s question. One of the three flow numbers is the
+          flow the circulation actually receives.
+        </FigureCaption>
       </PanelSection>
 
       <PanelSection title="Cardiac power — a pressure–flow summary" id="signals-cpo" reference>
@@ -246,9 +211,8 @@ export function SignalToPerfusionPanel({
         />
         <p className="mt-3 text-xs leading-5" data-cpo-caution>
           Cardiac power multiplies a pressure by a flow, so it sits across two rungs of the ladder
-          at once. That makes it a compact summary and a poor substitute for either. It can rise
-          while the flow term inside it falls — a state this module reaches later on durable support
-          — so a rising value is never on its own evidence that delivery improved.
+          at once. It can rise while flow falls, as it does on a durable pump when blood pressure
+          climbs, so a rising value is not on its own evidence that delivery improved.
         </p>
         <TextEquivalent>
           Cardiac power reads {reading(metrics.cardiacPowerOutputW, 2)} W, computed from a mean
@@ -266,11 +230,9 @@ export function SignalToPerfusionPanel({
             caption="Readings captured when the task began, beside the readings now."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>
-            {DEADBAND_CAPTION} This section changes nothing in the patient, so anything that does
-            move between the two columns is the fixed-step model settling rather than a response to
-            you.
-          </ModelBoundary>
+          <p className="mt-2 text-xs leading-5">
+            Nothing in this section changes the patient, so the two columns should match.
+          </p>
         </PanelSection>
       ) : null}
 
@@ -297,7 +259,7 @@ export function SignalToPerfusionPanel({
                 unit="%"
                 digits={0}
                 kind="modeled"
-                note="Modeled delivery–consumption balance signal."
+                note="Falls when delivery falls short of consumption."
               />
               <LiveValue
                 label="Cardiac power"
@@ -311,9 +273,8 @@ export function SignalToPerfusionPanel({
             <TextEquivalent>
               In the transfer patient: mean arterial pressure {reading(metrics.mapMmHg, 0)} mm Hg,
               effective systemic delivery {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min,
-              modeled delivery–consumption balance signal {reading(metrics.svo2Percent, 0)} percent,
-              cardiac power {reading(metrics.cardiacPowerOutputW, 2)} W.{' '}
-              {flowAccountSentence(account, disclosed)}
+              mixed venous saturation {reading(metrics.svo2Percent, 0)} percent, cardiac power{' '}
+              {reading(metrics.cardiacPowerOutputW, 2)} W. {flowAccountSentence(account, disclosed)}
             </TextEquivalent>
           </TransferState>
         </PanelSection>

@@ -6,6 +6,7 @@ import {
   mcsUnloadingSignals,
   type McsUnloadingLevel,
 } from '../../content/unloadingExamples'
+import { MCS_NUMBERS } from '../../content/teachingNumbers'
 import { mcsObservedDirection } from '../../engine/learningSession'
 import { replayMcsUnloadingComparison } from '../../engine/unloadingComparison'
 import styles from './mcs-unloading.module.css'
@@ -67,9 +68,9 @@ export function McsUnloadingComparison() {
         )
         .map(({ id, label }) => (
           <p key={id} className={styles.warning} data-unloading-suction>
-            <strong>{label}: </strong>Suction remains present at both settings. A higher flow number
-            does not establish safe support or resolution of underfilling. Assess filling, RV
-            delivery and position with the MCS team and current device instructions.
+            <strong>{label}: </strong>Suction is present at both settings, so the higher flow number
+            is not better support. Reduce the P-level by one or two levels, give volume if the
+            patient is underfilled, check position with echo and assess the right ventricle.
           </p>
         ))}
       <div className={styles.examples}>
@@ -162,33 +163,29 @@ export function McsUnloadingComparison() {
                 {Math.abs(
                   changed.metrics.leftDeviceFlowLMin - control.metrics.leftDeviceFlowLMin,
                 ).toFixed(2)}{' '}
-                L/min. These are matched-time endpoints; they do not establish the sequence of the
-                responses.
+                L/min, compared at the same moment in both branches.
               </p>
               <details>
-                <summary>Starting state and model assumptions</summary>
+                <summary>Starting state</summary>
                 <p>
-                  Seed {baseline.seed}. P5 starting state at {baseline.timeSeconds.toFixed(2)} s;
-                  both branches then receive the same setting-update step and eight simulated
-                  seconds of observation. The interval is authored, not a clinical stabilization
-                  time.
+                  P5 starting state at {baseline.timeSeconds.toFixed(2)} s. Both branches then
+                  receive the same setting change and eight simulated seconds of observation.
                 </p>
                 <p>
                   Starting LV volume {baseline.metrics.lvedvMl} mL; wedge pressure{' '}
-                  {baseline.metrics.pcwpMmHg} mm Hg. Comparison uses the later P5 control to account
-                  for settling, rather than attributing all change from this starting state to the
-                  new setting.
+                  {baseline.metrics.pcwpMmHg} mm Hg. Each change is measured against P5 held for the
+                  same eight seconds.
                 </p>
                 <p>
                   Heart rate {baseline.patient.heartRateBpm} beats/min; SVR{' '}
-                  {baseline.patient.systemicVascularResistanceDynSecCm5} dyn·s/cm⁵; modeled LV/RV
+                  {baseline.patient.systemicVascularResistanceDynSecCm5} dyn·s/cm⁵; LV/RV
                   contractility {baseline.patient.leftVentricularContractility}/
                   {baseline.patient.rightVentricularContractility}; PVR{' '}
                   {baseline.patient.pulmonaryVascularResistanceWU} Wood units; PEEP{' '}
-                  {baseline.patient.peepCmH2O} cm H₂O. No modeled aortic insufficiency or tamponade.
+                  {baseline.patient.peepCmH2O} cm H₂O. No aortic insufficiency or tamponade.
                 </p>
                 <p>
-                  Active modeled alarms at P5:{' '}
+                  Active alarms at P5:{' '}
                   {control.alarms
                     .filter((alarm) => alarm.active)
                     .map((alarm) => alarm.label)
@@ -208,28 +205,21 @@ export function McsUnloadingComparison() {
       <section data-unloading-explanation>
         <h4>How to read the comparison</h4>
         <p>
-          Pump flow and unloading are related but different. Here, LV end-diastolic volume is a
-          loading-dependent model surrogate; it is not the conserved LV reservoir volume or an
-          echocardiographic measurement. Wedge pressure is a separate modeled quantity, displayed to
-          the nearest mm Hg. A smaller LV can therefore appear beside an unchanged pressure. An
-          unchanged rounded pressure does not rule out the modeled volume response.
+          Pump flow and unloading are related but different. Unloading shows as a smaller ventricle
+          and a lower wedge pressure. LV end-diastolic volume here is a simulator surrogate, not an
+          echo measurement, and wedge pressure is shown to the nearest mm Hg, so a smaller ventricle
+          can sit beside an unchanged pressure.
         </p>
         <p>
-          Compare concurrent native flow, left pump flow and regurgitant return: effective systemic
-          flow is native plus left pump flow minus return, within display rounding. Native ejection
-          changes during support. Right-pump flow, when present elsewhere in the module, is in
-          series and is not added to that systemic total.
+          Effective systemic flow is native flow plus left pump flow, minus any regurgitant return.
+          Native ejection falls as support rises. A right-sided pump is in series and is never added
+          to the systemic total.
         </p>
         <p>
-          These outputs do not establish improved organ perfusion. Lactate, urine output, mentation,
-          hemolysis and tissue oxygen delivery are not measured by this model. The low-filling
-          example isolates the existing signal-dump condition; IMP-01 adds reduced RV contractility
-          and higher PVR, while IMP-03 adds high afterload and a purge warning.
-        </p>
-        <p>
-          The CP model is not a validated manufacturer flow estimator. The section’s source notes
-          retain the distinction between peak and mean product flow and the unresolved textbook
-          disagreement. Faculty/device review of this interpretation remains pending.
+          More flow on the console is not better perfusion until the patient shows it: mentation,
+          urine output and the lactate trend. Mean flow to expect on an Impella CP:{' '}
+          {MCS_NUMBERS.value('impella-cp-flow-by-level')}. Peak flow in systole at P-9 is{' '}
+          {MCS_NUMBERS.value('impella-cp-peak-flow')}: a peak, not a mean.
         </p>
       </section>
     </div>

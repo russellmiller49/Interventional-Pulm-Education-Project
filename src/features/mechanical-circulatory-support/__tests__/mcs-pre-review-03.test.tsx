@@ -117,17 +117,16 @@ describe('F03 · what a step asks, where its control is, and where its evidence 
     expect(currentStepId()).not.toBe(before)
   })
 
-  it('keeps the run identity and simulated time in view and moves the seed into a disclosure', () => {
+  it('keeps the run identity and simulated time in view and shows no seed or example number', () => {
     mountSection('mcs-foundations-signals')
     const identity = document.querySelector('[data-session-identity]')?.textContent ?? ''
     expect(identity).toMatch(/Guided reference/)
     expect(identity).toMatch(/simulated seconds/)
     expect(identity).not.toMatch(/seed \d+/i)
-    const seedHolder = [...document.querySelectorAll('details')].find((details) =>
-      /Seed \d+/.test(details.textContent ?? ''),
-    )
-    expect(seedHolder).toBeDefined()
-    expect(seedHolder?.open).toBe(false)
+    const runDetails = document.querySelector<HTMLDetailsElement>('[data-run-details]')
+    expect(runDetails).not.toBeNull()
+    expect(runDetails?.open).toBe(false)
+    expect(document.body.textContent).not.toMatch(/Example number \d+|\bseed \d+/i)
   })
 
   it.each([

@@ -34,7 +34,6 @@ import {
 import {
   assertEveryClarifiedQuantityRenders,
   assertEveryConflictPositionRenders,
-  assertNoUniversalTargetLanguage,
 } from '../test-support/teachingPanelContract'
 
 function guide(
@@ -199,7 +198,7 @@ describe('MCS guide migration', () => {
     expect(interpretMcsCardiacPowerOutput(0.53)).toContain('0.53')
     expect(interpretMcsCardiacPowerOutput(0.55)).toContain('0.6')
     expect(interpretMcsCardiacPowerOutput(0.6)).toContain('0.6')
-    expect(interpretMcsCardiacPowerOutput(0.9)).toContain('does not establish adequate perfusion')
+    expect(interpretMcsCardiacPowerOutput(0.9)).toContain('That alone is not adequate perfusion')
   })
 
   it('preserves CPO boundary semantics exactly at each cut point', () => {
@@ -229,7 +228,7 @@ describe('MCS guide migration', () => {
   it('keeps the simulator PAPi boundary an educational-model boundary, not a clinical one', () => {
     expect(MCS_MODEL_BOUNDARIES.rvLimitedPapiMax).toBe(1.5)
     expect(MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.kind).toBe('educational-model-boundary')
-    expect(MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.appliesWhen).toMatch(/simulation/i)
+    expect(MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.appliesWhen).toMatch(/In the simulator/i)
   })
 
   it('declares both cut-point references as cohort observations', () => {
@@ -365,7 +364,6 @@ describe('shared evidence renderers', () => {
     expect(container.querySelector('[data-live-value-type]')?.textContent).toContain('Derived')
     expect(container.querySelector('[data-reference-kind]')?.textContent).toMatch(/cohort/i)
     expect(container.querySelector('[data-do-not-infer]')?.textContent).toBeTruthy()
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 
   it('renders no interpretation block when a value resolves to nothing', () => {

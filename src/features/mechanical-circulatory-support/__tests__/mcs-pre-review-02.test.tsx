@@ -18,6 +18,8 @@ import {
   LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD,
   LVAD_HIGH_AFTERLOAD_MAP_MMHG,
   LVAD_SUSPECTED_THROMBOSIS_POWER_W,
+  LVAD_THROMBOSIS_FLOW_FRACTION,
+  measureIabpLandmarkPressures,
 } from '../engine/model'
 import { replayMcsUnloadingComparison } from '../engine/unloadingComparison'
 import type { McsAction } from '../engine/types'
@@ -425,8 +427,8 @@ describe('MCS-PRE-REVIEW-02 · F24 — the unloading response, read against the 
       filled().querySelector(`[data-unloading-delta="${metric}"]`)!.textContent!
 
     expect(delta('pcwpMmHg')).toBe('No resolvable displayed change')
-    expect(delta('lvedvMl')).toBe('−4 mL')
-    expect(delta('leftDeviceFlowLMin')).toBe('+0.40 L/min')
+    expect(delta('lvedvMl')).toBe('−2 mL')
+    expect(delta('leftDeviceFlowLMin')).toBe('+0.20 L/min')
     // One control column per example — the filled and the underfilled condition.
     expect(
       screen.getAllByRole('columnheader', { name: `P${MCS_UNLOADING_BASE_LEVEL} control` }),
@@ -436,8 +438,8 @@ describe('MCS-PRE-REVIEW-02 · F24 — the unloading response, read against the 
     ).toHaveLength(2)
 
     fireEvent.click(screen.getByRole('button', { name: 'P8' }))
-    expect(delta('lvedvMl')).toBe('−11 mL')
-    expect(delta('leftDeviceFlowLMin')).toBe('+1.05 L/min')
+    expect(delta('lvedvMl')).toBe('−6 mL')
+    expect(delta('leftDeviceFlowLMin')).toBe('+0.60 L/min')
     expect(delta('pcwpMmHg')).toBe('−1 mm Hg')
   })
 })
@@ -483,18 +485,73 @@ describe('MCS-PRE-REVIEW-02 · F17 — the timing contour', () => {
     return { assisted: pick(true), unassisted: pick(false) }
   }
 
-  it('pins what the live trace does not show, so the reference cannot be quietly retired', () => {
-    const result = mcsReplay({ id: 'aligned', device: 'iabp', setup: timingSetup(0, 0) }, [
-      { id: 'arm' },
-    ])
-    const { assisted, unassisted } = beatSummary(result.arms.arm)
+  const landmarks = (inflation: number, deflation: number) => {
+    const probe = mcsReplay(
+      {
+        id: `timing-${inflation}-${deflation}`,
+        device: 'iabp',
+        setup: timingSetup(inflation, deflation),
+      },
+      [{ id: 'arm' }],
+    ).arms.arm
+    const measured = measureIabpLandmarkPressures(probe.patient, probe.device, probe.metrics)
+    if (!measured) throw new Error('expected a running balloon pump')
+    return { probe, measured }
+  }
 
-    // Reproduced, and deliberately not repaired: at aligned timing the augmented peak sits below
-    // the systolic peak, and the assisted end-diastolic pressure is a fraction of a millimetre
-    // below the unassisted one. Amplifying either would be tuning a waveform to a sentence.
-    expect(assisted.diastolicPeak).toBeLessThan(assisted.systolicPeak)
+  it('draws the five landmark relationships on the live trace at aligned 1:2 timing', () => {
+    const { probe, measured } = landmarks(0, 0)
+    // Augmentation clears unassisted systole; deflation lowers the end-diastolic pressure and the
+    // systolic peak of the beat that follows it.
+    expect(measured.unassistedSystolicMmHg).not.toBeNull()
+    expect(measured.unassistedEndDiastolicMmHg).not.toBeNull()
+    expect(measured.augmentedDiastolicMmHg).toBeGreaterThan(measured.unassistedSystolicMmHg! + 5)
+    expect(measured.assistedEndDiastolicMmHg).toBeLessThan(measured.unassistedEndDiastolicMmHg! - 3)
+    expect(measured.assistedSystolicMmHg).toBeLessThan(measured.unassistedSystolicMmHg!)
+    // Plausible magnitudes for the default patient, as ranges rather than a tuned float.
+    expect(measured.unassistedSystolicMmHg!).toBeGreaterThanOrEqual(90)
+    expect(measured.unassistedSystolicMmHg!).toBeLessThanOrEqual(100)
+    expect(measured.augmentedDiastolicMmHg).toBeGreaterThanOrEqual(105)
+    expect(measured.augmentedDiastolicMmHg).toBeLessThanOrEqual(120)
+
+    // The same relationships read off the stored strip samples, not only off the measuring helper.
+    const { assisted, unassisted } = beatSummary(probe)
+    expect(assisted.diastolicPeak).toBeGreaterThan(assisted.systolicPeak)
     expect(assisted.diastolicPeak).toBeGreaterThan(unassisted.diastolicPeak + 10)
-    expect(Math.abs(assisted.endDiastolic - unassisted.endDiastolic)).toBeLessThan(2)
+    expect(assisted.endDiastolic).toBeLessThan(unassisted.endDiastolic - 3)
+  })
+
+  it('abolishes both reductions when deflation is late, and weakens them when it is early', () => {
+    const aligned = landmarks(0, 0).measured
+    const late = landmarks(0, 120).measured
+    const early = landmarks(0, -120).measured
+    const edpFall = (m: typeof aligned) =>
+      m.unassistedEndDiastolicMmHg! - m.assistedEndDiastolicMmHg
+    const systoleFall = (m: typeof aligned) => m.unassistedSystolicMmHg! - m.assistedSystolicMmHg
+
+    // Late deflation: the balloon is still inflated into ejection, so neither reduction is kept.
+    expect(edpFall(late)).toBeLessThanOrEqual(0)
+    expect(systoleFall(late)).toBeLessThanOrEqual(0)
+    // Early deflation: the pressure recovers before the valve opens.
+    expect(edpFall(early)).toBeLessThan(edpFall(aligned))
+    expect(systoleFall(early)).toBeLessThan(systoleFall(aligned))
+    // Mistimed deflation costs augmentation too.
+    expect(late.augmentedDiastolicMmHg).toBeLessThan(aligned.augmentedDiastolicMmHg)
+  })
+
+  it('gives no unassisted comparison at 1:1, where every beat is assisted', () => {
+    const probe = mcsReplay(
+      {
+        id: 'one-to-one',
+        device: 'iabp',
+        setup: [{ type: 'SET_IABP_CONTROL', control: 'assistRatio', value: 1 }],
+      },
+      [{ id: 'arm' }],
+    ).arms.arm
+    const measured = measureIabpLandmarkPressures(probe.patient, probe.device, probe.metrics)!
+    expect(measured.unassistedSystolicMmHg).toBeNull()
+    expect(measured.unassistedEndDiastolicMmHg).toBeNull()
+    expect(measured.augmentedDiastolicMmHg).toBeGreaterThan(measured.assistedSystolicMmHg)
   })
 
   it('still separates the five timing references by their event landmarks', () => {
@@ -535,16 +592,13 @@ describe('MCS-PRE-REVIEW-02 · F17 — the timing contour', () => {
     )
   })
 
-  it('draws an authored reference that names its five landmarks and refuses to be a run result', () => {
+  it('draws a labeled reference that names its five landmarks on the live strip’s pressure scale', () => {
     render(<McsIabpWaveformReference />)
     const figure = document.querySelector('[data-iabp-authored-reference]')!
     for (const landmark of MCS_IABP_REFERENCE_LANDMARKS)
       expect(figure.querySelector(`[data-iabp-reference-landmark="${landmark.id}"]`)).not.toBeNull()
-    expect(figure.textContent).toMatch(/not this patient’s trace/i)
-    expect(figure.textContent).toMatch(/not a run of this simulation/i)
+    expect(figure.textContent).toMatch(/The live strip shows the same five landmarks/i)
     expect(figure.textContent).toMatch(/ideally/i)
-    // No magnitude is claimed for the reductions the booklet describes without one.
-    expect(figure.textContent).not.toMatch(/15[–-]20\s*mm\s*Hg/i)
     expect(figure.textContent).toMatch(
       new RegExp(`${MCS_IABP_PRESSURE_SCALE.minMmHg}–${MCS_IABP_PRESSURE_SCALE.maxMmHg} mm Hg`),
     )
@@ -553,13 +607,13 @@ describe('MCS-PRE-REVIEW-02 · F17 — the timing contour', () => {
   it('registers the booklet it drew the relationships from, with its limits', () => {
     const source = mcsSources.find((entry) => entry.id === MCS_IABP_REFERENCE_SOURCE_ID)!
     expect(source.sourceType).toBe('manufacturer')
-    expect(source.limitation).toMatch(/no millimetre-of-mercury magnitude/i)
-    expect(source.limitation).toMatch(/OD-06/)
+    expect(source.limitation).toMatch(/no millimetre-of-mercury size/i)
+    expect(source.limitation).not.toMatch(/OD-0\d/)
   })
 })
 
 describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands', () => {
-  it('keeps flow generated from speed and loading, with power derived after it', () => {
+  it('separates the displayed estimate from real flow when thrombus raises power', () => {
     const result = mcsReplay({ id: 'estimator', device: 'lvad' }, [
       { id: 'no-action' },
       {
@@ -569,29 +623,43 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     ])
     const control = result.arms['no-action']
     const flagged = result.arms.thrombosis
-    // Unrepaired and pinned: the flag adds a flat wattage and never enters the flow formula. OD-02
-    // owns whether this module should instead model a controller's estimate.
     expect(lvad(control).thrombosisPowerAdditionW).toBe(0)
     expect(lvad(flagged).thrombosisPowerAdditionW).toBe(LVAD_SUSPECTED_THROMBOSIS_POWER_W)
-    // The displayed watts move by the flat addition, give or take the tenth that one-decimal
-    // rounding and a 0.01 L/min flow difference put on top of it.
-    expect(flagged.metrics.pumpPowerW! - control.metrics.pumpPowerW!).toBeGreaterThan(
-      LVAD_SUSPECTED_THROMBOSIS_POWER_W - 0.05,
+    // With no fault the controller's estimate is the real flow.
+    expect(
+      Math.abs(control.metrics.estimatedPumpFlowLMin! - control.metrics.deviceFlowLMin),
+    ).toBeLessThanOrEqual(0.02)
+    expect(lvad(control).estimatedFlow).toBeCloseTo(lvad(control).deviceFlow, 6)
+
+    // Thrombus: power up by more than a watt, the estimate up with it, real flow and PI down.
+    expect(flagged.metrics.pumpPowerW! - control.metrics.pumpPowerW!).toBeGreaterThan(1)
+    expect(flagged.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(
+      control.metrics.estimatedPumpFlowLMin! + 0.5,
     )
-    expect(flagged.metrics.pumpPowerW! - control.metrics.pumpPowerW!).toBeLessThan(
-      LVAD_SUSPECTED_THROMBOSIS_POWER_W + 0.15,
+    expect(flagged.metrics.deviceFlowLMin).toBeLessThan(control.metrics.deviceFlowLMin - 0.5)
+    expect(flagged.metrics.deviceFlowLMin / control.metrics.deviceFlowLMin).toBeCloseTo(
+      LVAD_THROMBOSIS_FLOW_FRACTION,
+      1,
     )
-    expect(Math.abs(flagged.metrics.deviceFlowLMin - control.metrics.deviceFlowLMin)).toBeLessThan(
-      0.05,
+    expect(flagged.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(flagged.metrics.deviceFlowLMin)
+    expect(flagged.metrics.pulsatilityIndex!).toBeLessThan(control.metrics.pulsatilityIndex!)
+    expect(flagged.metrics.effectiveSystemicFlowLMin).toBeLessThan(
+      control.metrics.effectiveSystemicFlowLMin,
     )
     expect(flagged.activeAlarmIds).toContain('lvad-high-power')
-    // The displayed flow is the modeled transfer, rounded — not a separate estimate fed back in.
-    expect(lvad(control).deviceFlow).toBeCloseTo(control.metrics.deviceFlowLMin, 1)
+    // The flow account is built on real flow, never on the falsely high estimate.
+    expect(flagged.metrics.effectiveSystemicFlowLMin).toBeCloseTo(
+      flagged.metrics.nativeFlowLMin + flagged.metrics.deviceFlowLMin,
+      1,
+    )
   })
 
-  it('shows that the afterload alarm reads a different pressure from the one on the monitor', () => {
+  it('raises the afterload alarm exactly when the mean arterial pressure on the monitor is above 90', () => {
     const result = mcsReplay({ id: 'afterload', device: 'lvad' }, [
       { id: 'no-action' },
+      { id: 'svr-900', actions: [setSvr(900)] },
+      { id: 'svr-1000', actions: [setSvr(1000)] },
+      { id: 'svr-1200', actions: [setSvr(1200)] },
       { id: 'svr-1900', actions: [setSvr(1900)] },
     ])
     const control = result.arms['no-action']
@@ -602,20 +670,77 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     expect(loaded.metrics.deviceFlowLMin).toBeLessThan(control.metrics.deviceFlowLMin - 0.4)
     expect(lvad(loaded).afterloadFactor).toBeLessThan(lvad(control).afterloadFactor)
 
-    // Reproduced and not repaired: the alarm's input is far below the displayed mean and the
-    // alarm stays quiet through a demonstrably afterload-limited state. OD-02 owns the predicate.
-    expect(lvad(control).highAfterloadPredicateInput).toBeLessThan(control.metrics.mapMmHg - 25)
-    expect(loaded.metrics.mapMmHg).toBeGreaterThan(LVAD_HIGH_AFTERLOAD_MAP_MMHG + 30)
-    expect(loaded.activeAlarmIds).not.toContain('lvad-high-afterload')
+    // The alarm reads the displayed mean arterial pressure, in every arm, on both sides of 90.
+    const arms = Object.values(result.arms)
+    for (const probe of arms) {
+      expect(lvad(probe).highAfterloadPredicateInput).toBe(probe.metrics.mapMmHg)
+      expect(probe.activeAlarmIds.includes('lvad-high-afterload')).toBe(
+        probe.metrics.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG,
+      )
+    }
+    expect(arms.some((probe) => probe.metrics.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG)).toBe(true)
+    expect(arms.some((probe) => probe.metrics.mapMmHg <= LVAD_HIGH_AFTERLOAD_MAP_MMHG)).toBe(true)
+    expect(control.activeAlarmIds).not.toContain('lvad-high-afterload')
+    expect(loaded.activeAlarmIds).toContain('lvad-high-afterload')
+    // Pulsatility index rises with afterload.
+    expect(loaded.metrics.pulsatilityIndex!).toBeGreaterThan(control.metrics.pulsatilityIndex!)
 
-    // What is repaired: the cost is now readable, and the alarm says which number it is not.
     const view = afterloadCostView(loaded.state)!
     expect(view.costPercent).toBeGreaterThan(15)
-    expect(view.alarmRaised).toBe(false)
-    expect(view.alarmInputMmHg).toBeLessThan(loaded.metrics.mapMmHg)
+    expect(view.alarmRaised).toBe(true)
+    expect(view.alarmInputMmHg).toBe(loaded.metrics.mapMmHg)
+    expect(view.alarmThresholdMmHg).toBe(90)
   })
 
-  it('says on the alarm itself which pressure its predicate reads', () => {
+  it('lowers the pulsatility index when the pump is underfilled, by tamponade or by the right heart', () => {
+    const reference = mcsReplay({ id: 'pi-reference', device: 'lvad' }, [{ id: 'arm' }]).arms.arm
+    const scenarioProbe = (id: string) =>
+      mcsReplay(
+        { id: `pi-${id}`, section: 'practice', device: 'lvad', scenario: mcsScenarioById.get(id)! },
+        [{ id: 'arm' }],
+      ).arms.arm
+    const tamponade = scenarioProbe('CAP-LVAD-01')
+    const rightHeart = scenarioProbe('LVAD-02')
+    const hypertensive = scenarioProbe('LVAD-01')
+    expect(tamponade.patient.tamponade).toBe(true)
+    expect(reference.metrics.pulsatilityIndex!).toBeGreaterThan(0)
+    expect(tamponade.metrics.pulsatilityIndex!).toBeLessThan(reference.metrics.pulsatilityIndex!)
+    expect(rightHeart.metrics.pulsatilityIndex!).toBeLessThan(reference.metrics.pulsatilityIndex!)
+    // Both are low-flow states with a high right atrial pressure.
+    for (const probe of [tamponade, rightHeart]) {
+      expect(probe.metrics.deviceFlowLMin).toBeLessThan(reference.metrics.deviceFlowLMin)
+      expect(probe.metrics.rapMmHg).toBeGreaterThan(reference.metrics.rapMmHg)
+    }
+    // High afterload is the opposite: the index rises.
+    expect(hypertensive.metrics.pulsatilityIndex!).toBeGreaterThan(
+      reference.metrics.pulsatilityIndex!,
+    )
+    expect(hypertensive.activeAlarmIds).toContain('lvad-high-afterload')
+
+    // Direct controls, one variable at a time, from the same reference.
+    const direct = mcsReplay({ id: 'pi-direct', device: 'lvad' }, [
+      { id: 'control' },
+      { id: 'tamponade', actions: [{ type: 'SET_TAMPONADE', active: true }] },
+      { id: 'rv', actions: [setRv(0.3)] },
+      {
+        id: 'underfilled',
+        actions: [{ type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 60 }],
+      },
+    ])
+    for (const id of ['tamponade', 'rv', 'underfilled']) {
+      expect(direct.arms[id].metrics.pulsatilityIndex!).toBeLessThan(
+        direct.arms.control.metrics.pulsatilityIndex!,
+      )
+      // No fault on the rotor: the displayed estimate is the real flow.
+      expect(
+        Math.abs(
+          direct.arms[id].metrics.estimatedPumpFlowLMin! - direct.arms[id].metrics.deviceFlowLMin,
+        ),
+      ).toBeLessThanOrEqual(0.02)
+    }
+  })
+
+  it('says on the alarm itself which pressure it reads and what to do about it', () => {
     const raised = mcsReplay({ id: 'alarm-copy', device: 'lvad' }, [
       {
         id: 'arm',
@@ -627,12 +752,14 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     ])
     const alarm = raised.arms.arm.state.alarms.find((entry) => entry.id === 'lvad-high-afterload')
     expect(alarm).toBeDefined()
-    expect(alarm!.explanation).toMatch(/without support/i)
-    expect(alarm!.explanation).toMatch(/not the mean pressure on the monitor/i)
+    expect(alarm!.explanation).toMatch(
+      new RegExp(`Mean arterial pressure is above ${LVAD_HIGH_AFTERLOAD_MAP_MMHG} mm Hg`),
+    )
+    expect(alarm!.explanation).toMatch(/Lower the blood pressure; do not raise the speed/i)
     expect(alarm!.explanation).not.toMatch(/^Elevated aortic pressure reduces/)
   })
 
-  it('keeps the speed-change authorization and the reference patient’s pressure unchanged', () => {
+  it('keeps the speed-change authorization, and starts the reference patient inside the 70–80 mm Hg goal', () => {
     const unauthorized = mcsReplay({ id: 'authorization', device: 'lvad' }, [
       { id: 'arm', actions: [{ type: 'SET_LVAD_CONTROL', control: 'speedRpm', value: 5800 }] },
     ])
@@ -640,9 +767,9 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     expect(unauthorized.arms.arm.device).toMatchObject({ speedRpm: 5200 })
 
     const reference = mcsReplay({ id: 'reference-map', device: 'lvad' }, [{ id: 'arm' }])
-    // Pinned as the open OD-02 decision, not endorsed: the reference state's displayed mean
-    // pressure is high and this slice did not tune it toward any target.
-    expect(reference.arms.arm.metrics.mapMmHg).toBeGreaterThan(95)
+    expect(reference.arms.arm.metrics.mapMmHg).toBeGreaterThanOrEqual(70)
+    expect(reference.arms.arm.metrics.mapMmHg).toBeLessThanOrEqual(80)
+    expect(reference.arms.arm.activeAlarmIds).toHaveLength(0)
   })
 })
 
@@ -688,9 +815,11 @@ describe('MCS-PRE-REVIEW-02 · F35 — LVAD-02’s whole success condition', () 
 
   it('says in the debrief why the ratio moved here and barely moves in section 9', () => {
     expect(scenario.debrief.join(' ')).toMatch(
-      /worked comparison that restores modeled RV contractility/i,
+      /A left-sided pump cannot pump what the right heart does not deliver/i,
     )
-    expect(scenario.debrief.join(' ')).toMatch(/not.*a response measure on its own/i)
+    expect(scenario.debrief.join(' ')).toMatch(
+      /As the right ventricle recovers, right atrial pressure falls, the pulmonary pulsatility ratio rises and pump flow returns/i,
+    )
     const rpResult = mcsReplay(
       {
         id: 'section-9-rp',
@@ -716,11 +845,9 @@ describe('MCS-PRE-REVIEW-02 · F35 — LVAD-02’s whole success condition', () 
 describe('MCS-PRE-REVIEW-02 · F26 — the low-preload story keeps its own identity', () => {
   it('states the scope of the loading change and still names no dose', () => {
     const volume = mcsStoryProblems.find((story) => story.id === 'story-volume-for-suction')!
-    expect(volume.changeScope).toMatch(/55 per cent to 100 per cent/)
-    expect(volume.changeScope).toMatch(/rescales the entire circulation/i)
-    expect(volume.changeScope).toMatch(
-      /response magnitude cannot be translated into a bedside fluid-challenge response/i,
-    )
+    expect(volume.changeScope).toMatch(/55 to 100 per cent/)
+    expect(volume.changeScope).toMatch(/far more than a fluid bolus/i)
+    expect(volume.changeScope).toMatch(/read the direction of the response, not its size/i)
     // MCS-PRE-REVIEW-01's guard, kept: no figure here can be read as a dose.
     expect(volume.changeScope).not.toMatch(/\b\d+\s*(mL|ml|millilitres|cc)\b/)
     expect(volume.changeScope).not.toMatch(/bolus of|give \d|over \d+ minutes/i)

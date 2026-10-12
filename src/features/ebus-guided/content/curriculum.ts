@@ -44,12 +44,12 @@ export const coupling: Lesson = {
         'A change with scope position suggests loss of the acoustic window. Reassess contact before amplifying the received signal.',
       ],
       [
-        'A sudden change in lymph-node echogenicity',
-        'The immediate link to scope rotation favors acquisition rather than a change in tissue.',
+        'The node has passed out of the imaging plane',
+        'Losing the node leaves other tissue echoes on the screen; losing all echoes means the transducer is off the wall.',
       ],
       [
-        'An incorrect caliper position',
-        'Calipers measure a displayed image; they do not establish acoustic contact.',
+        'Depth is set too shallow for this station',
+        'A shallow depth crops deep structures but still shows near-field tissue; it does not empty the sector.',
       ],
     ),
     imagePolicy: 'none',
@@ -63,7 +63,7 @@ export const coupling: Lesson = {
     freeDrive: true,
     initialRoll: 0,
     instruction:
-      'Compare the initial tip/wall close-up and ultrasound with the current acquisition. Use small Tip flexion changes in this authored setup and stop when tissue echoes return. Seeing the airway wall optically does not establish transducer contact. The comparison uses actual model acquisitions; the contact index is not pressure, force or balloon volume.',
+      'Compare the initial tip/wall close-up and ultrasound with the current image. Use small Tip flexion changes and stop when tissue echoes return. Seeing the airway wall optically does not establish transducer contact.',
   },
   observation: {
     ...question(
@@ -93,12 +93,12 @@ export const coupling: Lesson = {
         'An endoscopic view of the wall does not prove transducer contact. Re-establish the window, then optimize the ultrasound image.',
       ],
       [
-        'Advance the needle to find tissue',
-        'Needle passage without a reliable image removes essential guidance and risks injury.',
+        'Sample on the last good image; the node has not moved',
+        'Without a live window there is no guidance for the needle, wherever the node is.',
       ],
       [
-        'Label the station free of lymph nodes',
-        'Failure to display tissue is not evidence that the station contains no node.',
+        'Raise the gain until the node reappears',
+        'Gain cannot amplify echoes that never return; restore contact first.',
       ],
       true,
     ),
@@ -111,7 +111,7 @@ export const coupling: Lesson = {
   ],
   sources: ['ics2023', 'simulation'],
   boundary:
-    'The grayscale image is simulated from one anatomy model. Contact quality is an authored model index; it is not a measured pressure or a clinical safety threshold.',
+    'The grayscale image is simulated from one anatomy model. Contact quality is a model index; it is not a measured pressure or a clinical safety threshold.',
 }
 const authoredLessons: Lesson[] = [
   ...prepareLessons,

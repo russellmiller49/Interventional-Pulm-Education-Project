@@ -38,11 +38,8 @@ import { useRouter } from '@/i18n/navigation'
 import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
 import { mcsClaimChecksForSection } from '../../content/claimSourceMap'
 import { mcsDeviceStatusLabel } from '../../content/deviceNaming'
-import {
-  MCS_REFLECTION_REVIEW_STATUS,
-  mcsExplainReflection,
-} from '../../content/explainReflections'
-import { MCS_MODEL_LIMITS, MCS_MODEL_LIMITS_HEADING } from '../../content/modelLimits'
+import { mcsExplainReflection } from '../../content/explainReflections'
+
 import { mcsStepHint } from '../../content/stepHints'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
@@ -1244,7 +1241,7 @@ function McsStageSession({
                 <McsFlowArithmetic records={progression.comparisons} />
               ) : null}
               <p className={styles.footnote} data-worked-response-provenance>
-                Drawn from: {reflection.drawnFrom} {MCS_REFLECTION_REVIEW_STATUS}.
+                Drawn from: {reflection.drawnFrom}
               </p>
             </details>
           </section>
@@ -1769,30 +1766,17 @@ function McsStageSession({
       <div className={styles.stepBarIdentity}>
         <p className={styles.footnote} data-session-identity>
           {runLabel === null
-            ? 'Provided model comparison · observation times are shown with each example.'
+            ? 'Worked comparison · observation times are shown with each example.'
             : `${runLabel} · ${state.timeSeconds.toFixed(2)} simulated seconds.`}
         </p>
         {runLabel === null ? null : (
           <details className={styles.runDetails} data-run-details>
             <summary>Run details</summary>
             <p>
-              Seed {state.seed} · the run’s identifier for reproducing it, not a clinical value. The
-              simulated clock moves only while display playback runs or a step runs the model;
-              opening a panel, changing the theme or resizing the window adds no simulated time.
+              The simulated clock moves only while display playback runs or a step runs the model.
             </p>
           </details>
         )}
-        {/* The general limits, once, in the same place on every step (F39). */}
-        <details className={styles.runDetails} data-model-limits>
-          <summary>{MCS_MODEL_LIMITS_HEADING}</summary>
-          <ul>
-            {MCS_MODEL_LIMITS.map((limit) => (
-              <li key={limit.id} data-model-limit={limit.id}>
-                {limit.statement}
-              </li>
-            ))}
-          </ul>
-        </details>
       </div>
       {/*
        * The glossary, from inside the lesson (F42). It opens over the step and closes back to this
@@ -2041,7 +2025,7 @@ function McsStageSession({
       saveAndExitHref={mechanicalCirculatorySupportNavBase}
       resumedNote={
         mount.index > 0
-          ? `Opened at ${requestedPhase} with the authored starting model. Earlier answers, actions and observations were not restored.`
+          ? `Opened at ${requestedPhase} with the starting patient. Earlier answers, actions and observations were not restored.`
           : undefined
       }
     />
@@ -2161,11 +2145,6 @@ function McsStageSession({
               compactPane={compactPane}
               footer={
                 <>
-                  <p className={stageStyles.footerLine}>
-                    Professional education only. Not a clinical device or a patient-specific guide;
-                    every value is simulated. Follow current manufacturer instructions and local
-                    protocol.
-                  </p>
                   <StageSourcesFooter
                     count={stageSources.sourceIds.length}
                     label="Sources for this section"
@@ -2206,7 +2185,8 @@ function settingLabel(state: McsSimulationState): string {
 
 function displayedFlowLabel(state: McsSimulationState): string {
   if (state.device.kind === 'iabp') return 'none reported'
-  if (state.device.kind === 'lvad') return `${state.metrics.deviceFlowLMin.toFixed(1)} L/min`
+  if (state.device.kind === 'lvad')
+    return `${(state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(1)} L/min`
   const { left, right } = state.device
   const parts: string[] = []
   if (left.enabled) parts.push(`left ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min`)

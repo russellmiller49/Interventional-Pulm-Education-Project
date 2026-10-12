@@ -44,7 +44,7 @@ export function projectionObjectLabels(
       estimate: [86, 18],
       node: (
         <span className={styles.objectLabel} data-object-label="target">
-          Authored target
+          Model target
         </span>
       ),
     },

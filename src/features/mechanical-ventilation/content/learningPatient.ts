@@ -13,7 +13,7 @@ export const ventilationLearningPatient: VentilationCaseDefinition = {
   difficulty: 'Foundation',
   predictedBodyWeightKg: 70,
   patientDescription:
-    'An authored adult with quiet respiratory muscles and uncomplicated passive mechanics.',
+    'An adult with quiet respiratory muscles and uncomplicated passive mechanics.',
   initialSettings: {
     ...base.initialSettings,
     mode: 'volume-ac',
@@ -71,7 +71,7 @@ export const ventilationLearningPatient: VentilationCaseDefinition = {
     },
   },
   visibleFindings: [
-    'Respiratory muscles are quiet in this authored example.',
+    'Respiratory muscles are quiet.',
     'Gas enters during inspiration and leaves passively during expiration.',
   ],
   branchOptions: ['passive'],

@@ -43,6 +43,9 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     ctx.font='11px system-ui';ctx.fillStyle='#dce3e8';ctx.strokeStyle='#76838d';ctx.lineWidth=1;
     const half=frame.controls.sectorAngleDeg*Math.PI/360,radius=Math.min(frame.height*.86,frame.width*.46/Math.sin(half)),apexY=frame.height*.075;
     for(let mm=10;mm<=frame.controls.depthMm;mm+=10){const r=radius*mm/frame.controls.depthMm,x=frame.width/2+Math.sin(half)*r,y=apexY+Math.cos(half)*r;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+6,y);ctx.stroke();ctx.fillText(`${mm}`,x+8,y+4);}
+    // Orientation dot, as on the processor: it sits on the proximal (cephalad) side of the image,
+    // which is image right here because the lateral axis is `cephalicImageAxis`.
+    ctx.fillStyle='#35d06a';ctx.beginPath();ctx.arc(frame.width/2+frame.width*.07,apexY+frame.height*.012,frame.width*.013,0,Math.PI*2);ctx.fill();
   },[frame]);
   useEffect(()=>{
     const element=overlay.current;if(!element||!frame||!volume)return;
@@ -76,7 +79,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   const change=(key:'depthMm'|'gainDb',value:number)=>act(key === 'depthMm' ? 'depth' : 'gain',()=>setControls(c=>({...c,[key]:value})));
   const discover = canDiscoverImage(guided?.config, assessment) && !!volume && !!frame && !error && !renderError;
   return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-acoustic-version={volume?.metadata.assetVersion} data-frame-id={frameId} data-frame-pose={frame ? JSON.stringify(frame.pose) : undefined}>
-    <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{held && guided?.config.linkedLesson ? 'Retained ultrasound' : selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
+    <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{held && guided?.config.linkedLesson ? 'Your image' : baseline ? 'Initial and current' : selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
       <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}{/* A guided lab that was not given the freeze control does not show one (EBUS-PRE-REVIEW-02,
           L14-4). It used to render permanently disabled in every guided lab, since none of them
           include `freeze`, which reads as a broken button rather than an absent capability. The
@@ -87,10 +90,11 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
       <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={overlay} aria-hidden="true" style={{pointerEvents:'none'}}/>
       {volume && <ImageDiscovery canvas={canvas} image={frame} labels={volume.metadata.labels} enabled={discover} />}
       {!frame&&<div className="simulator-ultrasound-message" role="status">{t(error??renderError??'Loading acoustic anatomy…')}</div>}
+      {frame&&<span data-orientation-dot style={{position:'absolute',width:1,height:1,overflow:'hidden',clipPath:'inset(50%)',whiteSpace:'nowrap'}}>{t('Green orientation dot at the upper right: the proximal (cephalad) side of the image.')}</span>}
       {frame&&<div className="simulator-ultrasound-readout">{held?t('Frozen'):`${frame.controls.frequencyMHz} MHz`} · {frame.controls.depthMm} mm · {frame.controls.gainDb} dB</div>}
       {!held&&contactQuality<.45&&<div className="simulator-ultrasound-coupling" role="status">{t('Poor coupling — bring the transducer to the airway wall')}</div>}
     </div>
-    {discover && <p className="guided-label">Hover or tap to name modeled tissue. Focus the image and use arrow keys to explore.</p>}
+    {discover && <p className="guided-label">Hover or tap the image to name a structure. Focus the image and use the arrow keys to explore.</p>}
     <div className="simulator-ultrasound-controls">
       <label>{t('Depth')} {controls.depthMm} mm<input aria-label={t('Ultrasound depth')} disabled={frozen || !allowed('depth')} type="range" min="15" max="70" step="1" value={controls.depthMm} onChange={e=>change('depthMm',Number(e.target.value))}/></label>
       <label>{t('Gain')} {controls.gainDb} dB<input aria-label={t('Ultrasound gain')} disabled={frozen || !allowed('gain')} type="range" min="-18" max="24" step="1" value={controls.gainDb} onChange={e=>change('gainDb',Number(e.target.value))}/></label>

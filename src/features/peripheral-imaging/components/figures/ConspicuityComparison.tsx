@@ -121,10 +121,10 @@ export function ConspicuityComparison() {
         ))}
       </div>
       <p className={styles.note}>
-        The dashed circle marks where the authored nodule projects: it is part-solid and faint on
-        any projection in this model. The model names density classes, not organs. Appearance alone
-        does not settle the cause, so use the context as well: the field size, the dose-rate readout
-        and the planning CT.
+        The dashed circle marks where the model nodule projects: it is part-solid and faint on any
+        projection in this model. The model names density classes, not organs. Appearance alone does
+        not settle the cause, so use the context as well: the field size, the dose-rate readout and
+        the planning CT.
       </p>
     </section>
   )

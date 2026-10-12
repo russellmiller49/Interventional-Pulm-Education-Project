@@ -214,13 +214,13 @@ async function main() {
         await frame.getByRole('button', { name: 'Show distal tip', exact: true }).click()
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-distal.png' })
         const beforeFlex = await evidence()
-        await frame.getByRole('button', { name: 'Demonstrate flexion', exact: true }).click()
+        await frame.getByRole('button', { name: 'Flex the tip', exact: true }).click()
         await expect.poll(async () => (await evidence())?.flexion).toBe(15)
         expect((await evidence())?.roll).toBe(beforeFlex?.roll)
         await frame.locator('.linked-canvas').screenshot({ path: out + '/scope-flexion.png' })
       }
       const beforeRotation = await evidence()
-      await frame.getByRole('button', { name: 'Demonstrate rotation', exact: true }).click()
+      await frame.getByRole('button', { name: 'Rotate the scope', exact: true }).click()
       await expect.poll(async () => (await evidence())?.roll).toBe(25)
       expect((await evidence())?.flexion).toBe(beforeRotation?.flexion)
       await expect.poll(async () => (await evidence())?.frameReady).toBe(true)
@@ -364,9 +364,7 @@ async function main() {
         .locator('.guided-workbench')
         .screenshot({ path: out + '/' + lesson.id + '-workbench.png' })
       await next()
-      await expect(
-        frame.getByRole('heading', { name: 'Retained ultrasound', exact: true }),
-      ).toBeVisible()
+      await expect(frame.getByRole('heading', { name: 'Your image', exact: true })).toBeVisible()
       await expect(frame.getByLabel('Inspect a structure')).toHaveCount(0)
       await expect(control).toBeDisabled()
       await expect(frame.locator('.linked-image-tooltip, .linked-image-hint')).toHaveCount(0)

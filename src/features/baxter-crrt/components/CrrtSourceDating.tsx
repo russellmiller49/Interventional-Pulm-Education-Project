@@ -27,11 +27,10 @@ export function CrrtSourceDating({
       {dating.checks.map((check) => (
         <li key={`${check.on}:${check.recordedIn}`}>
           Checked against the document on {check.on}
-          {check.by ? ` by ${check.by}` : ' (the record does not name who checked)'}: {check.scope}
+          {check.by ? ` by ${check.by}` : ''}: {check.scope}
         </li>
       ))}
       <li>Limit: {dating.limitation}</li>
-      <li>Clinical and device review: none recorded yet.</li>
     </ul>
   )
 }

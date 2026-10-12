@@ -154,8 +154,8 @@ export function markedIntervalLook(markerId: string, figure: InspectionFigureSta
   if (figure === 'open')
     return `Read all three traces at interval ${markerId}, marked on the captured breath in the Experiment panel. Interval ${markerId} stays where it is; the exploration cursor is yours to move to the interval you choose.`
   if (figure === 'captured')
-    return 'The result for this application is captured. Read the retained baseline and result.'
-  return `Start the experiment to capture the baseline breath for this application; interval ${markerId} is marked on it in the Experiment panel.`
+    return 'The result for this part is captured. Read the retained baseline and result.'
+  return `Start the experiment to capture the baseline breath for this part; interval ${markerId} is marked on it in the Experiment panel.`
 }
 
 export function ventilationExperimentStatus(session: LabSession): ExperimentStatus {

@@ -84,7 +84,7 @@ const DECLARATIONS: readonly CaseFigureDeclaration[] = [
     evidence: 'depicts-the-question',
     medium: 'teaching-model',
     label:
-      'Teaching model: CT-derived images with an authored nodule and a modeled catheter. Not a patient acquisition.',
+      'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
     basis:
       'The question asks what the reconstructed planes support. The figure shows a projection of the DTS model with its catheter in place, three planes that carry no catheter at any depth, and the planning CT through the lesion: the absence and the resemblance the answer rests on are on screen.',
   },
@@ -95,9 +95,9 @@ const DECLARATIONS: readonly CaseFigureDeclaration[] = [
     evidence: 'depicts-the-question',
     medium: 'teaching-model',
     label:
-      'Teaching model: CT context with an authored nodule and a modeled needle. Not a patient acquisition; the needle’s dimensions do not describe a real device.',
+      'Teaching model: CT context with a model nodule and a modeled needle. Not a patient acquisition; the needle’s dimensions do not describe a real device.',
     basis:
-      'The question asks which part of the needle lies where. The linked thin planes are drawn at an authored geometry whose window partly intersects the modeled lesion and whose tip lies beyond it, by the model’s own relationship readout.',
+      'The question asks which part of the needle lies where. The linked thin planes are drawn at a geometry whose window partly intersects the modeled lesion and whose tip lies beyond it, by the model’s own relationship readout.',
   },
   {
     identity: 'practice:staff-protection-practice-1:figure',

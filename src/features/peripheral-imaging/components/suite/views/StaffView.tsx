@@ -105,7 +105,7 @@ export function StaffPanels({ inputs }: { inputs: SuiteInputs }) {
       </p>
       <p>
         Floor contours show a relative 1/r² trend around the irradiated volume. Their shape has an
-        authored tube-side weighting; orientation moves the same gantry shown in the suite.
+        assumed tube-side weighting; orientation moves the same gantry shown in the suite.
       </p>
       <p>
         The numerical ratio compares horizontal distance in the schematic floor plan. Angular

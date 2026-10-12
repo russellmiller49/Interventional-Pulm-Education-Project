@@ -1,5 +1,8 @@
 import type { Lesson } from './types'
 import { question as q, matching, sequence } from './authoring'
+import { EBUS_NUMBERS } from './teachingNumbers'
+
+const N = EBUS_NUMBERS.value
 export const completeLessons: Lesson[] = [
   {
     id: 'difficult-acquisition',
@@ -12,7 +15,7 @@ export const completeLessons: Lesson[] = [
     paragraphs: [
       'When the image deteriorates, return to a sequence of questions: Is the airway position understood? Is the transducer coupled? Is the target framed and the image usable? Is the path acceptable? Is the needle tip visible? Change the factor that explains the observed failure.',
       'An unstable window, vascular interposition, or repeated nonrepresentative specimens may require a new approach or a different target. Repeatedly performing the same poorly visualized pass does not create diagnostic assurance.',
-      'Patient tolerance is part of the decision. Pause acquisition for worsening oxygenation, ventilation, hemodynamics, or other safety concerns and coordinate with the responsible team.',
+      'Patient tolerance is part of the decision. If oxygenation, ventilation or blood pressure worsens, stop sampling and correct that first.',
     ],
     checklist: [
       'Describe what failed.',
@@ -29,10 +32,13 @@ export const completeLessons: Lesson[] = [
       'difficulty-predict',
       'The scope view is stable and tissue echoes are present, but the target’s far border is outside the sector. What should be adjusted first?',
       ['The depth field', 'The acquisition problem is framing, rather than absent contact.'],
-      ['The specimen container', 'Handling does not change the displayed field.'],
       [
-        'The needle force',
-        'Force does not restore missing image context and should not substitute for it.',
+        'The gain setting',
+        'Gain brightens what is already displayed; it cannot show tissue beyond the bottom of the sector.',
+      ],
+      [
+        'The balloon inflation',
+        'More balloon improves coupling, which is already adequate here; it does not extend the field.',
       ],
     ),
     matching: matching(
@@ -41,7 +47,7 @@ export const completeLessons: Lesson[] = [
         ['Tissue echoes disappear with loss of wall contact', 'Re-establish coupling'],
         ['Far border is outside the sector', 'Adjust image depth'],
         ['Needle shaft visible but tip lost', 'Stop movement and recover tip visualization'],
-        ['Repeated blood-only samples', 'Reassess targeting, path, and acquisition with the team'],
+        ['Repeated blood-only samples', 'Sample a different part of the node, without suction'],
       ],
       'Troubleshooting starts with the observed failure. Repetition is useful only after the cause is addressed.',
     ),
@@ -53,20 +59,20 @@ export const completeLessons: Lesson[] = [
         'The same control or maneuver cannot solve every acquisition failure.',
       ],
       [
-        'To allow sampling before the image is restored',
-        'Safe imaging conditions still need to be established.',
+        'To work through every correction in a fixed order',
+        'The observed failure tells you which correction applies; running all of them costs time and patient tolerance.',
       ],
       [
-        'To guarantee the next pass will be diagnostic',
-        'Even a corrected approach has diagnostic limits.',
+        'To decide when adding suction will solve the problem',
+        'Suction addresses a scant aspirate; it does not fix lost contact, framing or a lost tip, and it worsens a bloody sample.',
       ],
     ),
     transfer: q(
       'difficulty-transfer',
       'A target remains behind an interposed vessel after several attempts to improve the window. What is the next step?',
       [
-        'Reassess whether another target or route can answer the clinical question',
-        'An inaccessible target needs an explicit plan and documentation.',
+        'Sample another node that answers the question, or use the esophageal route',
+        'A node hidden behind a vessel from the airway may be clear from the esophagus with the same scope, and another station may settle the stage. If neither does, record the target as not assessed.',
       ],
       [
         'Puncture through the vessel as a routine workaround',
@@ -84,98 +90,97 @@ export const completeLessons: Lesson[] = [
       'Document an inaccessible target and the next plan.',
     ],
     sources: ['ics2023', 'ers2026'],
-    boundary:
-      'Troubleshooting examples omit patient physiology and do not simulate rescue treatment or advanced sampling techniques.',
   },
   {
     id: 'complications-recovery',
     title: 'Recognize complications and plan recovery',
     topic: 'Complete',
     minutes: 7,
-    objective:
-      'Identify deterioration that requires stopping acquisition and prompt team assessment.',
+    objective: 'Make the first moves for bleeding and for falling oxygenation during EBUS-TBNA.',
     recall: 'A tissue target never takes priority over a deteriorating patient.',
     concept: 'Continue observing after the needle pass',
     paragraphs: [
-      'Monitor oxygenation, ventilation, hemodynamics, airway patency, and bleeding throughout the procedure. Worsening hypoxemia, significant bleeding, instability, or suspected injury should prompt cessation of sampling and coordinated assessment and support.',
-      'Complications can also present later. Persistent or worsening dyspnea, chest pain, fever, substantial hemoptysis, or other concerning symptoms after EBUS require timely clinical evaluation. Infection, including mediastinal infection, is uncommon but important.',
-      'Recovery and discharge depend on the patient, sedation or anesthesia, the procedure, and the local protocol. Communicate findings, complications, pending results, and specific return precautions, including whom to contact and when to seek urgent care.',
+      `Monitor oxygenation, ventilation, hemodynamics, airway patency, and bleeding throughout the procedure. Serious complications are uncommon: in the AQuIRE registry of 1,317 patients they occurred in ${N('complication-rate')}, and pneumothorax in ${N('pneumothorax-rate')}.`,
+      'When bleeding obscures the view, retract the needle into its sheath and keep the scope in the airway: it is your view, your suction and your tamponade. Suction, and give 100% oxygen. Press the tip of the scope, or the inflated balloon, against the puncture site and hold it there. If bleeding continues, instill cold saline and turn the patient bleeding side down. If it still continues, secure the airway and isolate the bleeding lung with a bronchial blocker or by intubating the other main bronchus. Call for help as soon as the first moves have not worked.',
+      'Complications can also present later. Persistent or worsening dyspnea, chest pain, fever, substantial hemoptysis, or other concerning symptoms after EBUS require timely clinical evaluation. Infection, including mediastinitis, is uncommon but important.',
+      'Before discharge, tell the patient what was found, what is pending and who will call with it. Give return precautions they can act on: fever, worsening chest pain, shortness of breath, or coughing up more than streaks of blood are reasons to be seen the same day.',
     ],
     checklist: [
-      'Stop acquisition for deterioration.',
-      'Call the team and assess airway, breathing, and circulation.',
-      'Provide a recovery and escalation plan.',
+      'Needle in, scope stays, suction and oxygen.',
+      'Pressure on the puncture site, then cold saline.',
+      'Bleeding side down; isolate the lung if it continues.',
     ],
     worked: {
       context:
         'Oxygenation worsens during sampling and does not promptly return to the preceding condition.',
       reasoning:
-        'Pause sampling, notify the team, and assess ventilation, oxygenation, and airway status. Continuing to obtain more tissue can delay needed support.',
+        'Stop sampling and retract the needle. Check the airway first: is the tube or mask seated, is there blood or secretion to suction, is the chest moving? Give 100% oxygen. If the saturation does not recover, take the scope out so it no longer occupies the airway, and ventilate.',
     },
     question: q(
       'recovery-predict',
-      'During a pass, substantial airway bleeding obscures the view. Which priority is appropriate?',
+      'During a pass, substantial airway bleeding obscures the view. What do you do first?',
       [
-        'Stop sampling and initiate the team’s airway and bleeding response',
-        'Patient stabilization and assessment precede further tissue acquisition.',
+        'Retract the needle, keep the scope in, suction and press on the site',
+        'The scope is your view, your suction and your tamponade. Retract the needle so it cannot injure the wall, suction to see, and hold pressure on the puncture site with the scope tip or the balloon. Cold saline and turning the patient bleeding side down come next.',
       ],
       [
         'Finish the planned passes before addressing the bleeding',
         'This delays management of an evolving airway threat.',
       ],
       [
-        'Increase image gain to improve the bronchoscopic view',
-        'Ultrasound gain does not clear blood from the airway.',
+        'Withdraw the scope to the trachea to clear the lens and reassess',
+        'Pulling back gives up the suction and the pressure on the puncture site, and lets blood run into the other lung.',
       ],
       true,
     ),
     sequence: sequence(
-      'Order the broad response priorities to procedural deterioration.',
+      'Order the response to bleeding that obscures the view.',
       [
-        'Stop the ongoing acquisition and alert the team',
-        'Assess and support airway, breathing, and circulation using the local response protocol',
-        'Reassess stability and the need to terminate or change the procedure',
-        'Document the event and communicate a monitored recovery and follow-up plan',
+        'Retract the needle into its sheath and keep the scope in the airway',
+        'Suction to keep a view and give 100% oxygen',
+        'Hold pressure on the puncture site, then instill cold saline',
+        'Turn the patient bleeding side down and isolate the lung if it continues',
       ],
-      'Assessment and support occur together as needed. This sequence states priorities, not a drug or rescue-device algorithm.',
+      'Each step keeps your view and protects the other lung. Call for help as soon as the first moves have not worked.',
     ),
     observation: q(
       'recovery-observe',
-      'Which outcome can the response checklist itself establish?',
+      'After pressure and cold saline the view clears and the saturation is stable. What do you do before any more sampling?',
       [
-        'The response priorities are identified',
-        'Choosing a plan in the course does not produce a physiological recovery.',
+        'Inspect the puncture site and both main bronchi',
+        'Confirm the bleeding has stopped and that no clot is obstructing an airway. Then decide whether the remaining passes are worth taking.',
       ],
-      ['That hypoxemia has resolved', 'Resolution requires real clinical observations.'],
       [
-        'That delayed complications are excluded',
-        'Recovery assessment cannot exclude every later complication.',
+        'Resume at the same site to finish the planned passes',
+        'The site has just bled. Look before you puncture it again.',
+      ],
+      [
+        'Withdraw and end the procedure without looking',
+        'A clot left in a main bronchus can obstruct it after you leave.',
       ],
     ),
     transfer: q(
       'recovery-transfer',
       'A patient reports fever and worsening chest discomfort after discharge following EBUS. What should the discharge plan support?',
       [
-        'Prompt clinical assessment for a possible complication',
-        'The timing and symptoms warrant evaluation rather than automatic reassurance.',
+        'Same-day assessment for mediastinitis or pneumothorax',
+        'Fever with chest discomfort after EBUS-TBNA raises concern for mediastinal infection, and new breathlessness for pneumothorax. Both need examination and imaging the same day.',
       ],
       [
-        'Reassurance that symptoms are always expected after EBUS',
-        'That assumption can delay recognition of infection or another complication.',
+        'Reassurance, since transient fever is common after bronchoscopy',
+        'Transient fever alone can follow bronchoscopy, but fever with worsening chest pain needs assessment for mediastinitis.',
       ],
       [
-        'Waiting for the pathology report before assessing symptoms',
-        'Pending pathology does not defer evaluation of deterioration.',
+        'An empirical oral antibiotic, with review at the results visit',
+        'Treating without examination and imaging can miss mediastinitis, an abscess or a pneumothorax.',
       ],
       true,
     ),
     takeaways: [
-      'Stop acquisition when patient safety requires it.',
-      'Recovery includes escalation instructions and result follow-up.',
+      'Bleeding: needle in, scope stays in, pressure on the site.',
+      'Give return precautions the patient can act on.',
     ],
-    sources: ['ics2023'],
-    boundary:
-      'This lesson is not an emergency treatment algorithm. Medication, hemostasis, airway rescue, monitoring, and discharge decisions follow current local protocols and responsible clinicians.',
+    sources: ['ics2023', 'aquire2013'],
   },
   {
     id: 'results-reporting',
@@ -189,7 +194,7 @@ export const completeLessons: Lesson[] = [
     concept: 'A result has a sampling context',
     paragraphs: [
       '“No malignant cells identified” must be interpreted with specimen representativeness, examined and sampled stations, pretest probability, and the remaining clinical question. Blood-only or otherwise nonrepresentative material is not equivalent to a representative negative node. An unexamined station has no tissue result.',
-      'After a negative systematic endosonographic staging examination, the 2026 ERS/ESGE/ESTS guideline no longer recommends routine add-on mediastinoscopy. This statement does not turn inadequate or incomplete sampling into a reliable negative examination. Discuss discordant findings, unassessed targets, and further diagnostic needs with the multidisciplinary team.',
+      'After a negative systematic endosonographic staging examination, the 2026 ERS/ESGE/ESTS guideline recommends against routine add-on confirmatory mediastinoscopy; it may still be considered when the risk of a false-negative result is high. This statement does not turn inadequate or incomplete sampling into a reliable negative examination. Discuss discordant findings, unassessed targets, and further diagnostic needs with the multidisciplinary team.',
       'Report the indication, relevant imaging, airway and ultrasound findings, stations examined and sampled, specimen handling and adequacy information, complications, and the follow-up plan. Identify who will reconcile final pathology and pending studies with the patient and referring team.',
     ],
     checklist: [
@@ -211,12 +216,12 @@ export const completeLessons: Lesson[] = [
         'Absence of malignant cells in uninformative material does not exclude disease in the target.',
       ],
       [
-        'The station is definitively free of malignancy',
-        'That conclusion exceeds the specimen evidence.',
+        'A true negative, if the needle was seen within the node',
+        'Seeing the needle in the node supports targeting, but the specimen itself must contain representative material.',
       ],
       [
-        'The entire staging examination is automatically positive',
-        'A nonrepresentative sample is not proof of malignancy either.',
+        'Negative for malignancy, with lower confidence',
+        'Without lymphoid or lesional material the specimen cannot be called negative at any confidence; it is nondiagnostic.',
       ],
     ),
     matching: matching(
@@ -245,12 +250,12 @@ export const completeLessons: Lesson[] = [
         'The report must enable the next clinical decision and result communication.',
       ],
       [
-        'It calls all completed procedures diagnostically successful',
-        'Procedural completion and diagnostic success are different.',
+        'It gives the short axis of every node that was sampled',
+        'Sizes are worth recording, but they do not tell the reader what was not assessed or who acts on the result.',
       ],
       [
-        'It removes inaccessible targets from the record',
-        'Those limitations are essential to interpretation.',
+        'It summarizes the mediastinum as positive or negative',
+        'A one-word summary hides unsampled and nonrepresentative stations, which the next decision depends on.',
       ],
     ),
     transfer: q(
@@ -273,8 +278,6 @@ export const completeLessons: Lesson[] = [
       'Negative, nonrepresentative, and unassessed are different.',
       'A complete report assigns the next action and its owner.',
     ],
-    sources: ['ers2026', 'ics2023'],
-    boundary:
-      'The case statements are authored examples. An individual next step requires the full clinical and pathological context.',
+    sources: ['ers2026', 'ics2023', 'aabip2025'],
   },
 ]

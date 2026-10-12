@@ -175,7 +175,7 @@ export function Monitor({
           data-projection-state={state}
           hidden={hidden}
           role="img"
-          aria-label="CT-derived teaching projection with authored target and tool"
+          aria-label="CT-derived teaching projection with model target and tool"
         >
           <div
             className={styles.monitorImage}

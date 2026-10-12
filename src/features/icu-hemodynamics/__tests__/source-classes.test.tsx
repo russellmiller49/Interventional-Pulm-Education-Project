@@ -8,7 +8,6 @@ import { criticalCareEvidenceById } from '@/features/critical-care/content/evide
 import { HemodynamicsSourceList } from '../components/stage/HemodynamicsSourceList'
 import { requireDerivedThresholdContext } from '../content'
 import {
-  HEMODYNAMICS_CLINICAL_REVIEW_LINE,
   HEMODYNAMICS_SOURCE_CLASS_LABELS,
   hemodynamicsSourceClassLabel,
   hemodynamicsSourceDateLine,
@@ -119,7 +118,7 @@ describe('hemodynamics source classes and identity', () => {
     }
   })
 
-  it('shows every source’s class, date, checks and missing clinical review while its claims are folded', () => {
+  it('shows every source’s class, date and checks, and no review status, while its claims are folded', () => {
     const { container, rerender } = render(
       <HemodynamicsSourceList records={hemodynamicsSources} claimsVisible={false} />,
     )
@@ -130,7 +129,8 @@ describe('hemodynamics source classes and identity', () => {
       const identity = item.querySelector('[data-source-identity]')?.textContent ?? ''
       expect(item.querySelector('small')?.textContent).toBe(hemodynamicsSourceClassLabel(record))
       expect(identity).toContain(hemodynamicsSourceDateLine(record))
-      expect(identity).toContain(HEMODYNAMICS_CLINICAL_REVIEW_LINE)
+      // Review status is project metadata; it is tracked in packets, not printed to learners.
+      expect(identity).not.toMatch(/clinical review of how this module uses it/i)
       for (const check of hemodynamicsSourceReviewMetadata(record.id).checks) {
         expect(identity).toContain(check.what)
       }
@@ -168,13 +168,14 @@ describe('hemodynamics source classes and identity', () => {
     ).toEqual(expected)
   })
 
-  it('cites only the teaching model for the simulator’s cardiac-index alarm boundaries', () => {
+  it('cites the teaching model, and the review its two cutoffs come from, for the simulator’s cardiac-index alarm boundaries', () => {
     const alarm = requireDerivedThresholdContext('ci-educational-alarm-boundaries')
     expect(alarm.classification).toBe('model-parameter')
     expect(alarm.statement).toBe(
-      'This simulator warns below 2.2 L/min/m² and alarms below 1.8 L/min/m².',
+      'This simulator warns below 2.2 L/min/m² and alarms below 1.8 L/min/m², the two cardiogenic-shock cutoffs.',
     )
-    expect(alarm.evidenceIds).toEqual(['icu-hemodynamics-model-v1'])
+    // The alarm is the model's; the two cutoffs it borrows are the review's.
+    expect(alarm.evidenceIds).toEqual(['icu-hemodynamics-model-v1', 'emcrit-rhc-supplied-2026'])
   })
 
   it('no longer frames “the catheter measures resistance” as a defensible reading', () => {

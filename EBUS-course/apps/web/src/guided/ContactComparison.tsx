@@ -141,21 +141,14 @@ export function ContactComparison({
       className="linked-contact-comparison"
       aria-label="Initial and current contact comparison"
     >
-      <h3>Tip and wall: initial / current</h3>
-      <p className="guided-label">
-        Close-ups sample the same model volume at each acquired transducer position. In each
-        close-up the near-black band is air in the lumen, the bright band is the airway wall and
-        the mid grey is tissue beyond it; the label leaders point to sampled model regions. Cyan
-        marks the calibrated transducer origin and scan direction; it is a locator, not a pressure
-        or balloon measurement. The grayscale images below are the actual two acquisitions.
+      <p className="guided-label linked-contact-legend">
+        Top: tip against the wall (dark = air, bright = airway wall, grey = tissue, cyan =
+        transducer). Bottom: the ultrasound image at that position.
       </p>
       <div>
         <ContactFrame frame={baseline} volume={volume} title="Initial" />
         <ContactFrame frame={current} volume={volume} title="Current" />
       </div>
-      <p className="guided-label">
-        The optical view can show the wall while the transducer still faces air.
-      </p>
     </section>
   )
 }

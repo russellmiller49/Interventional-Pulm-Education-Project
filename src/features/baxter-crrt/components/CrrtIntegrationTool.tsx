@@ -61,8 +61,7 @@ export function CrrtIntegrationTool({
       <h3>Current run and recorded observations</h3>
       <p className={styles.caption}>
         {crrtLearnRunLabels.integration} · clock {crrtLearnClock(s.simulationTimeSeconds)} · event{' '}
-        {run.session.timeline.length}. This exercise is a draft: clinical and device review has not
-        been done.
+        {run.session.timeline.length}.
       </p>
       {balanceTask ? (
         <>
@@ -80,10 +79,10 @@ export function CrrtIntegrationTool({
           >
             <summary>Patient starting context and applied prescription</summary>
             <p>
-              Synthetic starting findings: {number(p.bodyWeightKg)} kg; mean arterial pressure{' '}
+              Starting findings: {number(p.bodyWeightKg)} kg; mean arterial pressure{' '}
               {number(p.meanArterialPressureMmHg)} mmHg; heart rate {number(p.heartRatePerMinute)}
-              /min; modeled fluid overload {number(p.totalFluidOverloadMl)} mL. These are authored
-              starting values, not new measurements after each action.
+              /min; fluid overload {number(p.totalFluidOverloadMl)} mL. These are the values at the
+              start of the case.
             </p>
             <p>
               Applied modality: {crrtModalityLabel(s.circuit.modality)}. Blood flow{' '}
@@ -94,9 +93,7 @@ export function CrrtIntegrationTool({
             </p>
             <p>
               Anticoagulation in this prescription:{' '}
-              {crrtAnticoagulationWords[s.circuit.anticoagulation]}. Citrate/calcium dosing remains
-              unavailable without a reviewed local protocol. This run does not model citrate
-              metabolism or linked calcium laboratory trends.
+              {crrtAnticoagulationWords[s.circuit.anticoagulation]}.
             </p>
             <p>
               External intake {number(totalExternalInputRateMlHour(s.scenario.externalFluidRates))}{' '}
@@ -108,8 +105,7 @@ export function CrrtIntegrationTool({
           <p data-testid="integration-state">
             Delivery: {crrtDeliveryStateWords[s.device.deliveryState]}; blood pump{' '}
             {s.device.bloodPumpRunning ? 'running' : 'stopped'}; fluid pump{' '}
-            {s.device.fluidPumpsRunning ? 'running' : 'stopped'}. Active generic alert count:{' '}
-            {s.alarms.length}. No manufacturer priority or automatic response is inferred.
+            {s.device.fluidPumpsRunning ? 'running' : 'stopped'}. Active alarms: {s.alarms.length}.
           </p>
           {task.operation === 'integration-action' ? (
             <div className={styles.observation}>
@@ -154,8 +150,8 @@ export function CrrtIntegrationTool({
           {inspected ? (
             <p role="status" className={styles.observation}>
               {corrected
-                ? 'The authored regional correction has been applied. Read actual pump state and subsequent delivery before claiming that treatment is restored.'
-                : 'Authored inspection: a return-region restriction is verified. The case supplies no specific catheter, tubing or patient maneuver. Inspection itself has not changed the pressures or delivery.'}
+                ? 'The restriction has been cleared. Read the pump state and the delivery that follows before you call the treatment restored.'
+                : 'Inspection finds a restriction on the return side. Looking has not changed the pressures or the delivery; clearing it will.'}
             </p>
           ) : null}
           <div

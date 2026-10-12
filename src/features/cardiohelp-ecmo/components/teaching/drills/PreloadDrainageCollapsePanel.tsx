@@ -47,15 +47,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
       // asserted a juddering limb contradicted its own live signal row whenever it was not set.
       clinicalQuestion="This circuit's flow fell and began swinging while drainage pressure deepened and the limb juddered. Which side of the pump is the limitation on, and what does that make the first move?"
       boundaries={[
-        // Both conditions, because the engine requires both: `drainageChatter` is set only when the
-        // case is drainage-limited *and* pVen has passed the authored suction depth. Naming only the
-        // first made the flag look like a direct readout of being past capacity, so a learner who
-        // was past capacity with shallower suction would see no judder and conclude the panel was
-        // wrong about the case.
-        'The judder is a flag this simulation switches on only once demand has passed the drainage this case can supply and the suction has deepened past a pressure this model picks, not a rendering of how a real drainage line kicks. The numbers around it come from simplified response curves.',
-        'This simulation offers no number for how negative drainage pressure may become before it matters, because that value depends on cannula size, patient size, and configuration. The console does carry adjustable pressure limits, but those are device alarm limits rather than a taught cut point.',
-        'How much drainage this case can supply is a quantity this simulation authors, and everything past it — the flow that stops rising, the deepening suction, the judder — follows from that one number. It is a teaching quantity chosen to make the relationship visible, not a measurement and not a flow any real patient is limited to.',
-        'Echocardiography, imaging of cannula position, and the volume picture decide this at the bedside, and none of the three is reproduced here. The single corrective action in this lab stands for all of them.',
+        'The line judders here only past a suction depth this model picks, and the drainage this case can supply is fixed. At the bedside the line can chatter earlier, and volume, cannula position and echo are separate steps; here one corrective step stands for all three.',
       ]}
     >
       <SignalRegister
@@ -250,7 +242,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
         </HarmfulReflex>
 
         {/*
-          Inside the gate: the authored interpretation of the drainage-pressure guide states the
+          Inside the gate: the interpretation of the drainage-pressure guide states the
           mechanism in as many words, so a learner scrolling the panel before choosing would meet
           the answer in a reference block.
         */}
@@ -260,8 +252,8 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
           </h3>
           <TextEquivalent>
             Drainage pressure, circuit blood flow, and the transmembrane gradient with their
-            authored interpretations. Each shows no value rather than an invented one where the
-            channel is not reporting.
+            interpretations. Each shows no value rather than an invented one where the channel is
+            not reporting.
           </TextEquivalent>
           <div className="mt-3 grid gap-3">
             <GuidedValue

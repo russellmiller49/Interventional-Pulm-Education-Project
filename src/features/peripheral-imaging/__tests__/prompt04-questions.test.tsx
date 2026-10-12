@@ -287,7 +287,7 @@ describe('practice case 9 keeps its id and loses what the model cannot support (
     expect(key).toMatch(/deliberately contains the modeled catheter/)
     expect(key).toMatch(/the three planes match the planning CT and contain no catheter/)
     expect(key).toMatch(/In this model, planes reconstructed from the current acquisition/)
-    expect(key).toMatch(/in this authored example, the planes were drawn from the planning CT/)
+    expect(key).toMatch(/in this example, the planes were drawn from the planning CT/)
     // What it does not claim.
     expect(key).toMatch(
       /catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system/,

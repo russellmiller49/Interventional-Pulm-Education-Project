@@ -132,6 +132,19 @@ export function orderControlsForDevice<T extends { key: VentilatorControlKey }>(
     .map((entry) => entry.control)
 }
 
+/**
+ * Said once above a console's grouped controls (MV-PRE-REVIEW-04, S3-2).
+ *
+ * On the Hamilton C6 facsimile the Peak flow tile sits in the group headed "Oxygenation", and a
+ * learner read the headings as this module's teaching categories. The grouping is registered from
+ * the operator's manual figures (see the profile's `displayNote`); the manual was not available to
+ * re-check where Peak flow sits, so the grouping is left exactly as registered and held for device
+ * review. What is corrected is the inference: a heading on a manufacturer's menu is not this
+ * module's statement of what a control does.
+ */
+export const VENTILATOR_CONTROL_GROUP_NOTE =
+  'These headings are the console’s own menu groups, as registered from its manual. They are not this module’s teaching categories: where a tile sits does not say what the control changes. Flow and inspiratory time shape the timing of the breath.'
+
 /** Split ordered controls into the vendor's on-screen groups, dropping groups with no members. */
 export function groupControlsForDevice<T extends { key: VentilatorControlKey }>(
   display: VentilatorDisplayProfile,

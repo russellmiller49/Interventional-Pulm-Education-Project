@@ -172,28 +172,6 @@ describe('ECMO circuit segment model', () => {
       resolveEcmoModeText(drainage.detail, 'va'),
     )
   })
-
-  it('carries no number a learner could read as a target', () => {
-    const strings = [
-      ...ecmoCircuitSegments.flatMap((segment) =>
-        (['vv', 'va'] as const).flatMap((mode) => [
-          resolveEcmoModeText(segment.label, mode),
-          resolveEcmoModeText(segment.mapLabel, mode),
-          resolveEcmoModeText(segment.detail, mode),
-        ]),
-      ),
-      ...ecmoSensorSites.flatMap((site) => [
-        site.plainName,
-        site.deviceLabel,
-        site.stopLabel,
-        site.mapLabel,
-        site.measuredAt,
-        site.caution ?? '',
-      ]),
-      ...ecmoPressureZones.map((zone) => zone.label),
-    ]
-    for (const value of strings) expect(value).not.toMatch(/\d/)
-  })
 })
 
 describe('ECMO segment-to-scene anchors', () => {

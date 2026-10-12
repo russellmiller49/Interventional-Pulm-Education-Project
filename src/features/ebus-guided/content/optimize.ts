@@ -1,7 +1,7 @@
 import type { Lesson } from './types'
 import { question as q } from './authoring'
 const boundary =
-  'These controls select existing recorded ultrasound examples. Example numbers are specific to this teaching library, not recommended processor settings for patients.'
+  'The depth and gain values here belong to this recorded teaching set. Read the direction of the change, not the number.'
 export const optimizeLessons: Lesson[] = [
   {
     id: 'image-depth',
@@ -24,7 +24,7 @@ export const optimizeLessons: Lesson[] = [
       context:
         'At a shallow setting, the far border leaves the image. At a much deeper setting, the target becomes small on the screen.',
       reasoning:
-        'Increase depth enough to see the entire target, then remove unnecessary depth. For this recorded example, compare the 3–4 cm views with the 8 cm view; these are teaching examples, not universal targets.',
+        'Increase depth enough to see the entire target, then remove unnecessary depth. In this example, compare the 3–4 cm views with the 8 cm view; the right depth depends on the target.',
     },
     question: q(
       'depth-predict',
@@ -34,7 +34,10 @@ export const optimizeLessons: Lesson[] = [
         'Gain',
         'Gain changes echo brightness and cannot reveal tissue outside the displayed field.',
       ],
-      ['Calipers', 'Calipers measure positions within the image; they do not expand the field.'],
+      [
+        'Frequency',
+        'Frequency trades resolution against penetration; it does not change how much depth is displayed.',
+      ],
     ),
     lab: {
       kind: 'knobology',
@@ -67,12 +70,12 @@ export const optimizeLessons: Lesson[] = [
         'Framing should preserve the structures that matter to the intended path.',
       ],
       [
-        'Accept the cropped image because the node appears larger',
-        'Magnification does not justify losing important anatomical context.',
+        'Keep the shallow view and rely on Doppler to show the vessel',
+        'Doppler only interrogates what is inside the displayed field; a vessel beyond it is not assessed.',
       ],
       [
-        'Treat the missing vessel as absent',
-        'A structure outside the displayed field remains present.',
+        'Keep the shallow view, since the vessel was seen a moment ago',
+        'The path is planned on the current image; a vessel remembered from an earlier view is not being tracked.',
       ],
     ),
     diagram: 'ultrasound',
@@ -104,20 +107,23 @@ export const optimizeLessons: Lesson[] = [
       context:
         'A stable recording looks washed out at a high gain level. The nodal border is difficult to distinguish.',
       reasoning:
-        'Reduce gain while watching whether tissue detail returns. Then compare contrast separately. The teaching clips show these changes one control at a time; they do not synthesize all combinations.',
+        'Reduce gain while watching whether tissue detail returns. Then compare contrast separately.',
     },
     question: q(
       'gain-predict',
-      'A well-coupled image is globally bright after increasing gain. Which explanation best fits?',
+      'After a gain increase, a well-coupled image is uniformly bright and the nodal border is hard to see. Which explanation best fits?',
       [
         'Amplification changed the displayed echoes',
         'The acquisition setting changed; the tissue itself has not become more echogenic.',
       ],
       [
-        'Every structure became denser',
-        'A processor adjustment does not change tissue composition.',
+        'The balloon is adding reverberation artifact',
+        'Reverberation gives repeating bright lines near the transducer, not a uniform rise in brightness that follows the gain control.',
       ],
-      ['The depth field became shorter', 'Gain does not define the depth range.'],
+      [
+        'The tissue at this station is unusually echogenic',
+        'Brightness that rises everywhere with the gain control is a display setting; judge echogenicity once gain is corrected.',
+      ],
     ),
     lab: {
       kind: 'knobology',
@@ -153,12 +159,12 @@ export const optimizeLessons: Lesson[] = [
         'Absent coupling should be corrected before adjusting gain.',
       ],
       [
-        'Increase gain to its maximum and proceed to puncture',
+        'Increase gain until the node is visible, then puncture',
         'Amplifying a poorly coupled image does not establish safe real-time guidance.',
       ],
       [
-        'Classify the target as necrotic',
-        'Loss of the window prevents a reliable morphology assessment.',
+        'Increase depth to bring the node back into the field',
+        'Depth changes the displayed range; it cannot restore echoes lost because the transducer left the wall.',
       ],
       true,
     ),
@@ -246,8 +252,8 @@ export const optimizeLessons: Lesson[] = [
         'This is unsafe; absent color is not proof that a structure is avascular.',
       ],
       [
-        'Rename it a lymph node based on shape alone',
-        'Morphology alone does not settle uncertain vascular anatomy.',
+        'Raise the gray-scale gain to look for internal echoes',
+        'Gray-scale gain does not reveal flow; adjust the Doppler settings and trace the structure in continuity.',
       ],
       true,
     ),
@@ -257,7 +263,6 @@ export const optimizeLessons: Lesson[] = [
       'Absent color is not clearance for puncture.',
     ],
     sources: ['ics2023', 'simulation'],
-    boundary,
   },
   {
     id: 'capture',
@@ -290,12 +295,12 @@ export const optimizeLessons: Lesson[] = [
         'Calipers describe the displayed plane rather than a complete three-dimensional node.',
       ],
       [
-        'Freezing makes every slice equivalent',
-        'Freeze holds a frame; it does not correct the plane.',
+        'Calipers can only be placed on a live image',
+        'Calipers are placed on the frozen frame; what matters is which frame you freeze.',
       ],
       [
-        'Saving automatically validates station identity',
-        'A stored image still needs correct anatomical labeling.',
+        'Freezing rescales the image, so the depth must be rechecked',
+        'Freezing keeps the scale. The plane is reviewed because the size you measure depends on the section you froze.',
       ],
     ),
     lab: {
@@ -306,7 +311,7 @@ export const optimizeLessons: Lesson[] = [
       initialDepth: 40,
       initialGain: 43,
       instruction:
-        'Freeze image, choose Measure, move the first marker, and select Set first caliper. Move the second marker to a distinct position, then Save image. Inspect your captured frame. This practices controls; border placement is not scored as a clinical measurement.',
+        'Freeze image, choose Measure, move the first marker, and select Set first caliper. Move the second marker to a distinct position, then Save image. Inspect your captured frame.',
     },
     observation: q(
       'capture-observe',
@@ -341,6 +346,5 @@ export const optimizeLessons: Lesson[] = [
       'Dimension and station context belong in the record.',
     ],
     sources: ['ics2023', 'simulation'],
-    boundary,
   },
 ]

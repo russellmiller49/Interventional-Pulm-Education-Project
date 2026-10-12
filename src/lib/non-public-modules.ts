@@ -131,7 +131,8 @@ export const nonPublicModules: NonPublicModule[] = [
     path: '/learn/anatomy/branch-tracing',
     title: 'Bronchial Branch Tracing',
     group: 'Bronchoscopy',
-    summary: 'Trace bronchial branches through the airway tree.',
+    summary:
+      'At each airway fork, match the CT to the bronchoscopic view, identify the openings and drive toward a lesion.',
   },
   {
     path: '/peripheral-imaging',

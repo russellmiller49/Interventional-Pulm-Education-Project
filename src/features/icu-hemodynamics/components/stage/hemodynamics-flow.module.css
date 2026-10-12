@@ -35,6 +35,7 @@
 }
 .taskContent {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.2rem;
   min-width: 0;
 }
@@ -116,9 +117,29 @@
 .paired > * {
   min-width: 0;
 }
+/*
+ * The monitor stays beside the controls that act on it.
+ *
+ * On a flush task the right-hand column runs to the release tracing, the three choices and the
+ * repair, and the monitor that shows the flush scrolled out of view above an empty half-card
+ * (report L2-11). It now keeps its place while that column scrolls. Only where there is room: not in
+ * a single-column layout, not on a short viewport, and not while the held copy makes it taller than
+ * the space it would be pinned in — a pinned panel taller than the window can never be scrolled to
+ * its end.
+ */
+@media (min-width: 761px) and (min-height: 700px) {
+  .pairedLead:not(:has([data-held-view])) {
+    position: sticky;
+    top: calc(var(--site-header-height, 5rem) + 0.75rem);
+  }
+}
 .toolGroups {
   display: grid;
   gap: 0.75rem;
+}
+/* `display: grid` above would otherwise show a group the page has hidden. */
+.toolGroups[hidden] {
+  display: none;
 }
 .toolGroups > details {
   border: 1px solid var(--line);
@@ -165,6 +186,8 @@
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
   display: grid;
+  /* One column that is the width it is given, never the width of its widest word (below). */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   font-size: 1rem;
   line-height: 1.55;
@@ -210,11 +233,95 @@
 }
 .caseWorkspace {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   min-width: 0;
 }
 .caseWorkspace > .paired {
   grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
+}
+/*
+ * The Practice case fits the window it is in (sanity review of HD-PRE-REVIEW-03, P-03).
+ *
+ * The case is one implicit grid column, and an implicit column is as wide as the least its widest
+ * item can be. At 390 px with text enlarged to 200 % that was the before-and-current table: 459 px,
+ * so every block in the case — the title, the checkpoints, the Return button — was drawn 459 px wide
+ * in a 390 px window and the whole page scrolled sideways by 101 px. Keeping the measurement tools
+ * open while a response is observed then put their own unshrinkable content inside that column and
+ * took the page to 161 px.
+ *
+ * Three rules:
+ *   1. the column and the workbench columns take the width they are given;
+ *   2. text that can wrap inside a word does so before it pushes its card wider;
+ *   3. an opened tool whose content cannot narrow further scrolls sideways inside its own frame,
+ *      so it is the tool that scrolls and never the page.
+ * None of them has an effect while the content fits, which it does at every width at 100 % text.
+ */
+.caseFlow > * {
+  min-width: 0;
+}
+.caseFlow > header,
+.caseFlow .caseBrief,
+.caseFlow .caseTask {
+  overflow-wrap: anywhere;
+}
+.caseWorkspace > .toolGroups {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.caseWorkspace > .toolGroups > details {
+  min-width: 0;
+}
+.caseWorkspace > .toolGroups > details > :not(summary) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+/*
+ * A before-and-current table, when there is no room for three columns.
+ *
+ * Practice's "Before action and current response" and Learn's "Reference and current result" are
+ * the same three-column table. Under 14 rem of card (a phone with text at 200 %; never a phone at
+ * 100 %) its columns would either run off the card — taking the Current column, the one the step is
+ * about, out of view, and the page sideways with it — or break every word in two. Each observation
+ * becomes a short block instead: its name, then each value on its own line with its column's name
+ * in front of it. The width is measured in rem on the card itself, so it follows the reader's text
+ * size, which a media query does not.
+ */
+.comparison {
+  container: hd-comparison / inline-size;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.comparison > :where(h2, h3, p) {
+  overflow-wrap: anywhere;
+}
+@container hd-comparison (max-width: 14rem) {
+  .comparison :where(table, tbody, tr, th, td) {
+    display: block;
+  }
+  /* Still the table's header row for a screen reader; each value carries its column name in sight. */
+  .comparison thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .comparison tbody tr {
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .comparison tbody :where(th, td) {
+    padding: 0.15rem 0;
+    border-bottom: 0;
+    overflow-wrap: anywhere;
+  }
+  .comparison td[data-column]::before {
+    content: attr(data-column) ': ';
+    color: var(--muted);
+    font-weight: 650;
+  }
 }
 .caseDebrief {
   background: #0e252d;
@@ -256,4 +363,74 @@
   .caseTask [aria-label='Bounded simulated interventions'] {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The case's checkpoints as a visible row of steps; the current one is marked, none is hidden. */
+.caseSteps {
+  display: grid;
+  gap: 0.35rem;
+}
+.caseSteps > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.caseSteps nav {
+  margin: 0;
+}
+.caseSteps nav button {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  text-align: left;
+}
+.caseSteps nav button > span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  opacity: 0.8;
+}
+.caseSteps nav button[aria-current='step'] {
+  border-color: var(--cyan-bright);
+  box-shadow: inset 0 -3px 0 var(--cyan-bright);
+  font-weight: 700;
+}
+.caseSteps nav button:focus-visible,
+.caseTask button:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+/*
+ * Sources, opened in the page.
+ *
+ * The shared footer floats its list over whatever is above it — right for a lesson held in fixed
+ * panes, wrong for this one, which is a scrolling document: the list landed on "Tasks in this
+ * section" and the tasks could not be reached until it was closed (report L1-05). Here it opens in
+ * place beneath the lesson, where it covers nothing and scrolls with the page. The shared component
+ * is untouched and still supplies the disclosure, Escape-to-close and the return of focus to its
+ * trigger; only where its list is laid out changes, and only inside this module.
+ */
+/*
+ * And it wraps. A citation is one long line with a DOI in it; on a phone with enlarged text the list
+ * ran past the window and took the page with it (measured with PR #321's phone check, which that
+ * branch passed and this one did not).
+ */
+.references {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.references :global([data-stage-sources]),
+.references :global([data-stage-sources]) * {
+  min-width: 0;
+  max-width: 100%;
+}
+.references :global([data-stage-sources]) > div {
+  position: static;
+  z-index: auto;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  margin-top: 0.5rem;
+  box-shadow: none;
+  backdrop-filter: none;
 }

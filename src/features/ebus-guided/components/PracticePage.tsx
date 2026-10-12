@@ -77,7 +77,7 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
                     : 'Your acquisition differs from the target for this teaching example.'}
                 </p>
                 <p>{lesson.worked.reasoning}</p>
-                <p>{lesson.boundary}</p>
+                {lesson.boundary && <p>{lesson.boundary}</p>}
                 <button className={styles.secondary} onClick={() => choose(lesson.id)}>
                   Try again
                 </button>
@@ -111,11 +111,11 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
               <section className={styles.card} data-lab-example>
                 <h2>Teaching example</h2>
                 <p className={styles.muted}>
-                  Shown on request. This describes the authored example; it is not your acquisition.
+                  Shown on request. This is the worked example, not your acquisition.
                 </p>
                 <p>{lesson.worked.context}</p>
                 <p>{lesson.worked.reasoning}</p>
-                <p>{lesson.boundary}</p>
+                {lesson.boundary && <p>{lesson.boundary}</p>}
               </section>
             )}
           </>

@@ -110,7 +110,7 @@ function input(
 
 const MEASURED_PRESSURE_NOTE = 'From the leveled, zeroed system validated earlier in this pathway.'
 const CHARTED_BSA_NOTE =
-  'Calculated by the charting system from an entered height and weight; this module consumes the recorded value with that provenance.'
+  'Calculated by the charting system from an entered height and weight (DuBois).'
 
 export const derivedMeasurementEpisodes: readonly DerivedMeasurementEpisode[] = Object.freeze([
   /* ------------------------------------------------------------------ *

@@ -58,7 +58,6 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
         <li>Use patient, prescription, circuit, pressure, and alert cues together.</li>
         <li>Use hints, explore the simulation, or continue without answering.</li>
       </ul>
-      <small>Educational simulation only; not patient-specific device or treatment guidance.</small>
     </div>
   )
 

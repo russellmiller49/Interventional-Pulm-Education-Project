@@ -14,21 +14,24 @@ const frame = (roll: number, visible: boolean, contact = 1) => ({
   contact,
   frameId: 'frame-' + roll,
 })
-const cross = () =>
-  [frame(40, false), ...[30, 20, 10, 0, -10].map((r) => frame(r, true)), frame(-20, false)].reduce(
-    sampleLinkedSweep,
-    emptyLinkedSweep(),
+it('completes a sweep on 20° of rotation that showed the node, whatever the step size or direction', () => {
+  const run = (frames: ReturnType<typeof frame>[]) =>
+    frames.reduce(sampleLinkedSweep, emptyLinkedSweep())
+  // One slider drag: a single large step from a plane without the node onto it.
+  expect(run([frame(85, false), frame(40, true)])).toMatchObject({ phase: 'complete', span: 45 })
+  // Small steps, back and forth.
+  expect(run([frame(10, true), frame(18, true), frame(4, true)])).toMatchObject({
+    phase: 'crossing',
+    span: 14,
+  })
+  expect(run([frame(10, true), frame(18, true), frame(4, true), frame(24, true)]).phase).toBe(
+    'complete',
   )
-it('requires a gradual one-direction crossing with several actual planes and both edges', () => {
-  expect(sampleLinkedSweep(emptyLinkedSweep(), frame(0, true)).phase).toBe('find-edge')
-  expect(cross()).toMatchObject({ phase: 'complete', samples: 5, span: 40 })
-  let sweep = sampleLinkedSweep(emptyLinkedSweep(), frame(40, false))
-  sweep = sampleLinkedSweep(sweep, frame(30, true))
+  // Rotation that never showed the node does not count, and neither does a frame without contact.
+  expect(run([frame(90, false), frame(40, false)]).phase).toBe('find-edge')
+  expect(run([frame(10, true), frame(40, true, 0.2)])).toMatchObject({ phase: 'crossing', span: 0 })
+  const sweep = sampleLinkedSweep(emptyLinkedSweep(), frame(30, true))
   expect(sampleLinkedSweep(sweep, frame(30, true))).toBe(sweep)
-  expect(sampleLinkedSweep(sweep, frame(-20, false)).phase).toBe('find-edge')
-  expect(sampleLinkedSweep(sweep, frame(40, false)).phase).toBe('find-edge')
-  expect(sampleLinkedSweep(sweep, frame(20, true, 0.2)).phase).toBe('find-edge')
-  expect(emptyLinkedSweep().phase).toBe('find-edge')
 })
 it('stores current task evidence separately, with actual source settings and interpretation, without upgrading old completion', () => {
   const lesson = LESSONS.find((l) => l.id === 'station-seven')!

@@ -16,6 +16,7 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 import { McsStageHost } from '../components/stage/McsStageHost'
 import { McsSourcesPanel } from '../components/McsSourcesPanel'
 import { McsCaseWorkflow } from '../components/McsCaseWorkflow'
+import { McsMonitor } from '../components/McsMonitor'
 import { mcsActionDisplayName, mcsHasActionDisplayName } from '../content/actionDisplayNames'
 import { mcsCasePredictionReasoning } from '../content/casePredictionReasoning'
 import { mcsScenarioById } from '../content/scenarios'
@@ -77,13 +78,15 @@ it('clears sort answers when Try again says it does', () => {
     expect(select).toHaveValue('')
 })
 
-it('keeps the synthesis hold visible on an unmapped section without opening sources', () => {
+it('renders no review status or packet id on a section', () => {
   mountSection('mcs-device-selection-integration')
-  const notice = screen.getByText(/MCS-03-10.*NOT REVIEWED.*source-owner review required/i)
-  expect(notice.closest('details')).toBeNull()
+  expect(
+    screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
+  ).not.toBeInTheDocument()
+  expect(document.querySelector('[data-source-review-hold]')).toBeNull()
 })
 
-it('keeps the synthesis hold visible in an unmapped practice case before explanation', () => {
+it('renders no review status or packet id in a practice case before explanation', () => {
   const scenario = mcsScenarioById.get('IABP-03')!
   render(
     <McsCaseWorkflow
@@ -91,8 +94,10 @@ it('keeps the synthesis hold visible in an unmapped practice case before explana
       dispatch={jest.fn()}
     />,
   )
-  const notice = screen.getByText(/MCS-03-10.*NOT REVIEWED.*source-owner review required/i)
-  expect(notice.closest('details')).toBeNull()
+  expect(
+    screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
+  ).not.toBeInTheDocument()
+  expect(document.querySelector('[data-source-review-hold]')).toBeNull()
 })
 
 it('orders the hub citations by opened evidence before unopened guidelines', () => {
@@ -126,6 +131,36 @@ it('does not call CAP-LVAD-01 power unchanged when constrained filling lowers de
   )
 })
 
+it('renders CAP-LVAD-01 power connection separately from its lower modeled pump watts', () => {
+  const scenario = mcsScenarioById.get('CAP-LVAD-01')!
+  const state = advanceMcsSimulation(createInitialMcsState('assess', 'lvad', scenario, 417), 8)
+  const reference = advanceMcsSimulation(createInitialMcsState('assess', 'lvad', null, 417), 8)
+  const { container } = render(
+    <McsCaseWorkflow
+      state={state}
+      dispatch={jest.fn()}
+      observations={<McsMonitor state={state} />}
+    />,
+  )
+
+  expect(screen.getByText('Patient problem').nextElementSibling).toHaveTextContent(
+    'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; pump speed is unchanged and the power path remains connected.',
+  )
+  expect(state.device).toEqual(reference.device)
+  expect(state.device.kind === 'lvad' && state.device.powerConnected).toBe(true)
+  expect(state.metrics.pumpPowerW).toBeLessThan(reference.metrics.pumpPowerW!)
+  // Constrained filling lowers the pulsatility index as well as the watts.
+  expect(state.metrics.pulsatilityIndex!).toBeLessThan(reference.metrics.pulsatilityIndex!)
+  expect(
+    container.querySelector('[data-monitor-target="monitor:power-pulsatility"]'),
+  ).toHaveTextContent(
+    `POWER / PI${state.metrics.pumpPowerW!.toFixed(1)} / ${state.metrics.pulsatilityIndex!.toFixed(1)}W / estimate`,
+  )
+  expect(
+    screen.getByRole('radio', { name: 'Pericardial constraint limits biventricular filling' }),
+  ).toBeInTheDocument()
+})
+
 it.each(['future:control', 'toString', 'constructor', '__proto__'])(
   'uses the neutral unknown-action fallback for %s',
   (id) => {
@@ -144,11 +179,16 @@ it('does not invent a fixed-level reference history for IMP-03', () => {
   expect(mcsCasePredictionReasoning('IMP-03', 'normal')).not.toMatch(/unchanged level/)
 })
 
-it('shows the source hold on the optional preparatory reference before entering the model', () => {
+it('renders no review status on the optional preparatory reference or after entering the model', () => {
   render(<McsStageHost sectionId="impella-suction-purge-rv" />)
   expect(document.querySelector('[data-prerequisite-reference]')).not.toBeNull()
-  const notice = screen.getByText(/MCS-03-10.*NOT REVIEWED.*source-owner review required/i)
-  expect(notice.closest('details')).toBeNull()
+  expect(
+    screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
+  ).not.toBeInTheDocument()
+  expect(document.querySelector('[data-source-review-hold]')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Continue to the model' }))
-  expect(document.querySelectorAll('[data-source-review-hold]')).toHaveLength(1)
+  expect(
+    screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
+  ).not.toBeInTheDocument()
+  expect(document.querySelector('[data-source-review-hold]')).toBeNull()
 })

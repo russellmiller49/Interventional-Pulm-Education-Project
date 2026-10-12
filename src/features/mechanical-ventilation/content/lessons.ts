@@ -1,3 +1,4 @@
+import { VENTILATION_NUMBERS } from './teachingNumbers'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 
 export interface VentilationLessonChoice {
@@ -889,9 +890,8 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
           'Hold maneuvers assume a relaxed patient. Reported values from an actively breathing patient are not interpretable as mechanics.',
       },
       {
-        title: 'Clinical boundary',
-        summary:
-          'Numeric thresholds and corrective protocols are deliberately not supplied here; they belong to the module content pass and to local policy.',
+        title: 'The limits in ARDS',
+        summary: `Tidal volume ${VENTILATION_NUMBERS.value('vt-ards-goal')}, plateau pressure ${VENTILATION_NUMBERS.value('pplat-limit')}, driving pressure ${VENTILATION_NUMBERS.value('driving-pressure-limit')}.`,
       },
     ],
   }),

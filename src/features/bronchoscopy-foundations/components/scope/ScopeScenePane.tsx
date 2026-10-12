@@ -33,10 +33,21 @@ export function ScopeScenePane(props: ScopePaneProps) {
 const PAUSED_SCENE_NOTE =
   'The scripted scene is held while motion is reduced. Step one second moves it on, one second at a time.'
 
-function ScopeDockWithClock(props: ScopePaneProps & { needsStep: boolean }) {
+/** Said while the controls wait for the first drawn frame, so a pressed control is not silent. */
+const LOADING_CONTROLS_NOTE =
+  'The 3D view is still loading. The controls open when it has drawn; nothing you press before then is counted.'
+
+function ScopeDockWithClock(
+  props: ScopePaneProps & { needsStep: boolean; sceneLoading?: boolean },
+) {
   const keys = scopeKeyboardHint(props.view.controls)
   return (
     <>
+      {props.sceneLoading ? (
+        <p className={styles.scriptClock} role="status" data-scope-controls-waiting>
+          {LOADING_CONTROLS_NOTE}
+        </p>
+      ) : null}
       {props.needsStep ? (
         <p className={styles.scriptClock} role="status" data-scripted-scene="held">
           {PAUSED_SCENE_NOTE}
@@ -54,7 +65,9 @@ function ScopeDockWithClock(props: ScopePaneProps & { needsStep: boolean }) {
 
 function ScenePane(props: ScopePaneProps) {
   const root = useRef<HTMLDivElement>(null)
-  const playbackRoot = useRef<HTMLDivElement>(null)
+  // Held as state, not a ref: the 3D view and the schematic view mount different elements here,
+  // and the visibility observer has to follow whichever is on the page (BF-01 finding 3).
+  const [playbackRoot, setPlaybackRoot] = useState<HTMLDivElement | null>(null)
   const lastMove = useRef(0)
   const [schematic, setSchematic] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
@@ -103,7 +116,7 @@ function ScenePane(props: ScopePaneProps) {
       aria-label="Interactive scope workspace"
     >
       {schematic ? (
-        <div ref={playbackRoot}>
+        <div ref={setPlaybackRoot}>
           <p role="status">Schematic view. Use the airway map and controls to continue.</p>
           <button
             type="button"
@@ -154,7 +167,7 @@ function ScenePane(props: ScopePaneProps) {
                 data-bench={props.state.place === 'bench' ? 'true' : undefined}
                 data-visual-tab={visualTab}
               >
-                <div className={styles.scopeColumn} ref={playbackRoot}>
+                <div className={styles.scopeColumn} ref={setPlaybackRoot}>
                   <Scene
                     {...props}
                     controlsEnabled={enabled}
@@ -191,6 +204,7 @@ function ScenePane(props: ScopePaneProps) {
               {...props}
               controlsEnabled={enabled}
               needsStep={playback.needsStep}
+              sceneLoading={props.controlsEnabled && status === 'loading'}
             />
           }
         />

@@ -21,6 +21,7 @@ import {
   type PulsatileShapeOptions,
   type VentricularShapeOptions,
 } from '../engine/waveformMorphology'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export type WaveformTraceSpec =
   | {
@@ -124,6 +125,12 @@ export interface WaveformAtlasEntry {
   readonly recognitionCues: readonly string[]
   readonly pitfall: string | null
   readonly sourceIds: readonly string[]
+  /**
+   * What this drawing does not show of the pattern it is named for. Printed with the labelled
+   * figure, because a schematic that looks complete is read as complete: the rhythm-defined
+   * patterns here are drawn at an even rate with no rhythm strip (report L4-02).
+   */
+  readonly renderingLimit?: string
 }
 
 const RA_ANNOTATIONS: readonly WaveformAnnotation[] = [
@@ -512,6 +519,9 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
         xDescentMmHg: 0.15,
         vWaveMmHg: 9,
         yDescentMmHg: 3.4,
+        // The c and v waves are one wave here: with separate bumps the pressure fell back to the
+        // baseline between them, and the "x lost" label pointed at that fall (report L4-04).
+        systolicFusion: true,
       },
       landmarks: 'right-atrial',
     },
@@ -541,6 +551,8 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     pitfall:
       'Read right ventricular end-diastolic pressure from the phasic tracing at the ECG R wave rather than from the displayed mean. Significant tricuspid regurgitation also degrades thermodilution cardiac output, because cold injectate refluxes back into the atrium.',
     sourceIds: ['pac-review-2014', 'pac-derived-part-2-2021'],
+    renderingLimit:
+      'One schematic of the pattern, drawn in sinus rhythm with the c and v waves joined into a single systolic wave. It is an example, not what every tricuspid-regurgitation tracing looks like.',
   },
   {
     id: 'ra-cannon-a-wave',
@@ -584,6 +596,8 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     pitfall:
       'A cannon wave is narrow and peaked; a v wave is broad and rounded. Confusing the two leads to a false diagnosis of tricuspid regurgitation. Cannon waves also inflate the mean right atrial pressure and can prompt unnecessary treatment of an apparently high filling pressure.',
     sourceIds: ['pac-review-2014', 'clinical-hemodynamics-waveforms'],
+    renderingLimit:
+      'Drawn on every beat, at an even rate, with no rhythm strip. With atrioventricular dissociation cannon waves come at irregular intervals, only when an atrial contraction meets a closed valve; this schematic shows the shape of the wave, not that timing.',
   },
   {
     id: 'ra-atrial-fibrillation',
@@ -643,6 +657,8 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     pitfall:
       'A wedge tracing in atrial fibrillation also loses its a wave, so the usual "well-defined a and v waves" check for a true wedge cannot be applied.',
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
+    renderingLimit:
+      'Drawn with evenly spaced beats and no rhythm strip. The irregular R–R intervals of atrial fibrillation, and the beat-to-beat change in the waves they cause, are not modeled; this schematic shows the missing a wave only.',
   },
   {
     id: 'rv-prominent-a-wave',
@@ -713,10 +729,9 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     recognitionCues: [
       'Atrial wave components cannot be made out — the defining feature.',
       'The trace wavers and drifts upward over seconds rather than settling on a stable mean.',
-      'The pressure often sits above the pulmonary artery diastolic pressure. That relationship is a warning to reconcile the two readings; on its own it does not establish over-wedging, and a large v wave can raise a genuine occlusion mean without the end-diastolic value moving with it.',
+      'The pressure often sits above the pulmonary artery diastolic pressure. A large v wave can do the same to a true wedge mean, so look for the waves.',
     ],
-    pitfall:
-      'This is a potentially fatal warning sign. Pulmonary-artery rupture associated with a balloon-tipped catheter has a reported mortality range of roughly 30–70%. Deflate immediately, stop manipulating or flushing the catheter, and reassess/reposition only under appropriate supervision.',
+    pitfall: `Deflate at once and do not flush. ${capitalize(HEMODYNAMICS_NUMBERS.value('overwedge-volume'))}: withdraw until the pulmonary-artery tracing returns. Pulmonary-artery rupture carries a mortality of ${HEMODYNAMICS_NUMBERS.value('pa-rupture-mortality')}.`,
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -754,7 +769,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'Paired oximetry can help: a valid occlusion sample should approach the simultaneous systemic arterial saturation; persistent mixed-venous admixture supports incomplete occlusion.',
     ],
     pitfall:
-      'This artifact falsely elevates the wedge and can misclassify pulmonary hypertension. Deflate immediately, return to a confirmed PA signal, and reassess catheter position and occlusion under appropriate supervision; do not advance or withdraw solely to chase a number.',
+      'This artifact falsely elevates the wedge and can misclassify pulmonary hypertension. Deflate, return to a confirmed PA signal, and reposition before wedging again. Do not add air beyond the full volume.',
     sourceIds: ['clinical-hemodynamics-waveforms'],
   },
 ]
@@ -777,4 +792,8 @@ export const arterialReferenceTrace: WaveformTraceSpec = {
   systolicMmHg: 120,
   diastolicMmHg: 70,
   shape: SYSTEMIC_ARTERIAL_SHAPE,
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }

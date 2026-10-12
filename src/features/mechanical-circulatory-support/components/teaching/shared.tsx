@@ -3,8 +3,10 @@ import type { ReactNode } from 'react'
 import { DerivedValueReadout } from '@/features/critical-care/components/teaching/EvidenceRenderers'
 import type { CriticalCareDerivedValueGuide } from '@/features/critical-care/content/derivedValueGuides'
 
+import { MCS_NUMBERS, type McsNumberId } from '../../content/teachingNumbers'
 import type { McsAlarm } from '../../engine/types'
 import {
+  MCS_DISPLAY_DEADBANDS,
   MCS_UNMODELED_ORGAN_SIGNALS,
   mcsAlarmPriorityWords,
   mcsDirectionMarks,
@@ -108,7 +110,7 @@ export function PanelSection({
 }
 
 /* ------------------------------------------------------------------ *
- * Text equivalent, model boundary, figure scope
+ * Text equivalent, simulator-value note, figure caption
  * ------------------------------------------------------------------ */
 
 /**
@@ -131,44 +133,83 @@ export function TextEquivalent({ children }: { readonly children: ReactNode }) {
   )
 }
 
-/** What the figure beside it simplifies or does not represent. */
+/** The author named in each short citation, keyed by the register's source id. */
+const MCS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
+  'impella-cp-ifu-rev-v-supplied': 'Impella CP instructions for use',
+  'impella-55-ifu-rev-l-supplied': 'Impella 5.5 instructions for use',
+  'TEXT-CASE-BASED-LVAD-INPATIENT-2021': 'Steiner & Tran',
+  'TEXT-CASE-BASED-LVAD-OUTPATIENT-2021': 'Yousefzai & Urey',
+  'TEXT-CASE-BASED-LVAD-COMPLICATIONS-2021': 'Perna & Wettersten',
+}
+
+/**
+ * The numbers a fellow holds a live reading against, each with where it comes from.
+ *
+ * It sits directly under the live values it applies to. `title` says which device or patient the
+ * numbers are for.
+ */
+export function ReferenceValues({
+  title,
+  ids,
+  children,
+}: {
+  readonly title: string
+  readonly ids: readonly McsNumberId[]
+  readonly children?: ReactNode
+}) {
+  return (
+    <section className="mt-3 min-w-0 rounded-xl border px-3 py-2" data-reference-values>
+      <h4 className="text-xs font-semibold">{title}</h4>
+      <dl className="mt-1 grid gap-1 text-xs leading-5">
+        {ids.map((id) => {
+          const row = MCS_NUMBERS.get(id)
+          return (
+            <div key={id} data-teaching-number={id}>
+              <dt className="inline font-medium">{row.label}: </dt>
+              <dd className="inline">
+                <strong>{row.value}</strong>{' '}
+                <small className="text-muted-foreground">
+                  (
+                  {row.sources
+                    .map(
+                      (source) =>
+                        `${MCS_NUMBER_SOURCE_NAMES[source.sourceId] ?? source.sourceId} ${source.year}`,
+                    )
+                    .join('; ')}
+                  )
+                </small>
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+      {children}
+    </section>
+  )
+}
+
+/**
+ * A limit of the simulator, printed only where a learner could take a simulated value for one a
+ * real console or patient would give.
+ */
 export function ModelBoundary({ children }: { readonly children: ReactNode }) {
   return (
     <p
       className="mt-3 rounded-xl border border-dashed px-3 py-2 text-xs leading-5"
       data-model-boundary
     >
-      <span className="font-semibold">Model boundary. </span>
+      <span className="font-semibold">Simulator value. </span>
       {children}
     </p>
   )
 }
 
-/**
- * What this figure can and cannot establish.
- *
- * Scoped to the figure, not to the section — the section's own claims live in the contract and are
- * rendered by the teaching pane. Both halves are always shown, and both are written so that neither
- * carries the section's prediction answer, because this block renders before a commitment too.
- */
-export function FigureScope({
-  establishes,
-  doesNotEstablish,
-}: {
-  readonly establishes: ReactNode
-  readonly doesNotEstablish: ReactNode
-}) {
+/** One line saying what the figure above it shows. */
+export function FigureCaption({ children }: { readonly children: ReactNode }) {
   return (
-    <dl className="mt-3 grid gap-2 text-xs leading-5" data-figure-scope>
-      <div>
-        <dt className="font-semibold">This figure can establish</dt>
-        <dd data-figure-establishes>{establishes}</dd>
-      </div>
-      <div>
-        <dt className="font-semibold">It cannot establish</dt>
-        <dd data-figure-does-not-establish>{doesNotEstablish}</dd>
-      </div>
-    </dl>
+    <p className="mt-3 text-xs leading-5 text-muted-foreground" data-figure-caption>
+      {children}
+    </p>
   )
 }
 
@@ -176,8 +217,7 @@ export function FigureScope({
 export function WaitingState({ label }: { readonly label: string }) {
   return (
     <p className="mt-3 text-sm text-muted-foreground" role="status" data-waiting-state={label}>
-      Waiting for the {label} to collect enough samples to draw. Nothing is missing — the trace is
-      still being recorded.
+      Waiting for the {label} to collect enough samples to draw.
     </p>
   )
 }
@@ -270,7 +310,7 @@ export function NotModeled({
       data-live-value-kind="not-modeled"
     >
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="text-sm font-semibold">not modeled here</p>
+      <p className="text-sm font-semibold">not in the simulator</p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground" data-live-value-kind-label>
         {mcsLiveValueKindLabels['not-modeled']}
       </p>
@@ -294,15 +334,14 @@ export function UnmodeledOrganResponse({
             className="rounded-xl border border-dashed p-2 text-xs leading-5"
             data-unmodeled-signal={signal.id}
           >
-            <span className="font-semibold">{signal.label} — not modeled. </span>
+            <span className="font-semibold">{signal.label}. </span>
             {signal.whyItMatters}
           </li>
         ))}
       </ul>
       <TextEquivalent>
-        {signals.map((signal) => signal.label).join(', ')} are not represented anywhere in this
-        simulation. Nothing on this screen answers at the organ level, and an unchanged screen is
-        not evidence that an organ is unaffected.
+        {signals.map((signal) => signal.label).join(', ')}: read these at the bedside. The simulator
+        has none of them.
       </TextEquivalent>
     </div>
   )
@@ -332,7 +371,9 @@ export function BeforeAfter({
   return (
     <div className={styles.scroller}>
       <table className={styles.table} data-before-after-figure>
-        <caption className="text-left text-xs leading-5 text-muted-foreground">{caption}</caption>
+        <caption className="text-left text-xs leading-5 text-muted-foreground">
+          {caption} {DEADBAND_NOTE}
+        </caption>
         <thead>
           <tr>
             <th scope="col" className="pb-1 pr-3 font-semibold">
@@ -409,8 +450,7 @@ export function TransferState({
   return (
     <div data-transfer-state>
       <p className="mt-2 text-xs leading-5" data-transfer-baseline-note>
-        These are live readings from the transfer patient. No baseline from the previous patient is
-        carried across, and nothing below is a comparison with one.
+        Live readings from the new patient. Nothing is carried over from the last one.
       </p>
       {children}
       <p className="mt-3 text-xs leading-5" data-transferable-principle>
@@ -421,8 +461,11 @@ export function TransferState({
   )
 }
 
-export const DEADBAND_CAPTION =
-  'The words higher, lower and about the same come from an authored display deadband for this simulation, set above the drift the fixed-step model produces on its own. They mark no boundary of any kind, and both raw readings are printed beside them. The mean-pressure row has the widest band of all, because a quarter of this simulation’s mean pressure is taken from the instantaneous arterial pressure — two readings taken at different points in the same beat differ by up to about 8 mm Hg with nothing having happened, so a small movement on that row is not readable as a response.'
+/**
+ * Said once, in the caption of every before-and-after table: how big a change has to be before the
+ * direction column calls it one.
+ */
+export const DEADBAND_NOTE = `A change smaller than the simulator’s beat-to-beat variation reads as “about the same”; mean arterial pressure has to move ${MCS_DISPLAY_DEADBANDS.mapMmHg} mm Hg to count.`
 
 /* ------------------------------------------------------------------ *
  * Flow account
@@ -673,7 +716,7 @@ export function pathwaySentence(pathway: McsPathwayView): string {
 /** Active modeled alarms, each with its priority as a word rather than as a colour. */
 export function AlarmBand({
   alarms,
-  emptyLabel = 'No modeled alarm is active in this state.',
+  emptyLabel = 'No alarm is active.',
   disclosed = true,
 }: {
   readonly alarms: readonly McsAlarm[]
@@ -710,7 +753,7 @@ export function AlarmBand({
 }
 
 export function alarmSentence(alarms: readonly McsAlarm[]): string {
-  if (alarms.length === 0) return 'No modeled alarm is active'
+  if (alarms.length === 0) return 'No alarm is active'
   return alarms
     .map((alarm) => `${alarm.label} at ${mcsAlarmPriorityWords[alarm.priority]}`)
     .join('; ')
@@ -720,7 +763,7 @@ export function alarmSentence(alarms: readonly McsAlarm[]): string {
  * Evidence
  * ------------------------------------------------------------------ */
 
-/** A live value beside its authored guide. Interpretation only ever arrives through one of these. */
+/** A live value beside its guide. Interpretation only ever arrives through one of these. */
 export function GuidedValue({
   guide,
   value,

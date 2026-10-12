@@ -8,6 +8,7 @@ import { IMAGING_HUB_HERO } from '../content/hubHero'
 import { CHAIN_STOPS } from '../content/imagingChain'
 import { peripheralImagingPathwaySections, peripheralImagingSectionIds } from '../content/pathway'
 import { imagingPathwayComposition } from '../content/pathwayResolver'
+import { IMAGING_SHARED_BOUNDARY } from '../content/sectionSpecs'
 import { LEGACY_IMAGING_RECORD_KEY_V2 } from '../engine/learnProgress'
 import {
   createEmptyImagingProgress,
@@ -72,6 +73,14 @@ describe('the hub', () => {
     expect(screen.getByText(new RegExp(`^${composition.total} sections`))).toBeInTheDocument()
     expect(chips()).toHaveLength(peripheralImagingPathwaySections.length)
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('states once that the course is a teaching simulator (teaching-first rules, 2026-10-08)', () => {
+    render(<PeripheralImagingHub />)
+    const statements = document.querySelectorAll('[data-module-statement]')
+    expect(statements).toHaveLength(1)
+    expect(statements[0].textContent).toBe(IMAGING_SHARED_BOUNDARY)
+    expect(IMAGING_SHARED_BOUNDARY).toMatch(/^This is a teaching simulator\./)
   })
 
   it('draws the suite once, between the door and the map, and says where each stop is', () => {

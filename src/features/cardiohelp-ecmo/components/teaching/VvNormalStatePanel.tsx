@@ -9,8 +9,12 @@ import { ecmoReferenceProfiles } from '../../content/referenceProfiles'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
 import {
+  EcmoAnticoagulationReference,
+  EcmoStartingSupportReference,
+  EcmoVenousCellReference,
+} from './EcmoReferenceValues'
+import {
   GuidedValue,
-  ModelBoundary,
   TableSentences,
   TextEquivalent,
   direction,
@@ -66,7 +70,7 @@ function vvReferenceCircuit(): EcmoSimulationState {
 type ReferenceProvenance = 'authored-input' | 'model-derived'
 
 const provenanceLabel: Readonly<Record<ReferenceProvenance, string>> = {
-  'authored-input': 'authored input',
+  'authored-input': 'case input',
   'model-derived': 'produced by the model',
 }
 
@@ -458,9 +462,9 @@ export function VvNormalStatePanel({
           <table className="w-full text-left text-sm" data-baseline-table>
             <caption className="sr-only">
               Each observed signal with its current value, the value in this circuit’s own reference
-              state together with whether that value was authored or produced by the model, and the
-              raw change over the observed window, grouped by where in the circuit or the patient it
-              belongs.
+              state together with whether that value was set by the case or produced by the model,
+              and the raw change over the observed window, grouped by where in the circuit or the
+              patient it belongs.
             </caption>
             <thead>
               <tr>
@@ -548,21 +552,9 @@ export function VvNormalStatePanel({
           </TextEquivalent>
         </TableSentences>
 
-        <ModelBoundary>
-          The words higher, lower and unchanged come from an authored per-signal display deadband
-          for this simulation, so that a value moving in its last decimal does not read as a change.
-          The deadbands are a display aid only. They are not clinical tolerances, they mark no
-          boundary of safety, and the raw change is printed beside every one of them. The guide
-          below states every one of them and where it came from.
-        </ModelBoundary>
-
-        <ModelBoundary>
-          Only three values in the reference column were authored: the pump speed, the sweep, and
-          the native cardiac output. Everything else in it was produced by the model from those
-          inputs, and is marked as such. None of them is a value to reproduce at a bedside — cannula
-          size and position, patient size, temperature, hemoglobin, the device configuration and
-          local protocol all move every one of them.
-        </ModelBoundary>
+        <EcmoStartingSupportReference />
+        <EcmoAnticoagulationReference />
+        <EcmoVenousCellReference />
       </section>
 
       <div data-presentation-section="derived-values">
@@ -654,12 +646,6 @@ export function VvNormalStatePanel({
             ? 'No samples have been retained yet.'
             : `The last ${Math.min(6, state.trends.length)} retained samples run from ${state.trends.slice(-6)[0]?.time.toFixed(0)} to ${round(state.simulationTime, 0)} modeled seconds. What a baseline review reads from a window like this is whether the relationship among the signals is holding, not whether any single value is familiar.`}
         </TextEquivalent>
-
-        <ModelBoundary>
-          The window here is modeled seconds. A bedside baseline is established and re-read over
-          hours, and the drift a real circuit shows over that time has no counterpart in this
-          simulation.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="beyond-circuit-heading">

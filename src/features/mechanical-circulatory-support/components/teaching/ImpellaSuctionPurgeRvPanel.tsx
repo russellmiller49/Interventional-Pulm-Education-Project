@@ -5,7 +5,6 @@ import {
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
-  MCS_ESTIMATED_FLOW_BOUNDARY,
   activeAlarms,
   inflowLimitView,
   beforeAfterReadings,
@@ -17,13 +16,10 @@ import {
 import {
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
   FlowAccount,
   GuidedValue,
   LiveSetting,
   LiveValue,
-  ModelBoundary,
   PanelSection,
   PathwayGraphic,
   TextEquivalent,
@@ -100,35 +96,33 @@ export function ImpellaSuctionPurgeRvPanel({
       title: 'Preload and right-sided delivery',
       readings: `right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg · wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg · left-sided suction ${pump?.leftSuction ? 'present' : 'absent'} · right-sided suction ${pump?.rightSuction ? 'present' : 'absent'}`,
       settles:
-        'Whether the modeled chamber a pump is drawing from has volume in it, and whether the model has entered a suction state.',
+        'Whether the chamber a pump draws from has volume in it, and whether suction is present.',
       doesNotSettle:
-        'Why the volume is not arriving. A high right atrial pressure with an underfilled left ventricle points upstream; it does not name the cause.',
+        'Why the volume is not arriving. A high right atrial pressure with an underfilled left ventricle points to the right heart; a low one points to hypovolemia.',
     },
     {
       id: 'position',
       title: 'Position',
       readings: `left ${pump?.leftPositionWords ?? 'not applicable'} · right ${pump?.rightEnabled ? (pump?.rightPositionWords ?? 'not applicable') : 'no right-sided pump in place'}`,
-      settles: 'What the modeled placement state currently is for each pump.',
+      settles: 'The placement state of each pump.',
       doesNotSettle:
-        'Where either device actually sits. Real position is an imaging question and belongs to qualified operators under current instructions.',
+        'Where either device actually sits. Confirm it with echo and the placement signal.',
     },
     {
       id: 'afterload',
       title: 'Afterload and pulmonary vascular load',
       readings: `systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵ · pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg`,
       settles:
-        'What each pump is currently ejecting against — systemic pressure for the left-sided pump, pulmonary load for the right-sided one.',
-      doesNotSettle:
-        'Whether a high load is the limiting problem rather than one of several. Loads and filling change flow through the same displayed number.',
+        'What each pump ejects against: systemic pressure for the left pump, pulmonary vascular resistance for the right.',
+      doesNotSettle: 'Whether load or filling is the limit. Both lower the same displayed flow.',
     },
     {
       id: 'purge',
       title: 'Purge path',
       readings: `left ${pump?.leftPurgeWords ?? 'not applicable'} · right ${pump?.rightEnabled ? (pump?.rightPurgeWords ?? 'not applicable') : 'no right-sided pump in place'}`,
-      settles:
-        'Whether a purge warning is present in this simulation. In this model a purge warning raises an alarm and changes no modeled blood flow at all.',
+      settles: 'Whether a purge alarm is active.',
       doesNotSettle:
-        'Anything about flow, filling, or blood trauma. A purge warning and a suction state are different problems with different causes, and this module authors no purge-fluid or anticoagulation management.',
+        'Anything about flow or filling. A purge alarm and suction are different problems with different causes.',
     },
   ] as const
 
@@ -156,8 +150,8 @@ export function ImpellaSuctionPurgeRvPanel({
           ) : (
             <p className="text-xs leading-5" data-pump-side="right" data-withheld>
               A right-sided pump can be started beside the left-sided one. Where it draws from and
-              where it returns are the question this section opens with; the map beside the monitor
-              is where it is answered.
+              where it returns is the question this section opens with. Use the map beside the
+              monitor.
             </p>
           )}
           <div data-pump-side="left">
@@ -170,8 +164,7 @@ export function ImpellaSuctionPurgeRvPanel({
             These pathways are in series. The right-sided pump delivers venous blood into the
             pulmonary artery; that blood crosses the lungs, fills the left heart, and is then moved
             onward by the left-sided pump. One stream, measured at two stages. Adding the two
-            displayed flows counts that blood twice, so they are never summed here — and the
-            systemic device-flow signal carries the left-sided pump only.
+            displayed flows counts that blood twice. Systemic flow is the left-sided number.
           </p>
         ) : null}
         <TextEquivalent>
@@ -179,12 +172,6 @@ export function ImpellaSuctionPurgeRvPanel({
           {pathwaySentence(mcsComparisonPathways.impellaLeft)}
           {disclosed ? ' The two are serial and their displayed flows are never added.' : ''}
         </TextEquivalent>
-        {disclosed ? (
-          <FigureScope
-            establishes="Where each pump draws from, where each returns to, and why one of the two numbers has not reached the systemic circulation yet."
-            doesNotEstablish="Whether this patient needed a second pump. Biventricular support is a decision made with the responsible team, not a reading."
-          />
-        ) : null}
       </PanelSection>
 
       <PanelSection title="The flow account, with the sides kept apart" id="rv-flow">
@@ -195,30 +182,29 @@ export function ImpellaSuctionPurgeRvPanel({
             value={metrics.pumpBalanceLMin}
             unit="L/min"
             kind="derived"
-            note="The right-sided flow minus the left-sided flow. It is a difference between two pumps, used to notice when more is being delivered into the lung than the left heart is handling. It is not an output, and nothing receives it."
+            note="Right-sided flow minus left-sided flow. A positive balance means more blood is going into the lung than the left heart is moving on: watch for pulmonary congestion."
           />
           <LiveValue
             label="Effective systemic delivery"
             value={metrics.effectiveSystemicFlowLMin}
             unit="L/min"
             kind="reasoned"
-            note="What reaches the systemic circulation. The right-sided pump flow is not part of this number."
+            note="What reaches the body. Right-sided pump flow is not part of it."
           />
         </div>
         <TextEquivalent>
           {flowAccountSentence(account, disclosed)} Pump balance reads{' '}
-          {reading(metrics.pumpBalanceLMin, 1)} L/min, which is the difference between the two pumps
-          and not a delivery to anything. Effective systemic delivery is{' '}
-          {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min and does not contain the right-sided
-          flow.
+          {reading(metrics.pumpBalanceLMin, 1)} L/min: right-sided flow minus left-sided flow.
+          Effective systemic delivery is {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min and
+          does not contain the right-sided flow.
         </TextEquivalent>
-        <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
+
         {disclosed ? (
           <p className="mt-2 text-xs leading-5" data-rp-role>
-            A right-sided pump restores delivery through the lungs and therefore filling of the left
-            heart. That is what lets a left-sided pump move blood it previously did not have. It
-            does not become a second systemic stream, and its number never enters the systemic
-            total.
+            A left-sided pump cannot pump what the right heart does not deliver. When the right
+            ventricle is the limit, treat the right heart (an inotrope, a pulmonary vasodilator,
+            right-sided support) rather than raising the left pump further. A right-sided pump
+            restores filling of the left heart; it is not a second systemic stream.
           </p>
         ) : null}
       </PanelSection>
@@ -227,8 +213,8 @@ export function ImpellaSuctionPurgeRvPanel({
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[34rem]`} data-low-flow-differential>
             <caption className="text-left text-xs leading-5 text-muted-foreground">
-              Each domain with the readings that speak to it, what those readings can settle, and
-              what they cannot. Reconciling all four is the task; no single row is a diagnosis.
+              Each domain with the readings that speak to it, what they settle and what they leave
+              open. Work through all four before you touch the P-level.
             </caption>
             <thead>
               <tr>
@@ -271,7 +257,7 @@ export function ImpellaSuctionPurgeRvPanel({
             label="Left-sided purge state"
             value={pump?.leftPurgeWords ?? 'not applicable'}
             kind="modeled"
-            note="A purge warning in this simulation raises an alarm and changes no modeled blood flow. It is not the same problem as suction, and it has a different cause."
+            note="A purge alarm is a problem in the purge system, not in blood flow. It is not suction."
           />
           <LiveSetting
             label="Suction state"
@@ -280,34 +266,31 @@ export function ImpellaSuctionPurgeRvPanel({
                 ? 'left-sided suction present'
                 : pump?.rightSuction
                   ? 'right-sided suction present'
-                  : 'no suction state in this model'
+                  : 'no suction'
             }
             kind="modeled"
-            note="A suction state means what is arriving at the inlet is below what the selected level has asked for. It is a statement about inflow, not a measurement of the chamber's size."
+            note="Suction means the inlet is short of blood for the P-level in use. It is a statement about inflow, not about how big the ventricle is."
           />
           {inflowLimit ? (
             <LiveSetting
-              label="Smallest term feeding the left inlet"
+              label="What is limiting inflow to the left pump"
               value={inflowLimit.label}
               kind="modeled"
-              note={`${inflowLimit.value.toFixed(2)} on this model's dimensionless scale (terms can exceed one). With the left pump running at P5 or above, a value below ${inflowLimit.threshold.toFixed(2)} raises modeled suction. ${inflowLimit.note}`}
+              note={inflowLimit.note}
             />
           ) : null}
         </div>
-        <ModelBoundary>
-          The limiting term above is this model&rsquo;s internal arithmetic made visible, not a
-          number any console reports and not a clinical measurement. It is shown because the
-          alternative is a suction alarm standing beside a full-looking ventricle with nothing on
-          screen to reconcile them. Which of the four domains is responsible in a patient is still a
-          bedside reconciliation. Hemolysis is not modeled anywhere in this simulation, and neither
-          is the detailed behavior of a purge system. The blood-trauma alarm is a modeled risk flag,
-          not a hemolysis outcome, and no purge-fluid or anticoagulation management is authored
-          here.
-        </ModelBoundary>
-        <FigureScope
-          establishes="Which readings belong to which of the four domains, and what each domain can and cannot answer on its own."
-          doesNotEstablish="Which domain is responsible. That is a reconciliation across all four, made with the patient in front of you."
-        />
+        <section className="mt-3 text-xs leading-5" data-suction-first-moves>
+          <h5 className="font-semibold">Suction alarm: first moves</h5>
+          <ol className="mt-1 grid gap-1">
+            <li>Reduce the P-level by one or two levels.</li>
+            <li>Give volume if the patient is underfilled.</li>
+            <li>Check catheter position with echo.</li>
+            <li>Assess the right ventricle.</li>
+            <li>Then return to the previous P-level.</li>
+          </ol>
+          <p className="mt-1 text-muted-foreground">Impella instructions for use, p. 7.17.</p>
+        </section>
       </PanelSection>
 
       <PanelSection title="Right-sided filling, and the ratio that will not report it" id="rv-papi">
@@ -318,7 +301,7 @@ export function ImpellaSuctionPurgeRvPanel({
             unit="mm Hg"
             digits={0}
             kind="modeled"
-            note="The pressure behind the right ventricle, and the reading that moves first when right-sided delivery changes in this model."
+            note="The pressure behind the right ventricle. It falls when a right-sided pump takes venous return past it."
           />
           <LiveValue
             label="Pulmonary vascular resistance"
@@ -333,21 +316,16 @@ export function ImpellaSuctionPurgeRvPanel({
           value={metrics.papi}
         />
         <p className="mt-3 text-xs leading-5" data-papi-limitation>
-          <span className="font-semibold">A limit of this model. </span>
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.statement}{' '}
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.appliesWhen} In this model the pulmonary
-          pulse pressure that forms the numerator is a function of right ventricular contractility
-          alone, so right-sided support moves the ratio only through the right atrial pressure in
-          its denominator — a change of about a tenth for several litres per minute of delivery. It
-          must not be used on its own to judge whether right-sided support is working, and nothing
-          in this section asks you to read it that way.
+          <span className="font-semibold">Simulator value. </span>
+          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.statement} Here the ratio barely moves
+          when right-sided support starts, because the simulator ties pulmonary pulse pressure to
+          right ventricular contractility alone. Judge right-sided support from right atrial
+          pressure and left-sided filling instead.
         </p>
         <TextEquivalent>
           Right atrial pressure is {reading(metrics.rapMmHg, 0)} mm Hg, pulmonary vascular
           resistance is {reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units, and
-          the pulmonary pulsatility ratio is {reading(metrics.papi, 1)}. In this model that ratio
-          barely responds to right-sided support, and it responds through the right atrial pressure
-          rather than through the pulmonary pulse.
+          the pulmonary pulsatility ratio is {reading(metrics.papi, 1)}.
         </TextEquivalent>
       </PanelSection>
 
@@ -364,13 +342,12 @@ export function ImpellaSuctionPurgeRvPanel({
             caption="The two pump flows on separate rows, the systemic delivery that contains only one of them, and the right-sided filling pressures."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="rv-transfer">
-          <TransferState principle="A suction state means inlet conditions are inadequate for the requested support — because of underfilling, restricted inflow, or position — not that the performance level is too low. Raising support against those inlet conditions worsens both the underfilling and the blood trauma.">
+          <TransferState principle="Suction means the inlet is short of blood for the P-level in use: underfilling, right heart failure or position. Turn the P-level down, find the cause, and only then turn it back up. Raising it into suction worsens the underfilling and the hemolysis.">
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Preload"
@@ -386,7 +363,7 @@ export function ImpellaSuctionPurgeRvPanel({
                     ? 'left-sided suction present'
                     : pump?.rightSuction
                       ? 'right-sided suction present'
-                      : 'no suction state in this model'
+                      : 'no suction'
                 }
                 kind="modeled"
               />

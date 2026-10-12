@@ -1,11 +1,7 @@
 'use client'
 
-import {
-  VENTILATION_CLINICAL_REVIEW_LINE,
-  ventilationEvidenceById,
-  ventilationSourceClassLabel,
-  ventilationSourceIdentityLine,
-} from '../content/evidence'
+import { ventilationEvidenceById, ventilationSourceClassLabel } from '../content/evidence'
+import { VENTILATION_NUMBERS } from '../content/teachingNumbers'
 import styles from './ventilation-course.module.css'
 
 /**
@@ -17,27 +13,41 @@ import styles from './ventilation-course.module.css'
 export function VentilationProtectionReference() {
   return (
     <aside className={styles.breath} aria-label="Adult ARDS guideline reference">
-      <span className={styles.badge}>Guideline · ATS 2024 · adult ARDS</span>
-      <h2 style={{ marginTop: 18 }}>Two measurements, together</h2>
-      <p className={styles.number}>
-        4–8 <small>mL/kg PBW</small>
+      <span className={styles.badge}>
+        Adult ARDS · ARDS Network 2000; ATS/ESICM/SCCM 2017, kept in the ATS 2024 update
+      </span>
+      <h2 style={{ marginTop: 18 }}>Three numbers, together</h2>
+      <p className={styles.number}>{VENTILATION_NUMBERS.value('vt-ards-goal')}</p>
+      <p className={styles.muted}>
+        Tidal volume goal, within {VENTILATION_NUMBERS.value('vt-ards-range')}
       </p>
-      <p className={styles.muted}>Tidal volume, using predicted body weight</p>
       <p className={styles.number} style={{ marginTop: 20 }}>
-        &lt;30 <small>cmH₂O</small>
+        {VENTILATION_NUMBERS.value('pplat-limit')}
       </p>
-      <p className={styles.muted}>Plateau pressure, with a valid measurement</p>
+      <p className={styles.muted}>Plateau pressure, on a relaxed patient</p>
+      <p className={styles.number} style={{ marginTop: 20 }}>
+        {VENTILATION_NUMBERS.value('driving-pressure-limit')}
+      </p>
+      <p className={styles.muted}>Driving pressure: plateau minus PEEP (Amato 2015)</p>
       <p className={styles.muted} style={{ marginTop: 20 }}>
-        These limits guide adult ARDS ventilation. They do not replace individualized clinical
-        evaluation.
+        PBW, male: {VENTILATION_NUMBERS.value('pbw-male')}. Female:{' '}
+        {VENTILATION_NUMBERS.value('pbw-female')}.
       </p>
+      <a
+        className={styles.textLink}
+        href="https://pubmed.ncbi.nlm.nih.gov/28459336/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Read the 2017 recommendation
+      </a>{' '}
       <a
         className={styles.textLink}
         href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10870893/"
         target="_blank"
         rel="noreferrer"
       >
-        Read the ATS recommendation
+        Read the 2024 update that keeps it
       </a>
     </aside>
   )
@@ -50,7 +60,7 @@ export function VentilationLearningSources({
 }) {
   return (
     <details className={styles.details}>
-      <summary>Sources and model boundaries</summary>
+      <summary>Sources</summary>
       <ul className={styles.sources}>
         {evidenceIds.map((id) => {
           const source = ventilationEvidenceById.get(id)
@@ -66,22 +76,10 @@ export function VentilationLearningSources({
               )}
               <p>{source.citation}</p>
               <p>{source.limitations}</p>
-              {source.identity ? <p>{ventilationSourceIdentityLine(source.identity)}</p> : null}
-              <p>
-                {source.reviewedAt
-                  ? `Source checked ${source.reviewedAt}; independent clinical sign-off pending.`
-                  : VENTILATION_CLINICAL_REVIEW_LINE}
-              </p>
             </li>
           ) : null
         })}
       </ul>
-      <p className={styles.muted}>
-        The questions were authored for this course on September 5, 2026, and the explanations for
-        ten of them were revised on September 15, 2026. They draw on the lesson rationales and on a
-        supplied case set that names no author. They are not patient data or prevalence estimates,
-        and no clinical review of them is recorded yet.
-      </p>
     </details>
   )
 }

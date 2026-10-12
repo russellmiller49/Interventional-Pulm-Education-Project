@@ -27,10 +27,10 @@ export function peepComparisonTimeControl(result: PeepComparison | null): string
 export const peepComparisonTeaching = {
   purpose: 'Compare oxygenation, pressure and circulation after changing only PEEP.',
   explanation: [
-    'In this authored case, PEEP 8–12 selects a more compliant, lower-shunt model state. PEEP 14 and above selects a less compliant state and lowers modeled arterial pressure. At 45 seconds, PEEP 15 produces higher pressure and lower MAP than PEEP 10, despite oxygenation remaining above the unchanged-PEEP result.',
-    'These discrete states illustrate the intended recruitment–overdistension tradeoff. They do not measure recruited lung, locate an individual patient’s best PEEP, or establish a smooth clinical response curve. The case authors no response at PEEP 13: the model holds the 8–12 state there — no further recruitment and no overdistension — rather than falling back to the PEEP-5 state, and it does not interpolate. That choice is itself under faculty review.',
-    'The patient continues to make respiratory effort. The displayed plateau is a waveform estimate unless an occlusion is actually performed, and it is unsuitable for passive mechanics interpretation here. The compliance row is the model’s assigned compliance, not tidal volume divided by a measured driving pressure. Intrinsic PEEP is reported separately and is not an acquired expiratory hold.',
+    'In this patient, raising PEEP from 5 to between 8 and 12 recruits lung: compliance improves and shunt falls. At PEEP 14 and above the lung overdistends: compliance falls, and so does arterial pressure. At 45 seconds, PEEP 15 gives a higher airway pressure and a lower MAP than PEEP 10, though oxygenation is still better than at the starting PEEP.',
+    'That is the trade to look for after any PEEP change. Oxygenation gained by recruitment comes with better compliance. The same oxygenation gained by overdistension costs compliance and blood pressure. The model steps between these states; a real lung moves between them gradually.',
+    'This patient is making respiratory effort, so the plateau shown is estimated from the waveform and is not a hold. The compliance row is the value the model assigned. Intrinsic PEEP is reported separately.',
   ],
   boundary:
-    'Authored simulation values, not clinical targets. The step boundaries and quantitative responses remain subject to ventilation faculty/RT review. A completed hold can still be unsuitable for passive interpretation; reading this example performs no hold on your separate patient.',
+    'These values are simulated for this patient. At the bedside, find the best PEEP by stepping it and rechecking compliance, oxygenation and blood pressure at each step.',
 } as const

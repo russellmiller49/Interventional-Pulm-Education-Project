@@ -1,6 +1,9 @@
 import type { CrrtFoundationChoice, CrrtFoundationTask } from './foundationLessons'
 import type { BaxterCrrtLearnLessonId } from './learnerRegistry'
 import type { PrismaxSimulatorHotspotId } from './prismaxSimulator'
+import { CRRT_NUMBERS } from './teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 export const CRRT_OPERATIONAL_VERSION = 'crrt-operations-2026-09-13-v1'
 export const crrtHardwareFunctionTeaching: Record<PrismaxSimulatorHotspotId, string> = {
@@ -73,28 +76,28 @@ export const crrtOperationalTasks: Partial<
       exampleId: 'entered-versus-recorded-b',
       run: 'workflow',
       kind: 'question',
-      instruction: 'Interpret a different operating history.',
+      instruction: 'Decide which record tells you what a run delivered.',
       teaching: [],
       question:
-        'Two runs have the same applied CVVHD flows now. One has a longer interruption during the charting interval. What establishes their delivered dose over that interval?',
+        'Two 80 kg patients are on CVVHD with effluent running at 1,900 mL/h, which is 23.75 mL/kg/h. Run A has not stopped. Run B was down for 6 of the last 24 hours. Which record tells you what run B delivered?',
       choices: [
         choice(
           'current',
-          'The current effluent setting alone establishes equal delivered dose.',
+          'The effluent rate on the screen now, multiplied by 24 hours.',
           false,
-          'Current rates omit the earlier interruption. Compare actual accumulated effluent, the same charting interval and patient weight.',
+          'The rate on the screen is what the machine is doing now. It assumes all 24 hours ran, and 6 of them did not.',
         ),
         choice(
           'recorded',
-          'Compare actual accumulated effluent over the same interval and weight.',
+          'The effluent volume collected over the same 24 hours.',
           true,
-          'The delivery record includes time when fluid did not move. Applying the same setting now does not rewrite that history.',
+          `Delivered dose is the effluent actually collected, divided by weight and by the hours in the interval. For run B that is 1,900 × 18 ÷ 24 ÷ 80, about 17.8 mL/kg/h, which is under the delivered target of ${N('dose-delivered')}. Run A delivered its full 23.75. Losses like this are why you prescribe ${N('dose-prescribed')}.`,
         ),
         choice(
           'pressure',
-          'A reassuring pressure pattern proves the full prescribed dose was delivered.',
+          'The pressure history, which shows when the filter was working.',
           false,
-          'Pressures describe current circuit conditions and trends; they do not replace the accumulated delivery record.',
+          'Pressures tell you what the circuit is doing at each moment and where a resistance is. They do not measure volume. Only the collected effluent tells you how much treatment was delivered.',
         ),
       ],
     },
@@ -119,28 +122,28 @@ export const crrtOperationalTasks: Partial<
       exampleId: 'access-run-13',
       run: 'access',
       kind: 'question',
-      instruction: 'Choose the next assessment after the more negative access-pressure pattern.',
+      instruction: 'Choose your first move at the bedside.',
       teaching: [],
       question:
-        'The case has developed an access-side pressure change. Which action best distinguishes a correctable access-path problem?',
+        'At 30 minutes the access pressure has become steadily more negative with blood flow unchanged at 120 mL/min, and the alert is showing. What do you do first?',
       choices: [
         choice(
           'inspect',
-          'Assess the patient and inspect the access catheter and pre-pump tubing for a mechanical cause.',
+          'Look at the patient, then the access line and catheter.',
           true,
-          'The pressure pattern localizes a region. Patient position, catheter findings and the access line help distinguish causes before selecting a correction.',
+          `Access pressure is the pump pulling against whatever lies between the patient and the pump. In order: the patient, then the access line for a kink or a clamp, then the patient’s position and whether the catheter has moved. PrisMax alarms “Access Extremely Negative” ${N('access-low-limit')}.`,
         ),
         choice(
           'speed',
-          'Increase blood flow immediately to overcome the resistance.',
+          'Turn the blood flow down until the alert clears, then carry on.',
           false,
-          'Do not use a higher blood-flow setting as a substitute for assessing the patient and access path. It can worsen the pressure demand while leaving the cause unresolved.',
+          'A lower flow makes the pressure less negative, and it can buy time while you reposition a catheter that is sucking against the vessel wall. It is not the fix. The resistance is still there, and a slow circuit clots sooner. Find the cause first.',
         ),
         choice(
           'ack-only',
-          'Acknowledge the alert and assume the access path is restored.',
+          'Acknowledge the alert and watch whether the pressure recovers.',
           false,
-          'Acknowledgement changes an alert record. It does not remove resistance or establish restored delivery.',
+          'Acknowledging records that you saw the alert. The resistance is still there, and if it gets worse the pump cannot draw its set flow. Look at the line and the patient now.',
         ),
       ],
     },
@@ -164,28 +167,28 @@ export const crrtOperationalTasks: Partial<
       exampleId: 'access-run-13',
       run: 'access',
       kind: 'question',
-      instruction: 'Use the completed inspection and correction in this authored case.',
+      instruction: 'The cause has been found and corrected. Decide what happens next.',
       teaching: [],
       question:
-        'The modeled access cause has been corrected while treatment is paused. Which continuation plan is supported?',
+        'The access-position problem has been corrected, and treatment has been paused for 10 minutes. What do you do next?',
       choices: [
         choice(
           'resume-verify',
-          'Use the permitted case resume action, then reassess the patient, pressures, pump state and new delivery.',
+          'Resume, then recheck the patient, pressures, pump state and new delivery.',
           true,
-          'This case allows resumption after its pause and correction prerequisites. Verification still requires observation after resumption; the action alone is not proof of restored delivery.',
+          'The cause is fixed, so restart. Then prove it worked: access pressure back near its earlier value at the full 120 mL/min, both pumps running, and the effluent volume climbing again. The 10 minutes stopped stays in the delivery record.',
         ),
         choice(
           'universal',
-          'Use the same resume sequence for every device alarm once it is acknowledged.',
+          'Resume with the steps that cleared the last alert; this one has been acknowledged.',
           false,
-          'Exact continuation, replacement or termination steps depend on the alarm, patient, disposable and manufacturer instructions. This case does not establish a universal restart sequence.',
+          'Each alarm has its own cause and its own way back. Resuming is reasonable here because the access-position problem was fixed, not because the alert was acknowledged. An air or blood-leak alarm needs a different sequence, which the PrisMax screen gives for each alarm.',
         ),
         choice(
           'return',
-          'Perform blood return automatically because the pressure improved during the pause.',
+          'Return the blood and end the run; the pressure improved during the pause.',
           false,
-          'A stopped-pump pressure is not evidence that blood return is appropriate. Return or discard decisions require the specific clinical situation and manufacturer/local instructions.',
+          'With the pump stopped, nothing is pulling on the access line, so the pressure drifts toward zero whatever the cause. That improvement tells you nothing. Returning the blood and ending the run is for a circuit you cannot keep, such as a clotting filter or failed access. Here the cause is fixed and the circuit is usable.',
         ),
       ],
     },
@@ -207,23 +210,28 @@ export const crrtOperationalTasks: Partial<
       title: 'Apply again: normal pressure with no new delivery',
       exampleId: 'verification-transfer-b',
       kind: 'question',
-      instruction:
-        'Interpret a changed observation without assuming the earlier correction applies.',
+      instruction: 'Read what has and has not happened in this different run.',
       teaching: [],
       question:
-        'In a different run, the alert is acknowledged and the pressure looks less abnormal, but the blood pump remains stopped and recorded effluent has not increased. What has been verified?',
+        'In another run an access pressure alert was acknowledged and the pressure now reads closer to normal. The blood pump is still stopped and the effluent total has not moved. Where does this run stand?',
       choices: [
         choice(
           'restored',
-          'Successful treatment delivery has been verified by the pressure alone.',
+          'Treatment delivery has resumed; the pressure is closer to its starting value.',
           false,
-          'Stopped-flow pressures can look reassuring without any treatment delivery. Check the patient, cause, device state and permitted next step.',
+          'A stopped pump pulls on nothing, so the access pressure drifts back toward zero by itself. Delivery means the blood pump running and the effluent total rising, and neither is true here.',
         ),
         choice(
           'not-restored',
-          'Delivery has not been demonstrated; reassess the cause and device state before permitted continuation.',
+          'Delivery has not resumed; recheck the cause and the pump before restarting.',
           true,
-          'Acknowledgement, pressure at stopped flow and actual delivery are separate observations. No new effluent and a stopped pump do not establish restored treatment.',
+          'Three separate facts: the alert was acknowledged, the pressure reads better because the pump is stopped, and no effluent has been produced. Blood standing in the filter clots, so go back to the cause now: line, position, catheter. Then restart and watch the effluent total climb.',
+        ),
+        choice(
+          'cause-corrected',
+          'The cause has been corrected; the alert was acknowledged and the pressure improved.',
+          false,
+          'Acknowledging silences the alert and changes nothing in the line. The pressure improved because the pump stopped pulling. You know the cause is fixed only when the pump runs at its set flow and the pressure holds.',
         ),
       ],
     },
@@ -276,21 +284,27 @@ export const crrtOperationalTasks: Partial<
       kind: 'question',
       operation: 'missing-chart',
       instruction:
-        'Review a deliberately incomplete chart copy for the same interval. The simulation’s record is intact, but this chart copy withholds urine output.',
+        'This copy of the chart covers the same interval, but the urine output was never written down.',
       teaching: [],
-      question: 'What balance can you report from this incomplete chart?',
+      question: 'The urine output box is blank. What balance do you report?',
       choices: [
         choice(
           'zero-output',
-          'Enter zero for unrecorded urine and report an exact whole-patient balance.',
+          'Chart the urine as 0 mL and report the balance to the mL.',
           false,
-          'An absent record does not establish zero output. Reconcile the urine record and any other missing terms before reporting an exact balance.',
+          'A blank is not a zero. Charting zero overstates the patient’s gain by whatever the urine really was, and the next person sets net removal from your number.',
         ),
         choice(
           'reconcile',
-          'Report that exact balance is unavailable and reconcile the missing urine output.',
+          'Report the balance as incomplete, then find the urine output.',
           true,
-          'A missing chart term must remain unavailable. Neither the machine-removal total nor an assumption of zero fills that gap.',
+          'Balance is intake minus non-CRRT output minus net CRRT removal, and one term is missing. Say so and give the terms you have. Then get the urine volume from the bedside chart or the collection bag and finish the sum.',
+        ),
+        choice(
+          'machine-only',
+          'Report the machine’s net removal as the balance for the interval.',
+          false,
+          'Net CRRT removal is one of three terms. Without intake and urine it tells you what the machine took, not where the patient ended up.',
         ),
       ],
     },
@@ -327,28 +341,28 @@ export const crrtOperationalTasks: Partial<
       title: 'Apply: match the control to the problem',
       exampleId: 'flow-change-transfer-b',
       kind: 'question',
-      instruction: 'Separate a patient fluid goal from transport and circuit settings.',
+      instruction: 'Match the control to the problem.',
       teaching: [],
       question:
-        'A different patient’s immediate concern is excessive fluid loss during CRRT, while the need for solute support persists. What distinction should guide reassessment?',
+        'A patient on CVVHD has had net removal running at 350 mL/h. Blood pressure is falling, the vasopressor dose is climbing, and the day’s fluid goal has already been exceeded. The potassium still needs the circuit. What do you change first?',
       choices: [
         choice(
           'dialysate',
-          'Dialysate flow is the same quantity as net patient fluid removal.',
+          'Turn dialysate down; it is the flow that sets how much fluid the patient loses.',
           false,
-          'Dialysate is a fluid-side solute-support flow. Net removal requires its own review alongside all patient inputs and outputs.',
+          'Dialysate stays on the fluid side of the membrane and leaves as effluent. None of it comes from the patient. Turning it down costs potassium clearance and the machine still takes the same 350 mL/h.',
         ),
         choice(
           'separate',
-          'Reassess net removal and all patient inputs/outputs while separately reviewing blood flow and solute-support requirements.',
+          'Turn net removal down; leave the dialysate and blood flow where they are.',
           true,
-          'These controls address different quantities. An appropriate clinical adjustment depends on patient response, the prescription and current instructions; this exercise supplies no universal rate.',
+          'Net removal is the one control that sets how much fluid the machine takes from the patient. Turn it down, to zero if the pressure is still falling, and keep dialysate running so clearance continues. Then recount every input and output and reset the fluid goal.',
         ),
         choice(
           'pump',
-          'Increasing blood flow alone establishes a safer net-removal rate.',
+          'Turn blood flow down; a slower circuit takes less fluid from the patient.',
           false,
-          'Blood flow changes circuit and transport conditions. It does not by itself establish the patient’s tolerance or the appropriate net fluid goal.',
+          'Blood flow sets how fast blood moves through the filter, not how much fluid comes off. Net removal is the same 350 mL/h at any blood flow. Slowing the pump does nothing for the blood pressure and makes the filter more likely to clot.',
         ),
       ],
     },
@@ -371,22 +385,28 @@ export const crrtOperationalTasks: Partial<
       title: 'Apply again: urine improves but support needs persist',
       exampleId: 'clinical-reassessment-transfer-b',
       kind: 'question',
-      instruction: 'Choose a reassessment plan for this different clinical example.',
+      instruction: 'Decide what the rising urine output does and does not tell you.',
       teaching: [],
       question:
-        'Urine output is improving, but substantial ongoing intake and unresolved solute/acid–base concerns remain. Which plan is supported?',
+        'On day 6 of CRRT, urine output has picked up over the last 24 hours. The patient is still on several infusions and feeds, and the potassium and bicarbonate are only controlled with the circuit running. What is the plan?',
       choices: [
         choice(
           'urine-only',
-          'Stop CRRT solely because urine output increased; no specific follow-up plan is needed.',
+          'Plan a trial off now; improving urine output shows the fluid and solute/acid–base needs are being met.',
           false,
-          'Urine recovery alone does not establish that all fluid, solute and acid–base needs are met. Review the original indication, native function and hemodynamics, with an explicit monitoring and contingency plan.',
+          'Urine volume shows the kidneys are making water. It does not show they are clearing potassium and acid, and here those are only controlled with the circuit running. A trial off now would be decided on fluid alone.',
         ),
         choice(
           'reassess',
-          'Reassess the original indication, native function, fluid and solute/acid–base needs and hemodynamics; define monitoring and contingencies before any trial off.',
+          'Before any trial off, reassess the indication, fluid and solute/acid–base needs, native function and hemodynamics, and plan monitoring.',
           true,
-          'The unresolved needs require clinical reassessment. A planned trial off, when appropriate, requires follow-up and criteria for escalation or renewed support rather than a universal stop threshold.',
+          `Go back to why CRRT was started and ask whether each reason has resolved: the fluid, the potassium and acid-base, and whether the kidneys can keep up with the ongoing intake. Urine output is the most useful single sign: ${N('liberation-urine-output')}, predicts coming off. If you then try time off, decide beforehand what you will measure, when, and what result puts the patient back on.`,
+        ),
+        choice(
+          'fixed-threshold',
+          'Continue unchanged until urine output reaches a fixed threshold, then stop.',
+          false,
+          `A urine volume helps you choose when to try: ${N('liberation-urine-output')}, predicts coming off. It does not decide the question alone. Stopping at a number ignores the potassium and acid-base, and waiting for one can keep a recovering patient on the circuit longer than needed.`,
         ),
       ],
     },

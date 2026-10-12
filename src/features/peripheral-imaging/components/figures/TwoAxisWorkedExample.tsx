@@ -402,8 +402,7 @@ export function TwoAxisWorkedExample() {
       </div>
 
       <p className={styles.note} data-angle-convention>
-        {glossaryTerm('obliquity-and-tilt').definition} Naming these signed angles with a console’s
-        labels is held for owner review.
+        {glossaryTerm('obliquity-and-tilt').definition}
       </p>
     </section>
   )

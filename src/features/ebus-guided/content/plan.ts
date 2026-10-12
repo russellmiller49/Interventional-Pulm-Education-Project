@@ -33,12 +33,12 @@ export const planLessons: Lesson[] = [
         'Sonographic features do not provide a definitive benign or malignant diagnosis.',
       ],
       [
-        'It is proven benign and needs no further consideration',
-        'Appearance alone cannot exclude malignancy when sampling is indicated.',
+        'It is a reactive node that can be left unsampled during staging',
+        'Benign-pattern features lower suspicion but do not exclude metastasis; in staging the node is still sampled when indicated.',
       ],
       [
-        'It must be malignant because it is visible on EBUS',
-        'Visibility is not a pathological criterion.',
+        'It is low risk, so a negative PET would settle the question',
+        'Neither bland morphology nor PET negativity excludes nodal metastasis when staging is indicated.',
       ],
     ),
     matching: matching(
@@ -64,12 +64,12 @@ export const planLessons: Lesson[] = [
         'This reports an observed feature without claiming histology.',
       ],
       [
-        'The node is definitively benign because it is oval',
-        'The conclusion exceeds the image evidence.',
+        'A reactive-appearing oval node was visualized at station 7',
+        '“Reactive” is an interpretation; the description records shape, margin and echotexture and leaves the diagnosis to tissue.',
       ],
       [
-        'Molecular testing is adequate because the border is smooth',
-        'Molecular adequacy depends on the specimen and assay.',
+        'An oval node with no evidence of metastasis was visualized',
+        'Absence of metastasis is a tissue conclusion; the image can only report what was seen.',
       ],
     ),
     transfer: q(
@@ -80,12 +80,12 @@ export const planLessons: Lesson[] = [
         'Neither PET negativity nor bland ultrasound morphology alone settles station involvement.',
       ],
       [
-        'Yes; the ultrasound appearance is equivalent to benign cytology',
-        'Image appearance and tissue assessment are different evidence.',
+        'Yes; PET-negative with benign sonographic features is sufficient',
+        'Occult nodal disease occurs in PET-negative, normal-appearing nodes; that is why systematic staging samples them.',
       ],
       [
-        'Yes; only the largest node can contain metastasis',
-        'Metastasis is not confined to the largest node.',
+        'Yes, provided its short axis is under 10 mm',
+        'The 10 mm CT threshold flags enlargement; it is not a cutoff for sampling during systematic staging.',
       ],
     ),
     station: '7',
@@ -158,8 +158,8 @@ export const planLessons: Lesson[] = [
         'Categories must first be assigned correctly for the actual primary side.',
       ],
       [
-        'Because the first target always provides the largest specimen',
-        'The order is not a specimen-volume prediction.',
+        'Because the scope meets the paratracheal stations first on the way in',
+        'Order follows N category for the primary side, not the order in which the scope passes the stations.',
       ],
     ),
     transfer: q(
@@ -173,16 +173,17 @@ export const planLessons: Lesson[] = [
         'N2b because two individual nodes are positive',
         'The subdivision counts stations rather than nodes.',
       ],
-      ['N3 because multiple passes were required', 'Pass count does not determine N category.'],
+      [
+        'N1 because both nodes lie on the side of the primary',
+        'Ipsilateral mediastinal involvement is N2; N1 is ipsilateral hilar, interlobar and intrapulmonary.',
+      ],
     ),
     diagram: 'stations',
     takeaways: [
       'Survey and specimen order serve different purposes.',
       'N2a versus N2b counts involved stations.',
     ],
-    sources: ['ers2026', 'iaslc9', 'ics2023'],
-    boundary:
-      'The vignettes assume the stated primary side and complete station information. Full TNM grouping, resectability, and treatment require additional clinical data and multidisciplinary review.',
+    sources: ['ers2026', 'iaslc9', 'ics2023', 'aabip2025'],
   },
   {
     id: 'eus-b',
@@ -248,12 +249,12 @@ export const planLessons: Lesson[] = [
         'An esophageal route may add targets or alternative windows to an airway examination.',
       ],
       [
-        'Both routes reach every mediastinal target routinely',
-        'Important access limitations remain.',
+        'Together the two routes reach every mediastinal station',
+        'Stations 5 and 6 remain outside the routine reach of either route.',
       ],
       [
-        'EUS-B eliminates the need for anatomical training',
-        'The different route requires its own supervised skills and landmarks.',
+        'The esophageal route repeats the airway stations as a second check',
+        'The gain is mainly in stations the airway reaches poorly or not at all, such as 8 and 9, not in resampling.',
       ],
     ),
     transfer: q(
@@ -264,8 +265,8 @@ export const planLessons: Lesson[] = [
         'The same station may be approachable from a complementary route, subject to expertise and anatomy.',
       ],
       [
-        'Whether stronger pressure can replace a stable window',
-        'Forcing the scope is not a substitute for safe access.',
+        'Whether to sample on the brief views the window does give',
+        'Intermittent visualization is not live guidance; beside the arch and pulmonary artery the needle needs a stable window.',
       ],
       [
         'Whether the station can be reported negative because access was difficult',
@@ -278,7 +279,5 @@ export const planLessons: Lesson[] = [
       'A difficult window requires a plan, not a presumed negative result.',
     ],
     sources: ['ers2026', 'ics2023'],
-    boundary:
-      'This is an introduction to route selection. The course does not simulate esophageal insertion, adrenal assessment, or EUS-B needle technique.',
   },
 ]

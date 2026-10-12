@@ -54,7 +54,9 @@ async function main() {
       await page.screenshot({ path: `${out}/${pkg}-worked-hover.png` })
       await canvas.press('Escape')
       await expect(frame.getByRole('tooltip')).toHaveCount(0)
-      await frame.getByLabel('Discover a structure', { exact: true }).selectOption({ index: 1 })
+      await frame
+        .getByLabel('Find a structure in the model', { exact: true })
+        .selectOption({ index: 1 })
       if (pkg === 'contact') await performModel(frame, pkg)
       await next()
       await answer(lesson.question)
@@ -135,7 +137,7 @@ async function main() {
     await page.screenshot({ path: out + '/phone-gate.png' })
     await page.setViewportSize({ width: 1500, height: 1050 })
     // A failed new model must not earn completion.
-    await page.route('**/guided-v2/*.glb', (route) => route.abort())
+    await page.route('**/guided-v2/*.glb*', (route) => route.abort())
     await page.goto(base + '/en/ebus-guided/learn?section=contact-cutaway-model')
     await next()
     await next()

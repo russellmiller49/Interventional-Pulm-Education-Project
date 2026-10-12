@@ -108,25 +108,29 @@ function drawnTrace(figure: Element): readonly Point[] {
   }))
 }
 
-/** Label text → x of its marker. The figure draws landmarks on the middle beat. */
+/**
+ * Label text → x of its marker. The figure draws landmarks on the middle beat.
+ *
+ * A label is page text laid out beside the plot, joined to its landmark by id (and, on screen, by
+ * a leader line), so the pairing is read from the ids rather than from a shared SVG group.
+ */
 function labelXs(figure: Element): ReadonlyMap<string, number> {
   const found: [string, number][] = []
-  for (const group of figure.querySelectorAll('svg g')) {
-    const circle = group.querySelector('circle')
-    const text = group.querySelector('text')
-    if (circle && text) found.push([text.textContent ?? '', Number(circle.getAttribute('cx'))])
+  for (const circle of figure.querySelectorAll('circle[data-atlas-landmark]')) {
+    const id = circle.getAttribute('data-atlas-landmark')
+    const label = figure.querySelector(`[data-atlas-label="${id}"]`)
+    if (label) found.push([label.textContent ?? '', Number(circle.getAttribute('cx'))])
   }
   return new Map(found)
 }
 
 function ecgXs(figure: Element): ReadonlyMap<string, number> {
   const found: [string, number][] = []
-  for (const group of figure.querySelectorAll('svg g')) {
-    const text = group.querySelector('text')?.textContent ?? ''
-    const line = group.querySelector('line')
-    if (line && !group.querySelector('circle') && ['P', 'QRS', 'T'].includes(text)) {
-      found.push([text, Number(line.getAttribute('x1'))])
-    }
+  for (const line of figure.querySelectorAll('line[data-atlas-ecg-landmark]')) {
+    found.push([
+      line.getAttribute('data-atlas-ecg-landmark') ?? '',
+      Number(line.getAttribute('x1')),
+    ])
   }
   return new Map(found)
 }
@@ -411,7 +415,7 @@ describe('the practice, as a learner uses it', () => {
     expect(
       screen.getByText('Not this one: this is a display that cannot name a place.'),
     ).toBeInTheDocument()
-    expect(screen.getByText(/^Chamber interpretation withheld/)).toBeInTheDocument()
+    expect(screen.getByText(/^The chamber cannot be named from this display/)).toBeInTheDocument()
     expect(
       document.querySelector('[data-recognition-reveal] [data-recognition-origin]')?.textContent,
     ).toMatch(/^Display fault: /)

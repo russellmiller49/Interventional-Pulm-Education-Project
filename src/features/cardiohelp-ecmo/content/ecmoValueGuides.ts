@@ -1,40 +1,29 @@
+import { ECMO_NUMBERS } from './teachingNumbers'
 import {
   registerCriticalCareDerivedValueGuides,
   type CriticalCareDerivedValueGuide,
 } from '@/features/critical-care/content/derivedValueGuides'
 
 /**
- * The minimum set of ECMO value guides the four shared foundation panels need.
+ * The ECMO value guides the foundation panels read.
  *
- * Deliberately small. A comprehensive ECMO threshold library is not part of this package, and
- * several of these quantities have no defensible universal cut point at all — the guide exists to
- * say *what kind of number this is*, not to draw a band around it.
+ * Circuit blood flow is a general ECMO quantity. `pVen`, `pInt` and `pArt` are CARDIOHELP/Getinge
+ * channel labels, and `pArt` names a pressure inside the circuit, not the patient's arterial
+ * pressure. Each channel guide carries the console's factory limits from the Instructions for Use
+ * and, where the numbers register has one, the textbook operating range. Every number is read from
+ * `ECMO_NUMBERS`.
  */
+const IFU_APPLIES =
+  'CARDIOHELP-i, US Instructions for Use Revision 2.3 (January 2025), software 03.04.10.00 or higher. Factory settings; your program may set its own limits.'
 
-/**
- * The four channels a learner reads first.
- *
- * Two different claims live here and must not be blurred. Circuit blood flow is a **general ECMO
- * concept** — every circuit has one and every console reports one; what is device-specific is where
- * this console measures it, what exactly it displays, and when it is available at all. By contrast
- * `pVen`, `pInt` and `pArt` are **CARDIOHELP/Getinge channel labels**: a learner who carries those
- * names to another console will not find them, and `pArt` is the sharper hazard, naming a pressure
- * inside the circuit while sounding exactly like the patient's arterial pressure.
- *
- * Every guide expands its abbreviation by physical location and points the learner at their own
- * unit's reference values rather than at a number invented here.
- */
-const localReferenceValues = (channel: string) =>
+const referenceValues = (channel: string, statement: string) =>
   ({
-    // Reference ids are globally unique across the whole registry, so this is built per channel
-    // rather than shared. The statement is deliberately identical on all four.
+    // Reference ids are globally unique across the whole registry, so this is built per channel.
     id: `ecmo.channel.${channel}.local-reference-values`,
-    kind: 'local-protocol',
-    statement:
-      'Expected values for this channel depend on cannula sizes, circuit and oxygenator, patient size, and the support the circuit is being asked for. Your unit will have local reference values. Ask for them.',
-    appliesWhen:
-      'Any real circuit. Nothing in this simulation is a substitute for the values your own program works to.',
-    evidenceIds: ['bounded-educational-model'],
+    kind: 'device-specification',
+    statement,
+    appliesWhen: IFU_APPLIES,
+    evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
   }) as const
 
 const cardiohelpLabelBoundary = (channel: string, expansion: string) =>
@@ -67,7 +56,10 @@ const circuitBloodFlow: CriticalCareDerivedValueGuide = {
         'CARDIOHELP-i, US Instructions for Use Revision 2.3 (January 2025), software 03.04.10.00 or higher, for the device-specific half. The concept itself applies to any ECMO circuit.',
       evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
     },
-    localReferenceValues('Flow'),
+    referenceValues(
+      'Flow',
+      `Full support in an adult is about ${ECMO_NUMBERS.value('full-support-flow')} (Hei 2023). The console’s factory upper flow limit is ${ECMO_NUMBERS.value('flow-factory-limit')}, and the pump’s factory upper speed limit is ${ECMO_NUMBERS.value('speed-factory-limit')}.`,
+    ),
   ],
   caveats:
     'Displayed flow and effective support come apart whenever blood is re-drained. In VV support the circuit adds no circulatory support at all, so this number is never a cardiac output.',
@@ -86,12 +78,15 @@ const drainagePressure: CriticalCareDerivedValueGuide = {
     'Pressure measured on the drainage limb, before the pump — the suction side. It is normally negative, because the pump is pulling against it, and it becomes more negative as the circuit asks for more than the drainage can supply.',
   references: [
     cardiohelpLabelBoundary('pVen', 'the pressure on the drainage limb, upstream of the pump'),
-    localReferenceValues('pVen'),
+    referenceValues(
+      'pVen',
+      `Factory limits: ${ECMO_NUMBERS.value('pven-factory-limits')}. The manual advises avoiding negative pressures ${ECMO_NUMBERS.value('negative-pressure-caution')} where possible, to prevent cavitation and hemolysis. Schmidt 2022 gives ${ECMO_NUMBERS.value('pump-inlet-pressure-typical')} as the usual range before the pump; the two sources differ, and the console limits are the ones the machine acts on.`,
+    ),
   ],
   caveats:
-    'How negative this can go before it matters depends on cannula size and position, volume state, and the flow being asked for. It is a suction pressure inside tubing, not a measurement of the patient.',
+    'Cannula size and position, volume state and the flow being asked for all move it. It is a suction pressure inside tubing, not a measurement of the patient.',
   doNotInfer:
-    'Do not read it as a central venous pressure, and do not treat any particular negative number as a universal limit.',
+    'Do not read it as a central venous pressure. A sudden swing to a more negative value matters more than a steady one: it is the signature of drainage collapsing onto the cannula.',
   conceptIds: ['cc.circuit.pressure-zones', 'cc.measurement.measurand'],
   reviewStatus: 'draft',
 }
@@ -108,7 +103,10 @@ const preMembranePressure: CriticalCareDerivedValueGuide = {
       'pInt',
       'the internal pressure between the pump outlet and the membrane lung',
     ),
-    localReferenceValues('pInt'),
+    referenceValues(
+      'pInt',
+      `Factory limits: ${ECMO_NUMBERS.value('pint-part-factory-limits')}. Schmidt 2022 gives ${ECMO_NUMBERS.value('pre-oxygenator-pressure-typical')} as the usual pressure at the oxygenator inlet.`,
+    ),
   ],
   caveats:
     'It rises both when the membrane resists more and when everything downstream resists more. Read together with pArt: what separates those two situations is the gradient between them, not either value alone.',
@@ -141,7 +139,10 @@ const returnPressure: CriticalCareDerivedValueGuide = {
       caveat:
         'In VV ECMO the return cannula enters the venous circulation even though the returned blood is oxygenated, so the channel named pArt sits on a line returning to the venous side.',
     },
-    localReferenceValues('pArt'),
+    referenceValues(
+      'pArt',
+      `Factory limits: ${ECMO_NUMBERS.value('pint-part-factory-limits')}. Schmidt 2022 gives ${ECMO_NUMBERS.value('post-oxygenator-pressure-typical')} as the usual pressure at the oxygenator outlet.`,
+    ),
   ],
   caveats:
     'It rises with anything that obstructs the return path — cannula position, kinking, or the resistance the patient’s own circulation offers.',
@@ -157,8 +158,7 @@ const deltaPTrend: CriticalCareDerivedValueGuide = {
   unit: 'mmHg',
   formula: 'pInt − pArt',
   liveValueType: 'derived',
-  interpretation:
-    'The gradient is a resistance multiplied by a flow, so it moves with blood flow even when the membrane has not changed. Read it against this circuit’s own earlier value at a similar flow rather than against a fixed number.',
+  interpretation: `The gradient is a resistance multiplied by a flow, so it moves with blood flow even when the membrane has not changed. The usual range is ${ECMO_NUMBERS.value('pressure-drop-typical')} (Schmidt 2022) and the console’s factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. Read it against this circuit’s own earlier value at a similar flow.`,
   references: [
     {
       id: 'ecmo.deltaP.own-baseline',
@@ -172,18 +172,16 @@ const deltaPTrend: CriticalCareDerivedValueGuide = {
     },
     {
       id: 'ecmo.deltaP.no-standard-cutoff',
-      kind: 'source-reported-range',
-      statement:
-        'The supplied sources describe trending the gradient rather than applying one standardized cutoff across oxygenators and flows.',
-      appliesWhen:
-        'Adult circuits in the supplied guideline and textbook set. No universal threshold is asserted here.',
-      evidenceIds: ['elso-circuit-2022'],
+      kind: 'device-specification',
+      statement: `The console’s factory upper limit for the pressure drop is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}; the lower limit is deactivated. The manual calls the alarm low priority where it describes pressure-drop monitoring (p. 136) and lists the message among medium-priority messages (p. 165). The response it gives for a blocked oxygenator is to replace the disposable.`,
+      appliesWhen: IFU_APPLIES,
+      evidenceIds: ['ifu-us-2025-scope', 'ifu-anomaly-boundary'],
     },
   ],
   caveats:
     'Blood flow, viscosity, hematocrit, temperature, and the specific oxygenator all move this number without any change in membrane health.',
   doNotInfer:
-    'Do not read a single gradient as a membrane verdict, and do not carry a number from one circuit to another.',
+    'Do not read a single gradient as a membrane verdict. A rising trend at a fixed flow, with falling post-oxygenator gas transfer, is what portends membrane failure.',
   conceptIds: ['cc.membrane.resistance-and-aging', 'cc.circuit.pressure-zones'],
   reviewStatus: 'draft',
 }
@@ -212,6 +210,13 @@ const venousLineSaturation: CriticalCareDerivedValueGuide = {
         'The console displays this parameter across 40.0–99.9%; a value outside that range shows the unavailable indication instead of a number.',
       appliesWhen: 'The same device revision and software release.',
       evidenceIds: ['ifu-us-2025-scope'],
+    },
+    {
+      id: 'ecmo.svo2.factory-limits',
+      kind: 'device-specification',
+      statement: `Factory lower alarm limit for SvO₂: ${ECMO_NUMBERS.value('svo2-factory-limit')}. The same cell reports hemoglobin, with factory limits of ${ECMO_NUMBERS.value('hb-factory-limits')}.`,
+      appliesWhen: IFU_APPLIES,
+      evidenceIds: ['ifu-us-2025-scope', 'ifu-console-workflow'],
     },
   ],
   caveats:

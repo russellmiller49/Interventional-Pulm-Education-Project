@@ -552,7 +552,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'vv-oxy-action',
         title: 'Clue 2 · Prepare before definitive exchange',
-        text: 'Verify the trend and gas-transfer failure, mobilize the replacement circuit and trained team, then perform your unit’s emergency exchange process.',
+        text: 'Confirm the rising pressure drop at an unchanged flow and the failing post-oxygenator gas, raise ventilator support, call the perfusionist with the primed backup, then exchange the oxygenator.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -656,8 +656,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'diff-device-correct',
-            'VA flow remains stable while the upper-body problem is recognised and escalated, without blindly escalating RPM.',
-            'VA flow is held steady while the native lung is optimized and the configuration decision is escalated, not carried out here. The console was never the site of this problem.',
+            'VA flow is held steady while the right arm is sampled and the ventilator is turned up; more RPM is not the first move.',
+            'VA flow is held steady while the native lungs are treated and a venous return limb (V-AV) or conversion to VV is planned. The console was never the site of this problem.',
           ),
           option(
             'diff-device-rpm',
@@ -699,7 +699,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'diff-patient-correct',
             'Right-arm oxygenation improves while native ejection, lung function, systemic perfusion, and limb perfusion are reassessed.',
-            'Right-arm oxygenation improves as native-lung gas exchange is optimized, while ejection, perfusion and the leg are reassessed. The configuration decision is escalated, not carried out here.',
+            'Right-arm oxygenation improves as ventilator FiO₂ and PEEP are raised, while ejection, perfusion and the leg are reassessed. The change to V-AV or VV is planned with the ECMO team; it is not carried out in this case.',
           ),
           option(
             'diff-patient-femoral',
@@ -728,7 +728,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'diff-action',
         title: 'Clue 2 · Treat the two-circulation mismatch',
-        text: 'Verify right-arm oxygenation, assess native ejection and lung function, optimize the native lung, then escalate the VA support strategy through your local escalation pathway.',
+        text: 'Confirm with a right radial gas. Raise ventilator FiO₂ and PEEP first. Use more VA flow only as a temporary step, because it loads the recovering ventricle. If the right arm stays low, add a venous return limb (V-AV), or convert to VV if the heart has recovered.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -907,7 +907,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'vaso-action',
         title: 'Clue 2 · Treat tone and source',
-        text: 'Use focused echo/perfusion assessment, titrate vasopressor through the local shock protocol, and treat the underlying septic source without blindly increasing RPM.',
+        text: 'Use focused echo/perfusion assessment, titrate a vasopressor to restore MAP, and treat the underlying septic source without blindly increasing RPM.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1081,7 +1081,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-oxy-action',
         title: 'Clue 2 · Preserve perfusion during definitive correction',
-        text: 'Verify the membrane-lung failure, support pressure if needed, prepare the trained exchange team, then perform the circuit exchange under local protocol while reassessing both circulations.',
+        text: 'Confirm the rising pressure drop and the failing post-oxygenator gas, start inotropes and vasopressors before the pump stops, call the perfusionist with the primed backup, then exchange the circuit and reassess both circulations.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1096,7 +1096,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'vv-air-device-correct',
-            'The pump resumes only after the circuit is de-aired and confirmed clear; support is resumed per the current IFU and your local protocol.',
+            'The pump restarts only after the circuit is free of bubbles: drainage clamp open, bubble stop reset, return clamp open last.',
             'Resumption here is a single step taken after de-airing: the pump comes back with support restored, and the patient is never left across two open limbs of a stopped circuit.',
           ),
           option(
@@ -1138,8 +1138,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'vv-air-patient-correct',
-            'Oxygenation recovers after protocol-governed resumption with no embolic deterioration.',
-            'After protocol-governed resumption the model restores forward flow and oxygenation recovers, with no embolic deterioration because the air was cleared before flow returned.',
+            'Oxygenation recovers after the bubble stop is reset, with no embolic deterioration.',
+            'With the bubble stop reset and the return clamp opened last, forward flow returns and oxygenation recovers. There is no embolic deterioration because the air was cleared before flow returned.',
           ),
           option(
             'vv-air-patient-flow-only',
@@ -1167,8 +1167,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       },
       {
         id: 'vv-air-action',
-        title: 'Clue 2 · Isolate, de-air, then resume per protocol',
-        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then resume support per the current IFU and your local protocol.',
+        title: 'Clue 2 · Isolate, de-air, then reset and reopen',
+        text: 'Clamp the return limb, then the drainage limb. Call for help and the backup circuit. Find the source, aspirate the air and confirm the circuit is clear. Then open the drainage clamp, reset the bubble stop, and open the return clamp last.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',
@@ -1185,7 +1185,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-device-correct',
-            'The pump resumes only after de-airing, through the resumption governed by the current IFU and your local protocol.',
+            'The pump restarts only after de-airing: drainage clamp open, bubble stop reset, return clamp open last.',
             'Here, resumption is a single step available only once the circuit is de-aired; the pump returns with support restored and no interval of two open limbs on a stopped circuit.',
           ),
           option(
@@ -1227,8 +1227,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
         options: [
           option(
             'va-air-patient-correct',
-            'MAP and perfusion recover after protocol-governed resumption with no arterial embolic event.',
-            'After protocol-governed resumption the model restores VA flow, and MAP and perfusion recover with no arterial embolic event because the circuit was cleared before flow returned.',
+            'MAP and perfusion recover after the bubble stop is reset, with no arterial embolic event.',
+            'With the bubble stop reset and the return clamp opened last, VA flow returns and MAP and perfusion recover. There is no arterial embolic event because the circuit was cleared before flow returned.',
           ),
           option(
             'va-air-patient-map-only',
@@ -1256,8 +1256,8 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       },
       {
         id: 'va-air-action',
-        title: 'Clue 2 · Isolate, de-air, then resume per protocol',
-        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Then resume venoarterial support per the current IFU and your local protocol while you reassess perfusion.',
+        title: 'Clue 2 · Isolate, de-air, then reset and reopen',
+        text: 'Clamp return then drainage; the bubble stop has already stopped the pump. Call for help and the backup circuit; raise inotropes and the ventilator. Secure the connector, aspirate the air and confirm clear. Then open the drainage clamp, reset the bubble stop, open the return clamp last, and reassess perfusion.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',
@@ -1297,7 +1297,7 @@ const fallbackRationale = {
   patientConsole:
     'The console reports the circuit, not the patient. Oxygenation, PaCO₂, MAP, and perfusion are read at the bedside, and this case reads the patient response there as well.',
   patientNone:
-    'Acting on a cause, or recognising and escalating one, starts the response rather than ending it. What the patient’s values do over the time that follows is the evidence to read.',
+    'Acting on a cause starts the response rather than ending it. What the patient’s values do over the time that follows is the evidence to read.',
 } as const
 
 export function resolveScenarioReassessment(

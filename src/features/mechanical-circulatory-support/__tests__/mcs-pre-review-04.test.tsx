@@ -111,7 +111,9 @@ describe('F02 — the hub', () => {
     )
     // The refresher is a link, not a gate: Start does not route through it.
     expect(start.getAttribute('href')).not.toMatch(/hemodynamics/)
-    expect(document.querySelector('[data-hub-time-note]')).toHaveTextContent(/not measured/)
+    expect(document.querySelector('[data-hub-time-note]')).toHaveTextContent(
+      /Minutes are estimates for the main path/,
+    )
   })
 
   it('resumes a returning learner without resetting anything', async () => {
@@ -137,14 +139,13 @@ describe('F02 — the hub', () => {
     expect(window.localStorage.getItem(PROGRESS_KEY)).toBe(before)
   })
 
-  it('keeps the review status on the page and the reviewer checklist one click in', async () => {
+  it('states that this is a teaching simulator after the pathway, with no review status', async () => {
     render(<McsHub />)
     await settle()
-    expect(document.querySelector('[data-review-governance]')).toHaveTextContent(
-      /Preview · pending clinical review/,
-    )
-    const reviewer = document.querySelector<HTMLDetailsElement>('[data-reviewer-layer]')!
-    expect(reviewer.open).toBe(false)
+    const reviewer = document.querySelector<HTMLElement>('[data-review-governance]')!
+    expect(reviewer).toHaveTextContent(/This is a teaching simulator\./)
+    expect(reviewer).not.toHaveTextContent(/pending clinical review|NOT REVIEWED/i)
+    expect(document.querySelector('[data-reviewer-layer]')).toBeNull()
     // It follows the reference material rather than standing between the hero and the pathway.
     const pathway = document.querySelector('#mcs-hub-pathway')!
     expect(
@@ -388,7 +389,7 @@ describe('F42 — the glossary from inside a lesson', () => {
     expect(dialog.querySelector('[data-glossary-abbreviations]')).toHaveTextContent(/PAPi/)
     expect(dialog.querySelector('[data-naming-row="impella-rp"]')).toHaveTextContent(/RP Flex/)
     expect(dialog.querySelector('[data-naming-row="lvad"]')).toHaveTextContent(
-      /not a HeartMate 3 simulator/,
+      /controller works as the HeartMate 3 controller does/,
     )
     fireEvent.click(within(dialog).getByRole('button', { name: /close/i }))
 
@@ -401,9 +402,6 @@ describe('F42 — the glossary from inside a lesson', () => {
     for (const sectionId of mcsStageLessonIds) {
       const view = mountSection(sectionId)
       expect(document.querySelectorAll('[data-glossary-trigger]')).toHaveLength(1)
-      expect(document.querySelector('[data-model-limits]')).toHaveTextContent(
-        'Limits of this simulation',
-      )
       view.unmount()
     }
   })
@@ -458,8 +456,8 @@ describe('F06, F30 and F39 — progressive disclosure that everyone can open', (
     ]) {
       expect(open(id)).toBe(false)
     }
-    // The limit that belongs to the open block stays in the open with it.
-    expect(document.querySelector('[data-congestion-limit]')!.closest('details')).toBeNull()
+    // What to read the pattern with stays in the open with the open block.
+    expect(document.querySelector('[data-congestion-reconcile]')!.closest('details')).toBeNull()
   })
 
   it('draws the ladder with one number per rung and organ response as the top', () => {
@@ -472,8 +470,8 @@ describe('F06, F30 and F39 — progressive disclosure that everyone can open', (
     ).toEqual([
       '1. Pressure',
       '2. Flow — three separate lines',
-      '3. Oxygen delivery — not directly calculated',
-      '4. Organ response — empty in this simulation',
+      '3. Oxygen delivery',
+      '4. Organ response',
     ])
     expect(document.querySelector('[data-ladder-orientation]')).toHaveTextContent(
       /pressure is the first rung and organ response is the top/,
@@ -536,9 +534,8 @@ describe('F36 — Mechanism Studio is an open sandbox on the reference patient',
     const scope = document.querySelector('[data-mcs-workbench-scope]')!
     expect(scope).toHaveAttribute('data-mcs-studio', 'true')
     const studio = document.querySelector<HTMLElement>('[data-mechanism-studio]')!
-    expect(studio).toHaveTextContent(/open sandbox on this module’s reference patient/)
-    expect(studio).toHaveTextContent(/no case to solve, no question to answer and no debrief/)
-    expect(studio).toHaveTextContent(/nothing you do here is recorded or counted/)
+    expect(studio).toHaveTextContent(/An open sandbox on the reference patient/)
+    expect(studio).toHaveTextContent(/There is no case to solve and nothing here is recorded/)
     expect(document.body.textContent).not.toMatch(/no patient and no debrief/)
     expect(document.querySelector('[data-case-workflow]')).toBeNull()
     expect(document.querySelector('[data-worked-explanation]')).toBeNull()
@@ -590,14 +587,14 @@ describe('F31, F32 and F33 — a case, by its own description', () => {
       expect(reasoning).toHaveTextContent(`Your prediction: ${wrong.label}`)
       const selected = reasoning.querySelector(`[data-prediction-reasoning="${wrong.id}"]`)!
       expect(selected).toHaveAttribute('data-fits', 'false')
-      expect(selected).toHaveTextContent('Why this does not fit this modeled state')
+      expect(selected).toHaveTextContent('Why this does not fit this patient')
       expect(selected).toHaveTextContent(mcsCasePredictionReasoning(scenario.id, wrong.id)!)
       for (const option of scenario.predictionOptions) {
         expect(reasoning).toHaveTextContent(mcsCasePredictionReasoning(scenario.id, option.id)!)
       }
       expect(
         reasoning.querySelector(`[data-prediction-reasoning="${scenario.correctPredictionId}"]`),
-      ).toHaveTextContent('Why this fits this modeled state')
+      ).toHaveTextContent('Why this fits this patient')
       expect(reasoning.textContent).not.toMatch(SCORE_LANGUAGE)
 
       // Retry is offered now, and clears the answer without touching the model.
@@ -642,15 +639,15 @@ describe('F31, F32 and F33 — a case, by its own description', () => {
     expect(run.querySelector('[data-run-actions]')!.textContent).not.toMatch(/[a-z]:[a-z]/)
   })
 
-  it('keeps the atrial-fibrillation hold exactly where it was', async () => {
+  it('keeps the atrial-fibrillation limit where it was, without packet ids or review status', async () => {
     render(<McsWorkbench section="practice" initialActivityId="IABP-02" />)
     await settle()
     fireEvent.click(screen.getByRole('button', { name: 'Open worked explanation' }))
     const held = document.querySelector('[data-condition-held="true"]')!
-    expect(held).toHaveTextContent(/MCS-03-05/)
-    expect(held).toHaveTextContent(/NOT REVIEWED/)
+    expect(held).toHaveTextContent(/Not used as a result/)
+    expect(held).not.toHaveTextContent(/MCS-03-05|NOT REVIEWED/)
     expect(document.querySelector('[data-option-reasoning="trigger"]')).toHaveTextContent(
-      /does not say which trigger to choose/,
+      /rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against/,
     )
   })
 
@@ -668,7 +665,7 @@ describe('F31, F32 and F33 — a case, by its own description', () => {
     expect(text).toContain('Authoring provenance — not independent clinical evidence')
   })
 
-  it('lists the claim checks for a case under its worked explanation, marked not reviewed', async () => {
+  it('lists the sources behind a case’s statements under its worked explanation, with no review status', async () => {
     render(<McsWorkbench section="practice" initialActivityId="IMP-01" />)
     await settle()
     fireEvent.click(screen.getByRole('button', { name: 'Open worked explanation' }))
@@ -679,7 +676,8 @@ describe('F31, F32 and F33 — a case, by its own description', () => {
       'data-claim-disposition',
       'wording-narrowed-to-source',
     )
-    expect(checks.querySelector('[data-claim-check-status]')).toHaveTextContent(/NOT REVIEWED/)
+    expect(checks.querySelector('[data-claim-check-status]')).toBeNull()
+    expect(checks).not.toHaveTextContent(/NOT REVIEWED|MCS-04-C\d+/)
     expect(checks).toHaveTextContent(/Printed page 7\.17/)
   })
 })
@@ -701,7 +699,7 @@ describe('F10 — the section footer says what each source is', () => {
     )
     for (const row of rows) {
       expect(row.querySelector('[data-source-class-label]')).toHaveTextContent(
-        /Opened and read for this module|Registered, not opened for this module/,
+        /Read first-hand|Listed for reference/,
       )
     }
     const checks = document.querySelector('[data-mcs-stage] [data-claim-source-checks]')!

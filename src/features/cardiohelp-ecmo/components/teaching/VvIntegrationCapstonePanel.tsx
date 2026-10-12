@@ -2,7 +2,7 @@ import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
 import { matrixCellEquivalent, type CapstoneMatrixCell } from './capstoneGrammarCell'
 import { CapstoneHypothesisMatrix, CapstoneMatrixSentences } from './CapstoneHypothesisMatrix'
-import { GuidedValue, ModelBoundary, TextEquivalent, round, styles } from './shared'
+import { GuidedValue, TextEquivalent, round, styles } from './shared'
 
 /**
  * One presentation, four explanations, and the discipline of not acting on the flow display.
@@ -71,8 +71,6 @@ const rows: readonly MatrixRow[] = [
           'Falls in this simulation, because the membrane resistance also constrains flow.',
         discriminator:
           'Read the gradient rather than the flow. The gradient is what separates a membrane problem from a return-side one.',
-        limitation:
-          'A membrane can lose gas transfer at the bedside without its resistance having risen enough to constrain flow. This simulation couples the two, so do not take an unchanged flow here as ruling a membrane problem out.',
       },
       'gas-side-interruption': {
         direction: 'Unchanged. The pump keeps moving blood through a membrane receiving no gas.',
@@ -111,8 +109,6 @@ const rows: readonly MatrixRow[] = [
           'Depends entirely on the change: a volume or intrathoracic-pressure change moves it, a rise in demand does not.',
         discriminator:
           'A drainage pressure that has become more negative points at volume or at what is around the cannula, not at consumption.',
-        limitation:
-          'This simulation has no preset that raises demand while leaving the circuit alone, so this row cannot be demonstrated here.',
       },
     },
   },
@@ -213,26 +209,20 @@ const rows: readonly MatrixRow[] = [
         direction: 'Falls while the displayed venous-line value rises.',
         discriminator:
           'The two moving in opposite directions is what makes recirculation visible at all.',
-        limitation:
-          'No sensor reads this. It exists only inside this simulation and is shown to make the divergence legible.',
       },
       'membrane-dysfunction': {
         direction: 'Falls, together with the venous-line value.',
         discriminator: 'Both fall together, so the divergence recirculation produces is absent.',
-        limitation: 'Modeled, not measured.',
       },
       'gas-side-interruption': {
         direction: 'Falls, together with the venous-line value.',
         discriminator:
           'The direction is shared with a membrane problem; the gas-side status and the gradient are what separate them.',
-        limitation: 'Modeled, not measured.',
       },
       'patient-side-change': {
         direction: 'Falls if consumption has risen or systemic flow has fallen.',
         discriminator:
           'A fall here with an entirely undisturbed circuit is what a patient-side change would look like.',
-        limitation:
-          'This simulation drives native cardiac output to a fixed value in VV and offers no preset that raises consumption alone, so this cannot be shown live here.',
       },
     },
   },
@@ -274,14 +264,10 @@ const rows: readonly MatrixRow[] = [
         direction: 'Little changed in this simulation.',
         discriminator:
           'Carbon dioxide clearance is governed by the gas side, which recirculation has not touched.',
-        limitation:
-          'At the bedside a large fall in useful support can eventually affect clearance too. This simulation keeps the two separate.',
       },
       'membrane-dysfunction': {
         direction: 'Would be expected to rise as transfer is lost.',
         discriminator: 'A rise here alongside a rising gradient points firmly at the device.',
-        limitation:
-          'The membrane-resistance preset in this simulation leaves the carbon dioxide value unchanged, so this row cannot be demonstrated with it.',
       },
       'gas-side-interruption': {
         direction: 'Rises quickly, with the pH following it down.',
@@ -293,7 +279,6 @@ const rows: readonly MatrixRow[] = [
           'Rises if production has risen or if the native lung has lost what it was contributing.',
         discriminator:
           'It moves more slowly than a gas-side interruption, and the gas connection is intact.',
-        limitation: 'Not demonstrable in this simulation for the reason given above.',
       },
     },
   },
@@ -379,8 +364,6 @@ const rows: readonly MatrixRow[] = [
           'This is where a patient-side change shows itself: new ventilator mechanics, a new chest finding, a change in temperature, sedation, agitation, or rising demand.',
         discriminator:
           'A new bedside or ventilator finding with an entirely undisturbed circuit is the strongest evidence for this explanation.',
-        limitation:
-          'This simulation holds these findings essentially fixed across the VV presets, so the row is authored teaching rather than something the modeled case will show you.',
       },
     },
   },
@@ -395,7 +378,7 @@ const rows: readonly MatrixRow[] = [
 const modelLimitations: readonly { readonly id: string; readonly text: string }[] = [
   {
     id: 'no-isolated-patient-side-preset',
-    text: 'No state in this simulation isolates a patient-side deterioration while leaving the circuit untouched. Native cardiac output is driven to a fixed value in venovenous support, the modeled oxygen consumption is authored per case rather than something a case changes over time, and the presets that do deteriorate a patient — a volume loss, a tension pneumothorax — also limit drainage, so their circuit does change. The column beside is therefore authored teaching supported by the sources, not a preview you can load.',
+    text: 'No state in this simulation isolates a patient-side deterioration while leaving the circuit untouched. Native cardiac output is driven to a fixed value in venovenous support, the modeled oxygen consumption is set per case rather than something a case changes over time, and the presets that do deteriorate a patient — a volume loss, a tension pneumothorax — also limit drainage, so their circuit does change. The column beside is therefore teaching from the sources, not a preview you can load.',
   },
   {
     id: 'membrane-preset-also-constrains-flow',
@@ -451,7 +434,7 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
 
         <CapstoneHypothesisMatrix
           idPrefix="vv-capstone"
-          caption="Each observed signal with its live value in the case currently loaded, and the direction each of the four explanations predicts for it, together with what makes that row useful and any limitation that applies."
+          caption="Each observed signal with its live value in the case currently loaded, and the direction each of the four explanations predicts for it, together with what makes that row useful."
           hypotheses={hypotheses}
           rows={rows.map((row) => ({
             id: row.id,
@@ -471,20 +454,10 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
                   (row) =>
                     `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
                 )
-                .join(' ')}{' '}
-              {rows
-                .filter((row) => row.cells[hypothesis.id].limitation)
-                .map((row) => `Limitation for ${row.label}: ${row.cells[hypothesis.id].limitation}`)
                 .join(' ')}
             </TextEquivalent>
           ))}
         </CapstoneMatrixSentences>
-
-        <ModelBoundary>
-          The directions in the matrix are what these mechanisms do. The magnitudes and the speed at
-          which the modeled values reach them belong to this simulation, and two of the rows cannot
-          be shown live here at all — the limitations below say which and why.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="patient-side-heading">
@@ -514,20 +487,24 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
       </section>
 
       <section className={styles.section} aria-labelledby="capstone-limitations-heading">
-        <h3 id="capstone-limitations-heading" className={styles.heading}>
-          Where this simulation stops
-        </h3>
-        <ul className="mt-3 grid gap-2" data-model-limitations>
-          {modelLimitations.map((limitation) => (
-            <li
-              key={limitation.id}
-              className="rounded-xl border px-3 py-2 text-sm leading-6"
-              data-model-limitation={limitation.id}
-            >
-              {limitation.text}
-            </li>
-          ))}
-        </ul>
+        <details data-model-boundary>
+          <summary className="cursor-pointer">
+            <h3 id="capstone-limitations-heading" className={`${styles.heading} inline`}>
+              Where this simulation stops
+            </h3>
+          </summary>
+          <ul className="mt-3 grid gap-2" data-model-limitations>
+            {modelLimitations.map((limitation) => (
+              <li
+                key={limitation.id}
+                className="rounded-xl border px-3 py-2 text-sm leading-6"
+                data-model-limitation={limitation.id}
+              >
+                {limitation.text}
+              </li>
+            ))}
+          </ul>
+        </details>
       </section>
 
       <GuidedValue

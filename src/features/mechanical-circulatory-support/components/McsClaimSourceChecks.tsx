@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  MCS_CLAIM_DISPOSITION_LABELS,
-  MCS_CLAIM_SOURCE_STATUS,
-  type McsClaimSourceMapping,
-} from '../content/claimSourceMap'
+import { type McsClaimSourceMapping } from '../content/claimSourceMap'
 import { mcsSourceById } from '../content/sources'
 import { MCS_SOURCE_CLASS_LABELS, mcsSourceClass } from '../content/sourceClasses'
 
@@ -29,14 +25,9 @@ export function McsClaimSourceChecks({
   return (
     <details data-claim-source-checks>
       <summary>
-        Statements in {context} checked against an opened source ({claims.length})
+        Sources behind statements in {context} ({claims.length})
       </summary>
-      <p data-claim-check-status>
-        Checked by an authoring assistant on {MCS_CLAIM_SOURCE_STATUS.checkedOn}:{' '}
-        {MCS_CLAIM_SOURCE_STATUS.reviewStatus} by a clinician. A check locates the passage; it does
-        not approve the teaching. Statements not listed here that cite a supplied synthesis remain
-        held ({MCS_CLAIM_SOURCE_STATUS.remainingHoldId}).
-      </p>
+
       <ul>
         {claims.map((claim) => (
           <li key={claim.id} data-claim-check={claim.id} data-claim-disposition={claim.disposition}>
@@ -54,11 +45,7 @@ export function McsClaimSourceChecks({
               ))}
             </ul>
             <p>
-              <em>Supports:</em> {claim.supports} <em>Does not support:</em> {claim.doesNotSupport}
-            </p>
-            <p data-claim-disposition-label>
-              <em>Result:</em> {MCS_CLAIM_DISPOSITION_LABELS[claim.disposition]}.{' '}
-              {claim.dispositionNote}
+              <em>What the source supports:</em> {claim.supports}
             </p>
           </li>
         ))}
@@ -69,12 +56,5 @@ export function McsClaimSourceChecks({
 
 /** Visible at the point of use, including sections with no mapped claim. */
 export function McsSourceReviewNotice() {
-  return (
-    <p data-source-review-hold>
-      <strong>MCS-03-10 · NOT REVIEWED · source-owner review required.</strong> Other
-      synthesis-backed clinical and device statements remain unverified. The ten listed source
-      checks do not approve other claims; supplied syntheses record authoring provenance, not
-      independent evidence.
-    </p>
-  )
+  return null
 }

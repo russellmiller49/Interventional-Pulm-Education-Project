@@ -43,13 +43,10 @@ export function BaxterCrrtLearnLanding() {
             </p>
           </div>
           <div>
-            <p className="font-semibold">Educational model · pending clinical review</p>
+            <p className="font-semibold">A teaching simulator</p>
             <p className="text-muted-foreground">
-              Values, device responses, and alarm behavior are synthetic teaching examples.
-              Finishing this pathway does not by itself qualify anyone to prescribe, set up, run, or
-              troubleshoot CRRT independently, and it replaces no local protocol. Confirm every
-              workflow against current PrisMax instructions, your local policy, and the responsible
-              clinical team.
+              The patients and readings are invented. Alarm names and limits are the PrisMax’s own;
+              your unit may set some limits differently.
             </p>
           </div>
         </aside>

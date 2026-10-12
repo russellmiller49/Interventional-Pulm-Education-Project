@@ -66,7 +66,7 @@ const TASK_INTERACTIONS = ['matching', 'sequence', 'record']
  */
 const KIND_LABELS: Record<LessonActivity['kind'], string> = {
   briefing: 'Teaching',
-  demonstration: 'Worked demonstration',
+  demonstration: 'Worked example',
   application: 'Guided task',
   acquisition: 'Your acquisition',
   interpretation: 'Check',
@@ -104,7 +104,6 @@ function LessonSession({
   const heading = useRef<HTMLHeadingElement>(null)
   const lessonFlow = useRef<HTMLDivElement>(null)
   const lessonChrome = useRef<HTMLDivElement>(null)
-  useLessonChromeClearance(lessonFlow, lessonChrome)
   const [sessionId] = useState(() => lesson.id + '-' + Math.random().toString(36).slice(2))
   const position = activities.findIndex((activity) => activity.id === activeId)
   const current = activities.find((activity) => activity.id === (reviewId ?? activeId))!
@@ -129,9 +128,24 @@ function LessonSession({
    * conditions the gate applies, so the learner can see which one is open instead of reading one
    * sentence that names a camera this lab does not have. Nothing here changes the gate.
    */
-  const labOutstanding = runtimeLab
+  const labUnmet = runtimeLab
     ? labGoalRequirements(runtimeLab, observation).filter((requirement) => !requirement.met)
     : []
+  /*
+   * While a slider moves, the image is a frame behind for a moment, so the "wait for the image"
+   * conditions go unmet and met again many times a second. Listing them made the to-do row and
+   * the button flash on every step of a drag (owner feedback of 2026-10-11). They are not steps
+   * the learner takes, so they are not listed, and a lab that is only waiting on them is shown as
+   * it will be once the frame arrives. The gate itself still waits: `advance` checks `labDone`.
+   */
+  const labSteps = labUnmet.filter(
+    (r) => !['ready', 'frame-ready', 'linked-frame', 'frame-matches-settings'].includes(r.id),
+  )
+  const labSettling = labUnmet.length > 0 && labSteps.length === 0
+  const labShownDone = labDone || labSettling
+  // "Move a control" says nothing once a more specific step is listed; any of those moves one.
+  const labOutstanding =
+    labSteps.length > 1 ? labSteps.filter((r) => r.id !== 'used-a-control') : labSteps
   const acquireStep = !reviewId && current.interaction === 'acquire'
   const onObservation = useCallback((value: EbusObservation) => {
     setObservation(value)
@@ -253,7 +267,7 @@ function LessonSession({
     : reviewId
       ? 'Return to current task'
       : acquireStep
-        ? 'Hold this acquisition'
+        ? 'Continue with this image'
         : taskOpen
           ? (nextTitle || current.questions.length ? 'Continue' : 'Finish lesson') +
             (current.interaction === 'record'
@@ -264,24 +278,33 @@ function LessonSession({
             : question && !lastQuestion
               ? 'Next check'
               : finishOrNext
-  const primaryDisabled = holdRequested || (acquireStep && !labDone)
+  const primaryDisabled = holdRequested || (acquireStep && !labShownDone)
   /*
-   * How much weight the advance control carries (EBUS-PRE-REVIEW-01, L1-7). It is always in the
-   * same place and always says the same thing; only its prominence follows what it is offering.
-   *
-   *  - While a matching, sequence or record task is open it offers to leave that task
-   *    uncompleted. That stays one click away and plainly labelled, but the brightest control on
-   *    a screen whose point is the task should not be the one that skips it.
-   *  - While the primary is disabled on an acquisition step there would otherwise be no prominent
-   *    way forward at all, so "Continue without an image" carries the weight until a real
-   *    acquisition enables "Hold this acquisition" and takes it back. Nothing about what either
-   *    control does, or about the acquisition gate itself, changes here.
+   * The filled button is always the task: hold the acquisition, move on once a task is done.
+   * When the same control would instead leave a task or a check unanswered, it is a text link,
+   * and so is "Continue without an image". The brightest control on a screen used to be the one
+   * that skipped its point (visual review of 2026-10-07, item 7).
    */
-  const advanceIsProminent = !(taskOpen && !reviewId) && !primaryDisabled
-  const skipLeadsWhileDisabled = acquireStep && primaryDisabled && !holdRequested
+  /*
+   * A linked acquisition is worked in a console that fits one screen: task, checklist and the
+   * Hold button in a strip, the three views under it, nothing to scroll (visual review of
+   * 2026-10-07, item 1). Recorded-clip and model labs keep the reading layout for now.
+   */
+  const consoleStage =
+    !finished &&
+    !reviewId &&
+    current.interaction === 'acquire' &&
+    runtimeLab?.kind === 'simulator' &&
+    !!runtimeLab.linkedLesson
+  useLessonChromeClearance(lessonFlow, lessonChrome, consoleStage)
+  const advanceIsSkip =
+    !reviewId && !holdRequested && !acquireStep && (taskOpen || (!!question && !committed))
+  const advanceIsProminent = !advanceIsSkip
   const disabledReason = holdRequested
     ? 'Waiting for the workbench to acknowledge the paused frame.'
-    : 'Complete the acquisition to hold an image, or continue without one.'
+    : labOutstanding.length
+      ? 'To turn this on: ' + labOutstanding[0].text
+      : 'Loading the simulator…'
   useEffect(() => {
     if (
       !holdRequested ||
@@ -334,10 +357,9 @@ function LessonSession({
      * "exploration does not complete your activity" beside a step counter that looked like
      * tracking. The counter now says it records nothing; this says what does.
      */
-    demonstration:
-      'Worked demonstration, not an acquisition of yours: nothing you do here is recorded. Your own acquisition is the next task, and it counts once you hold it. Continuing without one is allowed; the lesson summary then lists that task as “No image held”.',
+    demonstration: 'Try the controls. Nothing on this screen is scored.',
     held:
-      'Your held acquisition, from this session in this workbench.' +
+      'The image you continued with.' +
       /*
        * Which of the five modelled contact conditions is actually held
        * (EBUS-PRE-REVIEW-02, carry-forward of L5-1). The workbench now reports it with the
@@ -345,13 +367,10 @@ function LessonSession({
        * to assume it matches whichever state the next check happens to name. The wording of the
        * checks is untouched; this only stops the evidence claiming more than it is.
        */
-      (heldContactMode
-        ? ' Contact condition held: ' + CONTACT_MODE_LABELS[heldContactMode] + '.'
-        : ''),
-    'held-missing':
-      'No acquisition is held in this session, so there is no image of yours to read here.',
-    live: 'Live workbench. Nothing is held yet; what you see moves with the controls.',
-    supplied: 'Supplied reference, authored for this course. It is not an acquisition of yours.',
+      (heldContactMode ? ' Contact condition: ' + CONTACT_MODE_LABELS[heldContactMode] + '.' : ''),
+    'held-missing': 'You continued without an image, so there is none to read here.',
+    live: 'Live image. It moves with the controls.',
+    supplied: 'Reference figure.',
   }
   /*
    * Whether the check in front of the learner is a reading of the held frame or a described
@@ -361,15 +380,8 @@ function LessonSession({
    */
   const checkUsesHeldImage = question?.imagePolicy === 'retained-acquisition'
   const scenarioCheckBesideHeldImage = !!question && evidenceKind === 'held' && !checkUsesHeldImage
-  /*
-   * L5-1, presentation only (EBUS-PRE-REVIEW-04). A check that reads the held frame can name one
-   * modelled contact condition while the learner held another: lesson 5's second check names the
-   * reflector whatever was selected when the frame was held. The frame is not replaced, relabelled
-   * or reconstructed, and the question is not reworded (that alignment is held for owner review).
-   * What is said is only what is true: which condition is held, which one the check names, and
-   * that the named one was inspected in this session — the activity cannot be held until all five
-   * conditions have been inspected (`MODEL_STEPS.contact`, checked by `labGoalMet`).
-   */
+  /* A named condition can differ from a held frame. OD-01 now compares mechanisms without
+   * naming a required held condition; preserve this support for explicitly named questions. */
   const namedContactMode = checkUsesHeldImage ? question?.namesContactMode : undefined
   const heldConditionDiffers =
     evidenceKind === 'held' &&
@@ -391,15 +403,17 @@ function LessonSession({
          */
         evidenceKind === 'held-missing'
         ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
-        : heldConditionDiffers
-          ? 'This check names a different contact condition (' +
-            CONTACT_MODE_LABELS[namedContactMode!] +
-            ') from the one your held image shows (' +
-            CONTACT_MODE_LABELS[heldContactMode!] +
-            '). Your held image stays as you acquired it. You inspected the condition the check names in the workbench before holding, so answer from that inspection.'
-          : scenarioCheckBesideHeldImage
-            ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
-            : current.instruction
+        : question?.id === 'cutaway-observe'
+          ? 'Compare the air-gap and reflector states you inspected in the echo schematic. Your held image stays as you acquired it; this comparison does not depend on which contact condition you held.'
+          : heldConditionDiffers
+            ? 'This check names a different contact condition (' +
+              CONTACT_MODE_LABELS[namedContactMode!] +
+              ') from the one your held image shows (' +
+              CONTACT_MODE_LABELS[heldContactMode!] +
+              '). Your held image stays as you acquired it. You inspected the condition the check names in the workbench before holding, so answer from that inspection.'
+            : scenarioCheckBesideHeldImage
+              ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
+              : current.instruction
   const unavailableReason = !question
     ? undefined
     : !missingImage
@@ -429,7 +443,7 @@ function LessonSession({
       case 'read':
         return 'Read'
       case 'acquire':
-        return heldFor[activity.id] ? 'Image acquired and held' : 'No image held'
+        return heldFor[activity.id] ? 'Image acquired' : 'No image'
       case 'questions':
         return checkStatus.charAt(0).toUpperCase() + checkStatus.slice(1)
       default: {
@@ -496,7 +510,7 @@ function LessonSession({
               {item.title}
             </Link>
           ))}
-          <span>Unlisted preview · For education and supervised training</span>
+          <span>For education and supervised training</span>
         </nav>
         {/*
          * Lesson identity, the lesson controls and the task counter, kept together and kept in
@@ -576,7 +590,21 @@ function LessonSession({
             nothing new is being saved. Everything stays open.
           </p>
         )}
-        <section className={styles.taskSurface} data-now-card aria-labelledby="ebus-task-title">
+        <section
+          className={styles.taskSurface}
+          data-now-card
+          data-console={consoleStage || undefined}
+          /*
+           * Every other acquisition (model and recorded-clip labs) keeps its reading layout but
+           * carries Back, the skip link and the primary button in the heading row, so the button
+           * is not below a workbench taller than the screen (owner request of 2026-10-11).
+           */
+          data-top-advance={
+            (!consoleStage && !finished && !reviewId && current.interaction === 'acquire') ||
+            undefined
+          }
+          aria-labelledby="ebus-task-title"
+        >
           <div className={styles.taskHeading}>
             <p className={styles.eyebrow} data-activity-kind={current.kind}>
               {reviewId ? 'Review · Current activity paused' : KIND_LABELS[current.kind]}
@@ -611,6 +639,13 @@ function LessonSession({
              * suits a reading task starves the one surface the learner is actually working in.
              */
             data-acquiring={current.interaction === 'acquire' && !reviewId ? 'true' : undefined}
+            /*
+             * A briefing with a live example puts the text above and gives the example the full
+             * width, so the three views and their controls sit in one row on one screen (owner
+             * feedback of 2026-10-11). Beside the text the workbench was too narrow for a row
+             * and stacked its views, and the controls scrolled away from the image they change.
+             */
+            data-stacked={showDemo && !finished ? 'true' : undefined}
           >
             <div
               className={styles.taskEvidence}
@@ -621,7 +656,7 @@ function LessonSession({
                   : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
-              {evidenceKind && (
+              {evidenceKind && evidenceKind !== 'held-missing' && (
                 <p
                   className={styles.evidenceIdentity}
                   data-evidence-identity={evidenceKind}
@@ -630,7 +665,17 @@ function LessonSession({
                   {evidenceLabel[evidenceKind]}
                 </p>
               )}
-              {runtimeActivity && runtimeLab ? (
+              {evidenceKind === 'held-missing' && runtimeActivity ? (
+                // After a skip there is nothing to show. The pane used to draw a frame titled
+                // "Retained ultrasound" beside a sentence saying no image was held.
+                <div className={styles.emptyEvidence} data-evidence-identity="held-missing">
+                  <strong>No image</strong>
+                  <p>You continued without an image, so there is nothing of yours to read here.</p>
+                  <button type="button" className={styles.button} onClick={returnToAcquisition}>
+                    Go back and acquire one
+                  </button>
+                </div>
+              ) : runtimeActivity && runtimeLab ? (
                 <Workbench
                   key={runtimeActivity.task ?? 'guided'}
                   lab={runtimeLab}
@@ -640,6 +685,7 @@ function LessonSession({
                   reveal={reveal && !reviewId}
                   sessionId={sessionId + '-' + (runtimeActivity.task ?? 'guided')}
                   onObservation={onObservation}
+                  console={consoleStage}
                 />
               ) : showDemo && lesson.lab ? (
                 <Workbench
@@ -650,6 +696,7 @@ function LessonSession({
                   demonstration
                   sessionId={sessionId + '-demonstration'}
                   onObservation={onObservation}
+                  console={lesson.lab.kind === 'simulator' && !!lesson.lab.linkedLesson}
                 />
               ) : current.image === 'reference' && lesson.station ? (
                 <StationFigure key={lesson.station} station={lesson.station} allowSelect />
@@ -741,7 +788,7 @@ function LessonSession({
                   <GlossaryTerms
                     entries={glossaryForLesson(lesson.id)}
                     heading="Terms used in this lesson"
-                    intro="Open a term for the course’s own definition. The full course glossary is under Help."
+                    intro="Open a term for its definition, source and limits. The full course glossary is under Help."
                     currentLessonId={lesson.id}
                   />
                 </div>
@@ -793,10 +840,10 @@ function LessonSession({
                 lesson.matching && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored matches"
+                    aria-label="The matches"
                     data-task-reference="matching"
                   >
-                    <h3>Authored matches</h3>
+                    <h3>The matches</h3>
                     <dl>
                       {lesson.matching.pairs.map((pair) => (
                         <div key={pair.id} className={styles.sequence}>
@@ -815,10 +862,10 @@ function LessonSession({
                 lesson.sequence && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored sequence"
+                    aria-label="The sequence"
                     data-task-reference="sequence"
                   >
-                    <h3>Authored sequence</h3>
+                    <h3>The sequence</h3>
                     <ol style={{ listStylePosition: 'inside' }}>
                       {lesson.sequence.steps.map((step) => (
                         <li key={step.id}>{step.text}</li>
@@ -917,21 +964,17 @@ function LessonSession({
                 <div role="status" className={styles.taskStatus} data-acquisition-status>
                   {reviewId ? (
                     <p>An earlier acquisition is not replayed during review.</p>
-                  ) : labDone ? (
-                    <p>The acquisition is ready. Hold this image to interpret it.</p>
+                  ) : labShownDone ? (
+                    <p>Ready. Select “Continue with this image”.</p>
                   ) : (
                     <>
-                      <p>
-                        Waiting for your acquisition.{' '}
-                        {runtimeLab?.kind === 'knobology'
-                          ? 'Selecting a recording is not yet an acquisition.'
-                          : 'Loading a preset or moving the observer camera is not an acquisition.'}{' '}
-                        You can also continue without an image; the next check then has nothing to
-                        interpret.
+                      <p data-acquisition-waiting>
+                        Work through the steps below. You can also continue without an image; the
+                        next check then has nothing to interpret.
                       </p>
                       {labOutstanding.length > 0 && (
                         <>
-                          <p>Still open on this acquisition:</p>
+                          <p>Still to do:</p>
                           <ul className={styles.taskSummary} data-acquisition-outstanding>
                             {labOutstanding.map((requirement) => (
                               <li key={requirement.id} data-requirement={requirement.id}>
@@ -955,9 +998,11 @@ function LessonSession({
                   </ul>
                 </section>
               )}
-              {!finished && (current.interaction === 'acquire' || current.image === 'held') && (
-                <p className={styles.muted}>{lesson.boundary}</p>
-              )}
+              {!finished &&
+                lesson.boundary &&
+                (current.interaction === 'acquire' || current.image === 'held') && (
+                  <p className={styles.muted}>{lesson.boundary}</p>
+                )}
               {current.companion && (
                 <Link className={styles.secondary} href={lessonHref(current.companion)}>
                   Related concept: {LESSONS.find((entry) => entry.id === current.companion)?.title}
@@ -987,11 +1032,8 @@ function LessonSession({
             {acquireStep && !holdRequested && !finished && (
               <button
                 type="button"
-                className={
-                  (skipLeadsWhileDisabled ? styles.button : styles.secondary) + ' ' + styles.skip
-                }
+                className={styles.skipLink + ' ' + styles.skip}
                 data-skip-acquisition
-                data-prominent={skipLeadsWhileDisabled || undefined}
                 onClick={skipAcquisition}
               >
                 Continue without an image
@@ -1010,7 +1052,7 @@ function LessonSession({
                 data-now-primary
                 data-prominent={advanceIsProminent || undefined}
                 className={
-                  (advanceIsProminent ? styles.button : styles.secondary) + ' ' + styles.advance
+                  (advanceIsProminent ? styles.button : styles.skipLink) + ' ' + styles.advance
                 }
                 disabled={primaryDisabled}
                 onClick={advance}
@@ -1111,11 +1153,11 @@ function LessonSession({
                 try again, or continue without answering. Restart begins a new acquisition. Exit
                 keeps your place; the unfinished lesson starts over when reopened.
               </p>
-              <p>{lesson.boundary}</p>
+              {lesson.boundary && <p>{lesson.boundary}</p>}
               <GlossaryTerms
                 entries={GLOSSARY}
                 heading="Course glossary"
-                intro="Definitions taken from the course’s own teaching. Terms the course uses without defining are not listed."
+                intro="The terms this course uses, with where each comes from."
                 currentLessonId={lesson.id}
               />
             </>

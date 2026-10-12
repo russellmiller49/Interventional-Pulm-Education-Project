@@ -75,9 +75,9 @@ export async function performModel(frame: FrameLocator, pkg: ModelPackage) {
     await click('Record comparison / limitation')
     await frame.getByLabel('Target / region', { exact: true }).selectOption('11R')
     await click('Record comparison / limitation')
-    await expect(frame.getByRole('status').first()).toContainText('not modeled')
+    await expect(frame.getByRole('status').first()).toContainText('not included in the model')
   }
   await expect(
-    frame.getByText('Required model actions recorded. Hold this acquisition in the lesson.'),
+    frame.getByText('All steps done. Select “Continue with this image” in the lesson.'),
   ).toBeVisible()
 }

@@ -8,8 +8,6 @@ import {
   derivedMetricRecords,
   derivedMetricTextEquivalent,
   derivedThresholdClassificationLabels,
-  DERIVED_VERIFICATION_NOTE,
-  derivedUnsupportedClaimTopics,
   requireDerivedInputDefinition,
   requireDerivedMetric,
   requireDerivedThresholdContext,
@@ -18,6 +16,7 @@ import {
   type DerivedMetricRecord,
 } from '../content'
 import { hemodynamicsSourceClassLabel } from '../content/sourceReviewMetadata'
+import { HemodynamicsReferenceValues } from './HemodynamicsReferenceValues'
 import styles from './icu-hemodynamics.module.css'
 
 /**
@@ -116,7 +115,7 @@ function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
           <dt>Body-size dependence</dt>
           <dd>
             {metric.requiresBodySurfaceArea
-              ? 'Requires a body surface area whose height-and-weight provenance is known. When body size is missing, this value is withheld rather than calculated from an assumed figure.'
+              ? 'Needs a body surface area from a measured height and weight (DuBois). Without one, the indexed value is not calculated.'
               : 'Does not use body surface area.'}
           </dd>
         </div>
@@ -140,7 +139,7 @@ function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
       </ul>
 
       <h4 className={styles.thermoTrialQuality}>
-        <span>Context-specific boundaries — each one classified</span>
+        <span>Reference values</span>
       </h4>
       <dl className={styles.curveFeatureList}>
         {metric.thresholdContextIds.map((contextId) => {
@@ -149,8 +148,8 @@ function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
             <div key={contextId}>
               <dt>{derivedThresholdClassificationLabels[context.classification]}</dt>
               <dd>
-                {context.statement} <strong>Applies to:</strong> {context.population}{' '}
-                {context.notUniversal}
+                {context.statement} <strong>Applies to:</strong> {context.population}
+                {context.notUniversal ? ` ${context.notUniversal}` : ''}
               </dd>
             </div>
           )
@@ -158,7 +157,7 @@ function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
       </dl>
 
       <h4 className={styles.thermoTrialQuality}>
-        <span>Sources and their limits</span>
+        <span>Sources</span>
       </h4>
       <ul className={styles.measurementTeachingAudit}>
         {metric.evidenceIds.map((evidenceId) => {
@@ -189,10 +188,8 @@ export function DerivedHemodynamicsTeachingPanel() {
         <h2 id={headingId}>Derived hemodynamics are equations, not new measurements</h2>
         <p>
           A derived value is an equation over measurements, and it cannot be more valid than its
-          inputs. For every displayed number this station asks the same questions: which equation
-          produced it, where each input came from, which method produced the flow, whether the
-          inputs belong to one measurement episode, whether the arithmetic is possible, what it is
-          sensitive to, and what it still does not establish.
+          inputs. For each one: which equation, where each input came from, which method produced
+          the flow, and whether the inputs were taken together.
         </p>
       </header>
 
@@ -225,18 +222,12 @@ export function DerivedHemodynamicsTeachingPanel() {
       <p className="sr-only">{derivedMetricTextEquivalent(selected)}</p>
       <MetricDetail metric={selected} />
 
-      <div className={styles.measurementTeachingCard}>
-        <h3>What this module does not claim</h3>
-        <p className={styles.openQuestionCard}>
-          <strong>No universal targets.</strong> No boundary on this station is a treatment target,
-          and the model refuses that classification outright. Declared source gaps:{' '}
-          {derivedUnsupportedClaimTopics().join(', ').replaceAll('-', ' ')}.
-        </p>
-        <p className={styles.measurementTeachingSource}>
-          <span>Source boundary</span>
-          {DERIVED_VERIFICATION_NOTE}
-        </p>
-      </div>
+      <HemodynamicsReferenceValues
+        title="Body surface area and indexing"
+        ids={['bsa-dubois', 'cardiac-index-range', 'svr-range', 'svri-range', 'pvri-range']}
+      >
+        <p className="mt-1">Cardiac index = cardiac output ÷ BSA.</p>
+      </HemodynamicsReferenceValues>
     </section>
   )
 }

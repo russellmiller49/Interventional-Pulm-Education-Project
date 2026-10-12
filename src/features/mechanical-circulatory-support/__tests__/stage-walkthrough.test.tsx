@@ -276,7 +276,7 @@ describe('the stage: verdicts, Back, sources, help', () => {
     mountSection('iabp-timing-triggering', 'explain')
     expect(currentStepId()).toBe('iabp-timing-triggering-explain')
     expect(document.querySelector('[data-stage-resumed-note]')?.textContent).toMatch(
-      /authored starting model/i,
+      /Opened at explain with the starting patient/i,
     )
     expect(storedLessonIds()).toEqual([])
   })

@@ -132,8 +132,8 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
             </text>
           </svg>
           <figcaption>
-            Qualitative loop shape responds to the synchronized educational model; it is not a
-            measured pressure-volume study.
+            The loop is drawn qualitatively by the simulator; it is not a measured pressure-volume
+            study.
           </figcaption>
         </figure>
       ) : null}
@@ -143,7 +143,7 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
         teaching surface. The balloon is shown inflated during modeled RA/RV-to-PA advancement and
         during the brief pulmonary-artery occlusion that produces the wedge preview; it is shown
         deflated after PA arrival and after wedge release. The catheter route and transducer are
-        educational overlays, not procedural placement guidance.
+        drawn over the anatomy.
       </p>
     </section>
   )

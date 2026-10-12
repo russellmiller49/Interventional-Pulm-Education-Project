@@ -167,10 +167,10 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               </dd>
             </div>
             <div>
-              <dt>Status</dt>
+              <dt>What it is</dt>
               <dd>
-                A draft educational simulation, not yet clinically reviewed. Finishing it does not
-                qualify anyone to prescribe, set up or run CRRT, and it replaces no local protocol.
+                A teaching simulator. It builds the reasoning; running a circuit is learned at the
+                bedside under supervision.
               </dd>
             </div>
           </dl>

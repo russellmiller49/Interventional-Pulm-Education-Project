@@ -1,73 +1,186 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { LESSONS } from '../content/lessons'
-import { localExercise } from '../content/local-exercises'
+import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
+import { NAV_LESSONS, THIN_LUMEN_FORKS, buildTrip, routePlan } from '../content/nav-lessons'
 import {
-  JUNCTION_FEEDBACK_OBSERVATION,
-  JUNCTION_FEEDBACK_SCOPE,
-  junctionFeedbackPacket,
-} from '../content/junction-feedback'
-import {
-  compareMarks,
   edgeAirway,
   edgeCrossings,
+  locatorOpening,
+  optionLocators,
+  optionVerdict,
   planeDistanceMm,
-  slotLocators,
+  responseLumen,
+  responsePlane,
 } from '../engine/junction-feedback'
 import decisions from '../geometry/branch-decisions.json'
 import routes from '../geometry/paired-routes.json'
-import { NATIVE_CT } from '../geometry/native-ct'
-import type { LocalCtExercise } from '../content/ct-types'
+import { CT_TRACES, NATIVE_CT } from '../geometry/native-ct'
 
-const FEATURE = path.join(process.cwd(), 'src/features/bronchial-branch-tracing')
-const packetExercise = (checkpointId: string): LocalCtExercise => {
-  const divisionExercise = (spec: { checkpointId: string; kind: string }) =>
-    spec.checkpointId === checkpointId && !['same-lumen', 'viewpoint'].includes(spec.kind)
-  const lesson = LESSONS.find((l) => l.exercises?.some(divisionExercise))!
-  return localExercise(lesson.exercises!.find(divisionExercise)!)
+/** Every route that passes a division, with the division's index on it. */
+const stationsFor = (checkpointId: string) =>
+  CT_TRACES.flatMap((trace) => {
+    const index = trace.checkpoints.findIndex((p) => p.id === checkpointId && p.decision)
+    return index < 0 ? [] : [{ trace, index }]
+  })
+const station = (checkpointId: string) => stationsFor(checkpointId)[0]
+/** The division as the route export has it. */
+const exportedDecision = (checkpointId: string) =>
+  decisions.traces.flatMap((t) => t.checkpoints).find((p) => p.id === checkpointId && p.decision)!
+    .decision!
+const junctionSlice = (checkpointId: string) =>
+  (exportedDecision(checkpointId).junctionLps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2]
+/** What a learner can be shown from a packet: everything but the project-record fields. */
+const learnerText = (checkpointId: string) => {
+  const packet = junctionFeedbackPacket(checkpointId)!
+  return JSON.stringify({
+    ...packet,
+    checkpointId: '',
+    uncertain: [],
+    naming: { ...packet.naming, uncertainty: '' },
+  })
 }
-const junctionSlice = (checkpointId: string) => {
-  const point = decisions.traces
-    .flatMap((t) => t.checkpoints)
-    .find((p) => p.id === checkpointId && p.decision)!
-  return (point.decision!.junctionLps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2]
-}
-/** Learner-facing grade, verdict or attributed-error wording that BBT-02 must not introduce. */
+/**
+ * Scoring and answer-leak wording a packet must not use. The bench says which lumen a mark is in;
+ * it does not score it. ("passed" is left out: junction-52 uses it for divisions travelled past.)
+ */
 const FORBIDDEN =
-  /\b(score|scored|grade|graded|pass|passed|fail|failed|penalt\w*|incorrect|wrong|correct)\b|you (mistook|confused)/i
+  /\b(score|scored|grade|graded|fail|failed|penalt\w*|incorrect|wrong|correct)\b|you (mistook|confused)/i
 
-describe('five-junction feedback packet', () => {
-  it('covers exactly five junctions that exist as local exercises, an easy central division first and subsegmental choices last', () => {
+describe('fork explanations', () => {
+  it('covers thirty-five divisions, the central one first, each of them on a route', () => {
     expect(JUNCTION_FEEDBACK_SCOPE).toEqual([
       'junction-1',
+      'junction-3',
       'junction-6',
-      'junction-10',
       'junction-14',
+      'junction-9',
+      'junction-10',
+      'junction-19',
       'junction-20',
+      'junction-16',
+      'junction-23',
+      'junction-11',
+      'junction-25',
+      'junction-52',
+      // The ten lobar and basal forks added on October 9, 2026.
+      'junction-2',
+      'junction-4',
+      'junction-5',
+      'junction-7',
+      'junction-8',
+      'junction-21',
+      'junction-22',
+      'junction-12',
+      'junction-17',
+      'junction-26',
+      // The twelve subsegmental forks where openings are marked, added on October 10, 2026.
+      'junction-36',
+      'junction-73',
+      'junction-138',
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-43',
+      'junction-46',
+      'junction-94',
+      'junction-47',
+      'junction-53',
+      'junction-91',
     ])
+    expect(new Set(JUNCTION_FEEDBACK_SCOPE).size).toBe(35)
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
-      const exercise = packetExercise(id)
-      const decision = exercise.trace.checkpoints[0].decision!
+      expect(packet.checkpointId).toBe(id)
+      // The division is a real fork of at least one route, and the same fork on all of them.
+      const on = stationsFor(id)
+      expect([id, on.length > 0]).toEqual([id, true])
+      const decision = exportedDecision(id)
+      for (const { trace, index } of on) {
+        const routeDecision = trace.checkpoints[index].decision!
+        expect(routeDecision.nodeId).toBe(decision.nodeId)
+        expect(routeDecision.options.map((o) => o.airway.code)).toEqual(packet.daughters)
+      }
       expect(packet.parent).toBe(decision.parent.airway.code)
       expect(packet.daughters).toEqual(decision.options.map((o) => o.airway.code))
-      expect(Object.keys(packet.whenNearer).sort()).toEqual([...packet.daughters].sort())
-      expect(exercise.answerPoints.map((p) => p.label)).toEqual(
-        packet.daughters.map((code, i) => `${String.fromCharCode(65 + i)} · ${code}`),
-      )
+      // Keyed by opening, not by code: several divisions have daughters that share a code.
+      expect(packet.whenNearer).toHaveLength(decision.options.length)
+      // Two openings everywhere but the one three-way fork on a route.
+      expect([id, decision.options.length]).toEqual([id, id === 'junction-138' ? 3 : 2])
+      expect(packet.divergence.length).toBeGreaterThan(0)
+      expect(packet.continuity.length).toBeGreaterThan(0)
+      expect(packet.moreEvidence.length).toBeGreaterThan(0)
     }
-    expect(junctionFeedbackPacket('junction-9')).toBeUndefined()
-    expect(junctionFeedbackPacket('junction-2')).toBeUndefined()
+    // A small distal fork has computed levels only, no written explanation.
+    expect(junctionFeedbackPacket('junction-30')).toBeUndefined()
+    expect(junctionFeedbackPacket('target-approach')).toBeUndefined()
   })
-  it('ties every revisit interval to the exercise the learner can actually browse and to the model node', () => {
+
+  it('explains every fork where a learner is asked to mark the openings', () => {
+    // Whole routes (Practice and the closing set) and every lesson trip.
+    const plans = [
+      ...CT_TRACES.map((trace) => ({ trace, plan: routePlan(trace) })),
+      ...NAV_LESSONS.flatMap((lesson) => lesson.trips.map((trip) => buildTrip(trip))),
+    ]
+    const marked = new Set<string>()
+    for (const { trace, plan } of plans)
+      for (const stop of plan.stations)
+        if (stop.steps.includes('identify')) marked.add(trace.checkpoints[stop.checkpointIndex].id)
+    expect(marked.size).toBe(27)
+    expect([...marked].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
+    // Eight explained forks are never marked: the left main bronchus, two small LB6 forks, and
+    // the five forks with a lumen about 2 mm wide.
+    expect(JUNCTION_FEEDBACK_SCOPE.filter((id) => !marked.has(id))).toEqual([
+      'junction-3',
+      'junction-25',
+      'junction-52',
+      'junction-138',
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-53',
+    ])
+  })
+
+  it('writes for choosing, not marking, at the five forks that are only chosen at', () => {
+    for (const id of THIN_LUMEN_FORKS) {
+      const packet = junctionFeedbackPacket(id)!
+      // No note for before marking, and no advice for a mark: there is no mark.
+      expect([id, packet.entryLimitation]).toEqual([id, undefined])
+      expect([id, packet.whenNearer.every((advice) => advice === null)]).toEqual([id, true])
+      // Nothing a learner is shown, or could be shown, tells them to mark ("A marker" is not it).
+      const text = [
+        packet.divergence,
+        packet.continuity,
+        packet.moreEvidence,
+        ...packet.known,
+        ...packet.revisit.map((r) => r.look),
+        ...packet.naming.demonstration,
+      ].join(' ')
+      expect([id, text.match(/\bmark(s|ed|ing)?\b/i)?.[0] ?? null]).toEqual([id, null])
+      // Each opening is still tied to the slice it is seen on.
+      expect([
+        id,
+        (packet.divergence.match(/\bseen\b[^.;]*?\bon slice \d+/g) ?? []).length > 0,
+      ]).toEqual([id, true])
+    }
+    // Every other explained fork has advice for a mark that lands elsewhere.
+    for (const id of JUNCTION_FEEDBACK_SCOPE.filter((id) => !THIN_LUMEN_FORKS.includes(id)))
+      expect([
+        id,
+        junctionFeedbackPacket(id)!.whenNearer.some((advice) => advice !== null),
+      ]).toEqual([id, true])
+  })
+
+  it('ties every revisit interval to slices the learner can browse and to the model node', () => {
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
-      const [low, high] = packetExercise(id).trace.range
       const node = junctionSlice(id)
-      for (const r of packet.revisit) {
-        expect(
-          [id, r.from, r.to].every((v) => typeof v === 'string' || (v >= low && v <= high)),
-        ).toBe(true)
+      for (const { trace } of stationsFor(id)) {
+        const [low, high] = trace.range
+        for (const r of packet.revisit)
+          expect([id, trace.id, [r.from, r.to].every((v) => v >= low && v <= high)]).toEqual([
+            id,
+            trace.id,
+            true,
+          ])
       }
       // The junction level is quoted in the divergence text at its rounded slice.
       expect(packet.divergence).toContain(`slice ${Math.round(node)}`)
@@ -77,148 +190,304 @@ describe('five-junction feedback packet', () => {
       expect([id, covered]).toEqual([id, true])
     }
   })
-  it('states known source relationships by edge, keeps uncertainty explicit, and never grades, verdicts or attributes an error', () => {
-    const phantoms = fs.readFileSync(path.join(FEATURE, 'content/phantoms.ts'), 'utf8')
-    const packetSource = fs.readFileSync(path.join(FEATURE, 'content/junction-feedback.ts'), 'utf8')
-    expect(packetSource).not.toMatch(/from '\.\/phantoms'|misconceptions/)
+
+  it('names the slice each daughter is identified on', () => {
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
-      const exercise = packetExercise(id)
-      const decision = exercise.trace.checkpoints[0].decision!
-      const text = JSON.stringify(packet)
-      expect([id, text.match(FORBIDDEN)?.[0] ?? null]).toEqual([id, null])
-      expect(packet.known.length).toBeGreaterThan(0)
-      expect(packet.uncertain.length).toBeGreaterThan(0)
-      expect(packet.known[0]).toContain(`edge ${decision.parent.sourceEdgeId}`)
-      for (const option of decision.options)
-        expect(packet.known[0]).toContain(`edge ${option.sourceEdgeId}`)
-      expect(packet.uncertain.join(' ')).toMatch(/faculty review|authoring[- ]session/)
-      // Synthetic phantom misconception sentences are not reused as evidence about the scan.
-      for (const sentence of [
-        'Recheck the course through adjacent slices; a screen position alone does not identify the destination.',
-        'A visible proximal opening does not establish its unseen distal connection.',
-        'Trace that evidence before deciding the continuation is unresolved.',
-      ]) {
-        expect(phantoms).toContain(sentence)
-        expect(text).not.toContain(sentence)
-      }
+      const { trace, index } = station(id)
+      packet.daughters.forEach((_, option) => {
+        const plane = responsePlane(trace, index, option)!
+        expect([
+          id,
+          option,
+          `${packet.divergence} ${packet.continuity}`.includes(`slice ${plane.slice}`),
+        ]).toEqual([id, option, true])
+      })
     }
-    expect(JUNCTION_FEEDBACK_OBSERVATION.status).toMatch(/Pending faculty review/)
   })
-  it('offers a naming try only where the name follows lobar or segmental anatomy, and shows subsegmental labels with their uncertainty', () => {
+
+  it('teaches in airway names with no source identifiers, and uses no scoring or answer-leak wording', () => {
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
-      const decision = packetExercise(id).trace.checkpoints[0].decision!
-      expect(packet.naming.demonstration.length).toBeGreaterThan(0)
-      const subsegmental = packet.daughters.some((code) => /^[RL]B\d+[a-c]$/.test(code))
-      if (subsegmental) {
-        expect([id, packet.naming.try]).toEqual([id, undefined])
-        expect(packet.naming.uncertainty).toMatch(/pending faculty review/)
-      } else {
-        const attempt = packet.naming.try!
-        expect(attempt.choices.map((c) => c.code).sort()).toEqual([...packet.daughters].sort())
-        expect(packet.daughters).toContain(attempt.describes)
-        expect(Object.keys(attempt.explanation).sort()).toEqual([...packet.daughters].sort())
-        // The described daughter agrees with the source geometry in patient LPS coordinates.
-        const described = decision.options.find((o) => o.airway.code === attempt.describes)!
-        const other = decision.options.find((o) => o.airway.code !== attempt.describes)!
-        if (id === 'junction-1') expect(described.lps[0]).toBeLessThan(other.lps[0]) // more right
-        if (id === 'junction-6') expect(described.lps[2]).toBeGreaterThan(other.lps[2]) // more cranial
-        if (id === 'junction-10') expect(described.lps[0]).toBeLessThan(other.lps[0]) // more lateral (right)
-      }
+      const text = learnerText(id)
+      expect([id, text.match(FORBIDDEN)?.[0] ?? null]).toEqual([id, null])
+      // Levels and distances are stated for the learner; edge and checkpoint ids are not.
+      expect(packet.known.length).toBeGreaterThan(0)
+      expect([id, text.match(/\bedge \d+|junction-\d+|\bOD-\d+|BBT-\d+/)?.[0] ?? null]).toEqual([
+        id,
+        null,
+      ])
+      // Review status is a project record: it is not in anything a learner is shown.
+      expect([
+        id,
+        text.match(/faculty review|authoring session|pending|provisional|not yet reviewed/i)?.[0] ??
+          null,
+      ]).toEqual([id, null])
     }
+  })
+
+  it('tells a learner who could not separate the lumens what to scroll to, not that leaving it is fine', () => {
+    for (const id of JUNCTION_FEEDBACK_SCOPE) {
+      const { moreEvidence } = junctionFeedbackPacket(id)!
+      expect([id, /\b(step|scroll|follow)\b/i.test(moreEvidence)]).toEqual([id, true])
+      expect([id, /\bslice \d+|\b\d{3}\b/.test(moreEvidence)]).toEqual([id, true])
+      expect(moreEvidence).not.toMatch(
+        /valid response|reasonable (record|response)|counted against/i,
+      )
+    }
+    expect(junctionFeedbackPacket('junction-1')!.moreEvidence).toMatch(
+      /Scroll down one slice at a time from 376: the wall appears on 375 and is thick by 372\. Mark each oval on 372\./,
+    )
+  })
+
+  it('asks a naming question wherever the two daughters have different names, in the textbook orientation', () => {
+    const withTry = JUNCTION_FEEDBACK_SCOPE.filter((id) => junctionFeedbackPacket(id)!.naming.try)
+    expect(withTry).toEqual([
+      'junction-1',
+      'junction-3',
+      'junction-6',
+      'junction-14',
+      'junction-9',
+      'junction-10',
+      'junction-20',
+      'junction-23',
+      'junction-2',
+      'junction-4',
+      'junction-5',
+      'junction-7',
+      'junction-21',
+      'junction-22',
+      'junction-12',
+      'junction-26',
+    ])
+    for (const id of JUNCTION_FEEDBACK_SCOPE) {
+      const packet = junctionFeedbackPacket(id)!
+      expect(packet.naming.demonstration.length).toBeGreaterThan(0)
+      // No question where this source gives both daughters, or one daughter and the parent, one code.
+      const distinct =
+        new Set(packet.daughters).size === packet.daughters.length &&
+        !packet.daughters.includes(packet.parent)
+      expect([id, Boolean(packet.naming.try)]).toEqual([id, distinct])
+      if (!packet.naming.try) continue
+      const attempt = packet.naming.try
+      const decision = exportedDecision(id)
+      expect(attempt.choices.map((c) => c.code).sort()).toEqual([...packet.daughters].sort())
+      expect(packet.daughters).toContain(attempt.describes)
+      expect(Object.keys(attempt.explanation).sort()).toEqual([...packet.daughters].sort())
+      // The described daughter agrees with the source geometry in patient LPS coordinates:
+      // +x is the patient's left, +y posterior, +z cranial.
+      const described = decision.options.find((o) => o.airway.code === attempt.describes)!
+      const other = decision.options.find((o) => o.airway.code !== attempt.describes)!
+      const more = { right: 0, anterior: 1, caudal: 2 } as const
+      const expectMore = (axis: keyof typeof more, sign: 1 | -1 = 1) =>
+        expect([id, axis, sign * (other.lps[more[axis]] - described.lps[more[axis]]) > 0]).toEqual([
+          id,
+          axis,
+          true,
+        ])
+      if (id === 'junction-1') expectMore('right')
+      if (id === 'junction-3') expectMore('caudal') // LLL continues caudally
+      if (id === 'junction-3') expectMore('anterior', -1) // and posteriorly
+      if (id === 'junction-6') expectMore('caudal', -1) // LB6 runs upward
+      if (id === 'junction-9') expectMore('caudal', -1) // RB6 runs upward
+      if (id === 'junction-9') expectMore('anterior', -1) // from the posterior wall
+      if (id === 'junction-10') expectMore('right') // RB4 is lateral in the right lung
+      if (id === 'junction-14') expectMore('anterior', -1) // RB1a is the posterior (dorsal) one
+      if (id === 'junction-20') expectMore('caudal') // RB5b descends
+      if (id === 'junction-23') expectMore('anterior') // LB3 is the anterior (ventral) one
+      if (id === 'junction-2') expectMore('caudal') // the bronchus intermedius carries on down
+      if (id === 'junction-4') expectMore('anterior') // RB3 is the anterior segmental bronchus
+      if (id === 'junction-5') expectMore('anterior') // the middle-lobe bronchus leaves the front wall
+      if (id === 'junction-7') expectMore('caudal', -1) // RB1 climbs to the apex
+      if (id === 'junction-21') expectMore('caudal', -1) // the upper division climbs
+      if (id === 'junction-22') expectMore('caudal') // LB5, the inferior lingular bronchus, turns down
+      if (id === 'junction-12') expectMore('anterior', -1) // LB10 is the posterior basal bronchus
+      if (id === 'junction-26') expectMore('caudal') // LB9 carries on down
+    }
+    // Kurimoto & Morita: B1a dorsal, B1b ventral; B5a horizontal, B5b caudal.
+    const rb1 = junctionFeedbackPacket('junction-14')!.naming
+    expect(rb1.try!.describes).toBe('RB1a')
+    expect(rb1.demonstration.join(' ')).toMatch(
+      /RB1a, which goes posteriorly \(dorsal\), and RB1b, which goes anteriorly \(ventral\)/,
+    )
+    expect(rb1.try!.explanation.RB1a).toMatch(/dorsal.*posterior/)
+    expect(rb1.try!.explanation.RB1b).toMatch(/ventral.*anterior/)
+    const rb5 = junctionFeedbackPacket('junction-20')!.naming
+    expect(rb5.try!.describes).toBe('RB5b')
+    expect(rb5.demonstration.join(' ')).toMatch(
+      /RB5a, which runs forward near-horizontally, and RB5b, which runs forward and down/,
+    )
+    expect(rb5.try!.explanation.RB5a).toMatch(/horizontal/)
+    expect(rb5.try!.explanation.RB5b).toMatch(/caudal/)
+    // The model agrees: on the response planes RB1b lies anterior to RB1a.
+    const [rb1b, rb1a] = exportedDecision('junction-14').options
+    expect([rb1b.airway.code, rb1a.airway.code]).toEqual(['RB1b', 'RB1a'])
+    expect(rb1b.lps[1]).toBeLessThan(rb1a.lps[1])
   })
 })
 
-describe('mark comparison engine', () => {
-  const j1 = packetExercise('junction-1')
-  const [rmsb, lmsb] = j1.trace.checkpoints[0].decision!.options
+describe('model locators on a response plane', () => {
+  const j1 = station('junction-1')
+  const [routeRmsb, routeLmsb] = exportedDecision('junction-1').options
+  const [rmsb, lmsb] = [0, 1].map((option) => responsePlane(j1.trace, j1.index, option)!)
+
   it('labels every route-union edge from the branch registry and interpolates plane crossings in native pixels', () => {
     for (const edge of routes.edges)
       expect([edge.id, edgeAirway(edge.id)?.code]).not.toContain(undefined)
+    expect(edgeAirway(999)).toBeUndefined()
     expect(edgeCrossings(0, 400)).toHaveLength(1) // trachea crosses slice 400 once
     expect(edgeCrossings(0, 387)).toHaveLength(0) // and ends at the carina above 387
     expect(edgeCrossings(999, 387)).toHaveLength(0)
-    const [crossing] = edgeCrossings(rmsb.sourceEdgeId, 387)
-    // The authored answer pixel was sampled by the build script; it sits within half a millimetre of the interpolated crossing.
-    expect(planeDistanceMm(crossing, rmsb.pixel)).toBeLessThan(0.5)
+    // The export keeps its own plane, slice 387. The exported pixel was sampled by the build
+    // script; it sits within half a millimetre of the interpolated crossing.
+    expect([routeRmsb.slice, routeLmsb.slice]).toEqual([387, 387])
+    const [routeCrossing] = edgeCrossings(routeRmsb.sourceEdgeId, 387)
+    expect(planeDistanceMm(routeCrossing, routeRmsb.pixel)).toBeLessThan(0.5)
+    expect(planeDistanceMm(routeRmsb.pixel, routeLmsb.pixel)).toBeCloseTo(8.6, 1)
+    // The same two centrelines are identified on slice 372, below the carina.
+    expect([rmsb.slice, lmsb.slice]).toEqual([372, 372])
+    expect(rmsb.pixel).toEqual(edgeCrossings(routeRmsb.sourceEdgeId, 372)[0])
+    expect(lmsb.pixel).toEqual(edgeCrossings(routeLmsb.sourceEdgeId, 372)[0])
+    expect(planeDistanceMm(rmsb.pixel, lmsb.pixel)).toBeCloseTo(30.5, 1)
   })
-  it('reports the intended locator, the nearest other named airway and the span, and never mutates the marks', () => {
-    const marks = [
-      { slice: 387, pixel: [...rmsb.pixel] as [number, number] },
-      { slice: 387, pixel: null },
-    ]
-    const before = JSON.stringify(marks)
-    const [a, b] = compareMarks(j1, marks)
-    expect(JSON.stringify(marks)).toBe(before)
-    expect(a.status).toBe('nearest-intended')
-    expect(a.intended!.mm).toBeCloseTo(0, 5)
-    expect(a.others[0].locator.airway.code).toBe('LMSB')
-    expect(a.others[0].locator.role).toBe('daughter')
-    expect(a.others[0].mm).toBeCloseTo(8.6, 1)
-    expect(a.beyondSpan).toBe(false)
-    expect(b).toMatchObject({ status: 'unresolved', intended: null, others: [], beyondSpan: false })
-    // A mark placed on the other daughter's locator is reported as nearer that airway, not as an error.
-    const [swapped] = compareMarks(j1, [{ slice: 387, pixel: [...lmsb.pixel] }, null])
-    expect(swapped.status).toBe('nearest-other')
-    expect(swapped.others[0].locator.airway.code).toBe('LMSB')
-    expect(swapped.others[0].mm).toBeCloseTo(0, 5)
-    expect(swapped.intended!.mm).toBeCloseTo(8.6, 1)
-    expect(swapped.beyondSpan).toBe(false)
-    // Beyond the other locator: farther from RMSB than LMSB is.
-    const [beyond] = compareMarks(j1, [
-      { slice: 387, pixel: [lmsb.pixel[0] + 6, lmsb.pixel[1]] },
-      null,
-    ])
-    expect(beyond.status).toBe('nearest-other')
-    expect(beyond.beyondSpan).toBe(true)
-    // A mark on another slice is not compared against this slice's locators.
-    expect(compareMarks(j1, [{ slice: 390, pixel: [...rmsb.pixel] }, null])[0].status).toBe(
-      'unresolved',
-    )
+
+  it('reports the intended locator, the other daughter and the lumen, and never moves a mark', () => {
+    const locators = optionLocators(j1.trace, j1.index, 0)
+    expect(locators[0]).toEqual({
+      edgeId: routeRmsb.sourceEdgeId,
+      airway: routeRmsb.airway,
+      role: 'intended',
+      pixel: rmsb.pixel,
+    })
+    expect(locators.filter((l) => l.role === 'intended')).toHaveLength(1)
+    const sibling = locators.find((l) => l.role === 'daughter')!
+    expect(sibling).toMatchObject({ edgeId: routeLmsb.sourceEdgeId, airway: { code: 'LMSB' } })
+    expect(sibling.pixel).toEqual(lmsb.pixel)
+    // The trachea ends above slice 372: no parent locator on this plane.
+    expect(locators.some((l) => l.role === 'parent')).toBe(false)
+
+    const mark = { slice: 372, pixel: [...rmsb.pixel] as [number, number] }
+    const before = JSON.stringify(mark)
+    const result = optionVerdict(j1.trace, j1.index, 0, mark)!
+    expect(JSON.stringify(mark)).toBe(before)
+    expect(result.verdict).toBe('intended-lumen')
+    expect(result.toIntended.mm).toBeCloseTo(0, 9)
+    expect(result.nearest).toEqual(locators[0])
+    expect(result.reached[0].mm).toBeCloseTo(0, 9)
+    // A mark on the other daughter's locator is in the other main bronchus, 30.5 mm away.
+    const swapped = optionVerdict(j1.trace, j1.index, 0, { slice: 372, pixel: [...lmsb.pixel] })!
+    expect(swapped.verdict).toBe('other-airway')
+    expect(swapped.nearest!.airway.code).toBe('LMSB')
+    expect(swapped.reached[0].mm).toBeCloseTo(0, 9)
+    expect(swapped.toIntended.mm).toBeCloseTo(30.5, 1)
+    // A mark on another slice is not compared against this plane's locators: the export's
+    // plane, slice 387, is not where the main bronchi are identified.
+    for (const slice of [387, 375])
+      expect([
+        slice,
+        optionVerdict(j1.trace, j1.index, 0, { slice, pixel: [...rmsb.pixel] }),
+      ]).toEqual([slice, null])
   })
-  it('includes the parent where its edge still crosses the answer plane and other named airways, one per code', () => {
-    const j6 = packetExercise('junction-6')
-    const lb6Locators = slotLocators(j6, 0)
-    const parent = lb6Locators.find((l) => l.role === 'parent')!
+
+  it('includes the parent where its edge still crosses the response plane, and other named airways', () => {
+    const j6 = station('junction-6')
+    const plane = responsePlane(j6.trace, j6.index, 0)!
+    expect(plane.slice).toBe(326)
+    const parent = optionLocators(j6.trace, j6.index, 0).find((l) => l.role === 'parent')!
     expect(parent.airway.code).toBe('LLL')
     expect(edgeCrossings(parent.edgeId, 326)).toHaveLength(1)
-    const [onParent] = compareMarks(j6, [{ slice: 326, pixel: [...parent.pixel] }, null])
-    expect(onParent.status).toBe('nearest-other')
-    expect(onParent.others[0].locator).toMatchObject({ role: 'parent', airway: { code: 'LLL' } })
-    const j20 = packetExercise('junction-20')
-    const [rb5a] = compareMarks(j20, [
-      { slice: 309, pixel: [...j20.answerPoints[0].pixel] },
-      { slice: 301, pixel: null },
+    const onParent = optionVerdict(j6.trace, j6.index, 0, { slice: 326, pixel: [...parent.pixel] })!
+    expect(onParent.nearest).toMatchObject({ role: 'parent', airway: { code: 'LLL' } })
+    expect(onParent.verdict).toBe('near-fork')
+
+    const j20 = station('junction-20')
+    const rb5a = responsePlane(j20.trace, j20.index, 0)!
+    expect(rb5a.slice).toBe(309)
+    const locators = optionLocators(j20.trace, j20.index, 0)
+    expect(locators.filter((l) => l.role === 'other').map((l) => l.airway.code)).toContain('RML')
+    // A division's own edges are never listed again as "other".
+    const decision = j20.trace.checkpoints[j20.index].decision!
+    const own = new Set([
+      decision.parent.sourceEdgeId,
+      ...decision.options.map((o) => o.sourceEdgeId),
     ])
-    expect(rb5a.status).toBe('nearest-intended')
-    expect(rb5a.others.map((o) => o.locator.airway.code)).toContain('RML')
-    const codes = rb5a.others.map((o) => o.locator.airway.code)
-    expect(new Set(codes).size).toBe(codes.length)
-    expect(codes).not.toContain('RB5a')
+    expect(locators.filter((l) => l.role === 'other').some((l) => own.has(l.edgeId))).toBe(false)
+    // Each airway a mark's air reaches is reported once, nearest crossing first.
+    const reached = optionVerdict(j20.trace, j20.index, 0, {
+      slice: 309,
+      pixel: [...rb5a.pixel],
+    })!.reached
+    expect(new Set(reached.map((r) => r.locator.edgeId)).size).toBe(reached.length)
+    expect(reached.map((r) => r.mm)).toEqual([...reached.map((r) => r.mm)].sort((a, b) => a - b))
   })
-  it('returns every packet junction as unresolved without marks and as nearest-intended at the model locators, and nothing for same-lumen intervals', () => {
+
+  it('says which opening a mark landed in by airway edge, where the daughters share one name', () => {
+    // At every fork with an explanation: a mark in one opening's own lumen, made while another
+    // opening is being identified, is traced back to the opening it is in.
+    let checked = 0
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
-      const exercise = packetExercise(id)
-      const none = compareMarks(
-        exercise,
-        exercise.answerPoints.map(() => null),
-      )
-      expect(none.map((c) => c.status)).toEqual(exercise.answerPoints.map(() => 'unresolved'))
-      const exact = compareMarks(
-        exercise,
-        exercise.answerPoints.map((p) => ({
-          slice: p.slice,
-          pixel: [...p.pixel] as [number, number],
-        })),
-      )
-      expect(exact.map((c) => [c.status, Number(c.intended!.mm.toFixed(3))])).toEqual(
-        exercise.answerPoints.map(() => ['nearest-intended', 0]),
-      )
+      const { trace, index } = station(id)
+      const options = trace.checkpoints[index].decision!.options
+      options.forEach((_, asked) => {
+        options.forEach((_, landed) => {
+          if (asked === landed) return
+          const plane = responsePlane(trace, index, asked)!
+          const there = responsePlane(trace, index, landed)!
+          // Only where both are identified on one slice can a mark for one fall in the other.
+          if (plane.slice !== there.slice) return
+          const own = responseLumen(trace, index, landed)!
+          const result = optionVerdict(trace, index, asked, {
+            slice: plane.slice,
+            pixel: own.pixel,
+          })!
+          const sibling = result.reached.find((r) => r.locator.role === 'daughter')
+          if (!sibling) return
+          expect([id, asked, landed, locatorOpening(trace, index, sibling.locator)]).toEqual([
+            id,
+            asked,
+            landed,
+            landed,
+          ])
+          checked += 1
+        })
+      })
     }
-    const warmup = localExercise(LESSONS[0].exercises![0])
-    expect(compareMarks(warmup, [{ slice: warmup.answerPoints[0].slice, pixel: [5, 5] }])).toEqual(
-      [],
-    )
+    expect(checked).toBeGreaterThanOrEqual(8)
+    // The three-way fork: all three daughters are RB8. The two lower ones share slice 243.
+    const three = station('junction-138')
+    const lower = [1, 2].map((option) => responseLumen(three.trace, three.index, option)!)
+    const inThird = optionVerdict(three.trace, three.index, 1, {
+      slice: 243,
+      pixel: lower[1].pixel,
+    })!
+    expect(inThird.verdict).toBe('other-airway')
+    expect(inThird.nearest!.airway.code).toBe('RB8')
+    expect(locatorOpening(three.trace, three.index, inThird.nearest!)).toBe(2)
+    const inSecond = optionVerdict(three.trace, three.index, 2, {
+      slice: 243,
+      pixel: lower[0].pixel,
+    })!
+    expect(locatorOpening(three.trace, three.index, inSecond.nearest!)).toBe(1)
+    // The parent and airways of other forks are nobody's opening.
+    const parentRole = optionLocators(three.trace, three.index, 0).find((l) => l.role === 'parent')!
+    expect(locatorOpening(three.trace, three.index, parentRole)).toBeNull()
+    expect(locatorOpening(three.trace, three.index, { edgeId: 0, role: 'other' })).toBeNull()
+    expect(locatorOpening(three.trace, three.index, { edgeId: 0, role: 'daughter' })).toBeNull()
+  })
+
+  it('gives every division with an explanation an intended locator at each opening’s own response pixel', () => {
+    for (const id of JUNCTION_FEEDBACK_SCOPE) {
+      const { trace, index } = station(id)
+      trace.checkpoints[index].decision!.options.forEach((option, k) => {
+        const plane = responsePlane(trace, index, k)!
+        const intended = optionLocators(trace, index, k).filter((l) => l.role === 'intended')
+        expect(intended).toHaveLength(1)
+        expect(intended[0]).toMatchObject({ edgeId: option.sourceEdgeId, pixel: plane.pixel })
+        expect(optionVerdict(trace, index, k, { slice: plane.slice, pixel: null })).toBeNull()
+      })
+    }
+    // A checkpoint without a division has no locators.
+    const last = CT_TRACES[0].checkpoints.length - 1
+    expect(optionLocators(CT_TRACES[0], last, 0)).toEqual([])
   })
 })

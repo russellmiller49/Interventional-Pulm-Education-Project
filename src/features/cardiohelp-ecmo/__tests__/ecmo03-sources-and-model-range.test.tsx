@@ -21,12 +21,11 @@ import {
   ecmoFoundationVariant,
 } from '../content/foundationLessonRuntime'
 import {
-  ECMO_MODULE_REVIEW_LINE,
-  ECMO_SOURCE_REVIEW_LINE,
   ecmoSourceReviewMetadata,
   validateEcmoSourceReviewMetadata,
 } from '../content/sourceReviewMetadata'
 import { ecmoStoryProblems } from '../content/storyProblems'
+import { ECMO_NUMBER_ONLY_SOURCES } from '../content/teachingNumbers'
 import {
   createInitialSimulationState,
   createReferenceSimulationState,
@@ -148,7 +147,7 @@ describe('ECMO-03 source dates, revisions and document checks', () => {
     )
   })
 
-  it('shows date, revision, each check and the review line on separate lines of a full citation', () => {
+  it('shows date and revision on separate lines of a full citation, and no check or review line', () => {
     const [ifu] = resolveEcmoEvidence(['ifu-us-2025-scope'])
     const { container } = render(
       <ol>
@@ -161,20 +160,15 @@ describe('ECMO-03 source dates, revisions and document checks', () => {
     expect(container.querySelector('[data-citation-revision]')?.textContent).toContain(
       'Revision 2.3',
     )
-    const checks = container.querySelectorAll('[data-citation-check]')
-    expect(checks).toHaveLength(1)
-    expect(checks[0]?.textContent).toContain('2026-09-15')
-    expect(checks[0]?.textContent).toContain('page 13')
-    expect(container.querySelector('[data-citation-review]')?.textContent).toBe(
-      ECMO_SOURCE_REVIEW_LINE,
-    )
-    // The document's date and the date it was checked never share a line.
-    expect(container.querySelector('[data-citation-published]')?.textContent).not.toContain(
-      '2026-09-15',
-    )
+    // Teaching-first rule 6: the document check and the review line are project metadata. They stay
+    // in `sourceReviewMetadata.ts` and the review packets, and are not rendered beside a citation.
+    expect(container.querySelector('[data-citation-check]')).toBeNull()
+    expect(container.querySelector('[data-citation-review]')).toBeNull()
+    expect(container.textContent).not.toContain('2026-09-15')
+    expect(container.textContent).not.toMatch(/review[^.]*none recorded/i)
   })
 
-  it('keeps only the date line in a compact card, and the check date without its detail in a footnote', () => {
+  it('keeps only the date line in a compact card and in a footnote', () => {
     const [guideline] = resolveEcmoEvidence(['elso-adult-vv-2021'])
     const compact = render(
       <ol>
@@ -194,24 +188,27 @@ describe('ECMO-03 source dates, revisions and document checks', () => {
         <EcmoCitation citation={chapter} density="footnote" />
       </ol>,
     )
-    const check = footnote.container.querySelector('[data-citation-check]')
-    expect(check?.textContent).toContain('2026-09-15')
-    expect(check?.textContent).not.toContain('printed page 92')
-    expect(footnote.container.querySelector('[data-citation-review]')).not.toBeNull()
+    expect(footnote.container.querySelector('[data-citation-published]')).not.toBeNull()
+    expect(footnote.container.querySelector('[data-citation-check]')).toBeNull()
+    expect(footnote.container.querySelector('[data-citation-review]')).toBeNull()
+    expect(footnote.container.textContent).not.toContain('printed page 92')
   })
 
   it.each(['draft', 'published'] as const)(
-    'never turns a %s publication flag into a review claim on the hub',
+    'renders no review or publication status on the hub with the flag set to %s',
     (publicationStatus) => {
       const { container } = render(<SourcesPanel publicationStatus={publicationStatus} />)
       const text = container.textContent ?? ''
       expect(text).not.toMatch(/REVIEW APPROVED|Reviewed release|review approved|review required/i)
-      expect(container.querySelector('[data-review-status]')?.textContent).toContain(
-        ECMO_MODULE_REVIEW_LINE,
-      )
-      expect(text).toMatch(/Clinical and device review\s*None recorded/)
-      expect(text).toContain('currency not checked')
+      // Review status is project metadata (teaching-first rule 6): neither a claim nor a denial.
+      expect(container.querySelector('[data-review-status]')).toBeNull()
+      expect(text).not.toMatch(/none recorded|unlisted draft|public release/i)
+      expect(text).not.toMatch(/\bPUBLISHED\b/)
+      expect(text).not.toMatch(/currency not checked/i)
       expect(text).not.toMatch(/The current U\.S\. IFU/)
+      // What the hub carries instead: the taught numbers, each from the register, and their books.
+      expect(container.querySelectorAll('[data-reference-values]').length).toBeGreaterThanOrEqual(4)
+      for (const source of ECMO_NUMBER_ONLY_SOURCES) expect(text).toContain(source.title)
       const curriculum = container.querySelector('section[data-source-class="supplied-curriculum"]')
       expect(
         within(curriculum as HTMLElement).getByRole('heading', { level: 3 }),
@@ -307,7 +304,7 @@ describe('ECMO-03 copy states the bounds the model has', () => {
     ]) {
       const text = sourceText(file)
       expect({ file, noPlateau: /no plateau/i.test(text) }).toEqual({ file, noPlateau: false })
-      expect({ file, bound: text.includes('fixed lower bound of 20 mmHg') }).toEqual({
+      expect({ file, bound: /(?:fixed lower bound of|stops at) 20 mmHg/.test(text) }).toEqual({
         file,
         bound: true,
       })
@@ -325,9 +322,6 @@ describe('ECMO-03 copy states the bounds the model has', () => {
     const series = sourceText(`${MODULE}/components/teaching/VvSeriesPhysiologyPanel.tsx`)
     expect(series).not.toContain('Each case sets where this starts')
     expect(series).toContain('On the reference circuit it stays at its baseline at every speed.')
-    expect(series).toContain(
-      'The reference circuit has no established recirculation, so its share stays at the baseline whatever the speed.',
-    )
     expect(sourceText(`${MODULE}/content/ecmoValueGuides.ts`)).toContain(
       'On the reference circuit the fraction stays at its baseline, so this value rises with flow.',
     )

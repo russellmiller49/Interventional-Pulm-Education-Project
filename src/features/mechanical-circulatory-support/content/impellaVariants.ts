@@ -1,5 +1,7 @@
 import type { CardiacAssetId } from '@/features/cardiac-anatomy/content/rig'
 
+import { MCS_NUMBERS } from './teachingNumbers'
+
 export interface ImpellaAnatomyVariant {
   id: 'cp' | '55' | 'rp'
   label: string
@@ -20,7 +22,7 @@ export const impellaAnatomyVariants: readonly ImpellaAnatomyVariant[] = [
     asset: 'impellaCp',
     supportSide: 'left',
     modeledReferenceFlowLMin: 4.3,
-    productFlowFraming: 'Peak flow up to 4.3 L/min; actual flow remains loading-dependent.',
+    productFlowFraming: `Mean flow ${MCS_NUMBERS.value('impella-cp-flow-by-level')}. Peak flow in systole at P-9 is ${MCS_NUMBERS.value('impella-cp-peak-flow')}: a peak, not a mean.`,
     access: 'Percutaneous arterial route; peripheral access is outside the supplied CT field.',
     pathway: 'Left ventricle → pump across the aortic valve → ascending aorta',
     teachingBoundary: 'Active LV-support physiology and placement track.',
@@ -32,9 +34,8 @@ export const impellaAnatomyVariants: readonly ImpellaAnatomyVariant[] = [
     asset: 'impella55',
     supportSide: 'left',
     modeledReferenceFlowLMin: 5.5,
-    productFlowFraming:
-      'Maximum mean flow of 5.5 L/min in the device specification; actual flow remains loading-dependent.',
-    access: 'Surgical axillary-graft or direct-aortic route; the access boundary is authored.',
+    productFlowFraming: `Mean flow ${MCS_NUMBERS.value('impella-55-flow-by-level')}.`,
+    access: 'Surgical axillary-graft or direct-aortic route.',
     pathway: 'Left ventricle → transvalvular pump → ascending aorta',
     teachingBoundary: 'Active LV-support physiology and placement track.',
     sourceIds: ['fda-impella-55-labeling', 'jnj-impella-55-current'],
@@ -46,7 +47,7 @@ export const impellaAnatomyVariants: readonly ImpellaAnatomyVariant[] = [
     supportSide: 'right',
     modeledReferenceFlowLMin: 4,
     productFlowFraming:
-      'Product information frames flow up to 4.0 L/min; actual and modeled flow remain loading-dependent.',
+      'Up to 4.0 L/min in the product information; delivered flow depends on loading.',
     access: 'Femoral venous route to an IVC inlet and pulmonary-artery outlet.',
     pathway: 'Inferior vena cava/right atrium → pump → pulmonary artery',
     teachingBoundary: 'Active RV-support physiology and placement track; can run with a left pump.',

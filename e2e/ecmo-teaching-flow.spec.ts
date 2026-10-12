@@ -158,7 +158,11 @@ for (const viewport of viewports) {
     await page.addStyleTag({ content: `html { font-size: ${viewport.root}px !important; }` })
     const registry = page.locator('details[data-source-registry]')
     const summary = registry.locator(':scope > summary')
-    await expect(page.locator('[data-source-registry-status]')).toBeVisible()
+    // Teaching-first (2026-10-08): the hub no longer renders a registry review-status line. The
+    // taught reference values sit above the folded registry instead.
+    await expect(page.locator('[data-source-registry-status]')).toHaveCount(0)
+    await expect(page.locator('[data-review-status]')).toHaveCount(0)
+    await expect(page.locator('[data-reference-values]').first()).toBeVisible()
     await expect(registry).not.toHaveAttribute('open', '')
     await summary.focus()
     await page.keyboard.press('Enter')

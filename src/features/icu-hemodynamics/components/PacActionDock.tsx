@@ -250,7 +250,7 @@ export function PacActionDock({
               <span
                 aria-live="off"
                 aria-label="Time this simulated occlusion has been running"
-                title="Elapsed occlusion time in this simulation. The simulator ends an occlusion at a fixed cutoff of its own; that cutoff is not a clinical inflation-time limit."
+                title="Elapsed occlusion time. Keep a wedge brief; the simulator lets the balloon down if you leave it up."
               >
                 {Math.min(WEDGE_AUTO_DEFLATION_SECONDS, wedgeElapsed).toFixed(1)} s
               </span>
@@ -363,11 +363,9 @@ export function PacActionDock({
 
       {catheter.forcedSafetyRecovery && (
         <p className={styles.criticalFeedback} role="alert">
-          Safety recovery: this simulation ended the occlusion at its own fixed cutoff and recorded
-          a safety event. That cutoff belongs to the simulation and is not a clinical inflation-time
-          limit — inflation time and volume for a real catheter come from the manufacturer’s
-          instructions for the catheter in use and your local protocol. Confirm whether the
-          pulmonary-artery waveform has returned.
+          The balloon was left up, and the simulator let it down. Keep each wedge brief: just long
+          enough to read the value at end expiration. Check that the pulmonary-artery waveform has
+          returned.
         </p>
       )}
     </section>

@@ -162,16 +162,23 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
     expect(LESSONS).toHaveLength(26)
   })
 
-  it('summarizes the chapter registry on the Overview instead of a five-phase schematic', () => {
+  it('lists the chapters once on the Overview, under a picture of the lab', () => {
     const { container } = render(<CoursePage />)
     expect(container.querySelector('[data-teaching-diagram]')).toBeNull()
     expect(screen.queryByText('Authored schematic', { exact: false })).toBeNull()
     expect(screen.queryByText('Nodal survey')).toBeNull()
-    const map = screen.getByRole('navigation', { name: 'The course in 7 chapters' })
-    const links = within(map).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(CHAPTERS.map((chapter) => chapter.title))
-    for (const chapter of CHAPTERS)
-      expect(container.querySelector('#chapter-' + chapter.id)).not.toBeNull()
+    // The chapter cards are the one map; the summary list that repeated them is gone, and so is
+    // the glossary that took a third of the page (visual review of 2026-10-07, item 8).
+    expect(screen.queryByRole('navigation', { name: 'The course in 7 chapters' })).toBeNull()
+    for (const chapter of CHAPTERS) {
+      expect(container.querySelectorAll('#chapter-' + chapter.id)).toHaveLength(1)
+      expect(
+        screen.getAllByText(new RegExp(chapter.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))),
+      ).toHaveLength(1)
+    }
+    expect(screen.getByRole('img', { name: /The lab console/ })).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-up-next]')).toHaveLength(1)
+    expect(screen.queryByRole('heading', { name: 'Course glossary' })).toBeNull()
   })
 
   it('gives the four lessons that showed the schematic no figure at all', () => {
@@ -286,7 +293,6 @@ const PROVENANCE: Record<string, { sourced: string[]; framing?: string[] }> = {
   },
   'n-category': {
     sourced: [
-      'n classification describes regional tumor involvement in the relevant cancer context, not all adenopathy',
       'a non-lung-cancer adenopathy case does not automatically receive an n category',
       'relative to the primary side',
       'ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are n1',
@@ -351,29 +357,28 @@ const PROVENANCE: Record<string, { sourced: string[]; framing?: string[] }> = {
 
 describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () => {
   it('holds a provenance record for every entry', () => {
-    expect(Object.keys(PROVENANCE).sort()).toEqual(GLOSSARY.map((entry) => entry.id).sort())
+    expect(Object.keys(PROVENANCE).sort()).toEqual(
+      GLOSSARY.filter((entry) => !entry.sourceContext)
+        .map((entry) => entry.id)
+        .sort(),
+    )
   })
-  it.each(GLOSSARY.map((entry) => [entry.id, entry] as const))(
-    '%s is assembled from the course’s own sentences',
-    (id, entry) => {
-      const { sourced, framing = [] } = PROVENANCE[id]
-      expect(sourced.filter((part) => !corpus.includes(part))).toEqual([])
-      let rest = entry.definition.toLowerCase()
-      for (const part of [...sourced, ...framing]) {
-        expect(rest).toContain(part)
-        rest = rest.replace(part, ' ')
-      }
-      expect(rest.replace(/[\s.,;:]/g, '')).toBe('')
-      expect(entry.sources.length).toBeGreaterThan(0)
-    },
-  )
-
-  it('leaves out terms the course uses without defining, rather than defining them', () => {
-    const terms = GLOSSARY.map((entry) => entry.term.toLowerCase()).join(' ')
-    for (const undefinedTerm of ['chs', 'central hilar', 'ifu', 'tnm ', 'nsclc'])
-      expect(terms).not.toContain(undefinedTerm)
+  it.each(
+    GLOSSARY.filter((entry) => !entry.sourceContext).map((entry) => [entry.id, entry] as const),
+  )('%s is assembled from the course’s own sentences', (id, entry) => {
+    const { sourced, framing = [] } = PROVENANCE[id]
+    expect(sourced.filter((part) => !corpus.includes(part))).toEqual([])
+    let rest = entry.definition.toLowerCase()
+    for (const part of [...sourced, ...framing]) {
+      expect(rest).toContain(part)
+      rest = rest.replace(part, ' ')
+    }
+    expect(rest.replace(/[\s.,;:]/g, '')).toBe('')
+    expect(entry.sources.length).toBeGreaterThan(0)
   })
 
+  // OD-12 supersedes the original course-sentences-only exclusion. The original entries
+  // above retain their exact provenance contract; external expansions are tested in Step 13.
   it('brings the staging terms to lesson 1, before lesson 17 teaches them, with a link forward', () => {
     render(<LessonHost lesson={lesson('clinical-question')} />)
     const terms = document.querySelector('[data-glossary]')!
@@ -419,7 +424,7 @@ describe('refreshers and tool links say where they go (L1-3, part D)', () => {
     expect(refreshers).toHaveTextContent('nothing here requires them')
     const links = within(refreshers).getAllByRole('link')
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/learn/anatomy/branch-tracing/learn?lesson=orientation',
+      '/learn/anatomy/branch-tracing/learn?lesson=carina-orientation',
       '/bronchoscopy-foundations/learn?section=right-side',
       '/bronchoscopy-foundations/learn?section=left-side',
     ])
@@ -550,7 +555,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
     for (const entry of LESSONS)
       for (const activity of activitiesForLesson(entry))
         if (activity.teaching.includes('takeaways') && activity.questions.length) {
-          expect(activity.purpose).toMatch(/^Guided practice: the lesson’s key points stay beside/)
+          expect(activity.purpose).toMatch(/the key points beside this check/)
           expect(activity.support).toBe('guided')
         }
   })
@@ -564,7 +569,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
       'Guided practice · new situation',
     )
     expect(document.querySelector('[data-activity-purpose]')).toHaveTextContent(
-      'the lesson’s key points stay beside this check on purpose',
+      'Apply the key points beside this check to a new situation.',
     )
     expect(
       screen.getByRole('heading', { name: 'Carry this into the next examination' }),
@@ -575,7 +580,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
     const find = (lessonId: string, id: string) =>
       activitiesForLesson(lesson(lessonId)).find((a) => a.id === lessonId + ':' + id)!
     expect(find('image-depth', 'depth-comparison').purpose).toMatch(
-      /names the teaching example’s settings/,
+      /^Stop on the settings the instruction names/,
     )
     expect(find('station-seven', 'station-decision').purpose).toMatch(
       /The stem names the node’s compartment/,
@@ -636,14 +641,14 @@ describe('Try it yourself is the learner’s choice and changes nothing that is 
 
 describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
   it('says once, beside the demonstration, what records and what does not', () => {
-    render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
+    render(<LessonHost lesson={lesson('acoustic-contact')} />)
     expect(document.querySelector('[data-evidence-identity="demonstration"]')).toHaveTextContent(
-      'nothing you do here is recorded. Your own acquisition is the next task, and it counts once you hold it.',
+      'Try the controls. Nothing on this screen is scored.',
     )
   })
 
-  it.each(['bubble', 'gap', 'direct', 'balloon'] as const)(
-    'held %s: the reflector check says it names another condition and the frame is untouched',
+  it.each(['bubble', 'gap', 'direct', 'balloon', 'shadow'] as const)(
+    'held %s: OD-01 compares mechanisms and preserves the learner frame',
     (mode) => {
       workbenchEmitters['Complete the contact model'] = () => contactObservation(mode)
       render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
@@ -651,18 +656,16 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
       fireEvent.click(screen.getByText('Complete the contact model'))
       next() // hold
       expect(document.querySelector('[data-evidence-identity="held"]')).toHaveTextContent(
-        'Contact condition held: ' + CONTACT_MODE_LABELS[mode] + '.',
+        'Contact condition: ' + CONTACT_MODE_LABELS[mode] + '.',
       )
       next() // past the first check (a described situation)
       const check = document.querySelector('[data-question-id]')!
       expect(check.getAttribute('data-question-id')).toBe('cutaway-observe')
       expect(check).toHaveTextContent(
-        'Why did changing gain fail to remove the dark region behind the reflector?',
+        'You inspected the air-gap and reflector states in the echo schematic. Both leave a dark region. Which difference in mechanism does the model show?',
       )
       expect(document.querySelector('[data-task-instruction]')).toHaveTextContent(
-        'This check names a different contact condition (contact with a reflector) from the one your held image shows (' +
-          CONTACT_MODE_LABELS[mode] +
-          '). Your held image stays as you acquired it.',
+        'Compare the air-gap and reflector states you inspected in the echo schematic. Your held image stays as you acquired it; this comparison does not depend on which contact condition you held.',
       )
       // The held evidence is still the frame the learner acquired.
       expect(document.querySelector('[data-evidence-identity="held"]')).toHaveTextContent(
@@ -670,18 +673,6 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
       )
     },
   )
-
-  it('says nothing extra when the held condition is the one the check names', () => {
-    workbenchEmitters['Complete the contact model'] = () => contactObservation('shadow')
-    render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
-    next()
-    fireEvent.click(screen.getByText('Complete the contact model'))
-    next()
-    next()
-    expect(document.querySelector('[data-task-instruction]')).toHaveTextContent(
-      'This is the image you acquired. Interpret it, or open the explanation first.',
-    )
-  })
 })
 
 /* M. Learner language for internal labels (L10-4, L22-5) ------------------------------------ */
@@ -772,13 +763,13 @@ describe('source-bound figures (L22-6, L24-2)', () => {
 
 describe('display names and route notices change words only (L3-10, L19-2)', () => {
   it('shows the course spelling while every id stays as it was', () => {
-    expect(structureDisplayName('azygous', 'azygous')).toBe('azygos vein')
-    expect(structureDisplayName('left_atrium', 'Left Atrium')).toBe('left atrium')
+    expect(structureDisplayName('azygous', 'azygous')).toBe('Azygos vein')
+    expect(structureDisplayName('left_atrium', 'Left Atrium')).toBe('Left atrium')
     expect(structureDisplayName('atrial_appendage_left', 'atrial appendage left')).toBe(
-      'left atrial appendage',
+      'Left atrial appendage',
     )
     expect(structureDisplayName('node_station_11ri', 'Example node 11RI')).toBe('Example node 11Ri')
-    expect(structureDisplayName('aorta', 'aorta')).toBe('aorta')
+    expect(structureDisplayName('aorta', 'aorta')).toBe('Aorta')
     expect(LINKED_LANDMARKS['right-paratracheal']).toContain('azygous')
   })
 
@@ -826,7 +817,7 @@ describe('repeated practice says what changes, and keeps its own evidence (L12-7
     const activity = activitiesForLesson(lesson(lessonId)).find(
       (entry) => entry.id === lessonId + ':' + id,
     )!
-    expect(activity.purpose).toMatch(/^Repeated on purpose, from a changed scope position/)
+    expect(activity.purpose).toMatch(/^Same node, new scope position\./)
     expect(activity.task).toBe('changed-window')
     expect(lesson(lessonId).transferLab!.linkedVariant).toBe('changed-window')
   })

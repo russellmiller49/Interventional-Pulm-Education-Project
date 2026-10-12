@@ -162,7 +162,7 @@ export function EcmoDrillTeachingPanel({ state }: { readonly state: EcmoSimulati
               ? `The circuit on screen is running ${scenario.title}.`
               : 'The circuit on screen is running a case this panel does not recognise.'}{' '}
             {entry
-              ? 'It has an authored panel, but for the other support configuration, so it is not shown against this circuit.'
+              ? 'It has a panel, but for the other support configuration, so it is not shown against this circuit.'
               : 'A live teaching panel has not been written for it yet.'}
           </p>
           <p className="mt-2 text-muted-foreground">

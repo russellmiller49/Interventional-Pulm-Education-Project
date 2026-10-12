@@ -1,0 +1,267 @@
+/*
+ * The leveling card.
+ *
+ * A light card inside both site themes, so it declares its own ink rather than inheriting the
+ * stage's: the dark stage's near-white text on this card was the reported unreadable state. Every
+ * size is in rem and nothing here is below 0.8rem.
+ */
+.card {
+  container-type: inline-size;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #cfe0dc;
+  border-radius: 0.8rem;
+  color: #15323a;
+  background: #f4f9f7;
+}
+.card > header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.card > header span {
+  color: #245b55;
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.card h4 {
+  margin: 0.2rem 0 0;
+  color: #15323a;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+.card > header > strong {
+  flex: 0 0 auto;
+  padding: 0.38rem 0.6rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 999px;
+  color: #14534c;
+  background: #e1f4ee;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.card > header > strong[data-offset='high'] {
+  border-color: #d9ab64;
+  color: #6b3f05;
+  background: #fff2d8;
+}
+.card > header > strong[data-offset='low'] {
+  border-color: #9ebbdc;
+  color: #214c75;
+  background: #e8f1fb;
+}
+/*
+ * On a phone with text at 200 % the drawing keeps a least width and scrolls inside its own box.
+ *
+ * Its labels are text in rem over a drawing that shrinks with the card. At 390 px with text at
+ * 200 % the card is about 7 rem of drawing: the three labels sat on one another and ran past the
+ * card. That did not show while the page itself was too wide at that size and lent the card room;
+ * once the page fits its window (the PR #321 port), the drawing has to hold its own.
+ *
+ * The least width applies under 9 rem of card only — the two phone widths at 200 % text. The
+ * narrowest card at 100 % text is the one inside Practice's tool on a 320 px phone, about 10.4 rem,
+ * and it is left exactly as it was. `contain` keeps the least width from widening the card, as on
+ * the reference figure.
+ */
+.diagram {
+  min-width: 0;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid #d6e4e1;
+  border-radius: 0.65rem;
+  background: #fff;
+  contain: inline-size;
+}
+.diagramFrame {
+  position: relative;
+}
+@container (max-width: 9rem) {
+  .diagramFrame {
+    min-width: 14.5rem;
+  }
+}
+.diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.bed {
+  fill: #cad8d5;
+}
+.patient {
+  fill: #dbe9e6;
+  stroke: #6f8d88;
+  stroke-width: 2.5;
+}
+.depth {
+  stroke: #6f8d88;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+.axis {
+  stroke: #0f7a70;
+  stroke-width: 2.5;
+  stroke-dasharray: 9 6;
+}
+.axisPoint {
+  fill: #0f7a70;
+  stroke: #fff;
+  stroke-width: 3;
+}
+.leader {
+  stroke: #0f7a70;
+  stroke-width: 1.5;
+}
+.measure {
+  stroke: #b06e12;
+  stroke-width: 3.5;
+}
+.measureCap {
+  stroke: #b06e12;
+  stroke-width: 2.5;
+}
+.transducerBody {
+  fill: #e4f5f0;
+  stroke: #0f7a70;
+  stroke-width: 2.5;
+}
+.transducerPort {
+  fill: #0f7a70;
+}
+/* Labels are HTML over the drawing: they keep their size when the drawing shrinks. */
+.label {
+  position: absolute;
+  max-width: 46%;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  color: #173f3b;
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 0.85rem;
+  font-weight: 750;
+  line-height: 1.25;
+  transform: translateY(-100%);
+}
+.label small {
+  display: block;
+  color: #3d5b58;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.label[data-anchor='end'] {
+  text-align: right;
+  transform: translate(-100%, -50%);
+}
+.label[data-tone='measure'] {
+  color: #6b3f05;
+  font-variant-numeric: tabular-nums;
+}
+.caption,
+.boundary {
+  margin: 0.5rem 0 0;
+  color: #3d5b58;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.comparison {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #d6e4e1;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+.comparison > svg {
+  display: block;
+  width: 100%;
+  max-height: 7rem;
+  overflow: visible;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  color: #3d5b58;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.legend span {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.legend span::before {
+  width: 1.6rem;
+  border-top: 2px solid #0f7a70;
+  content: '';
+}
+.legend span[data-line='reference']::before {
+  border-top-color: #5d716e;
+  border-top-style: dashed;
+}
+.grid {
+  fill: none;
+  stroke: #dce8e5;
+  stroke-width: 1;
+}
+.referenceTrace,
+.currentTrace {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.referenceTrace {
+  stroke: #5d716e;
+  stroke-width: 1.8;
+  stroke-dasharray: 6 4;
+}
+.currentTrace {
+  stroke: #0f7a70;
+  stroke-width: 2.4;
+}
+/* One row per fact, so no value is ever squeezed into a column a word wide. */
+.comparison dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+.comparison dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.45rem;
+  background: #eef5f3;
+}
+.comparison dt {
+  color: #3d5b58;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+.comparison dd {
+  margin: 0;
+  color: #143f3d;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  line-height: 1.3;
+  text-align: right;
+}
+.comparison dd small {
+  display: block;
+  color: #3d5b58;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+@container (max-width: 22rem) {
+  .comparison dl > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .comparison dd {
+    text-align: left;
+  }
+}

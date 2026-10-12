@@ -1,5 +1,8 @@
 import type { Lesson } from './types'
 import { question as q, matching, sequence } from './authoring'
+import { EBUS_NUMBERS } from './teachingNumbers'
+
+const N = EBUS_NUMBERS.value
 export const sampleLessons: Lesson[] = [
   {
     id: 'needle-safety',
@@ -12,8 +15,9 @@ export const sampleLessons: Lesson[] = [
     concept: 'Keep the needle controlled and the tip visible',
     paragraphs: [
       'Check the needle–scope compatibility and the current manufacturer instructions. Before insertion or removal through the working channel, visually confirm that the needle is retracted into its sheath and secured as specified for the device.',
-      'Confirm the target and path on live ultrasound. Advance and sample with the needle tip continuously identified in the imaging plane. If the tip cannot be located, stop movement and regain a reliable view with the supervising operator.',
-      'Needle extension limits, sheath adjustment, suction, stylet handling, and sampling motions depend on the device and protocol. Do not improvise a universal maneuver from a schematic. Excessive resistance requires reassessment rather than force.',
+      'Protected needle/assembly preparation may occur according to the device and local workflow. Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately before needle exposure and advancement.',
+      'Confirm the target and path on live ultrasound. Advance and sample with the needle tip continuously identified in the imaging plane. If you lose the tip, stop moving the needle. Bring it back into the plane with small rotations of the scope, not by advancing.',
+      `Set the needle stop to the depth you measured to the far side of the node, so the needle cannot travel beyond it. Within the node, move the needle back and forth ${N('agitations-per-pass')} times on each pass (CHEST 2016; ICS/IAB 2023 suggests at least 10). Suction and the stylet are both optional (ICS/IAB 2023). Resistance means stop and reassess, not push.`,
     ],
     checklist: [
       'Confirm device compatibility and protected needle position.',
@@ -44,7 +48,7 @@ export const sampleLessons: Lesson[] = [
       'both',
     ),
     sequence: sequence(
-      'Order the broad safety checkpoints around a pass. Device-specific manipulations follow the current IFU.',
+      'Arrange the checkpoints around a pass. Protected preparation follows the device and local workflow; this example does not prescribe a universal order for preparation.',
       [
         'Confirm the labeled target, live image, and acceptable vascular path',
         'Confirm protected needle position and prepare the assembly per the IFU',
@@ -52,7 +56,7 @@ export const sampleLessons: Lesson[] = [
         'Confirm retraction and secure the needle before channel removal',
         'Transfer and label the specimen using the agreed handling plan',
       ],
-      'The checkpoints preserve target identity, live guidance, device protection, and specimen traceability. They are not a substitute for a device-specific checklist.',
+      'Protected needle/assembly preparation may occur according to the device and local workflow. Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately before needle exposure and advancement. The checkpoints preserve target identity, live guidance, device protection, and specimen traceability.',
     ),
     observation: q(
       'needle-observe',
@@ -61,10 +65,13 @@ export const sampleLessons: Lesson[] = [
         'An exposed tip can harm the patient or the equipment',
         'Retraction and securing the assembly follow the current device instructions.',
       ],
-      ['Retraction determines nodal histology', 'It is a safety maneuver, not a diagnostic test.'],
       [
-        'A sheath automatically makes all needle positions safe',
-        'The needle position must actually be checked.',
+        'Retraction keeps the aspirate from being lost in the channel',
+        'The specimen stays in the needle lumen either way; the check is about an exposed tip cutting the channel or the airway.',
+      ],
+      [
+        'Retraction releases the suction before the needle leaves the node',
+        'Suction is released at the syringe before the needle leaves the node; retraction is checked so the tip is covered in the channel.',
       ],
     ),
     transfer: q(
@@ -79,8 +86,8 @@ export const sampleLessons: Lesson[] = [
         'Resistance should prompt reassessment, not escalation of force.',
       ],
       [
-        'Increase ultrasound gain to reduce mechanical resistance',
-        'Gain changes the image, not the needle mechanics.',
+        'Lengthen the needle stop so the stroke carries more momentum',
+        'The stop limits travel to the far side of the node; lengthening it does not help entry and removes that safeguard.',
       ],
       true,
     ),
@@ -89,9 +96,7 @@ export const sampleLessons: Lesson[] = [
       'Visible shaft does not mean visible tip.',
       'Retraction checks protect the patient and equipment.',
     ],
-    sources: ['ics2023'],
-    boundary:
-      'This activity teaches safety checkpoints without simulated needle passage. Exact handling, stops, extensions, and sampling motions must follow the current device IFU and supervised instruction.',
+    sources: ['ics2023', 'chest2016'],
   },
   {
     id: 'adequacy-rose',
@@ -104,8 +109,8 @@ export const sampleLessons: Lesson[] = [
     concept: 'Adequacy is specific to the task',
     paragraphs: [
       'Rapid on-site evaluation (ROSE) provides immediate feedback about the submitted material and may guide further acquisition or allocation. It does not replace final pathology and does not automatically establish adequacy for all molecular or ancillary tests.',
-      'For suspected malignancy, the 2024 CHEST guideline suggests ROSE and recommends four or more needle passes rather than three or fewer. This is guideline-derived acquisition guidance, not a guarantee of adequacy and not a reason to continue through a safety concern.',
-      'The same guideline suggests a 21G or 22G needle over a 19G needle for suspected malignancy. Needle choice alone does not solve poor targeting or inappropriate specimen handling. Plan additional material with the laboratory when required.',
+      `For suspected malignancy, the 2024 CHEST guideline recommends ${N('passes-per-station')} needle passes per station rather than three or fewer (a strong recommendation on very low certainty evidence), and suggests ROSE where it is available. Four passes do not guarantee enough material for every assay.`,
+      `The same guideline suggests a ${N('needle-gauge')} needle for suspected malignancy. Needle choice does not make up for poor targeting or the wrong container. When molecular testing is planned, take additional passes for cell block.`,
     ],
     checklist: [
       'Ask what the on-site finding establishes.',
@@ -125,10 +130,13 @@ export const sampleLessons: Lesson[] = [
         'Adequacy for the requested ancillary assays',
         'An on-site finding does not guarantee final assay adequacy.',
       ],
-      ['Whether the anatomical station changes', 'Pathology does not alter the sampling location.'],
       [
-        'Whether all other stations are now known to be positive',
-        'A finding at one site does not classify unsampled stations.',
+        'Whether the needle was actually within the node',
+        'Malignant cells on site already show that lesional material was reached; what is open is whether there is enough for the assays.',
+      ],
+      [
+        'Whether lymphocytes are present to confirm a nodal sample',
+        'Lymphocytes matter for calling a negative sample representative; with tumor present, the open question is quantity for ancillary testing.',
       ],
     ),
     matching: matching(
@@ -167,12 +175,12 @@ export const sampleLessons: Lesson[] = [
         'EBUS can be performed without ROSE; plan material and follow-up deliberately.',
       ],
       [
-        'Assume any aspirate is adequate because it contains blood',
-        'Blood alone is not evidence of representative target material.',
+        'Postpone until on-site cytology can attend',
+        'ROSE is suggested where available, not required; EBUS-TBNA is performed without it, with a planned number of passes.',
       ],
       [
-        'Treat a normal-looking node as a substitute for cytology',
-        'Morphology does not provide specimen adequacy.',
+        'Take fewer passes, since adequacy cannot be checked',
+        'Without on-site feedback the planned pass count and cell-block material matter more, not less.',
       ],
     ),
     diagram: 'specimens',
@@ -181,8 +189,6 @@ export const sampleLessons: Lesson[] = [
       'A pass-count recommendation does not replace judgment.',
     ],
     sources: ['chest2024', 'ics2023'],
-    boundary:
-      'The numeric pass and gauge guidance is from CHEST 2024 for the stated malignancy context. Local laboratory requirements and patient safety govern the individual acquisition plan.',
   },
   {
     id: 'specimen-triage',
@@ -195,7 +201,7 @@ export const sampleLessons: Lesson[] = [
     concept: 'The sample is part of a diagnostic pathway',
     paragraphs: [
       'Keep each station separately identified through acquisition, containers, requisitions, and the final report. Confirm site and requested studies with the receiving team. A pooled unlabeled specimen may establish malignancy while losing crucial staging information.',
-      'Smears and cell-block material support cytologic evaluation. Suspected lymphoma may require fresh material for flow cytometry and sometimes additional tissue for architecture. Suspected infection may require a separately collected specimen for microbiology. The exact media and allocation must be agreed with the local laboratory.',
+      'Smears and cell-block material support cytologic evaluation. Suspected lymphoma may require fresh material for flow cytometry and sometimes additional tissue for architecture. Suspected infection may require a separately collected specimen for microbiology. Typical defaults are RPMI or saline for flow cytometry, a sterile container with no fixative for culture, and formalin or an alcohol-based fixative for cell block (CHEST 2024; ICS/IAB 2023). Confirm them with your laboratory once, before your first case.',
       'Do not place all material into one fixative before considering the differential diagnosis. Formalin-fixed material cannot be assumed suitable for culture or every fresh-tissue assay.',
     ],
     checklist: [
@@ -217,28 +223,22 @@ export const sampleLessons: Lesson[] = [
         'Pooling erases which station supplied the finding.',
       ],
       [
-        'Because each station always needs a different needle gauge',
-        'Gauge selection and station labeling are different decisions.',
+        'To give the laboratory more cells per block for biomarkers',
+        'Separating material does not raise cellularity; it is done so a positive result can be assigned to its station.',
       ],
       [
-        'Because separate labels increase the number of malignant cells',
-        'Labels preserve identity, not cellular yield.',
+        'To keep blood from one station from diluting the other',
+        'Dilution is not the concern; a pooled positive cannot be assigned to a station, which is what staging needs.',
       ],
     ),
     matching: matching(
       'Match each requested study with its planning requirement.',
       [
-        [
-          'Flow cytometry for suspected lymphoma',
-          'Agree on fresh-material handling with the laboratory',
-        ],
-        [
-          'Microbiologic culture',
-          'Collect separate material in the laboratory-approved sterile medium',
-        ],
-        ['Cytology and cell block', 'Allocate material according to the cytopathology protocol'],
+        ['Flow cytometry for suspected lymphoma', 'Fresh material in RPMI or saline'],
+        ['Microbiologic culture', 'Separate material in a sterile container, no fixative'],
+        ['Cytology and cell block', 'Smears, and a needle rinse in fixative'],
       ],
-      'The laboratory determines the actual medium and quantities. Contact it before allocating all material.',
+      'Decide the allocation from the differential before the first pass, so nothing that was needed fresh goes into fixative.',
     ),
     observation: q(
       'triage-observe',
@@ -248,12 +248,12 @@ export const sampleLessons: Lesson[] = [
         'A single default container may not preserve every requested diagnostic option.',
       ],
       [
-        'Different containers alone establish different diagnoses',
-        'The material must still be examined.',
+        'Formalin preserves everything, but separate tubes aid labeling',
+        'Formalin fixes cells and kills organisms, so flow cytometry and culture are lost.',
       ],
       [
-        'The same medium is always interchangeable across laboratories',
-        'Local processing and assay requirements need confirmation.',
+        'Saline keeps the material suitable for any later study',
+        'Unfixed material degrades; cytology and cell block need prompt fixation, so one medium does not serve every study.',
       ],
     ),
     transfer: q(
@@ -268,8 +268,8 @@ export const sampleLessons: Lesson[] = [
         'The diagnosis requires compatible clinical findings and assessment for alternatives.',
       ],
       [
-        'A new container label can recover a culture from already fixed tissue',
-        'Relabeling does not reverse fixation or supply an unperformed test.',
+        'Culture can still be requested on the fixed cell block',
+        'Fixation kills organisms; stains or molecular tests may be possible on fixed material, but culture is not.',
       ],
     ),
     diagram: 'specimens',
@@ -278,7 +278,5 @@ export const sampleLessons: Lesson[] = [
       'Plan preservation around the differential diagnosis.',
     ],
     sources: ['chest2024', 'ics2023', 'ats2020'],
-    boundary:
-      'No universal transport medium or specimen quantity is specified. Use the receiving laboratory’s instructions and supervised clinical judgment.',
   },
 ]

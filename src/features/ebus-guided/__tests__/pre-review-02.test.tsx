@@ -208,7 +208,7 @@ describe('the observation carries which contact condition produced the frame', (
 
     const identity = document.querySelector('[data-evidence-identity]') as HTMLElement
     expect(identity.dataset.evidenceIdentity).toBe('held')
-    expect(identity.textContent).toContain('Contact condition held: contact with a reflector.')
+    expect(identity.textContent).toContain('Contact condition: contact with a reflector.')
     // The authored check is untouched; it is the evidence that stops being anonymous.
     expect(contactLesson.observation.prompt).toBe(
       LESSONS.find((lesson) => lesson.id === 'contact-cutaway-model')!.observation.prompt,
@@ -293,7 +293,7 @@ describe('the acquisition says what is still open', () => {
       gainObservation({ lastAction: 'contrast' }),
     ).filter((requirement) => !requirement.met)
     expect(open.map((requirement) => requirement.id)).toEqual(['gain-last'])
-    expect(open[0].text).toMatch(/varies one control/i)
+    expect(open[0].text).toBe('Make gain the last control you move.')
   })
 
   it('agrees with the gate for every lab in the course', () => {
@@ -316,13 +316,15 @@ describe('the acquisition says what is still open', () => {
       (item) => (item as HTMLElement).dataset.requirement,
     )
     expect(listed).toContain('gain-last')
-    expect(listed).toContain('frame-ready')
+    // Image-sync conditions are not steps the learner takes, so they are not listed.
+    expect(listed).not.toContain('frame-ready')
   })
 
   it('does not tell a recorded lab it moved an observer camera', () => {
     openAcquisition('gain-contrast')
     const status = document.querySelector('[data-acquisition-status]')!.textContent ?? ''
-    expect(status).toContain('Selecting a recording is not yet an acquisition')
+    expect(status).toContain('Work through the steps below.')
+    expect(status).toContain('Still to do:')
     expect(status).not.toContain('observer camera')
   })
 })
@@ -348,7 +350,11 @@ describe('the advance row', () => {
   it('keeps the explanation slot present whether or not it has anything to say', () => {
     openAcquisition('gain-contrast')
     const note = document.querySelector('[data-advance-note]')!
-    expect(note.textContent).toMatch(/Complete the acquisition/)
+    // The note names the first outstanding step, the same one that heads the list above.
+    expect(note.textContent).toBe(
+      'To turn this on: ' +
+        document.querySelector('[data-acquisition-outstanding] li')!.textContent,
+    )
 
     fireEvent.click(document.querySelector('[data-skip-acquisition]') as HTMLButtonElement)
     expect(document.querySelector('[data-advance-note]')).not.toBeNull()

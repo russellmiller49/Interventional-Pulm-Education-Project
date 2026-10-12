@@ -40,10 +40,16 @@ test('comparison arms share model time even with zero, one and two actions', () 
   const result = mcsReplay({ id: 'time', device: 'lvad' }, arms)
   const times = Object.values(result.arms).map((x) => x.timeSeconds)
   expect(Math.max(...times) - Math.min(...times)).toBeLessThan(1e-9)
-  expect(result.arms.flag.metrics.deviceFlowLMin).toBe(result.arms.control.metrics.deviceFlowLMin)
+  // The thrombosis flag cuts real flow, raises power by more than a watt and raises the estimate.
+  expect(result.arms.flag.metrics.deviceFlowLMin).toBeLessThan(
+    result.arms.control.metrics.deviceFlowLMin,
+  )
   expect(
     result.arms.flag.metrics.pumpPowerW! - result.arms.control.metrics.pumpPowerW!,
-  ).toBeCloseTo(2.8, 10)
+  ).toBeGreaterThan(1)
+  expect(result.arms.flag.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(
+    result.arms.control.metrics.estimatedPumpFlowLMin!,
+  )
   expect(mcsReplay({ id: 'time', device: 'lvad' }, [...arms].reverse()).arms).toEqual(result.arms)
 })
 
@@ -53,11 +59,11 @@ test('rounded matched-time deltas do not mislabel nonzero responses as unresolve
     document.querySelector(`[data-unloading-condition="filled"] [data-unloading-delta="${key}"]`)
       ?.textContent
   expect(delta('pcwpMmHg')).toBe('No resolvable displayed change')
-  expect(delta('lvedvMl')).toBe('−4 mL')
-  expect(delta('leftDeviceFlowLMin')).toBe('+0.40 L/min')
+  expect(delta('lvedvMl')).toBe('−2 mL')
+  expect(delta('leftDeviceFlowLMin')).toBe('+0.20 L/min')
   fireEvent.click(screen.getByRole('button', { name: 'P8' }))
   expect(delta('pcwpMmHg')).toBe('−1 mm Hg')
-  expect(delta('lvedvMl')).toBe('−11 mL')
+  expect(delta('lvedvMl')).toBe('−6 mL')
 })
 
 test('all three Impella limiting terms are reachable and remain current through reset', () => {

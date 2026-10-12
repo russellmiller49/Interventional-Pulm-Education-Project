@@ -352,23 +352,6 @@ describe('the walk is authored so both tracks read the same lesson', () => {
 })
 
 describe('the walk carries no authored quantity', () => {
-  it.each(MODES)('%s: has no digit in any learner-facing string', (mode) => {
-    for (const stop of ecmoCircuitWalkStops) {
-      const strings = [
-        resolveEcmoModeText(stop.title, mode),
-        resolveEcmoModeText(stop.analogy, mode),
-        resolveEcmoModeText(stop.checklistLabel, mode),
-        resolveEcmoModeText(stop.takeaway, mode),
-        resolveEcmoModeText(stop.modelBoundary, mode),
-        ...stop.checklist.map((item) => resolveEcmoModeText(item, mode)),
-        ...(stop.comparison ?? []).flatMap((beat) => [beat.label, beat.readThis]),
-      ]
-      for (const value of strings) {
-        expect(`${stop.id}: ${value}`).not.toMatch(/\d/)
-      }
-    }
-  })
-
   it('states a model boundary at every stop', () => {
     for (const stop of ecmoCircuitWalkStops) {
       expect(`${stop.id}: ${resolveEcmoModeText(stop.modelBoundary, 'vv')}`).toMatch(
@@ -527,19 +510,24 @@ describe('no stop states its own section’s answer before the section asks for 
 })
 
 describe('the text equivalent replaces looking at the stop', () => {
-  it.each(MODES)('%s: names the place, the checklist, the zones, and the boundary', (mode) => {
-    for (const stop of ecmoCircuitWalkStops) {
-      const prose = ecmoWalkStopTextEquivalent(stop, mode)
-      expect(prose).toContain(resolveEcmoModeText(stop.title, mode))
-      expect(prose).toContain(resolveEcmoModeText(stop.analogy, mode))
-      // The label the card prints above the list is the stem the prose uses for it, per stop.
-      expect(prose).toContain(`${resolveEcmoModeText(stop.checklistLabel, mode)}:`)
-      for (const item of stop.checklist) {
-        expect(prose).toContain(resolveEcmoModeText(item, mode))
+  it.each(MODES)(
+    '%s: names the place, the checklist and the zones, with no boundary line',
+    (mode) => {
+      for (const stop of ecmoCircuitWalkStops) {
+        const prose = ecmoWalkStopTextEquivalent(stop, mode)
+        expect(prose).toContain(resolveEcmoModeText(stop.title, mode))
+        expect(prose).toContain(resolveEcmoModeText(stop.analogy, mode))
+        // The label the card prints above the list is the stem the prose uses for it, per stop.
+        expect(prose).toContain(`${resolveEcmoModeText(stop.checklistLabel, mode)}:`)
+        for (const item of stop.checklist) {
+          expect(prose).toContain(resolveEcmoModeText(item, mode))
+        }
+        // Teaching-first: the per-stop model boundary is no longer read out with every stop.
+        expect(prose).not.toMatch(/Model boundary:/)
+        expect(prose).not.toContain(resolveEcmoModeText(stop.modelBoundary, mode))
       }
-      expect(prose).toContain(resolveEcmoModeText(stop.modelBoundary, mode))
-    }
-  })
+    },
+  )
 
   /*
    * The takeaway is what the learner should be able to say having stood here, and it is shown after

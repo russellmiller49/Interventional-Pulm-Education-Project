@@ -265,7 +265,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting, and driving it harder through the membrane is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a widening gradient: trend it at similar flow, corroborate it with what the membrane returns, and escalate through the pathway your unit uses.',
+        'Pump speed — not this setting, and driving it harder through the membrane is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a widening gradient: confirm it at an unchanged flow, send a post-oxygenator gas, call for the primed backup and exchange the oxygenator.',
     },
     transferPrinciple:
       'A gradient is a resistance multiplied by a flow, so it is read against this circuit’s own earlier value at similar flow, never against a carried number.',
@@ -349,7 +349,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'this-emergency',
       sentence:
-        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, return limb then drainage limb, near the patient. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
+        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, return limb then drainage limb, near the patient. Call for help and the backup circuit, find and close the source, and aspirate the air. Resume only with the circuit free of bubbles: drainage clamp open, bubble stop reset, return clamp open last.',
     },
     transferPrinciple:
       'A device’s stop, the patient’s isolation, the air source and the restart are four separate acts, and the first does not accomplish the second.',
@@ -450,7 +450,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this setting. Oxygen fraction — not this setting: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No setting answers a mixing point: sample the right arm, read the two circulations against each other, and escalate the support strategy.',
+        'Pump speed — not this setting, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this setting. Oxygen fraction — not this setting: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No setting answers a mixing point from the console: sample the right arm, raise ventilator FiO₂ and PEEP first, and plan a venous return limb (V-AV) or conversion to VV if the right arm stays low.',
     },
     transferPrinciple:
       'The sampling site is part of the measurement: each arterial site reports its own territory, and one reassuring number describes one place.',
@@ -466,7 +466,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting, and raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading: read the pulse pressure, the valve and the lungs, and escalate for unloading evaluation.',
+        'Pump speed — not this setting, and raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading by itself: bring flow down to the least that perfuses, add an inotrope so the valve opens, and vent a ventricle that still does not eject.',
     },
     transferPrinciple:
       'An acceptable flow and mean pressure do not establish ejection; pulsatility, the valve and the lungs do.',
@@ -516,7 +516,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'this-emergency',
       sentence:
-        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, arterial return limb then drainage limb, near the patient, while the circulation carries on without the circuit’s share. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
+        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, arterial return limb then drainage limb, near the patient, while the circulation carries on without the circuit’s share. Call for help and the backup circuit, find and close the source, and aspirate the air. Resume only with the circuit free of bubbles: drainage clamp open, bubble stop reset, return clamp open last.',
     },
     transferPrinciple:
       'A pump stop halts the circuit’s share of the circulation without isolating the artery, so isolation is a deliberate act and what is lost meanwhile is named.',

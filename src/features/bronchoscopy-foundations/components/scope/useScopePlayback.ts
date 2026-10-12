@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ENVIRONMENT_CLOCK_SCRIPTS } from '../../engine/scope/scopeScripts'
 import type { ScopeCommand, ScopeInputMode, ScopePaneProps } from './types'
 
@@ -8,10 +8,18 @@ import type { ScopeCommand, ScopeInputMode, ScopePaneProps } from './types'
 const MAX_TICK_SECONDS = 0.25
 const TICK_INTERVAL_MS = 100
 
-/** A background tab, an offscreen pane and a locked step never accrue simulated time. */
+/**
+ * A background tab, an offscreen pane and a locked step never accrue simulated time.
+ *
+ * `root` is the element whose place on screen decides "offscreen" — the element itself, not a ref
+ * to it. The pane mounts a different element for the 3D view and for the schematic view, and an
+ * observer bound once to whichever was first went on watching a node that had left the page: it
+ * reported the pane as offscreen for good, the scene never drew a frame, and "Try the 3D view
+ * again" stayed in loading (BF-01 finding 3). Taking the element makes the observer follow it.
+ */
 export function useScopePlayback(
   props: ScopePaneProps,
-  root: RefObject<HTMLElement | null>,
+  root: HTMLElement | null,
   ready: boolean,
   forceManual = false,
 ) {
@@ -25,9 +33,13 @@ export function useScopePlayback(
     return () => media.removeEventListener('change', changed)
   }, [])
   useEffect(() => {
-    if (!root.current || typeof IntersectionObserver === 'undefined') return
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
-    observer.observe(root.current)
+    if (!root || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver((entries) => {
+      // The last entry is the element's current state when several are delivered at once.
+      const entry = entries[entries.length - 1]
+      if (entry) setVisible(entry.isIntersecting)
+    })
+    observer.observe(root)
     return () => observer.disconnect()
   }, [root])
   const { onCommand, controlsEnabled, state, view } = props

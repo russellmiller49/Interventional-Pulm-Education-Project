@@ -69,7 +69,8 @@ describe('one door, one map', () => {
       ventilationLearningUnits.reduce((sum, unit) => sum + unit.minutes, 0),
     )
     expect(ventilationCompositionLine()).toBe(
-      `${composition.total} sections · 1 orientation · 2 foundations · 7 mechanisms · 3 applications · 1 capstone · ${composition.minutes} min`,
+      // MV-PRE-REVIEW-04 (N2): “Applications” names the optional tab only; the minutes are a reading estimate.
+      `${composition.total} sections · 1 orientation · 2 foundations · 7 mechanisms · 3 integration sections · 1 capstone · about ${composition.minutes} min of reading`,
     )
     const flattened = ventilationPathwayGroups().flatMap((group) =>
       group.units.map((unit) => unit.id),

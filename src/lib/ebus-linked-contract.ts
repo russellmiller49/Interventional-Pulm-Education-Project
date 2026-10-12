@@ -59,38 +59,24 @@ export interface LinkedSweep {
   startRoll: number
 }
 /**
- * The authored exercise tolerances the sampler has always applied, named so the workbench can
- * report them (EBUS-PRE-REVIEW-03, L3-6 / L12-4). The values are unchanged and are not clinical
- * thresholds; a test holds them to their historical numbers.
+ * What the rotation sweep asks for. One rule, said to the learner in the workbench: rotate the
+ * scope through at least `minSpanDeg` with the target seen in the image on the way. There is no
+ * step limit, frame count or direction rule, so dragging the slider counts the same as stepping it.
  */
 export const LINKED_SWEEP_TOLERANCES = {
-  /** Below this contact index a frame carries no window and the sweep restarts. */
+  /** Below this contact index a frame carries no tissue window and is not counted. */
   minContact: 0.45,
-  /** The largest rotation between two paused frames that still counts as one continuous sweep. */
-  maxStepDeg: 12,
-  /** Frames with the target in plane that one pass must collect before it can complete. */
-  minSamples: 5,
-  /** Rotation, in degrees, that one pass must cover before it can complete. */
+  /** Rotation, in degrees, the sweep must cover. */
   minSpanDeg: 20,
 } as const
-/**
- * What one sampled frame did to the sweep. `sampleLinkedSweep` is unchanged in behaviour; this
- * is the same decision path with its branch named, so the workbench can say why a sweep reset
- * instead of silently returning to "find a plane".
- */
+/** What one sampled frame did to the sweep, so the workbench can describe where the learner is. */
 export type LinkedSweepEvent =
   | 'unchanged'
   | 'already-complete'
-  | 'reset-contact'
-  | 'reset-reversed'
-  | 'reset-step'
-  | 'reset-early-exit'
+  | 'no-contact'
   | 'complete'
   | 'sample'
   | 'outside'
-  | 'started'
-  | 'entered-too-fast'
-  | 'inside'
 export const emptyLinkedSweep = (): LinkedSweep => ({
   phase: 'find-edge',
   lastRoll: null,
@@ -101,6 +87,12 @@ export const emptyLinkedSweep = (): LinkedSweep => ({
   span: 0,
   startRoll: 0,
 })
+/**
+ * One sampled frame. `startRoll` is the lowest rotation sampled so far and `span` the range
+ * covered; `samples` counts frames that showed the target; `outside` records that a frame without
+ * the target has been seen. The sweep completes once the range reaches `minSpanDeg` and the target
+ * has been seen at least once.
+ */
 export function stepLinkedSweep(
   previous: LinkedSweep,
   frame: { roll: number; frameId: string; visible: boolean; contact: number },
@@ -109,61 +101,26 @@ export function stepLinkedSweep(
   if (!frame.frameId || frame.frameId === previous.lastFrameId)
     return { sweep: previous, event: 'unchanged' }
   if (previous.phase === 'complete') return { sweep: previous, event: 'already-complete' }
-  const delta = previous.lastRoll === null ? 0 : frame.roll - previous.lastRoll
   if (frame.contact < T.minContact)
-    return {
-      sweep: { ...emptyLinkedSweep(), lastFrameId: frame.frameId, lastRoll: frame.roll },
-      event: 'reset-contact',
-    }
-  const continuous = Math.abs(delta) > 0 && Math.abs(delta) <= T.maxStepDeg
-  const next = { ...previous, lastRoll: frame.roll, lastFrameId: frame.frameId }
-  if (previous.phase === 'crossing') {
-    if (!continuous || Math.sign(delta) !== previous.direction)
-      return {
-        sweep: {
-          ...emptyLinkedSweep(),
-          lastRoll: frame.roll,
-          lastFrameId: frame.frameId,
-          outside: !frame.visible,
-        },
-        event: !continuous ? 'reset-step' : 'reset-reversed',
-      }
-    if (!frame.visible)
-      return previous.samples >= T.minSamples && previous.span >= T.minSpanDeg
-        ? { sweep: { ...next, phase: 'complete' }, event: 'complete' }
-        : {
-            sweep: {
-              ...emptyLinkedSweep(),
-              lastRoll: frame.roll,
-              lastFrameId: frame.frameId,
-              outside: true,
-            },
-            event: 'reset-early-exit',
-          }
-    return {
-      sweep: {
-        ...next,
-        samples: previous.samples + 1,
-        span: Math.abs(frame.roll - previous.startRoll),
-      },
-      event: 'sample',
-    }
-  }
-  if (!frame.visible) return { sweep: { ...next, outside: true }, event: 'outside' }
-  if (previous.outside && continuous)
-    return {
-      sweep: {
-        ...next,
-        phase: 'crossing',
-        direction: Math.sign(delta),
-        samples: 1,
-        startRoll: frame.roll,
-      },
-      event: 'started',
-    }
+    return { sweep: { ...previous, lastFrameId: frame.frameId }, event: 'no-contact' }
+  const first = previous.lastRoll === null
+  const low = first ? frame.roll : Math.min(previous.startRoll, frame.roll)
+  const high = first ? frame.roll : Math.max(previous.startRoll + previous.span, frame.roll)
+  const samples = previous.samples + (frame.visible ? 1 : 0)
+  const span = high - low
+  const complete = span >= T.minSpanDeg && samples > 0
   return {
-    sweep: { ...next, outside: false },
-    event: previous.outside ? 'entered-too-fast' : 'inside',
+    sweep: {
+      phase: complete ? 'complete' : samples > 0 ? 'crossing' : 'find-edge',
+      lastRoll: frame.roll,
+      lastFrameId: frame.frameId,
+      direction: first ? 0 : Math.sign(frame.roll - previous.lastRoll!),
+      outside: previous.outside || !frame.visible,
+      samples,
+      span,
+      startRoll: low,
+    },
+    event: complete ? 'complete' : frame.visible ? 'sample' : 'outside',
   }
 }
 export function sampleLinkedSweep(
@@ -212,7 +169,9 @@ export const STRUCTURE_DISPLAY_NAMES: Record<string, string> = {
 }
 /** The name to show for a structure: the course's spelling where it differs, else the model's. */
 export function structureDisplayName(id: string, label?: string) {
-  return STRUCTURE_DISPLAY_NAMES[id] ?? String(label ?? id).replace(/_/g, ' ')
+  const name = STRUCTURE_DISPLAY_NAMES[id] ?? String(label ?? id).replace(/_/g, ' ')
+  // One case style for every label on a model: "Aorta" beside "Example node 4L", not "aorta".
+  return name.charAt(0).toUpperCase() + name.slice(1)
 }
 export const LANDMARK_HINTS: Record<string, string> = {
   transducer_face:

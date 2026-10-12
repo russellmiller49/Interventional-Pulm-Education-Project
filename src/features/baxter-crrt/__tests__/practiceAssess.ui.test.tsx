@@ -11,6 +11,8 @@ import { baxterCrrtAdditionalCaseIds, baxterCrrtCoreCaseIds, getBaxterCrrtCase }
 import { createCrrtLearningSession } from '../engine'
 import { createDefaultProgress, writeProgress } from '../engine/progress'
 
+const CHALLENGE_TITLE = getBaxterCrrtCase('CRRT-16').title
+
 const mockRecordLifecycleEvent = jest.fn()
 
 jest.mock('@/features/critical-care/analytics', () => ({
@@ -169,7 +171,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
 
     expect(
       await screen.findAllByRole('heading', {
-        name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+        name: CHALLENGE_TITLE,
       }),
     ).not.toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Explain this case' })).toBeEnabled()
@@ -188,7 +190,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     await waitFor(() =>
       expect(
         screen.getAllByRole('heading', {
-          name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+          name: CHALLENGE_TITLE,
         }).length,
       ).toBeGreaterThan(0),
     )

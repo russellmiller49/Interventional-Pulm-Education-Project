@@ -175,7 +175,8 @@ export function SignalRegister({
           <table className="w-full text-sm" data-signal-register>
             <caption className="sr-only">
               Every signal this drill turns on, where it is measured, and whether it is valid,
-              unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
+              unavailable, unmodeled, estimated, off the console, at the bedside, or set by the
+              case.
             </caption>
             <thead>
               <tr className="text-left">
@@ -355,7 +356,7 @@ function CommittedChoice({ state }: { readonly state: EcmoSimulationState }) {
       <span className="font-semibold">You committed to: </span>
       {[goalLabel, controlLabel, directionLabel].filter(Boolean).join(' · ')}.{' '}
       <span className="text-muted-foreground">
-        Whether that was the best of the authored options is answered beside the question, not here.
+        Whether that was the best of the options is answered beside the question, not here.
       </span>
     </p>
   )

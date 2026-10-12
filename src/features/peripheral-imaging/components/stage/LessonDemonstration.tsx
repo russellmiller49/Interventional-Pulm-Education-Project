@@ -65,8 +65,6 @@ export function LessonDemonstration({
   }, [usesSuite, onRepresentationReady])
   return (
     <div data-lesson-demonstration className={styles.demonstration}>
-      {/* Report CW2: the scene header already says "Authored teaching model"; the kicker no longer
-          repeats it. */}
       <p className={styles.kicker} data-demonstration-kicker>
         Worked demonstration{reminder ? ' · reminder' : ''}
       </p>

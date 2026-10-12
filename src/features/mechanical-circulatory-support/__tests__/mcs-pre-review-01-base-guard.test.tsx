@@ -85,8 +85,8 @@ describe('F19 — the atrial-fibrillation trigger choice earns no success signal
     for (const id of ['IABP-02', 'CAP-IABP-01']) {
       const panel = workedExplanation(withTrigger(openingState(id), 'pressure'))
       expect(panel.querySelector('[data-condition-held="true"]')).not.toBeNull()
-      expect(panel.textContent).toMatch(/not treated as an outcome/i)
-      expect(panel.textContent).toContain('MCS-03-05')
+      expect(panel.textContent).toMatch(/Not used as a result/i)
+      expect(panel.textContent).not.toContain('MCS-03-05')
     }
   })
 
@@ -138,7 +138,7 @@ describe('F26 — the story names the patient it starts from, before it asks', (
     const view = render(<McsStoryProblems stories={[story]} />)
     const scope = view.container.querySelector('[data-story-change-scope]')
     expect(scope).not.toBeNull()
-    expect(scope!.textContent).toMatch(/not a specified bolus/i)
+    expect(scope!.textContent).toMatch(/far more than a fluid bolus/i)
     expect(scope!.textContent).not.toMatch(/\b\d+\s*(mL|ml|cc)\b/)
   })
 })
@@ -153,7 +153,7 @@ describe('F33 — the twelve cases say what kind of number each condition is', (
       expect(entries.length).toBe(mcsScenarioById.get(id)!.successCriteria.length)
       entries.forEach((entry) => {
         expect(entry.getAttribute('data-condition-class')).toBeTruthy()
-        expect(entry.textContent).toContain('Authored for this simulation')
+        expect(entry.textContent).toContain('Simulator checkpoint')
       })
     },
   )
@@ -191,20 +191,17 @@ describe('F18 / F27 / F28 — claims that have to match the screen and the devic
     expect(contract.startingContext).not.toMatch(/unannotated/i)
   })
 
-  it('does not call the durable reference state normal', () => {
+  it('opens the durable reference inside the goal range its copy names', () => {
     const reference = settle(createInitialMcsState('learn', 'lvad', null, 417))
-    expect(reference.metrics.mapMmHg).toBeGreaterThan(100)
+    expect(reference.metrics.mapMmHg).toBeGreaterThanOrEqual(70)
+    expect(reference.metrics.mapMmHg).toBeLessThanOrEqual(80)
     const section7 = mcsSectionLearningContractById.get('lvad-parameters-assessment')!
-    expect(section7.startingContext).not.toMatch(/reading normally/)
-    expect(section7.startingContext).toMatch(/not adopted as this module’s target/)
+    expect(section7.startingContext).toMatch(/goal range of 70–80 mm Hg/)
   })
 
   it('names the direction of the real controller’s flow estimate, with its source', () => {
     const section8 = mcsSectionLearningContractById.get('lvad-alarms-emergencies')!
-    expect(section8.teaching.flowAccountNote).toMatch(
-      /speed, power and (the patient’s )?hematocrit/,
-    )
-    expect(section8.teaching.flowAccountNote).toMatch(/no estimator equation/)
+    expect(section8.teaching.flowAccountNote).toMatch(/the controller’s estimate from power/)
     expect(
       mcsSources.some((source) => source.id === 'abbott-heartmate3-pump-parameters-card'),
     ).toBe(true)

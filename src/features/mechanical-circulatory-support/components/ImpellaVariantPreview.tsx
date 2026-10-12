@@ -101,16 +101,10 @@ export function ImpellaVariantPreview() {
               <dd>{selected.access}</dd>
             </div>
             <div>
-              <dt>Flow framing</dt>
+              <dt>Flow</dt>
               <dd>{selected.productFlowFraming}</dd>
             </div>
-            <div>
-              <dt>Model reference ceiling</dt>
-              <dd>
-                {selected.modeledReferenceFlowLMin.toFixed(1)} L/min before loading, pressure,
-                position, and suction effects
-              </dd>
-            </div>
+
             <div>
               <dt>Scope</dt>
               <dd>{selected.teachingBoundary}</dd>

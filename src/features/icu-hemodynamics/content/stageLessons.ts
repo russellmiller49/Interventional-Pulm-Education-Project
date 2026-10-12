@@ -31,6 +31,7 @@ import {
   type HemodynamicsSectionSpec,
 } from './sectionSpecs'
 import { hemodynamicsSectionItems } from './stageItems'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 /**
  * The adapter: every section of the pathway as one ordered list of steps on the lesson stage.
@@ -588,7 +589,7 @@ function waveformComponentsSteps(): readonly StepInput[] {
       phase: 'recognize',
       title: 'When the atrial contour changes',
       instruction:
-        'Compare the existing abnormal reference patterns in a known chamber. Use the ECG and the affected wave or descent to distinguish mechanisms. A pattern supports a mechanism in context; it does not establish a diagnosis alone.',
+        'Compare the existing abnormal reference patterns in a known chamber. Find the wave or descent each one changes. These two examples draw the pressure pattern only, without their ECG.',
       lookIn: { pane: 'teaching', landmark: 'Contrasting abnormal atrial patterns' },
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },
@@ -598,7 +599,7 @@ function waveformComponentsSteps(): readonly StepInput[] {
       phase: 'predict',
       title: 'What made this wave?',
       instruction:
-        'Use the right-atrial question trace and the patient vignette to select a mechanism. This is an authored waveform example; the live reference patient is not being altered to produce it.',
+        'Use the right-atrial question trace and the patient vignette to select a mechanism.',
       lookIn: { pane: 'steps', landmark: 'the question trace and answer choices below' },
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
@@ -705,7 +706,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       phase: 'explain',
       title: 'Position from the shape, permission from the list',
       instruction:
-        'Read the rows this section fills in, then When to stop: the conditions the simulation cannot show you — resistance, ectopy, a patient who changes while the tracing does not.',
+        'Read the rows this section fills in, then When to stop: the first move for resistance, ectopy and a patient who deteriorates, none of which the simulator shows.',
       lookIn: {
         pane: 'teaching',
         landmark: 'Waveform patterns and common causes, then When to stop',
@@ -790,8 +791,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
     {
       phase: 'act',
       title: 'Occlude, read, release',
-      instruction:
-        'Inflate from the confirmed artery, let the tracing settle for about a breath, place the cursor at end expiration, store the value, and deflate. The simulation releases the balloon on its own after a set interval — a rail of this model, not a clinical limit.',
+      instruction: `Inflate from the confirmed artery (at the bedside: slowly, ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, stopping as soon as the tracing wedges). Let the tracing settle for about a breath, place the cursor at end expiration, store the value, and deflate.`,
       lookIn: { pane: 'simulator', landmark: ON_SIMULATOR.balloon },
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },

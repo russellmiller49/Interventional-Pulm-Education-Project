@@ -15,7 +15,7 @@ import type { AlarmEvent, VentilationSimulationState } from '../../engine'
 import { exhaledVolumeReading } from '../../content/measurementReadiness'
 import { patientReportAvailability } from '../../content/patientReport'
 import { referenceAlarmSet } from '../../content/referenceAlarmSet'
-import { ModelBoundary, TextEquivalent, round, styles } from './shared'
+import { TextEquivalent, round, styles } from './shared'
 
 type Locus = 'patient' | 'circuit' | 'ventilator' | 'person'
 
@@ -229,11 +229,36 @@ export function VentilationSafetyReassessment({
       </div>
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        Alarms shown here are the simulator’s own; no additional urgency threshold is applied by
-        this panel. The checks are a recognition-and-priority exercise, not a protocol — perform any
-        bedside procedure according to local policy and under appropriate supervision.
-      </ModelBoundary>
+      <section className={styles.firstMoves} data-first-moves>
+        <h4>Sudden deterioration on the ventilator: first moves</h4>
+        <ol>
+          <li>Turn the FiO₂ to 1.0 and call for help as you start.</li>
+          <li>
+            Disconnect the patient from the ventilator and ventilate by hand with 100% oxygen. If
+            trapped gas escapes and the blood pressure recovers, the cause was breath stacking.
+          </li>
+          <li>
+            Feel the bag. If it is hard to squeeze, pass a suction catheter down the tube: a
+            catheter that will not pass means a kinked, bitten or plugged tube.
+          </li>
+          <li>
+            Check the tube: depth at the teeth, the capnography trace, and breath sounds on both
+            sides.
+          </li>
+          <li>
+            Absent breath sounds on one side with a falling blood pressure is a tension pneumothorax
+            until proven otherwise. Decompress it; do not wait for a film.
+          </li>
+          <li>
+            If the patient is easy to bag and improves off the ventilator, the fault is in the
+            ventilator or its circuit.
+          </li>
+        </ol>
+        <p>
+          The order is Displacement, Obstruction, Pneumothorax, Equipment, with breath stacking
+          checked by the disconnection itself.
+        </p>
+      </section>
     </section>
   )
 }

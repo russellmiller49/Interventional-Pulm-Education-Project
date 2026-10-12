@@ -101,7 +101,7 @@ export function CrrtOperationalTool({
                   presentation="guided-setup"
                   caseContext={{
                     caseId: session.caseDefinition.id,
-                    title: 'CVVHD setup with an 80 kg synthetic patient',
+                    title: 'CVVHD setup with an 80 kg patient',
                     pathway: 'learn',
                   }}
                   state={session.interfaceState}
@@ -211,7 +211,7 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
         </p>
       ) : null}
       <p>
-        <strong>Synthetic patient:</strong>{' '}
+        <strong>Patient:</strong>{' '}
         {s.patient.status === 'configured'
           ? `${number(s.patient.bodyWeightKg)} kg`
           : 'Weight unavailable'}
@@ -290,10 +290,7 @@ function AlarmRecord({ run }: { run: CrrtOperationalRun }) {
   return (
     <section aria-label="Alert and cause record">
       <h3>Alert and cause record</h3>
-      <p>
-        {CRRT_SIMULATED_ALERT_BOUNDARY} In this simulation an alert does not stop the modeled pumps
-        by itself.
-      </p>
+      <p>{CRRT_SIMULATED_ALERT_BOUNDARY}</p>
       {alarms.length ? (
         <ul>
           {alarms.map((a) => (
@@ -450,8 +447,8 @@ function NetRemovalComparison({ run }: { run: CrrtOperationalRun }) {
       >
         <table className={styles.table}>
           <caption>
-            Same CRRT-10 run · simulated values at recorded events. Reserve and stress are teaching
-            proxies, not clinical tolerance measurements.
+            Same run, values at each recorded event. Reserve and stress are this simulator&rsquo;s
+            indices of how much removal the circulation can absorb.
           </caption>
           <thead>
             <tr>

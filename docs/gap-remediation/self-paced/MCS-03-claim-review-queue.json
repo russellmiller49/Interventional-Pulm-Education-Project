@@ -177,12 +177,12 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
           "locator": "Impella variant preview, CP flow framing",
-          "excerpt": "Peak flow up to 4.3 L/min; actual flow remains loading-dependent."
+          "excerpt": "Peak flow in systole at P-9 is"
         },
         {
           "file": "src/features/mechanical-circulatory-support/components/ImpellaVariantPreview.tsx",
           "locator": "Impella variant preview, model reference ceiling row (4.3 for CP)",
-          "excerpt": "<dt>Model reference ceiling</dt>"
+          "excerpt": "<dt>Flow</dt>"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
@@ -357,12 +357,12 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/supportPathways.ts",
           "locator": "Left microaxial pathway card, Impella 5.5 product reference condition",
-          "excerpt": "Device specification for the Impella 5.5, a different pump from the Impella CP figures above; not a guaranteed patient flow"
+          "excerpt": "Device specification for the Impella 5.5, a different pump from the Impella CP"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
           "locator": "Impella variant preview, 5.5 flow framing",
-          "excerpt": "Maximum mean flow of 5.5 L/min in the device specification; actual flow remains loading-dependent."
+          "excerpt": "Mean flow ${MCS_NUMBERS.value('impella-55-flow-by-level')}."
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
@@ -438,7 +438,7 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/impellaVariants.ts",
           "locator": "Impella variant preview, RP flow framing",
-          "excerpt": "Product information frames flow up to 4.0 L/min; actual and modeled flow remain loading-dependent."
+          "excerpt": "Up to 4.0 L/min in the product information; delivered flow depends on loading."
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
@@ -643,7 +643,7 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
           "locator": "Suction transfer, explanation (rewritten)",
-          "excerpt": "In this model a one- or two-level reduction leaves the suction pattern in place"
+          "excerpt": "Here a one- or two-level reduction leaves the suction pattern in place"
         }
       ],
       "learnerWording": "Before: rationale “This limits ongoing suction while preserving a structured patient–position–device evaluation.”; explanation “The learner must make a real pump-level adjustment and identify the loading mechanism.” After: the IFU order, and what the model does after a reduction.",
@@ -787,17 +787,17 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
           "locator": "LVAD emergency transfer stem (rewritten)",
-          "excerpt": "At an unchanged speed, LVAD power rises and a high-power alarm appears while the displayed flow and the effective flow barely move."
+          "excerpt": "At an unchanged speed, LVAD power rises and a high-power alarm appears. The displayed flow rises with it, the pulsatility index falls, and the mean pressure is lower."
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
           "locator": "LVAD emergency transfer, context (rewritten)",
-          "excerpt": "Pump thrombosis or flow obstruction pattern, which this model does not diagnose"
+          "excerpt": "value: 'Suspected pump thrombosis',"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sectionSpecs.ts",
           "locator": "LVAD alarms section, transfer task title",
-          "excerpt": "Power rising while the flow display holds"
+          "excerpt": "Power rising, the patient worse"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/supportPathways.ts",
@@ -886,7 +886,7 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
           "locator": "LVAD emergency transfer, disconnect-power rationale",
-          "excerpt": "Stopping a continuous-flow pump can cause immediate hemodynamic collapse and retrograde flow."
+          "excerpt": "Stopping a continuous-flow pump can cause immediate hemodynamic collapse and backflow through the pump."
         },
         {
           "file": "src/features/mechanical-circulatory-support/components/McsSourcesPanel.tsx",

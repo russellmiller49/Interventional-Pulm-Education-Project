@@ -700,8 +700,7 @@ function OperationsScreen({
                   {action.observationIntervalSeconds > 0 ? (
                     <small>
                       Applying this also advances the simulated clock by{' '}
-                      {formatObservationInterval(action.observationIntervalSeconds)} — its authored
-                      observation interval.
+                      {formatObservationInterval(action.observationIntervalSeconds)}.
                     </small>
                   ) : null}
                 </div>
@@ -837,13 +836,13 @@ function OperationsScreen({
           <strong id="phase3-alarm-heading">
             {operations.activeAlarmCodes.length > 0
               ? operations.activeAlarmCodes.map(crrtSimulatedAlertLabelFromCode).join(', ')
-              : 'No active simulated alert'}
+              : 'No active alarm'}
           </strong>
         </div>
         <p>
           {operations.activeAlarmCodes.length > 0
-            ? 'A simulated alert is shown. Review the patient and circuit, identify the cause, and verify resolution; acknowledgement alone does not resolve the problem.'
-            : 'This exercise does not reproduce exact alarm names, priorities, thresholds, pump or clamp reactions, or correction steps. Follow current device instructions and local policy.'}
+            ? 'An alarm is active. Look at the patient, then the part of the circuit it names, fix the cause, and confirm the pressures recover. Silencing it fixes nothing.'
+            : 'Alarms appear here under their PrisMax names.'}
         </p>
         <p className={styles.alarmPriority}>
           <strong>Priority:</strong> none shown. {CRRT_SIMULATED_ALERT_BOUNDARY}

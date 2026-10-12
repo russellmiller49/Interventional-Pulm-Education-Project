@@ -250,7 +250,7 @@ export const ventilationSettingSort: VentilationSettingSort = {
       label: 'Total rate (fTotal), on the monitoring screen',
       origin: 'reported',
       rationale:
-        'The total rate counts every breath, including the ones the patient started. It is higher than the set rate whenever the patient triggers.',
+        'The total rate counts every breath, including the ones the patient started. It is higher than the set rate only when the patient triggers breaths faster than the set rate; in assist-control each triggered breath restarts the wait for the next mandatory one.',
     },
     {
       id: 'peak',

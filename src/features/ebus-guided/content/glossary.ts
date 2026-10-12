@@ -1,11 +1,9 @@
 /**
  * Course glossary (EBUS-PRE-REVIEW-04, NAV-3 / L1-4 / L15-4).
  *
- * Every definition below is made of sentences the course already teaches, quoted or trimmed from
- * the place named in `sources`; nothing is written from general knowledge. A term the course
- * uses without defining it (for example "central hilar structure", or abbreviations such as TNM,
- * IASLC, NSCLC and IFU) is deliberately absent and listed for source review instead, because a
- * definition added here would read as authoritative teaching.
+ * Original entries quote the course teaching. OD-12 (Russell Miller, 2026-10-04) authorizes
+ * the expanded terms below from the recorded Prompt-05 evidence, without upgrading source
+ * verification. Source-dependent definitions carry their limits beside the definition.
  *
  * `firstUse` names the lessons that use a term without teaching it there — lesson 1 uses "N
  * category" sixteen lessons before lesson 17 teaches it — and show it beside their teaching. The
@@ -16,14 +14,90 @@ export interface GlossaryEntry {
   id: string
   term: string
   definition: string
-  /** Where each sentence of the definition comes from, in the course's own words. */
+  /** Course excerpts or recorded source/physician-author provenance for the definition. */
   sources: string[]
+  /** Distinguishes approved external expansions from the original course excerpts. */
+  sourceContext?: string
   /** The lesson that teaches the term in full, linked from the entry. */
   lessonId?: string
   firstUse: string[]
 }
 
 export const GLOSSARY: GlossaryEntry[] = [
+  {
+    id: 'tnm',
+    term: 'TNM',
+    definition: 'Tumor, node, metastasis classification.',
+    sources: ['IASLC ninth-edition staging terminology'],
+    sourceContext: 'Source',
+    firstUse: ['clinical-question', 'systematic-staging'],
+  },
+  {
+    id: 'iaslc',
+    term: 'IASLC',
+    definition: 'International Association for the Study of Lung Cancer.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['clinical-question', 'ct-map'],
+  },
+  {
+    id: 'nsclc',
+    term: 'NSCLC',
+    definition: 'Non-small cell lung cancer.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['systematic-staging'],
+  },
+  {
+    id: 'pet',
+    term: 'PET',
+    definition: 'Positron emission tomography.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['clinical-question'],
+  },
+  {
+    id: 'fna',
+    term: 'FNA',
+    definition: 'Fine-needle aspiration.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['eus-b'],
+  },
+  {
+    id: 'ers-esge-ests',
+    term: 'ERS / ESGE / ESTS',
+    definition:
+      'European Respiratory Society / European Society of Gastrointestinal Endoscopy / European Society of Thoracic Surgeons.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['systematic-staging', 'eus-b', 'results-reporting'],
+  },
+  {
+    id: 'chest',
+    term: 'CHEST',
+    definition: 'The American College of Chest Physicians and its guideline series.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['adequacy-rose'],
+  },
+  {
+    id: 'ifu',
+    term: 'IFU',
+    definition: 'Instructions for use: the manufacturer’s document for one device and revision.',
+    sources: [],
+    sourceContext: 'Source',
+    firstUse: ['needle-assembly-model', 'needle-safety'],
+  },
+  {
+    id: 'chs',
+    term: 'Central hilar structure (CHS)',
+    definition: 'A linear, flat, hyperechoic central area, as described in ICS/IAB 2023 Table 5.',
+    sources: ['ICS/IAB 2023, Table 5'],
+    sourceContext: 'Source',
+    firstUse: ['node-characterization'],
+  },
+
   {
     id: 'ebus-tbna',
     term: 'EBUS-TBNA',
@@ -61,7 +135,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: 'n-category',
     term: 'N category (N1, N2, N3)',
     definition:
-      'N classification describes regional tumor involvement in the relevant cancer context, not all adenopathy: a non-lung-cancer adenopathy case does not automatically receive an N category. The categories are defined relative to the primary side. The course’s examples: ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are N1; subcarinal involvement (station 7) is N2 for either primary side; contralateral mediastinal involvement is N3. For a right lung primary, 4L is N3, 7 is N2, and 11R is N1. These are the examples the course teaches, not the complete ninth-edition definitions.',
+      'A non-lung-cancer adenopathy case does not automatically receive an N category. The categories are defined relative to the primary side. The course’s examples: ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are N1; subcarinal involvement (station 7) is N2 for either primary side; contralateral mediastinal involvement is N3. For a right lung primary, 4L is N3, 7 is N2, and 11R is N1. These are the examples the course teaches, not the complete ninth-edition definitions.',
     sources: [
       'Lesson 1, Define the clinical question: the note on the first task and the rationale of the transfer check',
       'Lesson 17, Systematic staging and TNM ninth edition: second teaching paragraph, worked example and first check',

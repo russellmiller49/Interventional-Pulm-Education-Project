@@ -17,6 +17,7 @@ import {
   Target,
 } from 'lucide-react'
 
+import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { orderChoices } from '../content/choiceOrder'
 import { ecmoIntegratedCaseScope } from '../content/integratedCaseScope'
 import { resolveScenarioReassessment } from '../content/practiceSupport'
@@ -67,8 +68,7 @@ const faultLabels: Record<FaultId, string> = {
   'preload-limited': 'Resolve the identified drainage limitation',
   'return-obstruction': 'Remove the identified return-side obstruction',
   // S10-2: this one control escalates and, as a teaching transition, moves the circuit to its
-  // post-exchange state. It is not the exchange, which this module does not simulate.
-  'oxygenator-resistance': 'Escalate, then move to the post-exchange circuit',
+  'oxygenator-resistance': 'Call for the backup and exchange the oxygenator',
   recirculation: 'Resolve the cannula/recirculation cause',
   'acute-hypercapnia': 'Apply the predicted phase-aware sweep change',
   'compensated-hypercapnia': 'Confirm the compensated state and avoid blind normalization',
@@ -76,8 +76,8 @@ const faultLabels: Record<FaultId, string> = {
   'arterial-bubble': 'Resolve and clear the source of air',
   'ac-power-loss': 'Restore verified AC power and backup readiness',
   'flow-sensor-failure': 'Restore or replace the flow measurement',
-  'differential-hypoxemia': 'Verify upper-body oxygenation, assess both circulations, and escalate',
-  'lv-loading': 'Recognize LV-loading cues and escalate for expert evaluation',
+  'differential-hypoxemia': 'Confirm at the right arm and raise ventilator support',
+  'lv-loading': 'Lower flow, add an inotrope, call for a vent',
   'ecmo-not-initiated': 'Complete readiness, configure support, and start ECMO',
   'hemorrhagic-hypovolemia': 'Control hemorrhage and restore effective preload',
   'tension-pneumothorax': 'Relieve the obstructive thoracic cause',
@@ -96,7 +96,7 @@ const faultLabels: Record<FaultId, string> = {
  * live monitor, they read as two measurements of the same moment that disagree.
  */
 export const PRESENTATION_DATA_NOTE =
-  'At presentation: these are authored case-brief values. The live simulator starts at t=0. Some narrative values are not inputs to the model and may differ from its t=0 display. Use the live display to assess an action.'
+  'At presentation. The live simulator starts at t=0 and some of these values differ from its first display. Use the live display to assess an action.'
 
 /**
  * What a modeled second is (ECMO-FELLOW-02; S4-3, C1-4, S10-2, IV-4).
@@ -399,11 +399,12 @@ function ClinicalActionPanel({
       {targets ? (
         <div className={styles.initiationSettings}>
           <div>
-            <span className={styles.kicker}>Simulated initiation orders</span>
+            <span className={styles.kicker}>Initiation orders</span>
             <strong>Configure on the simulator before starting support</strong>
             <p>
               Set RPM on the CARDIOHELP console. Set sweep and sweep-gas FiO₂ on the separate gas
-              blender. These case orders are not universal clinical targets.
+              blender.{' '}
+              {`The usual start is sweep ${ECMO_NUMBERS.value('sweep-start')} and a blood gas at ${ECMO_NUMBERS.value('sweep-recheck')}; this case’s orders are its own.`}
             </p>
           </div>
           <ul className={styles.initiationSettingsGrid} aria-label="Initiation setting checklist">
@@ -664,7 +665,7 @@ export function ActionPanel({
               disabled={!enabled}
               onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint - 300 })}
             >
-              <Gauge aria-hidden="true" /> Reduce RPM 300 (authored step)
+              <Gauge aria-hidden="true" /> Reduce RPM 300
             </button>
             <button
               type="button"
@@ -672,7 +673,7 @@ export function ActionPanel({
               disabled={!enabled}
               onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint + 300 })}
             >
-              <AlertOctagon aria-hidden="true" /> Increase RPM 300 (authored step)
+              <AlertOctagon aria-hidden="true" /> Increase RPM 300
             </button>
           </>
         ) : null}

@@ -18,7 +18,9 @@ import { selectCrrtLabEvidence } from '../labEvidence'
  * nutrition trends during an interruption, and its review action announced that "the linked
  * trends … become available". None of that exists in the case: the patient values are one
  * case-start record, every action has no effect, and the run starts with treatment running.
- * The case is now an information-gap exercise; these tests hold that line.
+ * Teaching-first revision (2026-10-08): the case states this morning's results in its stem and
+ * keys on the first move. These tests hold that no serial trend is promised or announced, and
+ * that the recorded plan changes nothing in the simulation.
  */
 
 jest.mock('@/i18n/navigation', () => ({
@@ -116,15 +118,17 @@ describe('CRRT-12 claims only the evidence it carries', () => {
         if (effect.target === 'device.deliveryState') expect(effect.value).toBe('running')
       }
     }
-    expect(definition.patientDescription).toMatch(/no record of an earlier treatment interruption/)
-    expect(definition.visibleFindings[0]).toMatch(/no earlier treatment interruption is recorded/)
+    expect(definition.patientDescription).not.toMatch(/interrupt/i)
+    expect(definition.visibleFindings.join(' ')).not.toMatch(/interrupt/i)
   })
 
-  it('frames the review action as a request for evidence, not its arrival', () => {
-    expect(review.label).toMatch(/request/i)
+  it('keys the required action on a first move that is recorded without a simulated effect', () => {
+    expect(review.label).not.toMatch(/request|escalat|coordinate/i)
+    expect(review.label).toMatch(/^Replace /)
     expect(review.effects).toEqual([])
-    expect(review.response).toMatch(/requesting the data does not supply it/)
-    expect(definition.debrief.trendReview).toMatch(/cannot attribute/)
+    expect(review.response).toMatch(/plan is recorded/)
+    expect(review.response).toMatch(/do not change/)
+    expect(definition.debrief.requiredActionsReview).toBe(review.label)
   })
 })
 
@@ -154,26 +158,19 @@ describe('CRRT-12 evidence scope', () => {
     }
   })
 
-  it('names the serial clinical evidence as absent', () => {
+  it('names the repeat results as the one thing the run does not supply', () => {
     const absent = evidence!.absent.map((entry) => entry.label)
-    expect(absent).toEqual([
-      'Serial electrolyte and acid-base values',
-      'Serial temperature',
-      'Medication delivery or drug exposure over time',
-      'Nutrition intake or its effect over time',
-      'An earlier treatment interruption',
-      'Results of a multidisciplinary reassessment',
-    ])
+    expect(absent).toEqual(['Repeat results after you act'])
   })
 
   it('lists only quantities the simulation calculates, and what it does not model', () => {
     const calculates = evidence!.modelCalculates.join(' ')
     expect(calculates).toMatch(/Delivered dose/)
-    expect(calculates).toMatch(/downtime, as they actually occur in this run/)
+    expect(calculates).toMatch(/downtime, as they occur in this run/)
     expect(calculates).toMatch(/whole-patient fluid ledger/)
     expect(calculates).not.toMatch(/temperature|potassium|electrolyte|medication exposure/i)
     const notModeled = evidence!.modelDoesNotModel.join(' ')
-    for (const domain of [/electrolyte/, /temperature/, /medication/, /nutrition/, /attribute/]) {
+    for (const domain of [/electrolyte/i, /temperature/, /drug clearance/, /nutrition/]) {
       expect(notModeled).toMatch(domain)
     }
   })
@@ -183,9 +180,7 @@ describe('CRRT-12 evidence scope', () => {
     const scope = sectionFor(/What this case can show you/)
     expect(scope).toHaveTextContent('35.8 °C')
     expect(scope).toHaveTextContent('At case start')
-    expect(scope).toHaveTextContent('Serial temperature')
-    expect(scope).toHaveTextContent('An earlier treatment interruption')
-    expect(scope).toHaveTextContent('Results of a multidisciplinary reassessment')
+    expect(scope).toHaveTextContent('Repeat results after you act')
   })
 })
 
@@ -210,12 +205,12 @@ describe('performing the CRRT-12 review records a plan and changes nothing else'
     ).toHaveLength(1)
   })
 
-  it('shows a response about a request, and no clinical series appears afterwards', () => {
+  it('shows that the plan is recorded, and no clinical series appears afterwards', () => {
     render(<Player caseDefinition={definition} />)
     perform('Complete the initial clinical assessment')
     perform(review.label)
     const card = cardFor(review.label)
-    expect(card).toHaveTextContent('requesting the data does not supply it')
+    expect(card).toHaveTextContent('Your plan is recorded')
     expect(card).not.toHaveTextContent(/become available/i)
 
     fireEvent.click(screen.getByRole('button', { name: '+1 hr' }))
@@ -228,24 +223,24 @@ describe('performing the CRRT-12 review records a plan and changes nothing else'
     expect(patient).not.toHaveTextContent(/temperature|potassium|medication|nutrition/i)
   })
 
-  it('describes the accepted alternative without claiming the review request occurred', () => {
+  it('records the accepted alternative as a plan without a simulated effect', () => {
     const alternative = definition.interventions.find(
       ({ id }) => id === 'crrt12-action-alternative-candidate',
     )!
-    expect(alternative.response).toMatch(/keep the treatment unchanged/)
-    expect(alternative.response).toMatch(/clarifying the gap does not supply the data/)
+    expect(alternative.effects).toEqual([])
+    expect(alternative.response).toMatch(/plan is recorded/)
     expect(alternative.response).not.toMatch(/your review and the request/i)
   })
 })
 
 describe('the CRRT-12 debrief keeps the missing evidence missing', () => {
-  it('states the future reassessment need without narrating one on a no-action run', () => {
+  it('shows the worked teaching without narrating an action on a no-action run', () => {
     render(<Player caseDefinition={definition} />)
     fireEvent.click(screen.getByRole('button', { name: 'End run and review debrief' }))
     const actual = sectionFor(/What you did in this run/)
     expect(actual).not.toHaveTextContent(review.label)
     const debrief = sectionFor(/Causal debrief/)
-    expect(debrief).toHaveTextContent(/A future multidisciplinary reassessment would need/)
+    expect(debrief).toHaveTextContent(definition.debrief.trendReview)
     expect(debrief).not.toHaveTextContent(/Your review and the request/)
   })
 
@@ -267,7 +262,6 @@ describe('the CRRT-12 debrief keeps the missing evidence missing', () => {
       expect(debrief.textContent ?? '').not.toMatch(pattern)
     }
     expect(debrief).toHaveTextContent(definition.debrief.trendReview)
-    expect(debrief).toHaveTextContent('requesting the data does not supply it')
     // The generic duplicate debrief removed in Batch 04 does not come back.
     expect(screen.queryByText('intervention performed')).toBeNull()
   })

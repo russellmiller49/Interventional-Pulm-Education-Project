@@ -4,6 +4,7 @@ import { BedsideMonitor } from '../components/BedsideMonitor'
 
 import { hemodynamicsStageItems } from '../content/stageItems'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
+import { HEMODYNAMICS_NUMBERS } from '../content/teachingNumbers'
 import {
   catheterSimulationNotice,
   catheterTransitionAllowed,
@@ -322,12 +323,15 @@ describe('the flow-directed balloon is the simulation’s work, not the learner�
     const { lesson } = mountSection('catheter-advancement')
     while (currentStepId() !== lesson.steps[2].id) clickPrimary()
     expect(document.querySelector('[data-float-balloon-provenance]')?.textContent).toMatch(
-      /raised and lowered for you|guided model assistance/i,
+      /raises and lowers it for you|raised and lowered for you/i,
     )
     fireEvent.click(control('advance'))
     tick(6)
-    expect(document.querySelector('[data-float-balloon-provenance]')?.textContent).toMatch(
-      /guided model assistance, not an action you performed/i,
+    const whileFloating = document.querySelector('[data-float-balloon-provenance]')?.textContent
+    expect(whileFloating).toMatch(/the simulator raises it when the tip leaves the atrium/i)
+    // And it says what the learner's own hands do at the bedside, with the register's volume.
+    expect(whileFloating).toContain(
+      `at the bedside you inflate it with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}`,
     )
   })
 })
@@ -436,14 +440,14 @@ describe('the capstone screen (L9-01, L9-02)', () => {
     expect(capstone.catheter.balloonInflated).toBe(false)
   })
 
-  it('states the simulation’s own restriction rather than a manufacturer alarm', () => {
+  it('says what the catheter’s state calls for, as the action to take', () => {
     const notice = catheterSimulationNotice(capstone)
-    expect(notice).toMatch(/Simulation safety notice, not a device alarm/)
-    expect(notice).toMatch(/occluding distal position with the balloon down/)
-    expect(notice).toMatch(/not a validated occlusion pressure/)
-    expect(notice).toMatch(/blocks a flush on the pulmonary-artery line/)
-    // No invented withdrawal distance or recovery sequence: HD-03-08 is still an open source item.
-    expect(notice).not.toMatch(/\d+\s?cm/)
+    expect(notice).toMatch(/the tip sits too far out with the balloon down/i)
+    expect(notice).toMatch(/withdraw until a clean pulmonary-artery tracing returns/i)
+    expect(notice).toMatch(/do not flush until it does/i)
+    expect(notice).toMatch(/its displayed value is not an occlusion pressure/)
+    // It is the notice, not an invented device alarm: the alarm bar stays quiet (asserted below).
+    expect(notice).not.toMatch(/alarm/i)
   })
 
   it('names the channel for what it is carrying, with the balloon state beside it', () => {
@@ -454,8 +458,8 @@ describe('the capstone screen (L9-01, L9-02)', () => {
     expect(readout).toHaveTextContent(/not a validated occlusion/)
     // The claim the report caught: an occlusion mean printed over a balloon that is down.
     expect(readout).not.toHaveTextContent(/live occlusion mean/)
-    expect(document.querySelector('[data-simulation-safety-notice]')?.textContent).toMatch(
-      /not a device alarm/,
+    expect(document.querySelector('[data-simulation-safety-notice]')?.textContent).toBe(
+      catheterSimulationNotice(capstone),
     )
     expect(screen.getByText('NO ACTIVE MODEL ALARMS')).toBeInTheDocument()
   })

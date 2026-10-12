@@ -130,18 +130,16 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     unitId: 'controls-and-goals',
     newConcept: 'A setting is a request; a measurement is the result.',
     objective:
-      'Pair each of the five things you can change with the reading that shows whether the patient received it.',
-    recognizeTitle: 'The five things you can change',
+      'Pair each of the five main settings with the reading that shows whether the patient received it.',
+    recognizeTitle: 'The five main settings',
     recognizeInstruction:
-      'Find the five settings on the console — mode, breath size, rate, PEEP and oxygen. Then find the monitoring values beside them. The first group is what you ask for; the second is what happened.',
+      'Find the five main settings on the console — mode, breath size, rate, PEEP and oxygen. Then find the monitoring values beside them. The first group is what you ask for; the second is what happened.',
     stops: ['inspiration'],
     knobStrip: strip({
       'breath-size': thisKnob(
         'The setting this section changes. Check the exhaled volume and the pressure it cost.',
       ),
-      oxygen: thisKnob(
-        'Changed in the second setup. It moved the saturation and nothing on the breath.',
-      ),
+      oxygen: thisKnob('Changed in Part 2. It moved the saturation and nothing on the breath.'),
     }),
     precommitDenyPatterns: [/more elastic pressure/i, /gas mixture entering/i],
     practicePairing: { kind: 'next-in-unit', caseId: 'MV-01' },
@@ -224,7 +222,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       ),
     }),
     shapingNote:
-      'In the second setup the cycle-off ends a supported breath sooner, which also gives expiration time back.',
+      'In Part 2 the cycle-off ends a supported breath sooner, which also gives expiration time back.',
     precommitDenyPatterns: [
       /less time for passive emptying/i,
       /shorter machine inspiration/i,

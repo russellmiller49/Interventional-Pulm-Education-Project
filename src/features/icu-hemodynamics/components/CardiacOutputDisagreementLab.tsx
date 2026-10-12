@@ -177,7 +177,7 @@ function ScenarioCard({
       <p className={styles.measurementTeachingCallout}>
         <strong>Direction of bias.</strong>{' '}
         {scenario.biasDirection ??
-          'This module names no direction of bias here. The reason is below, and it is a gap in the reviewed sources rather than a detail left out.'}
+          'No single direction of bias is taught for this one; the reason is below.'}
       </p>
       {openQuestions.map((question) => (
         <p key={question.id} className={styles.openQuestionCard}>

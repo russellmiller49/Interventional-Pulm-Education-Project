@@ -70,7 +70,7 @@ const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | '
     'Anterior: looking down on the patient from the front. At 0° the detector is nearest you and covers the chest; the tube is beneath the table. Rotate the C-arm and the detector moves off the chest.',
   side: 'Side: from beside the table. The tube is below, the detector above, and the depth between the tool and the target, which a frontal image collapses, is visible.',
   head: 'Head: from the head of the table, to see how far the C-arm has rotated around the patient.',
-  target: 'Target: close on the authored target and the tool tip.',
+  target: 'Target: close on the model target and the tool tip.',
 }
 
 class SceneBoundary extends Component<
@@ -426,7 +426,6 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   <span>
                     {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
                   </span>
-                  <span>Authored teaching model</span>
                 </div>
                 <div className={styles.viewport} ref={viewport} data-suite-viewport>
                   {contextLost ? (
@@ -448,7 +447,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       aria-label={
                         isRoom
                           ? 'Imaging suite at rest with a gantry, table, CT-derived thorax and monitor boom'
-                          : 'CT-derived thorax with a source, cone, detector and authored target and tool'
+                          : 'CT-derived thorax with a source, cone and detector, with a model target and tool'
                       }
                       className={styles.canvasHost}
                     >
@@ -818,14 +817,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 hidden={view.monitor === 'hidden'}
               />
               {/* Reports 2.6 and 3.2: the same words as the sliders, and the model's own signed
-                  convention stated in patient terms and pinned by a geometry test. It is not a
-                  console's LAO/RAO or cranial/caudal labelling, which the owner has not adopted. */}
+                  convention stated in patient terms and pinned by a geometry test. The owner adopted
+                  the RAO/LAO and cranial mapping on 2026-10-08 (PI-FELLOW 2.6, option b). */}
               <p className={styles.monitorCaption} data-orientation-caption>
                 At frontal: screen right = patient left; top = superior. The zero-angle beam travels
                 from the tube behind the patient to the detector in front. C-arm obliquity and beam
                 tilt are the model’s signed angles: positive obliquity swings the detector toward
-                the patient’s right, and positive tilt swings it toward the head. They are not a
-                console’s LAO/RAO or cranial/caudal labels, whose conventions vary by system.
+                the patient’s right, and positive tilt swings it toward the head. On a console that
+                names the detector’s side, positive obliquity here corresponds to RAO and negative
+                to LAO, and positive tilt to cranial angulation; check your own system’s convention.
               </p>
               {/* Report 2.11: the numbered crosses and the dashed line were on the image and not in
                   the legend. */}
@@ -835,10 +835,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     ? 'Waiting for the first completed pulse.'
                     : `Frame ${timeModel.sampleIndex + 1} · held between pulses. Amber: pulse travel; white: sampled tool.`
                   : isRegistration
-                    ? 'Amber: current target · teal: stored contour · white: authored tool'
+                    ? 'Amber: current target · teal: stored contour · white: model tool'
                     : fieldVisible
-                      ? 'Amber contour: authored target · white mark: tool tip · numbered crosses: modeled landmarks 1 and 2 · dashed teal line: planned tool excursion'
-                      : 'Amber contour: authored target · white mark: tool tip'}
+                      ? 'Amber contour: model target · white mark: tool tip · numbered crosses: modeled landmarks 1 and 2 · dashed teal line: planned tool excursion'
+                      : 'Amber contour: model target · white mark: tool tip'}
               </p>
             </section>
           )}

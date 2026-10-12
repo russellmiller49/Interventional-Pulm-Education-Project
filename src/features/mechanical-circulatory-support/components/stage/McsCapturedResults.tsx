@@ -141,7 +141,7 @@ export function McsDeviceComparisonTable({ records }: { records: McsComparisonRe
               {record ? mcsConfigurationLabel(record.state) : device.toUpperCase()}
               <small>
                 {record
-                  ? `Seed ${record.seed} · captured at ${record.capturedAtSeconds.toFixed(2)} s · observation ${record.observationSeconds} s · patient ${record.referenceId}`
+                  ? `Captured at ${record.capturedAtSeconds.toFixed(2)} s · observation ${record.observationSeconds} s · same patient`
                   : 'Awaiting selection and observation'}
               </small>
             </p>

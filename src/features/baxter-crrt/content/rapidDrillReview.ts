@@ -31,34 +31,37 @@ export const CRRT_CAUSE_FIRST_STEPS: readonly CrrtCauseFirstStepDefinition[] = O
   Object.freeze({
     id: 'assess-patient-safety',
     label: 'Assess patient safety',
-    reviewerBoundary: 'Assess the patient and call for appropriate help before device interaction.',
+    reviewerBoundary:
+      'Look at the patient before the screen: breathing, saturation, blood pressure, the catheter site. Call the nurse or a colleague to the bedside if the patient has changed.',
   }),
   Object.freeze({
     id: 'identify-device-response',
     label: 'Identify the device response',
-    reviewerBoundary: 'Separate the detected condition from the device response and interruption.',
+    reviewerBoundary:
+      'Read what the alarm detected and what the machine has done about it: which pumps have stopped, and whether the return clamp is closed.',
   }),
   Object.freeze({
     id: 'inspect-corresponding-domain',
     label: 'Inspect the corresponding domain',
-    reviewerBoundary: 'Inspect the relevant patient, circuit, fluid, power, or detector domain.',
+    reviewerBoundary: 'Go to the part of the circuit the alarm points at and look at it.',
   }),
   Object.freeze({
     id: 'verify-cause-corrected',
     label: 'Verify that the cause is corrected',
-    reviewerBoundary: 'Acknowledgement alone is not evidence that the cause is corrected.',
+    reviewerBoundary:
+      'Silencing the alarm fixes nothing. Fix the cause, then confirm it with your eyes and the readings.',
   }),
   Object.freeze({
     id: 'resume-only-when-safe',
     label: 'Resume only when safe',
     reviewerBoundary:
-      'Use device instructions, local policy, and clinical judgment for any continuation decision.',
+      'Restart once the cause is fixed and the patient is stable. PrisMax enables Continue when its own check clears.',
   }),
   Object.freeze({
     id: 'reassess-delivery-and-patient',
     label: 'Reassess delivery and the patient',
     reviewerBoundary:
-      'Reassess patient status, actual delivery, interruption effects, and recurrence.',
+      'Check the patient again, then the treatment: how long it was off, what that did to the delivered dose and fluid balance, and whether the alarm comes back.',
   }),
 ])
 

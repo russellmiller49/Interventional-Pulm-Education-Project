@@ -965,13 +965,9 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
         forcedSafetyRecovery: true,
       }
       criticalErrors = [...new Set([...criticalErrors, 'wedge-prolonged-inflation'])]
-      // The cutoff itself is unchanged; only how it is described to the learner is. Naming it a
-      // "10-second inflation limit" asserted a clinical rule that no source in this module supplies
-      // and that the advancement prebrief explicitly lists as not covered here. It is a simulator
-      // rail, and the message no longer claims the pulmonary-artery waveform came back either —
-      // that is the learner's observation to make.
+      // The cutoff is the simulator's own; no sourced limit in seconds exists, so none is named.
       responseMessage =
-        'Safety recovery: this simulation ended the occlusion at its own fixed cutoff and recorded a safety event. That cutoff belongs to the simulation, not to any catheter — inflation time and volume come from the manufacturer’s instructions for the catheter in use and your local protocol. Confirm for yourself whether the pulmonary-artery waveform has returned.'
+        'The balloon was left up, and the simulator let it down. Keep each wedge brief: just long enough to read the value at end expiration. Check that the pulmonary-artery waveform has returned.'
     } else if (
       wedgeElapsed >= wedgeCaptureDelaySeconds(parameters.respiratoryRateBpm) &&
       !catheter.wedgeCaptureReady
@@ -1018,6 +1014,33 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
     waveforms,
     alarms: alarmsFor(measurements, catheter.balloonInflated, catheter.forcedSafetyRecovery),
     responseMessage,
+  }
+}
+
+/**
+ * Redraws the waveform buffer under the state's own measurement system.
+ *
+ * A lesson opening is authored as the case plus a list of settings (level, zero, damping). Applied
+ * through the reducer, those settings change what is generated from then on, but the twelve seconds
+ * already in the buffer were generated before them — so a step that had just been "zeroed" opened
+ * on an unzeroed tracing, and the first sweep showed a step where the two met (the "old trace" in
+ * report L2-06). Nothing happened to this patient before the lesson opened, so there is no earlier
+ * tracing to show: the opening buffer is the one this measurement system draws, at the same sample
+ * times, with the same seed. No measurement, parameter or stored value is touched.
+ */
+export function withOpeningTrace(state: HemodynamicSimulationState): HemodynamicSimulationState {
+  return {
+    ...state,
+    waveforms: state.waveforms.map((sample) =>
+      generateWaveformSample(
+        sample.time,
+        state.measurements,
+        state.parameters,
+        state.measurementSystem,
+        state.seed,
+      ),
+    ),
+    displaySeams: [],
   }
 }
 

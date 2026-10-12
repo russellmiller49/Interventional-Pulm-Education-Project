@@ -64,7 +64,7 @@ export function CrrtPressureArithmetic({
                 ? ' · monitored site'
                 : term.role === 'correction'
                   ? held
-                    ? ' · placement held for device review'
+                    ? ' · correction term'
                     : ' · printed in the manual'
                   : ''}
             </dt>
@@ -96,8 +96,7 @@ export function CrrtPressureArithmetic({
         {arithmetic.correction.note}
       </p>
       <p className={styles.source}>
-        Source: {sourceNaming === 'titled' ? arithmetic.sourceLabel : arithmetic.sourcePages}. Shown
-        as this simulation calculates it; clinical and device review of this arithmetic is pending.
+        Source: {sourceNaming === 'titled' ? arithmetic.sourceLabel : arithmetic.sourcePages}.
       </p>
     </section>
   )

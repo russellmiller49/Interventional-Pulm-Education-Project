@@ -21,6 +21,7 @@ import {
   ventilationExperimentByUnit,
   type LabGoal,
   type LabMetric,
+  type LabQuestionKind,
   type LabRound,
 } from './learningExperiments'
 import { ventilationReferenceMarker } from './referenceEvidence'
@@ -157,6 +158,13 @@ export function roundManeuver(round: LabRound): VentilationManeuver {
     return 'pause'
   if (round.goals.every((goal) => goal.type === 'hold')) return 'hold'
   return 'change'
+}
+
+/** What a round's optional question asks for: its own `asks`, else what its maneuver implies. */
+export function roundQuestionKind(round: LabRound): LabQuestionKind {
+  if (round.asks) return round.asks
+  const maneuver = roundManeuver(round)
+  return maneuver === 'hold' ? 'interpret' : maneuver === 'pause' ? 'identify' : 'predict'
 }
 
 const controlNames: Partial<Record<string, { name: string; unit: string }>> = {
@@ -537,7 +545,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
   steps.push(
     {
       phase: 'transfer',
-      title: 'A new setup: predict again',
+      title: 'Part 2: a new setup',
       instruction: `${second.introduction} ${second.look}`,
       rationale:
         'The same principle in a different situation. If the first answer was memorised rather than understood, this is where it shows.',
@@ -677,3 +685,56 @@ export function ventilationStageLesson(unitId: string): VentilationStageLesson {
 
 export const ventilationStageLessons: readonly VentilationStageLesson[] =
   ventilationLearningUnits.map((unit) => ventilationStageLesson(unit.id))
+
+/* ------------------------------------------------------------------------------------------------
+ * The steps a learner is shown (MV-PRE-REVIEW-04, N6)
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Whether a step has a screen of its own.
+ *
+ * Two step kinds had become literal repeats once the experiment moved beside its task (Batch 03):
+ *
+ * - `observe` ("Watch the response", "Read the captured traces") draws the same task, the same
+ *   experiment panel and the same readings as the `simulator-task` step before it;
+ * - `interpret` ("Interpret your recorded result", foundation sections only) draws the round's
+ *   explanation, captured comparison and observation question, which the `explain` step after it
+ *   draws again.
+ *
+ * Neither is deleted from the lesson. Step ids, ordinals and the positions a saved reading location
+ * refers to are exactly what they were; the learner is simply not walked through the same screen
+ * twice. Nothing either step carried is lost: the wait is done on the task step's own panel, and
+ * the interpretation is on the explanation step.
+ */
+export function isPresentedVentilationStep(step: VentilationStageStep): boolean {
+  return step.interaction.kind !== 'observe' && step.interaction.kind !== 'interpret'
+}
+
+/** Positions in `lesson.steps` of the steps the learner is shown, in order. */
+export function ventilationPresentedStepIndexes(lesson: VentilationStageLesson): readonly number[] {
+  return lesson.steps.flatMap((step, index) => (isPresentedVentilationStep(step) ? [index] : []))
+}
+
+/**
+ * Where a saved step position opens.
+ *
+ * A position on `observe` opens the task step of the same part, which carries its panel; a position
+ * on `interpret` opens that part's explanation step. The saved value is not rewritten here and the
+ * store's format is untouched; the next visit records the position actually shown.
+ */
+export function resolvePresentedStepIndex(lesson: VentilationStageLesson, stored: number): number {
+  const index = Math.max(0, Math.min(Math.trunc(stored) || 0, lesson.steps.length - 1))
+  const step = lesson.steps[index]
+  if (isPresentedVentilationStep(step)) return index
+  const round = 'round' in step.interaction ? step.interaction.round : 0
+  const wanted = step.interaction.kind === 'observe' ? 'simulator-task' : 'explain'
+  const target = lesson.steps.findIndex(
+    (candidate) =>
+      candidate.interaction.kind === wanted &&
+      'round' in candidate.interaction &&
+      candidate.interaction.round === round,
+  )
+  if (target >= 0) return target
+  const presented = ventilationPresentedStepIndexes(lesson)
+  return presented.filter((candidate) => candidate <= index).at(-1) ?? presented[0]
+}

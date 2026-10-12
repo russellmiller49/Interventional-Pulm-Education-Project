@@ -3,6 +3,7 @@ import { mcsDerivedValueGuides } from '@/features/mechanical-circulatory-support
 
 import type { DerivedHemodynamics } from '../engine/types'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS as thresholds } from './clinicalThresholds'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export type HemodynamicDerivedValueId = keyof DerivedHemodynamics
 
@@ -78,7 +79,7 @@ export const hemodynamicDerivedValueGuides = {
     id: 'cardiacIndexLMinM2',
     label: 'CI',
     formula: 'CO / BSA',
-    normalRange: 'Approximate resting adult reference: 2.5–4.0 L/min/m².',
+    normalRange: `Normal resting adult: ${HEMODYNAMICS_NUMBERS.value('cardiac-index-range')}. Cardiogenic shock: ${HEMODYNAMICS_NUMBERS.value('cardiogenic-shock-ci')}.`,
     caveats:
       'Indexing reduces body-size effects but does not establish whether organ perfusion is adequate. Interpret the trend with the method used to obtain CO and the whole-patient picture.',
     evidenceIds: ['pac-derived-part-2-2021'],
@@ -108,7 +109,7 @@ export const hemodynamicDerivedValueGuides = {
     id: 'systemicVascularResistance',
     label: 'SVR',
     formula: '80 × (MAP − RAP) / CO',
-    normalRange: `Usual adult reference: approximately ${thresholds.systemicVascularResistance.referenceMinDynSecCm5.toLocaleString()}–${thresholds.systemicVascularResistance.referenceMaxDynSecCm5.toLocaleString()} dyn·s·cm⁻⁵.`,
+    normalRange: `Normal adult: ${HEMODYNAMICS_NUMBERS.value('svr-range')}.`,
     caveats:
       'An artifactually low CO inflates SVR. Temperature, vasoactive support, pressure validity, and the pressure-flow pattern determine what the result means.',
     evidenceIds: ['pac-derived-part-2-2021'],
@@ -118,8 +119,7 @@ export const hemodynamicDerivedValueGuides = {
     id: 'systemicVascularResistanceIndex',
     label: 'SVRI',
     formula: 'SVR × BSA',
-    normalRange:
-      'Common adult reference: approximately 1,970–2,390 dyn·s·cm⁻⁵·m²; laboratory and text references vary.',
+    normalRange: `Normal adult: ${HEMODYNAMICS_NUMBERS.value('svri-range')}.`,
     caveats:
       'SVRI inherits every limitation of MAP, RAP, CO, and BSA. Use the same validated inputs when following a trend.',
     evidenceIds: ['pac-derived-part-2-2021'],
@@ -140,8 +140,7 @@ export const hemodynamicDerivedValueGuides = {
     id: 'pulmonaryVascularResistanceIndex',
     label: 'PVRI',
     formula: 'PVR × BSA',
-    normalRange:
-      'No single adult bedside classification boundary is used here; interpret indexed resistance with PVR, body size, and the clinical phenotype.',
+    normalRange: `Normal adult: ${HEMODYNAMICS_NUMBERS.value('pvri-range')}.`,
     caveats:
       'Indexing does not repair an invalid PAWP, mPAP, or CO and should not be substituted for the guideline PVR definition.',
     evidenceIds: ['esc-ers-ph-2022', 'pac-derived-part-2-2021'],
@@ -159,7 +158,7 @@ export const hemodynamicDerivedValueGuides = {
     id: 'pulmonaryArteryCompliance',
     label: 'PA compliance',
     formula: 'SV / (PASP − PADP)',
-    normalRange: `A broad contemporary RHC cohort had a median ${thresholds.pulmonaryArteryCompliance.cohortMedianMlMmHg} mL/mmHg (IQR ${thresholds.pulmonaryArteryCompliance.cohortIqrLowMlMmHg}–${thresholds.pulmonaryArteryCompliance.cohortIqrHighMlMmHg}); this is not a universal normal interval.`,
+    normalRange: `A broad contemporary RHC cohort had a median ${thresholds.pulmonaryArteryCompliance.cohortMedianMlMmHg} mL/mmHg (IQR ${thresholds.pulmonaryArteryCompliance.cohortIqrLowMlMmHg}–${thresholds.pulmonaryArteryCompliance.cohortIqrHighMlMmHg}); a cohort median, not a normal range.`,
     caveats:
       'Lower values indicate a stiffer pulmonary circulation, but the result inherits CO and PA pulse-pressure error and is load dependent.',
     evidenceIds: ['pa-compliance-outcomes-2026', 'pac-derived-part-2-2021'],

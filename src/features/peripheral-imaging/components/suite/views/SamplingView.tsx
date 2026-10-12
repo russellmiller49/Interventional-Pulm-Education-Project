@@ -60,7 +60,7 @@ export function SamplingView({
       {labels && (
         <>
           <Html portal={portal} position={add(LESION_CENTER, [27, 0, 24])}>
-            <span className={styles.objectLabel}>Authored target</span>
+            <span className={styles.objectLabel}>Model target</span>
           </Html>
           <Html portal={portal} position={add(model.tip, [-10, 18, -18])}>
             <span className={styles.objectLabel}>Sampling window</span>

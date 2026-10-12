@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from '../stageLook'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { simulatorCaseAssetUrl } from '../../features/simulator/paths'
@@ -62,12 +63,26 @@ async function load(pkg: ModelPackage) {
     throw new Error('A model package is missing from its manifest.')
   return Promise.all(
     records.map(async (r) => {
-      const data = await bytes(r.path)
+      // Model files are served as immutable for a year while the manifest is not, so each is
+      // requested by its content hash: a rebuilt model reaches a returning browser with its manifest.
+      const data = await bytes(r.path + '?v=' + r.sha256.slice(0, 12))
       if ((r.bytes && data.byteLength !== r.bytes) || (await hash(data)) !== r.sha256)
         throw new Error('A teaching model failed its integrity check.')
       return (await loader.parseAsync(data, '')).scene
     }),
   )
+}
+/** What the needle model's camera frames: the distal end, the handle, or both. */
+type NeedleView = 'tip' | 'handle' | 'whole'
+const NEEDLE_VIEWS: { id: NeedleView; label: string }[] = [
+  { id: 'tip', label: 'Needle tip' },
+  { id: 'handle', label: 'Handle' },
+  { id: 'whole', label: 'Whole assembly' },
+]
+/** The parts each close view frames. The handle is at true scale, so one view cannot show both ends well. */
+const NEEDLE_VIEW_PARTS: Record<Exclude<NeedleView, 'whole'>, string[]> = {
+  tip: ['target_node', 'airway_wall', 'adjacent_vessel', 'scope_distal_end', 'scope_bending_section'],
+  handle: ['handle_assembly'],
 }
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -95,6 +110,9 @@ export function ModelViewport({
   const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null)
   const [ready, setReady] = useState(false)
   const [selected, setSelected] = useState('')
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
+  const markSelected = useRef<(() => void) | null>(null)
   const [structures, setStructures] = useState<{ id: string; label: string }[]>([])
   const resetCamera = useRef<(() => void) | null>(null)
   // Presentation only: observer engagement and whether the route view draws structure labels.
@@ -104,13 +122,15 @@ export function ModelViewport({
   const showLabelsRef = useRef(showLabels)
   showLabelsRef.current = showLabels
   const [arrowPx, setArrowPx] = useState<number | null>(null)
+  const [needleView, setNeedleView] = useState<NeedleView>('tip')
+  const needleViewRef = useRef(needleView)
+  needleViewRef.current = needleView
   useEffect(() => {
     const el = host.current
     if (!el) return
     let disposed = false
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
-    renderer.setClearColor('#101e2c')
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.setClearColor(0x000000, 0)
     renderer.domElement.setAttribute(
       'aria-label',
       'Interactive 3D teaching model; drag to orbit the observer camera',
@@ -122,11 +142,8 @@ export function ModelViewport({
       dynamic = new THREE.Group()
     root.scale.setScalar(1000)
     scene.add(root, dynamic)
-    scene.add(new THREE.HemisphereLight(0xdcefff, 0x344154, 2.3))
-    const light = new THREE.DirectionalLight(0xffffff, 2.6)
-    light.position.set(60, 80, 120)
-    scene.add(light)
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 5000)
+    const disposeLighting = applyStageLighting(renderer, scene, camera)
     if (state.package !== 'routes') camera.up.set(0, -1, 0)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = false
@@ -154,6 +171,27 @@ export function ModelViewport({
         }
       })
       return names
+    }
+    // The structure chosen in the list is outlined in the model, so the list points at something.
+    let outlines: THREE.BoxHelper[] = []
+    const outlineSelected = () => {
+      outlines.forEach((box) => {
+        scene.remove(box)
+        box.geometry.dispose()
+        ;(box.material as THREE.Material).dispose()
+      })
+      outlines = []
+      const chosen = selectedRef.current
+      if (!chosen) return
+      root.traverseVisible((o) => {
+        if (!(o instanceof THREE.Mesh) || !o.userData.label) return
+        if (((o.userData.semanticId as string) || o.name) !== chosen) return
+        const box = new THREE.BoxHelper(o, 0xd9a5ff)
+        ;(box.material as THREE.LineBasicMaterial).depthTest = false
+        box.renderOrder = 20
+        scene.add(box)
+        outlines.push(box)
+      })
     }
     const draw = () => {
       if (disposed) return
@@ -221,7 +259,11 @@ export function ModelViewport({
           'needle_motion',
           d.map((n) => n * (s.extension + s.sheath)),
         )
+        // The handle body slides on the scope adaptor with the sheath; the slider rides on the body.
+        setPosition('handle_body_motion', [s.sheath, 0, 0])
         setPosition('handle_motion', [s.extension, 0, 0])
+        const lock = root.getObjectByName('sheath_lock')
+        if (lock) lock.rotation.z = s.secured ? Math.PI / 2 : 0
         const shaft = root.getObjectByName('needle_shaft')
         if (shaft) {
           const base = shaft.userData.fixedBaseWebMm as number[]
@@ -241,6 +283,7 @@ export function ModelViewport({
         setVisible('needle_motion', r || s.extension === 0)
         setVisible('needle_tip', r)
         for (const name of [
+          'handle_assembly',
           'mount_connector',
           'sheath_adjuster',
           'sheath_lock',
@@ -300,26 +343,31 @@ export function ModelViewport({
               routeSupported(s)
           if (id.startsWith('node_station_')) o.visible = id === routeDefinition(s)?.nodeId
           const mats = Array.isArray(o.material) ? o.material : [o.material]
+          // Focus and context, as in the linked view: the two lumens a route is read from are
+          // solid, the great vessels are outlines, and everything else is a faint shell.
+          const lumen = ['trachea', 'carina', 'left_main_bronchus', 'right_main_bronchus'].includes(
+            id,
+          )
+          const vessel = ['aorta', 'pulmonary_artery', 'azygous'].includes(id)
           for (const m of mats) {
-            if (!m.transparent) {
-              m.transparent = true
-              m.needsUpdate = true
-            }
-            m.opacity = id.startsWith('node_')
-              ? 0.95
-              : [
-                    'trachea',
-                    'carina',
-                    'left_main_bronchus',
-                    'right_main_bronchus',
-                    'esophagus',
-                    'aorta',
-                    'pulmonary_artery',
-                    'azygous',
-                  ].includes(id)
-                ? 0.32
-                : 0.07
-            m.depthWrite = false
+            if (!(m instanceof THREE.MeshStandardMaterial)) continue
+            installShell(m)
+            if (id.startsWith('node_')) {
+              // Drawn over the anatomy, as in the linked view: the target is never hidden.
+              m.color.set(STAGE_PALETTE.node)
+              m.depthTest = false
+              o.renderOrder = 4
+              setShell(m, 1)
+            } else if (lumen) {
+              m.color.set(STAGE_PALETTE.airway)
+              setShell(m, 1)
+            } else if (id === 'esophagus') {
+              m.color.set(STAGE_PALETTE.esophagus)
+              setShell(m, 1)
+            } else if (vessel) {
+              m.color.set(id === 'azygous' ? STAGE_PALETTE.vein : STAGE_PALETTE.artery)
+              setShell(m, 0.06, 0.7)
+            } else setShell(m, 0, 0.14)
           }
         })
         const route = routeDefinition(s)
@@ -364,7 +412,8 @@ export function ModelViewport({
              * vector; the locator, target and arrow are the contract's, unchanged.
              */
             controls.target.copy(b)
-            camera.position.copy(routeObserverPosition(a, b))
+            // Far enough back that the trachea, both main bronchi and the esophagus are in frame.
+            camera.position.copy(routeObserverPosition(a, b, 165))
             controls.update()
             lastRoute = routeKey
           }
@@ -381,7 +430,8 @@ export function ModelViewport({
               id === 'air_gap' ||
               id === 'air_bubble' ||
               id === 'calcified_focus')
-          if (!hiddenAnswer)
+          // A part drawn in several materials arrives as several meshes with one id: list it once.
+          if (!hiddenAnswer && !items.some((item) => item.id === id))
             items.push({
               id,
               label:
@@ -392,10 +442,15 @@ export function ModelViewport({
         }
       })
       setStructures(items)
+      outlineSelected()
       draw()
       live.current.onRendered(modelFrameId(s))
     }
     update.current = updateScene
+    markSelected.current = () => {
+      outlineSelected()
+      draw()
+    }
     load(state.package)
       .then((loaded) => {
         if (disposed) {
@@ -436,8 +491,16 @@ export function ModelViewport({
             // `root` carries the glTF metre-to-millimetre scale, so its world matrix has to be
             // current before the box means anything in the units the rest of this file uses.
             scene.updateMatrixWorld(true)
+            const view = needleViewRef.current
             const bounds = new THREE.Box3()
-            for (const group of groups) bounds.expandByObject(group)
+            const parts =
+              view === 'whole'
+                ? []
+                : NEEDLE_VIEW_PARTS[view]
+                    .map((name) => root.getObjectByName(name))
+                    .filter((o): o is THREE.Object3D => Boolean(o))
+            // An older export without these parts falls back to the whole model.
+            for (const part of parts.length ? parts : groups) bounds.expandByObject(part)
             const centre = bounds.getCenter(new THREE.Vector3())
             const size = bounds.getSize(new THREE.Vector3())
             const aspect = el.clientHeight > 0 ? el.clientWidth / el.clientHeight : 4 / 3
@@ -445,12 +508,16 @@ export function ModelViewport({
             // The assembly is long and shallow, so the width against the panel's aspect ratio is
             // what actually sets the distance; the old fixed position ignored both.
             const fit = Math.max(size.y / 2 / halfFov, size.x / 2 / halfFov / aspect)
+            const margin = view === 'handle' && parts.length ? 1.06 : 1.12
             const distance =
-              Number.isFinite(fit) && fit > 0 ? fit * 1.12 + size.z / 2 : 176
+              Number.isFinite(fit) && fit > 0 ? fit * margin + size.z / 2 : 176
             controls.target.copy(Number.isFinite(centre.x) ? centre : new THREE.Vector3(-29, 4, 0))
+            // The handle is seen slightly from its distal end, so its knob, scale and lever separate.
+            const along = view === 'handle' && parts.length ? 0.3 : 0.05
+            const above = view === 'handle' && parts.length ? -0.3 : 0.15
             camera.position.set(
-              controls.target.x + distance * 0.05,
-              controls.target.y + distance * 0.15,
+              controls.target.x + distance * along,
+              controls.target.y + distance * above,
               controls.target.z + distance,
             )
           } else {
@@ -548,6 +615,7 @@ export function ModelViewport({
     return () => {
       disposed = true
       update.current = null
+      markSelected.current = null
       resetCamera.current = null
       observer.disconnect()
       observerControlsDispose()
@@ -555,20 +623,39 @@ export function ModelViewport({
       controls.dispose()
       groups.forEach(dispose)
       clearDynamic()
+      disposeLighting()
       renderer.dispose()
       renderer.domElement.remove()
     }
   }, [state.package])
   useEffect(() => {
     setTooltip(null)
+    selectedRef.current = ''
     setSelected('')
     update.current?.()
   }, [state, reveal, showLabels])
+  useEffect(() => {
+    markSelected.current?.()
+  }, [selected])
+  useEffect(() => {
+    resetCamera.current?.()
+  }, [needleView])
   return (
     <section className="model-3d">
       <div className="model-heading">
         <h2>3D relationship</h2>
         <div className="model-observer-buttons" role="group" aria-label="Observer camera">
+          {state.package === 'needle' &&
+            NEEDLE_VIEWS.map((view) => (
+              <button
+                key={view.id}
+                aria-pressed={needleView === view.id}
+                data-needle-view={view.id}
+                onClick={() => setNeedleView(view.id)}
+              >
+                {view.label}
+              </button>
+            ))}
           <button onClick={() => observerRef.current?.orbit(-0.3)}>Orbit left</button>
           <button onClick={() => observerRef.current?.orbit(0.3)}>Orbit right</button>
           <button onClick={() => observerRef.current?.zoom(1.3)}>Zoom in</button>
@@ -596,9 +683,9 @@ export function ModelViewport({
       </div>
       <div className="model-inspector">
         <label>
-          Discover a structure{' '}
+          Find a structure in the model{' '}
           <select
-            aria-label="Discover a structure"
+            aria-label="Find a structure in the model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -610,31 +697,32 @@ export function ModelViewport({
             ))}
           </select>
         </label>
-        {selected && <p role="status">{structures.find((o) => o.id === selected)?.label}</p>}
+        {selected && (
+          <p role="status">
+            {structures.find((o) => o.id === selected)?.label}: outlined in violet in the model.
+          </p>
+        )}
       </div>
-      <p className="model-caption" data-observer-caption>
-        {OBSERVER_CAPTION} Observer movement does not alter the acquisition.
-        {state.package === 'needle' && !reveal
-          ? ' Distal needle geometry is concealed; use the ultrasound schematic.'
-          : ''}
-        {/*
-         * What this panel can and cannot show across the five contact conditions
-         * (EBUS-PRE-REVIEW-04, L5-4). Measured on the production build at the default view: the
-         * air gap, direct contact and fluid balloon differ; the bubble renders identically to the
-         * balloon and the reflector identically to direct contact. Nothing is added to the scene.
-         */}
-        {state.package === 'contact'
-          ? ' From this view the cutaway shows where the transducer, wall and fluid balloon sit, so it changes between an air gap, direct contact and balloon contact. The bubble and the reflector do not change what it shows; their effect is in the echo schematic.'
-          : ''}
-        {state.package === 'routes'
-          ? ' The arrow runs from the selected orientation locator to the fixed target and shows viewing direction only: blue for the airway approach, teal for the esophageal approach. Labels name the model’s own structures; the example node is named only in the worked example.'
-          : ''}
-      </p>
-      <p className="model-caption" data-observer-engaged={engaged} role="status">
-        {engaged
-          ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them.'
-          : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
-      </p>
+      <details className="model-caption">
+        <summary>How to move the model</summary>
+        <p data-observer-caption>{OBSERVER_CAPTION}</p>
+      </details>
+      {state.package === 'needle' && !reveal && (
+        <p className="model-caption">The needle tip is hidden here; find it on the ultrasound schematic.</p>
+      )}
+      {state.package === 'contact' && (
+        <p className="model-caption">
+          The cutaway shows the air gap, direct contact and the balloon. The bubble and the
+          reflector show their effect in the echo schematic.
+        </p>
+      )}
+      {state.package === 'routes' && (
+        <p className="model-caption">
+          The arrow shows the viewing direction to the node: blue from the airway, teal from the
+          esophagus.
+        </p>
+      )}
+      <span hidden data-observer-engaged={engaged} />
     </section>
   )
 }

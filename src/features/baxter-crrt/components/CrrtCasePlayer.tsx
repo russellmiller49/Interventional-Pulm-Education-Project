@@ -24,7 +24,10 @@ import { getCrrtWorkedCaseExample } from '../content/workedCaseExamples'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
 import { selectCrrtPrescriptionRecord } from '../engine/setupWorkflow'
-import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
+import {
+  selectCrrtCumulativeFluidView,
+  selectPrismaxPilotCaseOperationsDisplay,
+} from '../engine/deviceAdapters/prismax'
 import type {
   CrrtLearningSessionAction,
   CrrtLearningSessionState,
@@ -245,6 +248,8 @@ function CrrtCasePlayerContent({
   const prescriptionRecord = selectCrrtPrescriptionRecord(session)
   const caseEvidence = selectCrrtCaseEvidence(definition)
   const labEvidence = selectCrrtLabEvidence(session)
+  const cumulativeFluid = selectCrrtCumulativeFluidView(session.simulation)
+  const balanceWithheld = cumulativeFluid.resolution !== 'available'
   const firstTrend = session.simulation.trends[0]
   const latestTrend = session.simulation.trends.at(-1)
   const trendEvidenceRows =
@@ -262,8 +267,12 @@ function CrrtCasePlayerContent({
           },
           {
             label: 'Whole-patient balance',
-            first: formatTrendValue(firstTrend.cumulativeWholePatientBalanceMl, 'mL'),
-            latest: formatTrendValue(latestTrend.cumulativeWholePatientBalanceMl, 'mL'),
+            first: balanceWithheld
+              ? 'Withheld'
+              : formatTrendValue(firstTrend.cumulativeWholePatientBalanceMl, 'mL'),
+            latest: balanceWithheld
+              ? 'Withheld'
+              : formatTrendValue(latestTrend.cumulativeWholePatientBalanceMl, 'mL'),
           },
           {
             label: 'Access pressure',
@@ -450,14 +459,6 @@ function CrrtCasePlayerContent({
           </strong>
         </header>
 
-        <div className={styles.syntheticNotice} role="note">
-          <ShieldAlert aria-hidden="true" />
-          <p>
-            <strong>Simulated clinical case.</strong> Patient values, treatment responses, and
-            comparisons are for education only—not bedside targets or local protocols.
-          </p>
-        </div>
-
         <section
           className={styles.findingsSection}
           aria-labelledby={scopedId('crrt-case-findings')}
@@ -542,10 +543,7 @@ function CrrtCasePlayerContent({
                     <CrrtUnsafeActionList entries={unsafeTeaching} />
                   </>
                 ) : null}
-                <p>
-                  Viewing this plan records no answer, intervention, or observation. Clinical and
-                  device review remains pending.
-                </p>
+                <p>Viewing this plan records no answer, intervention, or observation.</p>
               </section>
             ) : null}
           </section>
@@ -591,9 +589,8 @@ function CrrtCasePlayerContent({
                     {observationIntervalSeconds > 0 ? (
                       <small>
                         Performing this advances the simulated clock by{' '}
-                        {formatCrrtRunClock(observationIntervalSeconds)} — its authored observation
-                        interval. Compare it with another path at the same elapsed time, not at the
-                        same number of clicks.
+                        {formatCrrtRunClock(observationIntervalSeconds)}. Compare it with another
+                        path at the same elapsed time, not at the same number of clicks.
                       </small>
                     ) : null}
                     {missingPrerequisite ? (
@@ -737,14 +734,11 @@ function CrrtCasePlayerContent({
           <div className={styles.criticalBanner} role="alert">
             <ShieldAlert aria-hidden="true" />
             <div>
-              <strong>Simulation safety notice</strong>
+              <strong>Unsafe action</strong>
               {session.criticalErrorIds.map((id) => (
                 <p key={id}>{selectedLabel(definition.criticalErrors, id)}</p>
               ))}
-              <p>
-                Review the action and its explanation in the debrief. These case rules have not been
-                clinically reviewed.
-              </p>
+              <p>The debrief explains what this action skips.</p>
             </div>
           </div>
         ) : null}
@@ -820,6 +814,7 @@ function CrrtCasePlayerContent({
         data-mobile-active={mobileSurface === 'patient'}
       >
         <h4>Patient and delivered-therapy state</h4>
+        {balanceWithheld ? <p>{cumulativeFluid.withheldReason}</p> : null}
         <dl>
           <div>
             <dt>Delivered dose</dt>
@@ -827,7 +822,11 @@ function CrrtCasePlayerContent({
           </div>
           <div>
             <dt>Whole-patient balance</dt>
-            <dd>{formatTrendValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}</dd>
+            <dd>
+              {balanceWithheld
+                ? 'Withheld'
+                : formatTrendValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}
+            </dd>
           </div>
           <div>
             <dt>Downtime</dt>
@@ -883,10 +882,7 @@ function CrrtCasePlayerContent({
               <h5 id={scopedId('crrt-supplied-teaching-path')}>
                 Supplied teaching path · worked example
               </h5>
-              <p>
-                This is the authored explanation for this case. It describes the example, not what
-                you did in this run.
-              </p>
+              <p>This explains the case. It describes the example, not what you did in this run.</p>
               <p className={styles.debriefSummary}>{debrief.summary}</p>
             </section>
 
@@ -916,7 +912,7 @@ function CrrtCasePlayerContent({
               <p>
                 {runReview.reassessmentLabels.length > 0
                   ? runReview.reassessmentLabels.join('; ')
-                  : 'Not recorded. The recommended reassessment below is the authored answer, not something you entered.'}
+                  : 'Not recorded. The reassessment below is the worked answer, not something you entered.'}
               </p>
 
               <h6>Where this run&rsquo;s simulated time came from</h6>
@@ -977,6 +973,7 @@ function CrrtCasePlayerContent({
               </p>
 
               <h6>What this run recorded</h6>
+              {balanceWithheld ? <p>{cumulativeFluid.withheldReason}</p> : null}
               <dl className={styles.attemptEvidenceGrid}>
                 {runReview.observations.map((observation) => (
                   <div key={observation.label}>
@@ -1109,9 +1106,8 @@ function CrrtCasePlayerContent({
                   <ul>
                     {labEvidence.unmodeledGroups.map((group) => (
                       <li key={group.key}>
-                        <strong>{group.soluteLabels.join(', ')}</strong> — this exercise has no
-                        reviewed specification for {group.missingInputText}, so it cannot represent
-                        how these values would move during treatment.
+                        <strong>{group.soluteLabels.join(', ')}</strong> — the simulator would need{' '}
+                        {group.missingInputText} to move these values during treatment.
                       </li>
                     ))}
                   </ul>

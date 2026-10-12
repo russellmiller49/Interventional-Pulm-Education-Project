@@ -27,7 +27,7 @@ export const MCS_HUB_REFRESHER = Object.freeze({
 
 /** Said beside the stated minutes so an estimate is not read as a measured duration (F39). */
 export const MCS_HUB_TIME_NOTE =
-  'Minutes are authored estimates for the main path, not measured learner time. Optional references and explanations add reading.'
+  'Minutes are estimates for the main path. Optional references and explanations add reading.'
 
 export interface McsHubObjective {
   readonly id: string
@@ -47,13 +47,13 @@ export const MCS_HUB_OBJECTIVES: readonly McsHubObjective[] = Object.freeze([
   {
     id: 'iabp-timing',
     statement:
-      'Recognize IABP timing relationships — inflation against valve closure, deflation against the next ejection — and say what this model’s trace does and does not reproduce.',
+      'Recognize IABP timing on the arterial trace at 1:2: inflation at the dicrotic notch, deflation just before the next upstroke, and the three pressure relationships that show it.',
     sectionIds: ['iabp-timing-triggering', 'iabp-efficacy-limits'],
   },
   {
     id: 'impella-unloading-suction',
     statement:
-      'Reason through a modeled Impella placement, unloading or suction state: compare inlet filling, outlet pressure and position without treating a flow reading as a diagnosis or a setting instruction.',
+      'Work through an Impella placement, unloading or suction problem: compare inlet filling, outlet pressure and position, and name the first moves for a suction alarm.',
     sectionIds: ['impella-unloading-placement', 'impella-suction-purge-rv'],
   },
   {
@@ -65,7 +65,7 @@ export const MCS_HUB_OBJECTIVES: readonly McsHubObjective[] = Object.freeze([
   {
     id: 'transfer-versus-delivery',
     statement:
-      'Tell what a device transfers from what the circulation effectively receives, and compare the modeled filling pressures, suction pattern and flow without treating them as a calibrated diagnosis or a device-selection rule.',
+      'Tell what a device pumps from what the circulation receives, and use filling pressures, suction and flow to name the limiting side before naming a device.',
     sectionIds: ['mcs-device-selection-integration'],
   },
 ])

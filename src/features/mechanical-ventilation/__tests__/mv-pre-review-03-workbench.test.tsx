@@ -285,7 +285,8 @@ describe('N4: navigation, focus and scroll', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(4)
     // The step count is the heading's description, so it is read with it.
     const describedBy = heading().getAttribute('aria-describedby')!
-    expect(document.getElementById(describedBy)).toHaveTextContent(/Step 6 of 10/)
+    // MV-PRE-REVIEW-04 (N6): position 5 in the lesson is the fourth of the seven steps shown.
+    expect(document.getElementById(describedBy)).toHaveTextContent(/Step 4 of 7/)
   })
 
   it('does not move focus or the page on ticks, Run/Pause, control changes or disclosures', () => {
@@ -338,7 +339,7 @@ describe('N4: navigation, focus and scroll', () => {
  * ---------------------------------------------------------------------------------------------- */
 
 describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sections', () => {
-  const ALLOWED = ['Worked example', 'More detail', 'Model limits']
+  const ALLOWED = ['Worked example', 'More detail', 'Keep in mind']
   it.each(ventilationLearningUnits.map((unit) => unit.id))('%s', (unitId) => {
     const lesson = mount(unitId)
     const kinds = new Set<string>()
@@ -360,10 +361,12 @@ describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sectio
       )
       expect(names.every((name) => ALLOWED.includes(name ?? ''))).toBe(true)
       expect(names).toEqual(ALLOWED.filter((name) => names.includes(name)))
-      // The unit's model boundary is on the page exactly once: shown, or in Model limits.
+      // A unit's point to keep in mind is on the page exactly once, shown or in its disclosure;
+      // a unit without one renders no such block.
       const boundary = lesson.unit.boundary
-      const occurrences = (block.textContent ?? '').split(boundary).length - 1
-      expect(occurrences).toBe(1)
+      const blocks = block.querySelectorAll('[data-teaching-block="boundary"]')
+      expect(blocks).toHaveLength(boundary ? 1 : 0)
+      if (boundary) expect((block.textContent ?? '').split(boundary).length - 1).toBe(1)
     }
   })
 
@@ -763,7 +766,7 @@ describe('earlier contracts survive the new workbench', () => {
       fireEvent.click(button)
     fireEvent.click(screen.getAllByText('More detail')[0])
     chooseStep(ventilationStageLesson('mechanics-load-and-pressure').steps.length - 1)
-    expect(screen.getByText(/No response has been captured/)).toBeInTheDocument()
+    expect(document.querySelector('[data-no-observation]')).not.toBeNull()
     expect(document.querySelector('[data-captured-result]')).toBeNull()
   })
 

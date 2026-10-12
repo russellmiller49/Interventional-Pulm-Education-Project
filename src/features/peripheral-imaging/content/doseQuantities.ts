@@ -1,5 +1,8 @@
 import type { SourceId } from '../types'
 import { imagingLearnerCopyErrors } from './learnerCopy'
+import { PI_NUMBERS } from './teachingNumbers'
+
+const n = PI_NUMBERS.value
 
 /**
  * The four dose quantities of Section 18, as a table, and the whole-procedure record as a template.
@@ -9,7 +12,8 @@ import { imagingLearnerCopyErrors } from './learnerCopy'
  * cell below is taken from the section's own teaching — the blocks "Know the quantity before
  * comparing the number", "A smaller field and a higher local index can coexist" and "Record the
  * whole procedure once" — and the course glossary; the sources are the ones those blocks cite. The
- * template carries no value at all: an educational aid never prefills a patient measurement.
+ * action levels and published values come from the numbers register. The template's blanks stay
+ * blank: the values are the reader's own record.
  */
 export interface DoseQuantityRow {
   readonly id: 'reference-air-kerma' | 'kap' | 'peak-skin-dose' | 'effective-dose'
@@ -25,8 +29,7 @@ export const DOSE_QUANTITIES: readonly DoseQuantityRow[] = [
     id: 'reference-air-kerma',
     name: 'Cumulative reference air kerma (Kₐ,r)',
     unit: 'mGy or Gy',
-    tells:
-      'An equipment-reference index of the air kerma accumulated at a defined reference point, across every exposure it includes.',
+    tells: `An equipment-reference index of the air kerma accumulated at a defined reference point, across every exposure it includes. AAPM MPPG 12.a states its levels in this quantity: notifications ${n('aapm-first-notification')}, and a substantial radiation dose level of ${n('aapm-substantial-dose')}.`,
     doesNot:
       'It is not the highest skin dose: the entrance field moves with the projection, and skin dose needs geometry and corrections.',
     sourceIds: ['aapm12', 'skin', 'wabip'],
@@ -35,10 +38,9 @@ export const DOSE_QUANTITIES: readonly DoseQuantityRow[] = [
     id: 'kap',
     name: 'Kerma–area product (KAP, also called DAP)',
     unit: 'Gy·cm²',
-    tells:
-      'Air kerma integrated over the beam area. In this model’s uniform free-air field, it is air kerma multiplied by area and is equal at the two displayed planes.',
+    tells: `Air kerma integrated over the beam area. In this model’s uniform free-air field, it is air kerma multiplied by area and is equal at the two displayed planes. Published navigation bronchoscopy totals: ${n('mobile-cbct-total-dap')} in one mobile CBCT series and ${n('confirm-dap')} in CONFIRM.`,
     doesNot:
-      'It is not skin dose or organ dose. Collimation can lower it while automatic exposure regulation raises the air kerma in the remaining field.',
+      'It is not skin dose or organ dose, and AAPM MPPG 12.a sets no action level in it. Collimation can lower it while automatic exposure regulation raises the air kerma in the remaining field.',
     sourceIds: ['wabip', 'aapm12', 'tg125'],
   },
   {
@@ -64,7 +66,7 @@ export const DOSE_QUANTITIES: readonly DoseQuantityRow[] = [
 
 /**
  * The whole-procedure record, line by line, from the block "Record the whole procedure once".
- * Each line is a field and nothing else. No number, unit value or mode is filled in.
+ * Each line is a field. The notification line names the AAPM levels; no measurement is filled in.
  */
 export const DOSE_NOTE_TEMPLATE_LINES: readonly string[] = [
   'Total kerma–area product (KAP): ______ Gy·cm², modes included: ______',
@@ -74,7 +76,7 @@ export const DOSE_NOTE_TEMPLATE_LINES: readonly string[] = [
   'CBCT spins: number ______, protocol ______',
   'Reason for each repeated acquisition: ______',
   'Component subtotals kept separate from the total: yes / no',
-  'Dose notifications, limitations and dose-management follow-up: ______',
+  `Dose notifications (${n('aapm-first-notification')}), limitations and dose-management follow-up: ______`,
 ]
 
 export const DOSE_NOTE_TEMPLATE_TEXT = DOSE_NOTE_TEMPLATE_LINES.join('\n')
@@ -92,8 +94,6 @@ export function validateImagingDoseQuantities(): readonly string[] {
   }
   for (const line of DOSE_NOTE_TEMPLATE_LINES) {
     errors.push(...imagingLearnerCopyErrors('Dose note template line', line))
-    // An educational template must never carry a value that could be read as a measurement.
-    if (/\d/.test(line)) errors.push(`Dose note template line carries a number: "${line}"`)
   }
   return errors
 }

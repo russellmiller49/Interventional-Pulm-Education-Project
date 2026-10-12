@@ -53,11 +53,15 @@ export interface VentilationControlPanel {
   readonly shaping: readonly VentilationShapingSetting[]
   readonly axes: Readonly<Record<VentilationControlAxis, string>>
   readonly monitoringSentence: string
+  /** The settings beyond the five, named so the five are not mistaken for the whole console. */
+  readonly shapingSentence: string
+  /** What is on the screen and is not a ventilator setting at all. */
+  readonly notSettingsSentence: string
 }
 
 export const VENTILATION_CONTROL_PANEL: VentilationControlPanel = {
   sentence:
-    'You can change five things on this ventilator: the mode, the size of the breath, the rate, the PEEP, and the oxygen.',
+    'Five settings do most of the work on this ventilator: the mode, the size of the breath, the rate, the PEEP, and the oxygen.',
   knobs: [
     {
       id: 'mode',
@@ -146,6 +150,10 @@ export const VENTILATION_CONTROL_PANEL: VentilationControlPanel = {
   },
   monitoringSentence:
     'Everything else on the screen is monitoring: it tells you what the patient received and how they took it.',
+  shapingSentence:
+    'Flow or inspiratory time, trigger sensitivity, cycle-off and rise time are settings too: they shape how each breath is delivered and timed, and each is met at its place on the breath. Other modes add settings of their own.',
+  notSettingsSentence:
+    'Three things in these sections are not ventilator settings: Pause and Run are playback, a hold is a measurement, and the compliance and resistance controls change the simulated patient.',
 }
 
 export const ventilationKnobById: ReadonlyMap<VentilationKnobId, VentilationKnob> = new Map(
@@ -173,7 +181,7 @@ export function ventilationControlOwner(
 }
 
 /**
- * Copy faults in the panel: a number in learner copy, a banned term, a knob with no axis
+ * Copy faults in the panel: a banned term, a knob with no axis
  * sentence, or a shaping setting at a stop that does not exist. Thrown at import so a partial edit
  * fails the build rather than the learner.
  */
@@ -182,12 +190,13 @@ export function ventilationControlPanelErrors(panel: VentilationControlPanel): r
   const copy = [
     panel.sentence,
     panel.monitoringSentence,
+    panel.shapingSentence,
+    panel.notSettingsSentence,
     ...Object.values(panel.axes),
     ...panel.knobs.flatMap((knob) => [knob.plainName, knob.principallyMoves, knob.doesNotMove]),
     ...panel.shaping.map((setting) => setting.plainName),
   ]
   for (const line of copy) {
-    if (/\d/.test(line)) errors.push(`Number in learner copy: "${line}"`)
     const flagged = flaggedLearnerCopyTerms(line)
     if (flagged.length > 0) errors.push(`Banned term ${flagged.join(', ')} in "${line}"`)
   }

@@ -15,6 +15,7 @@ import {
   type EcmoVvOnlyFoundationSectionId,
 } from '../content/foundationLessonRuntime'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
+import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { createFoundationVariantState, ecmoFoundationSnapshot } from '../session/foundationSession'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState } from '../engine/types'
@@ -225,10 +226,10 @@ describe('vv-series-physiology panel', () => {
       .map((node) => node.textContent ?? '')
       .join(' ')
     expect(boundaries).toMatch(/not a validated bedside method/i)
-    expect(boundaries).toMatch(/model estimate rather than anything the CARDIOHELP measures/i)
+    expect(boundaries).toMatch(/model estimate, not a CARDIOHELP measurement/i)
   })
 
-  it('states what the case authors and what speed moves, and bounds both', () => {
+  it('states what speed moves, and on which circuit', () => {
     // Before A2 this asserted the opposite — that raising the speed did not move the fraction —
     // because that was true of the engine at the time. The engine now raises the share above the
     // speed the case opened with, so the panel has to say so, and has to keep saying which part of
@@ -240,15 +241,12 @@ describe('vv-series-physiology panel', () => {
     // ECMO-03 (2026-09-15): the share rises with speed only in a case authored with established
     // recirculation. On the reference circuit this section opens on it stays at its baseline at every
     // speed (engine runs in ecmo03-sources-and-model-range.test.tsx), so the panel now says both.
-    expect(text).toMatch(
-      /takes the recirculating share the cannula relationship starts at from the authored case/i,
-    )
     expect(text).toMatch(/on the reference circuit it stays at its baseline at every speed/i)
     expect(text).toMatch(/more flow than (it|the case) opened with raises/i)
-    // The direction is the teaching object; the coefficient is not a bedside quantity.
-    expect(text).toMatch(/the direction is the teaching object here, not the size/i)
-    // And the parts the simulation still does not model must not quietly disappear.
-    expect(text).toMatch(/cannula position and volume state.*are not modeled at all/i)
+    // Teaching-first (2026-10-08): the long model-boundary note that closed this section — the
+    // share comes from the authored case, the direction not the size, cannula position and volume
+    // state unmodeled — was removed. The card sentence above still carries the behavior.
+    expect(text).not.toMatch(/authored case/i)
   })
 
   it('carries no recirculation band, and only the guides this lesson is allowed', () => {
@@ -401,16 +399,27 @@ describe('vv-normal-state panel', () => {
     }
   })
 
-  it('labels the deadbands as a simulation display aid, not a clinical tolerance', () => {
+  it('teaches the usual values beside the baseline instead of a boundary note', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="vv-normal-state" state={later} />,
     )
-    const boundaries = [...container.querySelectorAll('[data-model-boundary]')]
-      .map((node) => node.textContent ?? '')
-      .join(' ')
-    expect(boundaries).toMatch(/display aid only/i)
-    expect(boundaries).toMatch(/not clinical tolerances/i)
-    expect(boundaries).toMatch(/mark no boundary of safety/i)
+    // Teaching-first (2026-10-08): the deadband, authored-inputs and modeled-seconds boundary notes
+    // were removed from this panel. In their place the panel teaches the numbers a fellow holds a
+    // baseline against, each read from the register.
+    expect(container.querySelector('[data-model-boundary]')).toBeNull()
+    const taught = [...container.querySelectorAll('[data-teaching-number]')].map((node) =>
+      node.getAttribute('data-teaching-number'),
+    )
+    expect(taught).toEqual(
+      expect.arrayContaining([
+        'full-support-flow',
+        'sweep-start',
+        'act-target',
+        'svo2-factory-limit',
+      ]),
+    )
+    const act = container.querySelector('[data-teaching-number="act-target"]')
+    expect(act?.textContent).toContain(ECMO_NUMBERS.value('act-target'))
   })
 
   it('compares against a captured snapshot when the learner has taken one', () => {
@@ -660,7 +669,8 @@ describe('the three VV lessons as a set', () => {
       )
       expect(container.querySelector(`[data-teaching-panel="${sectionId}"]`)).toBeInTheDocument()
       expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
-      expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
+      // A model-boundary note is no longer required on every panel (teaching-first rule 5); where
+      // one is rendered, the shared contract above still checks that it is labelled.
     },
   )
 

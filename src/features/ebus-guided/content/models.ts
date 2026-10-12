@@ -12,7 +12,7 @@ export const needleModel: Lesson = {
     'The sheath protects the needle during passage through the working channel. A visible shaft segment does not establish the location of its tip.',
   concept: 'The handle and distal needle form one assembly',
   paragraphs: [
-    'Use this generic cutaway to follow movement from the external handle to the distal needle. The sheath and needle move separately along a common outlet axis. The illustration compresses the assembly; it does not specify a commercial device or a recommended extension distance.',
+    'Use this model to follow movement from the handle to the distal needle: switch between the Needle tip and Handle views to see both ends. The sheath and needle move separately along a common outlet axis. The handle and the scope tip are drawn at true size, with the length of the scope between them left out.',
     'The ultrasound schematic shows only the part of the needle intersecting its finite imaging plane. Changing that plane can remove the tip echo while leaving part of the shaft visible. Frozen images and missing contact cannot provide current tip guidance.',
   ],
   checklist: [
@@ -33,7 +33,10 @@ export const needleModel: Lesson = {
       'Live visualization of the actual tip',
       'A shaft intersection alone does not establish the distal endpoint. Stop and restore guidance.',
     ],
-    ['That the line is bright enough', 'Brightness does not identify the endpoint.'],
+    [
+      'That the line lies within the nodal borders',
+      'A shaft segment inside the node does not show where the tip is; it may already be beyond the far border.',
+    ],
     [
       'That the prior frozen frame showed the tip',
       'The prior frame cannot establish its current location.',
@@ -53,13 +56,16 @@ export const needleModel: Lesson = {
       'assembly-observe',
       'Why was advancement blocked after the plane changed?',
       [
-        'A shaft echo could remain while the tip left the modeled imaging plane',
+        'A shaft echo could remain while the tip left the imaging plane',
         'The needle geometry and imaging plane are separate. A surviving shaft intersection does not prove visible tip guidance.',
       ],
-      ['The needle reached a validated depth limit', 'Model travel has no clinical depth meaning.'],
       [
-        'The model diagnosed a vessel puncture',
-        'This activity does not simulate or validate puncture safety.',
+        'The needle had reached the far border of the node',
+        'Nothing about the node changed; the plane moved, so the position of the tip was no longer known.',
+      ],
+      [
+        'The shorter echo showed that the needle was bending',
+        'A shorter line after a plane change means less of the needle lies in the plane, not that it has deflected.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
@@ -82,7 +88,6 @@ export const needleModel: Lesson = {
   takeaways: [
     'Sheath position and needle exposure are distinct.',
     'A frozen frame or shaft-only echo cannot substitute for live tip guidance.',
-    'The generic model does not certify a device setup or safe puncture.',
   ],
   sources: ['ics2023', 'simulation'],
   boundary:
@@ -117,10 +122,13 @@ export const contactModel: Lesson = {
     'An air gap is present. Which adjustment can restore the acoustic path?',
     [
       'Establish transducer or fluid-balloon contact with the wall',
-      'Coupling permits transmission into tissue in this authored model.',
+      'Ultrasound reaches tissue only across a coupled interface.',
     ],
     ['Increase gain alone', 'Amplification cannot replace the missing contact.'],
-    ['Move the calipers', 'Measurement controls do not affect coupling.'],
+    [
+      'Lower the frequency for more penetration',
+      'Penetration is not the limit; nearly all of the beam is reflected at the air interface whatever the frequency.',
+    ],
   ),
   lab: {
     kind: 'model',
@@ -134,19 +142,21 @@ export const contactModel: Lesson = {
   observation: {
     ...question(
       'cutaway-observe',
-      'Why did changing gain fail to remove the dark region behind the reflector?',
+      'You inspected the air-gap and reflector states in the echo schematic. Both leave a dark region. Which difference in mechanism does the model show?',
       [
-        'The modeled acoustic path is attenuated behind the reflector',
-        'Amplifying the remaining echoes does not restore the missing information.',
+        'The air gap blocks transmission at the transducer; the reflector attenuates the path only beyond it',
+        'The course distinguishes a complete air gap at the transducer from a shadow behind a strong reflector.',
       ],
-      ['All dark regions represent malignant tissue', 'An artifact does not establish histology.'],
       [
-        'Balloon inflation always removes artifacts',
-        'A balloon can assist coupling but does not remove every artifact.',
+        'Both are corrected by raising gain',
+        'Gain amplifies returning echoes; it cannot restore a missing window or the signal lost behind a reflector.',
+      ],
+      [
+        'The dark region behind the reflector is a low-echo node',
+        'A shadow is an acoustic effect; it does not describe tissue.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
-    namesContactMode: 'shadow',
   },
   transfer: question(
     'cutaway-transfer',
@@ -155,18 +165,23 @@ export const contactModel: Lesson = {
       'The contact window and a possible local air interface',
       'Compare the acquisition and contact path before interpreting the focal change as tissue.',
     ],
-    ['Assume the entire station is absent', 'A local artifact is not a negative examination.'],
-    ['Assign histology from the new dark area', 'Image appearance alone is insufficient.'],
+    [
+      'The node, for a new area of necrosis',
+      'Necrosis does not appear during a pass; a new focal dropout is air or lost contact until shown otherwise.',
+    ],
+    [
+      'The overall gain, since the image has darkened',
+      'Low gain darkens the whole sector; a focal interruption with preserved surrounding echoes points to the acoustic path.',
+    ],
   ),
   diagram: 'ultrasound',
   takeaways: [
     'Contact and gain address different problems.',
     'Fluid-balloon contact does not guarantee a clear window.',
-    'The schematic illustrates mechanisms; it is not a matched clinical recording.',
   ],
   sources: ['ics2023', 'simulation'],
   boundary:
-    'Authored qualitative acoustic illustration. Brightness and balloon shape do not represent measured pressure, inflation volume or a calibrated clinical ultrasound response.',
+    'Qualitative acoustic illustration. Brightness and balloon shape do not represent measured pressure, inflation volume or a calibrated clinical ultrasound response.',
 }
 export const measurementModel: Lesson = {
   id: 'measurement-phantoms',
@@ -178,8 +193,8 @@ export const measurementModel: Lesson = {
   recall: 'The same fixed object can produce different sections as the imaging plane moves.',
   concept: 'A section is only one view of the object',
   paragraphs: [
-    'Explore a sphere, elongated ellipsoid, two adjacent objects and a lobulated union. Their dimensions stay fixed while the section moves. The millimeters in this activity belong to authored geometric phantoms.',
-    'Sweep each shape completely before measuring. For the required record, return to the elongated phantom’s central section, freeze it and place opposing short-axis calipers. The two adjacent objects share the same fictional station label; object count does not define station count.',
+    'Explore a sphere, elongated ellipsoid, two adjacent objects and a lobulated union. Their dimensions stay fixed while the section moves.',
+    'Sweep each shape completely before measuring. For the required record, return to the elongated phantom’s central section, freeze it and place opposing short-axis calipers. The two adjacent objects share the same station label; object count does not define station count.',
   ],
   checklist: [
     'Sweep from before the near border to beyond the far border.',
@@ -190,7 +205,7 @@ export const measurementModel: Lesson = {
     context:
       'An off-center section through an elongated object looks smaller than its central section.',
     reasoning:
-      'The object has not shrunk. Move through its full extent and compare sections. In this worked model, hover reveals the phantom identity; the independent measurement withholds dimensional and border answers.',
+      'The object has not shrunk. Move through its full extent and compare sections before choosing where to measure.',
   },
   question: question(
     'phantom-predict',
@@ -199,8 +214,14 @@ export const measurementModel: Lesson = {
       'The plane passes through a smaller cross-section',
       'Plane position changes the section without changing the object dimensions.',
     ],
-    ['Its tissue has regressed', 'The shape is fixed and has no biological behavior.'],
-    ['A second station has appeared', 'Section size does not define station identity.'],
+    [
+      'The depth setting changed the image scale',
+      'Depth was not changed; a scale change would shrink everything in the sector, not this object alone.',
+    ],
+    [
+      'Lower gain is hiding its outer border',
+      'Gain was not changed; the border is still sharp, and it encloses a smaller section.',
+    ],
   ),
   lab: {
     kind: 'model',
@@ -216,16 +237,16 @@ export const measurementModel: Lesson = {
       'phantom-observe',
       'What does the recorded millimeter measurement represent?',
       [
-        'A distance in the authored geometric phantom',
-        'The value comes from the phantom coordinate system and placed calipers; it does not calibrate clinical media.',
+        'A distance in the geometric phantom',
+        'The value comes from the phantom and where you placed the calipers. It says nothing about the size of a node in a clinical image.',
       ],
       [
-        'A calibrated measurement in the course videos',
-        'Uncalibrated recordings cannot inherit phantom dimensions.',
+        'The true short axis, whichever plane was frozen',
+        'Calipers measure the frozen section; an off-center or oblique plane gives a different number for the same object.',
       ],
       [
-        'Evidence of malignancy from object shape',
-        'These shapes teach geometry, not pathological diagnosis.',
+        'The largest diameter of the object',
+        'The task was the short axis on the central section; the long axis is a different measurement.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
@@ -247,11 +268,10 @@ export const measurementModel: Lesson = {
   takeaways: [
     'Sweep before choosing a measurement plane.',
     'Separated calipers can still be on the wrong borders or axis.',
-    'Phantom dimensions do not establish histology or clinical-image calibration.',
   ],
   sources: ['atlas', 'simulation'],
   boundary:
-    'Analytic geometric phantoms with authored dimensions. The fictional station label teaches documentation and does not make these objects anatomical station boundaries.',
+    'These are geometric phantoms. The station label on them teaches documentation; it does not make them an anatomical station.',
 }
 export const routeModel: Lesson = {
   id: 'eus-b-route-model',
@@ -259,13 +279,13 @@ export const routeModel: Lesson = {
   topic: 'Plan',
   minutes: 10,
   objective:
-    'Compare two approaches to a fixed modeled target and identify gaps that an esophageal examination does not resolve.',
+    'Compare two approaches to the same target and identify gaps that an esophageal examination does not resolve.',
   recall:
     'EUS-B uses the EBUS endoscope from the esophagus. Changing the approach does not change a lymph node’s anatomical station.',
   concept: 'Complementary access, with explicit limits',
   paragraphs: [
-    'Compare fixed station 4L and 7 example nodes from airway and esophageal orientation locators in the same anatomy frame. The esophagus, airway, aorta and vessels retain their original positions. Lines indicate viewing direction only.',
-    'A separate authored lower paraesophageal example illustrates additional context. Some requested windows are deliberately unsupported. An esophageal examination does not replace evaluation of relevant hilar and interlobar stations through an appropriate approach.',
+    'Compare the station 4L and 7 example nodes from the airway and from the esophagus in the same anatomy. The esophagus, airway, aorta and vessels stay where they are; the lines show the viewing direction.',
+    'A lower paraesophageal example shows a target that the esophageal route adds. Some windows are unsupported from a given route. An esophageal examination does not replace evaluation of relevant hilar and interlobar stations through an appropriate approach.',
   ],
   checklist: [
     'Identify the airway and esophageal sides of each fixed target.',
@@ -276,7 +296,7 @@ export const routeModel: Lesson = {
     context:
       'An airway examination gives limited information about a mediastinal target adjacent to the esophagus.',
     reasoning:
-      'Compare the two preset views of the same modeled target. Note the changed viewing direction and unchanged target position. These locators have not been validated as sampling windows or puncture trajectories.',
+      'Compare the two views of the same target. Note the changed viewing direction and unchanged target position.',
   },
   question: question(
     'route-model-predict',
@@ -285,10 +305,13 @@ export const routeModel: Lesson = {
       'The approach and viewing direction',
       'The anatomical station remains tied to the target’s location.',
     ],
-    ['The node becomes station 8', 'Changing route does not relocate the node.'],
     [
-      'Every previously inaccessible node becomes reachable',
-      'Complementary access does not imply universal reachability.',
+      'Its station, since EUS uses its own nodal map',
+      'EBUS and EUS use the same IASLC map; the route does not rename the node.',
+    ],
+    [
+      'Its position relative to the main bronchi',
+      'The anatomy is fixed; only the direction you look from is different.',
     ],
   ),
   lab: {
@@ -309,12 +332,12 @@ export const routeModel: Lesson = {
         'The route markers change, while target coordinates and anatomical identity stay fixed.',
       ],
       [
-        'Station labels are assigned by the scope route',
-        'Anatomical location defines the station.',
+        'Station 7 is the only station seen from both routes',
+        '4L is also seen from both; the label holds because the node has not moved, not because station 7 is special.',
       ],
       [
-        'The model guarantees both approaches can safely sample it',
-        'Orientation locators are not validated puncture windows.',
+        'Both routes are oriented by the main carina',
+        'The esophageal view has its own landmarks; the label holds because it belongs to the location of the node.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
@@ -328,17 +351,17 @@ export const routeModel: Lesson = {
     ],
     ['The nodes can be reported negative', 'An unexamined region is not a negative result.'],
     [
-      'A generic route toggle proves access',
-      'This model deliberately excludes unsupported windows.',
+      'They are N1 and do not affect a mediastinal staging report',
+      'N1 status changes stage and management; an unexamined hilar or interlobar station is a gap to state and plan for.',
     ],
   ),
   diagram: 'stations',
   takeaways: [
     'Station identity follows anatomy.',
     'EUS-B and EBUS provide complementary regional access.',
-    'Unsupported or unexamined windows remain explicit.',
+    'Regions you could not examine stay in the record.',
   ],
   sources: ['combined2015', 'atlas', 'simulation'],
   boundary:
-    'Same-frame anatomical orientation model with derived preset locators and one authored lower example. No clinical reachability, esophageal navigation, acoustic image or puncture safety is simulated.',
+    'Same-frame anatomical orientation model with derived preset locators and one lower example. No clinical reachability, esophageal navigation, acoustic image or puncture safety is simulated.',
 }

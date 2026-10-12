@@ -939,7 +939,9 @@ describe('every interactive section mounts', () => {
       else expect(loadedVariantId()).toBe(ecmoFoundationLessonRuntime(sectionId).primaryVariantId)
       expect(document.querySelector('[data-pane="teaching"]')).not.toBeNull()
       expect(document.querySelector(`[data-teaching-panel="${sectionId}"]`)).not.toBeNull()
-      expect(document.querySelector('[data-device-boundary]')).not.toBeNull()
+      // Teaching-first rule 5: one boundary statement per module, on the hub and the closing
+      // screen. The per-section device-boundary footer this used to require is gone.
+      expect(document.querySelector('[data-device-boundary]')).toBeNull()
       // Six steps, one progression, one current row.
       expect(document.querySelectorAll('[data-step-list] li[data-step-id]')).toHaveLength(
         buildFoundationStageLesson(sectionId, 'vv').steps.length,

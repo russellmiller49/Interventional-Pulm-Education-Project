@@ -39,9 +39,9 @@ export const ECMO_INTEGRATED_CASE_SCOPE: Readonly<Record<string, EcmoIntegratedC
     },
     'va-mixed-circulation-capstone': {
       rehearses:
-        'This case rehearses recognising a right-arm and femoral saturation mismatch on peripheral VA support, reading both circulations, and escalating.',
+        'This case rehearses recognising a right-arm and femoral saturation mismatch on peripheral VA support, reading both circulations, and treating the native lungs first.',
       cannotEstablish:
-        'The one management action is an authored composite. It records recognition and escalation in this simulation and stands for several bedside steps a team would carry out separately; it performs no configuration change, unloading intervention or other procedure. The right-arm reading stays low afterwards, because nothing in this exercise treats the cause.',
+        'The one management step stands for the right radial gas and the ventilator change together. No venous return limb is placed here, so the right-arm reading stays low afterwards.',
     },
   })
 

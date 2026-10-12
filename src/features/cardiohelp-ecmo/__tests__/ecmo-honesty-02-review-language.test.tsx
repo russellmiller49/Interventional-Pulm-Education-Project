@@ -9,7 +9,13 @@ import { clinicalPracticeScenarioById, clinicalPracticeScenarios } from '../cont
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { clinicalPracticeSupportByScenarioId } from '../content/practiceSupport'
 import { cardiohelpScenarioById, cardiohelpScenarios } from '../content/scenarios'
-import { ECMO_LOCAL_PROTOCOL_LINE } from '../content/sourceReviewMetadata'
+import {
+  ECMO_AIR_FIRST_MOVES,
+  ECMO_AIR_RESUME,
+  ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
+  ECMO_EMERGENCY_DRIVE_SENTENCE,
+} from '../content/teachingNumbers'
 import { createInitialSimulationState } from '../engine'
 
 /**
@@ -163,73 +169,89 @@ describe('ECMO never describes a local protocol as reviewed or approved', () => 
   })
 })
 
-describe('the clinical instruction behind the wording is unchanged', () => {
+/*
+  Until the teaching-first redo (docs/teaching-first-rules.md, 2026-10-08) this block required the
+  deferrals: resumption "per the current IFU and local protocol", a note that the module "holds no
+  copy of that protocol", and a hub row declaring that no local protocol is recorded. Those are
+  reversed. What is asserted now is that the teaching which replaced each deferral is present, and
+  that none of the wording invents a review or an approval in passing.
+*/
+describe('the deferrals are replaced by the teaching', () => {
   it.each([
     ['clinical-vv-circuit-air-embolism', 'air-resume-support'],
     ['va-clinical-circuit-air-embolism', 'va-air-resume-support'],
-  ] as const)('%s still defers resumption to the IFU and local protocol', (caseId, resumeId) => {
+  ] as const)('%s teaches the resumption from the register', (caseId, resumeId) => {
     const scenario = clinicalPracticeScenarioById.get(caseId)
     const resume = scenario?.clinicalCase?.interventions.find(
       (intervention) => intervention.id === resumeId,
     )
     expect(resume).toBeDefined()
-    // Both authorities are still named, and the module still disclaims the choreography.
-    expect(resume?.description).toMatch(/instructions for use \(IFU\)/i)
-    expect(resume?.description).toMatch(/ECMO air-emergency protocol/i)
-    expect(resume?.description).toMatch(/does not reproduce or teach that sequence/i)
-    expect(resume?.label).toMatch(/current IFU and local protocol/i)
+    expect(resume?.label).toBe(ECMO_AIR_RESUME.label)
+    expect(resume?.description).toBe(ECMO_AIR_RESUME_SENTENCE)
+    expect(resume?.description).not.toMatch(/local protocol|does not reproduce or teach/i)
   })
 
   it.each(['arterial-bubble-stop', 'va-arterial-bubble-stop'] as const)(
-    '%s marks the local-policy dependency as unavailable rather than inventing one',
+    '%s puts the call for help and the backup circuit in its safety notes',
     (scenarioId) => {
       const scenario = cardiohelpScenarioById.get(scenarioId)
       const notes = (scenario?.debrief.safetyNotes ?? []).join(' ')
-      expect(notes).toMatch(/holds no copy of that protocol/i)
-      expect(notes).toMatch(/Isolation is taught explicitly/i)
+      expect(notes).toMatch(/call for help and the primed backup circuit/i)
+      expect(notes).toMatch(/premature reset/i)
+      expect(notes).not.toMatch(/holds no copy of that protocol/i)
     },
   )
 
   it.each(['clinical-vv-circuit-air-embolism', 'va-clinical-circuit-air-embolism'] as const)(
-    '%s keeps the same dependency note on the case debrief',
+    '%s teaches the emergency drive on the case debrief',
     (caseId) => {
-      const notes = (clinicalPracticeScenarioById.get(caseId)?.debrief.safetyNotes ?? []).join(' ')
-      expect(notes).toMatch(/holds no copy of that protocol/i)
+      const notes = clinicalPracticeScenarioById.get(caseId)?.debrief.safetyNotes ?? []
+      expect(notes).toContain(ECMO_EMERGENCY_DRIVE_SENTENCE)
+      expect(notes.join(' ')).not.toMatch(/holds no copy of that protocol/i)
     },
   )
 
   /*
-    Rendered rather than read off the module: these two paragraphs sit in the drill teaching column,
-    which the in-app browser pane could not hold in its viewport, so the render is the evidence that
-    a learner meets the dependency note beside the air emergency rather than only in the source.
+    Rendered rather than read off the module: these boxes sit in the drill teaching column, so the
+    render is the evidence that a learner meets the sequence beside the air emergency rather than
+    only in the source.
   */
-  it('the VV air drill panel says on screen that no local protocol is held here', () => {
+  it('the VV air drill panel shows the first moves and the resume order on screen', () => {
     const state = createInitialSimulationState('arterial-bubble-stop')
     const { container } = render(<EcmoDrillTeachingPanel state={state} />)
+    const box = container.querySelector('[data-first-moves="air"]')
+    expect(box).not.toBeNull()
+    const moves = [...(box?.querySelectorAll('li') ?? [])].map((node) => node.textContent)
+    expect(moves).toEqual([...ECMO_AIR_FIRST_MOVES.massiveVv, ...ECMO_AIR_RESUME.conditions])
     const text = container.textContent ?? ''
-    expect(text).toMatch(/local protocols differ on it, and this module holds no copy of one/i)
-    expect(text).toMatch(/ECMO air-emergency protocol, which this module does not hold a copy of/i)
+    expect(text).not.toMatch(/holds no copy of|does not hold a copy of/i)
     expect(text).not.toMatch(/approved|reviewed local/i)
   })
 
-  it('the VA escalation panel points at the learner’s own protocol', () => {
+  it('the VA differential-hypoxemia panel shows how it is found and the moves in order', () => {
     const state = createInitialSimulationState('va-differential-hypoxemia')
     const { container } = render(<EcmoDrillTeachingPanel state={state} />)
+    const box = container.querySelector('[data-first-moves="differential-hypoxemia"]')
+    expect(box).not.toBeNull()
+    expect(box?.textContent).toContain(ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize)
+    expect([...(box?.querySelectorAll('li') ?? [])].map((node) => node.textContent)).toEqual([
+      ...ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves,
+    ])
     const text = container.textContent ?? ''
-    expect(text).toMatch(/escalation through your local protocol/i)
-    expect(text).toMatch(/belongs to the ECMO team under your local protocol/i)
+    expect(text).not.toMatch(/escalation through your local protocol/i)
     expect(text).not.toMatch(/reviewed local protocol/i)
   })
 
   it.each(['draft', 'published'] as const)(
-    'the %s hub declares that no local protocol is recorded',
+    'the %s hub carries no local-protocol or review row',
     (publicationStatus) => {
       const { container } = render(<SourcesPanel publicationStatus={publicationStatus} />)
+      const terms = [...container.querySelectorAll('dt')].map((node) => node.textContent)
+      expect(terms).not.toContain('Local protocol')
+      expect(terms).not.toContain('Clinical and device review')
+      expect(terms).not.toContain('Publication')
       const text = container.textContent ?? ''
-      expect(text).toContain('Local protocol')
-      expect(text).toContain(ECMO_LOCAL_PROTOCOL_LINE)
-      // The line reports an absence; it must never read as a recorded approval.
-      expect(ECMO_LOCAL_PROTOCOL_LINE).toMatch(/^None recorded\./)
+      expect(text).not.toMatch(/none recorded/i)
       expect(text).not.toMatch(/local protocol (?:reviewed|approved)/i)
     },
   )

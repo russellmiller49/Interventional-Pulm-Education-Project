@@ -5,6 +5,7 @@ import type {
   CrrtLearningTimelineDetail,
   CrrtLearningTimelineEntry,
 } from './engine/learningSession'
+import { selectCrrtCumulativeFluidView } from './engine/deviceAdapters/prismax'
 import { selectCrrtBloodFlowState } from './engine/circuitDelivery'
 import { hasCrrtRunActivity } from './engine/learningSession'
 import type { ActiveAlarm, CrrtEngineFaultId } from './engine/types'
@@ -184,7 +185,7 @@ export const CRRT_INTERRUPTION_CAPTION =
  * local boundary between it and the actual-run sections above it.
  */
 export const CRRT_WORKED_TEACHING_BOUNDARY =
-  'The points below are the authored teaching for this case: what a review would look at and why. They are the same after every run and do not report an action, a reassessment, or a result from this one. What this run recorded is under “What you did in this run” above.' as const
+  'The points below are the worked teaching for this case. They are the same after every run; what you did in this run is listed above.' as const
 
 export const CRRT_MODEL_INDEX_CAPTION =
   'These are bounded model indices, not measurements. They are the signals this exercise actually advances, so they are what separates one path from another at the same elapsed time.' as const
@@ -395,6 +396,7 @@ function selectModelIndices(
   session: CrrtLearningSessionState,
 ): readonly CrrtModelIndexObservation[] {
   const patient = session.simulation.patient
+  const cumulativeFluid = selectCrrtCumulativeFluidView(session.simulation)
   if (patient.status !== 'configured') return []
   return Object.freeze([
     {
@@ -409,8 +411,13 @@ function selectModelIndices(
     },
     {
       label: 'Total fluid overload carried',
-      value: `${Math.round(patient.totalFluidOverloadMl)} mL`,
-      note: "The supplied starting overload plus this run's whole-patient balance. It is an accounting total, not an assessed volume status.",
+      value:
+        cumulativeFluid.resolution === 'available'
+          ? `${Math.round(patient.totalFluidOverloadMl)} mL`
+          : 'Withheld',
+      note:
+        cumulativeFluid.withheldReason ??
+        "The supplied starting overload plus this run's whole-patient balance. It is an accounting total, not an assessed volume status.",
     },
   ])
 }
@@ -500,7 +507,10 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
     },
     {
       label: 'Whole-patient fluid balance',
-      value: formatNumber(simulation.deliveredTherapy.cumulativeWholePatientBalanceMl, 0, 'mL'),
+      value:
+        selectCrrtCumulativeFluidView(simulation).resolution === 'available'
+          ? formatNumber(simulation.deliveredTherapy.cumulativeWholePatientBalanceMl, 0, 'mL')
+          : 'Withheld',
     },
     {
       label: 'Treatment downtime recorded',
@@ -539,8 +549,8 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
       ? `Debrief opened · ${appliedActionCount} recorded ${appliedActionCount === 1 ? 'event' : 'events'} in this run`
       : 'Debrief opened · no run performed',
     statusDetail: hasRun
-      ? 'This lists what this session recorded. It is not a judgment that the care was safe, complete, or successful.'
-      : 'You have not performed a case action or advanced simulated time, so there is nothing from this run to review. The explanation below is the authored example.',
+      ? 'This lists what you did in this run.'
+      : 'You have not performed a case action or advanced simulated time, so there is nothing from this run to review. The explanation below is the worked example.',
     actions,
     observations,
     reassessmentLabels,

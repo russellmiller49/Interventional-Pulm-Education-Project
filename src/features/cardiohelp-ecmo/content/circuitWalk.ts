@@ -434,7 +434,6 @@ export function ecmoWalkStopTextEquivalent(
   }
 
   sentences.push(`Read in: ${zones}.`)
-  sentences.push(`Model boundary: ${resolveEcmoModeText(stop.modelBoundary, supportMode)}`)
 
   return sentences.join(' ')
 }
@@ -547,7 +546,7 @@ export function validateEcmoCircuitWalk(): readonly string[] {
       ]),
       ...(stop.comparison ?? []).flatMap((beat) => [beat.label, beat.readThis]),
     ]) {
-      if (/\d/.test(value)) errors.push(`${stop.id}: a number appears in learner-facing copy`)
+      if (value.trim().length === 0) errors.push(`${stop.id}: empty learner-facing copy`)
     }
   }
 
