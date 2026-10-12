@@ -68,7 +68,7 @@ import { createInvenioDemoDocument } from '../content/invenio-demo-document'
 import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
 import { databaseCompatibilityError } from '../database-compatibility'
 import { emptyCaseContent, emptyAuthorContent } from '../case-content'
-import { annotationFamily, moveAnnotation } from '../annotation-editing'
+import { annotationFamily, moveAnnotation, resizeAnnotation } from '../annotation-editing'
 import { AnnotationKey } from '@/features/socrates-study/components/shared'
 import { getInvenioPair } from '../invenio-source'
 import type { WebOverlayWorkspace } from '../web-overlay-storage'
@@ -484,6 +484,20 @@ export function SocratesBuilder({
   const handleAnnotationMoved = useCallback(
     (id: string, delta: ImagePoint) => {
       const next = moveAnnotation(document.annotations, id, delta, {
+        x: 0,
+        y: 0,
+        ...document.slide.expectedDimensions,
+      })
+      if (next.every((a, index) => a === document.annotations[index])) return
+      commitAnnotations(next)
+      setSelectedId(id)
+    },
+    [commitAnnotations, document.annotations, document.slide.expectedDimensions],
+  )
+
+  const handleAnnotationResized = useCallback(
+    (id: string, bounds: ImageRect) => {
+      const next = resizeAnnotation(document.annotations, id, bounds, {
         x: 0,
         y: 0,
         ...document.slide.expectedDimensions,
@@ -1199,9 +1213,9 @@ export function SocratesBuilder({
               <ToolButton
                 active={drawMode === 'move'}
                 onClick={() => setDrawMode('move')}
-                label="Move/select regions"
+                label="Move/resize regions"
               >
-                <Move aria-hidden="true" /> Move
+                <Move aria-hidden="true" /> Move / resize
               </ToolButton>
               <ToolButton
                 active={drawMode === 'parent'}
@@ -1263,6 +1277,16 @@ export function SocratesBuilder({
             </div>
           </div>
 
+          {document.caseContent && (
+            <div className={styles.annotationKey}>
+              <AnnotationKey
+                legend={document.caseContent.annotationLegend}
+                descriptorUrl={document.slide.descriptorUrl}
+                authorPreview
+              />
+            </div>
+          )}
+
           <div
             className={styles.canvasShell}
             data-mode={drawMode}
@@ -1270,7 +1294,10 @@ export function SocratesBuilder({
             role="group"
             aria-label="Annotation canvas. Select a region, use arrow keys to move it, or Delete to remove it."
             onPointerDown={(event) => {
-              if ((event.target as HTMLElement).closest('[data-testid="deep-zoom-viewer"]'))
+              if (
+                (event.target as HTMLElement).closest('[data-testid="deep-zoom-viewer"]') &&
+                !(event.target as HTMLElement).closest('button')
+              )
                 event.currentTarget.focus({ preventScroll: true })
             }}
             onKeyDown={(event) => {
@@ -1312,13 +1339,14 @@ export function SocratesBuilder({
               }
               onDrawRectangle={handleRectangleDrawn}
               onMoveAnnotation={handleAnnotationMoved}
+              onResizeAnnotation={handleAnnotationResized}
             />
             <div className={styles.canvasStatus} data-comparison={isPairedSlide}>
               <span>
                 {drawMode === 'navigate'
                   ? 'Pan/select'
                   : drawMode === 'move'
-                    ? 'Move/select'
+                    ? 'Move/resize'
                     : `Draw ${drawMode}`}
               </span>
               <span>{viewport.zoomRatio.toFixed(2)}×</span>
@@ -1341,19 +1369,16 @@ export function SocratesBuilder({
             </Button>
             <span>
               {drawMode === 'move'
-                ? 'Drag a region to move it. Parent regions move with their details. Select a region and use Delete, or focus the canvas and use arrow keys (Shift for 1 px).'
+                ? 'Drag inside a box to move it; drag its corner or edge handles to resize. Parents move with their details. Delete removes the selected region; Undo restores it. Arrow keys move by 10 px (Shift for 1 px); focus a handle to resize with the same keys.'
                 : drawMode === 'navigate'
                   ? isPairedSlide
-                    ? 'Pan either image; click a teaching region to edit it.'
-                    : 'Drag to pan; click a region to edit it.'
+                    ? 'Pan either image; click a box to select it. Choose Move / resize to drag the box or its handles, or Delete to remove it.'
+                    : 'Drag to pan; click a box to select it. Choose Move / resize to drag the box or its handles, or Delete to remove it.'
                   : isPairedSlide
                     ? 'Draw on either image. The same region appears on both.'
                     : 'Drag directly on the slide to create a rectangular annotation.'}
             </span>
           </div>
-          {document.caseContent && (
-            <AnnotationKey legend={document.caseContent.annotationLegend} authorPreview />
-          )}
         </section>
 
         <aside className={styles.inspector} aria-label="Slide and region properties">

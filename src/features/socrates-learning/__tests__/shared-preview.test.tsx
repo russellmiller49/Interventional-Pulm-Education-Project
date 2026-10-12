@@ -4,6 +4,7 @@ import { refreshSharedLibrary } from '@/app/[locale]/socrates-library/actions'
 import { SharedSlideLibrary } from '../components/SharedSlideLibrary'
 import { PROGRESS_KEY, type LearningMode } from '../model'
 import type { SharedSlide } from '../shared-library'
+import { createInvenioDemoDocument } from '@/features/socrates-builder/content/invenio-demo-document'
 
 jest.mock('@/app/[locale]/socrates-library/actions', () => ({
   refreshSharedLibrary: jest.fn(),
@@ -31,6 +32,8 @@ test.each<LearningMode>(['testing', 'teaching'])(
   'switches shared author previews in both directions when starting with %s',
   (initialMode) => {
     const document = caseFixture()
+    document.slide = createInvenioDemoDocument().slide
+    document.caseContent.annotationLegend = { reviewed: false, entries: [] }
     render(
       <SharedSlideLibrary
         locale="en"
@@ -61,6 +64,7 @@ test.each<LearningMode>(['testing', 'teaching'])(
         mode === 'testing',
       )
       expect(Boolean(screen.queryByText('Synthetic case context'))).toBe(mode === 'teaching')
+      expect(Boolean(screen.queryByText('Tumor / malignant'))).toBe(mode === 'teaching')
       if (mode === 'teaching') {
         expect(screen.getByRole('heading', { name: 'Case context' })).toBeVisible()
         fireEvent.click(screen.getByRole('button', { name: 'High magnification' }))

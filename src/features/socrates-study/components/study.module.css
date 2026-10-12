@@ -163,6 +163,26 @@
   gap: 0.65rem;
   margin: 1rem 0;
 }
+
+.providerKey summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.providerKey p {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.providerKeyEntries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.5rem 1rem;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
 .legendEntry {
   display: flex;
   gap: 0.65rem;

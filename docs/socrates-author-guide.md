@@ -21,6 +21,15 @@ A case number is an identifier, not its position in the curriculum.
 The key explains the provider's existing color image. It does not create, recolor
 or classify pixels. It is separate from drawing teaching regions.
 
+In the shared library and teaching preview, UCSD Slide Viewer slides automatically
+show the [provider's tissue annotation key](https://ucsd-slide-viewer-1080580899927.us-central1.run.app/assets/annotation-key-DI2mkxIw.svg)
+when their saved custom key is empty. The 14 labels and exact colors were checked
+against that source on October 12, 2026. The key is above the authoring canvas and
+can be collapsed. Custom entries take precedence and retain their review status.
+The shared-library testing preview remains tissue-only and does not show a key.
+
+For other image sources, or to provide a custom key:
+
 1. Select **Add key entry**.
 2. Enter the provider-approved category label.
 3. Enter its actual six-digit hex color, such as the supplied `#RRGGBB` value.
@@ -37,6 +46,20 @@ review flag. Learners see **Annotation key pending review** until the key is rev
 Testing rounds retain their own explicit key and color-image settings.
 Saving changed teaching content also clears content review; review the saved
 version and save that review separately.
+
+## Move, resize, and delete boxes
+
+Click a box or select it in **Regions**, then choose **Move / resize** above the
+image. Drag inside the box to move it; drag a corner or edge handle to resize it.
+The handles work on either image in a paired view. Boxes stay within the slide,
+details stay within their parent, and resizing a parent keeps its details in place.
+
+Choose **Delete** above the image to remove the selected box (and its details).
+**Undo** restores a move, resize, or deletion; **Redo** reapplies it. Each drag is
+one history step. With the canvas focused, arrow keys move by 10 source pixels;
+hold Shift for 1 pixel. Focus a resize handle to use the same keys for resizing.
+Delete/Backspace removes the selected box when the canvas has focus. Numeric
+coordinates remain available for exact adjustments.
 
 ## Workbook text and modules
 
