@@ -541,7 +541,7 @@ function ImagingStageSession({
             onActivate: () => continuePast(activeIndex),
             disabled: waitingForImage,
             disabledReason:
-              'The demonstration image must load. Teaching text remains available; retry the view, or continue without the image.',
+              'The image is still loading. Wait for it, or continue without the image.',
           },
           ...(waitingForImage ? { skip: skipStep('Continue without the image') } : {}),
         }
@@ -942,7 +942,7 @@ function ImagingStageSession({
   // (owner feedback, 2026-10-11). The three illustrative ones still say what their image is.
   const lockedReason =
     checkPending && exampleEvidence === 'illustrative-model'
-      ? 'This image stays fixed while you read it. It is this section’s teaching model of the equipment, not a picture of the situation in the question — answer from the written scenario.'
+      ? 'This image stays fixed while you read the question. It is this section’s example, not the situation in the question — answer from the written scenario.'
       : undefined
   const pausedReason =
     !checkPending && !beforePrediction && lookingBack
@@ -1090,10 +1090,10 @@ function ImagingStageSession({
       ) : null}
       {/* Reports CW3 and CW2: Help keeps its navigation role — its text and its action come first,
           so the keyboard order Close → Show me where is unchanged — and then adds the section's
-          terms and the one general statement about the models, so both reach a learner on any step. */}
+          terms and the one general statement about the course, so both reach a learner on any step. */}
       <SectionGlossary sectionId={lesson.sectionId} variant="help" />
       <p data-help-models>
-        <strong>About the models.</strong> {IMAGING_SHARED_BOUNDARY}
+        <strong>About this course.</strong> {IMAGING_SHARED_BOUNDARY}
       </p>
     </HelpDialog>
   )

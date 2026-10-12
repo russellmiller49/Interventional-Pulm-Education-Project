@@ -293,23 +293,23 @@ export function TomosynthesisMonitor({
             source={model.images.plane}
             label={
               model.selectedLayer === 'measured'
-                ? 'Teaching focal plane from limited-angle projections'
+                ? 'Reconstructed plane from the limited-angle projections'
                 : model.selectedLayer === 'prior'
                   ? 'Planning CT prior, coloured teal'
-                  : 'Teaching focal plane blended with a teal planning CT prior'
+                  : 'Reconstructed plane blended with the planning CT prior, in teal'
             }
           />
         ) : (
           <p className={styles.imageStatus}>
             {' '}
-            {failed ? 'Teaching image unavailable.' : 'Preparing the teaching plane…'}{' '}
+            {failed ? 'The image is unavailable.' : 'Preparing the reconstructed plane…'}{' '}
           </p>
         )}
         {allowOverlay && overlay && model.images && (
           <svg
             viewBox={`0 0 ${DTS_PLANE.sizePx} ${DTS_PLANE.sizePx}`}
             role="img"
-            aria-label="Teaching overlay of the modeled tool and target positions"
+            aria-label="Marks showing where the tool and the lesion actually are"
             data-dts-overlay-marks
           >
             {objects.map((object) => {
@@ -367,13 +367,13 @@ export function TomosynthesisMonitor({
               onChange={(event) => setOverlay(event.target.checked)}
               data-dts-overlay-toggle
             />
-            Show where the model placed the tool and the target
+            Show where the tool and the lesion actually are
           </label>
           {overlay && (
             <p data-dts-overlay-note>
-              A teaching overlay drawn from the model’s coordinates, not something detected in this
-              image. A solid outline means the selected plane passes through that object; a dotted
-              one marks an object that lies off this plane, where the image can show only its blur.
+              These marks show the true positions; a DTS system does not display them. A solid
+              outline means the selected plane passes through that object; a dotted one marks an
+              object that lies off this plane, where the image can show only its blur.
               {model.selectedLayer === 'prior'
                 ? ' The planning CT was acquired before the tool was placed, so no tool is marked on it.'
                 : ''}{' '}
@@ -427,7 +427,7 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
           <CanvasCopy
             key={selected}
             source={frames[selected].canvas}
-            label={`Teaching projection ${selected + 1} of ${frames.length} at ${frames[selected].angle} degrees, enlarged`}
+            label={`Projection ${selected + 1} of ${frames.length} at ${frames[selected].angle} degrees, enlarged`}
           />
           <figcaption>
             Projection {selected + 1} of {frames.length} · {frames[selected].angle}° · the same
@@ -475,10 +475,10 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
                 else thumbs.current.delete(i)
               }}
               aria-pressed={selected === i}
-              aria-label={`Enlarge teaching projection ${i + 1} of ${frames.length} at ${p.angle} degrees`}
+              aria-label={`Enlarge projection ${i + 1} of ${frames.length} at ${p.angle} degrees`}
               onClick={() => setOpen(selected === i ? null : { index: i, origin: i })}
             >
-              <CanvasCopy source={p.canvas} label={`Teaching projection at ${p.angle} degrees`} />
+              <CanvasCopy source={p.canvas} label={`Projection at ${p.angle} degrees`} />
             </button>
             <figcaption>{p.angle}°</figcaption>
           </figure>
@@ -502,13 +502,13 @@ export function TomosynthesisPanels({
     <section className={styles.signalProfile}>
       {model.failed && (
         <p role="status">
-          Teaching projections are unavailable; the scene and control values remain available.
+          The projections are unavailable; the 3D view and the controls still work.
         </p>
       )}
       <p>
         {prior
           ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
-          : '13 parallel teaching projections; the cone arc is drawn for orientation. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
+          : 'Thirteen projections across the arc. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
       </p>
       {prior && enabled && (
         <fieldset className={styles.controls}>
@@ -550,7 +550,7 @@ export function TomosynthesisPanels({
       {/* Report 4.6: the readout defined from the arithmetic that prints it (`smearWidth`), not
           from a guess. */}
       <p data-spread-definition>
-        Spread is how far across the image the model smears each object at the selected plane: the
+        Spread is how far across the image each object is smeared at the selected plane: the
         difference between where it lands at the two ends of the arc once the images are shifted for
         that depth. It is zero when the plane passes through the object and grows with the object’s
         distance from the plane and with the arc, so the plane where an object’s spread reaches zero

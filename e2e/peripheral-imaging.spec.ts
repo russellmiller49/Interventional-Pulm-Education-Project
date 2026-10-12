@@ -2148,7 +2148,9 @@ test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that
   await toggle.focus()
   await page.keyboard.press('Space')
   await expect(plane).toHaveAttribute('data-dts-overlay', 'shown')
-  await expect(page.locator('[data-dts-overlay-note]')).toContainText('not something detected')
+  await expect(page.locator('[data-dts-overlay-note]')).toContainText(
+    'a DTS system does not display them',
+  )
   // The "tool" example opens on the tool's plane: the tool is in it, the target 18 mm away.
   await expect(page.locator('[data-dts-mark="tool"]')).toHaveAttribute('data-in-plane', 'true')
   await expect(page.locator('[data-dts-mark="target"]')).toHaveAttribute('data-in-plane', 'false')
@@ -2273,11 +2275,11 @@ test('report 6.2 and 6.4: controls beside the planes, and the slab shown with th
     expect(thin!.width).toBeGreaterThan(110)
     await expect(pair.locator('[data-slab-pair-view="thin"] svg')).toHaveAttribute(
       'aria-label',
-      /teaching slice at/,
+      /plane at/,
     )
     await expect(pair.locator('[data-slab-pair-view="slab"] svg')).toHaveAttribute(
       'aria-label',
-      /teaching slab/,
+      /thick slab/,
     )
   }
   await capture(page, info, 'fellow2-64-slab-pairs.png')
@@ -2584,7 +2586,7 @@ test('slab comparison keeps each thin section tied to its own live plane slider'
     await expect(thin.locator('figcaption')).toHaveText(`Thin plane · ${position} mm`)
     await expect(thin.locator('svg')).toHaveAttribute(
       'aria-label',
-      new RegExp(`slice at ${position} millimeters`),
+      new RegExp(`plane at ${position} millimeters`),
     )
     await expect.poll(async () => (await pixels())[index]).not.toBe(before[index])
     const after = await pixels()
@@ -2950,7 +2952,7 @@ test('prompt 04: practice case 9 draws its model planes and keeps their provenan
   const figure = '[data-case-figure="practice:dts-interpretation-practice-1:figure"]'
   await figureReady(page, figure)
   await expect(page.locator(`${figure} [data-model-label]`)).toHaveText(
-    'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
+    'One projection with the catheter in place, three reconstructed planes, and the planning CT through the same lesion.',
   )
   await figureCanvasesDrawn(page, figure, false)
   await expect(page.locator(`${figure} canvas`)).toHaveCount(5)
@@ -3000,7 +3002,7 @@ test('prompt 04: the replaced integrated-case addresses redirect, and case 5 rea
   await expect(page.locator(figure)).toHaveCount(0)
   await page.goto(`${base()}/en/peripheral-imaging/assess?case=case-5-v2`)
   await expect(page.locator(`${figure} [data-model-label]`)).toContainText(
-    'Not a patient acquisition',
+    'Linked thin axial, coronal and sagittal planes through the lesion and the needle.',
   )
   await expect(page.locator(`${figure} [data-sampling-case-planes] svg[role="img"]`)).toHaveCount(3)
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
@@ -3008,9 +3010,9 @@ test('prompt 04: the replaced integrated-case addresses redirect, and case 5 rea
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
   await page.locator('[data-now-primary]').click()
   await expect(page.locator('[data-readout="window"]')).toHaveText(
-    'Sampling window partly intersects the modeled lesion',
+    'Sampling window partly intersects the lesion',
   )
-  await expect(page.locator('[data-readout="tip"]')).toContainText('Outside the modeled lesion')
+  await expect(page.locator('[data-readout="tip"]')).toContainText('Outside the lesion')
   await capture(page, info, 'prompt04-case5-checked.png')
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
@@ -3132,10 +3134,9 @@ test('PR #279 repair F2: practice case 9’s key rationale is bound to this teac
   const verdict = page.locator('[data-answer-verdict]')
   await expect(verdict).toHaveAttribute('data-verdict-outcome', 'correct')
   const text = await page.locator('[data-practice-case]').innerText()
-  expect(text).toContain(
-    'In this teaching figure, the projection stands for the current acquisition',
-  )
-  expect(text).toContain('in this example, the planes were drawn from the planning CT')
+  expect(text).toContain('In this example the projection is the current acquisition')
+  expect(text).toContain('So, here, the planes were drawn from the planning CT')
+  expect(text).toContain('The inference rests on what this figure shows')
   expect(text).toContain('catheter absence alone is not a universal sign of prior-derived content')
   expect(text).not.toMatch(/could not be missed|cannot be absent|absence marks/i)
   await verdict.scrollIntoViewIfNeeded()

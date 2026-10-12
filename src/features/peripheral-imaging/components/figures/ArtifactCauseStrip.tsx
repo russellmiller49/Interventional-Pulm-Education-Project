@@ -60,13 +60,13 @@ export function ArtifactCauseStrip() {
               <p className={styles.panelTitle}>{panel.title}</p>
               {state === 'failed' ? (
                 <p className={styles.status} role="status">
-                  The teaching CT could not be loaded here.
+                  The image could not be loaded here.
                 </p>
               ) : (
                 <FigureCanvas
                   pixels={model?.axial ?? null}
                   size={AXIAL_VIEW.sizePx}
-                  label="Axial plane of the teaching CT, dark outside a modeled reconstruction volume whose edge runs through the modeled lesion"
+                  label="Axial CT plane, dark outside a reconstruction volume whose edge runs through the lesion"
                   overlay={
                     model ? (
                       <>
@@ -101,7 +101,7 @@ export function ArtifactCauseStrip() {
               <figcaption>{panel.caption}</figcaption>
               {model ? (
                 <p className={styles.panelCaption} data-truncation-readout>
-                  Teal line: the edge of the modeled volume. Dashed circle: the modeled lesion;{' '}
+                  Teal line: the edge of the reconstruction volume. Dashed circle: the lesion;{' '}
                   {coveredInWords(model.lesionCoveredFraction)} of it lies inside the volume on this
                   plane.
                 </p>

@@ -215,8 +215,8 @@ export function LabDock(
         <p data-tube-load-note>
           Tube load at a fixed 20 mA is pulse rate × pulse width × current: the output the tube is
           asked for each second. Halving the pulse rate while the pulse doubles leaves it unchanged,
-          which is why a lower pulse rate alone does not mean less output. It is not patient dose.
-          Pulse width may be system-selected or mode-dependent, and no image-lag model is included.
+          which is why a lower pulse rate alone does not mean less output. Tube load is not patient
+          dose. On many systems the pulse width is selected by the system for the mode.
         </p>
       )}
       <dl className={styles.readouts} data-readouts>

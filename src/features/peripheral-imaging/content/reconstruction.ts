@@ -73,7 +73,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
       'Anything about a structure the arc never covered from a useful angle, however clean the image of it looks.',
     ],
     boundary:
-      'This section shows the plain version and only that: thirteen parallel-beam projections of a teaching volume, shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur is visible here on purpose — it is the cue a CT-like rendering does not leave you. No vendor algorithm, no scatter model and no measured detector response is involved.',
+      'The DTS image in this course is the plain version: thirteen projections, shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur stays visible; it is the cue a CT-like rendering does not leave you.',
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
     shownIn: 'dts-acquisition',
   },
@@ -105,7 +105,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
       'The detail of a diagnostic scan. It answers where things are, in the room, at that moment.',
     ],
     boundary:
-      'What this module displays after the spin is the original planning CT standing in for a reconstructed volume, labelled as such. Those images were not reconstructed from the projections the spin acquired.',
+      'The volume shown after the spin in this course is cleaner than a real one. A real CBCT volume is noisier and lower in contrast.',
     sourceIds: ['setser', 'mobile'],
     shownIn: 'cbct-acquisition',
   },

@@ -62,7 +62,7 @@ afterEach(() => {
  */
 
 const MATCHING_CLAIM = /stays fixed so the question and the image match/
-const MODEL_DISCLAIMER = /teaching model of the equipment, not a picture of the situation/
+const MODEL_DISCLAIMER = /this section’s example, not the situation/
 
 /** Walk a section to its check, skipping past anything that will not simply continue. */
 function reachCheck(sectionId: ImagingSectionId) {
@@ -132,7 +132,7 @@ const ILLUSTRATIVE: readonly {
 
 describe('a check whose model does not depict its scenario says so', () => {
   it.each(ILLUSTRATIVE)(
-    '$sectionId names the image as a teaching model and sends the learner to the written scenario',
+    '$sectionId names the image as the section’s example and sends the learner to the written scenario',
     ({ sectionId, stemFragment }) => {
       const lesson = reachCheck(sectionId)
       const seen = checkSurfaces()
@@ -150,7 +150,7 @@ describe('a check whose model does not depict its scenario says so', () => {
       // The adjacent instruction makes the same correction, not the old image-reading claim.
       expect(seen.nowCard).not.toMatch(/inspect the image/i)
       expect(seen.nowCard).toMatch(/Answer from the written scenario below/)
-      expect(seen.nowCard).toMatch(/teaching model of the equipment/)
+      expect(seen.nowCard).toMatch(/this section’s example, not the situation described/)
 
       // The question, its options and its image are exactly as authored.
       const step = lesson.steps[lesson.predictionStepIndex]
@@ -167,17 +167,12 @@ describe('a check whose model does not depict its scenario says so', () => {
   )
 
   it.each(ILLUSTRATIVE)(
-    '$sectionId keeps its answer key, rationale and model boundary ($whatTheModelOmits)',
+    '$sectionId keeps its answer key and rationale ($whatTheModelOmits)',
     ({ sectionId }) => {
       const lesson = reachCheck(sectionId)
       const step = lesson.steps[lesson.predictionStepIndex]
       if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
       const item = step.interaction.item
-
-      // The section still states what its model does and does not simulate.
-      expect(document.querySelector('[data-model-boundary]')?.textContent ?? '').toContain(
-        lesson.spec.modelBoundary.slice(0, 60),
-      )
 
       // Answering commits the authored key and shows the authored rationale, unchanged.
       const keyed = item.choices.find((choice) => item.correctChoiceIds.includes(choice.id))!

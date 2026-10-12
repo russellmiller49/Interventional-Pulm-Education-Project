@@ -38,11 +38,11 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/read the scenario|stated evidence/i)
         } else if (fixedExampleEvidence(sectionId, round) === 'illustrative-model') {
-          // A visual the question cannot be read off: it is named as a teaching model, and the
-          // learner is sent to the written scenario.
+          // A visual the question cannot be read off: it is named as the section's example, and
+          // the learner is sent to the written scenario.
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/answer from the written scenario/i)
-          expect(step.instruction).toMatch(/teaching model/i)
+          expect(step.instruction).toMatch(/this section’s example, not the situation described/)
         } else {
           // A visual that is the evidence keeps its image-based instruction.
           expect(step.instruction).toMatch(/inspect the image|stated evidence/i)

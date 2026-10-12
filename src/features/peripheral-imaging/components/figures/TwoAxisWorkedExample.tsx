@@ -81,7 +81,7 @@ function ToolViewPanel({ view, title }: { readonly view: ToolView; readonly titl
         viewBox={`0 0 ${TOOL_VIEW_FRAME.width} ${TOOL_VIEW_FRAME.height}`}
         className={`${styles.svgFigure} ${styles.svgCapped}`}
         role="img"
-        aria-label={`${title}: the modeled tool appears ${toolDescription(view)} beside the modeled lesion`}
+        aria-label={`${title}: the tool appears ${toolDescription(view)} beside the lesion`}
         data-tool-scale={view.scale}
       >
         <rect width={TOOL_VIEW_FRAME.width} height={TOOL_VIEW_FRAME.height} rx="6" fill="#0b1418" />
@@ -146,12 +146,11 @@ export function TwoAxisWorkedExample() {
       </p>
       {state === 'failed' ? (
         <p className={styles.status} role="status">
-          The teaching CT could not be loaded here, so the worked example is not drawn. The
-          paragraph above describes the technique.
+          The images could not be loaded here. The paragraph above describes the technique.
         </p>
       ) : state === 'loading' ? (
         <p className={styles.status} role="status">
-          Preparing the worked example from the teaching CT…
+          Preparing the worked example…
         </p>
       ) : null}
 
@@ -161,7 +160,7 @@ export function TwoAxisWorkedExample() {
           <FigureCanvas
             pixels={model?.axial ?? null}
             size={AXIAL_VIEW.sizePx}
-            label={`Axial planning CT through the modeled lesion in the posterior left lung, with the axial projection of the target ray from the X-ray tube through the lesion to the detector at C-arm obliquity ${TWO_AXIS_EXAMPLE.candidates.map(signedDegrees).join(', ')}`}
+            label={`Axial planning CT through the lesion in the posterior left lung, with the axial projection of the target ray from the X-ray tube through the lesion to the detector at C-arm obliquity ${TWO_AXIS_EXAMPLE.candidates.map(signedDegrees).join(', ')}`}
             overlay={
               model ? (
                 <>
@@ -276,13 +275,12 @@ export function TwoAxisWorkedExample() {
       {model && frontalRay && chosenRay ? (
         <p data-two-axis-reading>
           <strong>Reading it for this lesion.</strong> Frontally, the detector-side part of the ray
-          crosses {frontalRay.detectorSide.soft} mm of soft-tissue-like CT: the density anterior to
-          the lesion.{' '}
+          crosses {frontalRay.detectorSide.soft} mm of soft-tissue density anterior to the lesion.{' '}
           {clears
             ? `At C-arm obliquity ${signedDegrees(chosen)} (${obliquityDirection(chosen)}) that part crosses ${chosenRay.detectorSide.soft} mm, and the whole ray ${chosenRay.softTotal} mm instead of ${frontalRay.softTotal} mm.`
             : `At C-arm obliquity ${signedDegrees(chosen)} it crosses ${chosenRay.detectorSide.soft} mm.`}{' '}
           {beyond
-            ? `Going further, to ${signedDegrees(beyond.obliquity)}, lengthens the tube-side path instead: ${beyond.tubeSide.soft} mm of soft-tissue-like and ${beyond.tubeSide.bone} mm of bone-like CT.`
+            ? `Going further, to ${signedDegrees(beyond.obliquity)}, lengthens the tube-side path instead: ${beyond.tubeSide.soft} mm of soft-tissue density and ${beyond.tubeSide.bone} mm of bone density.`
             : null}{' '}
           {opposite && frontalRay && opposite.detectorSide.soft > frontalRay.detectorSide.soft
             ? `The opposite sign, ${signedDegrees(opposite.obliquity)}, swings the detector-side part through more of it: ${opposite.detectorSide.soft} mm.`
@@ -324,7 +322,7 @@ export function TwoAxisWorkedExample() {
           <p className={styles.panelCaption} data-tilt-reading>
             {tiltNeeded
               ? `Across these tilts the detector-side path changes by ${model.tiltRangeMm} mm, so the tilt is worth choosing from the sagittal CT.`
-              : `Across these tilts the detector-side path changes by only ${model.tiltRangeMm} mm, so this lesion needs no tilt in this model. Tilt earns its place when the sagittal CT shows a structure over the lesion.`}
+              : `Across these tilts the detector-side path changes by only ${model.tiltRangeMm} mm, so this lesion needs no tilt. Tilt earns its place when the sagittal CT shows a structure over the lesion.`}
           </p>
         ) : null}
       </div>
@@ -339,8 +337,8 @@ export function TwoAxisWorkedExample() {
                 size={TWO_AXIS_EXAMPLE.projection.sizePx}
                 label={
                   which === 'before'
-                    ? 'Frontal projection computed from the teaching CT, collimated around the modeled lesion'
-                    : `Projection at C-arm obliquity ${signedDegrees(chosen)}, recentred and collimated around the modeled lesion`
+                    ? 'Frontal projection, collimated around the lesion'
+                    : `Projection at C-arm obliquity ${signedDegrees(chosen)}, recentered and collimated around the lesion`
                 }
                 overlay={
                   model ? (
@@ -382,7 +380,7 @@ export function TwoAxisWorkedExample() {
           ))}
         </div>
         <p className={styles.panelCaption}>
-          {panel('projections').caption} The dashed teal line is the modeled tool’s approach.
+          {panel('projections').caption} The dashed teal line is the tool’s approach.
         </p>
       </div>
 

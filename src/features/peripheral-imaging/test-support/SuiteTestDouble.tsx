@@ -162,7 +162,6 @@ export function SuiteTestDouble(props: ImagingSuitePaneProps) {
           ))}
         </ul>
       ) : null}
-      <p {...{ [SUITE_DOM.boundary]: '' }}>{view.boundary}</p>
       {props.children}
     </div>
   )

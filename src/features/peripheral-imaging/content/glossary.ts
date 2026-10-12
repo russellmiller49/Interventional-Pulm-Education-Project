@@ -259,7 +259,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'Side-cutting window',
     pattern: /side[- ]cutting window|side window/i,
     definition:
-      'The opening on the side of some biopsy needles through which tissue is cut and taken. It sits behind the tip, so it is the window, not the tip, that has to be in the lesion. Not every tool has one: forceps sample at the jaws and a cryoprobe along its active segment. The window drawn in this course is a teaching shape, not a real needle.',
+      'The opening on the side of some biopsy needles through which tissue is cut and taken. It sits behind the tip, so it is the window, not the tip, that has to be in the lesion. Not every tool has one: forceps sample at the jaws and a cryoprobe along its active segment. The window in this course does not reproduce a particular needle.',
     provenance: {
       kind: 'section-teaching',
       sectionId: 'tool-confirmation',
@@ -385,7 +385,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'Tool-plane spread / target-plane spread',
     pattern: /(tool|target)[- ]plane spread|out-of-plane spread/i,
     definition:
-      'How far across the image the model smears each object at the selected plane: the difference between where the object lands at the two ends of the arc once the images are shifted for that depth. It is zero when the plane passes through the object and grows with the object’s distance from the plane and with the width of the arc, so the plane where an object’s spread reaches zero is the plane it lies in.',
+      'How far across the image each object is smeared at the selected plane: the difference between where the object lands at the two ends of the arc once the images are shifted for that depth. It is zero when the plane passes through the object and grows with the object’s distance from the plane and with the width of the arc, so the plane where an object’s spread reaches zero is the plane it lies in.',
     provenance: {
       kind: 'implementation',
       file: 'components/suite/dtsModel.ts',
@@ -400,7 +400,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'C-arm obliquity and beam tilt',
     pattern: /obliquity|cranial or caudal angulation|beam tilt|\btilt\b/i,
     definition:
-      'Obliquity rotates the C-arm around the patient; cranial or caudal angulation — beam tilt here — tilts it along the body axis. Both are the model’s own signed angles: positive obliquity swings the detector toward the patient’s right, and positive tilt swings it toward the head. On a console that names the detector’s side, positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation; check your own system’s convention.',
+      'Obliquity rotates the C-arm around the patient; cranial or caudal angulation — beam tilt here — tilts it along the body axis. Both angles are signed: positive obliquity swings the detector toward the patient’s right, and positive tilt swings it toward the head. On a console that names the detector’s side, positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation; check your own system’s convention.',
     provenance: {
       kind: 'implementation',
       file: 'components/suite/suiteModel.ts',
@@ -466,7 +466,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'Stored contour',
     pattern: /stored contour|saved contour|stored (augmented )?contour|target contour/i,
     definition:
-      'The target contour captured at one acquisition and drawn over later images: the model’s stand-in for an augmented-fluoroscopy overlay. It shows where the target was when it was captured, not where the lesion is now, and turning it off removes the annotation, not the anatomical change.',
+      'The target contour captured at one acquisition and drawn over later images, the way an augmented-fluoroscopy overlay is. It shows where the target was when it was captured, not where the lesion is now, and turning it off removes the annotation, not the anatomical change.',
     provenance: {
       kind: 'drafted',
       basis:
@@ -617,8 +617,9 @@ export function glossaryProvenanceLabel(term: GlossaryTerm): string {
       return `From the image-formation walk: ${chainStop(provenance.stop).title}`
     case 'control-panel':
       return 'From the control families'
+    // How a quantity is computed here is a note for the authors, not for the learner.
     case 'implementation':
-      return 'How this course’s model computes it'
+      return ''
     case 'registered-source': {
       const source = SOURCE_BY_ID.get(provenance.sourceId)
       return source
@@ -626,7 +627,7 @@ export function glossaryProvenanceLabel(term: GlossaryTerm): string {
         : 'From the registered study record'
     }
     case 'drafted':
-      return `Written for this course from ${provenance.sourceIds
+      return `Based on ${provenance.sourceIds
         .map((sourceId) => {
           const source = SOURCE_BY_ID.get(sourceId)
           return source ? `${source.publication} ${source.year}` : sourceId

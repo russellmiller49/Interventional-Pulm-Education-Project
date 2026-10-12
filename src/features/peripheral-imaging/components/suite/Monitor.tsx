@@ -238,7 +238,7 @@ export function Monitor({
           data-projection-state={state}
           hidden={hidden}
           role="img"
-          aria-label="CT-derived teaching projection with model target and tool"
+          aria-label="Fluoroscopic projection with the target lesion and the tool"
         >
           <div
             className={styles.monitorImage}
@@ -258,8 +258,8 @@ export function Monitor({
           {state !== 'ready' && (
             <p className={styles.imageStatus} role="status">
               {state === 'failed'
-                ? 'CT rendering unavailable. Image-based work cannot be completed. Reload to retry; teaching text remains available.'
-                : 'Preparing the CT projection…'}
+                ? 'The image could not be drawn. Reload to retry; the text remains available.'
+                : 'Preparing the projection…'}
             </p>
           )}
         </div>

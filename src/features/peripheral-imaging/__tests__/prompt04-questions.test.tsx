@@ -203,7 +203,7 @@ describe('question identity and versioning', () => {
     const case5 = imagingCaseById.get('case-5-v2')!.item
     expect(case5.correctChoiceIds).toEqual(['a'])
     expect(case5.stem).toBe(
-      'Linked thin axial, coronal and sagittal planes from a CBCT spin show the modeled lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
+      'Linked thin axial, coronal and sagittal planes from a CBCT spin show the lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
     )
     expect(case5.stem).not.toMatch(/fictional/i)
     expect(PLAUSIBILITY(case5.choices)).toMatchObject({
@@ -282,17 +282,17 @@ describe('practice case 9 keeps its id and loses what the model cannot support (
     const key = practice.item.choices.find((choice) => choice.id === 'a')!.rationale
     expect(key).toBe(question.choices[0].rationale)
     // What this figure establishes, stated as this figure's.
-    expect(key).toMatch(/^In this teaching figure, /)
-    expect(key).toMatch(/the projection stands for the current acquisition/)
-    expect(key).toMatch(/deliberately contains the modeled catheter/)
-    expect(key).toMatch(/the three planes match the planning CT and contain no catheter/)
-    expect(key).toMatch(/In this model, planes reconstructed from the current acquisition/)
-    expect(key).toMatch(/in this example, the planes were drawn from the planning CT/)
+    expect(key).toMatch(/^In this example the projection is the current acquisition/)
+    expect(key).toMatch(/and shows the catheter/)
+    expect(key).toMatch(/the three planes match the planning CT and show no catheter/)
+    expect(key).toMatch(/Planes reconstructed from this acquisition would show that catheter/)
+    expect(key).toMatch(/So, here, the planes were drawn from the planning CT/)
+    expect(key).toMatch(/The inference rests on what this figure shows/)
     // What it does not claim.
     expect(key).toMatch(
       /catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system/,
     )
-    expect(question.takeaway).toMatch(/In this teaching case, /)
+    expect(question.takeaway).toMatch(/In this case, /)
     expect(question.takeaway).toMatch(/so here the missing catheter identifies those planes/)
     expect(question.takeaway).toMatch(
       /Outside this case, catheter absence alone is not a universal sign of prior-derived content/,

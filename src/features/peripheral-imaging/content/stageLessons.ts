@@ -144,7 +144,7 @@ function checkInstruction(activity: ImagingLearningActivity): string {
   if (activity.visual === 'case')
     return 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
   if (fixedExampleEvidence(activity.sectionId, 0) === 'illustrative-model')
-    return 'Answer from the written scenario below. The image beside it is this section’s teaching model of the equipment, not a picture of the situation described.'
+    return 'Answer from the written scenario below. The image beside it is this section’s example, not the situation described.'
   return 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.'
 }
 

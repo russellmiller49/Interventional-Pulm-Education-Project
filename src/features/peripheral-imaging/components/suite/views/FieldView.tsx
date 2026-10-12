@@ -82,7 +82,7 @@ export function FieldContextOverlay({ orbit, tilt }: { orbit: number; tilt: numb
     <svg
       viewBox="0 0 512 512"
       role="img"
-      aria-label="Two modeled context landmarks and the dashed planned tool excursion"
+      aria-label="Two landmarks and the dashed planned tool path"
       data-field-context
     >
       <line

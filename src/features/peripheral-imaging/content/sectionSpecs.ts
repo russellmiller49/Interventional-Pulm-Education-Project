@@ -89,7 +89,7 @@ const noneOf = (extra: Partial<Strip> = {}): Strip => ({
  * the closing screen of the last section, and nowhere else (teaching-first rules, 2026-10-08).
  */
 export const IMAGING_SHARED_BOUNDARY =
-  'This is a teaching simulator. The CT supplies the anatomy; the target, the instruments and the exposure values are modeled for teaching. They are not equipment settings or patient measurements, they do not predict dose, tool placement or diagnostic yield on a particular system, and the course does not replace supervised C-arm operation or radiation safety training.'
+  'This is a teaching simulator. The anatomy comes from a CT; the lesion, the instruments and the exposure values were chosen for teaching. They are not equipment settings or patient measurements, they do not predict dose, tool placement or diagnostic yield on a particular system, and the course does not replace supervised C-arm operation or radiation safety training.'
 
 export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze([
   {

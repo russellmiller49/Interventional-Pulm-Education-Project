@@ -15,7 +15,8 @@ import type { FixedExampleEvidence } from './teachingExamples'
  * `caseFigureFor` returns nothing for a case that is not.
  *
  * The five OD4-04 safeguards, as they apply here:
- * 1. every model figure is labelled as teaching model output, never a patient acquisition;
+ * 1. every figure opens with a plain caption of what it shows (teaching-first rules, 2026-10-08:
+ *    the module's one statement that it is a teaching simulator is on the hub, not on each figure);
  * 2. every figure declares whether it depicts its question (`depicts-the-question`) or is only the
  *    course's model beside a written scenario (`illustrative-model`);
  * 3. the case text was changed to match the model (practice 9: left lung, smooth sphere, no
@@ -84,7 +85,7 @@ const DECLARATIONS: readonly CaseFigureDeclaration[] = [
     evidence: 'depicts-the-question',
     medium: 'teaching-model',
     label:
-      'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
+      'One projection with the catheter in place, three reconstructed planes, and the planning CT through the same lesion.',
     basis:
       'The question asks what the reconstructed planes support. The figure shows a projection of the DTS model with its catheter in place, three planes that carry no catheter at any depth, and the planning CT through the lesion: the absence and the resemblance the answer rests on are on screen.',
   },
@@ -94,8 +95,7 @@ const DECLARATIONS: readonly CaseFigureDeclaration[] = [
     caseId: 'case-5-v2',
     evidence: 'depicts-the-question',
     medium: 'teaching-model',
-    label:
-      'Teaching model: CT context with a model nodule and a modeled needle. Not a patient acquisition; the needle’s dimensions do not describe a real device.',
+    label: 'Linked thin axial, coronal and sagittal planes through the lesion and the needle.',
     basis:
       'The question asks which part of the needle lies where. The linked thin planes are drawn at a geometry whose window partly intersects the modeled lesion and whose tip lies beyond it, by the model’s own relationship readout.',
   },
@@ -106,7 +106,7 @@ const DECLARATIONS: readonly CaseFigureDeclaration[] = [
     evidence: 'depicts-the-question',
     medium: 'schematic',
     label:
-      'Schematic of this case’s room, drawn from its text. Not a scatter measurement or a dose map.',
+      'Plan of the room in this case: the table, the tube, the detector and the three standing positions.',
     basis:
       'The case states the geometry completely: tube near, detector far, three standing positions at a similar distance from the table. The plan draws exactly that and nothing about exposure.',
   },
@@ -142,9 +142,6 @@ export function validateCaseFigures(): readonly string[] {
     else if (declaration.identity !== `${item.id}:figure`)
       errors.push(`${where} is not keyed to its case's item.`)
     errors.push(...imagingLearnerCopyErrors(`${where} label`, declaration.label))
-    if (declaration.medium === 'teaching-model' && !/^Teaching model:/.test(declaration.label))
-      errors.push(`${where} does not open by naming itself a teaching model.`)
-    if (!/Not a /.test(declaration.label)) errors.push(`${where} does not say what it is not.`)
   }
   const sampling = samplingCaseReadouts()
   if (!sampling.intersects || sampling.full || sampling.tipInside)
