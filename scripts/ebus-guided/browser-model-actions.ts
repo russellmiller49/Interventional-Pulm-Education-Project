@@ -39,29 +39,46 @@ export async function performModel(frame: FrameLocator, pkg: ModelPackage) {
     }
   }
   if (pkg === 'measurement') {
-    for (const shape of ['sphere', 'ellipsoid', 'adjacent', 'lobulated']) {
-      await frame.getByLabel('Shape', { exact: true }).selectOption(shape)
-      for (let i = 0; i < 12; i++) await click('Next plane')
-    }
-    await frame.getByLabel('Shape', { exact: true }).selectOption('ellipsoid')
-    await frame.getByLabel('Plane offset', { exact: true }).fill('0')
+    // Two steps, both on the elongated shape the activity opens on: one sweep, one measurement.
+    const steps = frame.locator('.model-steps')
+    const status = frame.locator('.model-feedback')
+    await expect(frame.getByLabel('Shape', { exact: true })).toHaveValue('ellipsoid')
+    await expect(steps).toContainText('Steps: 0 of 2 done')
+    // Recording before anything is placed explains what to do instead of saving.
+    await click('Record measurement')
+    await expect(status).toContainText('Freeze the section')
+    // The sweep: the plane carried from one end of its range to the other.
+    await frame.getByLabel('Plane offset', { exact: true }).fill('12')
+    await expect(steps).toContainText('Steps: 1 of 2 done')
+    // An off-center section is refused.
     await click('Freeze section')
-    await click('Not adequately visualized')
-    await expect(frame.getByRole('status')).toContainText('No measurement recorded')
-    await frame.getByLabel('Image label', { exact: true }).selectOption('Phantom station 7')
-    await click('Record phantom image')
-    await expect(frame.getByRole('status')).toContainText('Place both calipers')
     const svg = frame.locator('.phantom-section')
     await svg.scrollIntoViewIfNeeded()
     const box = (await svg.boundingBox())!
-    await svg.click({ position: { x: box.width / 2, y: (box.height * 14) / 46 } })
-    await svg.click({ position: { x: box.width / 2, y: (box.height * 30) / 46 } })
-    await frame.getByLabel('Measurement axis', { exact: true }).selectOption('long')
-    await click('Record phantom image')
-    await expect(frame.getByRole('status')).toContainText('short axis')
-    await frame.getByLabel('Measurement axis', { exact: true }).selectOption('short')
-    await click('Record phantom image')
-    await expect(frame.locator('.model-record')).toContainText('16.0 phantom mm')
+    // The section is drawn in phantom millimetres: x -30..30, y 0..46.
+    const at = (x: number, y: number) => ({
+      x: (box.width * (x + 30)) / 60,
+      y: (box.height * y) / 46,
+    })
+    await svg.click({ position: at(0, 14) })
+    await svg.click({ position: at(0, 30) })
+    await click('Record measurement')
+    await expect(status).toContainText('central section')
+    await click('Unfreeze section')
+    await click('Go to the central section')
+    await click('Freeze section')
+    // Calipers along the long axis are refused, with where they should go.
+    await svg.click({ position: at(-16, 22) })
+    await svg.click({ position: at(16, 22) })
+    await click('Record measurement')
+    await expect(status).toContainText('top border')
+    await expect(steps).toContainText('Steps: 1 of 2 done')
+    // Top and bottom borders of the central section: the short axis.
+    await svg.click({ position: at(0, 14) })
+    await svg.click({ position: at(0, 30) })
+    await click('Record measurement')
+    await expect(frame.locator('.model-record')).toContainText('Short axis: 16.0 mm')
+    await expect(steps).toContainText('Steps: 2 of 2 done')
   }
   if (pkg === 'routes') {
     for (const station of ['4L', '7']) {
