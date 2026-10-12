@@ -1,7 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { DrrTextureSource, type ProjectionState, type DrrPose } from './drrTextureSource'
+import {
+  fieldDisplay,
+  luminanceOf,
+  type FieldDisplay,
+  type FieldRect,
+} from '../../lib/fieldDisplay'
 import type { Point3 } from '../../lib/physics'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import type { ImagingSuitePaneProps } from './types'
@@ -23,6 +29,11 @@ export interface StoredProjection {
   overlay: ReactNode
   /** The acquired (collimated) field, which is acquisition, not display. */
   mask: ReactNode
+  /**
+   * How the acquired field set the displayed image (`lib/fieldDisplay.ts`). It belongs to the
+   * acquisition: a stored frame keeps the processing it was read out with.
+   */
+  processing: FieldDisplay | null
   label: string
   id: string
   state: {
@@ -46,11 +57,13 @@ export function Monitor({
   overlay,
   offset,
   comparison = false,
+  comparisonHint,
   acquisitionField = 100,
   displayMask,
   viewMemory,
   captureEnabled = true,
   frameContext,
+  fieldProcessing,
 }: {
   pose: DrrPose
   depth: number
@@ -63,21 +76,55 @@ export function Monitor({
   overlay?: ReactNode
   offset?: Point3
   comparison?: boolean
+  /** What the baseline is for on this step, printed beside the button that replaces it. */
+  comparisonHint?: string
   acquisitionField?: number
   displayMask?: ReactNode
   viewMemory?: ImagingSuitePaneProps['viewMemory']
   captureEnabled?: boolean
   frameContext?: Record<string, unknown>
+  /**
+   * The collimation section: the collimated field on the image and its share of the open field's
+   * area. With it the display range and the scatter veil follow the field.
+   */
+  fieldProcessing?: { readonly rect: FieldRect; readonly areaFraction: number }
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
   const [state, setState] = useState<ProjectionState>('loading')
+  const [revision, setRevision] = useState(0)
+  const [processing, setProcessing] = useState<FieldDisplay | null>(null)
+  const filterId = useId().replace(/:/g, '')
   const [baseline, setBaseline] = useState<StoredProjection | null>(
     viewMemory?.current.baseline ?? null,
   )
+  const fieldLeft = fieldProcessing?.rect.left
+  const fieldTop = fieldProcessing?.rect.top
+  const fieldSize = fieldProcessing?.rect.size
+  const fieldArea = fieldProcessing?.areaFraction
+  /** The display mapping for the frame now on the canvas, read from its own pixels. */
+  function readProcessing(): FieldDisplay | null {
+    if (
+      fieldLeft === undefined ||
+      fieldTop === undefined ||
+      fieldSize === undefined ||
+      fieldArea === undefined ||
+      engine.current?.state !== 'ready'
+    )
+      return null
+    const size = 96
+    const pixels = engine.current.snapshot(size).getContext('2d')?.getImageData(0, 0, size, size)
+    if (!pixels) return null
+    return fieldDisplay(
+      luminanceOf(pixels.data),
+      size,
+      { left: fieldLeft, top: fieldTop, size: fieldSize },
+      fieldArea,
+    )
+  }
   // Report 2.6: the caption names the angles the way the sliders do ("C-arm obliquity", "Beam
   // tilt"), so one quantity has one name. The values are the same signed model angles.
-  const label = `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · acquired field ${acquisitionField}% · exposure: not modeled`
+  const label = `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
   const currentOverlay = overlay ?? (
     <ProjectionOverlays
       orbit={pose.orbit}
@@ -104,6 +151,7 @@ export function Monitor({
       image: engine.current.snapshot().toDataURL(),
       overlay: currentOverlay,
       mask,
+      processing: readProcessing(),
       label,
     }
     if (viewMemory) {
@@ -115,7 +163,10 @@ export function Monitor({
   useEffect(() => {
     const source = new DrrTextureSource(canvas.current!)
     engine.current = source
-    const unsubscribe = source.subscribe(() => setState(source.state))
+    const unsubscribe = source.subscribe(() => {
+      setState(source.state)
+      setRevision(source.revision)
+    })
     onSource(source)
     void source.load()
     return () => {
@@ -129,6 +180,11 @@ export function Monitor({
     engine.current?.update(pose)
   }, [pose])
   useEffect(() => {
+    setProcessing(readProcessing())
+    // The frame on the canvas (its revision) and the field are the whole input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision, state, fieldLeft, fieldTop, fieldSize, fieldArea])
+  useEffect(() => {
     if (comparison && state === 'ready' && !baseline) captureBaseline()
     // Freeze the first usable frame once; subsequent display/model changes cannot update it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,50 +195,62 @@ export function Monitor({
       data-image-comparison={comparison ? 'available' : undefined}
       data-has-baseline={comparison && baseline ? 'true' : undefined}
     >
-      {comparison && (
-        <div className={styles.toolbar}>
-          <button
-            type="button"
-            disabled={!captureEnabled || state !== 'ready'}
-            onClick={captureBaseline}
-          >
+      {/* Owner feedback, 2026-10-11 (slide 4): this asked the learner to freeze a baseline and
+          change a control on steps that had no control. It is offered only where the step can change
+          the image, and it says what the baseline is. */}
+      {comparison && captureEnabled && (
+        <div className={styles.toolbar} data-baseline-tools>
+          <button type="button" disabled={state !== 'ready'} onClick={captureBaseline}>
             Save baseline image
           </button>
-          <span>
-            Freeze this acquisition, then change one control. An electronic crop and display zoom
-            change the current view only.
-          </span>
+          {comparisonHint ? <span>{comparisonHint}</span> : null}
         </div>
       )}
       {comparison && baseline && (
         <figure data-baseline-image data-acquisition-id={baseline.id}>
-          <figcaption>Baseline acquisition A · {baseline.label}</figcaption>
+          <figcaption>Baseline · {baseline.label}</figcaption>
           <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
             <div className={styles.monitorImage} data-monitor-zoom={1}>
               {/* A local canvas capture, retained with its own overlay and acquisition state. */}
+              {baseline.processing && (
+                <DisplayFilter id={`${filterId}-baseline`} display={baseline.processing} />
+              )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={baseline.image} alt="" />
+              <img
+                src={baseline.image}
+                alt=""
+                style={baseline.processing ? { filter: `url(#${filterId}-baseline)` } : undefined}
+              />
               {baseline.overlay}
               {baseline.mask}
             </div>
           </div>
         </figure>
       )}
-      <figure data-current-image>
-        {comparison && <figcaption>Current simulated projection · {label}</figcaption>}
+      <figure data-current-image data-display-gain={processing?.gain.toFixed(2)}>
+        {/* The acquisition context is always stated with the image: a fixed example has no
+            sliders to read it from. */}
+        <figcaption data-acquisition-context>
+          {comparison ? `Current · ${label}` : label}
+        </figcaption>
         <div
           className={styles.monitor}
           data-projection-state={state}
           hidden={hidden}
           role="img"
-          aria-label="CT-derived teaching projection with model target and tool"
+          aria-label="Fluoroscopic projection with the target lesion and the tool"
         >
           <div
             className={styles.monitorImage}
             style={{ transform: `scale(${zoom})` }}
             data-monitor-zoom={zoom}
           >
-            <canvas ref={canvas} aria-hidden="true" />
+            {processing && <DisplayFilter id={`${filterId}-current`} display={processing} />}
+            <canvas
+              ref={canvas}
+              aria-hidden="true"
+              style={processing ? { filter: `url(#${filterId}-current)` } : undefined}
+            />
             {currentOverlay}
             {mask}
           </div>
@@ -190,12 +258,36 @@ export function Monitor({
           {state !== 'ready' && (
             <p className={styles.imageStatus} role="status">
               {state === 'failed'
-                ? 'CT rendering unavailable. Image-based work cannot be completed. Reload to retry; teaching text remains available.'
-                : 'Preparing the CT projection…'}
+                ? 'The image could not be drawn. Reload to retry; the text remains available.'
+                : 'Preparing the projection…'}
             </p>
           )}
         </div>
       </figure>
     </div>
+  )
+}
+
+/**
+ * The display mapping as an SVG filter over the projection. It changes what is shown, never the
+ * canvas: the detector texture in the 3D view and every stored pixel stay as acquired.
+ */
+function DisplayFilter({ id, display }: { id: string; display: FieldDisplay }) {
+  const tableValues = display.table.join(' ')
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      data-display-filter
+      style={{ position: 'absolute', width: 0, height: 0 }}
+    >
+      <filter id={id} colorInterpolationFilters="sRGB">
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues={tableValues} />
+          <feFuncG type="table" tableValues={tableValues} />
+          <feFuncB type="table" tableValues={tableValues} />
+        </feComponentTransfer>
+      </filter>
+    </svg>
   )
 }

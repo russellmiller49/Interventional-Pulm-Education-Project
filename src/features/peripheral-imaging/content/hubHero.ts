@@ -36,7 +36,6 @@ export interface ImagingHubHero {
   readonly anchors: Readonly<Record<ChainStopId, readonly [number, number]>>
   /** Which side of its anchor each on-figure label sits, chosen so no two labels collide. */
   readonly labelSide: Readonly<Record<ChainStopId, 'left' | 'right'>>
-  readonly boundary: string
 }
 
 export const IMAGING_HUB_HERO: ImagingHubHero = {
@@ -69,8 +68,6 @@ export const IMAGING_HUB_HERO: ImagingHubHero = {
     reconstruction: 'left',
     display: 'right',
   },
-  boundary:
-    'A schematic room and C-arm around a CT-derived chest. The head, pillow and draped body are drawn for context. No device, dimension or clearance is represented.',
 }
 
 export function validateImagingHubHero(): readonly string[] {
@@ -98,7 +95,6 @@ export function validateImagingHubHero(): readonly string[] {
   errors.push(
     ...imagingLearnerCopyErrors('The hub picture lede', hero.lede, { allowDigits: false }),
   )
-  errors.push(...imagingLearnerCopyErrors('The hub picture boundary', hero.boundary))
   return errors
 }
 

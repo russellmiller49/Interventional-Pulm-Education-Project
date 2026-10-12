@@ -60,7 +60,7 @@ export function SamplingView({
       {labels && (
         <>
           <Html portal={portal} position={add(LESION_CENTER, [27, 0, 24])}>
-            <span className={styles.objectLabel}>Model target</span>
+            <span className={styles.objectLabel}>Lesion</span>
           </Html>
           <Html portal={portal} position={add(model.tip, [-10, 18, -18])}>
             <span className={styles.objectLabel}>Sampling window</span>
@@ -81,9 +81,8 @@ export function SamplingPanels({ inputs, revealed }: { inputs: SuiteInputs; reve
     >
       {/* Report 6.3: one name for the lesion, and what the coarse CT behind it is for. */}
       <p data-sampling-legend>
-        Amber sphere: the modeled lesion · green: the modeled sampling window · white: shaft and
-        tip. The CT behind them is low-resolution context for orientation, not the thing being
-        measured.
+        Amber sphere: the lesion · green: the side-cutting window · white: shaft and tip. The CT
+        behind them is shown at low resolution, for orientation.
       </p>
       <p>
         {inputs.slab

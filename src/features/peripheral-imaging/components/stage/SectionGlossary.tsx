@@ -34,28 +34,30 @@ export function SectionGlossary({
       <dl className={styles.glossaryList}>
         {terms.map((term) => {
           const elsewhere = term.taughtIn && term.taughtIn !== sectionId ? term.taughtIn : null
+          const provenance = glossaryProvenanceLabel(term)
           return (
             <div key={term.id} data-glossary-term={term.id} data-glossary-status={term.status}>
               <dt>{term.term}</dt>
               <dd>
                 {term.definition}{' '}
-                <small className={styles.glossarySource}>
-                  {glossaryProvenanceLabel(term)}
-                  {elsewhere ? (
-                    <>
-                      {' '}
-                      · taught in full in{' '}
-                      <Link
-                        href={imagingSectionLinkTarget(elsewhere)}
-                        data-glossary-taught-in={elsewhere}
-                      >
-                        Section {peripheralImagingSectionIds.indexOf(elsewhere) + 1},{' '}
-                        {imagingLesson(elsewhere).title}
-                      </Link>
-                    </>
-                  ) : null}
-                  .
-                </small>
+                {provenance || elsewhere ? (
+                  <small className={styles.glossarySource}>
+                    {provenance}
+                    {elsewhere ? (
+                      <>
+                        {provenance ? ' · taught in full in ' : 'Taught in full in '}
+                        <Link
+                          href={imagingSectionLinkTarget(elsewhere)}
+                          data-glossary-taught-in={elsewhere}
+                        >
+                          Section {peripheralImagingSectionIds.indexOf(elsewhere) + 1},{' '}
+                          {imagingLesson(elsewhere).title}
+                        </Link>
+                      </>
+                    ) : null}
+                    .
+                  </small>
+                ) : null}
               </dd>
             </div>
           )

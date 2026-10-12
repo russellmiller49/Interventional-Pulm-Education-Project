@@ -119,8 +119,7 @@ function LeadComparison({ lead }: { readonly lead: ReconstructionAccount['id'] |
       ) : null}
       <details className={styles.reconstructionFull} data-reconstruction-full>
         <summary>
-          Full account: how each picture is built, what it answers and what it does not, and its
-          model boundary
+          Full account: how each picture is built, what it answers and what it does not
         </summary>
         <p className={styles.reconstructionLede}>{RECONSTRUCTION_CONTRAST}</p>
         <div className={styles.reconstructionPair}>
@@ -221,7 +220,7 @@ function AccountCard({
         </div>
       )}
       <p className={styles.reconstructionBoundary}>
-        <strong>Model boundary.</strong> {account.boundary}
+        <strong>In this course.</strong> {account.boundary}
       </p>
       <p className={styles.reconstructionWhere}>
         Watch it being built in{' '}

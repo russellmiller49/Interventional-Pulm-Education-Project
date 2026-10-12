@@ -177,7 +177,7 @@ export default function Scene3D(props: SceneProps) {
   return (
     <div className={styles.sceneWrap}>
       <div className={styles.sceneHeading}>
-        <span>{suite ? 'Original FluoroView C-arm' : 'CT-derived anatomy · 3D Slicer'}</span>
+        <span>{suite ? 'C-arm motion' : 'Anatomy'}</span>
         {!props.safety && (
           <div className={styles.buttonRow}>
             <button type="button" aria-pressed={!suite} onClick={() => setSuite(false)}>
@@ -194,8 +194,8 @@ export default function Scene3D(props: SceneProps) {
         role="img"
         aria-label={
           suite
-            ? 'Original FluoroView C-arm animation, a generic motion reference.'
-            : 'CT-derived thorax, segmented airways, lungs and skeleton with a model target and instrument.'
+            ? 'A C-arm rotating around the table.'
+            : 'The thorax in 3D: airways, lungs and skeleton, with the target lesion and the tool.'
         }
       >
         <SceneBoundary>
@@ -322,7 +322,7 @@ export function SamplingScene3D({ tip }: { tip: [number, number, number] }) {
       <div
         className={styles.sceneCompact}
         role="img"
-        aria-label="3D teaching sphere and modeled needle. The thick sampling-window segment is distinct from the tip. Linked slices below provide the same geometry."
+        aria-label="The lesion and the needle in 3D. The thick side-cutting-window segment is distinct from the tip. The linked slices below show the same geometry."
       >
         <SceneBoundary>
           <Canvas

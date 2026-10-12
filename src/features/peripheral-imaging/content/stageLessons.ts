@@ -30,7 +30,6 @@ import {
 import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
-import { fixedExampleEvidence } from './teachingExamples'
 import { transferOrigin, transferReviewInstruction, transferReviewTitle } from './transferOrigins'
 import { suiteViewForStep } from './suiteViews'
 
@@ -106,6 +105,9 @@ export const IN_TEACHING = {
 
 const CONTINUE = 'Continue'
 
+/** A hands-on step: the text column holds what to do and its checklist. */
+const HANDS_ON_INSTRUCTION = 'Do the steps in the checklist, using the controls beside the image.'
+
 interface StepInput {
   readonly activity: ImagingLearningActivity
   readonly phase: StagePhase
@@ -127,26 +129,22 @@ function prediction(
   return { kind: 'prediction', item, round, chainTargets: null }
 }
 
-function firstSentence(text: string): string {
-  const match = text.match(/^[^.!?]*[.!?]/)
-  return (match ? match[0] : text).trim()
-}
-
 /**
  * What a check asks the learner to read, decided by what that check actually puts on screen.
  *
  * Transfer rounds carry no visual at all and keep their own wording. A check with no visual reads
- * its scenario. A check whose image is declared `illustrative-model` for this exact section and
- * round says so and sends the learner to the written scenario; every other check keeps the
- * image-based instruction, because its image is the evidence.
+ * its scenario, a check beside a dose record reads the record, and every other check keeps the
+ * image-based instruction, because its image is the evidence. A check whose question the section's
+ * image cannot show is authored as a written scenario (`finish('record', 'case')`), never as an
+ * unrelated image with a disclaimer.
  */
 function checkInstruction(activity: ImagingLearningActivity): string {
   if (activity.task === 'transfer')
     return 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
   if (activity.visual === 'case')
     return 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
-  if (fixedExampleEvidence(activity.sectionId, 0) === 'illustrative-model')
-    return 'Answer from the written scenario below. The image beside it is this section’s teaching model of the equipment, not a picture of the situation described.'
+  if (activity.visual === 'dose')
+    return 'Read the procedure record. Choose what it supports and what remains uncertain.'
   return 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.'
 }
 
@@ -218,12 +216,14 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: 'act',
+          // Owner feedback, 2026-10-11: an instruction names only what its own step shows. The
+          // section's `labTask` spans every hands-on step, so quoting it here asked for controls
+          // the step did not have; what to move and what to watch is the task lead in the text
+          // column (`taskLeads.ts`), beside the step's checklist.
           instruction:
             spec.act.kind === 'walk'
-              ? 'Follow one component at a time. At beam geometry, change the C-arm obliquity and compare the image with the beam path. This X-ray map does not apply to radial EBUS.'
-              : sectionId === 'good-image'
-                ? 'Change the projection, then use display zoom. Compare the visible effect of each action with the same tool and lesion geometry.'
-                : `${firstSentence(lesson.labTask ?? activity.title)} Follow the requirements below; each is checked against the supported model.`,
+              ? 'Follow the image through its six components, one at a time. Each is highlighted in the 3D view as you reach it.'
+              : HANDS_ON_INSTRUCTION,
           interaction:
             spec.act.kind === 'walk'
               ? { kind: 'walk', stops: spec.chainStops, lab: lesson.lab, goals: goals.act }
@@ -236,8 +236,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: 'observe',
-          instruction:
-            'Compare the image as you make the changes listed below. Describe what changed on the image and what stayed fixed in the model.',
+          instruction: HANDS_ON_INSTRUCTION,
           interaction: {
             kind: 'observe',
             lab: lesson.lab,

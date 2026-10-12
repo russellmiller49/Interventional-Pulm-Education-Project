@@ -50,23 +50,23 @@ export function SamplingWindowCaseFigure({
         ))}
       </div>
       <p className={styles.note} data-sampling-legend>
-        Amber outline: the modeled lesion · green: the needle’s side-cutting window · white: the
-        shaft, ending at the tip. The CT behind them is low-resolution context for orientation.
+        Amber outline: the lesion · green: the needle’s side-cutting window · white: the shaft,
+        ending at the tip.
       </p>
       {revealed ? (
         <dl className={styles.readouts} data-case-figure-readouts>
-          <dt>Side-cutting window, by the model’s own readout</dt>
+          <dt>Side-cutting window</dt>
           <dd data-readout="window">{readouts.label}</dd>
           <dt>Needle tip</dt>
           <dd data-readout="tip">
             {readouts.tipInside
-              ? 'Inside the modeled lesion'
-              : `Outside the modeled lesion, about ${Math.round(readouts.tipFromSurfaceMm)} mm beyond its surface`}
+              ? 'Inside the lesion'
+              : `Outside the lesion, about ${Math.round(readouts.tipFromSurfaceMm)} mm beyond its surface`}
           </dd>
           <dt>What this does not establish</dt>
           <dd>
-            A model intersection is geometry. It does not establish diagnostic tissue or a safe
-            sampling decision.
+            Where the window lies is geometry. It does not establish diagnostic tissue, or that
+            sampling there is safe.
           </dd>
         </dl>
       ) : null}

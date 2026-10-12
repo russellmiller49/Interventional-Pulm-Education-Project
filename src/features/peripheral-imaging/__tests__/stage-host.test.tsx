@@ -73,7 +73,7 @@ it('replay and model reset never answer anything or satisfy the guided goal', ()
   // The demonstration did not do the learner's work, so Continue is not offered; moving on is.
   expect(nowPrimary()).toBeNull()
   expect(nowSkip()).toHaveTextContent('Skip this step')
-  expect(nowStatus()).toContain('Compare the image')
+  expect(nowStatus()).toContain('Work through the checklist')
   expect(document.getElementById('peripheral-imaging-control-orbit')).toHaveValue('0')
   expect(JSON.stringify(storedProgress())).not.toMatch(RESPONSE_SHAPED)
 })
@@ -205,7 +205,7 @@ it('back, restart and reload start the section again and restore no answer', () 
   })
 })
 
-it('looking back at a skipped step says it was not done and keeps the controls paused', () => {
+it('looking back at a skipped step says it was not done and puts its controls away', () => {
   const { lesson } = mountSection('projection')
   clickPrimary()
   clickPrimary()
@@ -217,7 +217,11 @@ it('looking back at a skipped step says it was not done and keeps the controls p
   expect(nowStatus()).toContain('without completing it')
   expect(document.querySelector('[data-step-skipped]')).not.toBeNull()
   expect(nowPrimary()).toHaveTextContent(/Return to step/)
-  expect(document.getElementById('peripheral-imaging-control-orbit')).toBeDisabled()
+  // Not drawn disabled: a control that cannot be used is left out, and the pane says why.
+  expect(document.getElementById('peripheral-imaging-control-orbit')).toBeNull()
+  expect(document.querySelector('[data-suite-scene] [role="status"]')?.textContent).toMatch(
+    /looking back at an earlier step/,
+  )
 })
 
 it('shows the evidence matches without placing any, and moves on without matching', () => {

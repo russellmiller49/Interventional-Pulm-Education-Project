@@ -36,6 +36,8 @@ export interface ChainStop {
   readonly plainName: string
   readonly analogy: string
   readonly precise: string
+  /** One line for the recap at the end of the walk: what this component decides. */
+  readonly summary: string
   /** Authored per list, because a checklist and a set of facts read differently. */
   readonly checklistLabel: string
   readonly checklist: readonly string[]
@@ -50,6 +52,7 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 1,
     title: 'X-ray tube',
     plainName: 'the X-ray tube and generator',
+    summary: 'sets the beam energy and the photon output of each pulse.',
     analogy:
       'Think of a light on automatic brightness: the picture stays even while the output behind it changes.',
     precise:
@@ -73,6 +76,8 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 2,
     title: 'Beam geometry',
     plainName: 'the collimated X-ray beam between the tube and the detector',
+    summary:
+      'sets the projection, the collimated field and the distances; one projection collapses depth.',
     analogy:
       'Think of a lamp casting a shadow: the angle, the opening and the distances change the shadow before anything else does.',
     precise:
@@ -96,6 +101,7 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 3,
     title: 'Patient anatomy',
     plainName: 'the anatomy in the X-ray path',
+    summary: 'attenuates and scatters the beam, moves, and may differ from the planning CT.',
     analogy:
       'Think of glass slides stacked against a light: what overlaps, what moves and when the picture was taken decide what you can make out.',
     precise:
@@ -119,6 +125,7 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 4,
     title: 'Flat-panel detector',
     plainName: 'the flat-panel detector',
+    summary: 'records one field of view at its own pixel sampling and frame rate.',
     analogy:
       'Think of a camera sensor: it records one field, at one sampling pitch, a set number of times per second, and nothing outside the field or between frames.',
     precise:
@@ -137,6 +144,8 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 5,
     title: 'Reconstruction and registration',
     plainName: 'DTS or CBCT reconstruction, and registration of prior imaging',
+    summary:
+      'builds planes or a volume from many projections, and aligns prior imaging with the current image.',
     analogy:
       'Think of a sculptor working from a few photographs: the fewer the angles and the older the photographs, the more of the result is inferred.',
     precise:
@@ -155,6 +164,7 @@ export const CHAIN_STOPS: readonly ChainStop[] = Object.freeze([
     number: 6,
     title: 'Display and interpretation',
     plainName: 'the monitor and the procedure record',
+    summary: 'changes what is shown, by zoom, window and overlay, and never what was acquired.',
     analogy:
       'Think of enlarging a photograph: zoom, window and overlay change what you see, not what was acquired.',
     precise:
@@ -207,6 +217,7 @@ export function validateImagingChain(): readonly string[] {
       ...imagingLearnerCopyErrors(`${where} plain name`, stop.plainName),
       ...imagingLearnerCopyErrors(`${where} analogy`, stop.analogy),
       ...imagingLearnerCopyErrors(`${where} precise statement`, stop.precise),
+      ...imagingLearnerCopyErrors(`${where} summary`, stop.summary),
       ...imagingLearnerCopyErrors(`${where} checklist label`, stop.checklistLabel),
     )
     if (stop.checklist.length === 0 || stop.checklist.length > 4) {

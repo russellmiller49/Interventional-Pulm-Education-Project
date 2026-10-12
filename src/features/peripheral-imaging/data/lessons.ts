@@ -118,7 +118,7 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Six components, one image',
         kind: 'signals',
-        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and the X-ray modalities use these components differently. Radial EBUS uses ultrasound and does not share this X-ray pipeline.',
+        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and fluoroscopy, DTS and CBCT use these components differently.',
         points: [
           'The X-ray tube and generator set kV, mA and pulses.',
           'Beam geometry sets the projection, collimation and distances.',
@@ -213,7 +213,7 @@ export const LESSONS: Lesson[] = [
         'Magnification enlarges the same projection, heart included. Obliquity changes the projection, so the heart can move off the lesion. The first changes the display or the detector sampling; the second changes the projection. Name the control before you change it.',
     },
     labTask:
-      'Change projection with fixed tool and lesion geometry, then inspect the same model with display zoom. Compare what each control changes and what remains unresolved.',
+      'Change projection with fixed tool and lesion geometry, then inspect the same image with display zoom. Compare what each control changes and what remains unresolved.',
     lab: 'geometry',
     takeaway: [
       'Control families organize the main acquisition and display adjustments.',
@@ -335,7 +335,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'geometry',
     labTask:
-      'Keep the tool depth offset, rotate the C-arm, and compare the 3D scene with its CT-derived projection.',
+      'Keep the tool depth offset, rotate the C-arm, and compare the 3D view with its projection.',
     takeaway: [
       'Overlap on one projection is superimposition until shown otherwise.',
       'Choose the projection for the question: alignment or advancement.',
@@ -435,6 +435,17 @@ export const LESSONS: Lesson[] = [
         sources: ['wabip', 'tg125', 'tg272'],
       },
       {
+        // Owner's teaching, 2026-10-11: why excluding the spine improves the image.
+        title: 'Collimate the spine out of the field',
+        body: 'Collimating the beam to exclude highly radiopaque structures such as the spine can substantially improve how well you see a pulmonary target and the instruments used to reach it. Three mechanisms contribute: less scatter, automatic image processing that works on the lung, and more favorable automatic exposure control. The tool path has to stay in the field while the tool is advancing, so this is the field for working at the lesion.',
+        points: [
+          'Less scatter. Photons that undergo Compton scattering in the patient reach the detector from unintended directions and add a background signal that lowers contrast. A tighter field irradiates less tissue, so fewer scattered photons are produced and fewer reach the detector. A needle, a catheter or a robotic bronchoscope then stands out better against the lung, which matters most for a subtle peripheral lesion or the tip of a small biopsy instrument.',
+          'Grayscale spent on the lung. The image processing sets displayed brightness, contrast and grayscale from what is in the field. A spine that fills much of the image takes the bright end of the range, so part of the available grayscale goes to anatomy that is irrelevant to the procedure. With the spine out of the field the same range is spread across the lung, the lesion and the instrument, and small differences in attenuation, such as a needle or forceps against a lesion, are easier to see. How much this helps depends on the system.',
+          'Automatic exposure set by the lung. Automatic exposure control adjusts kV, mA and pulse width to hold the detector signal in its measuring field. Dense structures in that field push it toward a more penetrating beam, which lowers contrast in the lung and can wash out the aerated lung beside them. With them excluded, the system regulates to the lung, the lesion and the instrument.',
+        ],
+        sources: ['wabip', 'tg125', 'tg272'],
+      },
+      {
         title: 'Display zoom versus acquisition magnification',
         body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system.',
         sources: ['tg272', 'tg125'],
@@ -461,9 +472,10 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'field',
     labTask:
-      'Compare the collimated field with an electronic crop, then apply display zoom to the stored image. Keep the full tool excursion in the field.',
+      'Collimate for the tool path, then collimate the spine out of the field once the tool is at the lesion. Compare the collimated field with an electronic crop and with display zoom on the stored image.',
     takeaway: [
       'Collimation acts on the beam; electronic cropping acts on the display.',
+      'At the lesion, collimating the spine out of the field improves contrast: less scatter, and grayscale and automatic exposure set by the lung.',
       'A magnification label does not tell you what the acquisition changed.',
       'Keep the anatomic context and mechanical clearance.',
     ],
@@ -513,7 +525,7 @@ export const LESSONS: Lesson[] = [
       scenario:
         'After the pulse rate is reduced, the system doubles pulse width. Tube current is unchanged.',
       reasoning:
-        'There are fewer images per second but the same mAs per second in this simplified comparison, and each exposure spans more motion. Pulse-rate arithmetic alone does not establish a reduction in patient dose.',
+        'There are fewer images per second but the same mAs per second in this comparison, and each exposure spans more motion. Pulse-rate arithmetic alone does not establish a reduction in patient dose.',
     },
     lab: 'temporal',
     labTask:
@@ -649,7 +661,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'dts',
     labTask:
-      'Scroll the reconstruction plane through the added lesion and tool, then compare the surrounding anatomy with a wider DTS arc.',
+      'Scroll the reconstruction plane through the lesion and the tool, then compare the surrounding anatomy with a wider DTS arc.',
     takeaway: [
       'DTS adds depth information absent from a single projection.',
       'Depth resolution depends on angular coverage.',
@@ -769,7 +781,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Set up the model lesion and complete the readiness checks. See what happens when a checked setup is moved.',
+      'Center the lesion and complete the readiness checks. See what happens when a checked setup is moved.',
     takeaway: [
       'Center the lesion, not just the chest.',
       'Check clearance for the whole spin.',
@@ -881,7 +893,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Select the mobile CBCT workflow. Compare its room-preparation needs, and center the lesion on both CT-derived scout images.',
+      'Select the mobile CBCT workflow. Compare its room-preparation needs, and center the lesion on both scout images.',
     takeaway: [
       'Portability changes logistics, not the physics.',
       'Commission the room, table and scanner together.',
@@ -939,11 +951,11 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The needle tip is beyond the nodule, and its side-cutting window lies within part of the lesion on thin reformats.',
       reasoning:
-        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. The module’s modeled window geometry teaches this distinction; clinical interpretation depends on the real tool, the approved technique and the surrounding safety anatomy.',
+        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. At the table, the interpretation depends on the tool in use, the approved technique and the surrounding anatomy at risk.',
     },
     lab: 'mpr',
     labTask:
-      'Move the modeled needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
+      'Move the needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
     takeaway: [
       'Identify the lesion independently.',
       'Follow the part of the tool that acquires tissue on thin planes.',
@@ -1068,7 +1080,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'safety',
     labTask:
-      'Inspect staff, patient and barrier geometry. Explore distance while noting what the simplified calculation cannot establish.',
+      'Inspect staff, patient and barrier geometry. Explore distance while noting what the inverse-square ratio cannot establish.',
     takeaway: [
       'Protect against scatter as well as the primary beam.',
       'Use effective barriers and verified positions.',

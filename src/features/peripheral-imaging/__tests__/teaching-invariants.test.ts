@@ -6,6 +6,7 @@ import { emptyLabState, labStateAfterChange, labGoalsMet } from '../engine/labGo
 import { imagingLabGoals } from '../content/labGoals'
 import {
   fieldContextCoverage,
+  spineInField,
   toolTipForDepth,
   projectToDetector,
   LESION_CENTER,
@@ -60,8 +61,30 @@ it('display edits preserve the physical field, and a cropped context cannot pass
   expect(labReadouts('field', lab.values, 'field').irradiatedAreaPct).toBe(acquisition)
   expect(fieldContextCoverage(90)).toBe(true)
   expect(fieldContextCoverage(45)).toBe(false)
-  lab = labStateAfterChange('field', lab, { field: 45 }, 'field')
+  // Display edits and a first notch of collimation satisfy neither stage of the task.
   expect(labGoalsMet(imagingLabGoals('field')!.act, lab, 'field', 'field')).toBe(false)
+})
+
+it('the collimation task has two stages, and narrowness alone meets only the second', () => {
+  const goals = imagingLabGoals('field')!.act
+  // Straight to a tight field: the spine is out, but the field for the tool path was never held.
+  let lab = labStateAfterChange('field', emptyLabState('field', 'field'), { field: 40 }, 'field')
+  expect(labReadouts('field', lab.values, 'field').spineInField).toBe(false)
+  expect(lab.events).toContain('spine-excluded')
+  expect(lab.events).not.toContain('path-kept-collimated')
+  expect(labGoalsMet(goals, lab, 'field', 'field')).toBe(false)
+  // The field for the tool path, then the field for the lesion.
+  lab = labStateAfterChange('field', emptyLabState('field', 'field'), { field: 70 }, 'field')
+  expect(labReadouts('field', lab.values, 'field')).toMatchObject({
+    contextRetained: true,
+    spineInField: true,
+  })
+  expect(labGoalsMet(goals, lab, 'field', 'field')).toBe(false)
+  lab = labStateAfterChange('field', lab, { field: 40 }, 'field')
+  expect(labGoalsMet(goals, lab, 'field', 'field')).toBe(true)
+  // The two cannot hold at once in this geometry, which is why each is recorded when achieved.
+  for (let field = 30; field <= 100; field++)
+    expect(fieldContextCoverage(field) && !spineInField(field)).toBe(false)
 })
 
 it('timing examples hold the intended variables fixed; combined changes cannot satisfy isolated practice', () => {

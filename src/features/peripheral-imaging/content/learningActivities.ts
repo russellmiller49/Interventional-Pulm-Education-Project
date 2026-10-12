@@ -82,7 +82,8 @@ const finish = (
   {
     id: 'interpretation',
     task: 'check',
-    title: 'Interpret a changed example',
+    // A check with no image is a written scenario, and its title says so.
+    title: visual === 'case' ? 'Interpret a clinical scenario' : 'Interpret a changed example',
     presentation,
     visual,
     content: [],
@@ -104,6 +105,17 @@ const finish = (
     content: [],
   },
 ]
+
+/** Centering and the four pre-spin checks. The spin has its own button, with the scouts. */
+const CBCT_SETUP_CONTROLS = [
+  'offsetX',
+  'offsetDepth',
+  'center',
+  'target',
+  'clearance',
+  'state',
+  'protection',
+] as const
 
 /** Each section authors its own sequence. Content lives in the existing lesson/example registries. */
 const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> = {
@@ -204,7 +216,9 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Inspect a mismatch with the planning target', 'comparison'),
     compare('Capture new localization evidence', 'comparison'),
-    ...finish('comparison'),
+    // The check describes a new dependent opacity, which the section's image cannot show: it is a
+    // written scenario (owner follow-up, 2026-10-12).
+    ...finish('record', 'case'),
   ],
   projection: [
     read(
@@ -246,7 +260,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     read(
       'superimposition',
-      'Inspect superimposition on CT-derived projections',
+      'Inspect superimposition in two projections',
       ['@worked'],
       'suite',
       'comparison',
@@ -260,10 +274,14 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'collimation',
       'Keep the information the task requires',
-      ['@purpose', 'Collimate to the task'],
+      ['@purpose', 'Collimate to the task', 'Collimate the spine out of the field'],
       'suite',
       'comparison',
-      ['Baseline · full acquisition field', 'Physical collimation'],
+      [
+        'Baseline · full acquisition field',
+        'Physical collimation',
+        'Collimated to the lesion · spine out of the field',
+      ],
       ['field'],
     ),
     read(
@@ -283,7 +301,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ],
       ['crop', 'cropWidth', 'zoom'],
     ),
-    work('Collimate while retaining the planned excursion', 'comparison', 'suite', ['field']),
+    work('Collimate for the tool path, then for the lesion', 'comparison', 'suite', ['field']),
     compare('Inspect the acquisition through crop and zoom', 'comparison', [
       'crop',
       'cropWidth',
@@ -385,7 +403,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['@worked', 'Depth resolution depends on angular coverage'],
       'suite',
       'multiplanar',
-      ['Scroll through the modeled tool', 'Scroll through the modeled lesion'],
+      ['Scroll through the tool', 'Scroll through the lesion'],
       ['plane'],
     ),
     work('Review the reconstructed planes', 'multiplanar'),
@@ -414,7 +432,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ],
       'suite',
       'multiplanar',
-      ['Acquisition arc', 'Scroll through the modeled tool', 'Scroll through the modeled lesion'],
+      ['Acquisition arc', 'Scroll through the tool', 'Scroll through the lesion'],
       ['sweep', 'plane'],
     ),
     work('Distinguish reconstruction, target update and overlay', 'record', 'case'),
@@ -441,8 +459,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Two scouts · one centered', 'Both scouts centered'],
       ['offsetX', 'offsetDepth'],
     ),
-    work('Center, check and acquire the modeled volume', 'acquisition'),
-    compare('Reassess after a setup change', 'acquisition'),
+    work('Center, check and run the spin', 'acquisition', 'suite', CBCT_SETUP_CONTROLS),
+    compare('Reassess after a setup change', 'acquisition', CBCT_SETUP_CONTROLS),
     ...finish('acquisition'),
   ],
   'fixed-suite': [
@@ -469,7 +487,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Movement requires rechecking'],
       ['offsetX'],
     ),
-    work('Inspect the fixed-room setup after movement', 'acquisition'),
+    // Only what this step uses: the readiness checks and the spin belong to the CBCT section.
+    work('Inspect the fixed-room setup after movement', 'acquisition', 'suite', [
+      'acquisitionOrbit',
+      'offsetX',
+    ]),
     ...finish('record', 'case'),
   ],
   'mobile-suite': [
@@ -493,7 +515,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Preserve orientation and registration', '@worked'],
       'provenance',
     ),
-    work('Inspect the mobile scanner path with a centered setup', 'acquisition'),
+    work('Inspect the mobile scanner path with a centered setup', 'acquisition', 'suite', [
+      'acquisitionOrbit',
+      'offsetX',
+      'offsetDepth',
+      'center',
+    ]),
     ...finish('record', 'case'),
   ],
   'tool-confirmation': [
@@ -547,7 +574,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Capture a contour, then change the anatomy', 'comparison'),
     compare('Review current evidence without the old annotation', 'comparison'),
-    ...finish('comparison'),
+    // The check describes doubled edges from motion during a spin: a written scenario.
+    ...finish('record', 'case'),
   ],
   'staff-protection': [
     read(
@@ -568,9 +596,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Distance and barrier'],
       ['orbit'],
     ),
-    work('Compare distance in the idealized model', 'acquisition'),
+    work('Compare exposure at different distances', 'acquisition'),
     compare('Inspect a changed projection with a barrier', 'acquisition'),
-    ...finish('acquisition'),
+    // The check is about a hand in the primary beam, which the scatter scene does not show: a
+    // written scenario.
+    ...finish('record', 'case'),
   ],
   'dose-reporting': [
     read(

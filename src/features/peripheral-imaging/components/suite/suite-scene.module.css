@@ -728,6 +728,29 @@
     grid-row: 1;
   }
 }
+/*
+ * A workbench beside the text column on a laptop-sized window. Three columns there made each
+ * projection about 190px wide, and a collimated field inside it smaller still, so the projections
+ * and their controls take the row and the 3D view sits under them: the image being read is the
+ * large thing on screen (owner feedback, 2026-10-11: text on the left, image and controls together).
+ */
+@container suite (min-width: 48rem) and (max-width: 67.99rem) {
+  .pane[data-task-presentation='comparison'] .displays[data-image-first='true'] {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  }
+  .pane[data-task-presentation='comparison'] .displays .monitorPanel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pane[data-task-presentation='comparison'] .displays .nearImageControls {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .pane[data-task-presentation='comparison'] .displays .scenePanel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
 .pane[data-task-presentation='comparison'] .displays .monitor,
 .pane[data-task-presentation='comparison']
   .displays
@@ -845,19 +868,30 @@
   }
   .pane[data-walk-layout] .displays .scenePanel {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     align-self: start;
   }
-  /* The slider and readouts sit under the view they move, beside the image they change. */
+  /*
+   * The slider sits beside the view it moves and directly above the image it changes. Under the
+   * view it was below the fold on a 900px-tall window, which is where the walk asks for it
+   * (owner feedback, 2026-10-11).
+   */
   .pane[data-walk-layout] .displays .nearImageControls {
-    grid-column: 1;
-    grid-row: 2;
+    grid-column: 2;
+    grid-row: 1;
     align-self: start;
   }
   .pane[data-walk-layout] .displays .monitorPanel {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 2;
     align-self: start;
+  }
+  .pane[data-walk-layout] .displays .dock {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    padding: 12px;
+  }
+  .pane[data-walk-layout] .displays .readoutMeanings {
+    grid-column: 1 / -1;
   }
   /* The projections keep the size the stacked walk gave them; the view beside them is what grew. */
   .pane[data-walk-layout] .displays .monitor {
@@ -1060,5 +1094,22 @@
 .signalProfile > p.sampleCaption {
   margin: 4px 0;
   font-size: inherit;
+  color: inherit;
+}
+
+/* The acquisition context under a projection shown on its own (a fixed example, a reading step
+   with nothing to compare): the same small caption the comparison pair carries. */
+.monitorPanel [data-current-image] {
+  display: flex;
+  flex-direction: column;
+}
+.monitorPanel [data-current-image] > [data-acquisition-context] {
+  order: 1;
+  padding: 6px 12px 0;
+  font-size: 12px;
+  color: #b7cbd5;
+}
+.comparison [data-current-image] > [data-acquisition-context] {
+  padding-inline: 0;
   color: inherit;
 }

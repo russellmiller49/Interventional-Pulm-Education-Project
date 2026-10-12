@@ -2,6 +2,7 @@ import type { LabId } from '../types'
 import {
   centeredForTeaching,
   fieldContextCoverage,
+  spineInField,
   clamp,
   kapGyCm2,
   kapMicroGyM2,
@@ -63,7 +64,8 @@ const FIELD_CONTROLS: readonly LabControlSpec[] = [
     key: 'field',
     kind: 'range',
     label: 'Collimated field width',
-    min: 45,
+    // Tight enough to take the spine and most of the mediastinum out of the field around the lesion.
+    min: 30,
     max: 100,
     step: 1,
     unit: '%',
@@ -160,7 +162,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'speed',
       kind: 'range',
-      label: 'Authored tool speed',
+      label: 'Tool speed',
       min: 0,
       max: 40,
       step: 1,
@@ -172,7 +174,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'sweep',
       kind: 'range',
-      label: 'Authored DTS arc',
+      label: 'DTS arc',
       min: 20,
       max: 60,
       step: 10,
@@ -225,7 +227,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'acquisitionOrbit',
       kind: 'range',
-      label: 'Illustrative gantry rotation',
+      label: 'Gantry rotation',
       min: -100,
       max: 100,
       step: 1,
@@ -286,7 +288,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'captured',
       kind: 'action',
-      label: 'Capture the checked model setup',
+      label: 'Run the CBCT spin',
       default: false,
       patch: { captured: true },
     },
@@ -322,7 +324,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       unit: ' mm',
       default: 0,
     },
-    { key: 'slab', kind: 'toggle', label: 'Combine depths into a teaching slab', default: false },
+    { key: 'slab', kind: 'toggle', label: 'Thick slab (combine depths)', default: false },
     {
       key: 'slicesTarget',
       kind: 'action',
@@ -366,7 +368,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'shift',
       kind: 'range',
-      label: 'Authored anatomical displacement',
+      label: 'Anatomical displacement',
       min: -30,
       max: 30,
       step: 1,
@@ -377,7 +379,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'showCurrent',
       kind: 'toggle',
-      label: 'Show the current lesion position (teaching ground truth)',
+      label: 'Show the current lesion position',
       default: true,
     },
     { key: 'capture', kind: 'action', label: 'Capture a new stored contour', default: false },
@@ -386,7 +388,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'distance',
       kind: 'range',
-      label: 'Illustrative distance from patient center',
+      label: 'Distance from patient center',
       min: 1.3,
       max: 3,
       step: 0.1,
@@ -406,7 +408,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'shield',
       kind: 'toggle',
-      label: 'Place the schematic shielding barrier between patient and staff',
+      label: 'Place the shielding barrier between patient and staff',
       default: false,
     },
   ],
@@ -524,6 +526,7 @@ export type LabMetricId =
   | 'depthMm'
   | 'irradiatedAreaPct'
   | 'contextRetained'
+  | 'spineInField'
   | 'zoomAddsExposure'
   | 'pulseRate'
   | 'masPerSecond'
@@ -558,8 +561,9 @@ export interface LabMetricSpec {
 export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   separationMm: { label: 'Projected tool–lesion separation', unit: ' mm', digits: 1 },
   depthMm: { label: 'True depth offset along the X-ray path', unit: ' mm', digits: 0 },
-  contextRetained: { label: 'Modeled target, excursion and landmarks retained' },
-  irradiatedAreaPct: { label: 'Modeled irradiated area vs full field', unit: '%', digits: 0 },
+  contextRetained: { label: 'Lesion, tool path and landmarks in the field' },
+  spineInField: { label: 'Spine in the field' },
+  irradiatedAreaPct: { label: 'Irradiated area vs the open field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
   pulseRate: { label: 'Pulse rate', unit: ' pulses/s', digits: 2 },
   masPerSecond: { label: 'Tube load at fixed 20 mA', unit: ' mAs/s', digits: 2 },
@@ -570,7 +574,7 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
   centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
-  captured: { label: 'Checked model setup captured' },
+  captured: { label: 'Spin run on the checked setup' },
   windowLabel: { label: 'Side-cutting window and lesion' },
   windowIntersects: { label: 'Side-cutting window intersects the lesion' },
   windowFull: { label: 'Side-cutting window fully within the lesion' },
@@ -579,7 +583,7 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   currentShiftMm: { label: 'Current anatomy state', unit: ' mm', digits: 0 },
   contourStale: { label: 'Stored contour differs from current anatomy' },
   inverseSquareRatio: {
-    label: 'Unshielded point-source illustration vs 1 m',
+    label: 'Scatter exposure vs 1 m, unshielded',
     unit: '×',
     digits: 2,
   },
@@ -598,36 +602,37 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
   separationMm:
     'The distance on the detector between where the tool tip and the target project in this projection. Zero means they are superimposed, however far apart they are in depth.',
   depthMm:
-    'How far the tool tip sits from the target along the initial X-ray path: the depth a single projection collapses.',
+    'How far the tool tip sits from the target along the frontal X-ray path: the depth a single projection collapses.',
   irradiatedAreaPct:
-    'The collimated field’s area as a share of the full detector field, from the field width squared. Geometry, not dose.',
+    'The collimated field’s area as a share of the open field, from the field width squared. Scatter is produced in the irradiated tissue, so less area means less scatter reaching the detector.',
   contextRetained:
-    'Whether the modeled target, both numbered landmarks and the whole dashed planned excursion fall inside the field.',
+    'Whether the lesion, both numbered landmarks and the whole dashed planned tool path fall inside the field.',
+  spineInField:
+    'Whether any of the vertebral column lies inside the collimated field. With it outside, the display range and the automatic exposure control are set by the lung, the lesion and the tool.',
   zoomAddsExposure: 'Always no: display zoom re-displays acquired pixels and delivers no X-rays.',
   pulseRate: 'How often a new image is acquired.',
   masPerSecond:
-    'Pulse rate × pulse width × a fixed 20 mA: the output the tube is asked for each second. Not patient dose.',
+    'Pulse rate × pulse width × a fixed 20 mA: the output the tube is asked for each second. Tube load is not patient dose.',
   inFrameBlurMm:
-    'How far the tool travels during one pulse at the authored speed: the blur within one frame.',
+    'How far the tool travels during one pulse at the set tool speed: the blur within one frame.',
   interFrameTravelMm: 'How far the tool travels between one acquired frame and the next.',
   intervalMs: 'The time between acquired frames: one second divided by the pulse rate.',
-  sweepDeg: 'The authored angular width of the DTS arc.',
+  sweepDeg: 'The angular width of the DTS arc.',
   planeMm: 'The depth of the reconstructed plane relative to the target plane.',
-  centered: 'Whether the lesion lies within the teaching tolerance of centre on both scout images.',
-  ready: 'Centered, with every readiness check declared.',
-  captured: 'Whether the checked model setup was captured before the spin.',
-  windowLabel:
-    'Where the modeled side-cutting window lies relative to the modeled lesion: geometry only.',
-  windowIntersects: 'Whether any part of the modeled window lies inside the modeled lesion.',
-  windowFull: 'Whether the whole modeled window lies inside the modeled lesion.',
+  centered: 'Whether the lesion lies within 8 mm of center on both scout images.',
+  ready: 'Centered, with all four pre-spin checks confirmed.',
+  captured: 'Whether the spin was run on a centered, checked setup.',
+  windowLabel: 'Where the side-cutting window lies relative to the lesion.',
+  windowIntersects: 'Whether any part of the side-cutting window lies inside the lesion.',
+  windowFull: 'Whether the whole side-cutting window lies inside the lesion.',
   tipInside:
-    'Whether the modeled tip lies inside the modeled lesion, which is a different question from the window.',
+    'Whether the tip lies inside the lesion, which is a different question from the window.',
   storedShiftMm: 'The displacement at which the stored contour was captured.',
   currentShiftMm: 'The displacement the current anatomy sits at now.',
   contourStale:
     'Yes when the stored contour was captured at a different displacement from the current anatomy.',
   inverseSquareRatio:
-    'One over the distance squared, relative to one metre: the idealized point-source trend, not a staff dose.',
+    'One over the distance squared, relative to one meter: the inverse-square trend with distance. It is not a measured staff dose.',
   kapGyCm2: 'Air kerma × beam area at the chosen plane.',
   kapMicroGyM2: 'The same kerma–area product in µGy·m²: 1 Gy·cm² is 100 µGy·m².',
 }
@@ -665,6 +670,7 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         irradiatedAreaPct: (field * field) / 100,
         zoomAddsExposure: false,
         contextRetained: fieldContextCoverage(field),
+        spineInField: spineInField(field),
       }
     }
     case 'temporal': {

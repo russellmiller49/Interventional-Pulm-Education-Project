@@ -4,11 +4,11 @@ import { LESION_CENTER, LESION_RADIUS, clamp, type Point3 } from './physics'
 
 export type RayTissue = 'air' | 'lung' | 'soft' | 'bone' | 'target'
 export const RAY_TISSUES: Record<RayTissue, { label: string; color: string }> = {
-  air: { label: 'Air-like CT', color: '#8299aa' },
-  lung: { label: 'Aerated-lung-like CT', color: '#61bdbe' },
-  soft: { label: 'Soft-tissue-like CT', color: '#d28b93' },
-  bone: { label: 'Bone-like CT', color: '#ece0bd' },
-  target: { label: 'Authored target', color: '#e8b86c' },
+  air: { label: 'Air density', color: '#8299aa' },
+  lung: { label: 'Aerated-lung density', color: '#61bdbe' },
+  soft: { label: 'Soft-tissue density', color: '#d28b93' },
+  bone: { label: 'Bone density', color: '#ece0bd' },
+  target: { label: 'Lesion', color: '#e8b86c' },
 }
 export interface RaySegment {
   start: Point3

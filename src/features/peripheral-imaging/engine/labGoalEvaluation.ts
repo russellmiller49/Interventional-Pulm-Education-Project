@@ -99,6 +99,9 @@ export function emptyLabState(lab: LabId, lessonId: string): LabState {
   return { values: labDefaults(lab, lessonId), events: [] }
 }
 
+/** The collimated field width, in percent, at or below which "narrowed for the tool path" counts. */
+export const FIELD_FOR_PATH_MAX = 75
+
 const ACQUISITION_SETUP_KEYS = ['kind', 'acquisitionOrbit', 'offsetX', 'offsetDepth'] as const
 const MPR_TOOL_KEYS = ['tipX', 'tipY', 'tipZ'] as const
 
@@ -203,6 +206,18 @@ export function labStateAfterChange(
     if (typeof separation === 'number' && separation >= 10) {
       events = withEvent(events, 'separation-seen')
     }
+  }
+
+  if (lab === 'field' && touched.includes('field')) {
+    // Two things a collimated field can be asked for, at different moments of a procedure: the
+    // whole tool path while the tool advances, and the spine out of the field once it has arrived.
+    // They cannot both hold at once in this geometry, so each is recorded when it is achieved.
+    const readouts = labReadouts(lab, values, lessonId)
+    const field = labNumber(lab, values, 'field', lessonId)
+    // A real narrowing, not the first notch off the open field.
+    if (field <= FIELD_FOR_PATH_MAX && readouts.contextRetained === true)
+      events = withEvent(events, 'path-kept-collimated')
+    if (readouts.spineInField === false) events = withEvent(events, 'spine-excluded')
   }
 
   if (lab === 'temporal') {

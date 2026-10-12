@@ -210,8 +210,7 @@ export interface ImagingSuitePaneProps {
   readonly onLabChange: (patch: LabValues) => void
   readonly onLabReset: () => void
   readonly controlsEnabled: boolean
-  /** Printed on the scene when the controls are locked (deciding) or paused (looking back). */
-  readonly lockedReason?: string
+  /** Printed on the scene when the controls are put away because the learner is looking back. */
   readonly pausedReason?: string
   readonly goals: readonly { readonly goal: LabGoal; readonly met: boolean }[]
   /** `chainCaption(view.litStop)`, printed verbatim. */
@@ -221,6 +220,12 @@ export interface ImagingSuitePaneProps {
   readonly spotlightKey?: string
   /** Learn keeps independent geometry/answer cues separate from foundational teaching. */
   readonly independent?: boolean
+  /**
+   * The host can change the image by something other than a dock control — a demonstration with
+   * more than one example. With neither that nor a control, the monitor shows one image and offers
+   * no baseline to compare it with.
+   */
+  readonly comparable?: boolean
   readonly onRepresentationReady?: (ready: boolean) => void
   readonly children?: ReactNode
 }

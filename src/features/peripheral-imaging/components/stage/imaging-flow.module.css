@@ -218,12 +218,17 @@
   color: #bed1d4;
   font-size: 0.95rem;
 }
+/*
+ * The task: the text column, then the image it is read against (owner feedback, 2026-10-11).
+ * Side by side the text is on the left; stacked it is on top. The text column is never an empty
+ * box: a step with nothing to say there renders nothing.
+ */
 .task {
   max-width: var(--imaging-flow-max);
   margin: auto;
   padding: 0 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 1.65fr);
   gap: 1.5rem;
   align-items: start;
 }
@@ -256,6 +261,13 @@
   border-radius: 0.75rem;
   background: #102930;
 }
+.explanation:empty {
+  display: none;
+}
+/* A guard, not a layout: no rule below may leave a text-column gutter beside the image. */
+.course .task:has(> .explanation:empty) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
 .explanation h3 {
   font-size: 1rem;
   line-height: 1.4;
@@ -276,10 +288,9 @@
 .course[data-presentation='multiplanar'] .explanation {
   max-width: 900px;
   width: 100%;
-  justify-self: center;
 }
 .course[data-presentation='record'] .task {
-  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 1.1fr);
 }
 .evidence:empty {
   display: none;
@@ -482,15 +493,24 @@
 .taskHeading {
   scroll-margin-top: calc(var(--site-header-height, 4rem) + 7rem);
 }
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .task {
+/*
+ * A hands-on step. Its text column is the task: what to do, ticked off as it is done. It is a short
+ * list, so it takes a narrow column and the workbench takes the rest; below that width it sits
+ * above the workbench.
+ */
+.course:is([data-task-kind='act'], [data-task-kind='observe']) .task:has(.evidence:not(:empty)) {
   grid-template-columns: minmax(0, 1fr);
 }
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation {
-  order: -1;
-  padding: 0.5rem 0.85rem;
-}
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation:has([data-walk-stop]) {
-  order: initial;
+/* The multiplanar workbench is three planes and their controls in a row: it needs the full width
+   until the window is wide, so its task sits above it on a laptop. */
+@media (min-width: 1180px) {
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(17rem, 20rem) minmax(0, 1fr);
+  }
 }
 @media (max-width: 700px) {
   .header {
@@ -544,8 +564,32 @@
   grid-template-columns: minmax(0, 1fr);
   max-width: var(--imaging-flow-max);
 }
-.course[data-presentation='comparison'] .task:has([data-suite-scene]) .explanation {
-  order: initial;
+/*
+ * From here the workbench beside a text column is still wide enough for its two projections and
+ * its controls in one row (`suite-scene.module.css`, the `suite` container at 48rem).
+ */
+@media (min-width: 1180px) {
+  .course[data-presentation='comparison']:not([data-chrome-pinned='false'])
+    .task:has([data-suite-scene]) {
+    grid-template-columns: minmax(20rem, 22rem) minmax(0, 1fr);
+  }
+}
+
+/*
+ * A check: the question and its choices are the text column, so it gets a reader's width and the
+ * fixed example image sits beside it. The multiplanar examples need the full row for their planes.
+ */
+@media (min-width: 1001px) {
+  .course:is([data-task-kind='check'], [data-task-kind='transfer']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 1.2fr);
+  }
+}
+.course[data-task-kind='check'][data-presentation='multiplanar'] .task:has(.evidence:not(:empty)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /*
@@ -564,17 +608,25 @@
  * the walk is one readable column again, the scene first and its text under it.
  */
 @media (min-width: 1001px) {
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .task {
-    grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 1.65fr);
   }
-  .course[data-step-kind='walk'] .explanation,
-  .course[data-step-kind='walk'] .explanation:has([data-walk-stop]) {
-    order: initial;
+  .course[data-step-kind='walk'] .explanation {
     padding: 0.85rem 1rem;
   }
 }
-@media (min-width: 1001px) and (min-height: 700px) {
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .explanation {
+/*
+ * The task list of a hands-on step stays beside the workbench while the workbench is scrolled, the
+ * way the walk's text does.
+ */
+@media (min-width: 1180px) and (min-height: 700px) {
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty))
+    .explanation {
     position: sticky;
     top: calc(
       var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem)) + 0.5rem
@@ -633,10 +685,32 @@
   .header > div:first-child > h1 {
     grid-column: 1 / -1;
   }
-  .course[data-presentation='comparison'] .task:has([data-suite-scene]) {
-    grid-template-columns: minmax(0, 2.5fr) minmax(22rem, 1fr);
+  .course[data-presentation='comparison']:not([data-chrome-pinned='false'])
+    .task:has([data-suite-scene]) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.5fr);
   }
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .task {
-    grid-template-columns: minmax(0, 2.6fr) minmax(22rem, 1fr);
+  .course[data-presentation='multiplanar'] .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.5fr);
+  }
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
+  }
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.6fr);
+  }
+}
+@media (min-width: 1500px) and (min-height: 700px) {
+  .course[data-presentation='multiplanar']:is(
+      [data-task-kind='act'],
+      [data-task-kind='observe']
+    ):not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty))
+    .explanation {
+    position: sticky;
+    top: calc(
+      var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem)) + 0.5rem
+    );
   }
 }

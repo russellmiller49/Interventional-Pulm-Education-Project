@@ -157,7 +157,7 @@ export const QUESTIONS: Question[] = [
       ],
       [
         'It remains constant under these conditions.',
-        'Tube current × pulse width × pulse rate is the same. There are fewer images per second and more motion within each pulse; this exercise does not calculate patient dose.',
+        'Tube current × pulse width × pulse rate is the same. There are fewer images per second and more motion within each pulse. Tube load is not patient dose.',
       ],
     ],
     'Reducing pulse rate alone does not establish dose reduction or adequate temporal resolution.',
@@ -476,12 +476,12 @@ export const QUESTIONS: Question[] = [
   item(
     'case-5',
     'verify',
-    'In the course’s modeled needle design, the tip lies beyond a spherical lesion, and thin reformats place part of the side-cutting window inside it. Which documentation is most accurate?',
+    'The needle tip lies beyond a spherical lesion, and thin reformats place part of the needle’s side-cutting window inside the lesion. Which documentation is most accurate?',
     'a',
     [
       [
         'The side-cutting window partly intersects the lesion in this acquisition.',
-        'This states the component and extent the images demonstrate. Diagnostic adequacy and safety remain separate judgments for the real tool.',
+        'This states the component and extent the images demonstrate. Diagnostic adequacy and safety remain separate judgments.',
       ],
       [
         'The needle tip is in the lesion because the window intersects it.',
@@ -595,12 +595,12 @@ export const QUESTIONS: Question[] = [
   item(
     'case-5-v2',
     'verify',
-    'Linked thin axial, coronal and sagittal planes from a CBCT spin show the modeled lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
+    'Linked thin axial, coronal and sagittal planes from a CBCT spin show the lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
     'a',
     [
       [
-        'The side-cutting window partly intersects the modeled lesion in this acquisition; the tip lies beyond it.',
-        'Follow the tool, not the streak. The part that acquires tissue is the side-cutting window, not the tip. Here the linked thin planes show the window partly inside the modeled lesion and the tip beyond it; document that, in that acquisition.',
+        'The side-cutting window partly intersects the lesion in this acquisition; the tip lies beyond it.',
+        'Follow the tool, not the streak. The part that acquires tissue is the side-cutting window, not the tip. Here the linked thin planes show the window partly inside the lesion and the tip beyond it; document that, in that acquisition.',
       ],
       [
         'The needle tip is in the lesion, since part of the needle crosses it.',
@@ -611,7 +611,7 @@ export const QUESTIONS: Question[] = [
         'It is careful about adequacy, but “the needle is in the lesion” loses what the images show: which part of the tool, and how much of it. That is what the note needs.',
       ],
     ],
-    'Document which part of the biopsy tool is in the lesion, and in which acquisition. Tool-in-lesion confirmation does not guarantee diagnostic tissue, and a model intersection is not a clinical safety decision.',
+    'Document which part of the biopsy tool is in the lesion, and in which acquisition. Tool-in-lesion confirmation does not guarantee diagnostic tissue, and it is not a decision that sampling is safe.',
     ['setser', 'confirm'],
   ),
   item(
@@ -948,7 +948,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'The lesion margin on these planes comes from another acquisition, since the catheter is absent from them.',
-        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
+        'In this example the projection is the current acquisition and shows the catheter, while the three planes match the planning CT and show no catheter. Planes reconstructed from this acquisition would show that catheter, at least blurred on the planes near its depth. So, here, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
       ],
       [
         'The catheter is too thin to appear on these planes, so the lesion margin comes from this DTS acquisition.',
@@ -959,7 +959,7 @@ export const QUESTIONS: Question[] = [
         'Registration drift does occur, but a shift moves the catheter and the anatomy around it together, because one set of projections drew both. The planes that show that anatomy would show the catheter, and waiting for a refreshed registration cannot add a catheter those planes never contained.',
       ],
     ],
-    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this teaching case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
+    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
     ['saad', 'pritchett'],
   ),
   item(

@@ -7,6 +7,7 @@ import {
   labReadouts,
   labValue,
   formatReadout,
+  type LabControlSpec,
   type LabMetricId,
 } from '../../engine/labMetrics'
 import { controlElementId, type ImagingSuitePaneProps } from './types'
@@ -37,19 +38,47 @@ const MODEL_KEYS = new Set([
   'area',
 ])
 
-export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: ReadonlySet<string> }) {
+/**
+ * The controls a view puts in its dock: the lab's controls, narrowed to the ones the step names.
+ * The scene asks the same question to decide whether a step has anything to compare, so a control
+ * and the affordances that depend on it cannot disagree.
+ */
+export function visibleLabControls(
+  view: ImagingSuitePaneProps['view'],
+  independent = false,
+): readonly LabControlSpec[] {
+  if (!view.lab) return []
+  return LAB_CONTROLS[view.lab].filter(
+    (c) =>
+      (!view.controls || view.controls.includes(c.key)) && (!independent || !MODEL_KEYS.has(c.key)),
+  )
+}
+
+export function LabDock(
+  props: ImagingSuitePaneProps & {
+    /**
+     * The step has handed the controls to nobody: a check holds its image fixed, or the learner is
+     * looking back. They are left out rather than drawn disabled (owner feedback, 2026-10-11: a
+     * slider that does nothing reads as a broken slider). The pane's reason line says why.
+     */
+    controlsWithheld?: boolean
+  },
+) {
   const { view, lab, onLabChange, controlsEnabled, spotlightKey } = props
   const readouts = view.lab ? labReadouts(view.lab, lab.values, view.sectionId) : {}
   const metricIds = props.independent
     ? []
     : (view.readouts ?? (Object.keys(readouts) as LabMetricId[]))
-  const controls = view.lab
-    ? LAB_CONTROLS[view.lab].filter(
-        (c) =>
-          (!view.controls || view.controls.includes(c.key)) &&
-          (!props.independent || !MODEL_KEYS.has(c.key)),
+  const controls = props.controlsWithheld
+    ? []
+    : visibleLabControls(view, props.independent).filter(
+        (control) =>
+          // The crop width does nothing until the crop is on, so it appears with the crop.
+          (control.key !== 'cropWidth' ||
+            labValue(view.lab!, lab.values, 'crop', view.sectionId) === true) &&
+          // The CBCT spin has one button, with the scouts it acts on (`ConeBeamPanels`).
+          control.key !== 'captured',
       )
-    : []
   // Report 3.8: several readouts update together, and nothing said which of them the last control
   // change had moved. A readout is marked from the change that moved it until the next change; it
   // is a statement about the display, and no value, unit or formula is touched.
@@ -74,38 +103,35 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
     if (!spotlightKey) return
     document.getElementById(controlElementId(spotlightKey))?.focus({ preventScroll: true })
   }, [spotlightKey])
+  // Nothing to adjust and nothing to read out: no dock, rather than an empty card under the image.
+  if (controls.length === 0 && metricIds.length === 0 && view.lab !== 'temporal') return null
   return (
     <div className={styles.dock} data-lab-dock>
-      {/* Report 2.13 (fellow walkthrough, PDF p.21/p.27): the step's checklist was printed in the
-          explanation column, which the comparison workbench puts below the fold, while the footer
-          said "the changes listed below". It is the list of what these controls are for, so it
-          leads the dock that holds them. */}
-      {props.goals.length > 0 && (
-        <div className={styles.goalBlock} data-dock-goals>
-          <p className={styles.goalHeading}>What to do in this step</p>
-          <LabGoals goals={props.goals} />
-        </div>
-      )}
+      {/* The step's checklist is in the text column beside the image, with what to do and what to
+          watch (owner feedback, 2026-10-11). The dock holds the controls and what they read out. */}
       {view.lab && controls.length > 0 && (
         <fieldset className={styles.controls} disabled={!controlsEnabled} data-suite-controls>
-          <legend>Image controls</legend>
-          {view.lab === 'acquisition' && (
-            <p data-learner-declared>
-              Checklist confirmations are learner-declared. This scene does not detect collisions or
-              verify clinical safety.
+          <legend>Controls</legend>
+          {controls.some((control) => control.key === 'clearance') && (
+            <p data-pre-spin-checks>
+              Tick each check as you would call it out with the team before a spin.
             </p>
           )}
           {[false, true].map((model) => {
             const group = controls.filter((c) => MODEL_KEYS.has(c.key) === model)
+            // The two groups are named only where both are present; one group under a second
+            // heading is a heading with nothing to tell apart.
+            const named = controls.some((c) => MODEL_KEYS.has(c.key) !== model)
             return group.length ? (
               <fieldset
                 key={String(model)}
                 className={styles.controlGroup}
                 data-model-controls={model ? 'true' : undefined}
+                aria-label={
+                  named ? undefined : model ? 'Scenario controls' : 'Imaging and display controls'
+                }
               >
-                <legend>
-                  {model ? 'Teaching-model adjustments' : 'Imaging and display controls'}
-                </legend>
+                {named ? <legend>{model ? 'Scenario' : 'Imaging and display'}</legend> : null}
                 {group.map((control) => {
                   const id = controlElementId(control.key)
                   const current = labValue(view.lab!, lab.values, control.key, view.sectionId)
@@ -168,10 +194,6 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
                         <button
                           id={id}
                           type="button"
-                          disabled={
-                            (control.key === 'captured' && readouts.ready !== true) ||
-                            props.disabledControls?.has(control.key)
-                          }
                           onClick={() => onLabChange({ [control.key]: true })}
                         >
                           {control.label}
@@ -184,7 +206,7 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
             ) : null
           })}
           <button type="button" onClick={props.onLabReset}>
-            Reset this model
+            Reset controls
           </button>
         </fieldset>
       )}
@@ -193,8 +215,8 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
         <p data-tube-load-note>
           Tube load at a fixed 20 mA is pulse rate × pulse width × current: the output the tube is
           asked for each second. Halving the pulse rate while the pulse doubles leaves it unchanged,
-          which is why a lower pulse rate alone does not mean less output. It is not patient dose.
-          Pulse width may be system-selected or mode-dependent, and no image-lag model is included.
+          which is why a lower pulse rate alone does not mean less output. Tube load is not patient
+          dose. On many systems the pulse width is selected by the system for the mode.
         </p>
       )}
       <dl className={styles.readouts} data-readouts>

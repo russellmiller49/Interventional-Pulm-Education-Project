@@ -33,11 +33,11 @@ export function SignalReadout({
       {/* Report 3.6: what the strip is and what to conclude from it, from the ray profile that
           computes it. The model names density classes, not organs. */}
       <p data-ray-meaning>
-        One X-ray path from the tube through the target to the detector, split into the CT density
-        classes it crosses and how many millimetres of each. A long soft-tissue-like or bone-like
-        stretch means dense structure shares this path with the target in this projection; the model
-        does not name the organ. Rotate the C-arm and watch that length fall as the target ray
-        clears dense anatomy.
+        One X-ray path from the tube through the lesion to the detector, split by tissue density,
+        with the millimeters of each. A long stretch of soft-tissue or bone density means a dense
+        structure shares this path with the lesion in this projection. Rotate the C-arm and watch
+        that length fall as the path clears dense anatomy. The strip shows density, not which organ
+        it is.
       </p>
       {profile ? (
         <>

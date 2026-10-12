@@ -90,7 +90,7 @@ describe('reports CW3, O2, 1.1/6.1, 1.8, 4.4, 4.6 — every term the walkthrough
       for (const sourceId of term.provenance.sourceIds)
         expect(SOURCE_BY_ID.has(sourceId)).toBe(true)
       const label = glossaryProvenanceLabel(term)
-      expect(label).toMatch(/^Written for this course from \S/)
+      expect(label).toMatch(/^Based on \S/)
       expect(label).not.toMatch(/draft|awaiting|review/i)
     }
   })
@@ -369,14 +369,12 @@ describe('reports 3.3, 4.4, 2.14 and 2.11 — the rule or the worked example lea
     }
   })
 
-  it('calls the lesion a modeled lesion in the sampling readouts, not a sphere (report 6.3)', () => {
-    expect(windowRelationship([10, 0, 0]).label).toBe(
-      'Sampling window fully within the modeled lesion',
-    )
+  it('calls the lesion a lesion in the sampling readouts, not a sphere (report 6.3)', () => {
+    expect(windowRelationship([10, 0, 0]).label).toBe('Sampling window fully within the lesion')
     expect(windowRelationship([20, 0, 0]).label).toBe(
-      'Sampling window partly intersects the modeled lesion',
+      'Sampling window partly intersects the lesion',
     )
-    expect(windowRelationship([-5, 0, 0]).label).toBe('Sampling window outside the modeled lesion')
+    expect(windowRelationship([-5, 0, 0]).label).toBe('Sampling window outside the lesion')
     // The geometry is untouched.
     expect(windowRelationship([10, 0, 0])).toMatchObject({
       full: true,
@@ -432,15 +430,18 @@ describe('report CW2 — caveats are classed, and only the repeated general one 
     }
   })
 
-  it('says "modeled" where the demonstrations said "fictional", and keeps the not-a-real-device limits', () => {
+  it('names the lesion and the tools plainly in every demonstration, and keeps the needle limit once', () => {
+    // Owner direction, 2026-10-11: builder words ("fictional", "modeled", "teaching model") are not
+    // learner copy. The one limit a learner could mistake for a real needle stays, in the glossary.
     for (const id of peripheralImagingSectionIds) {
       for (const example of teachingDemonstration(id)?.examples ?? []) {
-        expect(example.title).not.toMatch(/fictional/i)
-        expect(example.look).not.toMatch(/fictional/i)
+        expect(example.title).not.toMatch(/fictional|model(ed|led)?\b/i)
+        expect(example.look).not.toMatch(/fictional|model(ed|led)?\b/i)
       }
     }
-    const sampling = teachingDemonstration('tool-confirmation')!.examples
-    expect(sampling.some((e) => /do not describe a real device/.test(e.look))).toBe(true)
+    expect(glossaryTerm('side-cutting-window').definition).toMatch(
+      /does not reproduce a particular needle/,
+    )
   })
 })
 
@@ -470,8 +471,8 @@ describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first
       (c) => c.id === 'a',
     )!.rationale
     expect(rationale).not.toMatch(/module never grants/)
-    expect(rationale).toMatch(/cannot clear a biopsy/)
-    expect(rationale).toMatch(/procedure team/)
+    // Teaching-first rules: the rationale is the imaging limit, with no statement about the course.
+    expect(rationale).toMatch(/remain unconfirmed, and required image context is missing/)
     expect(INTERPRETATION_CHECKS['two-dimensional']!.correct).toBe('c')
   })
 
@@ -502,6 +503,6 @@ describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first
     expect(cbct.analogy).toMatch(/projections from a wide rotation/)
     expect(cbct.analogy).not.toMatch(/nothing.*inferred/)
     expect(glossaryTerm('iterative-reconstruction').definition).not.toMatch(/until they agree/)
-    expect(DOSE_QUANTITIES.find((row) => row.id === 'kap')?.tells).toMatch(/uniform free-air field/)
+    expect(DOSE_QUANTITIES.find((row) => row.id === 'kap')?.tells).toMatch(/uniform field in air/)
   })
 })

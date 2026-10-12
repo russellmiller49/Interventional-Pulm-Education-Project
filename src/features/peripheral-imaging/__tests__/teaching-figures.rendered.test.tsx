@@ -10,7 +10,8 @@ import {
   targetRayGeometry,
   TOOL_VIEW_FRAME,
 } from '../components/figures/teachingFigureModel'
-import { SignalComparison, TeachingPanels } from '../components/stage/TeachingPanels'
+import { ConspicuityPair } from '../components/figures/CheckImages'
+import { TeachingPanels } from '../components/stage/TeachingPanels'
 import {
   FIXED_MOBILE_COMPARISON,
   REMOVED_ORGANIZATIONAL_SUGGESTIONS,
@@ -123,12 +124,15 @@ describe('the teaching figures are declared data and validate at import', () => 
     )
   })
 
-  it('names every simulated panel as simulated and every placeholder as having no image', () => {
+  it('captions every panel with what it shows, in plain words', () => {
+    // Teaching-first rules (2026-10-08) and owner direction (2026-10-11): no per-panel "simulated"
+    // or "no image here" label. A text-only panel is still declared as one, and draws nothing.
     for (const declaration of teachingFigureDeclarations())
       for (const panel of declaration.panels) {
-        if (panel.medium === 'simulated-on-model')
-          expect(`${panel.title} ${panel.caption}`).toMatch(/simulated|drawn|drawing/i)
-        if (panel.medium === 'placeholder') expect(panel.caption).toMatch(/^No image here/)
+        expect(`${panel.title} ${panel.caption}`).not.toMatch(
+          /simulated|teaching model|model(ed|led)?\b|No image here/i,
+        )
+        expect(panel.caption.trim().length).toBeGreaterThan(30)
       }
   })
 
@@ -150,7 +154,7 @@ describe('the teaching figures are declared data and validate at import', () => 
 })
 
 describe('OD4-06 · Section 6 compares three causes on the course’s CT', () => {
-  it('shows the CT-derived set on the reading steps and keeps the check’s fixed Images A and B', async () => {
+  it('shows the CT-derived set on the reading steps and the check’s Images A and B from the same CT', async () => {
     render(<TeachingPanels sectionId="signal" />)
     expect(document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')).not.toBeNull()
     expect(document.querySelector('[data-signal-comparison]')).toBeNull()
@@ -159,28 +163,35 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     const check = document.querySelector('[data-signal-comparison]')!
     expect(check).toHaveTextContent('Image A')
     expect(check).toHaveTextContent('Image B')
+    // Owner feedback, 2026-10-11: the two images are projections of the course's CT, not drawings,
+    // and carry no note about what a drawing does not calculate.
+    expect(check.querySelectorAll('canvas')).toHaveLength(2)
+    expect(check).not.toHaveTextContent(/conceptual|drawing|do not calculate/i)
     // Review status is project metadata and does not render (teaching-first rules, 2026-10-08).
-    expect(check).toHaveTextContent('Matched conceptual images')
     expect(check.querySelector('[data-draft-status]')).toBeNull()
     expect(check).not.toHaveTextContent(/draft/i)
     expect(document.querySelector('[data-teaching-figure]')).toBeNull()
     cleanup()
-    render(<SignalComparison />)
+    render(<ConspicuityPair />)
     expect(document.querySelectorAll('[data-signal-comparison] button')).toHaveLength(0)
   })
 
-  it('labels the model and each simulated effect, and prints the ray numbers it computed', async () => {
+  it('captions the set and each effect plainly, and prints the ray numbers it computed', async () => {
     render(<ConspicuityComparison />)
     await ready('[data-teaching-figure="signal:conspicuity-set"]')
     const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
-    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(/^Teaching model:/)
-    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(/no panel is a dose level/)
-    expect(figure.querySelector('[data-figure-panel="noise"]')).toHaveTextContent('simulated')
-    expect(figure.querySelector('[data-figure-panel="scatter"]')).toHaveTextContent(
-      /does not calculate scatter/,
+    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(
+      'One frontal projection of the same chest, changed one way in each panel.',
     )
+    expect(figure.querySelector('[data-figure-panel="noise"]')).toHaveTextContent(
+      /square root of the photon count/,
+    )
+    expect(figure.querySelector('[data-figure-panel="scatter"]')).toHaveTextContent(
+      /scatter adds a uniform veil/,
+    )
+    expect(figure.textContent).not.toMatch(/simulated|teaching model|model(ed|led)?\b/i)
     expect(figure.querySelector('[data-ray-readout]')).toHaveTextContent(
-      /C-arm obliquity is −20° \(detector toward the patient’s left\)\. Soft-tissue-like CT on the ray through the lesion: \d+ mm frontal, \d+ mm at −20°\./,
+      /C-arm obliquity is −20° \(detector toward the patient’s left\)\. Soft-tissue density on the ray through the lesion: \d+ mm frontal, \d+ mm at −20°\./,
     )
     expect(figure.textContent).not.toMatch(/\b(LAO|RAO)\b/)
     expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(4)
@@ -198,7 +209,7 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     expect(changed).toBeLessThan(frontal)
     const note = figure.querySelector('[data-later-example-note]')
     expect(note).toHaveTextContent(
-      'This −20° comparison shortens the model’s soft-tissue path on the target ray; the later −35° example shows a different pattern, with the overlap redistributed along the ray.',
+      'At −20° the ray through the lesion crosses less soft tissue; the later −35° example shows a different pattern, with the overlap redistributed along the ray.',
     )
     expect(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY).toBe(-35)
     expect(note!.textContent).not.toMatch(/best|optimal|ideal|recommend|always|should|choose/i)
@@ -206,7 +217,7 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
 })
 
 describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion or opacity', () => {
-  it('has one model image and two text placeholders that say why', async () => {
+  it('has one image and two panels described in words', async () => {
     render(<ArtifactCauseStrip />)
     await ready('[data-teaching-figure="changing-anatomy:artifact-strip"]')
     const figure = document.querySelector(
@@ -218,7 +229,7 @@ describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion 
       const panel = figure.querySelector(`[data-figure-panel="${id}"]`)!
       expect(panel).toHaveAttribute('data-panel-medium', 'placeholder')
       expect(panel.querySelector('canvas, svg, img')).toBeNull()
-      expect(panel).toHaveTextContent(/No image here/)
+      expect(panel).toHaveTextContent(/^.*Look for /)
     }
     expect(figure.querySelector('[data-truncation-readout]')).toHaveTextContent(
       /about half of it lies inside the volume/,
@@ -240,7 +251,7 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
     expect(convention).toHaveTextContent(
       /positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation/,
     )
-    expect(convention).not.toHaveTextContent(/held for owner review/)
+    expect(convention).not.toHaveTextContent(/held for owner review|model’s own/)
     // Beam lines carry signed model values; the strip and tilt tables carry the same set.
     expect(
       [...figure.querySelectorAll('[data-beam-line]')].map((line) =>
@@ -364,7 +375,7 @@ describe('OD4-09 · the fixed/mobile comparison and the equalised field', () => 
       expect(numbered[0]).toHaveTextContent(PI_NUMBERS.value(id))
     expect(cells).not.toMatch(/better|superior|inferior|equivalent|always|never has/i)
     expect(table.querySelector('[data-model-note]')).toHaveTextContent(
-      /draw the same detector field and the same field of view; they differ only in how they are mounted/,
+      /drawn here with the same detector field and the same field of view; only the mounting differs/,
     )
   })
 

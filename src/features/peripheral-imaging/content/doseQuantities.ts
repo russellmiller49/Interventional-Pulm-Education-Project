@@ -38,7 +38,7 @@ export const DOSE_QUANTITIES: readonly DoseQuantityRow[] = [
     id: 'kap',
     name: 'Kerma–area product (KAP, also called DAP)',
     unit: 'Gy·cm²',
-    tells: `Air kerma integrated over the beam area. In this model’s uniform free-air field, it is air kerma multiplied by area and is equal at the two displayed planes. Published navigation bronchoscopy totals: ${n('mobile-cbct-total-dap')} in one mobile CBCT series and ${n('confirm-dap')} in CONFIRM.`,
+    tells: `Air kerma integrated over the beam area. For a uniform field in air, it is air kerma multiplied by area, and it is the same at the two planes shown. Published navigation bronchoscopy totals: ${n('mobile-cbct-total-dap')} in one mobile CBCT series and ${n('confirm-dap')} in CONFIRM.`,
     doesNot:
       'It is not skin dose or organ dose, and AAPM MPPG 12.a sets no action level in it. Collimation can lower it while automatic exposure regulation raises the air kerma in the remaining field.',
     sourceIds: ['wabip', 'aapm12', 'tg125'],

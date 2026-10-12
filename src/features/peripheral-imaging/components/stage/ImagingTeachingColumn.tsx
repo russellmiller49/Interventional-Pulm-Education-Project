@@ -56,7 +56,9 @@ export function ImagingTeachingColumn({
         <p data-check-prompt>
           {activity.visual === 'case'
             ? 'Choose the interpretation the written scenario supports.'
-            : 'Choose the interpretation this image and its acquisition context support.'}{' '}
+            : activity.visual === 'dose'
+              ? 'Choose the entry the procedure record supports.'
+              : 'Choose the interpretation this image and its acquisition context support.'}{' '}
           You can show the explanation first, reread the section’s teaching, or continue without
           answering.
         </p>
@@ -72,6 +74,9 @@ export function ImagingTeachingColumn({
       </div>
     )
   }
+  // A hands-on step authors no reading: its text column is the task card the host renders, and an
+  // empty panel here would be an empty box beside the image.
+  if (activity.content.length === 0) return null
   return (
     <div className={styles.teaching} data-teaching-panel>
       {activity.content.map((ref) => (

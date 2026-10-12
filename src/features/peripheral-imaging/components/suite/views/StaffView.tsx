@@ -104,18 +104,16 @@ export function StaffPanels({ inputs }: { inputs: SuiteInputs }) {
         throughout. Rotate the C-arm and watch the contours lean toward the tube side.
       </p>
       <p>
-        Floor contours show a relative 1/r² trend around the irradiated volume. Their shape has an
-        assumed tube-side weighting; orientation moves the same gantry shown in the suite.
+        Floor contours show the 1/r² fall-off around the irradiated volume. They lean toward the
+        tube side, where scatter is often higher, and follow the C-arm as it rotates.
       </p>
       <p>
-        The numerical ratio compares horizontal distance in the schematic floor plan. Angular
-        weighting and the barrier are separate visual illustrations.
+        The ratio in the readout reflects distance alone; it does not change with the C-arm angle or
+        the barrier.
       </p>
       <p>
-        Nominal contour radii: 1, 1.5, 2 and 3 m.{' '}
-        {inputs.barrier
-          ? 'Gray dashed portions mark a geometric shadow; no attenuation value is assigned.'
-          : 'The unshielded contours provide the geometric comparison.'}
+        Contour radii: 1, 1.5, 2 and 3 m.
+        {inputs.barrier ? ' Gray dashed portions lie in the shadow of the barrier.' : ''}
       </p>
     </section>
   )

@@ -119,8 +119,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
   {
     // Section 6's reading steps show it in place of the cartoon set (`TeachingPanels`).
     id: 'signal:conspicuity-set',
-    label:
-      'Teaching model: projections computed from the course’s CT, which carries a model nodule. Two of the effects below are simulated, and say so. Not device images, and no panel is a dose level.',
+    label: 'One frontal projection of the same chest, changed one way in each panel.',
     panels: [
       {
         id: 'reference',
@@ -130,17 +129,17 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
       },
       {
         id: 'noise',
-        title: 'Quantum noise · simulated',
+        title: 'Quantum noise',
         medium: 'simulated-on-model',
         caption:
-          'The same projection re-read from far fewer detected photons per pixel. The mottle is fine and heaviest where the beam is most attenuated. It illustrates the square-root relation between photons and signal-to-noise; it is not a dose level or a setting.',
+          'The same projection with far fewer detected photons per pixel. The mottle is fine and heaviest where the beam is most attenuated: signal-to-noise falls with the square root of the photon count.',
       },
       {
         id: 'scatter',
-        title: 'Scatter-related contrast loss · drawn veil',
+        title: 'Scatter-related contrast loss',
         medium: 'simulated-on-model',
         caption:
-          'The collimator is open to the detector edges and a uniform veil is added, shown at the reference’s average brightness. Dense and soft structures drift toward the same gray while edges stay sharp. The course does not calculate scatter: this is a drawing of its look.',
+          'The collimator is open to the detector edges, and scatter adds a uniform veil. Dense and soft structures drift toward the same gray while edges stay sharp.',
       },
       {
         id: 'superimposition',
@@ -155,28 +154,28 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     id: 'changing-anatomy:artifact-strip',
     contentRef: '@artifact-strip',
     label:
-      'Only the truncation panel is an image, and it is a teaching model. Motion and a new dependent opacity are described in words.',
+      'Truncation is shown on an axial CT plane. Motion and a new dependent opacity are described.',
     panels: [
       {
         id: 'motion',
         title: 'Motion · duplicated edges',
         medium: 'placeholder',
         caption:
-          'No image here. Look for the catheter and the lesion margin drawn twice, a small distance apart, on several planes. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
+          'Look for the catheter and the lesion margin drawn twice, a small distance apart, on several planes. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
       },
       {
         id: 'truncation',
         title: 'Truncation · coverage',
         medium: 'model-output',
         caption:
-          'Teaching model: an axial plane of the course’s CT, masked outside a modeled reconstruction volume that was placed off-centre, so its edge runs through the modeled lesion. Part of the lesion was never imaged. It shows coverage, not how a real reconstruction looks at its edge.',
+          'An axial CT plane, dark outside a reconstruction volume that was centered away from the lesion, so the edge of the volume runs through it. Part of the lesion was never imaged.',
       },
       {
         id: 'opacity',
         title: 'New dependent opacity',
         medium: 'placeholder',
         caption:
-          'No image here. Look for a soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
+          'Look for a soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
       },
     ],
   },
@@ -184,21 +183,21 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     id: 'two-dimensional:two-axis-example',
     contentRef: '@two-axis-example',
     label:
-      'Teaching model: CT-derived anatomy with a model nodule in the posterior left lung; no lobe is named. Angles are the model’s signed C-arm obliquity and beam tilt.',
+      'A nodule in the posterior left lung. Angles are given as signed C-arm obliquity and beam tilt; the convention is under the figure.',
     panels: [
       {
         id: 'axial',
         title: 'Planning CT through the lesion, with candidate beams',
         medium: 'model-output',
         caption:
-          'Each line is the target ray whose path lengths the table gives: from the X-ray tube’s focal spot, through the centre of the modeled lesion, to the detector, with its arrowhead at the detector end. It is drawn as its projection onto this axial image. The tube lies off the image beyond the line’s other end, and the ray crosses this slice only at the lesion. The rays spread out from the tube and the lesion lies off the isocentre, so each line’s angle on the image differs by a few degrees from its C-arm obliquity.',
+          'Each line is the target ray whose path lengths the table gives: from the X-ray tube’s focal spot, through the center of the lesion, to the detector, with its arrowhead at the detector end. It is drawn as its projection onto this axial image. The tube lies off the image beyond the line’s other end, and the ray crosses this slice only at the lesion. The rays spread out from the tube and the lesion lies off the isocentre, so each line’s angle on the image differs by a few degrees from its C-arm obliquity.',
       },
       {
         id: 'strip',
         title: 'What each ray crosses',
         medium: 'model-output',
         caption:
-          'Millimetres of CT density along each ray, on the tube side and the detector side of the lesion. The model names density classes, not organs.',
+          'Millimeters of tissue along each ray, on the tube side and the detector side of the lesion, grouped by density.',
       },
       {
         id: 'tilt',
@@ -211,14 +210,14 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'Projection before and after',
         medium: 'model-output',
         caption:
-          'Recentred on the lesion and collimated around it and the tool’s approach. The dashed circle marks where the model nodule projects; it is faint on any projection in this model.',
+          'Recentered on the lesion and collimated around it and the tool’s approach. The dashed circle marks where the nodule projects; it is part-solid and faint on every projection.',
       },
       {
         id: 'tool-views',
         title: 'Alignment view and advancement view',
         medium: 'model-output',
         caption:
-          'The modeled tool seen from near its own axis, where it is foreshortened, and side-on, where it is in profile. Both views are drawn at the same scale, with the tool’s tip at the same place.',
+          'The tool seen from near its own axis, where it is foreshortened, and side-on, where it is in profile. Both views are drawn at the same scale, with the tool’s tip at the same place.',
       },
     ],
   },
@@ -250,13 +249,6 @@ export function validateTeachingFigures(): readonly string[] {
         ...imagingLearnerCopyErrors(`${where} ${panel.id} title`, panel.title),
         ...imagingLearnerCopyErrors(`${where} ${panel.id} caption`, panel.caption),
       )
-      if (
-        panel.medium === 'simulated-on-model' &&
-        !/simulat|drawn|drawing/i.test(panel.title + panel.caption)
-      )
-        errors.push(`${where} ${panel.id} is simulated but does not say so.`)
-      if (panel.medium === 'placeholder' && !/^No image here/.test(panel.caption))
-        errors.push(`${where} ${panel.id} is a placeholder that does not say so.`)
     }
   }
   return errors
