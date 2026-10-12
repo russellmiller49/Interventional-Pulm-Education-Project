@@ -21,17 +21,17 @@ One PR is open, and it holds everything since:
 
 | PR   | Branch                       | State                                                                                                     |
 | ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
-| #NEW | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
+| #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
 
 It replaces five stacked drafts, which carry the same commits one step at a time: #380 (hub and
 closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
-cases). Close them when #NEW merges. `main` was merged into the combined branch on 2026-10-12
+cases). Close them when #391 merges. `main` was merged into the combined branch on 2026-10-12
 with no conflict.
 
 The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
 `claude/bf-integrated-cases`, the last of the stacked branches. Its unstaged
 `.claude/launch.json` blocks a merge of `main` there, so the combined branch was made in a
-temporary checkout. Branch the next change from `origin/main` once #NEW is merged.
+temporary checkout. Branch the next change from `origin/main` once #391 is merged.
 
 ## Start here next session
 
@@ -100,7 +100,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #NEW reviewed and merged.** Everything before it is on `main`.
+1. **Get #391 reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
