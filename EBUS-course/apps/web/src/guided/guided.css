@@ -1063,3 +1063,67 @@ body,
 .model-steps li[data-done='true'] {
   color: #8fd9c4;
 }
+
+/*
+ * Model section (owner feedback of 2026-10-12): a heading, a paragraph and a row of tabs stood
+ * above the image, so in a console pane the image ran off the bottom. Controls are one row, the
+ * image takes whatever height is left, and the key is one line under it.
+ */
+.linked-section {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 6px 8px 8px;
+}
+.linked-section-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+.linked-section-bar .guided-tabs {
+  margin: 0;
+}
+.linked-section-bar label {
+  display: flex;
+  flex: 1 1 140px;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.linked-section-bar label input {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+.linked-section-bar button {
+  min-height: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.linked-section-fit {
+  display: flex;
+  justify-content: center;
+}
+.linked-console .linked-section-fit {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.linked-console .linked-section-image {
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+  aspect-ratio: 1;
+}
+.linked-console .linked-section canvas {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+.linked-section-key {
+  margin: 0;
+  font-size: 11px;
+}
