@@ -97,6 +97,7 @@ function LessonSession({
   const [retained, setRetained] = useState<EbusObservation | null>(null)
   const [finished, setFinished] = useState(false)
   const [holdRequested, setHoldRequested] = useState(false)
+  const [continueWhenReady, setContinueWhenReady] = useState(false)
   const [dialogTrigger, setDialogTrigger] = useState<'outline' | 'help'>('help')
   const [dialog, setDialog] = useState<'outline' | 'help' | null>(null)
   const helpButton = useRef<HTMLButtonElement>(null)
@@ -204,7 +205,12 @@ function LessonSession({
     }
     if (finished) return
     if (current.interaction === 'acquire') {
-      if (!labDone) return
+      if (!labDone) {
+        // The button is shown ready while the image catches up; a click in that instant is
+        // remembered and carried through when the frame arrives, instead of doing nothing.
+        if (labSettling) setContinueWhenReady(true)
+        return
+      }
       if (runtimeLab?.kind === 'knobology' && !observation.recorded?.held) {
         setHoldRequested(true)
         return
@@ -297,6 +303,19 @@ function LessonSession({
     runtimeLab?.kind === 'simulator' &&
     !!runtimeLab.linkedLesson
   useLessonChromeClearance(lessonFlow, lessonChrome, consoleStage)
+  useEffect(() => {
+    if (!continueWhenReady) return
+    // Something the learner did reopened a step: the remembered click no longer applies.
+    if (!acquireStep || (!labDone && !labSettling)) {
+      setContinueWhenReady(false)
+      return
+    }
+    if (!labDone) return
+    setContinueWhenReady(false)
+    advance()
+    // `advance` reads the current render's state; it is called only when that state is ready.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continueWhenReady, labDone, labSettling, acquireStep])
   const advanceIsSkip =
     !reviewId && !holdRequested && !acquireStep && (taskOpen || (!!question && !committed))
   const advanceIsProminent = !advanceIsSkip
@@ -315,7 +334,7 @@ function LessonSession({
     )
       return
     // The child acknowledges the actual decoded, paused frame before interpretation opens.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setRetained(observation)
     setHeldFor((held) => ({ ...held, [current.id]: true }))
     setHoldRequested(false)
@@ -1076,9 +1095,10 @@ function LessonSession({
         </section>
         <div className={styles.flowFooter}>
           <p>
-            This browser saves only your place in the course, the lessons you have opened, finished
-            or saved for later, and the cases you have opened. Responses, held images and help use
-            are not stored. Reopening an unfinished lesson starts it from its first task.
+            This browser saves your place in the course, the lessons you have opened, finished or
+            saved for later, the cases you have opened, and the entries you make in a case record.
+            Answers to checks, images and help use are not stored. Reopening an unfinished lesson
+            starts it from its first task.
           </p>
           <SourceList ids={lesson.sources} />
         </div>
