@@ -110,6 +110,10 @@ try {
       watch(resolve(root, directory), { recursive: true }, (_, filename) => {
         if (!filename || filename.split(/[/\\]/).some((part) => ignored.has(part))) return
         if (filename.endsWith('.tsbuildinfo')) return
+        // A build recreates `dist`, which touches its parent directory. That directory event has
+        // no ignored part in its path, so each build scheduled the next one, for ever. Only a
+        // change to a file (a path with an extension) is a source change.
+        if (!/\.[a-z0-9]+$/i.test(filename)) return
         for (const app of targets) schedule(app)
       }),
     )
