@@ -22,7 +22,7 @@ Two PRs are open:
 | PR   | Branch                       | State                                                                                                     |
 | ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
-| #NEW | `claude/bf-practice-cleanup` | Draft, stacked on #391. The plan's clean-up of the older practice questions: eight small fixes.           |
+| #394 | `claude/bf-practice-cleanup` | Draft, stacked on #391. The plan's clean-up of the older practice questions: eight small fixes.           |
 
 It replaces five stacked drafts, which carried the same commits one step at a time: #380 (hub and
 closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
@@ -102,7 +102,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #391 and #NEW reviewed and merged.** Everything before them is on `main`.
+1. **Get #391 and #394 reviewed and merged.** Everything before them is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
