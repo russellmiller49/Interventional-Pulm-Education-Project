@@ -55,25 +55,21 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
     }
   })
 
-  it('the nine text-only checks read as scenarios', () => {
+  it('the seven text-only checks read as scenarios', () => {
     const textOnly = peripheralImagingSectionIds.filter((sectionId) => {
       const lesson = imagingStageLesson(sectionId)
       return lesson.steps[lesson.predictionStepIndex].activity.visual === 'case'
     })
     expect(textOnly).toEqual([
       'imaging-questions',
-      // Owner follow-up, 2026-10-12: a new dependent opacity is not something this section's
-      // registration image can show.
-      'current-anatomy',
       // PR #279 sanity review (F3, CHK-S10): Section 10's conceptual check lost the single
       // reconstructed plane beside it, which could not show the elongation its stem describes.
       'dts-acquisition',
       'dts-interpretation',
       'fixed-suite',
       'mobile-suite',
-      // Doubled edges from motion during a spin, and a hand in the primary beam: neither is on
-      // the section's image.
-      'changing-anatomy',
+      // Owner follow-up, 2026-10-12: a hand in the primary beam is not on the section's image.
+      // (Sections 4 and 16 show their findings on images of their own.)
       'staff-protection',
       'suite-cases',
     ])

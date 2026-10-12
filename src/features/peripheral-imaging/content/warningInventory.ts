@@ -111,7 +111,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The label on a Prompt 04 teaching figure (Sections 6, 9 and 16)',
     selector: '[data-teaching-figure] [data-model-label]',
     treatment: 'kept',
-    note: 'A plain caption of what the figure shows; a panel with no image is described in words.',
+    note: 'A plain caption of what the figure shows.',
   },
   {
     id: 'fixed-mobile-model-note',

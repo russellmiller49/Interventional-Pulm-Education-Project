@@ -216,20 +216,25 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
   }, 30_000)
 })
 
-describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion or opacity', () => {
-  it('has one image and two panels described in words', async () => {
+describe('OD4-06 · Section 16 shows all three appearances as images', () => {
+  it('draws motion, truncation and a new dependent opacity, each with its caption', async () => {
     render(<ArtifactCauseStrip />)
     await ready('[data-teaching-figure="changing-anatomy:artifact-strip"]')
     const figure = document.querySelector(
       '[data-teaching-figure="changing-anatomy:artifact-strip"]',
     )!
-    expect(figure.querySelectorAll('canvas')).toHaveLength(1)
+    // Owner decision, 2026-10-12: motion and the opacity are simulated on the course's CT, where
+    // they were text panels waiting for authentic media.
+    expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(3)
     expect(figure.querySelector('[data-figure-panel="truncation"] canvas')).not.toBeNull()
-    for (const id of ['motion', 'opacity']) {
+    for (const [id, words] of [
+      ['motion', /each appear twice, a small distance apart/],
+      ['opacity', /ill-defined region in dependent lung/],
+    ] as const) {
       const panel = figure.querySelector(`[data-figure-panel="${id}"]`)!
-      expect(panel).toHaveAttribute('data-panel-medium', 'placeholder')
-      expect(panel.querySelector('canvas, svg, img')).toBeNull()
-      expect(panel).toHaveTextContent(/^.*Look for /)
+      expect(panel).toHaveAttribute('data-panel-medium', 'simulated-on-model')
+      expect(panel.querySelector('canvas')!.getAttribute('aria-label')!.length).toBeGreaterThan(40)
+      expect(panel.querySelector('figcaption')).toHaveTextContent(words)
     }
     expect(figure.querySelector('[data-truncation-readout]')).toHaveTextContent(
       /about half of it lies inside the volume/,

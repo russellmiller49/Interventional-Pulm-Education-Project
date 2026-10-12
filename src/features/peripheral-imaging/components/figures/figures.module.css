@@ -132,30 +132,14 @@
   margin: 0 0 0.25rem;
 }
 
-.placeholder {
-  display: grid;
-  align-content: start;
-  gap: 0.35rem;
-  min-width: 0;
-  padding: 0.7rem;
-  border: 1px dashed var(--line, rgba(255, 255, 255, 0.24));
-  border-radius: 0.5rem;
-}
-
 .note {
   font-size: 0.82rem;
   color: var(--stage-muted, var(--muted, #bdd0d3));
 }
 
 /* A narrow figure — a phone, or any screen with enlarged text, since the query is in rem — gives
-   the text the inline padding its nested boxes would take. Without this, at 320 px with 200 % text
-   a placeholder's caption wrapped every four or five letters. The boxes keep their edges. */
+   the text the inline padding its nested boxes would take. The boxes keep their edges. */
 @container (max-width: 24rem) {
-  .placeholder {
-    padding-inline: 0;
-    border-inline: 0;
-    border-radius: 0;
-  }
   .modelLabel,
   .readouts,
   .status {
