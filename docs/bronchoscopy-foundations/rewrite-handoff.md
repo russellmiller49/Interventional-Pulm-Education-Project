@@ -23,9 +23,10 @@ One PR is open, and it holds everything since:
 | ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
 
-It replaces five stacked drafts, which carry the same commits one step at a time: #380 (hub and
+It replaces five stacked drafts, which carried the same commits one step at a time: #380 (hub and
 closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
-cases). Close them when #391 merges. `main` was merged into the combined branch on 2026-10-12
+cases). All five were closed on 2026-10-12, each with a note pointing here; their branches
+still exist. `main` was merged into the combined branch on 2026-10-12
 with no conflict.
 
 The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
