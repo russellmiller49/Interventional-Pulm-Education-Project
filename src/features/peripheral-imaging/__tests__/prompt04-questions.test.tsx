@@ -18,10 +18,6 @@ import { imagingMicroCaseById } from '../content/microCases'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingSectionItems } from '../content/stageItems'
 import { imagingStageLesson } from '../content/stageLessons'
-import {
-  fixedExampleEvidence,
-  illustrativeOnlyExampleIdentities,
-} from '../content/teachingExamples'
 import { transferOrigin, transferReviewInstruction } from '../content/transferOrigins'
 import { QUESTION_BY_ID, QUESTIONS } from '../data/questions'
 import {
@@ -223,13 +219,11 @@ describe('question identity and versioning', () => {
     for (const item of [s1, s6, s16, case4, case5, case8]) expect(item.reviewStatus).toBe('draft')
   })
 
-  it('keeps the Section 16 check’s image declared as the section’s teaching model, not evidence', () => {
-    expect(fixedExampleEvidence('changing-anatomy', 0)).toBe('illustrative-model')
-    expect(illustrativeOnlyExampleIdentities()).toEqual([
-      'current-anatomy:example:0',
-      'changing-anatomy:example:0',
-      'staff-protection:example:0',
-    ])
+  it('keeps the Section 16 check a written scenario, with no image beside it', () => {
+    const lesson = imagingStageLesson('changing-anatomy')
+    const step = lesson.steps[lesson.predictionStepIndex]
+    expect(step.activity.visual).toBe('case')
+    expect(step.instruction).toMatch(/^Read the scenario\./)
   })
 
   it('labels the two reviews of choose-1 truthfully now Section 1 renders its new check instead', () => {

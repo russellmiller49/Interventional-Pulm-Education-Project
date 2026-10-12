@@ -66,14 +66,6 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     note: 'Neither "fictional" nor "modeled" renders: the lesion, the tool and the catheter are named plainly. The one needle limit is in the glossary entry for the side-cutting window.',
   },
   {
-    id: 'held-example-banner',
-    category: 'figure-limitation',
-    where: 'The banner over a check’s held image',
-    selector: '[data-suite-scene] [role="status"]',
-    treatment: 'kept',
-    note: 'Says whether the image depicts the question or is the section’s example (PI-FELLOW-01).',
-  },
-  {
     id: 'dts-overlay-note',
     category: 'figure-limitation',
     where: 'The DTS overlay note',

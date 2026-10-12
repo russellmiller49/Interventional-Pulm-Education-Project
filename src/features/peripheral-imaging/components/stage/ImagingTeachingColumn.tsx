@@ -56,7 +56,9 @@ export function ImagingTeachingColumn({
         <p data-check-prompt>
           {activity.visual === 'case'
             ? 'Choose the interpretation the written scenario supports.'
-            : 'Choose the interpretation this image and its acquisition context support.'}{' '}
+            : activity.visual === 'dose'
+              ? 'Choose the entry the procedure record supports.'
+              : 'Choose the interpretation this image and its acquisition context support.'}{' '}
           You can show the explanation first, reread the section’s teaching, or continue without
           answering.
         </p>

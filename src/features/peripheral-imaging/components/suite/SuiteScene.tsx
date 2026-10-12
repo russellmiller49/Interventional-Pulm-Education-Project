@@ -433,9 +433,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {view.stopSentence}
           </p>
         )}
-        {!props.controlsEnabled && (props.lockedReason ?? props.pausedReason) && (
+        {!props.controlsEnabled && props.pausedReason && (
           <p role="status" className={styles.reason}>
-            {props.lockedReason ?? props.pausedReason}
+            {props.pausedReason}
           </p>
         )}
         <div

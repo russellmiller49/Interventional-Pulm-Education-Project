@@ -3,7 +3,6 @@ import { LESION_RADIUS, windowRelationship, type Point3 } from '../lib/physics'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import { capstoneItemId, imagingCaseById } from './cases'
 import { imagingMicroCaseById } from './microCases'
-import type { FixedExampleEvidence } from './teachingExamples'
 
 /**
  * Figures inside cases (Prompt 04, owner decisions OD4-04 and OD4-12, 2026-09-22).
@@ -17,8 +16,8 @@ import type { FixedExampleEvidence } from './teachingExamples'
  * The five OD4-04 safeguards, as they apply here:
  * 1. every figure opens with a plain caption of what it shows (teaching-first rules, 2026-10-08:
  *    the module's one statement that it is a teaching simulator is on the hub, not on each figure);
- * 2. every figure declares whether it depicts its question (`depicts-the-question`) or is only the
- *    course's model beside a written scenario (`illustrative-model`);
+ * 2. every figure depicts its question (`depicts-the-question`); a case whose scenario no figure
+ *    here can show carries no figure;
  * 3. the case text was changed to match the model (practice 9: left lung, smooth sphere, no
  *    airway claim), never the other way round;
  * 4. no teaching colour gives an answer away (the DTS prior layer is drawn in neutral grey here);
@@ -26,13 +25,14 @@ import type { FixedExampleEvidence } from './teachingExamples'
  *    an answer.
  */
 export type CaseFigureMedium = 'teaching-model' | 'schematic'
+export type CaseFigureEvidence = 'depicts-the-question'
 
 export interface CaseFigureDeclaration {
   /** `<item id>:figure`, so the figure is keyed to exactly one question. */
   readonly identity: string
   readonly caseKind: 'practice' | 'integrated'
   readonly caseId: string
-  readonly evidence: FixedExampleEvidence
+  readonly evidence: CaseFigureEvidence
   readonly medium: CaseFigureMedium
   /** Printed first on the figure, before any image. */
   readonly label: string
