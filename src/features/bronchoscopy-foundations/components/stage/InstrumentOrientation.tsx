@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ControlHeadSchematic } from './ControlHeadSchematic'
 import styles from './bronch-stage.module.css'
 
 /** A labeled prerequisite reference, never an identification test or completion event. */
@@ -23,64 +24,11 @@ export function InstrumentOrientation() {
       </div>
       {detail ? (
         <>
-          <svg
-            viewBox="0 0 800 530"
-            role="img"
-            aria-labelledby="bronch-controls-title bronch-controls-desc"
-            className={styles.instrumentFigure}
-          >
-            <title id="bronch-controls-title">
-              Angulation lever, suction control and working-channel port
-            </title>
-            <desc id="bronch-controls-desc">
-              Close-up of the course bronchoscope photograph. The thumb operates the angulation
-              lever at the top of the control section. The index finger operates the suction valve.
-              The working-channel port sits below them on the handle.
-            </desc>
-            <rect width="800" height="530" fill="#fff" />
-            <svg x="215" y="32" width="555" height="450" viewBox="580 780 600 505">
-              <image
-                href="/intro-bronchoscopy/scope-anatomy/full-scope.png"
-                width="2100"
-                height="1500"
-              />
-            </svg>
-            <g fill="none" stroke="#217888" strokeWidth="2">
-              <path d="M34 152 H268 L315 107" />
-              <path d="M34 244 H280 L324 163" />
-              <path d="M34 358 H396 L535 342" />
-            </g>
-            <g fill="#217888">
-              <circle cx="315" cy="107" r="5" />
-              <circle cx="324" cy="163" r="5" />
-              <circle cx="535" cy="342" r="5" />
-            </g>
-            <g fill="#193e49" fontSize="21" fontFamily="sans-serif" fontWeight="600">
-              <text x="34" y="118">
-                Angulation lever
-              </text>
-              <text x="34" y="210">
-                Suction valve
-              </text>
-              <text x="34" y="324">
-                Working-channel port
-              </text>
-            </g>
-            <g fill="#526871" fontSize="17" fontFamily="sans-serif">
-              <text x="34" y="141">
-                Thumb controls tip bend
-              </text>
-              <text x="34" y="233">
-                Index finger applies suction
-              </text>
-              <text x="34" y="347">
-                Entry for instruments
-              </text>
-            </g>
-          </svg>
+          <ControlHeadSchematic />
           <p>
-            Use the thumb to move the angulation lever and the index finger to press the suction
-            valve. Instruments enter through the separate working-channel port below the controls.
+            The thumb moves the angulation lever on the back of the scope. On the front, the index
+            finger presses the suction valve. Instruments enter through the separate working-channel
+            port below it.
           </p>
         </>
       ) : (
