@@ -29,7 +29,10 @@ import {
 } from '../scope/types'
 import { microCasesForSection } from '../../content/microCases'
 import { isBronchSectionId } from '../../content/sectionIds'
-import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
+import {
+  BENCH_APPROACH_DEPTH_MM,
+  benchTargetObservation,
+} from '../../engine/scope/scopeBenchTarget'
 import {
   bronchSection,
   bronchoscopyFoundationsPathway,
@@ -1347,10 +1350,17 @@ function BronchStageSessionView({
           : null
         return (
           <>
+            {view.benchSuction ? (
+              <p className={styles.figureCaption}>
+                Bench fluid model: the liquid level and emptying rate illustrate aspiration, not
+                clinical volume or suction performance.
+              </p>
+            ) : null}
             {target ? (
               <p role="status" data-target-status>
                 Gold target: {target.position}. Practice depth: {Math.round(displayedState.depthMm)}{' '}
-                mm; band 12–16 mm. Authored exercise values.
+                mm; practice band {BENCH_APPROACH_DEPTH_MM.min}–{BENCH_APPROACH_DEPTH_MM.max} mm.
+                Bench exercise distances.
               </p>
             ) : null}
             <ScopePane

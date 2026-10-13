@@ -55,7 +55,7 @@ describe('the stage lessons', () => {
     },
   )
 
-  it('keeps each bench unit of the five-controls sequence, guided then repeated, inside the rewritten flow', () => {
+  it('keeps each bench unit of the five-controls sequence, with distinct applications, inside the rewritten flow', () => {
     const lesson = bronchStageLesson('five-controls')
     const units = lesson.steps.filter((step) => step.learn)
     // The hook opens the section and the checklist closes it; the bench units run between them.
@@ -65,14 +65,11 @@ describe('the stage lessons', () => {
       'check',
       'instrument',
       'depth',
-      'depth-repeat',
       'bend',
-      'bend-repeat',
       'rotation',
       'rotation-repeat',
       'combine',
       'suction',
-      'suction-repeat',
       'transfer',
     ])
     expect(units.find((step) => step.learn!.id === 'instrument')?.learn?.orientation).toBe(true)

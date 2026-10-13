@@ -54,7 +54,9 @@ export async function performPilotStep(step: BronchStageStep) {
         break
       case 'suction':
       case 'suction-repeat':
+        for (let i = 0; i < 6; i++) fireEvent.click(control('advance'))
         fireEvent.click(control('suction'))
+        fireEvent.click(control('step'))
         fireEvent.click(control('suction'))
         break
       case 'transfer':

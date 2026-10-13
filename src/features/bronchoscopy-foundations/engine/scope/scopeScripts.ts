@@ -39,10 +39,13 @@ export const ENVIRONMENT_CLOCK_SCRIPTS: ReadonlySet<ScopeScriptId> = new Set<Sco
 
 /** Whether this command is the scripted scene's own clock on a view that runs one. */
 export function isEnvironmentClockCommand(
-  view: Pick<ScopeViewSpec, 'script'>,
+  view: Pick<ScopeViewSpec, 'script' | 'benchSuction'>,
   command: ScopeCommand,
 ): boolean {
-  return command.type === 'tick' && !!view.script && ENVIRONMENT_CLOCK_SCRIPTS.has(view.script)
+  return (
+    command.type === 'tick' &&
+    (view.benchSuction === true || (!!view.script && ENVIRONMENT_CLOCK_SCRIPTS.has(view.script)))
+  )
 }
 
 /** The scripted breath: expiration first, so crossing needs a wait; a cough every third breath. */

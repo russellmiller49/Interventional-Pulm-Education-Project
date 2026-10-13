@@ -1,6 +1,5 @@
 import type { BronchLearnUnit } from '../../content/learnUnit'
 import type { BronchSectionDefinition } from '../../content/types'
-import { formatSourceRef } from '../../data/sources'
 import styles from './bronch-stage.module.css'
 
 export function BronchPilotTeaching({
@@ -34,10 +33,6 @@ export function BronchPilotTeaching({
             <strong>Try this.</strong> {unit.cue}
           </p>
         ) : null}
-        <p className={styles.figureCaption}>
-          Sources: {unit.sourceRefs.map(formatSourceRef).join('; ')}.
-          {rewritten ? null : ' Teaching adaptation; review pending.'}
-        </p>
       </section>
       {unit.orientation && !rewritten ? (
         <p className={styles.boundaryLine}>

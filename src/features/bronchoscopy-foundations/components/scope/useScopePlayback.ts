@@ -52,7 +52,8 @@ export function useScopePlayback(
   useEffect(() => {
     send.current = onCommand
   }, [onCommand])
-  const scripted = !!state.script && ENVIRONMENT_CLOCK_SCRIPTS.has(state.script.id)
+  const scripted =
+    !!view.benchSuction || (!!state.script && ENVIRONMENT_CLOCK_SCRIPTS.has(state.script.id))
   const manual = forceManual || reducedMotion || view.controls.includes('step')
   useEffect(() => {
     if (!ready || !controlsEnabled || !scripted || manual || !visible) return

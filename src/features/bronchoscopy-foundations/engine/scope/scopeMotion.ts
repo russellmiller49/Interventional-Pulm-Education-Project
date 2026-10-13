@@ -1,3 +1,4 @@
+import { BENCH_FLUID } from './benchFluid'
 import { minus, scalar, unit } from '@/lib/bronchoscopy-core/frame'
 import { driveScope } from '@/lib/airway-anatomy/drive'
 import { distance } from '@/lib/airway-anatomy/geometry'
@@ -324,7 +325,9 @@ export function insertScope(
   if (!Number.isFinite(mm) || mm === 0) return outcome(state, {})
   switch (state.place) {
     case 'bench': {
-      const depthMm = Math.max(-BENCH_TRAVEL_MM, Math.min(BENCH_TRAVEL_MM, state.depthMm + mm))
+      const depthMm = ctx.view.benchSuction
+        ? Math.max(0, Math.min(BENCH_FLUID.bottomMm - 1, state.depthMm + mm))
+        : Math.max(-BENCH_TRAVEL_MM, Math.min(BENCH_TRAVEL_MM, state.depthMm + mm))
       return outcome(state, { depthMm, travelledMm: Math.abs(depthMm - state.depthMm) })
     }
     case 'larynx':

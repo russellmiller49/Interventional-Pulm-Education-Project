@@ -209,7 +209,8 @@ export function ScopePaneFrame(
   const interactiveField = alignOffered && pins.length > 0
 
   const dockKeys = SCOPE_CONTROL_KEYS.filter(
-    (key) => key !== 'declare' && view.controls.includes(key),
+    (key) =>
+      key !== 'declare' && (view.controls.includes(key) || (key === 'step' && view.benchSuction)),
   )
   const declareOffered = view.controls.includes('declare')
   const recordWords = view.ledger?.record
@@ -602,7 +603,7 @@ export function ScopePaneFrame(
         ) : null)}
 
       {/* After the controls, so the bench and its controls stay together (SYSTEMIC-UX-01). */}
-      {state.place === 'bench' && view.physicalControlLabels ? (
+      {state.place === 'bench' && view.physicalControlLabels && !view.benchSuction ? (
         <TipCompass state={props.benchState ?? state} />
       ) : null}
       {goalCardFirst ? null : goalCard}

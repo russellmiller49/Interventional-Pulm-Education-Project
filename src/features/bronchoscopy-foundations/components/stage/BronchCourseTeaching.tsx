@@ -55,7 +55,7 @@ export function BronchCourseTeaching({
       ) : null}
       {chunk.visual === 'instrument' ? (
         <div className={styles.illustratedPair}>
-          <InstrumentOrientation plain={rewritten} />
+          <InstrumentOrientation />
           {section.id === 'pre-use-check' && !rewritten ? (
             <section>
               <h3>What each hand does</h3>
