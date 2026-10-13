@@ -1264,6 +1264,12 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl) || (guided.config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId)) return;
     if (!guided.config.demonstration) guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
     if (name === 'roll' && !guided.config.demonstration) rollAcquisition.current = { approach: linkedEvidence.approach, count: guidedActions.current.count };
+    // The rotation the learner starts from is part of the sweep: without it a single move from
+    // the starting position (a click on the track, a quick flick) was credited with 0°.
+    if (name === 'roll' && !guided.config.demonstration && guided.config.linkedLesson && !linkedEvidence.sweeps?.[linkedEvidence.approach]) {
+      const approach = linkedEvidence.approach, start = rollTrimDeg;
+      setLinkedEvidence(previous => previous.sweeps?.[approach] ? previous : { ...previous, sweeps: { ...previous.sweeps, [approach]: { ...emptyLinkedSweep(), lastRoll: start, startRoll: start } } });
+    }
     apply();
   };
   const { assets, caseData, error } = useSimulatorCase();
