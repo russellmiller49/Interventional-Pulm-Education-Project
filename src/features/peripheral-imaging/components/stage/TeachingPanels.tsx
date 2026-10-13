@@ -23,7 +23,12 @@ import {
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { TimeSamples } from '../suite/views/TimeView'
 import { temporal } from '../suite/suiteModel'
-import { ConspicuityPair, FieldPair } from '../figures/CheckImages'
+import {
+  ConspicuityPair,
+  DependentOpacityPair,
+  FieldPair,
+  MotionDoubledPlanes,
+} from '../figures/CheckImages'
 import { ConspicuityComparison } from '../figures/ConspicuityComparison'
 import { EvidenceSequenceFigure, type EvidenceStep } from '../figures/EvidenceSequenceFigure'
 import { CopyTextButton } from '../figures/CopyTextButton'
@@ -361,6 +366,8 @@ export function TeachingPanels({
       </>
     )
   if (sectionId === 'field' && independent) return <FieldPair />
+  if (sectionId === 'current-anatomy' && independent) return <DependentOpacityPair />
+  if (sectionId === 'changing-anatomy' && independent) return <MotionDoubledPlanes />
   if (sectionId === 'imaging-questions' && !independent) return <ImagingQuestionPanels />
   if (sectionId === 'time' && independent)
     return (
@@ -401,7 +408,7 @@ export function hasIndependentImagePanel(sectionId: ImagingSectionId) {
   return INDEPENDENT_IMAGE_PANEL_SECTIONS.includes(sectionId)
 }
 
-/** These self-contained SVG/table examples need no remote asset or WebGL renderer. */
+/** These self-contained image, SVG and table examples need no WebGL renderer. */
 export function IndependentImagePanels({
   sectionId,
   onRepresentationReady,

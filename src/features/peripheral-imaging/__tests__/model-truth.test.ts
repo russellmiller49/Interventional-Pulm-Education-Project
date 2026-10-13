@@ -16,6 +16,17 @@ import {
   modeledCatheterFraction,
 } from '../components/figures/DtsAbsenceFigure'
 import {
+  breathingShare,
+  DEPENDENT_OPACITY,
+  dependentOpacityImages,
+  dependentOpacityPoint,
+  MOTION_EXAMPLE,
+  motionPlanePixels,
+  motionSceneSampler,
+  movingSceneSampler,
+  posteriorPleura,
+} from '../components/figures/simulatedFindings'
+import {
   AXIAL_VIEW,
   axialPixelOf,
   conspicuityImages,
@@ -547,5 +558,164 @@ describe('collimating the spine out of the field, on the teaching CT', () => {
     expect(forPath.gain).toBeLessThan(1.5)
     expect(atLesion.gain).toBeGreaterThan(1.8)
     expect(atLesion.window[1]).toBeLessThan(open.window[1])
+  })
+})
+
+describe('the simulated dependent opacity is where gravity puts it, and covers the check’s nodule', () => {
+  const gray = (pixels: Uint8ClampedArray, col: number, row: number) =>
+    pixels[(row * DEPENDENT_OPACITY.sizePx + col) * 4]
+  /** Mean gray of the pixels whose distance from the nodule's centre lies in a ring, in mm. */
+  const ring = (
+    pixels: Uint8ClampedArray,
+    centre: readonly [number, number],
+    innerMm: number,
+    outerMm: number,
+  ) => {
+    let sum = 0
+    let count = 0
+    for (let row = 0; row < DEPENDENT_OPACITY.sizePx; row++)
+      for (let col = 0; col < DEPENDENT_OPACITY.sizePx; col++) {
+        const [x, y] = dependentOpacityPoint(col, row)
+        const d = Math.hypot(x - centre[0], y - centre[1])
+        if (d < innerMm || d > outerMm) continue
+        sum += gray(pixels, col, row)
+        count++
+      }
+    return sum / count
+  }
+
+  it('finds the posterior pleura of the left lower lobe, and puts the nodule just in front of it', () => {
+    const { sliceZ, nodule } = DEPENDENT_OPACITY
+    const pleura = posteriorPleura(ctSampler(volume), nodule.xMm, sliceZ)!
+    expect(pleura).not.toBeNull()
+    // Behind it is chest wall, in front of it aerated lung.
+    expect(sampleAnatomy(volume, [nodule.xMm, pleura - 12, sliceZ])).toBeGreaterThan(-300)
+    expect(sampleAnatomy(volume, [nodule.xMm, pleura + 25, sliceZ])).toBeLessThan(-700)
+    const images = dependentOpacityImages(volume)
+    expect(images.noduleMm).toEqual([nodule.xMm, pleura + nodule.fromPleuraMm])
+    // The level is clear of the course's own nodule, so only one lesion is on the image.
+    expect(Math.abs(sliceZ - LESION_CENTER[2])).toBeGreaterThan(LESION_RADIUS + 8)
+  })
+
+  it('the nodule is distinct on the planning image and covered on the current one', () => {
+    const images = dependentOpacityImages(volume)
+    const centre = images.noduleMm!
+    // Against the lung beside and behind it, at its own depth: the opacity thins toward the front.
+    const beside: [number, number] = [centre[0], centre[1] - 3]
+    const contrast = (pixels: Uint8ClampedArray) =>
+      ring(pixels, centre, 0, 3) - ring(pixels, beside, 9, 11)
+    expect(contrast(images.planning)).toBeGreaterThan(80)
+    expect(Math.abs(contrast(images.current))).toBeLessThan(12)
+    expect(images.noduleCover).toBeGreaterThan(0.95)
+  })
+
+  it('the opacity is posterior and bilateral, and nothing else on the image changes', () => {
+    const images = dependentOpacityImages(volume)
+    const size = DEPENDENT_OPACITY.sizePx
+    const changed = { left: 0, right: 0, anterior: 0 }
+    let highest = -Infinity
+    for (let row = 0; row < size; row++)
+      for (let col = 0; col < size; col++) {
+        const delta = gray(images.current, col, row) - gray(images.planning, col, row)
+        // The opacity only ever adds density.
+        expect(delta).toBeGreaterThanOrEqual(0)
+        if (delta < 20) continue
+        const [x, y] = dependentOpacityPoint(col, row)
+        highest = Math.max(highest, y)
+        if (y > -40) changed.anterior++
+        else if (x > 0) changed.left++
+        else changed.right++
+      }
+    expect(changed.left).toBeGreaterThan(400)
+    expect(changed.right).toBeGreaterThan(400)
+    expect(changed.anterior).toBe(0)
+    // It reaches forward a few centimetres from the posterior pleura, no further.
+    const pleura = posteriorPleura(
+      ctSampler(volume),
+      DEPENDENT_OPACITY.nodule.xMm,
+      DEPENDENT_OPACITY.sliceZ,
+    )!
+    expect(highest - pleura).toBeLessThan(DEPENDENT_OPACITY.reachMm + 25)
+  })
+})
+
+describe('the simulated motion doubles what breathing moves, and nothing else', () => {
+  const y = MOTION_EXAMPLE.planes.coronalY
+  /** Local maxima of a profile sampled every `stepMm`, above a floor. */
+  const peaks = (values: readonly number[], floor: number) =>
+    values.flatMap((value, i) =>
+      value > floor && value > (values[i - 1] ?? -Infinity) && value >= (values[i + 1] ?? -Infinity)
+        ? [i]
+        : [],
+    )
+
+  it('the catheter runs to the nodule and appears once at rest, twice during breathing', () => {
+    const scene = motionSceneSampler(ctSampler(volume))
+    const moving = movingSceneSampler(scene)
+    const [, , tip] = MOTION_EXAMPLE.catheter.path
+    expect(
+      Math.hypot(tip[0] - LESION_CENTER[0], tip[1] - LESION_CENTER[1], tip[2] - LESION_CENTER[2]),
+    ).toBeLessThan(MOTION_EXAMPLE.nodule.radiusMm)
+    // A craniocaudal line across the catheter's distal third, where the lung moves most.
+    const x = 66
+    const step = 0.25
+    const zs = Array.from({ length: 160 }, (_, i) => -45 + i * step)
+    const still = peaks(
+      zs.map((z) => scene(x, y, z)),
+      -500,
+    )
+    const doubled = peaks(
+      zs.map((z) => moving(x, y, z)),
+      -500,
+    )
+    expect(still).toHaveLength(1)
+    expect(doubled).toHaveLength(2)
+    const apart = (doubled[1] - doubled[0]) * step
+    // "A few millimetres apart": about twice the amplitude, along the line.
+    expect(apart).toBeGreaterThan(4)
+    expect(apart).toBeLessThan(9)
+  })
+
+  it('the nodule’s margin is drawn at two positions, a few millimetres apart', () => {
+    // In uniform lung, so the measurement is of the nodule's solid edge alone: the CT's own
+    // part-solid halo around it is soft, and would blur where each edge is.
+    const scene = motionSceneSampler(() => -850)
+    const moving = movingSceneSampler(scene)
+    const step = 0.25
+    const zs = Array.from({ length: 240 }, (_, i) => -60 + i * step)
+    // Where at least a third of the spin saw the nodule.
+    const floor = -850 + (MOTION_EXAMPLE.nodule.hu + 850) / 3
+    const extent = (sample: (x: number, y: number, z: number) => number) =>
+      zs.filter((z) => sample(LESION_CENTER[0], y, z) > floor).length * step
+    expect(extent(scene)).toBeCloseTo(2 * MOTION_EXAMPLE.nodule.radiusMm, 0)
+    const widened = extent(moving) - extent(scene)
+    expect(widened).toBeGreaterThan(4)
+    expect(widened).toBeLessThan(9)
+    // And in the middle, where both positions overlap, it is as dense as at rest.
+    const [cx, cy, cz] = LESION_CENTER
+    expect(moving(cx, cy, cz)).toBeCloseTo(scene(cx, cy, cz), 0)
+  })
+
+  it('the spine and the posterior chest wall do not move, so they stay sharp', () => {
+    expect(breathingShare(-130, -30)).toBe(0)
+    expect(breathingShare(-20, -30)).toBeGreaterThan(0.9)
+    const scene = motionSceneSampler(ctSampler(volume))
+    const moving = movingSceneSampler(scene)
+    for (const [px, py, pz] of [
+      [0, -135, -30],
+      [20, -140, 10],
+      [-60, -150, -52],
+    ])
+      expect(moving(px, py, pz)).toBeCloseTo(scene(px, py, pz), 6)
+  })
+
+  it('draws three different planes, each changed by the motion', () => {
+    for (const plane of ['coronal', 'sagittal', 'axial'] as const) {
+      const still = motionPlanePixels(volume, plane, { moving: false })
+      const moved = motionPlanePixels(volume, plane)
+      let differing = 0
+      for (let i = 0; i < still.length; i += 4) if (Math.abs(still[i] - moved[i]) > 12) differing++
+      expect(differing).toBeGreaterThan(300)
+    }
   })
 })

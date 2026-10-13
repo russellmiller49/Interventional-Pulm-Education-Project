@@ -14,6 +14,7 @@ import {
   INTERPRETATION_CHECKS,
   RETIRED_INTERPRETATION_CHECKS,
 } from '../content/interpretationChecks'
+import { INDEPENDENT_IMAGE_PANEL_SECTIONS } from '../content/learningActivities'
 import { imagingMicroCaseById } from '../content/microCases'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingSectionItems } from '../content/stageItems'
@@ -219,11 +220,12 @@ describe('question identity and versioning', () => {
     for (const item of [s1, s6, s16, case4, case5, case8]) expect(item.reviewStatus).toBe('draft')
   })
 
-  it('keeps the Section 16 check a written scenario, with no image beside it', () => {
+  it('gives the Section 16 check its own image of the appearance its stem describes', () => {
     const lesson = imagingStageLesson('changing-anatomy')
     const step = lesson.steps[lesson.predictionStepIndex]
-    expect(step.activity.visual).toBe('case')
-    expect(step.instruction).toMatch(/^Read the scenario\./)
+    expect(step.activity.visual).toBe('suite')
+    expect(INDEPENDENT_IMAGE_PANEL_SECTIONS).toContain('changing-anatomy')
+    expect(step.instruction).toMatch(/^Inspect the image and acquisition context\./)
   })
 
   it('labels the two reviews of choose-1 truthfully now Section 1 renders its new check instead', () => {

@@ -3123,6 +3123,30 @@ test('PR #279 repair F1 and F4: Section 9 draws the measured rays and both whole
   }
 })
 
+test('owner follow-up 2026-10-12: the Section 4 and 16 checks draw the finding they ask about', async ({
+  page,
+}, info) => {
+  for (const [sectionId, figure, panels, shot] of [
+    ['current-anatomy', '[data-opacity-comparison]', 2, 'check-dependent-opacity.png'],
+    ['changing-anatomy', '[data-motion-planes]', 3, 'check-motion-planes.png'],
+  ] as const) {
+    await advanceToKind(page, sectionId, 'prediction')
+    const selector = `[data-authored-example] ${figure}`
+    await figureReady(page, selector)
+    await expect(page.locator(`${selector} canvas`)).toHaveCount(panels)
+    await figureCanvasesDrawn(page, selector, false)
+    // The image is the evidence: no suite view, no controls, and nothing disclaiming it.
+    await expect(page.locator('[data-suite-scene]')).toHaveCount(0)
+    await expect(page.locator('[data-suite-controls]')).toHaveCount(0)
+    await expect(page.locator('[data-now-card]')).toContainText('Inspect the image')
+    await expect(page.locator('[data-current-task]')).not.toContainText(
+      /not the situation|section’s example|simulated/i,
+    )
+    await page.locator(figure).scrollIntoViewIfNeeded()
+    await capture(page, info, shot)
+  }
+})
+
 test('PR #279 repair F2: practice case 9’s key rationale is bound to this teaching case', async ({
   page,
 }, info) => {
@@ -3309,7 +3333,7 @@ for (const condition of PROMPT04_CONDITIONS) {
       if (selector.includes('data-teaching-figure')) {
         await figureReady(page, selector)
         await expect(page.locator(`${selector} [data-model-label]`)).toBeVisible()
-        if (!selector.includes('artifact-strip')) await figureCanvasesDrawn(page, selector, phone)
+        await figureCanvasesDrawn(page, selector, phone)
       }
       // Tables stay inside their figure: columns when there is room, labelled blocks when not.
       for (const table of await page.locator(`${selector} table`).all()) {

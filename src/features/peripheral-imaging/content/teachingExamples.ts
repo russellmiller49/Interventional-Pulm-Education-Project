@@ -397,8 +397,9 @@ export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string
 
 /**
  * A fixed example always depicts its question: the learner can read the answer's evidence off the
- * image. A check whose scenario the section's image cannot show — a new dependent opacity, doubled
- * edges from motion during a spin, a hand in the primary beam — is authored as a written scenario
- * with no image (`finish('record', 'case')` in `learningActivities.ts`), not as an unrelated image
- * with a disclaimer (owner follow-up, 2026-10-12).
+ * image. A check whose scenario the section's suite cannot show either carries an image of its own
+ * (a new dependent opacity in Section 4, doubled edges from motion in Section 16:
+ * `INDEPENDENT_IMAGE_PANEL_SECTIONS`, drawn by `simulatedFindings.ts`) or is a written scenario with
+ * no image (a hand in the primary beam in Section 17: `finish('record', 'case')`). It is never an
+ * unrelated image with a disclaimer (owner follow-up, 2026-10-12).
  */

@@ -53,8 +53,9 @@ afterEach(() => {
  * beside an image their section cannot make show it: a new dependent opacity, duplicated edges from
  * motion during a CBCT spin, and a clinician holding an accessory in the primary beam. For a while
  * they carried a banner saying the image was not the situation in the question. Owner follow-up,
- * 2026-10-12: a check either shows the image it asks about or is a written scenario with no image,
- * as Section 10's has been since PR #279. These are the rendered regressions for that rule.
+ * 2026-10-12: a check either shows the image it asks about or is a written scenario with no image.
+ * The first two now show their finding, simulated on the course's CT (`simulatedFindings.ts`); the
+ * third is written, as Section 10's has been since PR #279. These are the rendered regressions.
  */
 
 /** Walk a section to its check, skipping past anything that will not simply continue. */
@@ -99,11 +100,88 @@ function checkSurfaces() {
 }
 
 const WRITTEN: readonly { sectionId: ImagingSectionId; stemFragment: RegExp }[] = [
-  { sectionId: 'current-anatomy', stemFragment: /dependent opacity/i },
-  // QS-4 (OD4-05): the check describes the appearance and leaves the cause to the learner.
-  { sectionId: 'changing-anatomy', stemFragment: /appear twice/i },
   { sectionId: 'staff-protection', stemFragment: /primary beam/i },
 ]
+
+const SIMULATED: readonly {
+  sectionId: ImagingSectionId
+  stemFragment: RegExp
+  figure: string
+  panels: readonly string[]
+}[] = [
+  {
+    sectionId: 'current-anatomy',
+    stemFragment: /dependent opacity/i,
+    figure: '[data-opacity-comparison]',
+    panels: ['Planning CT', 'Current imaging'],
+  },
+  {
+    sectionId: 'changing-anatomy',
+    // QS-4 (OD4-05): the check describes the appearance and leaves the cause to the learner.
+    stemFragment: /appear twice/i,
+    figure: '[data-motion-planes]',
+    panels: ['Coronal', 'Sagittal', 'Axial'],
+  },
+]
+
+describe('a check about a finding the suite cannot show carries its own image of it', () => {
+  it.each(SIMULATED)(
+    '$sectionId shows the finding beside the question, with no banner and no suite controls',
+    ({ sectionId, stemFragment, figure, panels }) => {
+      const lesson = reachCheck(sectionId)
+      const seen = checkSurfaces()
+
+      // The check's own image, in the fixed-example frame, in place of the section's suite view.
+      expect(seen.identity).toBe(`${sectionId}:example:0`)
+      const node = document.querySelector(`[data-authored-example] ${figure}`)
+      expect(node).not.toBeNull()
+      expect(
+        [...node!.querySelectorAll('figure')].map(
+          (panel) => panel.querySelector('p')?.textContent ?? '',
+        ),
+      ).toEqual(panels)
+      // Every panel is an image with a text equivalent that says what it shows.
+      for (const canvas of node!.querySelectorAll('canvas'))
+        expect(canvas.getAttribute('aria-label')!.length).toBeGreaterThan(30)
+      expect(node!.querySelectorAll('canvas')).toHaveLength(panels.length)
+      expect(seen.imagePresent).toBe(false)
+      expect(document.querySelector('[data-suite-controls]')).toBeNull()
+
+      // It is the evidence, and the screen says so; nothing disclaims it.
+      expect(seen.banner).toBeNull()
+      expect(document.body.textContent).not.toMatch(
+        /not the situation|stays fixed|teaching model|section’s example|simulated/i,
+      )
+      expect(seen.nowCard).toMatch(/Inspect the image and acquisition context/)
+      expect(
+        document.querySelector('[data-check-teaching] [data-check-prompt]')?.textContent,
+      ).toMatch(/^Choose the interpretation this image and its acquisition context support\./)
+
+      // The question and its options are exactly as authored.
+      const step = lesson.steps[lesson.predictionStepIndex]
+      if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
+      expect(step.activity.title).toBe('Interpret a changed example')
+      expect(seen.stem).toBe(step.interaction.item.stem)
+      expect(seen.stem).toMatch(stemFragment)
+      expect(seen.choices).toHaveLength(step.interaction.item.choices.length)
+      expect(seen.explanationButton).toMatch(/Show the explanation/)
+      expect(seen.skipLabel).toMatch(/Continue without answering/)
+    },
+  )
+
+  it.each(SIMULATED)('$sectionId keeps its answer key and rationale', ({ sectionId }) => {
+    const lesson = reachCheck(sectionId)
+    const step = lesson.steps[lesson.predictionStepIndex]
+    if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
+    const item = step.interaction.item
+    const keyed = item.choices.find((choice) => item.correctChoiceIds.includes(choice.id))!
+    fireEvent.click(document.querySelector(`[data-prediction-choices] input[value="${keyed.id}"]`)!)
+    fireEvent.click(nowPrimary()!)
+    const verdict = document.querySelector('[data-answer-verdict]')
+    expect(verdict!.getAttribute('data-verdict-outcome')).toBe('correct')
+    expect(verdict!.textContent).toContain(keyed.rationale)
+  })
+})
 
 describe('a check whose scenario the section’s image cannot show is written, with no image', () => {
   it.each(WRITTEN)(

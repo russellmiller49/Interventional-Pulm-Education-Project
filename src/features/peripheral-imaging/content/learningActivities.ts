@@ -216,9 +216,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Inspect a mismatch with the planning target', 'comparison'),
     compare('Capture new localization evidence', 'comparison'),
-    // The check describes a new dependent opacity, which the section's image cannot show: it is a
-    // written scenario (owner follow-up, 2026-10-12).
-    ...finish('record', 'case'),
+    // The check shows a new dependent opacity on its own image pair (`DependentOpacityPair`).
+    ...finish('comparison'),
   ],
   projection: [
     read(
@@ -574,8 +573,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Capture a contour, then change the anatomy', 'comparison'),
     compare('Review current evidence without the old annotation', 'comparison'),
-    // The check describes doubled edges from motion during a spin: a written scenario.
-    ...finish('record', 'case'),
+    // The check shows the doubled edges of motion on its own planes (`MotionDoubledPlanes`).
+    ...finish('comparison'),
   ],
   'staff-protection': [
     read(
@@ -661,9 +660,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
  * `TeachingPanels` re-exports the predicate for the components that ask it.
  */
 export const INDEPENDENT_IMAGE_PANEL_SECTIONS: readonly ImagingSectionId[] = [
+  'current-anatomy',
   'signal',
   'field',
   'time',
+  'changing-anatomy',
   'dose-reporting',
 ]
 

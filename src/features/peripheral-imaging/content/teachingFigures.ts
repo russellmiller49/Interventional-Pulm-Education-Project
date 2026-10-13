@@ -16,10 +16,8 @@ import { teachingDemonstration } from './teachingExamples'
 export type TeachingFigureMedium =
   /** Output of the course's CT-derived model, labelled as such. */
   | 'model-output'
-  /** Model output with a labelled simulated effect applied. */
+  /** The CT with a simulated effect or finding applied. */
   | 'simulated-on-model'
-  /** A text panel standing where an honest image does not yet exist. */
-  | 'placeholder'
 
 export interface TeachingFigurePanel {
   readonly id: string
@@ -153,15 +151,14 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
   {
     id: 'changing-anatomy:artifact-strip',
     contentRef: '@artifact-strip',
-    label:
-      'Truncation is shown on an axial CT plane. Motion and a new dependent opacity are described.',
+    label: 'Motion on a coronal plane; truncation and a new dependent opacity on axial planes.',
     panels: [
       {
         id: 'motion',
         title: 'Motion · duplicated edges',
-        medium: 'placeholder',
+        medium: 'simulated-on-model',
         caption:
-          'Look for the catheter and the lesion margin drawn twice, a small distance apart, on several planes. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
+          'The catheter and the lesion margin each appear twice, a small distance apart. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
       },
       {
         id: 'truncation',
@@ -173,9 +170,9 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
       {
         id: 'opacity',
         title: 'New dependent opacity',
-        medium: 'placeholder',
+        medium: 'simulated-on-model',
         caption:
-          'Look for a soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
+          'A soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
       },
     ],
   },
