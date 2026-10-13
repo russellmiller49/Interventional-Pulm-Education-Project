@@ -1,4 +1,3 @@
-import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import type {
@@ -11,6 +10,7 @@ import type {
 import type { ScopeCase } from '../engine/scope/scopeCase'
 import { aimAt } from '../engine/scope/scopeFrame'
 import { scopeGoalStatuses } from '../engine/scope/scopeGoalEvaluation'
+import { guidedFork } from '../engine/scope/scopeMotion'
 import { tipBaseFrame } from '../engine/scope/scopePose'
 
 /**
@@ -28,6 +28,11 @@ export interface ScopeTransport {
  * The learner's own way of moving the scope, over any transport: approach a fork with the tip
  * straight, rotate and bend it into the next airway, advance, relax the bend. If a goal an
  * author wrote cannot be met this way, the step cannot be completed.
+ *
+ * Guided travel stops an undecided tip short of a fork (`FORK_STANDOFF_MM`), where both openings
+ * are still in the picture, and holds it there until one opening is plainly the nearest the centre
+ * of that picture. So the pilot drives straight until the guard refuses or the fork is reached,
+ * then centres the opening of the airway it wants and advances until it is through.
  */
 export class ScopePilot {
   constructor(readonly transport: ScopeTransport) {}
@@ -91,6 +96,28 @@ export class ScopePilot {
     if (this.state.inputs.deflectionDeg !== 0) this.send({ type: 'set-deflection', deg: 0 })
   }
 
+  /** How many advances the aim guard has refused so far in this attempt. */
+  private get refusals(): number {
+    return this.state.events.filter((event) => event === 'aim-refused').length
+  }
+
+  /**
+   * Bring the opening that leads into an edge to the centre of the picture the fork ahead is read
+   * from: the view from where the scope waits. Guided travel enters the opening nearest the centre
+   * of that picture, so this is the aim that decides.
+   */
+  aimDown(edgeId: number) {
+    const fork = guidedFork(this.engine.edgeId, this.state.inputs, {
+      view: this.view,
+      scopeCase: this.sc,
+    })
+    const opening = fork?.openings.find((candidate) => candidate.edgeId === edgeId)
+    if (!fork || !opening) throw new Error(`Edge ${edgeId} does not open off the fork ahead`)
+    const aim = aimAt(fork.base, opening.aimPoint)
+    this.send({ type: 'set-rotation', deg: aim.rotationDeg })
+    this.send({ type: 'set-deflection', deg: aim.deflectionDeg })
+  }
+
   private pathTo(edgeId: number): number[] {
     const path: number[] = []
     let edge = this.sc.index.edgesById.get(edgeId)
@@ -104,20 +131,25 @@ export class ScopePilot {
 
   goToEdge(target: number) {
     const path = this.pathTo(target)
+    // Whether the aim guard is holding the straight tip short of the fork ahead.
+    let waiting = false
     for (let guard = 0; this.engine.edgeId !== target; guard += 1) {
       if (guard > 400) throw new Error(`Stuck on edge ${this.engine.edgeId} heading for ${target}`)
       const here = path.indexOf(this.engine.edgeId)
       if (here < 0) throw new Error(`Edge ${this.engine.edgeId} is not on the way to ${target}`)
       const edge = this.sc.index.edgesById.get(this.engine.edgeId)!
       const toFork = edge.lengthMm - this.engine.distanceMm
-      if (toFork > 1.01) {
+      if (toFork > 1.01 && !waiting) {
         this.straighten()
+        const refusals = this.refusals
         this.advance(Math.min(this.state.inputs.stepMm, toFork - 1))
+        waiting = this.refusals > refusals
         continue
       }
-      const next = this.sc.index.edgesById.get(path[here + 1])!
-      this.aimAtPoint(sampleEdgePose(next, Math.min(8, next.lengthMm)).point)
-      this.advance(toFork + 1)
+      // At the fork, or held short of it: centre the next airway's opening and go on.
+      this.aimDown(path[here + 1])
+      this.advance(Math.min(this.state.inputs.stepMm, toFork + 1))
+      if (this.engine.edgeId !== edge.id) waiting = false
     }
     this.straighten()
   }
@@ -126,14 +158,28 @@ export class ScopePilot {
     this.goToEdge(this.sc.originEdge.get(label)!)
   }
 
-  /** Far enough into an airway's first segment to see beyond its opening. */
+  /**
+   * Far enough into an airway's first segment to see beyond its opening. Where that is inside the
+   * stretch the aim guard holds a straight tip out of, the view is turned down the first airway
+   * beyond it to go on.
+   */
   goDeep(label: AirwayLabel) {
     const origin = this.sc.originEdge.get(label)!
     if (this.engine.edgeId !== origin) throw new Error(`Not at the start of ${label}`)
-    const want = Math.min(8, this.sc.index.edgesById.get(origin)!.lengthMm * 0.5) + 0.2
-    this.straighten()
-    while (this.engine.distanceMm < want)
+    const edge = this.sc.index.edgesById.get(origin)!
+    const beyond = this.sc.index.nodesById.get(edge.endNodeId)?.childEdgeIds[0]
+    const want = Math.min(8, edge.lengthMm * 0.5) + 0.2
+    let waiting = false
+    for (let guard = 0; this.engine.distanceMm < want; guard += 1) {
+      if (guard > 60 || this.engine.edgeId !== origin)
+        throw new Error(`Could not go deep into ${label} (${this.state.message})`)
+      if (waiting && beyond !== undefined) this.aimDown(beyond)
+      else this.straighten()
+      const refusals = this.refusals
       this.advance(Math.min(this.state.inputs.stepMm, want - this.engine.distanceMm))
+      if (this.refusals > refusals) waiting = true
+    }
+    this.straighten()
   }
 
   withdrawTo(label: AirwayLabel) {

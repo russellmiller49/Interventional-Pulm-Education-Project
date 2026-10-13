@@ -3,12 +3,13 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useRef } from 'react'
 import type * as THREE from 'three'
-import { AirwaySurface, ScopeCamera } from '@/components/airway-anatomy/scope-primitives'
+import { AirwaySurface } from '@/components/airway-anatomy/scope-primitives'
 import { updateScopeCamera } from '@/components/airway-anatomy/scope-primitives/ScopeCamera'
 import { TEACHING_LUMEN_URL } from '../../engine/scope/scopeCase'
 import { OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { BENCH_CARD_CENTER } from '../../engine/scope/benchOrientation'
 import { DRACO_DECODER_PATH } from '../stage/scopeCaseLoader'
+import { EasedScopeCamera } from './EasedScopeCamera'
 import type { ScopePaneProps } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
 import {
@@ -69,7 +70,7 @@ export function ScopeOpticalView({
         state.place === 'bench' && view.physicalControlLabels ? (
           <BenchOpticalCamera pose={state.pose} />
         ) : (
-          <ScopeCamera pose={state.pose} fovDeg={OPTICAL_FOV_DEG} />
+          <EasedScopeCamera pose={state.pose} fovDeg={OPTICAL_FOV_DEG} />
         )
       ) : null}
       <Headlight />

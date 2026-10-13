@@ -29,7 +29,15 @@ export interface TreeMapProps {
   readonly current: AirwayLabel | null
   readonly tipLps: Vec3 | null
   readonly treeAnswer?: TreeAnswer
+  /**
+   * Airways a naming record has still to hear named. Their pins stay where they are and show a
+   * question mark instead of the name, so the map fills in as the learner names them.
+   */
+  readonly unnamed?: readonly AirwayLabel[]
 }
+
+/** What an unnamed pin says to assistive technology, in place of the name it withholds. */
+export const UNNAMED_PIN_WORDS = 'A segment not named yet'
 
 const TIP_RADIUS = 2.5
 
@@ -41,7 +49,7 @@ const TIP_RADIUS = 2.5
 export const MAP_FRAME_NOTE =
   'Map: a front (coronal) view, so the patient’s right is on the map’s left, head at the top.'
 
-export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps) {
+export function TreeMap({ map, lit, current, tipLps, treeAnswer, unnamed }: TreeMapProps) {
   if (!map) {
     return (
       <div
@@ -104,13 +112,22 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
         </svg>
         {layout.pins.map(({ label, x, y }) => {
           const choice = treeAnswer?.choices.find((candidate) => candidate.airway === label)
+          const withheld = unnamed?.includes(label) === true
           const shared = {
             className: styles.mapPin,
             style: { left: `${(x / MAP_WIDTH) * 100}%`, top: `${(y / MAP_HEIGHT) * 100}%` },
             'aria-current': label === current ? ('location' as const) : undefined,
             'data-lit': litSet.has(label) ? 'true' : undefined,
+            'data-unnamed': withheld ? 'true' : undefined,
+            'aria-label': withheld ? UNNAMED_PIN_WORDS : undefined,
             [SCOPE_DOM.pin]: label,
           }
+          if (withheld)
+            return (
+              <span key={label} {...shared}>
+                ?
+              </span>
+            )
           return choice ? (
             <label key={label} htmlFor={treeChoiceInputId(treeAnswer!.name, choice.id)} {...shared}>
               {label}

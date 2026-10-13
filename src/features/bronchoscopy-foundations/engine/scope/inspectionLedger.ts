@@ -7,6 +7,7 @@ import {
   type InspectionLedger,
   type InspectionStatus,
   type ScopeEventId,
+  type ScopeState,
   type ScopeViewSpec,
 } from '../../components/scope/types'
 
@@ -263,3 +264,31 @@ export function declareInspection(
       return recorded({ ...record, limitation: 'not-observed' })
   }
 }
+
+/**
+ * The airway a naming record is asking about (educator feedback, 2026-10-13): the one the tip is
+ * inside, when it is on the record and has not been named. Null on a view that does not keep its
+ * record by naming, and wherever the tip is not inside such an airway.
+ */
+export function namingSubject(
+  view: Pick<ScopeViewSpec, 'ledger'>,
+  state: Pick<ScopeState, 'ledger' | 'location'>,
+): AirwayLabel | null {
+  if (!view.ledger?.naming) return null
+  const path = state.location.parentage
+  for (let at = path.length - 1; at >= 0; at -= 1) {
+    const record = state.ledger[path[at]]
+    if (record) return record.identified ? null : record.label
+  }
+  return null
+}
+
+/** The airways a naming record has still to hear named, in the record's own order. */
+export function unnamedAirways(ledger: InspectionLedger): readonly AirwayLabel[] {
+  return inspectionRecords(ledger)
+    .filter((record) => !record.identified)
+    .map((record) => record.label)
+}
+
+/** What a naming record prints for the airway it is asking about, in place of its name. */
+export const UNNAMED_AIRWAY_WORDS = 'A segment you have not named yet'

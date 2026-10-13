@@ -216,7 +216,10 @@ export const section: BronchSectionDefinition = {
       sectionId: 'right-side',
       mode: 'guided-walk',
       profile: 'adult-teaching-combined-left-basal-v1',
-      start: { kind: 'airway', label: 'BI', at: 'distal' },
+      // The view a bronchoscopist sets up to find the middle lobe (educator feedback, 2026-10-13):
+      // far enough back in the bronchus intermedius to see both openings, turned so the middle
+      // lobe is at the top of the image and the lower lobe lies ahead.
+      start: { kind: 'airway', label: 'BI', at: 'mid' },
       controls: ['advance', 'withdraw', 'rotate', 'deflect', 'recenter', 'reset'],
       assists: {
         'centerline-lock': true,
@@ -226,7 +229,7 @@ export const section: BronchSectionDefinition = {
         recenter: true,
         'reference-orientation': true,
       },
-      defaults: { branchLabels: false },
+      defaults: { branchLabels: false, rotationDeg: 44, deflectionDeg: -3 },
       readouts: ['currentAirway', 'parentage'],
       litAirways: ['BI', 'RML', 'RB4', 'RB5', 'RLL', 'RB6'],
       boundary: VIEW_LINE,

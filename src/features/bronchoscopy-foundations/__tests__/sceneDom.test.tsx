@@ -3,6 +3,13 @@ import { fireEvent, render, screen, act } from '@testing-library/react'
 import { ScopeScenePane, SCOPE_MODES_READY } from '../components/scope/ScopeScenePane'
 import { ScopeDock } from '../components/scope/ScopeDock'
 import {
+  HELD_INTERVAL_MS,
+  HELD_STEP_MM,
+  HELD_TURN_DEG,
+  HOLD_DELAY_MS,
+  HOLD_RELEASE_MS,
+} from '../components/scope/scopeKeyMap'
+import {
   SCOPE_MODES,
   scopeControlId,
   type ScopePaneProps,
@@ -93,6 +100,114 @@ test('dock commands retain device input provenance and button ids', () => {
   expect(p.onCommand).toHaveBeenLastCalledWith({ type: 'capture' }, 'keyboard')
   fireEvent.click(screen.getByRole('button', { name: 'Step one second' }))
   expect(p.onCommand).toHaveBeenLastCalledWith({ type: 'tick', seconds: 1 }, 'keyboard')
+})
+test('a held movement key glides: one step on the press, then fine increments at a steady rate', () => {
+  jest.useFakeTimers()
+  const p = props()
+  const onCommand = p.onCommand as jest.Mock
+  const mounted = render(<ScopeScenePane {...p} />)
+  const workspace = screen.getByLabelText('Interactive scope workspace')
+  fireEvent.keyDown(workspace, { key: 'w' })
+  expect(onCommand).toHaveBeenLastCalledWith(
+    { type: 'advance', mm: p.state.inputs.stepMm },
+    'keyboard',
+  )
+  // The keyboard repeats faster than the glide runs: a repeat inside the interval sends nothing.
+  fireEvent.keyDown(workspace, { key: 'w', repeat: true })
+  expect(onCommand).toHaveBeenCalledTimes(1)
+  for (let i = 0; i < 3; i += 1) {
+    act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+    fireEvent.keyDown(workspace, { key: 'w', repeat: true })
+    fireEvent.keyDown(workspace, { key: 'w', repeat: true })
+  }
+  expect(onCommand.mock.calls.slice(1)).toEqual(
+    Array.from({ length: 3 }, () => [{ type: 'advance', mm: HELD_STEP_MM }, 'keyboard']),
+  )
+  // Withdrawing and turning glide the same way, in the direction of the key.
+  for (const [key, held] of [
+    ['s', { type: 'advance', mm: -HELD_STEP_MM }],
+    ['a', { type: 'rotate', deg: -HELD_TURN_DEG }],
+    ['ArrowUp', { type: 'deflect', deg: HELD_TURN_DEG }],
+  ] as const) {
+    act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+    fireEvent.keyDown(workspace, { key, repeat: true })
+    expect(onCommand).toHaveBeenLastCalledWith(held, 'keyboard')
+  }
+  // Only movement repeats: a held capture key is one capture.
+  const sent = onCommand.mock.calls.length
+  act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+  fireEvent.keyDown(workspace, { key: 'c', repeat: true })
+  expect(onCommand).toHaveBeenCalledTimes(sent)
+  mounted.unmount()
+  jest.useRealTimers()
+})
+test('a press of Advance is one step; a hold glides, and the click that ends it adds no step', () => {
+  jest.useFakeTimers()
+  // This jsdom has neither pointer events nor pointer capture. A mouse event stands in for the
+  // press (it carries the button the dock checks), and capture, which the dock asks for so that a
+  // drag off the button still ends the hold, is a stub.
+  const hadPointerEvent = 'PointerEvent' in window
+  if (!hadPointerEvent)
+    Object.defineProperty(window, 'PointerEvent', { configurable: true, value: MouseEvent })
+  const elementPrototype = Element.prototype as unknown as { setPointerCapture?: unknown }
+  const hadCapture = 'setPointerCapture' in elementPrototype
+  if (!hadCapture) elementPrototype.setPointerCapture = jest.fn()
+  const p = props()
+  const onCommand = p.onCommand as jest.Mock
+  const mounted = render(<ScopeDock {...p} needsStep={false} />)
+  const advance = screen.getByRole('button', { name: /^Advance$/ })
+  const step = [{ type: 'advance', mm: p.state.inputs.stepMm }, 'pointer']
+  const fine = [{ type: 'advance', mm: HELD_STEP_MM }, 'pointer']
+
+  // A short press: released inside the delay, so the click is the whole of it.
+  fireEvent.pointerDown(advance, { button: 0 })
+  expect(elementPrototype.setPointerCapture).toHaveBeenCalledTimes(hadCapture ? 0 : 1)
+  act(() => jest.advanceTimersByTime(HOLD_DELAY_MS - 1))
+  expect(onCommand).not.toHaveBeenCalled()
+  fireEvent.pointerUp(advance)
+  fireEvent.click(advance)
+  act(() => jest.advanceTimersByTime(4 * HOLD_DELAY_MS))
+  expect(onCommand.mock.calls).toEqual([step])
+
+  // A hold: nothing until the delay has run, then one fine increment per interval.
+  onCommand.mockClear()
+  fireEvent.pointerDown(advance, { button: 0 })
+  act(() => jest.advanceTimersByTime(HOLD_DELAY_MS))
+  expect(onCommand.mock.calls).toEqual([fine])
+  act(() => jest.advanceTimersByTime(3 * HELD_INTERVAL_MS))
+  expect(onCommand.mock.calls).toEqual([fine, fine, fine, fine])
+  // The release stops the glide, and the click the browser sends after it is not one more step.
+  fireEvent.pointerUp(advance)
+  fireEvent.click(advance)
+  act(() => jest.advanceTimersByTime(10 * HELD_INTERVAL_MS))
+  expect(onCommand).toHaveBeenCalledTimes(4)
+  // The next press is an ordinary step again.
+  fireEvent.click(advance)
+  expect(onCommand.mock.calls.at(-1)).toEqual(step)
+
+  // Withdraw glides the other way, and a hold that loses the pointer stops too.
+  onCommand.mockClear()
+  const withdraw = screen.getByRole('button', { name: /^Withdraw$/ })
+  fireEvent.pointerDown(withdraw, { button: 0 })
+  act(() => jest.advanceTimersByTime(HOLD_DELAY_MS + HELD_INTERVAL_MS))
+  expect(onCommand.mock.calls).toEqual(
+    Array.from({ length: 2 }, () => [{ type: 'advance', mm: -HELD_STEP_MM }, 'pointer']),
+  )
+  fireEvent.pointerCancel(withdraw)
+  act(() => jest.advanceTimersByTime(HOLD_RELEASE_MS))
+  expect(onCommand).toHaveBeenCalledTimes(2)
+  // A cancelled hold is followed by no click of its own, so the learner's next press still counts.
+  fireEvent.click(withdraw)
+  expect(onCommand.mock.calls.at(-1)).toEqual([
+    { type: 'advance', mm: -p.state.inputs.stepMm },
+    'pointer',
+  ])
+  expect(onCommand).toHaveBeenCalledTimes(3)
+
+  mounted.unmount()
+  if (!hadCapture) delete elementPrototype.setPointerCapture
+  if (!hadPointerEvent) delete (window as { PointerEvent?: unknown }).PointerEvent
+  jest.useRealTimers()
 })
 test('reduced motion exposes an explicit step and never ticks on its own', () => {
   jest.useFakeTimers()

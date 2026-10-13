@@ -5,8 +5,15 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { ScopePaneFrame } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
+import { unnamedAirways } from '../../engine/scope/inspectionLedger'
 import { isDetailedBench, useBenchPresentation } from './useBenchPresentation'
-import { SCOPE_KEY_MAP, scopeKeyCommand, scopeKeyboardHint } from './scopeKeyMap'
+import {
+  HELD_INTERVAL_MS,
+  heldKeyCommand,
+  SCOPE_KEY_MAP,
+  scopeKeyCommand,
+  scopeKeyboardHint,
+} from './scopeKeyMap'
 import { SCOPE_MODES, type ScopeMode, type ScopePaneProps } from './types'
 import styles from './scope-scene.module.css'
 import { TreeMap } from './TreeMap'
@@ -93,18 +100,17 @@ function ScenePane(props: ScopePaneProps) {
     const command = scopeKeyCommand(key, props.state)
     if (!command) return
     event.preventDefault()
-    if (
-      event.repeat &&
-      command.type !== 'advance' &&
-      command.type !== 'rotate' &&
-      command.type !== 'deflect'
-    )
-      return
-    if (command.type === 'advance') {
-      const now = performance.now()
-      if (event.repeat && now - lastMove.current < (props.state.inputs.stepMm / 24) * 1000) return
+    const now = performance.now()
+    if (event.repeat) {
+      // Only movement repeats, and a held key glides: fine increments at a steady rate.
+      if (command.type !== 'advance' && command.type !== 'rotate' && command.type !== 'deflect')
+        return
+      if (now - lastMove.current < HELD_INTERVAL_MS) return
       lastMove.current = now
+      props.onCommand(heldKeyCommand(command), 'keyboard')
+      return
     }
+    lastMove.current = now
     props.onCommand(command, 'keyboard')
   }
   return (
@@ -193,6 +199,9 @@ function ScenePane(props: ScopePaneProps) {
                       current={props.state.location.label}
                       tipLps={props.state.pose?.tipLps ?? null}
                       treeAnswer={props.treeAnswer}
+                      unnamed={
+                        props.view.ledger?.naming ? unnamedAirways(props.state.ledger) : undefined
+                      }
                     />
                   </div>
                 ) : null}

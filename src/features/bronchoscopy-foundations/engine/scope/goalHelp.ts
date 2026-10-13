@@ -1,4 +1,11 @@
-import { minus, plus, projectOptical, times, unit } from '@/lib/bronchoscopy-core/frame'
+import {
+  minus,
+  plus,
+  projectOptical,
+  times,
+  unit,
+  type OpticalFrame,
+} from '@/lib/bronchoscopy-core/frame'
 import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
@@ -12,10 +19,12 @@ import type {
   ScopeViewSpec,
 } from '../../components/scope/types'
 import { airwayDisplayName, labelAncestry, treeNodeByLabel } from '../../content/airwayTree'
+import { namingSubject } from './inspectionLedger'
 import { scopeGoalTestMet } from './scopeGoalEvaluation'
 import type { ScopeCase } from './scopeCase'
 import { aimAt } from './scopeFrame'
 import { normalizeRotationDeg } from './scopeInputs'
+import { guidedFork } from './scopeMotion'
 import { tipBaseFrame } from './scopePose'
 import { reduceScope } from './scopeReducer'
 import type { ScopeRuntimeState } from './scopeRuntime'
@@ -150,7 +159,16 @@ function steeringAlong(
 ): { readonly rotateBy: number; readonly deflectBy: number } | null {
   if (!state.engine) return null
   const base = tipBaseFrame(state.engine, view, scopeCase)
-  const aim = aimAt(base, plus(base.position, times(direction, 20)))
+  return steeringToward(base, plus(base.position, times(direction, 20)), state)
+}
+
+/** The turn and bend that bring a point to the centre of the picture a frame gives. */
+function steeringToward(
+  base: OpticalFrame,
+  point: Vec3,
+  state: ScopeState,
+): { readonly rotateBy: number; readonly deflectBy: number } {
+  const aim = aimAt(base, point)
   // The same direction is reached by turning the other way round and bending the other way.
   const options = [
     { rotation: aim.rotationDeg, deflection: aim.deflectionDeg },
@@ -227,8 +245,23 @@ function steer(
         ? `Advance: ${opening} comes into view as the tip goes on.`
         : `Advance: an advance from here goes into ${opening}.`,
     }
-  // To see an opening, point the axis at it; to go through one, point along its branch.
   const frame = scopeOpticalFrame(state.pose)
+  // To go through the fork just ahead, bring the opening that leads on to the centre of the
+  // picture the fork is read from: the engine's own rule (`guidedFork`), asked rather than copied.
+  const fork =
+    !seeing && state.engine && view.mode === 'guided-walk'
+      ? guidedFork(state.engine.edgeId, state.inputs, { view, scopeCase })
+      : null
+  const lead = fork ? leadingOpening(scopeCase, state.engine!.edgeId, pin.edgeId) : null
+  const leadOpening =
+    fork && lead !== null ? fork.openings.find((o) => o.edgeId === lead) : undefined
+  if (fork && leadOpening && fork.chosenEdgeId === lead)
+    return {
+      control: 'advance',
+      target: pin.label,
+      sentence: `Advance: the tip is pointed the way to ${opening}.`,
+    }
+  // To see an opening, point the axis at it; to go through one further on, point along its branch.
   const child = scopeCase.index.edgesById.get(pin.edgeId)
   const node = child ? scopeCase.index.nodesById.get(child.startNodeId) : undefined
   const direction =
@@ -238,7 +271,10 @@ function steer(
           minus(sampleEdgePose(child, Math.min(BRANCH_PROBE_MM, child.lengthMm)).point, node.lps),
           frame.forward,
         )
-  const steering = steeringAlong(direction, state, view, scopeCase)
+  const steering =
+    fork && leadOpening
+      ? steeringToward(fork.base, leadOpening.aimPoint, state)
+      : steeringAlong(direction, state, view, scopeCase)
   const projected = projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
   const inField = projected !== null && Math.hypot(projected.x * OPTICAL_ASPECT, projected.y) < 1
   const outside = inField ? '' : ' It is outside the field of view now.'
@@ -253,6 +289,20 @@ function steer(
     target: pin.label,
     sentence: `Deflect toward ${steering && steering.deflectBy < 0 ? 'D' : 'U'}: ${opening} is in the plane the lever bends in.${outside}`,
   }
+}
+
+/** The opening of the fork at the end of `edgeId` that leads to `towardEdgeId`, if any does. */
+function leadingOpening(scopeCase: ScopeCase, edgeId: number, towardEdgeId: number): number | null {
+  let current: number | null = towardEdgeId
+  for (let guard = 0; current !== null && guard < scopeCase.graph.edges.length; guard += 1) {
+    const edge = scopeCase.index.edgesById.get(current)
+    const above: number | null = edge
+      ? (scopeCase.index.nodesById.get(edge.startNodeId)?.parentEdgeId ?? null)
+      : null
+    if (above === edgeId) return current
+    current = above
+  }
+  return null
 }
 
 function capitalize(text: string): string {
@@ -364,6 +414,15 @@ export function goalHelp(
     case 'location':
       return steer(state, view, scopeCase, pending.airway, 'enter')
     case 'ledger':
+      // A naming record's help never says which segment is which: that is the question.
+      if (view.ledger?.naming)
+        return {
+          control: 'declare',
+          target: null,
+          sentence: namingSubject(view, state)
+            ? 'Choose this segment’s name from the list under the controls.'
+            : 'Drive into a segment you have not named yet. Its list of names opens under the controls.',
+        }
       return {
         control: 'declare',
         target: pending.airway,

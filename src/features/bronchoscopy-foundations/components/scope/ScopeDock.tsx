@@ -14,6 +14,8 @@ import {
 } from './types'
 import styles from './scope-scene.module.css'
 import { accessoryKind } from '../../engine/scope/scopeAccessory'
+import { HELD_INTERVAL_MS, HELD_STEP_MM, HOLD_DELAY_MS, HOLD_RELEASE_MS } from './scopeKeyMap'
+import { NameSegment } from './NameSegment'
 
 /**
  * Choosing a state here is a command to the assistant, not the state itself (SUP-16).
@@ -27,15 +29,30 @@ const ACCESSORY_COMMAND_NOTE =
   'Choosing here commands the assistant; the image settles what the accessory is doing.'
 const ACCESSORY_COMMAND_NOTE_ID = scopeControlId('accessory-command-note')
 
-/** Held insertion is a sequence of ordinary commands, capped at 24 authored mm/s. */
+/**
+ * A press of Advance or Withdraw is one step. Held, it becomes a glide: ordinary advance commands
+ * in fine increments at a steady rate (`scopeKeyMap.ts`), and the release adds no step of its own.
+ */
 export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
   const { view, state, controlsEnabled, onCommand, onReset, spotlightKey } = props
   const inputMode = useRef<ScopeInputMode>('pointer')
   const hold = useRef<ReturnType<typeof setInterval> | null>(null)
+  const holdDelay = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const held = useRef(false)
+  // Until when a click belongs to the hold that just ended, and so adds no step of its own.
+  const releaseUntil = useRef(0)
   const repeat = useRef<() => void>(() => {})
   const stop = () => {
+    if (holdDelay.current) clearTimeout(holdDelay.current)
+    holdDelay.current = null
     if (hold.current) clearInterval(hold.current)
     hold.current = null
+    if (held.current) {
+      // Only the click that follows this release at once: a hold the browser cancelled is
+      // followed by none, and must not swallow the learner's next press.
+      held.current = false
+      releaseUntil.current = performance.now() + HOLD_RELEASE_MS
+    }
   }
   useEffect(() => {
     const release = () => stop()
@@ -57,13 +74,15 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
     if (!controlsEnabled || event.button !== 0) return
     event.currentTarget.setPointerCapture(event.pointerId)
     stop()
-    // The click supplies the initial step. Only a sustained hold starts repetition.
+    releaseUntil.current = 0
+    // A short press is the click's one step. Only a sustained hold starts the glide.
     repeat.current = () =>
-      onCommand({ type: 'advance', mm: direction * state.inputs.stepMm }, inputMode.current)
-    hold.current = setInterval(
-      () => repeat.current(),
-      Math.max(160, (state.inputs.stepMm / 24) * 1000),
-    )
+      onCommand({ type: 'advance', mm: direction * HELD_STEP_MM }, inputMode.current)
+    holdDelay.current = setTimeout(() => {
+      held.current = true
+      repeat.current()
+      hold.current = setInterval(() => repeat.current(), HELD_INTERVAL_MS)
+    }, HOLD_DELAY_MS)
   }
   const button = (key: ScopeControlKey, text: string, command: ScopeCommand) => (
     <button id={scopeControlId(key)} type="button" onClick={() => send(command)}>
@@ -85,7 +104,14 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
             onPointerUp={stop}
             onPointerCancel={stop}
             onLostPointerCapture={stop}
-            onClick={() => send({ type: 'advance', mm: direction * state.inputs.stepMm })}
+            onClick={() => {
+              // The release of a hold has already travelled; it is not one more step.
+              if (performance.now() < releaseUntil.current) {
+                releaseUntil.current = 0
+                return
+              }
+              send({ type: 'advance', mm: direction * state.inputs.stepMm })
+            }}
           >
             {key === 'advance' ? 'Advance' : 'Withdraw'}
             {view.physicalControlLabels ? (
@@ -219,11 +245,13 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
       case 'step':
         return button(key, 'Step one second', { type: 'tick', seconds: 1 })
       case 'declare':
-        return null
+        return <NameSegment view={view} state={state} disabled={!controlsEnabled} onName={send} />
     }
   }
-  const keys = [...view.controls.filter((key) => key !== 'declare')]
+  // A naming record asks its question in a row of its own, under the movement controls.
+  const keys: ScopeControlKey[] = view.controls.filter((key) => key !== 'declare')
   if (props.needsStep && !keys.includes('step')) keys.push('step')
+  if (view.controls.includes('declare') && view.ledger?.naming) keys.push('declare')
   if (!keys.length) return null
   return (
     <fieldset

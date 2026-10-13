@@ -1,9 +1,9 @@
-import { projectOptical, scalar } from '@/lib/bronchoscopy-core/frame'
+import { projectOptical, scalar, type OpticalFrame } from '@/lib/bronchoscopy-core/frame'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
-import type { ScopeState, CordsState } from './types'
+import type { ScopeState, CordsState, OstiumPin } from './types'
 
 export const CORD_MORPH_WEIGHT: Readonly<Record<CordsState, number>> = {
   abducted: 0,
@@ -41,12 +41,42 @@ export function patientDirectionTicks(state: Pick<ScopeState, 'pose' | 'place'>)
 export const PATIENT_TICK_LEGEND =
   'Scope view: from the tip, looking along the airway. A marks the patient’s front and L the patient’s left, from the teaching model’s geometry; they move when the control section turns.'
 
+/**
+ * Where an opening's name goes in the image: a little way inside the airway, so the name sits in
+ * its lumen (educator feedback, 2026-10-13: at the main carina both names crowded onto the ridge
+ * between the openings). From far back that is the airway's own label point. Close to a fork that
+ * point swings out of the round field, so the name steps back toward the opening along the line
+ * between the two until the field holds it, and rests on the opening itself only as a last resort.
+ */
+export function projectPinLabel(pin: OstiumPin, frame: OpticalFrame) {
+  const inside = pin.labelPointLps
+  if (inside)
+    for (const share of LABEL_DEPTH_STEPS) {
+      const point: Vec3 = [
+        pin.pointLps[0] + (inside[0] - pin.pointLps[0]) * share,
+        pin.pointLps[1] + (inside[1] - pin.pointLps[1]) * share,
+        pin.pointLps[2] + (inside[2] - pin.pointLps[2]) * share,
+      ]
+      const projected = projectOptical(point, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
+      if (projected && Math.hypot(projected.x * OPTICAL_ASPECT, projected.y) < LABEL_FIELD_RADIUS)
+        return projected
+    }
+  return projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
+}
+/**
+ * A name's centre is kept this far inside the round field (radius 1), so the name is not clipped
+ * by the rim and does not sit on the patient-direction ticks drawn at 0.9.
+ */
+const LABEL_FIELD_RADIUS = 0.72
+/** How far toward the label point a name is tried, deepest first. */
+const LABEL_DEPTH_STEPS = [1, 0.8, 0.6, 0.4, 0.2] as const
+
 export function projectScenePins(state: ScopeState) {
   if (!state.pose || state.signals.view !== 'clear') return []
   const frame = scopeOpticalFrame(state.pose)
   return state.ostia.flatMap((pin) => {
     if (!pin.inView) return []
-    const projected = projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
+    const projected = projectPinLabel(pin, frame)
     return projected
       ? [
           {
@@ -72,13 +102,13 @@ const ANCHOR_CLEARANCE = 26
  * Move the caption only; leader lines retain the measured optical projection (fellow walkthrough
  * A24).
  *
- * Each pin's attachment point is the model's own ostium point, projected through the same frame the
- * renderer draws — never a pixel guessed from the picture. At the main carina both openings begin
- * a few millimetres apart, so both points sit near the middle of the image and centred captions
- * crowd onto the ridge between them. A caption that would crowd is pushed outward, away from the
- * other openings' points (along the line from their centroid through its own point), until it is
- * clear of every other caption and of every other opening's point; a leader line and a dot keep
- * it attached to its own point. Unlabelled pins (the "·" markers) stay on their points.
+ * Each pin's attachment point is the model's own point inside that airway (`projectPinLabel`),
+ * projected through the same frame the renderer draws — never a pixel guessed from the picture.
+ * Two openings seen from far back can still project close together. A caption that would crowd is
+ * pushed outward, away from the other openings' points (along the line from their centroid through
+ * its own point), until it is clear of every other caption and of every other opening's point; a
+ * leader line and a dot keep it attached to its own point. Unlabelled pins (the "·" markers) stay
+ * on their points.
  */
 export function layoutOpticalLabels(
   pins: ReturnType<typeof projectScenePins>,

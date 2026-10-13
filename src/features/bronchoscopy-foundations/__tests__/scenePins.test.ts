@@ -2,9 +2,13 @@
 import { PerspectiveCamera, Vector3 } from 'three'
 import { verticalFov } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
-import { layoutOpticalLabels, projectScenePins } from '../components/scope/scopeSceneModel'
+import {
+  layoutOpticalLabels,
+  projectPinLabel,
+  projectScenePins,
+} from '../components/scope/scopeSceneModel'
 import { treePinLayout } from '../components/scope/treePinLayout'
-import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../engine/scope/scopeOstia'
+import { OPTICAL_ASPECT, OPTICAL_FOV_DEG, pointInOpticalField } from '../engine/scope/scopeOstia'
 import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
 import type { ScopeViewSpec } from '../components/scope/types'
 import { createScopeState } from '../engine/scope/scopeReducer'
@@ -21,8 +25,18 @@ const view: ScopeViewSpec = {
   boundary: 'Authored model.',
 }
 
+/**
+ * A name is drawn on the line from an opening to the point a little way inside its airway
+ * (`projectPinLabel`): at that point when the round field holds it, stepped back toward the
+ * opening when it does not. Radius 1 is the rim, in units of the frame's half-height; a point this
+ * far inside it is clear of whatever margin the model keeps from the rim.
+ */
+const COMFORTABLY_INSIDE_FIELD = 0.5
+
 test('in-view pins agree with the Three camera projection for every sampled roll and bend', () => {
   let compared = 0
+  let namedInside = 0
+  let namedAtItsPoint = 0
   for (const roll of [-180, -90, -35, 0, 35, 90, 180])
     for (const bend of [-15, 0, 15]) {
       const driver = new ScopeDriver(view)
@@ -40,14 +54,50 @@ test('in-view pins agree with the Three camera projection for every sampled roll
       camera.lookAt(new Vector3(...frame.position).add(new Vector3(...frame.forward)))
       camera.updateMatrixWorld()
       for (const pin of projectScenePins(driver.state)) {
-        const projected = new Vector3(...pin.pointLps).project(camera)
-        expect(pin.leftPct).toBeCloseTo((0.5 + projected.x / 2) * 100, 8)
-        expect(pin.topPct).toBeCloseTo((0.5 - projected.y / 2) * 100, 8)
+        // The scene draws each name where the model's one rule puts it.
+        const placed = projectPinLabel(pin, frame)!
+        expect(pin.leftPct).toBeCloseTo((0.5 + placed.x / 2) * 100, 8)
+        expect(pin.topPct).toBeCloseTo((0.5 - placed.y / 2) * 100, 8)
+        // And the Three camera sees that place on the airway itself: on the image of the line from
+        // the opening to the point inside it, which a perspective camera draws as a line.
+        expect(pin.labelPointLps).toBeDefined()
+        const opening = new Vector3(...pin.pointLps).project(camera)
+        const inside = new Vector3(...pin.labelPointLps!).project(camera)
+        const at = { x: (pin.leftPct / 100 - 0.5) * 2, y: (0.5 - pin.topPct / 100) * 2 }
+        const along = { x: inside.x - opening.x, y: inside.y - opening.y }
+        const lengthSq = along.x ** 2 + along.y ** 2
+        expect(lengthSq).toBeGreaterThan(1e-9)
+        const share = ((at.x - opening.x) * along.x + (at.y - opening.y) * along.y) / lengthSq
+        expect(share).toBeGreaterThan(-1e-9)
+        expect(share).toBeLessThan(1 + 1e-9)
+        expect(opening.x + along.x * share).toBeCloseTo(at.x, 8)
+        expect(opening.y + along.y * share).toBeCloseTo(at.y, 8)
+        // A name that has left its opening is still inside the round field, where it can be read.
+        if (share > 1e-6) {
+          expect(Math.hypot(at.x * OPTICAL_ASPECT, at.y)).toBeLessThan(1)
+          namedInside++
+        }
+        // Deepest first: where the point inside the airway is well within the field, that is it.
+        if (Math.hypot(inside.x * OPTICAL_ASPECT, inside.y) < COMFORTABLY_INSIDE_FIELD) {
+          expect(share).toBeCloseTo(1, 8)
+          namedAtItsPoint++
+        }
         compared++
       }
       expect(driver.state.location.label).toBe('TR')
     }
   expect(compared).toBeGreaterThan(20)
+  // Most names sit inside the lumen, and many at the airway's own point.
+  expect(namedInside).toBeGreaterThan(20)
+  expect(namedAtItsPoint).toBeGreaterThan(5)
+})
+
+test('what counts as in view is still read from the opening, not from where its name is drawn', () => {
+  const driver = new ScopeDriver(view)
+  const frame = scopeOpticalFrame(driver.state.pose!)
+  expect(driver.state.ostia.length).toBeGreaterThan(0)
+  for (const pin of driver.state.ostia)
+    expect(pin.inView).toBe(pointInOpticalField(pin.pointLps, frame, null))
 })
 
 test('obscured fields do not offer visible ostium pins', () => {

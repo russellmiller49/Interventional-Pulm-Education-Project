@@ -13,6 +13,7 @@ import { BlockCard } from './BronchTeachingBlock'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
 import { InstrumentOrientation } from './InstrumentOrientation'
 import { MediaFigure } from './MediaFigure'
+import { OrientationCompass } from './OrientationCompass'
 import { SurveyVideo } from './SurveyVideo'
 import styles from './course-flow.module.css'
 
@@ -84,6 +85,7 @@ export function BronchCourseTeaching({
       {chunk.visual === 'tool-states' ? <ToolStatesFigure /> : null}
       {chunk.visual === 'radiation-safety' ? <RadiationSafetyFigure /> : null}
       {chunk.visual === 'specimen-containers' ? <SpecimenContainersFigure /> : null}
+      {chunk.visual === 'orientation-compass' ? <OrientationCompass /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
           <h3>A worked situation</h3>

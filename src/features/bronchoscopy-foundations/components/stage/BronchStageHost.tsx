@@ -523,6 +523,8 @@ function BronchStageSessionView({
     : goals.map((goal) => ({ goal, met: false, claim: scopeGoalClaim(goal.test) }))
   const goalsMetNow = goalStatuses.map((status) => status.met)
   const goalsClaim = scopeGoalsClaim(goals)
+  /** A rewritten section's goal card says what to do and when it is done, in plain words. */
+  const plainGoals = lesson.section.authoringContract === 2
   /** Where the tip is now, so a met goal is never read as a statement about the present view. */
   const liveLocationLine =
     goals.length > 0 && activeScopeState ? scopeNowLine(activeScopeState) : null
@@ -570,6 +572,8 @@ function BronchStageSessionView({
     goals.length > 0 &&
     !treeItem &&
     goalInteraction.view.mode === 'guided-walk' &&
+    // A naming record asks for the names; it does not also hand them out.
+    goalInteraction.view.ledger?.naming !== true &&
     !goalInteraction.view.controls.includes('branchLabels') &&
     activeScopeState?.inputs.branchLabels !== true &&
     activeScopeState?.script?.phase !== 'unidentified'
@@ -803,7 +807,7 @@ function BronchStageSessionView({
           return {
             ...base,
             status: workDone
-              ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim))
+              ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim, plainGoals))
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
                 : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
@@ -824,7 +828,7 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: scopeDoneLead(goalsClaim),
+            status: scopeDoneLead(goalsClaim, plainGoals),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -847,7 +851,7 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: scopeDoneLead(goalsClaim),
+            status: scopeDoneLead(goalsClaim, plainGoals),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -876,7 +880,7 @@ function BronchStageSessionView({
     <>
       {goals.length > 0 ? (
         <p className={styles.goalGroupHeading} id={goalHeadingId} data-goal-group={goalsClaim}>
-          {goalListHeading(goalsClaim, goalsMetNow.every(Boolean))}
+          {goalListHeading(goalsClaim, goalsMetNow.every(Boolean), plainGoals)}
         </p>
       ) : null}
       <ul
@@ -892,7 +896,7 @@ function BronchStageSessionView({
             {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
             <span>
               {/* Only a card that carries both kinds needs to mark them apart row by row. */}
-              {goalsClaim === 'mixed' ? (
+              {goalsClaim === 'mixed' && !plainGoals ? (
                 <span className={styles.goalClaimTag} data-goal-claim-tag={claim}>
                   {GOAL_CLAIM_TAG[claim]}
                 </span>

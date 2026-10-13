@@ -1,5 +1,5 @@
 import { BENCH_FLUID } from './benchFluid'
-import { minus, scalar, unit } from '@/lib/bronchoscopy-core/frame'
+import { minus, scalar, unit, type OpticalFrame } from '@/lib/bronchoscopy-core/frame'
 import { driveScope } from '@/lib/airway-anatomy/drive'
 import { distance } from '@/lib/airway-anatomy/geometry'
 import {
@@ -12,7 +12,7 @@ import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import type { ScopeEventId, ScopeInputs, ScopeState } from '../../components/scope/types'
 import { labelAncestry } from '../../content/airwayTree'
-import type { ScopeCase } from './scopeCase'
+import { openingInsetMm, type ScopeCase } from './scopeCase'
 import { enteredEvent, withdrewToEvent } from './scopeEvents'
 import { aimAngleDeg, scopeFrame } from './scopeFrame'
 import { SCOPE_MESSAGES } from './scopeMessages'
@@ -21,7 +21,10 @@ import type { ScopeContext, ScopeRuntimeState } from './scopeRuntime'
 import {
   AIM_CONE_DEG,
   BRANCH_APPROACH_MM,
+  FORK_STANDOFF_MM,
   GLOTTIS_ALIGN_LIMIT_DEG,
+  GUIDED_AIM_CONE_DEG,
+  GUIDED_AIM_MARGIN_DEG,
   LARYNX_GLOTTIS_MM,
   LARYNX_LENGTH_MM,
   MOTION_INCREMENT_MM,
@@ -40,6 +43,12 @@ import {
  * refused rather than resolved. With a loaded lumen and free drive, the tip moves along its own
  * axis against the collider instead (driveScope). The larynx, the tube and the bench are authored
  * one-axis geometry.
+ *
+ * Guided travel is forgiving on purpose (educator feedback, 2026-10-13). The lumen guides the tip,
+ * so a bend registers no wall contact; at a fork the scope takes the opening nearest the centre of
+ * the picture, or waits short of the fork while two are about equally near (`guidedForkChoice`);
+ * and once through a fork the tip returns to neutral, as the lever is released on entering a
+ * branch. What a wall feels like through the insertion tube is left to the scope in the hand.
  */
 
 export interface InsertionResult {
@@ -57,6 +66,8 @@ export interface InsertionResult {
   readonly aimGuardActed: boolean
   /** The tip travelled the airway tree along the centerline. */
   readonly centerlineTravel: boolean
+  /** Guided travel carried a bent tip through a fork and returned it to neutral. */
+  readonly straightened: boolean
 }
 
 const BENCH_TRAVEL_MM = 100
@@ -73,6 +84,7 @@ function outcome(state: ScopeRuntimeState, patch: Partial<InsertionResult>): Ins
     travelledMm: 0,
     aimGuardActed: false,
     centerlineTravel: false,
+    straightened: false,
     ...patch,
   }
 }
@@ -120,6 +132,61 @@ export function aimsAtWall(
   return radius / Math.sin((angle * Math.PI) / 180) <= WALL_AIM_STEPS * inputs.stepMm
 }
 
+/** A fork ahead of a guided tip, and what its picture says about it. */
+export interface GuidedFork {
+  /** How far along the current edge the scope waits while the aim is undecided. */
+  readonly standMm: number
+  /** The frame at that place before rotation and deflection: what an aim is worked out against. */
+  readonly base: OpticalFrame
+  /** The view from that place with the controls as they are: where the fork is read from. */
+  readonly frame: OpticalFrame
+  /** The openings, nearest the centre of that picture first. */
+  readonly openings: readonly {
+    readonly edgeId: number
+    /** The point inside the opening the picture is read against (`openingInsetMm`). */
+    readonly aimPoint: Vec3
+    /** Degrees between the view axis and that point. */
+    readonly offAxisDeg: number
+  }[]
+  /** The opening the aim has chosen, or null while two are about equally near or none is in view. */
+  readonly chosenEdgeId: number | null
+}
+
+/**
+ * The fork at the end of an edge as a guided tip reads it (`scopeScripts.ts`, the aim guard).
+ * Null when the edge does not end in a fork. Read from where the scope waits, with the controls as
+ * they are, so the answer does not change as the tip covers the last stretch to the fork.
+ */
+export function guidedFork(
+  edgeId: number,
+  inputs: Pick<ScopeInputs, 'rotationDeg' | 'deflectionDeg'>,
+  ctx: ScopeContext,
+): GuidedFork | null {
+  const scopeCase = ctx.scopeCase
+  const edge = scopeCase?.index.edgesById.get(edgeId)
+  const node = edge ? scopeCase?.index.nodesById.get(edge.endNodeId) : undefined
+  if (!scopeCase || !edge || !node || node.childEdgeIds.length < 2) return null
+  const standMm = Math.max(0, edge.lengthMm - FORK_STANDOFF_MM)
+  const base = transportFor(ctx.view, scopeCase).at(edgeId, standMm)
+  const frame = scopeFrame(base, inputs)
+  const openings = node.childEdgeIds
+    .flatMap((childId) => {
+      const child = scopeCase.index.edgesById.get(childId)
+      if (!child) return []
+      const aimPoint = sampleEdgePose(child, openingInsetMm(child)).point
+      const cos = scalar(frame.forward, unit(minus(aimPoint, frame.position), frame.forward))
+      const offAxisDeg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI
+      return [{ edgeId: childId, aimPoint, offAxisDeg }]
+    })
+    .sort((a, b) => a.offAxisDeg - b.offAxisDeg)
+  const [nearest, next] = openings
+  const decided =
+    nearest !== undefined &&
+    nearest.offAxisDeg <= GUIDED_AIM_CONE_DEG &&
+    (next === undefined || next.offAxisDeg - nearest.offAxisDeg >= GUIDED_AIM_MARGIN_DEG)
+  return { standMm, base, frame, openings, chosenEdgeId: decided ? nearest.edgeId : null }
+}
+
 function insertInLarynx(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): InsertionResult {
   const from = state.depthMm
   const to = from + mm
@@ -165,9 +232,10 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
   const scopeCase = ctx.scopeCase
   if (!scopeCase || !state.engine) return outcome(state, {})
   const { view } = ctx
-  const { inputs } = state
+  let inputs = state.inputs
   const advancing = mm > 0
   const free = Boolean(state.engine.freeFrame && scopeCase.collider)
+  const guided = view.mode === 'guided-walk'
 
   if (advancing) {
     if (state.signals.view === 'red-out')
@@ -182,7 +250,7 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
         contact: true,
         message: SCOPE_MESSAGES.tubeWall,
       })
-    if (state.place === 'airway' && !free && aimsAtWall(state.engine, inputs, ctx))
+    if (state.place === 'airway' && !free && !guided && aimsAtWall(state.engine, inputs, ctx))
       return outcome(state, {
         events: ['wall-contact'],
         contact: true,
@@ -191,7 +259,7 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
       })
   }
 
-  const requireAim = view.mode === 'guided-walk' && view.assists['aim-guard'] !== false
+  const requireAim = guided && view.assists['aim-guard'] !== false
   const labelOf = (engine: EngineScopeState) => scopeCase.labelAt(engine.edgeId)
   const events: ScopeEventId[] = []
   let engine = state.engine
@@ -200,9 +268,22 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
   let contact = false
   let lensOnWall = false
   let aimGuardActed = false
+  let straightened = false
   let travelledMm = 0
   let remaining = mm
   let guard = 0
+  const travel = (viewForward: Vec3) => ({
+    requireAim,
+    viewForward,
+    lookAheadMm: scopeCase.interaction.lookAheadMm,
+    trailMaxPoints: scopeCase.interaction.trailMaxPoints,
+  })
+  /** The direction a branch leaves its fork in: what carries the tip into the chosen opening. */
+  const branchDirection = (childEdgeId: number, from: Vec3, fallback: Vec3): Vec3 => {
+    const child = scopeCase.index.edgesById.get(childEdgeId)
+    if (!child) return fallback
+    return unit(minus(sampleEdgePose(child, Math.min(8, child.lengthMm)).point, from), fallback)
+  }
   while (Math.abs(remaining) > 1e-6 && guard < 100_000) {
     guard += 1
     const step = Math.sign(remaining) * Math.min(MOTION_INCREMENT_MM, Math.abs(remaining))
@@ -244,26 +325,50 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
         stopAfter = true
       }
     } else {
-      next = moveScope({ ...engine, movementMessage: undefined }, scopeCase.graph, step, {
-        requireAim,
-        viewForward: frame.forward,
-        lookAheadMm: scopeCase.interaction.lookAheadMm,
-        trailMaxPoints: scopeCase.interaction.trailMaxPoints,
-      })
-      if (next.movementMessage) {
+      const fork = requireAim && step > 0 ? guidedFork(engine.edgeId, inputs, ctx) : null
+      if (fork && fork.chosenEdgeId === null && engine.distanceMm + step > fork.standMm) {
+        // Undecided on the way in: wait short of the fork, where both openings are in the picture.
+        // Never backward: a tip already past that place waits where it is.
         events.push('aim-refused')
         message = SCOPE_MESSAGES.aimRefused
         aimGuardActed = true
-        next = { ...next, movementMessage: undefined }
+        next = {
+          ...engine,
+          distanceMm: Math.max(engine.distanceMm, Math.min(fork.standMm, engine.distanceMm + step)),
+          movementMessage: undefined,
+        }
         stopAfter = true
-      } else if (
-        step > 0 &&
-        next.edgeId === engine.edgeId &&
-        Math.abs(next.distanceMm - engine.distanceMm) < 1e-9
-      ) {
-        events.push('lumen-end')
-        message = SCOPE_MESSAGES.lumenEnd
-        break
+      } else {
+        // A chosen opening is entered by pointing the engine down that branch itself.
+        const forkNode =
+          fork && fork.chosenEdgeId !== null
+            ? scopeCase.index.nodesById.get(scopeCase.index.edgesById.get(engine.edgeId)!.endNodeId)
+            : undefined
+        const viewForward =
+          fork && fork.chosenEdgeId !== null && forkNode
+            ? branchDirection(fork.chosenEdgeId, forkNode.lps, frame.forward)
+            : frame.forward
+        next = moveScope(
+          { ...engine, movementMessage: undefined },
+          scopeCase.graph,
+          step,
+          travel(viewForward),
+        )
+        if (next.movementMessage) {
+          events.push('aim-refused')
+          message = SCOPE_MESSAGES.aimRefused
+          aimGuardActed = true
+          next = { ...next, movementMessage: undefined }
+          stopAfter = true
+        } else if (
+          step > 0 &&
+          next.edgeId === engine.edgeId &&
+          Math.abs(next.distanceMm - engine.distanceMm) < 1e-9
+        ) {
+          events.push('lumen-end')
+          message = SCOPE_MESSAGES.lumenEnd
+          break
+        }
       }
     }
 
@@ -297,6 +402,16 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
       next.distanceMm < TUBE_TIP_MM
     )
       place = 'tube'
+    // Through a fork under guided travel, the bend that chose the branch is let go.
+    if (guided && step > 0 && next.edgeId !== engine.edgeId && inputs.deflectionDeg !== 0) {
+      const crossed = scopeCase.index.edgesById.get(engine.edgeId)
+      const fork = crossed ? scopeCase.index.nodesById.get(crossed.endNodeId) : undefined
+      if (fork && fork.childEdgeIds.length > 1) {
+        inputs = { ...inputs, deflectionDeg: 0 }
+        straightened = true
+        message = message ?? SCOPE_MESSAGES.tipStraightened
+      }
+    }
     travelledMm += distance(tipPoint(engine, scopeCase), tipPoint(next, scopeCase))
     engine = next
     remaining -= step
@@ -313,6 +428,7 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
     travelledMm,
     aimGuardActed,
     centerlineTravel: !free && travelledMm > 0,
+    straightened,
   })
 }
 

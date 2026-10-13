@@ -1,5 +1,9 @@
 /** @jest-environment node */
-import type { ScopeGoal, ScopeViewSpec } from '../components/scope/types'
+import {
+  SEGMENTAL_AIRWAY_LABELS,
+  type ScopeGoal,
+  type ScopeViewSpec,
+} from '../components/scope/types'
 import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
@@ -9,6 +13,7 @@ import { section as rightSide } from '../content/sections/right-side'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import type { BronchSectionDefinition, ScopeLabAct } from '../content/types'
+import { unnamedAirways } from '../engine/scope/inspectionLedger'
 import { createScopeCase, type ScopeCase } from '../engine/scope/scopeCase'
 import { breathPhaseAt, LARYNX_GLOTTIS_MM } from '../engine/scope/scopeScripts'
 import { ScopePilot } from '../test-support/scopePilot'
@@ -62,13 +67,17 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(o.goals(suction.goals)).toEqual(allMet(suction.goals))
   })
 
-  it('the carina tasks: to the carina, into each main bronchus, and a held view', () => {
+  it('the carina tasks: into each main bronchus and back, and the hold the engine still carries', () => {
     const act = actOf(branchEntry)
     const p = pilot(act.view)
     p.goInto('RMSB')
     p.withdrawTo('TR')
     p.goInto('LMSB')
+    // The last goal is the way home: the left side is not finished until the tip is back.
+    expect(p.goals(act.goals)).toEqual({ ...allMet(act.goals), 'back-from-left': false })
+    p.withdrawTo('TR')
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
+    // The hold is no longer a course activity; the fixture keeps its engine path walked.
     const observe = act.observe!
     const o = pilot(observe.view ?? act.view)
     o.send({ type: 'acknowledge' })
@@ -112,7 +121,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     )
   })
 
-  it('larynx-and-entry: wait for the breath in, cross, then name the trachea', () => {
+  it('larynx-and-entry: wait for the breath in, cross, and go on into the trachea', () => {
     const act = actOf(larynxAndEntry)
     const p = pilot(act.view)
     while (p.state.depthMm + p.state.inputs.stepMm < LARYNX_GLOTTIS_MM) p.advance()
@@ -121,7 +130,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
       p.send({ type: 'tick', seconds: 0.5 })
     }
     p.advanceUntil(() => p.state.place === 'airway')
-    p.send({ type: 'declare', airway: 'TR', status: 'identified' })
+    // Crossing is the whole task: nothing is left to name or record below the folds.
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
@@ -160,22 +169,28 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('systematic-survey: every segment of both lungs seen and recorded, the narrowed one not reachable', () => {
+  it('systematic-survey: every segment of both lungs entered and named', () => {
     const act = actOf(systematicSurvey)
     const p = pilot(act.view)
+    // Nothing is named at the start, and the goals wait on the naming alone.
+    expect(unnamedAirways(p.state.ledger)).toEqual([...SEGMENTAL_AIRWAY_LABELS])
+    expect(p.goals(act.goals)).toEqual({ 'right-lung-named': false, 'left-lung-named': false })
     SCOPE_RECIPES['systematic-survey']!.act(p)
-    expect(p.state.events).toContain('survey-complete')
+    expect(unnamedAirways(p.state.ledger)).toEqual([])
+    expect(p.state.events).not.toContain('misnamed')
+    // No segment is closed to the scope in this task any more.
     expect(p.state.events).not.toContain('entry-refused')
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('systematic-survey: the record offers three statuses under this view’s own words', () => {
-    const record = actOf(systematicSurvey).view.ledger?.record
-    expect(record?.offer).toEqual([
-      { status: 'inspected', word: 'Seen' },
-      { status: 'not-observed', word: 'Not seen' },
-      { status: 'not-safely-accessible', word: 'Not reachable' },
-    ])
+  it('systematic-survey: the record is kept by naming, with no status menu and no names in view', () => {
+    const { view } = actOf(systematicSurvey)
+    expect(view.ledger).toEqual({ expected: 'segmental', naming: true })
+    // The control that answers the record is offered; the one that would print the answers is not.
+    expect(view.controls).toContain('declare')
+    expect(view.controls).not.toContain('branchLabels')
+    expect(view.assists['branch-labels']).toBeUndefined()
+    expect(view.inaccessible).toBeUndefined()
   })
 
   it('biopsy-and-specimens: expose only beyond the tip; retrieve only once the image agrees', () => {
