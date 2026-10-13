@@ -13,27 +13,21 @@ supervisor" answers.
 
 ## Where things stand
 
-All fifteen sections are on `main`: #349 to #375 were merged on 2026-10-10 with #351 and #376,
-#377 (section 13) and #378 (section 15, with capstone C09) the next day, and #381 (four
-teaching gaps in sections 13 and 15, from the review of those two) after that. #348 is closed.
+On `main`: all fifteen sections (#349 to #378, with #351 and #376), the four teaching-gap fixes
+to sections 13 and 15 (#381), and #391, merged on 2026-10-12, which holds the hub, the closing
+screen, the image bank, the vignettes, the mixed sets and the integrated cases. #391 replaced
+five stacked drafts (#380, #382, #385, #388, #389), now closed. #348 is closed.
 
-Two PRs are open:
+One PR is open:
 
-| PR   | Branch                       | State                                                                                                     |
-| ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
-| #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
-| #394 | `claude/bf-practice-cleanup` | Draft, stacked on #391. The plan's clean-up of the older practice questions: eight small fixes.           |
-
-It replaces five stacked drafts, which carried the same commits one step at a time: #380 (hub and
-closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
-cases). All five were closed on 2026-10-12, each with a note pointing here; their branches
-still exist. `main` was merged into the combined branch on 2026-10-12
-with no conflict.
+| PR   | Branch                       | State                                                                                          |
+| ---- | ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| #394 | `claude/bf-practice-cleanup` | Draft, targets `main`. The plan's clean-up of the older practice questions: eight small fixes. |
 
 The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
 `claude/bf-practice-cleanup`. Its unstaged `.claude/launch.json` holds the `claude-bf` dev-server
 entry and blocks a switch or a merge that touches that file: copy it aside, restore the file,
-switch, and copy it back. Branch the next change from `origin/main` once both PRs are merged.
+switch, and copy it back. Branch the next change from `origin/main` once #394 is merged.
 
 ## Start here next session
 
@@ -102,7 +96,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #391 and #394 reviewed and merged.** Everything before them is on `main`.
+1. **Get #394 reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
