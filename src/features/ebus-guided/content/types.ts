@@ -122,8 +122,7 @@ export interface EbusCase {
  * means the gain control has to be the last one moved; that is a real property of the lookup (the
  * clips vary one control at a time), not a stale flag, so it is explained rather than removed.
  *
- * This reports; it never decides. `labGoalMet` remains the only gate, and a test holds the two to
- * the same answer.
+ * This list is the gate: `labGoalMet` is true exactly when every item here is met.
  */
 export interface LabRequirement {
   id: string
@@ -187,13 +186,13 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
       met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
         linked?.identifiedStructures?.includes(id),
       ),
-      text: 'Identify the structure the task bar asks for on the 3D model.',
+      text: 'Find and click the structure the task bar names on the ultrasound image.',
     })
     if (lab.linkedLesson === 'ct-map')
       list.push({
         id: 'linked-section',
         met: !!linked?.modelSectionViewed,
-        text: 'Open “Model section” in the 3D pane.',
+        text: 'Open “Model section” (the third tab above the 3D model).',
       })
     else if (lab.linkedLesson === 'acoustic-contact')
       list.push({
@@ -302,81 +301,12 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
   }
   return list
 }
+/**
+ * The gate is the list: a lab is done when every listed requirement is met. The two used to be
+ * written out separately and had drifted (the CT-map lab listed "open the model section" while
+ * the gate also waited for a sweep it never mentioned), which left the button disabled with
+ * nothing on the list to do.
+ */
 export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
-  if (!state.ready || !state.frameReady || state.actionCount < 1) return false
-  if (lab.kind === 'knobology') {
-    const source = state.recorded
-    if (
-      !source ||
-      source.taskId !== lab.goal ||
-      source.settings.depthMm !== state.depth ||
-      source.settings.gain !== state.gain ||
-      source.settings.contrast !== state.contrast ||
-      source.settings.doppler !== state.doppler ||
-      source.captured !== state.saved
-    )
-      return false
-  }
-  if (lab.linkedLesson) {
-    const linked = state.linked
-    const source = linked?.source
-    if (
-      !linked?.assetsReady ||
-      !linked.frameId ||
-      !source ||
-      source.taskVersion !== LINKED_TASK_VERSION ||
-      source.frameId !== linked.frameId ||
-      source.taskId !== linkedTaskId(lab.linkedLesson, lab.linkedVariant ?? 'guided') ||
-      source.modelRevision !== linked.modelRevision ||
-      source.settings.depthMm !== state.depth ||
-      source.settings.gainDb !== state.gain ||
-      source.scope.roll !== state.roll ||
-      source.scope.flexion !== state.flexion ||
-      source.settings.contactQuality !== state.contactQuality
-    )
-      return false
-    if (
-      !LINKED_LANDMARKS[lab.linkedLesson].every((id) => linked.identifiedStructures?.includes(id))
-    )
-      return false
-    if (lab.linkedLesson === 'ct-map' && !linked.modelSectionViewed) return false
-    if (lab.linkedLesson === 'acoustic-contact') {
-      if (!linked.baselineFrameId || linked.baselineFrameId === linked.frameId) return false
-    } else {
-      const approaches =
-        lab.linkedLesson === 'station-seven' && lab.linkedVariant !== 'changed-window'
-          ? (['rms', 'lms'] as const)
-          : [linked.approach]
-      if (!approaches.every((a) => linked.sweeps?.[a]?.phase === 'complete')) return false
-    }
-  }
-  switch (lab.goal) {
-    case 'model':
-      return (
-        !!lab.modelPackage &&
-        state.model?.package === lab.modelPackage &&
-        state.model.revision === MODEL_REVISION &&
-        !!state.model.frameId &&
-        state.model.complete &&
-        !state.model.annotations &&
-        MODEL_STEPS[lab.modelPackage].every((step) => state.model!.steps.includes(step))
-      )
-    case 'scan':
-      return state.targetVisible && state.contactQuality >= 0.45
-    case 'coupling':
-      return state.contactQuality >= 0.8 && state.lastAction === 'flexion'
-    case 'depth':
-      return state.depth >= 30 && state.depth <= 45 && state.lastAction === 'depth'
-    case 'gain':
-      return (
-        state.gain >= 35 &&
-        state.gain <= 65 &&
-        state.lastAction === 'gain' &&
-        state.usedControls.includes('contrast')
-      )
-    case 'doppler':
-      return state.doppler
-    case 'capture':
-      return state.frozen && state.measured && state.saved
-  }
+  return labGoalRequirements(lab, state).every((requirement) => requirement.met)
 }

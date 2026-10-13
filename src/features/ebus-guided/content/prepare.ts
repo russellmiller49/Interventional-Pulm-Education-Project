@@ -270,7 +270,7 @@ export const prepareLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Find the transducer on the 3D scope model. Then move the Scope rotation slider through at least 20° and watch the node enter and leave the ultrasound image. Finish with the node in the image.',
+        'Move the Scope rotation slider through at least 20° and watch the node enter and leave the ultrasound image. When the subcarinal node is in the image, click it, and finish with it in view.',
     },
     observation: {
       ...q(

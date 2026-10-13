@@ -6,13 +6,8 @@ export type ModelPackage = (typeof MODEL_PACKAGES)[number]
 export const MODEL_STEPS = {
   needle: ['sheath', 'live-tip', 'lost-tip-stop', 'resistance-stop', 'protected-removal'],
   contact: ['gain-gap', 'direct', 'balloon', 'bubble', 'shadow'],
-  measurement: [
-    'sphere-sweep',
-    'ellipsoid-sweep',
-    'adjacent-sweep',
-    'lobulated-sweep',
-    'short-axis-record',
-  ],
+  // One sweep and one measurement, both on the elongated shape. The other shapes are optional.
+  measurement: ['ellipsoid-sweep', 'short-axis-record'],
   routes: ['4L-airway', '4L-esophagus', '7-airway', '7-esophagus', '8-esophagus', 'unsupported'],
 } as const
 export type Point2 = [number, number]
@@ -96,10 +91,10 @@ export function initialModelState(pkg: ModelPackage): ModelState {
     return {
       ...base,
       package: pkg,
-      shape: 'sphere',
+      shape: 'ellipsoid',
       offset: -12,
       frozen: false,
-      bins: { sphere: [-12], ellipsoid: [], adjacent: [], lobulated: [] },
+      bins: { sphere: [], ellipsoid: [-12], adjacent: [], lobulated: [] },
       calipers: [null, null],
       endpoint: 0,
       axis: 'short',
@@ -188,7 +183,11 @@ export const PHANTOM_RECOMMENDED_COMPARISON = { shape: 'ellipsoid' as PhantomNam
 export function measurePhantom(s: MeasurementState) {
   const [a, b] = s.calipers
   if (!a || !b)
-    return { valid: false, value: 0, feedback: 'Place both calipers on the visible borders.' }
+    return {
+      valid: false,
+      value: 0,
+      feedback: 'Freeze the section, then click the top and bottom borders to place two calipers.',
+    }
   const value = Math.hypot(a[0] - b[0], a[1] - b[1])
   if (!s.frozen)
     return { valid: false, value, feedback: 'Freeze the intended section before measuring.' }
@@ -196,7 +195,7 @@ export function measurePhantom(s: MeasurementState) {
     return {
       valid: false,
       value,
-      feedback: 'For this record, return to the central section of the elongated phantom.',
+      feedback: 'Measure the elongated shape at plane offset 0, its central section.',
     }
   const section = phantomSections('ellipsoid', 0)[0]
   const expected: Point2[] =
@@ -219,15 +218,14 @@ export function measurePhantom(s: MeasurementState) {
     return {
       valid: false,
       value,
-      feedback:
-        'The authored task requests the short axis. A long-axis record does not satisfy it.',
+      feedback: 'This task asks for the short axis, not the long axis.',
     }
   return {
     valid: borders,
     value,
     feedback: borders
       ? 'Calipers follow the requested central short axis.'
-      : 'Reposition the calipers at opposite borders on the short axis. Separated points alone are insufficient.',
+      : 'Put one caliper on the top border and one on the bottom border of the shape, straight across its short axis.',
   }
 }
 export const routeDefinition = (s: RouteState) => contract.routes.find((r) => r.id === s.station)
@@ -421,7 +419,10 @@ export function modelReducer(state: ModelState, a: ModelAction): ModelState {
       s.calipers = [null, null]
       s.record = null
       s.bins = { ...s.bins, [s.shape]: [...new Set([...s.bins[s.shape], s.offset])] }
-      if (s.bins[s.shape].length === 13) s.steps = add(s.steps, s.shape + '-sweep')
+      // A sweep is the shape carried from one edge of the plane range to the other.
+      const visited = s.bins[s.shape]
+      if (s.shape === 'ellipsoid' && Math.min(...visited) <= -8 && Math.max(...visited) >= 8)
+        s.steps = add(s.steps, 'ellipsoid-sweep')
     } else if (a.type === 'freeze') {
       s.frozen = !s.frozen
       s.record = null
@@ -439,24 +440,17 @@ export function modelReducer(state: ModelState, a: ModelAction): ModelState {
       s.record = null
     } else if (a.type === 'inadequate')
       s.notice =
-        'No measurement recorded. Sweep to a section with adequately visualized borders before placing calipers.'
+        'No measurement recorded. Sweep to a section with clear borders before placing calipers.'
     else if (a.type === 'record') {
       const m = measurePhantom(s)
       if (!m.valid) return { ...s, notice: m.feedback }
-      if (s.station !== 'Phantom station 7')
-        return {
-          ...s,
-          notice:
-            'Label this authored example “Phantom station 7” before saving the image. These shapes are not anatomical station boundaries.',
-        }
       s.record = {
-        label: `${s.station} · elongated phantom · central short axis`,
+        label: 'Elongated phantom · central short axis',
         value: m.value,
         frameId: modelFrameId(s),
       }
       s.steps = add(s.steps, 'short-axis-record')
-      s.notice =
-        'Phantom image and measurement recorded. Millimeters refer only to the authored phantom.'
+      s.notice = 'Measurement recorded: the short axis of the central section.'
     }
     return s
   }

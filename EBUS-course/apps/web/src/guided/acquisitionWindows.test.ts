@@ -20,7 +20,14 @@ import type {
   SimulatorCenterlineAsset,
   SimulatorMeshAsset,
 } from '../features/simulator/types'
-import { emptyLinkedSweep, sampleLinkedSweep } from '../../../../../src/lib/ebus-linked-contract'
+import {
+  emptyLinkedSweep,
+  sampleLinkedSweep,
+  LINKED_LANDMARKS,
+  linkedSetup,
+  type LinkedLesson,
+  type LinkedVariant,
+} from '../../../../../src/lib/ebus-linked-contract'
 const root = resolve('public/simulator/case-001')
 const json = <T>(file: string): T => JSON.parse(readFileSync(resolve(root, file), 'utf8'))
 const manifest = json<SimulatorCaseManifest>('case_manifest.simplified.web.json')
@@ -75,4 +82,51 @@ describe('actual acoustic windows at original and changed assisted positions', (
       }
     },
   )
+})
+
+describe('every structure a lesson asks the learner to find is reachable on ultrasound', () => {
+  const cases: [LinkedLesson, LinkedVariant, string][] = [
+    ['scope-orientation', 'guided', 'station_7_node_a::rms'],
+    ['ct-map', 'guided', 'station_7_node_a::rms'],
+    ['station-seven', 'guided', 'station_7_node_a::rms'],
+    ['station-seven', 'guided', 'station_7_node_a::lms'],
+    ['station-seven', 'changed-window', linkedSetup('station-seven', 'changed-window').presetKey],
+    ['right-paratracheal', 'guided', linkedSetup('right-paratracheal', 'guided').presetKey],
+    [
+      'right-paratracheal',
+      'changed-window',
+      linkedSetup('right-paratracheal', 'changed-window').presetKey,
+    ],
+  ]
+  it.each(cases)('%s (%s) from %s', (lesson, variant, key) => {
+    const preset = manifest.presets.find((p) => p.preset_key === key)!
+    const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+    const offset = linkedSetup(lesson, variant).offsetMm
+    const best = new Map<string, number>()
+    for (let roll = 90; roll >= -90; roll -= 5) {
+      const pose = clampPosePositionInsideChannel(
+        computeSimulatorPose(line, preset.centerline_s_mm + offset, roll, preset),
+        channel,
+        0.2,
+      )
+      const frame = renderAcousticFrame(
+        volume,
+        acousticPoseFromScope(pose),
+        { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contactQualityForPose(pose, channel) },
+        192,
+        192,
+        80,
+        100,
+      )
+      const counts = new Map<number, number>()
+      for (const id of frame.labelImage) counts.set(id, (counts.get(id) ?? 0) + 1)
+      for (const [id, n] of counts) {
+        const name = volume.metadata.labels[id].key
+        best.set(name, Math.max(best.get(name) ?? 0, n))
+      }
+    }
+    // A structure the learner must click needs a patch they can hit: at least 1% of the image.
+    for (const id of LINKED_LANDMARKS[lesson])
+      expect([id, (best.get(id) ?? 0) >= 192 * 192 * 0.01]).toEqual([id, true])
+  })
 })

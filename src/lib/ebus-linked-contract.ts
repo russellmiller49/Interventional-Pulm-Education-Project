@@ -133,11 +133,13 @@ export const linkedTaskId = (lesson: LinkedLesson, variant: LinkedVariant) => `$
 export const linkedTaskKey = (lesson: LinkedLesson, variant: LinkedVariant) =>
   `${linkedTaskId(lesson, variant)}:v${LINKED_TASK_VERSION}`
 export const LINKED_LANDMARKS: Record<LinkedLesson, readonly string[]> = {
-  'scope-orientation': ['transducer_face'],
+  // Structures the learner finds and clicks on the ultrasound image (keys of the acoustic volume's
+  // labels). Airway anatomy on the 3D model is assumed knowledge and is not asked.
+  'scope-orientation': ['station_7'],
   'acoustic-contact': [],
-  'ct-map': ['carina', 'superior_vena_cava'],
-  'station-seven': ['carina', 'right_main_bronchus', 'left_main_bronchus'],
-  'right-paratracheal': ['azygous', 'superior_vena_cava', 'left_brachiocephalic_vein'],
+  'ct-map': ['station_7', 'pulmonary_artery'],
+  'station-seven': ['station_7', 'pulmonary_artery', 'esophagus'],
+  'right-paratracheal': ['superior_vena_cava', 'azygous', 'station_4r'],
 }
 export const LANDMARK_NAMES: Record<string, string> = {
   transducer_face: 'transducer surface',
@@ -147,6 +149,12 @@ export const LANDMARK_NAMES: Record<string, string> = {
   azygous: 'azygos vein',
   superior_vena_cava: 'superior vena cava',
   left_brachiocephalic_vein: 'left brachiocephalic vein',
+  station_7: 'subcarinal node (station 7)',
+  station_4r: 'right lower paratracheal node (4R)',
+  pulmonary_artery: 'pulmonary artery',
+  esophagus: 'esophagus',
+  left_atrium: 'left atrium',
+  aorta: 'aorta',
 }
 /**
  * Learner-facing names for structures whose model labels are spelled or ordered differently from
@@ -174,6 +182,14 @@ export function structureDisplayName(id: string, label?: string) {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 export const LANDMARK_HINTS: Record<string, string> = {
+  station_7:
+    'It lies against the airway wall between the two main bronchi. Rotate until a rounded structure with tissue echoes comes into the image; vessels are echo-free.',
+  station_4r:
+    'It lies beside the lower trachea, behind the superior vena cava and above the azygos arch.',
+  pulmonary_artery:
+    'It is the large echo-free vessel in front of the subcarinal space. Rotate the plane anteriorly to bring it in.',
+  esophagus:
+    'It lies behind the subcarinal space and has a layered wall. Rotate the plane posteriorly to bring it in.',
   transducer_face:
     'Look on the scan-facing side of the distal scope, beside the projecting tip. The optical lens has a different direction.',
   carina: 'Follow the trachea to the point where it divides into the two main bronchi.',
@@ -182,9 +198,9 @@ export const LANDMARK_HINTS: Record<string, string> = {
   left_main_bronchus:
     'Trace the branch from the carina toward the patient’s left. Observer rotation changes your view, not patient laterality.',
   azygous:
-    'Look for the vein that arches over the right main bronchus toward the superior vena cava.',
+    'It arches over the right main bronchus to join the superior vena cava, at the lower edge of the right paratracheal space.',
   superior_vena_cava:
-    'Look for the large vein to the patient’s right of the trachea, receiving the azygos arch.',
+    'It is the large echo-free vein in front of the right paratracheal space, to the patient’s right of the trachea.',
   left_brachiocephalic_vein:
     'Follow the vein crossing anterior to the upper trachea toward the superior vena cava. The brachiocephalic arterial trunk is a different structure.',
 }

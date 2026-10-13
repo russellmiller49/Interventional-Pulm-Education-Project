@@ -1,4 +1,4 @@
-import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
+import { LINKED_TASK_VERSION, LANDMARK_NAMES, structureDisplayName, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
 import { LinkedModelView } from '../../guided/LinkedModelView';
 import { opticalRay } from '../../guided/linkedModels';
 import * as THREE from 'three';
@@ -1235,6 +1235,11 @@ const ignoreCourseProgress = () => undefined;
 /** Stable identity: the bronchoscopy view rebuilds its renderer when this prop changes. */
 const NO_BRONCH_STRUCTURES: never[] = [];
 
+/** How a clicked structure is named back to the learner; a node is named by its station. */
+function ultrasoundPickName(key: string, label: string | null) {
+  const station = /^station_(.+)$/.exec(key);
+  return station ? `station ${station[1].toUpperCase().replace(/S$/, 's').replace(/I$/, 'i')} node` : (LANDMARK_NAMES[key] ?? structureDisplayName(key, label ?? undefined).toLowerCase());
+}
 export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleProgress = ignoreCourseProgress, guided }: {
   showVirtualBronchoscopy?: boolean;
   setModuleProgress?: (module: 'simulator', percent: number) => void;
@@ -1252,10 +1257,19 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
+  // The learner's latest click on the ultrasound image, for the "find it on ultrasound" tasks.
+  const [ultrasoundPick, setUltrasoundPick] = useState<{ n: number; near: string[]; centerName: string | null } | null>(null);
+  const onUltrasoundPick = useCallback((pick: { near: string[]; centerKey: string | null; centerLabel: string | null }) => setUltrasoundPick(previous => ({ n: (previous?.n ?? 0) + 1, near: pick.near, centerName: pick.centerKey ? ultrasoundPickName(pick.centerKey, pick.centerLabel) : null })), []);
   const guidedAction = (name: string, apply: () => void) => {
     if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl) || (guided.config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId)) return;
     if (!guided.config.demonstration) guidedActions.current = { count: guidedActions.current.count + 1, last: name, used: [...new Set([...guidedActions.current.used,name as EbusControl])] };
     if (name === 'roll' && !guided.config.demonstration) rollAcquisition.current = { approach: linkedEvidence.approach, count: guidedActions.current.count };
+    // The rotation the learner starts from is part of the sweep: without it a single move from
+    // the starting position (a click on the track, a quick flick) was credited with 0°.
+    if (name === 'roll' && !guided.config.demonstration && guided.config.linkedLesson && !linkedEvidence.sweeps?.[linkedEvidence.approach]) {
+      const approach = linkedEvidence.approach, start = rollTrimDeg;
+      setLinkedEvidence(previous => previous.sweeps?.[approach] ? previous : { ...previous, sweeps: { ...previous.sweeps, [approach]: { ...emptyLinkedSweep(), lastRoll: start, startRoll: start } } });
+    }
     apply();
   };
   const { assets, caseData, error } = useSimulatorCase();
@@ -2116,7 +2130,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
         {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
       </fieldset>;
     const sector = <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
-      guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply) }} />;
+      guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply), onPick: config.linkedLesson && !config.locked && !config.demonstration && !config.reveal ? onUltrasoundPick : undefined }} />;
     const chooseApproach = (approach: 'rms'|'lms') => {
       if (config.locked || config.linkedLesson !== 'station-seven' || config.linkedVariant === 'changed-window') return;
       const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
@@ -2131,6 +2145,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {config.linkedLesson && config.linkedVariant === 'changed-window' && <p className="guided-label linked-task-line">The scope has moved to a new position in the same airway. Find the landmarks and sweep through the node again from here.</p>}
       {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} controls={<>{scopeControls}{!config.locked && !config.demonstration && <button className="linked-reset" onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}</>} bronchoscopy={assets ? <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={NO_BRONCH_STRUCTURES} /></div> : undefined} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
+        ultrasoundPick={ultrasoundPick}
         targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey}
         targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The node (${label})` : 'The node'; })()}
         onDemo={action => {

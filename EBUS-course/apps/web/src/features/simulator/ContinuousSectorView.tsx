@@ -9,9 +9,9 @@ import { useCourseShellText } from '@/i18n/courseShell';
 import type { SimulatorProbePose } from './pose';
 import type { SimulatorCaseManifest, SimulatorPreset } from './types';
 import { ImageDiscovery } from '../../guided/ImageDiscovery';
-import { canDiscoverImage } from '../../guided/imageDiscoveryPixels';
+import { canDiscoverImage, imagePixelAt } from '../../guided/imageDiscoveryPixels';
 
-export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:LinkedRenderedFrame)=>void;onAction:(name:string,apply:()=>void)=>void}}) {
+export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:LinkedRenderedFrame)=>void;onAction:(name:string,apply:()=>void)=>void;onPick?:(pick:{near:string[];centerKey:string|null;centerLabel:string|null})=>void}}) {
   const t=useCourseShellText(),canvas=useRef<HTMLCanvasElement>(null),overlay=useRef<HTMLCanvasElement>(null),worker=useRef<Worker|null>(null),sequence=useRef(0),scheduled=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [controls,setControls]=useState<AcousticControls>({...DEFAULT_ACOUSTIC_CONTROLS,gainDb:guided?.config.initialGain ?? DEFAULT_ACOUSTIC_CONTROLS.gainDb,depthMm:guided?.config.initialDepth ?? caseData.render_defaults.max_depth_mm,sectorAngleDeg:caseData.render_defaults.sector_angle_deg});
   const [frozen,setFrozen]=useState(false),[teaching,setTeaching]=useState(false),[frame,setFrame]=useState<AcousticFrame|null>(null),[renderError,setRenderError]=useState<string|null>(null);
@@ -56,6 +56,59 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     for(let i=0;i<frame.labelImage.length;i++){const id=frame.labelImage[i];if(id<3)continue;const c=colors[id],p=i*4;image.data[p]=c[0];image.data[p+1]=c[1];image.data[p+2]=c[2];image.data[p+3]=volume.metadata.labels[id].key===activeStructure?130:55;}
     ctx.putImageData(image,0,0);
   },[frame,volume,teaching,assessment,activeStructure]);
+  // A click on the image reports the structure under it and within a few pixels of it, so the
+  // lesson can ask the learner to find a structure on ultrasound. Nothing is named on screen here.
+  const pickCallback = useRef(guided?.onPick);
+  useEffect(() => { pickCallback.current = guided?.onPick; }, [guided?.onPick]);
+  const picking = !!guided?.onPick;
+  useEffect(() => {
+    const element = canvas.current;
+    if (!element || !frame || !volume || !picking) return;
+    const click = (event: MouseEvent) => {
+      const pixel = imagePixelAt(event.clientX, event.clientY, element.getBoundingClientRect(), frame);
+      if (!pixel) return;
+      const labels = volume.metadata.labels, near = new Set<string>(), reach = Math.max(2, Math.round(frame.width / 64));
+      for (let dy = -reach; dy <= reach; dy++) for (let dx = -reach; dx <= reach; dx++) {
+        const x = pixel.x + dx, y = pixel.y + dy;
+        if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) continue;
+        const id = frame.labelImage[y * frame.width + x];
+        if (id >= 3 && labels[id]) near.add(labels[id].key);
+      }
+      const center = labels[frame.labelImage[pixel.y * frame.width + pixel.x]];
+      const named = center && frame.labelImage[pixel.y * frame.width + pixel.x] >= 3 ? center : null;
+      pickCallback.current?.({ near: [...near], centerKey: named?.key ?? null, centerLabel: named?.label ?? null });
+    };
+    element.addEventListener('click', click);
+    element.style.cursor = 'crosshair';
+    return () => { element.removeEventListener('click', click); element.style.cursor = ''; };
+  }, [frame, volume, picking]);
+  // For browser tests of the pick task: where each structure's pixels sit in the current frame, as
+  // fractions of the image. An attribute only; nothing on screen names a structure.
+  const labelCentroids = useMemo(() => {
+    if (!picking || !frame || !volume) return undefined;
+    const sums = new Map<number, [number, number, number]>();
+    for (let i = 0; i < frame.labelImage.length; i++) {
+      const id = frame.labelImage[i];
+      if (id < 3) continue;
+      const entry = sums.get(id) ?? [0, 0, 0];
+      entry[0] += i % frame.width; entry[1] += Math.floor(i / frame.width); entry[2] += 1;
+      sums.set(id, entry);
+    }
+    const out: Record<string, [number, number]> = {};
+    for (const [id, [sx, sy, n]] of sums) {
+      if (n < 40) continue;
+      // The centroid of a crescent can fall outside it: use the structure's own pixel nearest to it.
+      const cx = sx / n, cy = sy / n;
+      let best = Infinity, bx = cx, by = cy;
+      for (let i = 0; i < frame.labelImage.length; i++) {
+        if (frame.labelImage[i] !== id) continue;
+        const x = i % frame.width, y = Math.floor(i / frame.width), d = (x - cx) ** 2 + (y - cy) ** 2;
+        if (d < best) { best = d; bx = x; by = y; }
+      }
+      out[volume.metadata.labels[id].key] = [(bx + 0.5) / frame.width, (by + 0.5) / frame.height];
+    }
+    return JSON.stringify(out);
+  }, [picking, frame, volume]);
   const frameCallback = useRef(guided?.onFrame);
   useEffect(() => { frameCallback.current = guided?.onFrame; }, [guided?.onFrame]);
   const frameId = useMemo(() => {
@@ -78,7 +131,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   const act = (control:'depth'|'gain'|'freeze', apply:()=>void) => { if (!allowed(control)) return; if (guided) guided.onAction(control,apply); else apply(); };
   const change=(key:'depthMm'|'gainDb',value:number)=>act(key === 'depthMm' ? 'depth' : 'gain',()=>setControls(c=>({...c,[key]:value})));
   const discover = canDiscoverImage(guided?.config, assessment) && !!volume && !!frame && !error && !renderError;
-  return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-acoustic-version={volume?.metadata.assetVersion} data-frame-id={frameId} data-frame-pose={frame ? JSON.stringify(frame.pose) : undefined}>
+  return <section className={`simulator-sector-pane${compact?' simulator-sector-pane--compact':''}`} aria-label={t('Continuous EBUS ultrasound')} data-sector-source="acoustic-volume" data-label-centroids={labelCentroids} data-acoustic-version={volume?.metadata.assetVersion} data-frame-id={frameId} data-frame-pose={frame ? JSON.stringify(frame.pose) : undefined}>
     <div className="simulator-pane-header"><div><span className="eyebrow">{t('EBUS ultrasound')}</span><h2>{held && guided?.config.linkedLesson ? 'Your image' : baseline ? 'Initial and current' : selectedPreset?`${t('Station')} ${formatSimulatorStation(selectedPreset.station)}`:t('Live scan')}</h2></div>
       <div className="simulator-sector-header-actions">{onEnlarge&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onEnlarge}>{t('Enlarge')}</button>}{onShowAll&&<button className="simulator-sector-style-toggle simulator-pane-layout-toggle" onClick={onShowAll}>{t('All views')}</button>}{/* A guided lab that was not given the freeze control does not show one (EBUS-PRE-REVIEW-02,
           L14-4). It used to render permanently disabled in every guided lab, since none of them

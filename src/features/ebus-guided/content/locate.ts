@@ -53,7 +53,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and superior vena cava in the unnamed Anatomy model, checking each selection. Open Model section to compare the airway and vascular level. Then slowly sweep through the target until it leaves the sector on the far side and return to a visible section.',
+        'Find the subcarinal node and the pulmonary artery on the ultrasound image: rotate until each is in view and click it. Then open Model section to see the same level as a slice, and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -147,7 +147,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and each main bronchus in the unnamed Anatomy model. From each main bronchus, sweep slowly from outside the target, through several sections, and beyond its other edge; then return to a visible section. Pause for each image. The same node remains between the main bronchi.',
+        'Find the subcarinal node, the pulmonary artery and the esophagus on the ultrasound image: rotate until each is in view and click it. Then, from each main bronchus in turn, move the Scope rotation slider through at least 20° and watch the same node cross the image. Finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -196,7 +196,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'Image the same target from a different position in the left main bronchus. Identify the carina and both main bronchi again, then make a new gradual sweep and return to a visible section. Continue with this image before answering.',
+        'The scope is now at a different position in the left main bronchus. Find the node, the pulmonary artery and the esophagus again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
     diagram: 'stations',
     station: '7',
@@ -257,7 +257,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the azygos vein, superior vena cava and left brachiocephalic vein in the unnamed Anatomy model. Check each selection. Slowly sweep through the paratracheal target until it leaves on the far side, then return to a visible section.',
+        'Find the superior vena cava, the azygos vein and the right lower paratracheal node on the ultrasound image: rotate until each is in view and click it. Sweep the rotation through at least 20° and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -306,7 +306,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'The scope now starts at a different longitudinal position in the same anatomy. Re-identify the three vein landmarks and make a fresh gradual sweep through the target. Return to a visible section and continue with that image before interpreting the new position.',
+        'The scope now starts higher or lower in the same airway. Find the superior vena cava, the azygos vein and the node again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
     diagram: 'stations',
     station: '4R',
