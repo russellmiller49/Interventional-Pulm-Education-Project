@@ -90,7 +90,10 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   expect(document.querySelector('[data-extended-technique]')).toBeNull()
   expect(screen.getByRole('img', { name: /Flexible bronchoscope:/ })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Steering and suction' }))
-  expect(screen.getByRole('img', { name: /Angulation lever, suction control/ })).toBeVisible()
+  expect(screen.getByRole('img', { name: /Angulation lever on the rear/ })).toBeVisible()
+  expect(
+    screen.getByRole('img', { name: /Suction valve and working-channel port on the front/ }),
+  ).toBeVisible()
   expect(document.querySelector('[data-prediction-choices]')).toBeNull()
   clickPrimary()
   await settle()

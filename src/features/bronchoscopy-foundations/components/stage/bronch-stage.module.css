@@ -850,3 +850,59 @@
   line-height: 1.4;
   color: var(--ink);
 }
+
+.controlSchematic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1.5rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  border-radius: 0.6rem;
+  background: #f2f7f8;
+}
+.controlSchematicView {
+  min-width: 0;
+  margin: 0;
+}
+.controlSchematicView figcaption {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #c6d7dc;
+  color: #284b59;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.controlSchematicView svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.75rem;
+}
+
+.controlSchematicKey {
+  display: grid;
+  gap: 1rem;
+  margin: 0.25rem 0 0;
+  color: #163e4a;
+}
+.controlSchematicKey dt {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.controlSchematicKey dt span {
+  display: inline-grid;
+  flex: 0 0 1.4rem;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1px solid #257c87;
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+.controlSchematicKey dd {
+  margin: 0.25rem 0 0 1.9rem;
+  color: #526c77;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
