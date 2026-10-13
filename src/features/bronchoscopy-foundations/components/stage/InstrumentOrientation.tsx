@@ -4,8 +4,7 @@ import { useState } from 'react'
 import styles from './bronch-stage.module.css'
 
 /** A labeled prerequisite reference, never an identification test or completion event. */
-/** `plain`: a rewritten section shows the picture with its source and no note about review. */
-export function InstrumentOrientation({ plain = false }: { readonly plain?: boolean } = {}) {
+export function InstrumentOrientation() {
   const [detail, setDetail] = useState(false)
   return (
     <section
@@ -25,76 +24,63 @@ export function InstrumentOrientation({ plain = false }: { readonly plain?: bool
       {detail ? (
         <>
           <svg
-            viewBox="0 0 520 340"
+            viewBox="0 0 800 530"
             role="img"
             aria-labelledby="bronch-controls-title bronch-controls-desc"
             className={styles.instrumentFigure}
           >
             <title id="bronch-controls-title">
-              Angulation lever, suction control and distal bending section
+              Angulation lever, suction control and working-channel port
             </title>
             <desc id="bronch-controls-desc">
-              Authored component diagram. The angulation lever on the handle bends the distal
-              section. The separate suction control operates suction through the working channel.
+              Close-up of the course bronchoscope photograph. The thumb operates the angulation
+              lever at the top of the control section. The index finger operates the suction valve.
+              The working-channel port sits below them on the handle.
             </desc>
-            <rect
-              x="215"
-              y="65"
-              width="65"
-              height="140"
-              rx="24"
-              fill="#283d4a"
-              stroke="#bad8df"
-              strokeWidth="3"
-            />
-            <path d="M232 76 L204 47 L210 39 L251 67" fill="#82cbd0" />
-            <rect x="266" y="73" width="32" height="15" rx="6" fill="#b1d2da" />
-            <path
-              d="M248 205 C245 262 350 305 412 244 Q430 222 418 199"
-              fill="none"
-              stroke="#46616b"
-              strokeWidth="12"
-            />
-            <path
-              d="M412 244 Q430 222 418 199"
-              fill="none"
-              stroke="#55c5c6"
-              strokeWidth="12"
-              strokeDasharray="4 2"
-            />
-            <g stroke="#275b66" strokeWidth="2" fill="none">
-              <path d="M190 43 H204" />
-              <path d="M302 79 H337" />
-              <path d="M310 275 L280 289 H198" />
+            <rect width="800" height="530" fill="#fff" />
+            <svg x="215" y="32" width="555" height="450" viewBox="580 780 600 505">
+              <image
+                href="/intro-bronchoscopy/scope-anatomy/full-scope.png"
+                width="2100"
+                height="1500"
+              />
+            </svg>
+            <g fill="none" stroke="#217888" strokeWidth="2">
+              <path d="M34 152 H268 L315 107" />
+              <path d="M34 244 H280 L324 163" />
+              <path d="M34 358 H396 L535 342" />
             </g>
-            <g fill="#123641" fontSize="16" fontFamily="sans-serif">
-              <text x="15" y="40">
+            <g fill="#217888">
+              <circle cx="315" cy="107" r="5" />
+              <circle cx="324" cy="163" r="5" />
+              <circle cx="535" cy="342" r="5" />
+            </g>
+            <g fill="#193e49" fontSize="21" fontFamily="sans-serif" fontWeight="600">
+              <text x="34" y="118">
                 Angulation lever
               </text>
-              <text x="15" y="61">
-                Thumb bends the tip
+              <text x="34" y="210">
+                Suction valve
               </text>
-              <text x="338" y="62">
-                Suction control
-              </text>
-              <text x="338" y="84">
-                Index finger
-              </text>
-              <text x="290" y="163">
-                Control section / handle
-              </text>
-              <text x="20" y="285">
-                Insertion tube
-              </text>
-              <text x="328" y="322">
-                Distal bending section
+              <text x="34" y="324">
+                Working-channel port
               </text>
             </g>
-            <path d="M402 304 L416 247" stroke="#275b66" strokeWidth="2" />
+            <g fill="#526871" fontSize="17" fontFamily="sans-serif">
+              <text x="34" y="141">
+                Thumb controls tip bend
+              </text>
+              <text x="34" y="233">
+                Index finger applies suction
+              </text>
+              <text x="34" y="347">
+                Entry for instruments
+              </text>
+            </g>
           </svg>
           <p>
-            Authored component diagram, not an instruction sheet for a particular device. Lever
-            layout, bending limits and suction controls vary by model.
+            Use the thumb to move the angulation lever and the index finger to press the suction
+            valve. Instruments enter through the separate working-channel port below the controls.
           </p>
         </>
       ) : (
@@ -148,11 +134,6 @@ export function InstrumentOrientation({ plain = false }: { readonly plain?: bool
           </p>
         </>
       )}
-      <p className={styles.figureCaption}>
-        {plain
-          ? 'Source: S1, PDF 89–97; S3, PDF 80.'
-          : 'Existing teaching photograph and authored diagram · clinical/media review pending. Source: S1, PDF 89–97; hand-position qualifications: S3, PDF 80.'}
-      </p>
     </section>
   )
 }

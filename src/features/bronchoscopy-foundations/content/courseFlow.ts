@@ -215,16 +215,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     },
     {
       ...practice(
-        'Depth again, without the cue',
-        'skill',
-        'Make the card look closer, then return to the starting depth.',
-      ),
-      id: 'depth-repeat',
-      blocks: [],
-      act: 'depth-repeat',
-    },
-    {
-      ...practice(
         'Bend the tip',
         'skill',
         'Watch the lever and the tip, then bend and release the tip yourself.',
@@ -232,16 +222,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       id: 'bend',
       blocks: ['bend'],
       act: 'bend',
-    },
-    {
-      ...practice(
-        'The bend again, without the cue',
-        'skill',
-        'Change the direction the tip faces, then bring it back to straight.',
-      ),
-      id: 'bend-repeat',
-      blocks: [],
-      act: 'bend-repeat',
     },
     {
       ...practice(
@@ -281,16 +261,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       id: 'suction',
       blocks: ['suction'],
       act: 'suction',
-    },
-    {
-      ...practice(
-        'Suction again, without the cue',
-        'skill',
-        'Apply suction, then release it. Watch whether the tip moves.',
-      ),
-      id: 'suction-repeat',
-      blocks: [],
-      act: 'suction-repeat',
     },
     screen(
       'in-the-airway',

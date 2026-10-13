@@ -132,7 +132,7 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
       'depth',
       'Advance and withdraw',
       'Watch the example, then move the tip forward and back yourself.',
-      'Press Advance and watch the depth rise. Then press Withdraw until the depth is back to zero.',
+      'Press Advance and watch the depth rise. Then press Withdraw until you are close to the starting depth.',
       'You advanced, then withdrew to the starting depth.',
       [
         {
@@ -145,20 +145,11 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
         },
       ],
     ),
-    repeat(
-      'depth-repeat',
-      'depth',
-      'Depth again, without the cue',
-      'Make the card look closer, then return to the starting depth.',
-      'Check the result in both views',
-      'Same task, no cue. Use the depth readout to check that you are back where you started.',
-      'You went forward and came back to the starting depth.',
-    ),
     guided(
       'bend',
       'Bend the tip',
       'Watch the lever and the tip, then bend and release the tip yourself.',
-      'Move the Deflection slider away from straight, then return it to zero. The arrow keys also move the lever.',
+      'Move the Deflection slider away from straight, then return it close to straight. The arrow keys also move the lever.',
       'You bent the tip and released it, and the depth did not change.',
       [
         {
@@ -178,15 +169,6 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
           caption: 'The lever returns to neutral and the tip is straight again.',
         },
       ],
-    ),
-    repeat(
-      'bend-repeat',
-      'bend',
-      'The bend again, without the cue',
-      'Change the direction the tip faces, then bring it back to straight.',
-      'Direction, at a fixed depth',
-      'Same task, no cue. Watch the tip in the outside view and the direction in the scope view.',
-      'You changed the bend and came back to straight, at the same depth.',
     ),
     guided(
       'rotation',
@@ -222,7 +204,7 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
       'combine',
       'Aim at a target',
       'Keep the gold target centered as you advance into the depth band.',
-      'Bring the target to the top of the image with Rotation. Center it with Deflection. Then advance, and adjust the bend to keep it centered.',
+      'Use Rotation and Deflection together to bring the target inside the center ring. Then advance in small steps, adjusting your aim as you move.',
       'The target is centered at the right depth. You aimed before you advanced.',
       [
         {
@@ -246,29 +228,28 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
     guided(
       'suction',
       'Suction',
-      'Watch the suction valve, then apply and release it yourself.',
-      'Select Suction and watch the tip. Then clear the checkbox.',
-      'You applied suction and released it. The tip did not move.',
+      'Advance the tip into the fluid, apply suction, then release it.',
+      'Advance until the tip enters the fluid. Select Suction and watch the fluid level fall. Follow the falling surface with the tip if needed, then release suction. With reduced motion, use Step one second to watch each change.',
+      'You aspirated fluid through the working channel, then released suction.',
       [
         {
+          command: { type: 'advance', mm: 24 },
+          caption: 'Advance into the fluid so the working-channel opening is submerged.',
+        },
+        {
           command: { type: 'suction', on: true },
+          caption: 'The suction valve opens. Fluid can now enter the working channel.',
+        },
+        {
+          command: { type: 'tick', seconds: 2 },
           caption:
-            'The index finger presses the valve. The indicator turns on and the tip stays put.',
+            'Fluid travels up the working channel and the level falls. The tip stays at the same depth.',
         },
         {
           command: { type: 'suction', on: false },
           caption: 'The finger lifts and suction stops.',
         },
       ],
-    ),
-    repeat(
-      'suction-repeat',
-      'suction',
-      'Suction again, without the cue',
-      'Apply suction, then release it. Watch whether the tip moves.',
-      'A short burst',
-      'Same task, no cue. Apply suction briefly and let go.',
-      'You applied suction and released it while the tip stayed in place.',
     ),
     task(
       'transfer',

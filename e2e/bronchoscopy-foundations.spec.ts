@@ -53,6 +53,14 @@ test.beforeEach(async ({ page }) => {
   if (!['localhost', '127.0.0.1'].includes(new URL(url).hostname))
     throw new Error('Local server required')
   await page.route('**/api/analytics', (route) => route.fulfill({ status: 204 }))
+  if (process.env.BRONCH_FOUNDATIONS_AUTH_TOKEN) {
+    await page.goto(
+      '/api/local-dev-auth?token=' +
+        encodeURIComponent(process.env.BRONCH_FOUNDATIONS_AUTH_TOKEN) +
+        '&next=' +
+        base,
+    )
+  }
   const response = await page.goto(base)
   expect(response?.status()).toBe(200)
   await expect(page.locator('[data-bronch-continue]')).toHaveCount(1)
@@ -342,7 +350,16 @@ async function pilotMovement(page: Page, id: string) {
       break
     case 'suction':
     case 'suction-repeat':
+      for (let i = 0; i < 6; i++) await depth('advance')
       await control(page, 'suction').check()
+      if (await control(page, 'step').count()) await control(page, 'step').click()
+      await expect
+        .poll(async () =>
+          Number(
+            await page.locator('[data-bench-fluid="outside"]').getAttribute('data-fluid-remaining'),
+          ),
+        )
+        .toBeLessThan(1)
       await control(page, 'suction').uncheck()
       break
     case 'transfer':

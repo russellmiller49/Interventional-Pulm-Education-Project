@@ -345,6 +345,7 @@ export type ScopeEventId =
   | 'suction-applied'
   | 'suction-released'
   | 'bench-advanced-off-target'
+  | 'bench-fluid-aspirated'
   | `accessory:${AccessoryState}`
   | `accessory-moved:${AccessoryPosition}`
   | `assist:${ScopeAssist}`
@@ -466,6 +467,8 @@ export interface ScopeViewSpec {
   readonly litAirways?: readonly AirwayLabel[]
   /** The model-boundary sentence printed under the scene. */
   readonly boundary: string
+  /** Fluid aspiration exercise outside the airway. */
+  readonly benchSuction?: boolean
   /** Learn-only authored target, shared by the scene and optical-frame goal check. */
   readonly benchTarget?: { readonly point: Vec3; readonly radiusMm: number }
   /** Physical action descriptions on the pilot's controls; existing callers retain labels. */
@@ -512,6 +515,8 @@ export interface OstiumPin {
 }
 
 export interface ScopeSignals {
+  /** Dimensionless remaining fluid in the bench reservoir; absent in airway cases. */
+  readonly benchFluidRemaining?: number
   /** Feedback signals, not measurements of trauma, force or competence (§23.3). */
   readonly contactCount: number
   readonly pathLengthMm: number

@@ -526,3 +526,24 @@
     border-left: 1px solid #b6c4c9;
   }
 }
+
+/* Give the falling fluid surface enough space to be compared with the tip. */
+.views[data-bench-suction='true'] .observer {
+  grid-template-rows: minmax(160px, 1fr) minmax(160px, 1fr);
+}
+.targetReticle {
+  display: grid;
+  place-items: center;
+  border: 1px dashed #b0e3e7;
+  border-radius: 50%;
+}
+@container (max-width: 560px) {
+  .views[data-bench-suction='true'][data-pilot-bench='true'] .observer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 160px 180px;
+  }
+  .views[data-bench-suction='true'] .tipCloseup {
+    border-left: 0;
+    border-top: 1px solid #b6c4c9;
+  }
+}

@@ -261,7 +261,7 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     id: 'U19',
     kind: 'manufacturer product specifications',
     title:
-      'Olympus bronchoscope specifications: EVIS X1 BF-H1100 and BF-1TH1100; EVIS EXERA III BF-P190',
+      'Olympus bronchoscope specifications: EVIS X1 BF-H1100 and BF-1TH1100; EVIS EXERA III BF-P190, BF-1TH190 and BF-XT190',
     authors: null,
     organization: 'Olympus',
     year: 2026,

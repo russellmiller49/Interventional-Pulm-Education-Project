@@ -120,7 +120,10 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   expect(currentStepId()).toBe(lesson.steps[unitIndex(lesson, 'depth')].id) // feedback never auto-advances
   clickPrimary()
   await settle()
-  expect(document.querySelector('[data-pilot-cue]')).toBeNull()
+  expect(document.querySelector('[data-pilot-teaching]')).toHaveAttribute(
+    'data-pilot-teaching',
+    'bend',
+  )
   expect(goalStates()).toEqual(['false'])
 })
 

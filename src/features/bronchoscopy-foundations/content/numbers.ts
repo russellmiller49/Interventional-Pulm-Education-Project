@@ -733,6 +733,40 @@ const ROWS = {
     value: '2.2 mm',
     ...SCOPE_ROW('BF-H1100'),
   },
+  'scope-standard-therapeutic-channel': {
+    row: 22,
+    label: 'Standard therapeutic bronchoscope example: Olympus BF-1TH190 working channel',
+    value: '2.8 mm',
+    ...SCOPE_ROW('BF-1TH190'),
+    checkedOn: '2026-10-12',
+    checkedBy: 'Codex, against Olympus America product specifications',
+    sources: [
+      {
+        sourceId: 'U19',
+        grade: null,
+        locator:
+          'BF-1TH190 product specifications: Channel Width; https://medical.olympusamerica.com/products/bronchoscope/therapeutic-bronchoscope-bf-1th190',
+      },
+    ],
+    note: 'Manufacturer specification, checked 2026-10-12; web page undated. A standard therapeutic example, not a universal class size. The BF-1TH1100 example has a 3.0 mm channel.',
+  },
+  'scope-large-therapeutic-channel': {
+    row: 22,
+    label: 'Larger therapeutic bronchoscope example: Olympus BF-XT190 working channel',
+    value: '3.2 mm',
+    ...SCOPE_ROW('BF-XT190'),
+    checkedOn: '2026-10-12',
+    checkedBy: 'Codex, against Olympus product specifications',
+    sources: [
+      {
+        sourceId: 'U19',
+        grade: null,
+        locator:
+          'BF-XT190 product specifications: extra-large working channel; https://medical.olympuscanada.com/products/bronchoscope/bf-xt190-bronchoscope',
+      },
+    ],
+    note: 'Manufacturer specification, checked 2026-10-12; web page undated. Larger therapeutic example; not the default size of every therapeutic bronchoscope.',
+  },
   'scope-therapeutic-od': {
     row: 22,
     label: 'Therapeutic bronchoscope: outer diameter at the distal end',
@@ -845,6 +879,8 @@ export function numberTokenErrors(where: string, text: string): readonly string[
  * ("6 o'clock"), and a bleeding grade used as a label ("grade 2").
  */
 const NOTATION = [
+  // Device model identifiers are names, not unsourced clinical measurements.
+  /\bBF-(?:1TH|XT|H|P)\d{3,4}\b/g,
   /\b[RL]?B\d{1,2}(\s?[+–-]\s?\d{1,2})?\b/g,
   /\b\d{1,2}\s+o[’']clock\b/gi,
   /\bgrades?\s+[1-4](\s?(–|-|to|and|or)\s?[1-4])?\b/gi,

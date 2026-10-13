@@ -14,11 +14,13 @@ import { WebGLRenderer, type WebGLRendererParameters } from 'three'
 import { PerspectiveCamera, View } from '@react-three/drei'
 import { BronchLabelOverlay } from '@/components/airway-anatomy/scope-primitives'
 import type { OstiumLabel } from '@/lib/airway-anatomy/ostia'
-import { OPTICAL_ASPECT } from '../../engine/scope/scopeOstia'
+import { BENCH_AIM_TOLERANCE_DEG } from '../../engine/scope/scopeBenchTarget'
+import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { ScopeOpticalView } from './ScopeOpticalView'
 import { ObserverView } from './ObserverView'
 import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
 import { isDetailedBench, type BenchPresentation } from './useBenchPresentation'
+import { BenchFluidView } from './BenchFluidView'
 import { benchOffCardNote, benchTipOrientation } from '../../engine/scope/benchOrientation'
 import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
 import {
@@ -232,6 +234,7 @@ export default function ScopeScene(props: SceneProps) {
       <div
         className={styles.views}
         ref={root}
+        data-bench-suction={view.benchSuction || undefined}
         data-three-state={status}
         data-three-attempt={generation}
         data-three-failure={load.failure ?? undefined}
@@ -284,12 +287,25 @@ export default function ScopeScene(props: SceneProps) {
                 )}
               </View>
               <span className={styles.viewHeading}>{optical ? 'Scope view' : 'Airway model'}</span>
+              {view.benchSuction ? <BenchFluidView state={state} optical overlay /> : null}
               {view.benchTarget ? (
-                <span className={styles.targetReticle} aria-hidden="true" data-bench-reticle>
+                <span
+                  className={styles.targetReticle}
+                  aria-hidden="true"
+                  data-bench-reticle
+                  style={{
+                    width:
+                      (opticalSize.height * Math.tan((BENCH_AIM_TOLERANCE_DEG * Math.PI) / 180)) /
+                      Math.tan((OPTICAL_FOV_DEG * Math.PI) / 360),
+                    height:
+                      (opticalSize.height * Math.tan((BENCH_AIM_TOLERANCE_DEG * Math.PI) / 180)) /
+                      Math.tan((OPTICAL_FOV_DEG * Math.PI) / 360),
+                  }}
+                >
                   +
                 </span>
               ) : null}
-              {benchOffCard ? (
+              {benchOffCard && !view.benchSuction ? (
                 // Hidden from assistive technology here: the end-on drawing under the controls
                 // carries the same sentence for it, read from the same displayed state.
                 <span className={styles.benchOffCard} aria-hidden="true" data-bench-off-card>
@@ -484,8 +500,16 @@ export default function ScopeScene(props: SceneProps) {
                         <PerspectiveCamera makeDefault near={0.1} far={1400} fov={38} />
                         <DistalTipCloseup state={presentation.state} />
                       </View>
-                      <span className={styles.closeupHeading}>Distal bending section</span>
-                      <span className={styles.closeupState}>Enlarged · middle tube omitted</span>
+                      {view.benchSuction ? (
+                        <BenchFluidView state={state} overlay />
+                      ) : (
+                        <>
+                          <span className={styles.closeupHeading}>Distal bending section</span>
+                          <span className={styles.closeupState}>
+                            Enlarged · middle tube omitted
+                          </span>
+                        </>
+                      )}
                     </div>
                   </>
                 ) : (

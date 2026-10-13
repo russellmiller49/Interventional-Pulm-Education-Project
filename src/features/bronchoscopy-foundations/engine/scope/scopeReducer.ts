@@ -1,5 +1,6 @@
+import { BENCH_FLUID, benchFluidObservation } from './benchFluid'
 import { authoredScopePose } from './scopeAuthoredPose'
-import { benchTargetObservation } from './scopeBenchTarget'
+import { BENCH_AIM_TOLERANCE_DEG, benchTargetObservation } from './scopeBenchTarget'
 import { enterFreeDrive } from '@/lib/airway-anatomy/drive'
 import {
   createInitialScopeState,
@@ -144,6 +145,7 @@ export function createScopeState(
     inputs,
     ledger: createInspectionLedger(view),
     signals: {
+      ...(view.benchSuction ? { benchFluidRemaining: 1 } : {}),
       contactCount: 0,
       pathLengthMm: 0,
       view: 'clear',
@@ -301,7 +303,8 @@ export function reduceScope(
         command.mm > 0 &&
         moved.travelledMm > 0 &&
         view.benchTarget &&
-        (benchTargetObservation(state, view.benchTarget.point)?.angleDeg ?? Infinity) > 5
+        (benchTargetObservation(state, view.benchTarget.point)?.angleDeg ?? Infinity) >
+          BENCH_AIM_TOLERANCE_DEG
       )
         d.events.push('bench-advanced-off-target')
       d.events.push(...moved.events)
@@ -382,7 +385,27 @@ export function reduceScope(
       }
       break
     case 'tick': {
-      d.signals.clockSec += Math.max(0, Math.min(10, command.seconds || 0))
+      const seconds = Number.isFinite(command.seconds)
+        ? Math.max(0, Math.min(10, command.seconds))
+        : 0
+      d.signals.clockSec += seconds
+      if (view.benchSuction && d.place === 'bench') {
+        const fluid = benchFluidObservation(state)
+        if (fluid.aspirating && seconds > 0) {
+          // Stop at the tip when the falling surface exposes the channel opening.
+          const atTip = Math.max(
+            0,
+            (BENCH_FLUID.bottomMm - d.depthMm) /
+              (BENCH_FLUID.bottomMm - BENCH_FLUID.surfaceStartMm),
+          )
+          const remaining = Math.max(
+            atTip,
+            fluid.remaining - seconds * BENCH_FLUID.removalPerSecond,
+          )
+          d.signals.benchFluidRemaining = remaining
+          if (remaining < fluid.remaining) d.events.push('bench-fluid-aspirated')
+        }
+      }
       if (view.script === 'breathing-cords') {
         const phase = breathPhaseAt(d.signals.clockSec)
         d.inputs = { ...d.inputs, cords: cordsForPhase(phase) }
