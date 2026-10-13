@@ -18,6 +18,14 @@ type Snapshot = {
   overlaps: { a: string; b: string; dx: number; dy: number }[]
 }
 
+/*
+ * Label boxes drawn over the 3D models must never overlap. On the scope model the markers are a
+ * named reference the learner turns on with the "Names" chip (they are never bare letters and
+ * are not an identification task; landmarks are found on the ultrasound image). On the route
+ * model the structure labels are on when the model opens and have their own toggle.
+ */
+const NAMED_MARKERS = '.linked-structure-letter.is-named:not([hidden])'
+
 async function enterLive(page: Page) {
   for (let i = 0; i < 8 && !(await page.locator('[data-evidence-identity="live"]').count()); i++)
     await page.locator('[data-now-primary]').click()
@@ -25,7 +33,12 @@ async function enterLive(page: Page) {
   return page.frameLocator('iframe[title="EBUS workbench"]')
 }
 
+/** Wait for the acquisition's workbench, then show the named markers if they are not showing. */
 async function scopeReady(page: Page, frame: FrameLocator) {
+  await expect(page.locator('[data-ebus-flow]')).toHaveAttribute(
+    'data-activity-id',
+    'scope-orientation:acquire-sweep',
+  )
   await expect
     .poll(
       () =>
@@ -37,10 +50,21 @@ async function scopeReady(page: Page, frame: FrameLocator) {
           ).spacingObservation
           return !!o?.frameReady && !!o.linked?.assetsReady
         }),
-      { timeout: 60000 },
+      { timeout: 90000 },
     )
     .toBe(true)
-  await expect(frame.locator('.linked-structure-letter:not([hidden])')).toHaveCount(4)
+  const names = frame.locator('[data-structure-names]')
+  // The chip mounts with the model; a restarted lesson loads the workbench again.
+  await expect(names).toBeVisible({ timeout: 60000 })
+  if ((await names.getAttribute('aria-pressed')) !== 'true') {
+    // Off until asked for: no marker is drawn over the model.
+    await expect(frame.locator('.linked-structure-callouts')).toBeHidden()
+    await frame.getByRole('button', { name: 'Show structure names', exact: true }).click()
+  }
+  await expect(names).toHaveAttribute('aria-label', 'Hide structure names')
+  await expect(frame.locator('.linked-structure-callouts')).toBeVisible()
+  await expect(frame.locator(NAMED_MARKERS)).toHaveCount(4)
+  await expect(frame.locator('.linked-structure-letter:not(.is-named)')).toHaveCount(0)
 }
 
 async function measure(frame: FrameLocator, selector: string, name: string): Promise<Snapshot> {
@@ -123,6 +147,8 @@ async function verify(records: Snapshot[], frame: FrameLocator, selector: string
     expect(record.boxes.length).toBeGreaterThan(0)
     expect(record.geometry.map((g) => g.id).sort()).toEqual(record.boxes.map((b) => b.id).sort())
     for (const b of record.boxes) {
+      // Lettered scope markers read "Structure A: name"; the route model's unlettered ones read the name alone.
+      expect(b.label).toMatch(/^(Structure [A-Z]: \S|(?!Structure)\S)/)
       expect(b.h).toBeGreaterThanOrEqual(34)
       expect(b.x).toBeGreaterThanOrEqual(-1)
       expect(b.y).toBeGreaterThanOrEqual(-1)
@@ -160,10 +186,7 @@ for (const viewport of [
     const snap = async (name: string) => {
       records.push(await measure(frame, '.linked-canvas', name))
     }
-    const names = async () => {
-      await frame.getByRole('button', { name: 'Show structure names', exact: true }).click()
-    }
-    await snap('initial')
+    await snap('named')
     const slider = frame.getByRole('slider', { name: 'Scope rotation', exact: true })
     for (const [i, key] of ['End', 'Home', 'End', 'Home'].entries()) {
       await slider.press(key)
@@ -184,12 +207,16 @@ for (const viewport of [
       await frame.getByRole('button', { name: 'Orbit right', exact: true }).click()
       await snap(`orbit-${i}`)
     }
-    await names()
-    await snap('named')
     for (let i = 0; i < 4; i++) {
       await frame.getByRole('button', { name: 'Orbit left', exact: true }).click()
-      await snap(`named-orbit-${i}`)
+      await snap(`orbit-back-${i}`)
     }
+    // Hiding the names removes every marker; showing them again lays them out afresh.
+    await frame.getByRole('button', { name: 'Hide structure names', exact: true }).click()
+    await expect(frame.locator('.linked-structure-callouts')).toBeHidden()
+    await frame.getByRole('button', { name: 'Show structure names', exact: true }).click()
+    await expect(frame.locator('.linked-structure-callouts')).toBeVisible()
+    await snap('names-returned')
     for (let i = 0; i < 3; i++)
       await frame.getByRole('button', { name: 'Zoom in', exact: true }).click()
     await snap('zoom-in')
@@ -208,19 +235,21 @@ for (const viewport of [
     await expect(page.getByText('Desktop or tablet lab', { exact: true })).toBeVisible()
     await page.setViewportSize(viewport)
     frame = page.frameLocator('iframe[title="EBUS workbench"]')
+    // The paused workbench is preserved, so the names are still showing on return.
+    await expect(frame.locator('[data-structure-names]')).toHaveAttribute('aria-pressed', 'true')
     await scopeReady(page, frame)
-    if (await frame.getByRole('button', { name: 'Show structure names', exact: true }).count())
-      await names()
     await snap('supported-reentry')
+    // Readiness after a restart must come from the new workbench, not the one just measured.
+    await page.evaluate(() => {
+      delete (window as unknown as { spacingObservation?: unknown }).spacingObservation
+    })
     await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
     frame = await enterLive(page)
     await scopeReady(page, frame)
-    await names()
     await snap('restart-named')
     await page.reload()
     frame = await enterLive(page)
     await scopeReady(page, frame)
-    await names()
     await snap('reload-named')
     const mapping = records[0].geometry
       .map(({ id, letter }) => ({ id, letter }))
@@ -240,10 +269,24 @@ test('route named boxes stay separate through target, approach, orbit, zoom and 
 }, info) => {
   await page.setViewportSize({ width: 1024, height: 900 })
   await page.goto('/en/ebus-guided/learn?section=eus-b-route-model')
+  // The briefing has no live model; the model opens on the acquisition, the second task.
+  await expect(page.locator('iframe[title="EBUS workbench"]')).toHaveCount(0)
   const frame = await enterLive(page)
+  await expect(page.locator('[data-ebus-flow]')).toHaveAttribute(
+    'data-activity-id',
+    'eus-b-route-model:route-comparison',
+  )
   await expect(frame.locator('.model-viewport')).toHaveAttribute('data-arrow-px', /.+/, {
-    timeout: 60000,
+    timeout: 120000,
   })
+  // Structure labels are on when the route model opens.
+  const labels = frame.locator('[data-structure-names]')
+  await expect(labels).toHaveAttribute('aria-pressed', 'true')
+  await expect(labels).toHaveText('Hide structure labels')
+  await expect(frame.locator(NAMED_MARKERS).first()).toBeVisible()
+  await expect(frame.locator('.linked-structure-letter:not(.is-named):not([hidden])')).toHaveCount(
+    0,
+  )
   const records: Snapshot[] = []
   const snap = async (name: string) => {
     records.push(await measure(frame, '.model-viewport', name))
@@ -271,5 +314,16 @@ test('route named boxes stay separate through target, approach, orbit, zoom and 
     await page.setViewportSize({ width, height: 900 })
     await snap(`route-resize-${width}`)
   }
+  // Hiding the labels removes them all; they come back separate.
+  await labels.click()
+  await expect(labels).toHaveText('Show structure labels')
+  await expect(frame.locator('.linked-structure-callouts')).toBeHidden()
+  await labels.click()
+  await expect(labels).toHaveText('Hide structure labels')
+  await expect(frame.locator('.model-viewport')).toHaveAttribute('data-arrow-px', /.+/, {
+    timeout: 60000,
+  })
+  await expect(frame.locator('.linked-structure-callouts')).toBeVisible()
+  await snap('labels-returned')
   await verify(records, frame, '.model-viewport', info)
 })
