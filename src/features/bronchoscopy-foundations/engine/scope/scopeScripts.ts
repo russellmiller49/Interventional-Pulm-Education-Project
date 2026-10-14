@@ -131,8 +131,9 @@ export const AIM_CONE_DEG = 40
  * Guided travel's aim guard (educator feedback, 2026-10-13: the driving asked for more precision
  * than a screen can teach).
  *
- * The picture decides. At a fork the scope enters the opening nearest the centre of the picture,
- * as that picture is from where the scope waits (`FORK_STANDOFF_MM`). The opening has to be in
+ * The picture decides. At a fork the scope enters the opening nearest the centre of the picture:
+ * the picture from where the scope waits (`FORK_STANDOFF_MM`) on the way in, and from where the
+ * tip is once it is nearer the fork than that (`guidedFork`). The opening has to be in
  * the picture (within the cone) and plainly the nearest (by the margin, in degrees between the
  * view axis and each opening). So an opening the learner has brought toward the centre is the one
  * entered, with no exact aim asked for: at the main carina a bend of some six degrees toward a
@@ -156,6 +157,12 @@ export const GUIDED_AIM_MARGIN_DEG = 12
  * the picture is the ridge between them.
  */
 export const FORK_STANDOFF_MM = 8
+/**
+ * Once the aim has chosen an opening, one movement carries the tip through it and this far inside.
+ * The choice is read from the picture at the waiting place; stopping part-way through the last
+ * stretch would have it read again from a place where the picture has changed.
+ */
+export const FORK_CARRY_MM = 1
 
 /** One insertion command is travelled in increments no longer than this, so no airway is skipped. */
 export const MOTION_INCREMENT_MM = 0.5

@@ -14,6 +14,7 @@ import {
 } from './types'
 import styles from './scope-scene.module.css'
 import { accessoryKind } from '../../engine/scope/scopeAccessory'
+import { isForkWaitMessage } from '../../engine/scope/scopeMessages'
 import { HELD_INTERVAL_MS, HELD_STEP_MM, HOLD_DELAY_MS, HOLD_RELEASE_MS } from './scopeKeyMap'
 import { NameSegment } from './NameSegment'
 
@@ -41,7 +42,16 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
   const held = useRef(false)
   // Until when a click belongs to the hold that just ended, and so adds no step of its own.
   const releaseUntil = useRef(0)
+  // A hold that ended itself at a fork while the button was still down: the click its release
+  // sends belongs to it too, however long the learner keeps the button pressed.
+  const pressed = useRef(false)
+  const ownsNextClick = useRef(false)
   const repeat = useRef<() => void>(() => {})
+  // The latest message, read by a running hold: the glide ends where the scope waits at a fork.
+  const message = useRef(state.message)
+  useEffect(() => {
+    message.current = state.message
+  }, [state.message])
   const stop = () => {
     if (holdDelay.current) clearTimeout(holdDelay.current)
     holdDelay.current = null
@@ -75,13 +85,21 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
     event.currentTarget.setPointerCapture(event.pointerId)
     stop()
     releaseUntil.current = 0
+    pressed.current = true
+    ownsNextClick.current = false
     // A short press is the click's one step. Only a sustained hold starts the glide.
     repeat.current = () =>
       onCommand({ type: 'advance', mm: direction * HELD_STEP_MM }, inputMode.current)
     holdDelay.current = setTimeout(() => {
       held.current = true
       repeat.current()
-      hold.current = setInterval(() => repeat.current(), HELD_INTERVAL_MS)
+      hold.current = setInterval(() => {
+        // Forward only: the scope has stopped to show a fork, and a new press goes on from there.
+        if (direction > 0 && isForkWaitMessage(message.current)) {
+          stop()
+          ownsNextClick.current = pressed.current
+        } else repeat.current()
+      }, HELD_INTERVAL_MS)
     }, HOLD_DELAY_MS)
   }
   const button = (key: ScopeControlKey, text: string, command: ScopeCommand) => (
@@ -101,12 +119,24 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
             type="button"
             aria-label={key === 'advance' ? 'Advance' : 'Withdraw'}
             onPointerDown={(event) => start(event, direction)}
-            onPointerUp={stop}
-            onPointerCancel={stop}
-            onLostPointerCapture={stop}
+            onPointerUp={() => {
+              pressed.current = false
+              stop()
+            }}
+            onPointerCancel={() => {
+              // A cancelled press sends no click, so it leaves none to be swallowed.
+              pressed.current = false
+              ownsNextClick.current = false
+              stop()
+            }}
+            onLostPointerCapture={() => {
+              pressed.current = false
+              stop()
+            }}
             onClick={() => {
               // The release of a hold has already travelled; it is not one more step.
-              if (performance.now() < releaseUntil.current) {
+              if (ownsNextClick.current || performance.now() < releaseUntil.current) {
+                ownsNextClick.current = false
                 releaseUntil.current = 0
                 return
               }
@@ -263,6 +293,8 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
         inputMode.current = event.pointerType === 'touch' ? 'touch' : 'pointer'
       }}
       onKeyDownCapture={() => {
+        // A key press is its own action: no pointer hold's release is still owed a click.
+        ownsNextClick.current = false
         inputMode.current = 'keyboard'
       }}
     >

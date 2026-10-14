@@ -15,6 +15,7 @@ import {
   type ScopePaneProps,
   type ScopeViewSpec,
 } from '../components/scope/types'
+import { SCOPE_MESSAGES } from '../engine/scope/scopeMessages'
 import { createScopeState } from '../engine/scope/scopeReducer'
 import { scopeLocationCaption } from '../engine/scope/scopeCaption'
 import { teachingCase } from '../test-support/teachingCase'
@@ -56,6 +57,30 @@ beforeAll(() =>
     value: () => ({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() }),
   }),
 )
+
+/**
+ * This jsdom has neither pointer events nor pointer capture. A mouse event stands in for the press
+ * (it carries the button the dock checks), and capture, which the dock asks for so that a drag off
+ * the button still ends the hold, is a stub. Returns the way to put both back.
+ */
+function pointerStandIns(): () => void {
+  const hadPointerEvent = 'PointerEvent' in window
+  if (!hadPointerEvent)
+    Object.defineProperty(window, 'PointerEvent', { configurable: true, value: MouseEvent })
+  const elementPrototype = Element.prototype as unknown as { setPointerCapture?: unknown }
+  const hadCapture = 'setPointerCapture' in elementPrototype
+  if (!hadCapture) elementPrototype.setPointerCapture = jest.fn()
+  return () => {
+    if (!hadCapture) delete elementPrototype.setPointerCapture
+    if (!hadPointerEvent) delete (window as { PointerEvent?: unknown }).PointerEvent
+  }
+}
+
+/** The pane's props with the scene's message as given: what the scope last said. */
+function propsSaying(message: string | null, onCommand: jest.Mock): ScopePaneProps {
+  const p = props({ onCommand })
+  return { ...p, state: { ...p.state, message } }
+}
 
 test('all seven modes select the scene implementation', () => {
   expect([...SCOPE_MODES_READY]).toEqual(SCOPE_MODES)
@@ -143,15 +168,7 @@ test('a held movement key glides: one step on the press, then fine increments at
 })
 test('a press of Advance is one step; a hold glides, and the click that ends it adds no step', () => {
   jest.useFakeTimers()
-  // This jsdom has neither pointer events nor pointer capture. A mouse event stands in for the
-  // press (it carries the button the dock checks), and capture, which the dock asks for so that a
-  // drag off the button still ends the hold, is a stub.
-  const hadPointerEvent = 'PointerEvent' in window
-  if (!hadPointerEvent)
-    Object.defineProperty(window, 'PointerEvent', { configurable: true, value: MouseEvent })
-  const elementPrototype = Element.prototype as unknown as { setPointerCapture?: unknown }
-  const hadCapture = 'setPointerCapture' in elementPrototype
-  if (!hadCapture) elementPrototype.setPointerCapture = jest.fn()
+  const restore = pointerStandIns()
   const p = props()
   const onCommand = p.onCommand as jest.Mock
   const mounted = render(<ScopeDock {...p} needsStep={false} />)
@@ -161,7 +178,6 @@ test('a press of Advance is one step; a hold glides, and the click that ends it 
 
   // A short press: released inside the delay, so the click is the whole of it.
   fireEvent.pointerDown(advance, { button: 0 })
-  expect(elementPrototype.setPointerCapture).toHaveBeenCalledTimes(hadCapture ? 0 : 1)
   act(() => jest.advanceTimersByTime(HOLD_DELAY_MS - 1))
   expect(onCommand).not.toHaveBeenCalled()
   fireEvent.pointerUp(advance)
@@ -205,9 +221,123 @@ test('a press of Advance is one step; a hold glides, and the click that ends it 
   expect(onCommand).toHaveBeenCalledTimes(3)
 
   mounted.unmount()
-  if (!hadCapture) delete elementPrototype.setPointerCapture
-  if (!hadPointerEvent) delete (window as { PointerEvent?: unknown }).PointerEvent
+  restore()
   jest.useRealTimers()
+})
+test.each([
+  ['with the way on chosen', SCOPE_MESSAGES.forkAhead],
+  ['with the choice still open', SCOPE_MESSAGES.aimRefused],
+])('a held W ends where the scope waits at a fork (%s); a new press goes on', (_which, said) => {
+  jest.useFakeTimers()
+  const onCommand = jest.fn()
+  const waiting = propsSaying(said, onCommand)
+  const mounted = render(<ScopeScenePane {...waiting} />)
+  const workspace = screen.getByLabelText('Interactive scope workspace')
+  // The key is still down from the glide that brought the scope here: its repeats send nothing,
+  // however long it is held.
+  for (let i = 0; i < 5; i += 1) {
+    act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+    fireEvent.keyDown(workspace, { key: 'w', repeat: true })
+  }
+  expect(onCommand).not.toHaveBeenCalled()
+  // Only going forward is held back: backing out and turning still glide.
+  for (const [key, held] of [
+    ['s', { type: 'advance', mm: -HELD_STEP_MM }],
+    ['d', { type: 'rotate', deg: HELD_TURN_DEG }],
+    ['ArrowDown', { type: 'deflect', deg: -HELD_TURN_DEG }],
+  ] as const) {
+    act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+    fireEvent.keyDown(workspace, { key, repeat: true })
+    expect(onCommand).toHaveBeenLastCalledWith(held, 'keyboard')
+  }
+  // Letting go and pressing again is a new press: one whole step, which is what goes on.
+  onCommand.mockClear()
+  fireEvent.keyUp(workspace, { key: 'w' })
+  fireEvent.keyDown(workspace, { key: 'w' })
+  expect(onCommand.mock.calls).toEqual([
+    [{ type: 'advance', mm: waiting.state.inputs.stepMm }, 'keyboard'],
+  ])
+  // Once the scope says something else, a held key glides again.
+  mounted.rerender(<ScopeScenePane {...propsSaying(null, onCommand)} />)
+  act(() => jest.advanceTimersByTime(HELD_INTERVAL_MS))
+  fireEvent.keyDown(workspace, { key: 'w', repeat: true })
+  expect(onCommand).toHaveBeenLastCalledWith({ type: 'advance', mm: HELD_STEP_MM }, 'keyboard')
+  mounted.unmount()
+  jest.useRealTimers()
+})
+test('a held Advance ends where the scope waits at a fork; a held Withdraw does not', () => {
+  jest.useFakeTimers()
+  const restore = pointerStandIns()
+  const onCommand = jest.fn()
+  const fine = [{ type: 'advance', mm: HELD_STEP_MM }, 'pointer']
+  const mounted = render(<ScopeDock {...propsSaying(null, onCommand)} needsStep={false} />)
+  const advance = screen.getByRole('button', { name: /^Advance$/ })
+  fireEvent.pointerDown(advance, { button: 0 })
+  act(() => jest.advanceTimersByTime(HOLD_DELAY_MS + 2 * HELD_INTERVAL_MS))
+  expect(onCommand.mock.calls).toEqual([fine, fine, fine])
+  // The scope arrives at a fork and says so. The button is still down; the glide is over.
+  mounted.rerender(
+    <ScopeDock {...propsSaying(SCOPE_MESSAGES.forkAhead, onCommand)} needsStep={false} />,
+  )
+  act(() => jest.advanceTimersByTime(6 * HELD_INTERVAL_MS))
+  expect(onCommand).toHaveBeenCalledTimes(3)
+  // Let go straight away, and the click that ends the hold adds no step of its own.
+  fireEvent.pointerUp(advance)
+  fireEvent.click(advance)
+  expect(onCommand).toHaveBeenCalledTimes(3)
+  // A new press is one step, which at a fork is what takes the scope on.
+  act(() => jest.advanceTimersByTime(HOLD_RELEASE_MS))
+  fireEvent.pointerDown(advance, { button: 0 })
+  fireEvent.pointerUp(advance)
+  fireEvent.click(advance)
+  expect(onCommand.mock.calls.at(-1)).toEqual([
+    { type: 'advance', mm: createScopeState(view, teachingCase()).inputs.stepMm },
+    'pointer',
+  ])
+  expect(onCommand).toHaveBeenCalledTimes(4)
+
+  // Backing out of a fork is never held: a held Withdraw glides on with the message showing.
+  onCommand.mockClear()
+  const withdraw = screen.getByRole('button', { name: /^Withdraw$/ })
+  fireEvent.pointerDown(withdraw, { button: 0 })
+  act(() => jest.advanceTimersByTime(HOLD_DELAY_MS + 3 * HELD_INTERVAL_MS))
+  expect(onCommand.mock.calls).toEqual(
+    Array.from({ length: 4 }, () => [{ type: 'advance', mm: -HELD_STEP_MM }, 'pointer']),
+  )
+  fireEvent.pointerUp(withdraw)
+
+  mounted.unmount()
+  restore()
+  jest.useRealTimers()
+})
+// A hold that stops itself at a fork ends while the button is still down. The click its release
+// sends belongs to that hold whenever it comes: a learner who keeps the button down a moment longer
+// must not send a whole step with the release, which at a fork with the way on chosen would carry
+// the scope through it.
+test('the release of a hold that ended at a fork adds no step, however late it comes', () => {
+  jest.useFakeTimers()
+  const restore = pointerStandIns()
+  try {
+    const onCommand = jest.fn()
+    const mounted = render(<ScopeDock {...propsSaying(null, onCommand)} needsStep={false} />)
+    const advance = screen.getByRole('button', { name: /^Advance$/ })
+    fireEvent.pointerDown(advance, { button: 0 })
+    act(() => jest.advanceTimersByTime(HOLD_DELAY_MS + 2 * HELD_INTERVAL_MS))
+    mounted.rerender(
+      <ScopeDock {...propsSaying(SCOPE_MESSAGES.forkAhead, onCommand)} needsStep={false} />,
+    )
+    act(() => jest.advanceTimersByTime(2 * HELD_INTERVAL_MS))
+    const sent = onCommand.mock.calls.length
+    // Still looking at the fork with the button down, well past the release window.
+    act(() => jest.advanceTimersByTime(HOLD_RELEASE_MS + 200))
+    fireEvent.pointerUp(advance)
+    fireEvent.click(advance)
+    expect(onCommand).toHaveBeenCalledTimes(sent)
+    mounted.unmount()
+  } finally {
+    restore()
+    jest.useRealTimers()
+  }
 })
 test('reduced motion exposes an explicit step and never ticks on its own', () => {
   jest.useFakeTimers()

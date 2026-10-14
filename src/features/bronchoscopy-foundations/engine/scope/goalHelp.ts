@@ -250,7 +250,7 @@ function steer(
   // picture the fork is read from: the engine's own rule (`guidedFork`), asked rather than copied.
   const fork =
     !seeing && state.engine && view.mode === 'guided-walk'
-      ? guidedFork(state.engine.edgeId, state.inputs, { view, scopeCase })
+      ? guidedFork(state.engine.edgeId, state.inputs, { view, scopeCase }, state.engine.distanceMm)
       : null
   const lead = fork ? leadingOpening(scopeCase, state.engine!.edgeId, pin.edgeId) : null
   const leadOpening =

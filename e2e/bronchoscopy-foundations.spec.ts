@@ -2818,13 +2818,15 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
 
 /**
  * Educator feedback, 2026-10-13 (`docs/bronchoscopy-foundations/review/feedback-2026-10-13.md`), on
- * the real route with native input: guided travel that waits short of a fork and enters the opening
- * brought toward the centre of the picture, the screen on where the operator stands, the right
- * lung's opening view, and the course's own frames.
+ * the real route with native input: guided travel that pauses short of every fork and enters the
+ * opening at the centre of the picture, the screen on where the operator stands, the right lung's
+ * opening view, and the course's own frames.
  */
 test.describe('Feedback 2026-10-13: guided travel, orientation and the course’s own frames', () => {
   const FORK_WAITS =
     'More than one opening is ahead. Bend the tip toward the one you want, then advance.'
+  const FORK_AHEAD =
+    'A fork. Advance again to enter the opening at the centre of the view, or bend toward another first.'
   const THROUGH = 'Through the opening. The tip is straight again, in line with this airway.'
 
   test('above the carina a straight tip waits with both openings named, a bend chooses one, and the task ends back in the trachea', async ({
@@ -2854,13 +2856,25 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
     await expect(goal('reach-carina')).toHaveAttribute('data-met', 'true')
     // It waits where the choice can be seen: both openings are in the picture, each with its name.
     const names = page.locator('[data-three-state] [data-ostium-pin]')
-    const placed = () =>
-      names.evaluateAll((pins) =>
-        pins.map((pin) => {
-          const { left, top } = (pin as HTMLElement).style
-          return `${pin.getAttribute('data-ostium-pin')} ${left} ${top}`
-        }),
-      )
+    /** Where each opening's name is drawn, in percent of the picture. */
+    const placed = async () =>
+      Object.fromEntries(
+        await names.evaluateAll((pins) =>
+          pins.map((pin) => {
+            const { left, top } = (pin as HTMLElement).style
+            return [pin.getAttribute('data-ostium-pin')!, [parseFloat(left), parseFloat(top)]]
+          }),
+        ),
+      ) as Record<string, [number, number]>
+    /** The same names in the same places: the tip is where it was, turned as it was. */
+    const expectSamePicture = async (expected: Record<string, [number, number]>) => {
+      const now = await placed()
+      expect(Object.keys(now).sort()).toEqual(Object.keys(expected).sort())
+      for (const [label, [left, top]] of Object.entries(expected)) {
+        expect(Math.abs(now[label][0] - left), label).toBeLessThan(0.5)
+        expect(Math.abs(now[label][1] - top), label).toBeLessThan(0.5)
+      }
+    }
     await expect(names).toHaveCount(2)
     for (const label of ['RMSB', 'LMSB'])
       await expect(page.locator(`[data-three-state] [data-ostium-pin="${label}"]`)).toBeVisible()
@@ -2868,7 +2882,7 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
     const waitingView = await placed()
     await control(page, 'advance').press('Enter')
     await expect(message).toHaveText(FORK_WAITS)
-    expect(await placed()).toEqual(waitingView)
+    await expectSamePicture(waitingView)
     await expect(caption).toContainText('main carina')
     await expect(goal('enter-right')).toHaveAttribute('data-met', 'false')
     await expect(control(page, 'deflect')).toHaveValue('0')
@@ -2906,13 +2920,15 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
       ),
     ) as Record<'RMSB' | 'LMSB', boolean>
     expect(above.RMSB).not.toBe(above.LMSB)
+    // The turn moved the names in the picture, not the tip: this is the waiting place, as turned.
+    const waitingPlace = await placed()
 
     for (const [label, name, entered, back] of [
       ['RMSB', 'Right main bronchus', 'enter-right', 'back-to-trachea'],
       ['LMSB', 'Left main bronchus', 'enter-left', 'back-from-left'],
     ] as const) {
       // The picture decides. The bend brings the wanted opening toward the centre of the picture,
-      // nearer than any other name in view, and that is the opening the next advances enter.
+      // nearer than any other name in view, and that is the opening the next Advance enters.
       const straight = await offCentre()
       await setRange(page, 'deflect', above[label] ? 30 : -30)
       await expect.poll(async () => (await offCentre())[label]).toBeLessThan(straight[label])
@@ -2920,8 +2936,8 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
       expect(bent[label]).toBe(Math.min(...Object.values(bent)))
       // A bent tip under guided travel is not a wall contact: no red field, no refusal for it.
       await expect(signal).toHaveAttribute('data-view-signal', 'clear')
-      for (let i = 0; i < 10 && !(await caption.textContent())!.includes(name); i += 1)
-        await control(page, 'advance').press('Enter')
+      // From the waiting place, one Advance carries the tip through the fork into that opening.
+      await control(page, 'advance').press('Enter')
       await expect(caption).toContainText(name)
       await expect(goal(entered)).toHaveAttribute('data-met', 'true')
       // Through the fork the bend is let go; the turn of the control section is the learner's.
@@ -2930,10 +2946,13 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
       await expect(control(page, 'rotate')).toHaveValue('-90')
       await expect(signal).toHaveAttribute('data-view-signal', 'clear')
       await expect(goal(back)).toHaveAttribute('data-met', 'false')
-      for (let i = 0; i < 30 && (await caption.textContent())!.includes(name); i += 1)
-        await control(page, 'withdraw').press('Enter')
+      // One Withdraw comes back out to the waiting place in the trachea, where both openings are
+      // in the picture again, each with its name where it was.
+      await control(page, 'withdraw').press('Enter')
       await expect(caption).toContainText('main carina')
       await expect(goal(back)).toHaveAttribute('data-met', 'true')
+      await expect(names).toHaveCount(2)
+      await expectSamePicture(waitingPlace)
     }
 
     // The finished card says the goals are met, in plain words, and tags no row.
@@ -2944,6 +2963,58 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
     await expect(page.locator('[data-goal-claim-tag]')).toHaveCount(0)
     await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now: Trachea.')
     await expect(primary(page)).toBeEnabled()
+    expect((await record(page)).reviewedSectionIds).toEqual([])
+  })
+
+  test('a fork with one opening plainly ahead: the scope pauses once and says so, and the next Advance enters the opening at the centre', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await walkToStep(page, 'right-side', 'right-side-flow-v1-application')
+    await ready(page)
+    const message = page.locator('[data-scope-message]')
+    const caption = locationCaption(page)
+    const signal = page.locator('[data-three-state] [data-view-signal]')
+    const atFork = page.locator('[data-scope-message]', {
+      hasText: /^(A fork\.|More than one opening is ahead\.)/,
+    })
+    const toTheFork = async () => {
+      for (let i = 0; i < 12 && !(await atFork.count()); i += 1)
+        await control(page, 'advance').press('Enter')
+    }
+    // From the opening view the lower lobe is plainly nearest the centre of the picture. The scope
+    // still stops short of the fork, once, and says what the next Advance will do.
+    await toTheFork()
+    await expect(message).toHaveText(FORK_AHEAD)
+    await expect(caption).toContainText('Bronchus intermedius')
+    await expect(control(page, 'rotate')).toHaveValue('44')
+    await expect(control(page, 'deflect')).toHaveValue('-3')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+    // The next press enters the opening at the centre of the view, and the slight bend is let go.
+    await control(page, 'advance').press('Enter')
+    await expect(caption).toContainText('Right lower lobe bronchus')
+    await expect(message).toHaveText(THROUGH)
+    await expect(control(page, 'deflect')).toHaveValue('0')
+    await expect(control(page, 'rotate')).toHaveValue('44')
+    // One press, one fork: the press after that stops for the lower lobe's own fork.
+    await control(page, 'advance').press('Enter')
+    await expect(atFork).toHaveCount(1)
+    await expect(caption).toContainText('Right lower lobe bronchus')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+
+    // "Or bend toward another first": from the same pause, lifting the tip toward the middle lobe
+    // at the top of the picture sends the same single press there instead.
+    await control(page, 'reset').click()
+    await expect(caption).toContainText('Bronchus intermedius')
+    await expect(control(page, 'deflect')).toHaveValue('-3')
+    await toTheFork()
+    await expect(message).toHaveText(FORK_AHEAD)
+    await setRange(page, 'deflect', 18)
+    await control(page, 'advance').press('Enter')
+    await expect(caption).toContainText('Right middle lobe bronchus')
+    await expect(message).toHaveText(THROUGH)
+    await expect(control(page, 'deflect')).toHaveValue('0')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
     expect((await record(page)).reviewedSectionIds).toEqual([])
   })
 

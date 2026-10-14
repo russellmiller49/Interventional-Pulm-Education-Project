@@ -7,6 +7,8 @@ import type { AirwayLabel } from '../../components/scope/types'
  */
 export const SCOPE_MESSAGES = {
   aimRefused: 'More than one opening is ahead. Bend the tip toward the one you want, then advance.',
+  forkAhead:
+    'A fork. Advance again to enter the opening at the centre of the view, or bend toward another first.',
   tipStraightened: 'Through the opening. The tip is straight again, in line with this airway.',
   lumenEnd:
     'The teaching model ends here, one generation inside this segment. Withdraw to continue.',
@@ -63,3 +65,8 @@ export const SCRIPT_REPORTS = {
   misreportProtected: 'Assistant (scripted): “It is protected.”',
   protectedNow: 'Assistant (scripted): “Protected now.”',
 } as const
+
+/** Whether the scene's message says the scope is waiting at a fork: a held Advance stops on it. */
+export function isForkWaitMessage(message: string | null): boolean {
+  return message === SCOPE_MESSAGES.forkAhead || message === SCOPE_MESSAGES.aimRefused
+}

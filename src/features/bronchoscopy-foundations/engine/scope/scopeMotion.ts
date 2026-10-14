@@ -21,6 +21,7 @@ import type { ScopeContext, ScopeRuntimeState } from './scopeRuntime'
 import {
   AIM_CONE_DEG,
   BRANCH_APPROACH_MM,
+  FORK_CARRY_MM,
   FORK_STANDOFF_MM,
   GLOTTIS_ALIGN_LIMIT_DEG,
   GUIDED_AIM_CONE_DEG,
@@ -136,14 +137,14 @@ export function aimsAtWall(
 export interface GuidedFork {
   /** How far along the current edge the scope waits while the aim is undecided. */
   readonly standMm: number
-  /** The frame at that place before rotation and deflection: what an aim is worked out against. */
+  /** The frame the picture is taken from, before rotation and deflection: what an aim is worked out against. */
   readonly base: OpticalFrame
   /** The view from that place with the controls as they are: where the fork is read from. */
   readonly frame: OpticalFrame
   /** The openings, nearest the centre of that picture first. */
   readonly openings: readonly {
     readonly edgeId: number
-    /** The point inside the opening the picture is read against (`openingInsetMm`). */
+    /** The point down the opening's course that the view axis comes nearest to. */
     readonly aimPoint: Vec3
     /** Degrees between the view axis and that point. */
     readonly offAxisDeg: number
@@ -153,38 +154,92 @@ export interface GuidedFork {
 }
 
 /**
+ * How much further down an opening's course the picture is read against, beyond the point its name
+ * is drawn at. Close to a fork the name point is only just inside the opening and sits well off to
+ * one side, while the learner is looking down the lumen beyond it; an aim counts when the view axis
+ * comes near any of these points.
+ */
+const AIM_DEPTHS_BEYOND_NAME_MM = [0, 6, 12] as const
+
+/** A point `mm` along an edge's course, carried straight on past its end. */
+function pointAlongCourse(
+  edge: Parameters<typeof sampleEdgePose>[0] & { readonly lengthMm: number },
+  mm: number,
+): Vec3 {
+  if (mm <= edge.lengthMm) return sampleEdgePose(edge, mm).point
+  const end = sampleEdgePose(edge, edge.lengthMm)
+  const over = mm - edge.lengthMm
+  return [
+    end.point[0] + end.tangent[0] * over,
+    end.point[1] + end.tangent[1] * over,
+    end.point[2] + end.tangent[2] * over,
+  ]
+}
+
+/**
  * The fork at the end of an edge as a guided tip reads it (`scopeScripts.ts`, the aim guard).
- * Null when the edge does not end in a fork. Read from where the scope waits, with the controls as
- * they are, so the answer does not change as the tip covers the last stretch to the fork.
+ * Null when the edge does not end in a fork.
+ *
+ * The picture it is read from is the learner's own. On the way in that is the place the scope
+ * waits; with `distanceMm` past that place (a tip that has come back out of a branch, or entered a
+ * short airway) it is where the tip actually is. Educator feedback, 2026-10-13: read only from the
+ * waiting place, a tip at the fork with a clear view down one opening was told that more than one
+ * opening was ahead, because from eight millimetres back the same bend pointed at the wall.
+ *
+ * An aim made at the waiting place is not lost on the last stretch: where the tip's own picture no
+ * longer decides, the waiting place's still does.
  */
 export function guidedFork(
   edgeId: number,
   inputs: Pick<ScopeInputs, 'rotationDeg' | 'deflectionDeg'>,
   ctx: ScopeContext,
+  distanceMm?: number,
 ): GuidedFork | null {
   const scopeCase = ctx.scopeCase
   const edge = scopeCase?.index.edgesById.get(edgeId)
   const node = edge ? scopeCase?.index.nodesById.get(edge.endNodeId) : undefined
   if (!scopeCase || !edge || !node || node.childEdgeIds.length < 2) return null
   const standMm = Math.max(0, edge.lengthMm - FORK_STANDOFF_MM)
-  const base = transportFor(ctx.view, scopeCase).at(edgeId, standMm)
-  const frame = scopeFrame(base, inputs)
-  const openings = node.childEdgeIds
-    .flatMap((childId) => {
-      const child = scopeCase.index.edgesById.get(childId)
-      if (!child) return []
-      const aimPoint = sampleEdgePose(child, openingInsetMm(child)).point
-      const cos = scalar(frame.forward, unit(minus(aimPoint, frame.position), frame.forward))
-      const offAxisDeg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI
-      return [{ edgeId: childId, aimPoint, offAxisDeg }]
-    })
-    .sort((a, b) => a.offAxisDeg - b.offAxisDeg)
-  const [nearest, next] = openings
-  const decided =
-    nearest !== undefined &&
-    nearest.offAxisDeg <= GUIDED_AIM_CONE_DEG &&
-    (next === undefined || next.offAxisDeg - nearest.offAxisDeg >= GUIDED_AIM_MARGIN_DEG)
-  return { standMm, base, frame, openings, chosenEdgeId: decided ? nearest.edgeId : null }
+  const courses = node.childEdgeIds.flatMap((childId) => {
+    const child = scopeCase.index.edgesById.get(childId)
+    if (!child) return []
+    const name = openingInsetMm(child)
+    return [
+      {
+        edgeId: childId,
+        points: AIM_DEPTHS_BEYOND_NAME_MM.map((beyond) => pointAlongCourse(child, name + beyond)),
+      },
+    ]
+  })
+  const read = (atMm: number) => {
+    const base = transportFor(ctx.view, scopeCase).at(edgeId, atMm)
+    const frame = scopeFrame(base, inputs)
+    const openings = courses
+      .map(({ edgeId: childId, points }) => {
+        let aimPoint = points[0]
+        let offAxisDeg = Infinity
+        for (const point of points) {
+          const cos = scalar(frame.forward, unit(minus(point, frame.position), frame.forward))
+          const deg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI
+          if (deg < offAxisDeg) {
+            offAxisDeg = deg
+            aimPoint = point
+          }
+        }
+        return { edgeId: childId, aimPoint, offAxisDeg }
+      })
+      .sort((a, b) => a.offAxisDeg - b.offAxisDeg)
+    const [nearest, next] = openings
+    const decided =
+      nearest !== undefined &&
+      nearest.offAxisDeg <= GUIDED_AIM_CONE_DEG &&
+      (next === undefined || next.offAxisDeg - nearest.offAxisDeg >= GUIDED_AIM_MARGIN_DEG)
+    return { base, frame, openings, chosenEdgeId: decided ? nearest.edgeId : null }
+  }
+  const waiting = read(standMm)
+  if (distanceMm === undefined || distanceMm <= standMm) return { standMm, ...waiting }
+  const here = read(Math.min(distanceMm, edge.lengthMm))
+  return { standMm, ...here, chosenEdgeId: here.chosenEdgeId ?? waiting.chosenEdgeId }
 }
 
 function insertInLarynx(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): InsertionResult {
@@ -272,6 +327,10 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
   let travelledMm = 0
   let remaining = mm
   let guard = 0
+  /** A fork this movement has already chosen at, and the branch it is carrying the tip into. */
+  const carry: { through: { readonly edgeId: number; readonly direction: Vec3 } | null } = {
+    through: null,
+  }
   const travel = (viewForward: Vec3) => ({
     requireAim,
     viewForward,
@@ -325,29 +384,60 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
         stopAfter = true
       }
     } else {
-      const fork = requireAim && step > 0 ? guidedFork(engine.edgeId, inputs, ctx) : null
-      if (fork && fork.chosenEdgeId === null && engine.distanceMm + step > fork.standMm) {
-        // Undecided on the way in: wait short of the fork, where both openings are in the picture.
-        // Never backward: a tip already past that place waits where it is.
-        events.push('aim-refused')
-        message = SCOPE_MESSAGES.aimRefused
-        aimGuardActed = true
-        next = {
-          ...engine,
-          distanceMm: Math.max(engine.distanceMm, Math.min(fork.standMm, engine.distanceMm + step)),
-          movementMessage: undefined,
+      let viewForward = frame.forward
+      let waitAt: number | null = null
+      let refused = false
+      if (requireAim && step > 0) {
+        if (carry.through?.edgeId === engine.edgeId) viewForward = carry.through.direction
+        else {
+          const fork = guidedFork(engine.edgeId, inputs, ctx, engine.distanceMm)
+          // One movement, one opening: having come through a fork, the tip stops before the next
+          // one's last stretch, so the learner sees where they are before choosing again.
+          // "Reaches", not "passes": an increment that ends exactly on the waiting place has
+          // arrived there, and must stop there like any other.
+          const reaches = fork !== null && engine.distanceMm + step >= fork.standMm - 1e-9
+          if (fork && carry.through && reaches) {
+            // The airway just entered is short: its own fork is already this close. Say so now,
+            // as at any other fork, rather than stopping without a word.
+            message =
+              fork.chosenEdgeId === null ? SCOPE_MESSAGES.aimRefused : SCOPE_MESSAGES.forkAhead
+            break
+          }
+          if (fork && reaches) {
+            const edge = scopeCase.index.edgesById.get(engine.edgeId)
+            const node = edge ? scopeCase.index.nodesById.get(edge.endNodeId) : undefined
+            if (fork.chosenEdgeId === null || !edge || !node) {
+              // Undecided: wait short of the fork, where both openings are in the picture. Never
+              // backward: a tip already past that place waits where it is.
+              waitAt = Math.max(engine.distanceMm, Math.min(fork.standMm, engine.distanceMm + step))
+              refused = true
+            } else if (engine.distanceMm < fork.standMm - 1e-9) {
+              // Arriving with an opening plainly ahead: the scope still stops here once, so the
+              // fork is seen before it is entered. The next advance goes on.
+              waitAt = fork.standMm
+            } else {
+              // Chosen, from the waiting place: this one movement carries the tip through the
+              // opening, so the choice made from the picture is not read again from somewhere the
+              // picture has changed.
+              carry.through = {
+                edgeId: engine.edgeId,
+                direction: branchDirection(fork.chosenEdgeId, node.lps, frame.forward),
+              }
+              viewForward = carry.through.direction
+              remaining = Math.max(remaining, edge.lengthMm - engine.distanceMm + FORK_CARRY_MM)
+            }
+          }
         }
+      }
+      if (waitAt !== null) {
+        if (refused) {
+          events.push('aim-refused')
+          message = SCOPE_MESSAGES.aimRefused
+          aimGuardActed = true
+        } else message = message ?? SCOPE_MESSAGES.forkAhead
+        next = { ...engine, distanceMm: waitAt, movementMessage: undefined }
         stopAfter = true
       } else {
-        // A chosen opening is entered by pointing the engine down that branch itself.
-        const forkNode =
-          fork && fork.chosenEdgeId !== null
-            ? scopeCase.index.nodesById.get(scopeCase.index.edgesById.get(engine.edgeId)!.endNodeId)
-            : undefined
-        const viewForward =
-          fork && fork.chosenEdgeId !== null && forkNode
-            ? branchDirection(fork.chosenEdgeId, forkNode.lps, frame.forward)
-            : frame.forward
         next = moveScope(
           { ...engine, movementMessage: undefined },
           scopeCase.graph,
@@ -369,6 +459,18 @@ function insertInTree(state: ScopeRuntimeState, mm: number, ctx: ScopeContext): 
           message = SCOPE_MESSAGES.lumenEnd
           break
         }
+      }
+    }
+
+    // Withdrawn out of a branch under guided travel: come back as far as the place the scope waits
+    // at, where both openings are in the picture, rather than stopping against the ridge.
+    if (guided && step < 0 && next.edgeId !== engine.edgeId) {
+      const parent = scopeCase.index.edgesById.get(next.edgeId)
+      const fork = parent ? scopeCase.index.nodesById.get(parent.endNodeId) : undefined
+      if (parent && fork && fork.childEdgeIds.length > 1) {
+        const standMm = Math.max(0, parent.lengthMm - FORK_STANDOFF_MM)
+        if (next.distanceMm > standMm) next = { ...next, distanceMm: standMm }
+        stopAfter = true
       }
     }
 

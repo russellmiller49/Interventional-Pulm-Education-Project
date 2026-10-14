@@ -1,3 +1,4 @@
+import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import type {
@@ -7,7 +8,7 @@ import type {
   ScopeState,
   ScopeViewSpec,
 } from '../components/scope/types'
-import type { ScopeCase } from '../engine/scope/scopeCase'
+import { openingInsetMm, type ScopeCase } from '../engine/scope/scopeCase'
 import { aimAt } from '../engine/scope/scopeFrame'
 import { scopeGoalStatuses } from '../engine/scope/scopeGoalEvaluation'
 import { guidedFork } from '../engine/scope/scopeMotion'
@@ -29,10 +30,12 @@ export interface ScopeTransport {
  * straight, rotate and bend it into the next airway, advance, relax the bend. If a goal an
  * author wrote cannot be met this way, the step cannot be completed.
  *
- * Guided travel stops an undecided tip short of a fork (`FORK_STANDOFF_MM`), where both openings
- * are still in the picture, and holds it there until one opening is plainly the nearest the centre
- * of that picture. So the pilot drives straight until the guard refuses or the fork is reached,
- * then centres the opening of the airway it wants and advances until it is through.
+ * Guided travel stops the tip once on the way to every fork, at the place the scope waits
+ * (`FORK_STANDOFF_MM` short of it), where both openings are in the picture. From there an advance
+ * is refused while no opening is plainly the nearest the centre of that picture, and otherwise
+ * carries the tip through the chosen opening in one movement. So the pilot advances until the
+ * scope stops at a fork, centres the opening of the airway it wants, and advances once; and where
+ * it finds itself off its way it withdraws, which brings the scope back to the waiting place.
  */
 export class ScopePilot {
   constructor(readonly transport: ScopeTransport) {}
@@ -96,24 +99,33 @@ export class ScopePilot {
     if (this.state.inputs.deflectionDeg !== 0) this.send({ type: 'set-deflection', deg: 0 })
   }
 
-  /** How many advances the aim guard has refused so far in this attempt. */
-  private get refusals(): number {
-    return this.state.events.filter((event) => event === 'aim-refused').length
+  /** The fork ahead as guided travel reads it now: from the waiting place, or from the tip past it. */
+  private forkAhead() {
+    return guidedFork(
+      this.engine.edgeId,
+      this.state.inputs,
+      { view: this.view, scopeCase: this.sc },
+      this.engine.distanceMm,
+    )
+  }
+
+  /** Whether the scope has come to the place it waits at before the fork ahead, or past it. */
+  get atFork(): boolean {
+    const fork = this.forkAhead()
+    return fork !== null && this.engine.distanceMm >= fork.standMm - 1e-6
   }
 
   /**
    * Bring the opening that leads into an edge to the centre of the picture the fork ahead is read
-   * from: the view from where the scope waits. Guided travel enters the opening nearest the centre
-   * of that picture, so this is the aim that decides.
+   * from: the point inside it where its name is drawn. Guided travel enters the opening nearest
+   * the centre of that picture, so this is the aim that decides.
    */
   aimDown(edgeId: number) {
-    const fork = guidedFork(this.engine.edgeId, this.state.inputs, {
-      view: this.view,
-      scopeCase: this.sc,
-    })
-    const opening = fork?.openings.find((candidate) => candidate.edgeId === edgeId)
-    if (!fork || !opening) throw new Error(`Edge ${edgeId} does not open off the fork ahead`)
-    const aim = aimAt(fork.base, opening.aimPoint)
+    const fork = this.forkAhead()
+    const child = this.sc.index.edgesById.get(edgeId)
+    if (!fork || !child || !fork.openings.some((opening) => opening.edgeId === edgeId))
+      throw new Error(`Edge ${edgeId} does not open off the fork ahead`)
+    const aim = aimAt(fork.base, sampleEdgePose(child, openingInsetMm(child)).point)
     this.send({ type: 'set-rotation', deg: aim.rotationDeg })
     this.send({ type: 'set-deflection', deg: aim.deflectionDeg })
   }
@@ -131,25 +143,25 @@ export class ScopePilot {
 
   goToEdge(target: number) {
     const path = this.pathTo(target)
-    // Whether the aim guard is holding the straight tip short of the fork ahead.
-    let waiting = false
     for (let guard = 0; this.engine.edgeId !== target; guard += 1) {
       if (guard > 400) throw new Error(`Stuck on edge ${this.engine.edgeId} heading for ${target}`)
       const here = path.indexOf(this.engine.edgeId)
-      if (here < 0) throw new Error(`Edge ${this.engine.edgeId} is not on the way to ${target}`)
-      const edge = this.sc.index.edgesById.get(this.engine.edgeId)!
-      const toFork = edge.lengthMm - this.engine.distanceMm
-      if (toFork > 1.01 && !waiting) {
+      if (here < 0) {
+        // Somewhere that is not on the way, by a wrong turn or from an earlier visit: back out.
+        // Withdrawn out of a branch, the scope returns to where it waits before that fork.
         this.straighten()
-        const refusals = this.refusals
-        this.advance(Math.min(this.state.inputs.stepMm, toFork - 1))
-        waiting = this.refusals > refusals
+        this.withdraw()
         continue
       }
-      // At the fork, or held short of it: centre the next airway's opening and go on.
+      if (!this.atFork) {
+        // Straight along the airway: the scope stops by itself where it waits before the fork.
+        this.straighten()
+        this.advance()
+        continue
+      }
+      // Stopped at the fork: centre the next airway's opening, and one advance carries the tip in.
       this.aimDown(path[here + 1])
-      this.advance(Math.min(this.state.inputs.stepMm, toFork + 1))
-      if (this.engine.edgeId !== edge.id) waiting = false
+      this.advance()
     }
     this.straighten()
   }
@@ -159,27 +171,18 @@ export class ScopePilot {
   }
 
   /**
-   * Far enough into an airway's first segment to see beyond its opening. Where that is inside the
-   * stretch the aim guard holds a straight tip out of, the view is turned down the first airway
-   * beyond it to go on.
+   * As far into an airway's first segment as a straight tip is taken: to where the view reaches
+   * beyond its opening, or to where the scope waits before the next fork if that comes first.
    */
   goDeep(label: AirwayLabel) {
     const origin = this.sc.originEdge.get(label)!
     if (this.engine.edgeId !== origin) throw new Error(`Not at the start of ${label}`)
-    const edge = this.sc.index.edgesById.get(origin)!
-    const beyond = this.sc.index.nodesById.get(edge.endNodeId)?.childEdgeIds[0]
-    const want = Math.min(8, edge.lengthMm * 0.5) + 0.2
-    let waiting = false
-    for (let guard = 0; this.engine.distanceMm < want; guard += 1) {
-      if (guard > 60 || this.engine.edgeId !== origin)
-        throw new Error(`Could not go deep into ${label} (${this.state.message})`)
-      if (waiting && beyond !== undefined) this.aimDown(beyond)
-      else this.straighten()
-      const refusals = this.refusals
-      this.advance(Math.min(this.state.inputs.stepMm, want - this.engine.distanceMm))
-      if (this.refusals > refusals) waiting = true
-    }
+    const want = Math.min(8, this.sc.index.edgesById.get(origin)!.lengthMm * 0.5) + 0.2
     this.straighten()
+    for (let guard = 0; this.engine.distanceMm < want && !this.atFork; guard += 1) {
+      if (guard > 60) throw new Error(`Could not go deep into ${label} (${this.state.message})`)
+      this.advance(Math.min(this.state.inputs.stepMm, want - this.engine.distanceMm))
+    }
   }
 
   withdrawTo(label: AirwayLabel) {

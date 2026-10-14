@@ -6,6 +6,7 @@ import { ScopePaneFrame } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
 import { unnamedAirways } from '../../engine/scope/inspectionLedger'
+import { isForkWaitMessage } from '../../engine/scope/scopeMessages'
 import { isDetailedBench, useBenchPresentation } from './useBenchPresentation'
 import {
   HELD_INTERVAL_MS,
@@ -106,6 +107,9 @@ function ScenePane(props: ScopePaneProps) {
       if (command.type !== 'advance' && command.type !== 'rotate' && command.type !== 'deflect')
         return
       if (now - lastMove.current < HELD_INTERVAL_MS) return
+      // A held Advance ends where the scope waits at a fork; a new press goes on from there.
+      if (command.type === 'advance' && command.mm > 0 && isForkWaitMessage(props.state.message))
+        return
       lastMove.current = now
       props.onCommand(heldKeyCommand(command), 'keyboard')
       return

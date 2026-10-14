@@ -1,4 +1,4 @@
-import { SEGMENTAL_AIRWAY_LABELS, type AirwayLabel } from '../components/scope/types'
+import { SEGMENTAL_AIRWAY_LABELS } from '../components/scope/types'
 import type { BronchSectionId } from '../content/pathway'
 import { LARYNX_GLOTTIS_MM } from '../engine/scope/scopeScripts'
 import type { ScopePilot } from './scopePilot'
@@ -94,22 +94,10 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
   },
   'systematic-survey': {
     act: (p) => {
-      // To a segment from wherever the tip is: back out until it is on the way, then in.
-      const reach = (label: AirwayLabel) => {
-        for (let guard = 0; ; guard += 1) {
-          try {
-            p.goInto(label)
-            return
-          } catch (error) {
-            if (guard > 400 || !/is not on the way/.test(String(error))) throw error
-            p.straighten()
-            p.withdraw()
-          }
-        }
-      }
-      // The record is kept by naming: into each segment, then its name from the list.
+      // The record is kept by naming: into each segment, from wherever the last one left the tip
+      // (the pilot backs out until the segment is on its way), then its name from the list.
       for (const label of SEGMENTAL_AIRWAY_LABELS) {
-        reach(label)
+        p.goInto(label)
         p.send({ type: 'name', airway: label })
       }
     },

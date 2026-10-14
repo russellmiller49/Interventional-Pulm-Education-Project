@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 
+import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
 import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
@@ -64,16 +65,19 @@ import { goalHelp } from '../engine/scope/goalHelp'
 import { aimAt } from '../engine/scope/scopeFrame'
 import { scopeGoalStatuses, scopeGoalTestMet } from '../engine/scope/scopeGoalEvaluation'
 import { DEFAULT_STEP_MM } from '../engine/scope/scopeInputs'
-import { SCOPE_MESSAGES } from '../engine/scope/scopeMessages'
+import { isForkWaitMessage, SCOPE_MESSAGES } from '../engine/scope/scopeMessages'
 import { formatScopeMetric } from '../engine/scope/scopeMetrics'
 import { aimsAtWall, guidedFork } from '../engine/scope/scopeMotion'
+import { openingInsetMm } from '../engine/scope/scopeCase'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../engine/scope/scopeOstia'
-import { tipBaseFrame } from '../engine/scope/scopePose'
+import { transportFor } from '../engine/scope/scopePose'
 import {
   ENVIRONMENT_CLOCK_SCRIPTS,
+  FORK_CARRY_MM,
   FORK_STANDOFF_MM,
   GUIDED_AIM_CONE_DEG,
   GUIDED_AIM_MARGIN_DEG,
+  MOTION_INCREMENT_MM,
 } from '../engine/scope/scopeScripts'
 import { scopeViewErrors } from '../engine/scope/scopeViewErrors'
 import { ScopePilot } from '../test-support/scopePilot'
@@ -84,10 +88,11 @@ import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
  * Educator feedback on the course, 2026-10-13, held at the level of the engine and the content.
  *
  * The driving asked for more precision than a screen can teach, so guided travel was made
- * forgiving: a bend registers no wall contact, the picture decides at a fork (the opening nearest
- * the centre of the view is the one entered), an undecided tip waits short of the fork with both
- * openings still in the picture, and the tip returns to neutral once through. The tasks dropped
- * what depended on the old strictness (the
+ * forgiving: a bend registers no wall contact, and the picture decides at a fork. The scope stops
+ * once short of every fork, where both openings are in the picture; from there the opening nearest
+ * the centre of the learner's own view is entered in one movement, or the scope waits while none
+ * is plainly the nearest; and the tip returns to neutral once through. The tasks dropped what
+ * depended on the old strictness (the
  * trachea declaration, the clean-passage goal, the hold above the carina, the penalty for a wrong
  * turn). Opening names moved off the ridge between two openings and into each lumen, the right
  * lung task opens on the view that finds the middle lobe, the right main bronchus has a still from
@@ -146,23 +151,39 @@ function withoutTests(test: ScopeGoalTest): string[] {
   return test.type === 'all' ? test.tests.flatMap(withoutTests) : []
 }
 
-/** Advance with the tip as it is until the aim guard refuses, the way a learner arrives at a fork. */
-function advanceToRefusal(driver: ScopeDriver) {
-  for (let i = 0; i < 80 && !driver.state.events.includes('aim-refused'); i += 1)
-    driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
+const step = (driver: ScopeDriver) =>
+  driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
+
+/** The fork ahead of the tip as guided travel reads it now, with the controls as they are. */
+function forkAhead(driver: ScopeDriver) {
+  const engine = driver.state.engine!
+  const fork = guidedFork(
+    engine.edgeId,
+    driver.state.inputs,
+    { view: driver.view, scopeCase },
+    engine.distanceMm,
+  )
+  if (!fork) throw new Error(`Edge ${engine.edgeId} does not end in a fork`)
+  return fork
+}
+
+/** Whether the scope has come to the place it waits at before the fork ahead, or is past it. */
+const atTheWait = (driver: ScopeDriver) =>
+  driver.state.engine!.distanceMm >= forkAhead(driver).standMm - 1e-6
+
+/**
+ * Advance with the tip as it is until the scope stops before the fork ahead, the way a learner
+ * arrives at one: the scope stops there by itself, whether or not the aim has chosen an opening.
+ */
+function advanceToFork(driver: ScopeDriver) {
+  const from = driver.state.engine!.edgeId
+  for (let i = 0; i < 80 && driver.state.engine!.edgeId === from && !atTheWait(driver); i += 1)
+    step(driver)
   return driver
 }
 
-/** Where the straight tip waits above the main carina: short of the fork, not on it. */
-const atTheCarina = () => advanceToRefusal(new ScopeDriver(walkView('TR', 'distal')))
-
-/** Advance with the tip as it is until it is in another airway: the few steps the wait leaves. */
-function advanceInto(driver: ScopeDriver, max = 8) {
-  const from = driver.state.location.label
-  for (let i = 0; i < max && driver.state.location.label === from; i += 1)
-    driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
-  return driver
-}
+/** Stopped above the main carina with a straight tip: short of the fork, not on it. */
+const atTheCarina = () => advanceToFork(new ScopeDriver(walkView('TR', 'distal')))
 
 /** How far short of the fork ahead the tip is, along the airway it is in. */
 function shortOfFork(driver: ScopeDriver): number {
@@ -176,47 +197,33 @@ const inViewLabels = (driver: ScopeDriver) =>
     .map((pin) => pin.label)
     .sort()
 
-/** The fork ahead of the tip as guided travel reads it, with the controls as they are. */
-function forkAhead(driver: ScopeDriver) {
-  const fork = guidedFork(driver.state.engine!.edgeId, driver.state.inputs, {
-    view: driver.view,
-    scopeCase,
-  })
-  if (!fork) throw new Error(`Edge ${driver.state.engine!.edgeId} does not end in a fork`)
-  return fork
+/** The point inside an opening where its name is drawn, and one further down its course. */
+function pointDown(edgeId: number, beyondNameMm = 0): Vec3 {
+  const child = scopeCase.index.edgesById.get(edgeId)!
+  const mm = openingInsetMm(child) + beyondNameMm
+  if (mm <= child.lengthMm) return sampleEdgePose(child, mm).point
+  // Past the end of a short first segment the course is carried straight on.
+  const end = sampleEdgePose(child, child.lengthMm)
+  const over = mm - child.lengthMm
+  return [
+    end.point[0] + end.tangent[0] * over,
+    end.point[1] + end.tangent[1] * over,
+    end.point[2] + end.tangent[2] * over,
+  ]
 }
 
 /**
- * Bring an opening of the fork ahead toward the centre of the picture the fork is read from: all
- * the way, or a share of the bend that would centre it.
+ * Bring an opening of the fork ahead toward the centre of the picture the fork is read from: the
+ * point where its name is drawn, all the way or a share of the bend that would centre it.
  */
 function centre(driver: ScopeDriver, edgeId: number, share = 1) {
   const fork = forkAhead(driver)
-  const opening = fork.openings.find((candidate) => candidate.edgeId === edgeId)
-  if (!opening) throw new Error(`Edge ${edgeId} does not open off the fork ahead`)
-  const aim = aimAt(fork.base, opening.aimPoint)
+  if (!fork.openings.some((candidate) => candidate.edgeId === edgeId))
+    throw new Error(`Edge ${edgeId} does not open off the fork ahead`)
+  const aim = aimAt(fork.base, pointDown(edgeId))
   driver.send({ type: 'set-rotation', deg: aim.rotationDeg })
   driver.send({ type: 'set-deflection', deg: aim.deflectionDeg * share })
   return aim
-}
-
-/**
- * Advance with the tip as it is until it has left the edge it is on, or the guard refuses it
- * there. Says which: a refusal recorded by the advance that carried the tip off the edge belongs
- * to the next fork, where a straight tip that has just come through may wait again.
- */
-function advanceOffEdge(driver: ScopeDriver, max = 40): { readonly heldOnEdge: boolean } {
-  const from = driver.state.engine!.edgeId
-  for (let i = 0; i < max && driver.state.engine!.edgeId === from; i += 1) {
-    const refusals = count(driver.state.events, 'aim-refused')
-    driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
-    if (
-      driver.state.engine!.edgeId === from &&
-      count(driver.state.events, 'aim-refused') > refusals
-    )
-      return { heldOnEdge: true }
-  }
-  return { heldOnEdge: false }
 }
 
 /** The edge a labelled airway opens off: the one whose fork holds its opening. */
@@ -227,11 +234,26 @@ function parentEdgeOf(label: AirwayLabel): number {
   return parent
 }
 
-/** A straight tip a little way into an edge, reached the learner's own way. */
+/** A straight tip just inside an edge, reached the learner's own way. */
 function onEdge(edgeId: number) {
   const driver = new ScopeDriver(walkView('TR', 'distal'))
   new ScopePilot(driver).goToEdge(edgeId)
   return driver
+}
+
+/** Every edge of the teaching graph that ends in a fork. */
+const FORK_EDGES = scopeCase.graph.edges.filter(
+  (edge) => (scopeCase.index.nodesById.get(edge.endNodeId)?.childEdgeIds.length ?? 0) > 1,
+)
+
+/**
+ * Whether ordinary steps from where the tip is end one of their increments exactly on the place
+ * the scope waits. See the known defect pinned under "guided travel is forgiving".
+ */
+function stepLandsOnTheWait(driver: ScopeDriver): boolean {
+  const increments =
+    (forkAhead(driver).standMm - driver.state.engine!.distanceMm) / MOTION_INCREMENT_MM
+  return increments > 0 && Math.abs(increments - Math.round(increments)) < 1e-9
 }
 
 describe('larynx, trachea and carina: what the tasks ask for', () => {
@@ -321,6 +343,7 @@ describe('guided travel is forgiving', () => {
     const driver = atTheCarina()
     expect(driver.state.location.label).toBe('TR')
     expect(driver.state.inputs.deflectionDeg).toBe(0)
+    expect(driver.state.events).toContain('aim-refused')
     expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
     expect(driver.state.assistsUsed).toContain('aim-guard')
     // The tip is held back from the fork, where the picture still shows what it is choosing
@@ -339,17 +362,18 @@ describe('guided travel is forgiving', () => {
     )
     // Asked again, it waits again: the guard still does not choose a side, and does not creep.
     const depth = driver.state.depthMm
-    driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
+    const refusals = count(driver.state.events, 'aim-refused')
+    step(driver)
     expect(driver.state.location.label).toBe('TR')
     expect(driver.state.depthMm).toBe(depth)
-    expect(count(driver.state.events, 'aim-refused')).toBe(2)
+    expect(count(driver.state.events, 'aim-refused')).toBe(refusals + 1)
     expect(driver.state.events).not.toContain('wall-contact')
     expect(driver.state.events).not.toContain('red-out')
     expect(driver.state.signals.contactCount).toBe(0)
   })
 
   it.each(['RMSB', 'LMSB'] as const)(
-    'enters %s from the carina once its opening is brought toward the centre of the picture',
+    'enters %s from the carina in one advance once its opening is brought toward the centre',
     (label) => {
       const edgeId = scopeCase.originEdge.get(label)!
       // Half the bend that would centre it already makes it plainly the nearer; so does all of it.
@@ -357,9 +381,9 @@ describe('guided travel is forgiving', () => {
         const driver = atTheCarina()
         centre(driver, edgeId, share)
         expect(forkAhead(driver).chosenEdgeId).toBe(edgeId)
-        // The aim is decided, so the wait is over: on to the fork and across, in ordinary steps.
+        // The aim is decided, so the wait is over: one movement takes the tip through.
         const refusals = count(driver.state.events, 'aim-refused')
-        advanceInto(driver)
+        step(driver)
         expect(driver.state.location.label).toBe(label)
         expect(driver.state.events).toContain(`entered:${label}`)
         expect(count(driver.state.events, 'aim-refused')).toBe(refusals)
@@ -377,7 +401,7 @@ describe('guided travel is forgiving', () => {
       driver.send({ type: 'set-rotation', deg: rotationDeg })
       driver.send({ type: 'set-deflection', deg: 10 })
       expect(forkAhead(driver).chosenEdgeId).toBe(scopeCase.originEdge.get(label))
-      advanceInto(driver)
+      step(driver)
       expect([rotationDeg, driver.state.location.label]).toEqual([rotationDeg, label])
     }
   })
@@ -398,7 +422,7 @@ describe('guided travel is forgiving', () => {
       expect(fork.chosenEdgeId).toBe(plain ? nearest.edgeId : null)
       const depth = driver.state.depthMm
       const refusals = count(driver.state.events, 'aim-refused')
-      advanceInto(driver)
+      step(driver)
       if (plain) {
         // What the picture chose is what the engine enters.
         expect(driver.state.engine!.edgeId).toBe(nearest.edgeId)
@@ -407,7 +431,7 @@ describe('guided travel is forgiving', () => {
       } else {
         expect(driver.state.location.label).toBe('TR')
         expect(driver.state.depthMm).toBe(depth)
-        expect(count(driver.state.events, 'aim-refused')).toBeGreaterThan(refusals)
+        expect(count(driver.state.events, 'aim-refused')).toBe(refusals + 1)
         // The bend the learner put on is theirs to keep: nothing was crossed.
         expect(driver.state.inputs.deflectionDeg).toBeCloseTo((aim.deflectionDeg * twentieths) / 20)
         waited += 1
@@ -421,9 +445,11 @@ describe('guided travel is forgiving', () => {
   it('does not choose an opening that is out of the picture, however clearly it is the nearest', () => {
     const driver = atTheCarina()
     const right = scopeCase.originEdge.get('RMSB')!
-    // Past the right main opening and on round, until it is well outside the cone of the view.
+    // Past the right main opening and on round, until all of its course is outside the cone.
     const aim = centre(driver, right)
-    driver.send({ type: 'set-deflection', deg: aim.deflectionDeg + GUIDED_AIM_CONE_DEG + 10 })
+    let bend = aim.deflectionDeg
+    for (; bend < 120 && forkAhead(driver).openings[0].offAxisDeg <= GUIDED_AIM_CONE_DEG; bend += 5)
+      driver.send({ type: 'set-deflection', deg: bend + 5 })
     const fork = forkAhead(driver)
     const [nearest, next] = fork.openings
     expect(nearest.edgeId).toBe(right)
@@ -431,54 +457,187 @@ describe('guided travel is forgiving', () => {
     expect(next.offAxisDeg - nearest.offAxisDeg).toBeGreaterThanOrEqual(GUIDED_AIM_MARGIN_DEG)
     expect(fork.chosenEdgeId).toBeNull()
     const depth = driver.state.depthMm
-    driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
+    step(driver)
     expect(driver.state.location.label).toBe('TR')
     expect(driver.state.depthMm).toBe(depth)
     expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
     // Brought back inside the cone, the same opening is chosen.
-    driver.send({ type: 'set-deflection', deg: aim.deflectionDeg + GUIDED_AIM_CONE_DEG - 10 })
+    driver.send({ type: 'set-deflection', deg: aim.deflectionDeg + 10 })
     expect(forkAhead(driver).chosenEdgeId).toBe(right)
   })
 
-  it('enters whichever opening is centred, at every fork of the model', () => {
-    let forks = 0
+  it('chooses the opening the view is pointed down, from the waiting place and from anywhere on the last stretch', () => {
+    // Every fork, with and without the reference roll, from the waiting place in to a quarter of
+    // a millimetre short of the fork, each opening aimed at where its name is drawn and at a
+    // point further down its course.
+    let cases = 0
+    for (const assists of [
+      { 'centerline-lock': true, 'aim-guard': true },
+      { 'centerline-lock': true, 'aim-guard': true, 'reference-orientation': true },
+    ] as const) {
+      const view = walkView('TR', 'distal', { assists })
+      const ctx = { view, scopeCase }
+      for (const edge of FORK_EDGES)
+        for (const before of [8, 6, 4, 2, 1, 0.25]) {
+          const at = Math.max(0, edge.lengthMm - before)
+          const base = transportFor(view, scopeCase).at(edge.id, at)
+          for (const childId of scopeCase.index.nodesById.get(edge.endNodeId)!.childEdgeIds)
+            for (const beyondNameMm of [0, 6]) {
+              const aim = aimAt(base, pointDown(childId, beyondNameMm))
+              const fork = guidedFork(edge.id, aim, ctx, at)!
+              const where = { fork: edge.id, before, opening: childId, beyondNameMm }
+              expect({ ...where, chosen: fork.chosenEdgeId }).toEqual({ ...where, chosen: childId })
+              cases += 1
+            }
+        }
+    }
+    expect(FORK_EDGES).toHaveLength(35)
+    expect(cases).toBe(1680)
+  })
+
+  it('reads the fork from where the tip is once it is past the waiting place', () => {
+    // The case the educator met: back at the upper lobe's first fork with a clear view down the
+    // way on, control section turned 98° and the tip bent 44°. Read from eight millimetres back,
+    // that bend pointed at the wall; read from the tip, it points down the continuation.
+    const upperLobe = scopeCase.originEdge.get('RUL')!
+    const edge = scopeCase.index.edgesById.get(upperLobe)!
+    const [continuation] = scopeCase.index.nodesById
+      .get(edge.endNodeId)!
+      .childEdgeIds.filter((childId) => scopeCase.labelAt(childId) === 'RUL')
+    expect(continuation).toBeDefined()
+    const view = walkView('TR', 'distal')
+    expect(view.assists['reference-orientation']).toBeUndefined()
+    const inputs = { rotationDeg: 98, deflectionDeg: 44 }
+    for (const before of [8, 4, 2, 0.5]) {
+      const fork = guidedFork(upperLobe, inputs, { view, scopeCase }, edge.lengthMm - before)!
+      expect({ before, chosen: fork.chosenEdgeId }).toEqual({ before, chosen: continuation })
+    }
+    // Past the waiting place the picture is the tip's own, taken from where the tip is.
+    const fromTheWait = guidedFork(upperLobe, inputs, { view, scopeCase })!
+    const fromTheTip = guidedFork(upperLobe, inputs, { view, scopeCase }, edge.lengthMm - 2)!
+    expect(fromTheWait.standMm).toBeCloseTo(edge.lengthMm - FORK_STANDOFF_MM, 6)
+    expect(fromTheTip.standMm).toBe(fromTheWait.standMm)
+    expect(fromTheTip.base.position).not.toEqual(fromTheWait.base.position)
+    expect(fromTheTip.base.position).toEqual(
+      transportFor(view, scopeCase).at(upperLobe, edge.lengthMm - 2).position,
+    )
+    // At the waiting place or short of it, a distance changes nothing: it is the wait's reading.
+    expect(guidedFork(upperLobe, inputs, { view, scopeCase }, fromTheWait.standMm)).toEqual(
+      fromTheWait,
+    )
+    expect(guidedFork(upperLobe, inputs, { view, scopeCase }, 1)).toEqual(fromTheWait)
+  })
+
+  it('stops once on arriving at a fork even with the way on plainly chosen, and records no refusal', () => {
+    const driver = new ScopeDriver(walkView('TR', 'distal'))
+    expect(shortOfFork(driver)).toBeGreaterThan(FORK_STANDOFF_MM + 3)
+    // Chosen from well back: the right main opening centred in the picture the fork is read from.
+    centre(driver, scopeCase.originEdge.get('RMSB')!)
+    const bend = driver.state.inputs.deflectionDeg
+    expect(forkAhead(driver).chosenEdgeId).toBe(scopeCase.originEdge.get('RMSB'))
+    advanceToFork(driver)
+    // The scope has stopped to show the fork: at the waiting place, with nothing refused.
+    expect(driver.state.location.label).toBe('TR')
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(forkAhead(driver).standMm, 6)
+    expect(driver.state.message).toBe(SCOPE_MESSAGES.forkAhead)
+    expect(driver.state.events).not.toContain('aim-refused')
+    expect(driver.state.inputs.deflectionDeg).toBe(bend)
+    expect(inViewLabels(driver)).toContain('RMSB')
+    // A long advance is stopped there too: arriving never runs on through the fork.
+    const far = new ScopeDriver(walkView('TR', 'distal'))
+    centre(far, scopeCase.originEdge.get('RMSB')!)
+    far.send({ type: 'advance', mm: 60 })
+    expect(far.state.location.label).toBe('TR')
+    expect(far.state.depthMm).toBeCloseTo(driver.state.depthMm, 6)
+    expect(far.state.message).toBe(SCOPE_MESSAGES.forkAhead)
+    // The next advance goes on, into the opening at the centre of the view.
+    step(driver)
+    expect(driver.state.location.label).toBe('RMSB')
+    expect(driver.state.events).not.toContain('aim-refused')
+  })
+
+  it('carries the tip through a chosen opening in one movement, a short way inside', () => {
+    const driver = atTheCarina()
+    centre(driver, scopeCase.originEdge.get('LMSB')!)
+    const depth = driver.state.depthMm
+    const toFork = shortOfFork(driver)
+    expect(toFork).toBeCloseTo(FORK_STANDOFF_MM, 6)
+    // One ordinary step is shorter than the last stretch, and still takes the tip all the way.
+    expect(driver.state.inputs.stepMm).toBeLessThan(toFork)
+    step(driver)
+    expect(driver.state.location.label).toBe('LMSB')
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(FORK_CARRY_MM, 6)
+    expect(driver.state.depthMm).toBeCloseTo(depth + toFork + FORK_CARRY_MM, 6)
+    // The fine increment of a held control is carried the same way.
+    const fine = atTheCarina()
+    centre(fine, scopeCase.originEdge.get('LMSB')!)
+    fine.send({ type: 'advance', mm: HELD_STEP_MM })
+    expect(fine.state.location.label).toBe('LMSB')
+    expect(fine.state.engine!.distanceMm).toBeCloseTo(FORK_CARRY_MM, 6)
+  })
+
+  it('takes one opening in one movement: it does not run on through the next fork', () => {
+    // The upper lobe's way on is a connecting stretch under five millimetres long, with the fork
+    // into RB1 and RB2 at its end.
+    const upperLobe = scopeCase.originEdge.get('RUL')!
+    const driver = advanceToFork(onEdge(upperLobe))
+    const fork = forkAhead(driver)
+    const continuation = fork.chosenEdgeId!
+    expect(scopeCase.labelAt(continuation)).toBe('RUL')
+    expect(scopeCase.index.edgesById.get(continuation)!.lengthMm).toBeLessThan(FORK_STANDOFF_MM)
+    expect(driver.state.message).toBe(SCOPE_MESSAGES.forkAhead)
+    // However long the movement, it ends just inside that stretch, short of the next choice.
+    for (const mm of [driver.state.inputs.stepMm, 40]) {
+      const one = advanceToFork(onEdge(upperLobe))
+      const refusals = count(one.state.events, 'aim-refused')
+      one.send({ type: 'advance', mm })
+      expect({ mm, edge: one.state.engine!.edgeId }).toEqual({ mm, edge: continuation })
+      expect(one.state.location.label).toBe('RUL')
+      expect(one.state.events.filter((event) => event.startsWith('entered:RB'))).toEqual([])
+      expect(one.state.engine!.distanceMm).toBeLessThanOrEqual(FORK_CARRY_MM + 1e-6)
+      // It does not stop there without a word: the stretch's own fork is announced at once, as a
+      // fork is anywhere else, and with no refusal recorded for it.
+      expect({ mm, said: isForkWaitMessage(one.state.message) }).toEqual({ mm, said: true })
+      expect(count(one.state.events, 'aim-refused')).toBe(refusals)
+    }
+    // And a second movement is one more opening, not two.
+    step(driver)
+    step(driver)
+    expect(scopeCase.index.edgesById.get(driver.state.engine!.edgeId)!.startNodeId).toBe(
+      scopeCase.index.edgesById.get(continuation)!.endNodeId,
+    )
+  })
+
+  it('enters whichever opening is centred, at every fork of the model, in one advance', () => {
     let openings = 0
-    for (const edge of scopeCase.graph.edges) {
-      const straight = guidedFork(
-        edge.id,
-        { rotationDeg: 0, deflectionDeg: 0 },
-        { view: walkView('TR', 'distal'), scopeCase },
-      )
-      if (!straight) continue
-      forks += 1
-      for (const opening of straight.openings) {
-        const driver = onEdge(edge.id)
-        centre(driver, opening.edgeId)
+    for (const edge of FORK_EDGES)
+      for (const childId of scopeCase.index.nodesById.get(edge.endNodeId)!.childEdgeIds) {
+        const driver = advanceToFork(onEdge(edge.id))
+        // Whatever stopped the scope here (a pause, a refusal, or a step that ran on and was
+        // withdrawn), the tip is at the fork, on this edge.
+        if (driver.state.engine!.edgeId !== edge.id) new ScopePilot(driver).withdrawToEdge(edge.id)
+        expect(atTheWait(driver)).toBe(true)
+        centre(driver, childId)
         // Centred in the picture the fork is read from, it is the one chosen …
         const aimed = forkAhead(driver)
-        expect({ fork: edge.id, opening: opening.edgeId, chosen: aimed.chosenEdgeId }).toEqual({
-          fork: edge.id,
-          opening: opening.edgeId,
-          chosen: opening.edgeId,
-        })
-        expect(aimed.openings[0].edgeId).toBe(opening.edgeId)
+        const where = { fork: edge.id, opening: childId }
+        expect({ ...where, chosen: aimed.chosenEdgeId }).toEqual({ ...where, chosen: childId })
+        expect(aimed.openings[0].edgeId).toBe(childId)
         expect(aimed.openings[0].offAxisDeg).toBeLessThan(0.01)
-        // … and the one the tip goes into, with no refusal before it is through.
-        expect({ fork: edge.id, ...advanceOffEdge(driver) }).toEqual({
-          fork: edge.id,
-          heldOnEdge: false,
+        // … and one advance takes the tip into it, with nothing refused and the bend let go.
+        const refusals = count(driver.state.events, 'aim-refused')
+        step(driver)
+        expect({ ...where, entered: driver.state.engine!.edgeId }).toEqual({
+          ...where,
+          entered: childId,
         })
-        expect({ fork: edge.id, entered: driver.state.engine!.edgeId }).toEqual({
-          fork: edge.id,
-          entered: opening.edgeId,
-        })
+        expect(count(driver.state.events, 'aim-refused')).toBe(refusals)
         expect(driver.state.inputs.deflectionDeg).toBe(0)
+        expect(driver.state.engine!.distanceMm).toBeLessThanOrEqual(FORK_CARRY_MM + 1e-6)
         openings += 1
       }
-    }
     // Every fork of the teaching graph, and both openings of each.
-    expect(forks).toBeGreaterThan(30)
-    expect(openings).toBe(2 * forks)
+    expect(openings).toBe(2 * FORK_EDGES.length)
   })
 
   it.each([
@@ -487,45 +646,58 @@ describe('guided travel is forgiving', () => {
     ['RB9', 'RLL'],
     ['RUL', 'RMSB'],
   ] as const)('enters %s from %s when its opening is centred', (label, from) => {
-    // The four openings the rule this one replaced would not enter on a centred aim: it read the
-    // direction each branch leaves the fork in, and the airway's continuation could win.
+    // Four openings an earlier rule would not enter on a centred aim: it read the direction each
+    // branch leaves the fork in, and the airway's continuation could win.
     expect(scopeCase.labelAt(parentEdgeOf(label))).toBe(from)
     const edgeId = scopeCase.originEdge.get(label)!
-    const driver = onEdge(parentEdgeOf(label))
+    const driver = advanceToFork(onEdge(parentEdgeOf(label)))
     centre(driver, edgeId)
     expect(forkAhead(driver).chosenEdgeId).toBe(edgeId)
-    expect(advanceOffEdge(driver)).toEqual({ heldOnEdge: false })
+    const refusals = count(driver.state.events, 'aim-refused')
+    step(driver)
     expect(driver.state.location.label).toBe(label)
     expect(driver.state.events).toContain(`entered:${label}`)
+    expect(count(driver.state.events, 'aim-refused')).toBe(refusals)
   })
 
-  it('with a straight tip, does at every fork what that fork’s picture says', () => {
+  it('with a straight tip, stops at every fork and then does what that fork’s picture says', () => {
     let waits = 0
     let passes = 0
-    for (const edge of scopeCase.graph.edges) {
-      if ((scopeCase.index.nodesById.get(edge.endNodeId)?.childEdgeIds.length ?? 0) < 2) continue
+    let checked = 0
+    for (const edge of FORK_EDGES) {
       const driver = onEdge(edge.id)
       expect(driver.state.inputs.deflectionDeg).toBe(0)
-      const fork = forkAhead(driver)
+      // A step that ends exactly on the waiting place is the known defect below; left to it.
+      if (stepLandsOnTheWait(driver)) continue
+      checked += 1
       const arrivedAt = driver.state.engine!.distanceMm
-      const { heldOnEdge } = advanceOffEdge(driver)
-      expect({ fork: edge.id, heldOnEdge }).toEqual({
-        fork: edge.id,
-        heldOnEdge: fork.chosenEdgeId === null,
-      })
+      const where = { fork: edge.id }
+      advanceToFork(driver)
+      // Arriving always stops the scope on this edge: where the picture holds both openings, or
+      // where the tip already is if it came in past that place.
+      const fork = forkAhead(driver)
+      expect({ ...where, edge: driver.state.engine!.edgeId }).toEqual({ ...where, edge: edge.id })
+      expect(driver.state.engine!.distanceMm).toBeCloseTo(Math.max(arrivedAt, fork.standMm), 6)
+      const depth = driver.state.depthMm
+      const refusals = count(driver.state.events, 'aim-refused')
       if (fork.chosenEdgeId === null) {
-        // No opening plainly the nearer the centre: the tip waits where the picture holds both,
-        // or where it already is if it came in past that place.
-        expect(driver.state.engine!.edgeId).toBe(edge.id)
-        expect(driver.state.engine!.distanceMm).toBeCloseTo(Math.max(arrivedAt, fork.standMm), 6)
+        // No opening plainly the nearer the centre: every further advance is refused in place.
+        if (arrivedAt < fork.standMm) expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
+        step(driver)
+        expect({ ...where, edge: driver.state.engine!.edgeId }).toEqual({ ...where, edge: edge.id })
+        expect(driver.state.depthMm).toBe(depth)
+        expect(count(driver.state.events, 'aim-refused')).toBe(refusals + 1)
         expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
         waits += 1
       } else {
-        // One opening plainly ahead: the tip follows the airway on into it.
-        expect({ fork: edge.id, entered: driver.state.engine!.edgeId }).toEqual({
-          fork: edge.id,
+        // One opening plainly ahead: the scope shows the fork once, and the next advance goes in.
+        if (arrivedAt < fork.standMm) expect(driver.state.message).toBe(SCOPE_MESSAGES.forkAhead)
+        step(driver)
+        expect({ ...where, entered: driver.state.engine!.edgeId }).toEqual({
+          ...where,
           entered: fork.chosenEdgeId,
         })
+        expect(count(driver.state.events, 'aim-refused')).toBe(refusals)
         passes += 1
       }
       expect(driver.state.events).not.toContain('wall-contact')
@@ -533,108 +705,158 @@ describe('guided travel is forgiving', () => {
     // Some forks wait for a choice and some have a plain way on.
     expect(waits).toBeGreaterThan(0)
     expect(passes).toBeGreaterThan(0)
+    expect(checked).toBeGreaterThan(30)
+  })
+
+  // Arrival is "reaches", not "passes". Where one of a movement's half-millimetre increments ends
+  // exactly on the waiting place, the tip has arrived and stops there; read as "passes", the same
+  // movement carried it on through the fork with no pause. One millimetre inside the airway, where
+  // a carry leaves the tip, that happens in the lower lobe trunk before LB10 (22.5 mm long) and in
+  // LB9 (11 mm).
+  it('stops on arrival where a step ends exactly on the waiting place', () => {
+    const trunk = parentEdgeOf('LB10')
+    const driver = onEdge(trunk)
+    expect(stepLandsOnTheWait(driver)).toBe(true)
+    expect(forkAhead(driver).chosenEdgeId).not.toBeNull()
+    for (let i = 0; i < 12 && driver.state.message !== SCOPE_MESSAGES.forkAhead; i += 1) {
+      step(driver)
+      // The scope must not leave the trunk before it has stopped to show the fork.
+      expect(driver.state.engine!.edgeId).toBe(trunk)
+    }
+    expect(driver.state.message).toBe(SCOPE_MESSAGES.forkAhead)
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(forkAhead(driver).standMm, 6)
   })
 
   it('waits with a straight tip at the forks the course asks the learner to choose at', () => {
     // The main carina, the end of each main bronchus, the end of the bronchus intermedius, the
     // middle lobe's two segments, and the lower lobe where the superior segment leaves it.
     for (const label of ['TR', 'RMSB', 'LMSB', 'BI', 'RML', 'RLL'] as const) {
-      const driver = onEdge(scopeCase.originEdge.get(label)!)
+      const driver = advanceToFork(onEdge(scopeCase.originEdge.get(label)!))
       const fork = forkAhead(driver)
       expect({ label, chosen: fork.chosenEdgeId }).toEqual({ label, chosen: null })
       expect(fork.openings[1].offAxisDeg - fork.openings[0].offAxisDeg).toBeLessThan(
         GUIDED_AIM_MARGIN_DEG,
       )
-      expect({ label, ...advanceOffEdge(driver) }).toEqual({ label, heldOnEdge: true })
+      expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
+      step(driver)
       expect(driver.state.location.label).toBe(label)
+      expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
     }
-    // Deeper in, where one opening is plainly ahead, it follows the airway on: out of the basal
-    // trunk the way ahead is RB10.
-    const trunk = onEdge(parentEdgeOf('RB10'))
+    // Deeper in, where one opening is plainly ahead, a second press follows the airway on: out
+    // of the basal trunk the way ahead is RB10.
+    const trunk = advanceToFork(onEdge(parentEdgeOf('RB10')))
     const ahead = forkAhead(trunk)
     expect(ahead.chosenEdgeId).toBe(scopeCase.originEdge.get('RB10'))
     expect(ahead.openings[1].offAxisDeg - ahead.openings[0].offAxisDeg).toBeGreaterThanOrEqual(
       GUIDED_AIM_MARGIN_DEG,
     )
-    expect(advanceOffEdge(trunk)).toEqual({ heldOnEdge: false })
+    step(trunk)
     expect(trunk.state.location.label).toBe('RB10')
+    expect(trunk.state.events).not.toContain('misnamed')
   })
 
   it.each([
     ['the right lung task', scopeLab(rightSide.act)],
     ['the left lung task', scopeLab(leftSide.act)],
   ] as const)(
-    'in %s, Advance alone from the start meets no goal and ends waiting at a fork',
+    'in %s, Advance alone from the start pauses at each fork, ends waiting, and meets no goal',
     (_task, act) => {
       const driver = new ScopeDriver(act.view)
       const start = driver.state
-      // What the task's own opening picture says about the fork ahead, before anything is pressed.
-      const first = forkAhead(driver)
-      for (let i = 0; i < 60 && !driver.state.events.includes('aim-refused'); i += 1)
-        driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
-      // The scope is held at a fork with the choice still open, both openings in the picture.
+      const unmet = Object.fromEntries(act.goals.map((goal) => [goal.id, false]))
+      const stops: { readonly edgeId: number; readonly chosen: number | null }[] = []
+      // Press Advance until a press no longer moves the scope.
+      for (let presses = 0; presses < 80; presses += 1) {
+        const before = driver.state
+        step(driver)
+        if (isForkWaitMessage(driver.state.message) && driver.state.depthMm !== before.depthMm) {
+          // Stopped to show a fork: short of it, on the airway that leads to it.
+          expect(atTheWait(driver)).toBe(true)
+          stops.push({
+            edgeId: driver.state.engine!.edgeId,
+            chosen: forkAhead(driver).chosenEdgeId,
+          })
+        }
+        if (driver.state.depthMm === before.depthMm) break
+      }
+      // It went on only through forks whose picture had one opening plainly ahead, one fork to a
+      // press, and it ends held at the first fork where the choice is open.
+      expect(stops.length).toBeGreaterThan(0)
+      expect(stops.slice(0, -1).every((stop) => stop.chosen !== null)).toBe(true)
+      expect(stops.at(-1)!.chosen).toBeNull()
+      expect(stops.at(-1)!.edgeId).toBe(driver.state.engine!.edgeId)
+      expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
       expect(driver.state.events).toContain('aim-refused')
       expect(driver.state.events).not.toContain('lumen-end')
-      expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
-      const fork = forkAhead(driver)
-      expect(fork.chosenEdgeId).toBeNull()
-      expect(driver.state.engine!.distanceMm).toBeGreaterThanOrEqual(fork.standMm - 1e-6)
       expect(driver.state.ostia.filter((pin) => pin.inView).length).toBeGreaterThanOrEqual(2)
-      // Where it is held is where that first picture left the choice open: in the airway the task
-      // starts in, or one airway on where the task's own start already points the way.
-      const entered = driver.state.events.filter((event) => event.startsWith('entered:'))
-      if (first.chosenEdgeId === null) {
-        expect(driver.state.location.label).toBe(start.location.label)
-        expect(entered).toEqual([])
-      } else {
-        expect(driver.state.engine!.edgeId).toBe(first.chosenEdgeId)
-        expect(entered).toEqual([`entered:${scopeCase.labelAt(first.chosenEdgeId)}`])
-      }
+      // What it entered on the way is what each of those pictures chose.
+      expect(driver.state.events.filter((event) => event.startsWith('entered:'))).toEqual(
+        stops.slice(0, -1).map((stop) => `entered:${scopeCase.labelAt(stop.chosen!)}`),
+      )
       // The learner steered nothing, and no goal of the task is met.
       expect(
         driver.state.events.filter((event) => /^control-used:(rotation|deflection)$/.test(event)),
       ).toEqual([])
       expect(driver.state.inputs.rotationDeg).toBe(start.inputs.rotationDeg)
-      const unmet = Object.fromEntries(act.goals.map((goal) => [goal.id, false]))
       expect(new ScopePilot(driver).goals(act.goals)).toEqual(unmet)
-      // And it stays there however long Advance is held.
+      // And it stays there however long Advance is pressed.
       const depth = driver.state.depthMm
-      for (let i = 0; i < 10; i += 1)
-        driver.send({ type: 'advance', mm: driver.state.inputs.stepMm })
+      for (let i = 0; i < 10; i += 1) step(driver)
       expect(driver.state.depthMm).toBe(depth)
       expect(new ScopePilot(driver).goals(act.goals)).toEqual(unmet)
     },
   )
 
-  it('lets a decided aim through to the fork and across without a wait', () => {
-    const driver = new ScopeDriver(walkView('TR', 'distal'))
-    expect(shortOfFork(driver)).toBeGreaterThan(FORK_STANDOFF_MM + 3)
-    // Chosen from well back: the fork is read from where the scope would wait, not from the tip.
+  it('comes back to the waiting place when withdrawn out of a branch, with both openings in view', () => {
+    const driver = atTheCarina()
+    const stand = forkAhead(driver).standMm
+    const depthAtTheWait = driver.state.depthMm
     centre(driver, scopeCase.originEdge.get('RMSB')!)
-    expect(forkAhead(driver).chosenEdgeId).toBe(scopeCase.originEdge.get('RMSB'))
-    advanceInto(driver, 12)
+    step(driver)
     expect(driver.state.location.label).toBe('RMSB')
-    expect(driver.state.events).not.toContain('aim-refused')
+    // One ordinary step back is enough: the scope returns to where both openings are in the
+    // picture, not to the ridge between them.
+    const before = driver.state
+    driver.send({ type: 'advance', mm: -before.inputs.stepMm })
+    expect(driver.state.location.label).toBe('TR')
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(stand, 6)
+    expect(driver.state.depthMm).toBeCloseTo(depthAtTheWait, 6)
+    expect(inViewLabels(driver)).toEqual(['LMSB', 'RMSB'])
+    expect(driver.state.events.slice(before.events.length)).toEqual(
+      expect.arrayContaining(['withdrawn', 'withdrew-to:TR', 'returned-to-trachea']),
+    )
+    expect(driver.state.events.slice(before.events.length)).not.toContain('aim-refused')
+    // From there the choice is open again: straight on waits, and the other side is one advance.
+    step(driver)
+    expect(driver.state.location.label).toBe('TR')
+    expect(driver.state.message).toBe(SCOPE_MESSAGES.aimRefused)
+    centre(driver, scopeCase.originEdge.get('LMSB')!)
+    step(driver)
+    expect(driver.state.location.label).toBe('LMSB')
+    // A long withdrawal from deeper in ends at the same place: that movement goes no further.
+    step(driver)
+    step(driver)
+    expect(driver.state.engine!.distanceMm).toBeGreaterThan(FORK_CARRY_MM + 3)
+    driver.send({ type: 'advance', mm: -60 })
+    expect(driver.state.location.label).toBe('TR')
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(stand, 6)
+    expect(inViewLabels(driver)).toEqual(['LMSB', 'RMSB'])
   })
 
-  it('never moves the tip back to wait: withdrawn out of a branch, it waits where it is', () => {
-    const driver = new ScopeDriver(walkView('TR', 'distal'))
-    const p = new ScopePilot(driver)
-    p.goInto('RMSB')
-    p.withdrawTo('TR')
-    // Back in the trachea the tip is already inside the last stretch before the carina.
-    const short = shortOfFork(driver)
-    expect(short).toBeLessThan(FORK_STANDOFF_MM - 1)
-    const refusals = count(p.state.events, 'aim-refused')
-    const depth = p.state.depthMm
-    p.advance()
-    expect(p.state.location.label).toBe('TR')
-    expect(p.state.depthMm).toBe(depth)
-    expect(shortOfFork(driver)).toBe(short)
-    expect(count(p.state.events, 'aim-refused')).toBe(refusals + 1)
-    // And from there a decided aim goes on into the other side.
-    p.goInto('LMSB')
-    expect(p.state.location.label).toBe('LMSB')
+  it('says which messages mean the scope is waiting at a fork', () => {
+    expect(isForkWaitMessage(SCOPE_MESSAGES.forkAhead)).toBe(true)
+    expect(isForkWaitMessage(SCOPE_MESSAGES.aimRefused)).toBe(true)
+    for (const other of [
+      null,
+      '',
+      SCOPE_MESSAGES.tipStraightened,
+      SCOPE_MESSAGES.lumenEnd,
+      SCOPE_MESSAGES.wallFromBend,
+    ])
+      expect(isForkWaitMessage(other)).toBe(false)
+    // The two are different sentences: one says choose, the other says the way on is chosen.
+    expect(SCOPE_MESSAGES.forkAhead).not.toBe(SCOPE_MESSAGES.aimRefused)
+    expect(SCOPE_MESSAGES.forkAhead).toMatch(/^A fork\. Advance again/)
   })
 
   it('applies the wait only where the aim guard is on', () => {
@@ -642,9 +864,10 @@ describe('guided travel is forgiving', () => {
     const driver = new ScopeDriver(
       walkView('TR', 'distal', { assists: { 'centerline-lock': true, 'aim-guard': false } }),
     )
-    advanceInto(driver, 12)
+    for (let i = 0; i < 12 && driver.state.location.label === 'TR'; i += 1) step(driver)
     expect(driver.state.location.label).not.toBe('TR')
     expect(driver.state.events).not.toContain('aim-refused')
+    expect(driver.state.message).toBeNull()
   })
 
   it('registers no wall contact and no lost view for a bent tip, in any airway', () => {
@@ -684,8 +907,10 @@ describe('guided travel is forgiving', () => {
     expect(proxyWouldHaveStopped).toBeGreaterThan(200)
   })
 
-  it('carries a bent tip through a segment the old proxy stopped it in', () => {
-    const driver = new ScopeDriver(walkView('RB6', 'proximal'))
+  it('carries a bent tip along a segment the old proxy stopped it in', () => {
+    // RB9: a narrow segment, started well short of where the scope waits before its own fork.
+    const driver = new ScopeDriver(walkView('RB9', 'proximal'))
+    expect(shortOfFork(driver)).toBeGreaterThan(FORK_STANDOFF_MM + 3)
     driver.send({ type: 'set-deflection', deg: 40 })
     expect(
       aimsAtWall(driver.state.engine!, driver.state.inputs, { view: driver.view, scopeCase }),
@@ -704,7 +929,7 @@ describe('guided travel is forgiving', () => {
   })
 
   it('still registers the bent tip against the wall under unaided travel without a lumen', () => {
-    const driver = new ScopeDriver(unaidedView('RB6', 'proximal'))
+    const driver = new ScopeDriver(unaidedView('RB9', 'proximal'))
     driver.send({ type: 'set-deflection', deg: 40 })
     const depth = driver.state.depthMm
     driver.send({ type: 'advance', mm: 3 })
@@ -723,17 +948,10 @@ describe('guided travel is forgiving', () => {
 
   it('returns the tip to neutral once through a fork, as the engine’s act and not the learner’s', () => {
     const driver = atTheCarina()
-    const pin = driver.state.ostia.find((candidate) => candidate.label === 'RMSB')!
-    const aim = aimAt(tipBaseFrame(driver.state.engine!, driver.view, scopeCase), pin.pointLps)
-    driver.send({ type: 'set-rotation', deg: aim.rotationDeg })
-    driver.send({ type: 'set-deflection', deg: 20 })
+    centre(driver, scopeCase.originEdge.get('RMSB')!, 0.5)
     const before = driver.state
-    // On the way to the fork the bend is the learner's, and stays on.
-    driver.send({ type: 'advance', mm: before.inputs.stepMm })
-    expect(driver.state.location.label).toBe('TR')
-    expect(driver.state.inputs.deflectionDeg).toBe(20)
-    expect(driver.state.message).toBeNull()
-    advanceInto(driver)
+    expect(before.inputs.deflectionDeg).toBeGreaterThan(10)
+    step(driver)
     expect(driver.state.location.label).toBe('RMSB')
     expect(driver.state.inputs.deflectionDeg).toBe(0)
     // Rotation is left where the learner put it; only the bend is let go.
@@ -746,6 +964,12 @@ describe('guided travel is forgiving', () => {
     expect(driver.state.events.slice(before.events.length)).toEqual(
       expect.arrayContaining(['control-used:insertion', 'advanced', 'entered:RMSB']),
     )
+    // A bend put on away from any fork is the learner's to keep as the tip travels.
+    const along = new ScopeDriver(walkView('TR', 'proximal'))
+    along.send({ type: 'set-deflection', deg: 20 })
+    step(along)
+    expect(along.state.inputs.deflectionDeg).toBe(20)
+    expect(along.state.message).toBeNull()
   })
 
   it('keeps the bend on the way back through a fork', () => {
@@ -756,12 +980,18 @@ describe('guided travel is forgiving', () => {
     expect(driver.state.events).toContain('returned-to-trachea')
     expect(driver.state.inputs.deflectionDeg).toBe(10)
     expect(driver.state.message).toBeNull()
+    // Back at the waiting place, with that bend still on.
+    expect(driver.state.engine!.distanceMm).toBeCloseTo(forkAhead(driver).standMm, 6)
   })
 
   it('says both of its new lines in the course’s own register', () => {
     expect(SCOPE_MESSAGES.aimRefused).toMatch(/Bend the tip toward the one you want/)
     expect(SCOPE_MESSAGES.aimRefused).not.toMatch(/aim guard|will not choose/i)
-    for (const text of [SCOPE_MESSAGES.aimRefused, SCOPE_MESSAGES.tipStraightened])
+    for (const text of [
+      SCOPE_MESSAGES.aimRefused,
+      SCOPE_MESSAGES.forkAhead,
+      SCOPE_MESSAGES.tipStraightened,
+    ])
       expect(bronchLearnerCopyErrors('engine copy', text)).toEqual([])
   })
 })
