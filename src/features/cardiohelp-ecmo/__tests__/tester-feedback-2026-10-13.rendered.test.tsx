@@ -11,6 +11,9 @@
  *   5. The way to the next task was two screens down.
  *
  * These are rendered checks: each one mounts the real host and reads what a learner would see.
+ *
+ * Block 6 holds her second batch, five reports later the same day on the pressure tasks of the
+ * circuit walk and the speed comparison of the pump section.
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -49,8 +52,9 @@ jest.mock('../components/EcmoCircuit3D', () => ({
 
 const OXYGEN = 'why-extracorporeal-support'
 const WALK = 'circuit-flow-path'
+const PUMP = 'pump-and-pressure-zones'
 
-function mount(sectionId: typeof OXYGEN | typeof WALK) {
+function mount(sectionId: typeof OXYGEN | typeof WALK | typeof PUMP) {
   return render(<FoundationStageHost sectionId={sectionId} supportMode="vv" />)
 }
 
@@ -286,5 +290,76 @@ describe('5. the way forward stays in view', () => {
     for (let stop = 0; stop < 3; stop += 1) fireEvent.click(primary())
     expect(primary().textContent).toBe('Continue to the gas path')
     expect(screen.getByRole('button', { name: 'Continue to the gas path' })).toBeEnabled()
+  })
+})
+
+describe('6. the second batch: the pressure tasks and the speed comparison', () => {
+  it('says the circuit is not operated here, in place of "Model reference … clock held"', () => {
+    // "When do I click on this simulator?"
+    mount(WALK)
+    reachFoundationStep(WALK, 'pressure-sites')
+    const card = document.querySelector('[data-model-reference="compact"]')!
+    expect(card.textContent).toMatch(/You don’t operate the circuit in these sections/)
+    expect(pageText()).not.toMatch(/Model reference for this task|About this model|clock held/)
+    // The instruction names the controls that are on screen, and where.
+    expect(document.querySelector('[data-now-card] h2 + p')?.textContent).toMatch(
+      /^Select pVen, pInt, pArt and Δp on the left/,
+    )
+  })
+
+  it('lights the two readings the comparison is about, and says it once', () => {
+    // "Not sure where to direct my attention first"
+    mount(WALK)
+    reachFoundationStep(WALK, 'observe')
+    expect(document.querySelector('[data-patient-signal="map"]')).toHaveAttribute(
+      'data-emphasis',
+      'true',
+    )
+    expect(document.querySelector('[data-map-emphasis-caption]')?.textContent).toMatch(
+      /Ringed on the map: return pressure \(pArt\)/,
+    )
+    const card = document.querySelector('[data-active-foundation-block="circuit-patient"]')!
+    expect(card.textContent).not.toMatch(/The word “arterial” in this device label/)
+    expect(card.textContent).not.toMatch(/does not establish the patient/)
+    expect(card.querySelectorAll('[data-circuit-pressure-identity]')).toHaveLength(1)
+  })
+
+  it('reads the speed comparison on the task that runs it, with no second task for the table', () => {
+    // "this is the same as the previous task"
+    expect(ecmoFoundationTeachingTasks[PUMP].map((task) => task.id)).not.toContain('observe')
+    mount(PUMP)
+    reachFoundationStep(PUMP, 'act')
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-comparison-run]')!)
+    expect(document.querySelector('[data-foundation-comparison]')).toHaveAttribute(
+      'data-comparison-complete',
+      'true',
+    )
+    // How to read it sits under the table on the same task.
+    expect(pageText()).toMatch(/Drawing that extra blood takes more suction/)
+    expect(pageText()).toMatch(/so a rise after a speed change is not, by itself, new\s+membrane/)
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-now-primary]')!)
+    expect(currentFoundationStep()).toBe(`${PUMP}-loading`)
+  })
+
+  it('drops the notes under the comparison and keeps the step short', () => {
+    // "maybe not necessary" and "way too much text here"
+    mount(PUMP)
+    reachFoundationStep(PUMP, 'act')
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-comparison-run]')!)
+    const text = pageText()
+    expect(text).not.toMatch(/All values are simulated/)
+    expect(text).not.toMatch(/Teaching comparison: the Run button/)
+    expect(text).not.toMatch(/modeled time/)
+    expect(text).not.toMatch(/Comparison saved\. Review Before/)
+    expect(text).toMatch(/After is read 6 seconds after the change\./)
+    expect(document.querySelector('[data-teaching-run-note]')).toBeNull()
+    // Said once on the task, by the table, rather than three times.
+    expect(
+      document.querySelectorAll('[data-now-card] [data-circuit-pressure-identity]'),
+    ).toHaveLength(1)
+    // The pressure-patterns reference sits on the two tasks it is about, not this one.
+    expect(text).not.toMatch(/More about pressure patterns/)
+    reachFoundationStep(PUMP, 'loading')
+    expect(pageText()).toMatch(/More about pressure patterns/)
   })
 })

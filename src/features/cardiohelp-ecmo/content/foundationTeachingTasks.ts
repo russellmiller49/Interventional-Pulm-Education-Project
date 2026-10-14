@@ -103,7 +103,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Find the pressure measurements',
       block: 'pressure-sites',
       instruction:
-        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with Δp, the pressure drop the console calculates between pInt and pArt; the readouts show its running value as the Δp trend.',
+        'Select pVen, pInt, pArt and Δp on the left, one at a time. The circuit map rings where each one is measured. Δp, the pressure drop the console calculates between pInt and pArt, is not a fourth sensor; the readouts show it as the Δp trend.',
       lookIn: teaching('Pressure measurements'),
     },
     {
@@ -112,7 +112,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Compare circuit and patient readings',
       block: 'circuit-patient',
       instruction:
-        'Read circuit pArt alongside the independent patient monitor. These measurements describe different places.',
+        'Compare the circuit’s pArt with the patient’s MAP. Both are highlighted in yellow: pArt on the circuit map, MAP on the bedside monitor.',
       lookIn: teaching('Circuit pressure and patient pressure'),
     },
     {
@@ -156,18 +156,8 @@ export const ecmoFoundationTeachingTasks: Readonly<
       actionId: 'increase-rpm',
       walkStopId: 'walk-pump-under-load',
       instruction:
-        'Use Increase pump speed by 300 rpm below. The guided control restores the reference, changes only speed, and retains the response after six modeled seconds.',
+        'Use Increase pump speed by 300 rpm below, then read what changed: flow, pVen, and the pressures after the pump.',
       lookIn: comparison('The speed comparison'),
-    },
-    {
-      id: 'observe',
-      phase: 'observe',
-      title: 'Compare the result',
-      block: 'pump-result',
-      comparisonOf: 'act',
-      instruction:
-        'Read Before, After, and Change for flow and pressures. These are the saved values from your speed comparison.',
-      lookIn: steps('the saved comparison below'),
     },
     {
       id: 'loading',

@@ -327,16 +327,20 @@ describe('B. the work and what it is read against, together', () => {
     expect(ecmoTaskPresentation(lesson, observe!)?.surfaces).toEqual(['monitor', 'circuit'])
   })
 
-  it('S2-5: keeps the model identity in view and the meta-text one disclosure away', async () => {
+  /*
+   * Revised 2026-10-13. The card said "Model reference for this task · VV reference circuit · clock
+   * held" with the meta-text in an "About this model" disclosure. A tester then asked "When do I
+   * click on this simulator?", so the card now says what the circuit is for in one sentence.
+   */
+  it('S2-5: names the circuit and says the learner does not operate it here', async () => {
     render(<EcmoFoundationLessonActivity sectionId="circuit-flow-path" supportMode="vv" />)
     await screen.findByRole('heading', { name: /Follow the blood/i })
     const card = document.querySelector('[data-model-reference="compact"]')
     expect(card).not.toBeNull()
-    expect(card?.querySelector('[data-clock-held]')?.textContent).toMatch(/clock held/)
-    const details = card?.querySelector('details[data-model-reference-details]')
-    expect(details).not.toBeNull()
-    expect(details).not.toHaveAttribute('open')
-    expect(details?.textContent).toMatch(/Observation-only display/)
+    expect(card?.textContent).toMatch(/^VV reference circuit\./)
+    expect(card?.textContent).toMatch(/You don’t operate the circuit in these sections/)
+    expect(card?.querySelector('details')).toBeNull()
+    expect(card?.textContent).not.toMatch(/clock held|Observation-only|modeled/i)
   })
 
   it('S3-1: the result sits under the action, and replay takes the action’s slot', async () => {

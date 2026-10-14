@@ -201,7 +201,7 @@ describe('the rendered introductory teaching journey', () => {
     expect(primary()).toHaveTextContent('Increase pump speed by 300 rpm')
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
     expect(
-      document.querySelector('[data-step-id="pump-and-pressure-zones-observe"] button'),
+      document.querySelector('[data-step-id="pump-and-pressure-zones-loading"] button'),
     ).toBeEnabled()
     expect(document.querySelector('[data-foundation-comparison]')).toHaveAttribute(
       'data-comparison-complete',
@@ -215,9 +215,12 @@ describe('the rendered introductory teaching journey', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Repeat this comparison' }))
     expect(document.querySelector('[data-foundation-comparison]')!.textContent).toBe(result)
     fireEvent.click(primary())
-    expect(currentFoundationStep()).toBe('pump-and-pressure-zones-observe')
-    expect(document.querySelector('[data-foundation-comparison]')!.textContent).toBe(result)
+    // The result is read on this task. A separate "Compare the result" task printed the same table
+    // again and was removed (tester feedback, 2026-10-13), so Continue goes to the loading task and
+    // Back returns to the saved result.
+    expect(currentFoundationStep()).toBe('pump-and-pressure-zones-loading')
     fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(currentFoundationStep()).toBe('pump-and-pressure-zones-act')
     expect(document.querySelector('[data-foundation-comparison]')!.textContent).toBe(result)
     fireEvent.click(screen.getByRole('button', { name: 'Reset this comparison' }))
     expect(primary()).toHaveTextContent('Increase pump speed by 300 rpm')

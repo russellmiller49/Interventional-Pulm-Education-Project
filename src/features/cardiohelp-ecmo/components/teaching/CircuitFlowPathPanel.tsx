@@ -152,7 +152,8 @@ export function CircuitFlowPathPanel({
             ) : null}
             {site.caution ? <p className="mt-2 text-sm leading-6">{site.caution}</p> : null}
           </div>
-          <CircuitPressureIdentity />
+          {/* Said with the reading it is about, not under every pressure (it is also on the map). */}
+          {selected === 'pArt' ? <CircuitPressureIdentity /> : null}
           <details className="mt-3">
             <summary className="cursor-pointer font-semibold">All locations in words</summary>
             <TextEquivalent>
@@ -210,22 +211,15 @@ export function CircuitFlowPathPanel({
               </dd>
             </div>
           </dl>
-          <p className="mt-2 text-sm leading-6" data-part-map-sites>
-            Two different places, so the two numbers are not expected to agree, and neither stands
-            in for the other.
-          </p>
+          {/* Two short statements where there were four, three of them saying the same thing. */}
           <CircuitPressureIdentity />
-          <p className="mt-3 text-sm leading-6">
-            Read the patient&apos;s arterial pressure on the separate bedside monitor. A change in
-            circuit pArt does not establish the patient&apos;s arterial pressure or tissue
-            perfusion.
+          <p className="mt-2 text-sm leading-6" data-part-map-sites>
+            Two places, two numbers: they are not expected to agree, and neither stands in for the
+            other. Read the patient&apos;s blood pressure on the bedside monitor.
+            {state.supportMode === 'vv'
+              ? ' In VV, “arterial” is only the device’s label: return blood still goes into a vein.'
+              : ''}
           </p>
-          {state.supportMode === 'vv' ? (
-            <p className="mt-2 text-sm leading-6">
-              The word “arterial” in this device label does not change VV anatomy: return blood
-              still goes into a vein.
-            </p>
-          ) : null}
         </section>
         <details className={`${styles.section} mt-4`}>
           <summary className="cursor-pointer font-semibold">

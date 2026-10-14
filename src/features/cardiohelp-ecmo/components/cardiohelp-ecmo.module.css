@@ -4394,6 +4394,13 @@
   background: rgba(4, 24, 28, 0.56);
 }
 
+/* A reading a teaching step is about: the map's yellow, so the two highlights read as one. */
+.patientGrid > div[data-emphasis='true'] {
+  border: 2px solid #ffd166;
+  background: rgba(255, 209, 102, 0.12);
+  box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.18);
+}
+
 .circuitReadoutGrid > div[data-alert='true'] {
   border-color: rgba(255, 107, 115, 0.55);
   background: rgba(108, 27, 34, 0.24);

@@ -1207,7 +1207,8 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     reachFoundationStep('pump-and-pressure-zones', 'act')
     expect(nowPrimary()).toHaveTextContent('Increase pump speed by 300 rpm')
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
-    expect(walkCard().querySelectorAll('[data-walk-beat]')).toHaveLength(0)
+    // No second door into the comparison: no walk beat anywhere on the task.
+    expect(document.querySelectorAll('[data-walk-beat]')).toHaveLength(0)
     fireEvent.click(nowPrimary())
     expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
   })
@@ -1217,7 +1218,9 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     reachFoundationStep('pump-and-pressure-zones', 'loading')
     fireEvent.click(nowPrimary())
     expect(loadedVariantId()).toBe('return-resistance-preview')
-    expect(loadedStateCard()).toMatch(/Return-side resistance — mechanism preview/i)
+    // The comparison names the preview it loaded beside its table (the separate label line under
+    // the table was removed with the other notes a tester flagged on 2026-10-13).
+    expect(loadedStateCard()).toMatch(/the existing return-resistance preview/i)
   })
 
   it('offers no comparison beats on a stop that is not a comparison', () => {

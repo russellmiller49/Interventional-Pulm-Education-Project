@@ -1545,7 +1545,11 @@ export function PatientMonitor({
   state,
   guidedTarget,
   guidedControlId,
-}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
+  emphasis,
+}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'> & {
+  /** The reading a teaching step is about, highlighted in the map's yellow. */
+  readonly emphasis?: 'map'
+}) {
   const limbStoryDriven =
     state.scenario.activeFaults.includes('distal-limb-ischemia') ||
     state.scenario.correctedFaults.includes('distal-limb-ischemia')
@@ -1632,7 +1636,7 @@ export function PatientMonitor({
               : 'Not modeled: held at the value the case set.'}
           </small>
         </div>
-        <div>
+        <div data-patient-signal="map" data-emphasis={emphasis === 'map' || undefined}>
           <span>MAP</span>
           <strong>{state.patient.meanArterialPressure} mmHg</strong>
         </div>

@@ -912,12 +912,13 @@ describe('S3-4: the speed comparison is run from the control the page actually s
     )
     const text = view.container.textContent ?? ''
     expect(text).not.toMatch(/teaching Run control/)
-    expect(text).toMatch(/Use the “Increase pump speed by 300 rpm” control for this task/)
+    // The panel no longer repeats the instruction (tester feedback, 2026-10-13: "way too much
+    // text"); the instruction below is where the control is named.
     // The task's own instruction and its guided action carry the same words.
     const task = ecmoFoundationTeachingTasks['pump-and-pressure-zones'].find(
       (candidate) => candidate.id === 'act',
     )
-    expect(task?.instruction).toMatch(/^Use Increase pump speed by 300 rpm below\./)
+    expect(task?.instruction).toMatch(/^Use Increase pump speed by 300 rpm below,/)
     expect(
       ecmoFoundationLessonRuntime('pump-and-pressure-zones').guidedActions.find(
         (action) => action.id === task?.actionId,

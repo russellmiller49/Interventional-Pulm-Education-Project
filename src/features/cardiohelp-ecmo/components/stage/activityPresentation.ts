@@ -60,7 +60,6 @@ const foundationTasks: Readonly<Record<string, Readonly<Record<string, EcmoTaskP
   'pump-and-pressure-zones': {
     recognize: circuit,
     act: comparison,
-    observe: comparison,
     loading: comparison,
     predict: concept,
     decrease: comparison,
