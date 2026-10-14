@@ -26,6 +26,9 @@ import {
   createInspectionLedger,
   declareInspection,
   inspectionLedgerIsFinal,
+  namingSubject,
+  UNNAMED_AIRWAY_WORDS,
+  unnamedAirways,
 } from './inspectionLedger'
 import {
   commandAccessory,
@@ -37,6 +40,7 @@ import {
 import type { ScopeCase } from './scopeCase'
 import { assistEvent, controlUsedEvent, enteredEvent, ostiumVisualizedEvent } from './scopeEvents'
 import { aimAt } from './scopeFrame'
+import { airwayDisplayName } from '../../content/airwayTree'
 import { clampDeflectionDeg, normalizeRotationDeg, resolveScopeInputs } from './scopeInputs'
 import { SCOPE_MESSAGES, SCRIPT_REPORTS } from './scopeMessages'
 import { insertScope } from './scopeMotion'
@@ -247,6 +251,7 @@ export function scopeCommandControl(command: ScopeCommand): ScopeControlKey | nu
     case 'branch-labels':
       return 'branchLabels'
     case 'declare':
+    case 'name':
       return 'declare'
   }
 }
@@ -309,6 +314,7 @@ export function reduceScope(
         d.events.push('bench-advanced-off-target')
       d.events.push(...moved.events)
       d.message = moved.message
+      if (moved.straightened) d.inputs = { ...d.inputs, deflectionDeg: 0 }
       if (moved.contact) d.signals.contactCount += 1
       d.signals.pathLengthMm += moved.travelledMm
       if (moved.lensOnWall && !d.runtime.redOut) {
@@ -429,7 +435,13 @@ export function reduceScope(
         const aim = aimAt(tipBaseFrame(state.engine, view, scopeCase), pin.pointLps)
         d.inputs = { ...d.inputs, rotationDeg: aim.rotationDeg, deflectionDeg: aim.deflectionDeg }
       } else if (assist === 'recenter') {
-        d.inputs = { ...d.inputs, rotationDeg: 0, deflectionDeg: 0 }
+        // Back to the angulation the step opened with: neutral unless the view authors a start.
+        const opening = resolveScopeInputs(view)
+        d.inputs = {
+          ...d.inputs,
+          rotationDeg: opening.rotationDeg,
+          deflectionDeg: opening.deflectionDeg,
+        }
       } else {
         const start = startPosition(view, scopeCase)
         d.place = start.place
@@ -460,6 +472,21 @@ export function reduceScope(
         d.ledger = result.ledger
         d.events.push(result.event)
         d.message = result.message
+      }
+      break
+    }
+    case 'name': {
+      // The record's own answer key: the name has to be the airway the tip is inside.
+      const subject = namingSubject(view, state)
+      const record = subject ? d.ledger[subject] : undefined
+      if (!subject || !record) d.message = SCOPE_MESSAGES.nothingToName
+      else if (command.airway !== subject) {
+        d.events.push('misnamed')
+        d.message = SCOPE_MESSAGES.misnamed
+      } else {
+        d.ledger = { ...d.ledger, [subject]: { ...record, identified: true } }
+        d.events.push(`declared:${subject}:identified`)
+        d.message = SCOPE_MESSAGES.named(airwayDisplayName(subject))
       }
       break
     }
@@ -525,7 +552,11 @@ function finalize(prev: ScopeRuntimeState | null, d: Draft, ctx: ScopeContext): 
     onTree && pose?.opticalFrame
       ? upcomingOstia(scopeCase, engine.edgeId, engine.distanceMm, pose.opticalFrame)
       : []
-  const location = scopeLocation(d.place, engine, d.depthMm, scopeCase)
+  const located = scopeLocation(d.place, engine, d.depthMm, scopeCase)
+  // A naming record does not print the name it is asking for: every surface reads this one line.
+  const location = namingSubject(view, { ledger: d.ledger, location: located })
+    ? { ...located, fullLabel: UNNAMED_AIRWAY_WORDS }
+    : located
 
   // An opening counts as seen when it comes into a clear view.
   const clear = signalView === 'clear'
@@ -548,7 +579,10 @@ function finalize(prev: ScopeRuntimeState | null, d: Draft, ctx: ScopeContext): 
         ? distalViewAirways(scopeCase, engine.edgeId, engine.distanceMm)
         : new Set<AirwayLabel>(),
   })
-  if (view.ledger && inspectionLedgerIsFinal(d.ledger) && !history().includes('survey-complete'))
+  const recordComplete = view.ledger?.naming
+    ? unnamedAirways(d.ledger).length === 0
+    : inspectionLedgerIsFinal(d.ledger)
+  if (view.ledger && recordComplete && !history().includes('survey-complete'))
     d.events.push('survey-complete')
 
   // Drill D10: hold the view while the assistant speaks and the image is taken.

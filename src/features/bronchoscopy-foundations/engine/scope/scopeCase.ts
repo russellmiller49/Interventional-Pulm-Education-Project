@@ -75,6 +75,8 @@ export interface ScopeCase {
   readonly framesPlain: TransportFrames
   /** Where each airway's opening is: the reviewed ostial landmark, or just inside its first segment. */
   readonly ostiumPoint: ReadonlyMap<AirwayLabel, Vec3>
+  /** Where each airway's name is drawn in the view: on its centerline, inside the lumen. */
+  readonly labelPoint: ReadonlyMap<AirwayLabel, Vec3>
   readonly collider: LumenCollider | null
   readonly map: AirwayMapGeometry
   readonly interaction: TeachingGraphFile['interaction']
@@ -82,6 +84,19 @@ export interface ScopeCase {
 
 /** How far inside an airway's first segment its opening is placed when no landmark is reviewed. */
 const OSTIUM_INSET_MM = 2
+
+/**
+ * How far inside an airway its name is drawn, and where a guided tip is taken to be aiming when it
+ * points at that airway's opening: about a diameter in, so that from the parent airway
+ * the name falls on the dark of the lumen and not on the ridge between two openings, and never
+ * more than three-fifths of the way along a short first segment.
+ */
+export function openingInsetMm(edge: {
+  readonly lengthMm: number
+  readonly radiusMm?: number | null
+}): number {
+  return Math.min(Math.max(2 * (edge.radiusMm ?? 2), 6), edge.lengthMm * 0.6)
+}
 
 export function createScopeCase(
   file: TeachingGraphFile,
@@ -144,6 +159,7 @@ export function createScopeCase(
 
   const landmarkPoints = new Map(file.ostialLandmarks.map((mark) => [mark.edgeId, mark.pointLps]))
   const ostiumPoint = new Map<AirwayLabel, Vec3>()
+  const labelPoint = new Map<AirwayLabel, Vec3>()
   for (const [label, edgeId] of originEdge) {
     const edge = index.edgesById.get(edgeId)!
     ostiumPoint.set(
@@ -151,6 +167,7 @@ export function createScopeCase(
       landmarkPoints.get(edgeId) ??
         sampleEdgePose(edge, Math.min(OSTIUM_INSET_MM, edge.lengthMm * 0.25)).point,
     )
+    labelPoint.set(label, sampleEdgePose(edge, openingInsetMm(edge)).point)
   }
 
   return {
@@ -164,6 +181,7 @@ export function createScopeCase(
     framesReference: buildTransportFrames(graph, [...file.orientationLandmarks]),
     framesPlain: buildTransportFrames(graph, []),
     ostiumPoint,
+    labelPoint,
     collider: options.collider ?? null,
     map: buildAirwayMap(graph, labelAt, originEdge),
     interaction: file.interaction,

@@ -8,7 +8,7 @@ import {
 } from '@/lib/airway-anatomy-lesson/ct-correlation'
 import { QUIZ_FRAMES_URL, type QuizFramesData } from '@/lib/airway-anatomy-lesson/airway-quiz'
 
-import { SCOPE_PHOTO_ATLAS_URL, type MediaRef } from '../../content/media'
+import { courseStill, SCOPE_PHOTO_ATLAS_URL, type MediaRef } from '../../content/media'
 import styles from './bronch-stage.module.css'
 import { MediaEnlargeDialog } from './MediaEnlargeDialog'
 import { detailRegion, needsDetail, pointBounds, type DetailRegion } from './mediaDetail'
@@ -160,6 +160,18 @@ function resolveImage(media: MediaRef, data: unknown): ResolvedImage | string {
     }
     case 'endoscopic-still':
     case 'survey-clip': {
+      if (media.kind === 'endoscopic-still') {
+        // The course's own frame for this airway, where it cuts one (`COURSE_STILLS`).
+        const own = courseStill(media.structureId)
+        if (own)
+          return {
+            src: own.src,
+            width: own.width,
+            height: own.height,
+            outline: media.outline ? own.outline : null,
+            detail: null,
+          }
+      }
       const frames = data as QuizFramesData
       const structure = frames.structures[media.structureId]
       if (!structure) return 'The still is not in the atlas.'

@@ -2,13 +2,13 @@
 
 import { useId, useRef, type ReactNode } from 'react'
 
-import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 
 import { airwayDisplayName } from '../../content/airwayTree'
 import {
   declarationAllowed,
   expectedLedgerAirways,
+  unnamedAirways,
   inspectionRecords,
   ledgerStatus,
 } from '../../engine/scope/inspectionLedger'
@@ -16,6 +16,8 @@ import {
   GOAL_CLAIM_TAG,
   GOAL_GROUP_HEADING,
   GOAL_MODEL_LIMIT,
+  PLAIN_GOALS_DONE_HEADING,
+  PLAIN_NEXT_GOAL_HEADING,
   scopeDoneLead,
   scopeNowLine,
 } from '../../engine/scope/goalPresentation'
@@ -26,13 +28,18 @@ import {
   describeScopePerformance,
   scopeReadouts,
 } from '../../engine/scope/scopeMetrics'
-import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { LocationCaptionStrip } from './LocationCaptionStrip'
-import { opticalViewName, PATIENT_TICK_LEGEND, patientDirectionTicks } from './scopeSceneModel'
+import {
+  opticalViewName,
+  PATIENT_TICK_LEGEND,
+  patientDirectionTicks,
+  projectPinLabel,
+} from './scopeSceneModel'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
 import { TipCompass } from './TipCompass'
+import { NameSegment } from './NameSegment'
 import { TubeCrossSection } from './TubeCrossSection'
 import { BenchSchematic } from './BenchSchematic'
 import {
@@ -90,6 +97,9 @@ const DECLARATION_WORDS: Readonly<Record<DeclarableStatus, string>> = {
 
 const DECLARED_WITHOUT_VIEW = 'declared inspected without a view beyond its opening'
 
+/** What a naming record's table says for each row: it is a list of what is done and what is left. */
+const NAMING_STATUS_WORDS = { named: 'Named', open: 'To name' } as const
+
 /** Printed wherever the record shows (A07/A30). */
 export const LEDGER_CAVEAT =
   'Entering an airway is not inspecting it; only a declaration records an inspection.'
@@ -117,13 +127,13 @@ interface FieldPin {
   readonly top: string
 }
 
-/** The openings in the round field, placed by the scene's own projection of the optical frame. */
+/** The openings in the round field, each named where the scene names it: inside its lumen. */
 function fieldPins(state: ScopeState): readonly FieldPin[] {
   if (!state.pose) return []
   const frame = scopeOpticalFrame(state.pose)
   return state.ostia.flatMap((pin) => {
     if (!pin.inView) return []
-    const projected = projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
+    const projected = projectPinLabel(pin, frame)
     if (!projected) return []
     return [
       {
@@ -196,9 +206,13 @@ export function ScopePaneFrame(
   const paneClaims = new Set(goals.map(({ claim }) => claim ?? 'history'))
   const paneGoalsClaim = paneClaims.size === 1 ? [...paneClaims][0] : 'mixed'
   const currentGoal = goals.find(({ met }) => !met)
-  const paneGoalsHeading = currentGoal
-    ? 'The goal this step is waiting for'
-    : GOAL_GROUP_HEADING[paneGoalsClaim]
+  const paneGoalsHeading = props.plain
+    ? currentGoal
+      ? PLAIN_NEXT_GOAL_HEADING
+      : PLAIN_GOALS_DONE_HEADING
+    : currentGoal
+      ? 'The goal this step is waiting for'
+      : GOAL_GROUP_HEADING[paneGoalsClaim]
   // The engine withholds names until the view is identified again (unfamiliar-clear); so does help.
   const withheld = state.script?.phase === 'unidentified'
   const referenceNames =
@@ -208,11 +222,16 @@ export function ScopePaneFrame(
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
   const interactiveField = alignOffered && pins.length > 0
 
-  const dockKeys = SCOPE_CONTROL_KEYS.filter(
-    (key) =>
-      key !== 'declare' && (view.controls.includes(key) || (key === 'step' && view.benchSuction)),
-  )
   const declareOffered = view.controls.includes('declare')
+  const naming = view.ledger?.naming === true
+  // A naming record asks its question in a row of its own, under the movement controls.
+  const dockKeys = [
+    ...SCOPE_CONTROL_KEYS.filter(
+      (key) =>
+        key !== 'declare' && (view.controls.includes(key) || (key === 'step' && view.benchSuction)),
+    ),
+    ...(declareOffered && naming ? (['declare'] as const) : []),
+  ]
   const recordWords = view.ledger?.record
   const readouts = scopeReadouts(view, state)
   const records = expectedLedgerAirways(view).length > 0 ? inspectionRecords(state.ledger) : []
@@ -395,7 +414,7 @@ export function ScopePaneFrame(
           </button>
         )
       case 'declare':
-        return null
+        return <NameSegment view={view} state={state} disabled={!controlsEnabled} onName={send} />
     }
   }
 
@@ -420,14 +439,14 @@ export function ScopePaneFrame(
               data-goal-claim={currentGoal.claim ?? ''}
               data-goal-current={currentGoal.goal.id}
             >
-              {paneGoalsClaim === 'mixed' && currentGoal.claim ? (
+              {paneGoalsClaim === 'mixed' && currentGoal.claim && !props.plain ? (
                 <span className={styles.goalTag}>{GOAL_CLAIM_TAG[currentGoal.claim]}</span>
               ) : null}
               {currentGoal.goal.label}
             </li>
           ) : (
             <li data-met="true" data-goal-claim={paneGoalsClaim} data-goal-summary>
-              {scopeDoneLead(paneGoalsClaim)}
+              {scopeDoneLead(paneGoalsClaim, props.plain)}
             </li>
           )}
         </ul>
@@ -578,6 +597,7 @@ export function ScopePaneFrame(
           current={state.location.label}
           tipLps={state.pose?.tipLps ?? null}
           treeAnswer={props.treeAnswer}
+          unnamed={naming ? unnamedAirways(state.ledger) : undefined}
         />
       ) : null}
 
@@ -637,12 +657,17 @@ export function ScopePaneFrame(
           id={declareOffered ? scopeControlId('declare') : undefined}
           data-spotlight={spotlight('declare')}
         >
-          <table aria-label="The inspection record" {...{ [SCOPE_DOM.ledger]: '' }}>
+          <table
+            aria-label={naming ? 'The segments named so far' : 'The inspection record'}
+            {...{ [SCOPE_DOM.ledger]: '' }}
+          >
             <thead>
               <tr>
-                <th scope="col">Airway</th>
+                <th scope="col">{naming ? 'Segment' : 'Airway'}</th>
                 <th scope="col">Status</th>
-                {declareOffered ? <th scope="col">{recordWords ? 'Record' : 'Declare'}</th> : null}
+                {declareOffered && !naming ? (
+                  <th scope="col">{recordWords ? 'Record' : 'Declare'}</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -655,14 +680,18 @@ export function ScopePaneFrame(
                   >
                     <th scope="row">{airwayDisplayName(record.label)}</th>
                     <td>
-                      {recordWords
-                        ? recordWord(recordWords, record)
-                        : INSPECTION_STATUS_WORDS[status]}
-                      {record.inspected === 'declared-without-view'
+                      {naming
+                        ? record.identified
+                          ? NAMING_STATUS_WORDS.named
+                          : NAMING_STATUS_WORDS.open
+                        : recordWords
+                          ? recordWord(recordWords, record)
+                          : INSPECTION_STATUS_WORDS[status]}
+                      {!naming && record.inspected === 'declared-without-view'
                         ? ` · ${recordWords ? recordWords.withoutView : DECLARED_WITHOUT_VIEW}`
                         : ''}
                     </td>
-                    {declareOffered ? (
+                    {declareOffered && !naming ? (
                       <td>
                         <select
                           id={scopeControlId(`declare-${record.label}`)}
@@ -699,7 +728,7 @@ export function ScopePaneFrame(
               })}
             </tbody>
           </table>
-          {recordWords ? (
+          {naming ? null : recordWords ? (
             recordWords.note ? (
               <p className={styles.caveat}>{recordWords.note}</p>
             ) : null

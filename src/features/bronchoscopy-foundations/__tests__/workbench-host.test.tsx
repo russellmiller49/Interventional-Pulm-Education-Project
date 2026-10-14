@@ -1,8 +1,18 @@
 import { cleanup, fireEvent } from '@testing-library/react'
 
+import { SEGMENTAL_AIRWAY_LABELS, scopeControlId } from '../components/scope/types'
+import { airwayDisplayName } from '../content/airwayTree'
+import { UNNAMED_AIRWAY_WORDS } from '../engine/scope/inspectionLedger'
+import { SCOPE_MESSAGES } from '../engine/scope/scopeMessages'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../engine/selfPacedProgress'
 import { latestScopePaneProps } from '../test-support/ScopeTestDouble'
-import { currentStepId, installDom, mountSection, settle } from '../test-support/stageHarness'
+import {
+  currentStepId,
+  installDom,
+  mountSection,
+  scopePilot,
+  settle,
+} from '../test-support/stageHarness'
 import { reachCourseStep } from '../test-support/courseHarness'
 
 jest.mock(
@@ -59,7 +69,7 @@ afterEach(() => {
 })
 
 /** The section's scope practice, reached by doing each earlier step as a learner would. */
-async function reachPractice(section: 'larynx-and-entry' | 'right-side') {
+async function reachPractice(section: 'larynx-and-entry' | 'right-side' | 'systematic-survey') {
   const { lesson } = await mountSection(section)
   // "Larynx, trachea and carina" has three scope tasks; the carina task is the one with labels.
   const practice = lesson.steps.find((step) =>
@@ -92,8 +102,8 @@ describe('A30 — help is advice, not a move', () => {
     const saved = record()
     fireEvent.click(nowButton('Show me where'))
     await settle()
-    // The step starts where the bronchus intermedius ends; the first goal needs the tip turned
-    // toward the middle lobe before it can enter it.
+    // The step starts back in the bronchus intermedius with both openings in view; the first goal
+    // still needs the tip turned toward the middle lobe before it can enter it.
     expect(document.querySelector('[data-spotlight="true"]')?.getAttribute('data-control')).toBe(
       'rotate',
     )
@@ -138,6 +148,111 @@ describe('A30 — help is advice, not a move', () => {
     await reachPractice('larynx-and-entry')
     expect(latestScopePaneProps()!.view.controls).toContain('branchLabels')
     expect(document.querySelector('button[data-reference-labels]')).toBeNull()
+  })
+})
+
+/**
+ * The survey keeps its record by naming (educator feedback, 2026-10-13): the question is asked
+ * among the controls once the tip is inside a segment, and nothing on the stage hands out the name
+ * it is asking for. Held on the real host, through the list the learner chooses from.
+ */
+describe('the survey’s naming record on the stage', () => {
+  const pane = () => latestScopePaneProps()!
+  const question = () => document.querySelector('[data-name-segment]')
+  const nameList = () =>
+    document.getElementById(scopeControlId('name-segment')) as HTMLSelectElement | null
+  const choose = async (label: string) => {
+    fireEvent.change(nameList()!, { target: { value: label } })
+    await settle()
+  }
+  /** Everything a learner or a screen reader meets, less the list of names being chosen from. */
+  function shownOutsideTheQuestion(): string {
+    const clone = document.body.cloneNode(true) as HTMLElement
+    for (const node of clone.querySelectorAll(
+      '[data-name-segment], [data-inspection-ledger], [data-step-goals], [data-scope-goals], script, style',
+    ))
+      node.remove()
+    const spoken = [...clone.querySelectorAll('*')].flatMap((node) =>
+      [...node.attributes].filter((a) => /^(aria-|title|alt)/.test(a.name)).map((a) => a.value),
+    )
+    return `${clone.textContent ?? ''} ${spoken.join(' ')}`
+  }
+
+  it('offers no opening names, in view or on request, and waits for a segment', async () => {
+    await reachPractice('systematic-survey')
+    expect(pane().view.ledger?.naming).toBe(true)
+    expect(pane().view.controls).not.toContain('branchLabels')
+    expect(document.querySelector('button[data-reference-labels]')).toBeNull()
+    expect(pane().referenceLabels?.on ?? false).toBe(false)
+    // All eighteen pins are on the map, each a question mark until it is named.
+    const pins = [...document.querySelectorAll('[data-airway-map] [data-unnamed="true"]')]
+    expect(pins).toHaveLength(SEGMENTAL_AIRWAY_LABELS.length)
+    expect(pins.every((pin) => pin.textContent?.trim() === '?')).toBe(true)
+    // The record lists what is left to name, with no menu on its rows.
+    expect(document.querySelectorAll('[data-inspection-ledger] [data-ledger-row]')).toHaveLength(18)
+    expect(document.querySelector('[data-inspection-ledger] select')).toBeNull()
+    expect(
+      [...document.querySelectorAll('[data-inspection-ledger] tbody td')].every(
+        (cell) => cell.textContent === 'To name',
+      ),
+    ).toBe(true)
+    expect(question()?.getAttribute('data-name-segment')).toBe('waiting')
+    expect(nameList()).toBeNull()
+    expect(document.querySelector('[data-name-segment-count]')?.textContent).toBe('0 of 18 named')
+  })
+
+  it('asks inside a segment without printing its name, and fills the record in on the right answer', async () => {
+    await reachPractice('systematic-survey')
+    const pilot = scopePilot()
+    pilot.goInto('RB1')
+    await settle()
+    const name = airwayDisplayName('RB1')
+    // The question is open, and the name is nowhere but in the list to choose from.
+    expect(question()?.getAttribute('data-name-segment')).toBe('asked')
+    expect([...nameList()!.options].map((option) => option.value)).toEqual([
+      '',
+      ...SEGMENTAL_AIRWAY_LABELS,
+    ])
+    expect(pane().caption).toContain(UNNAMED_AIRWAY_WORDS)
+    expect(document.querySelector('[data-goal-now]')?.textContent).toContain(UNNAMED_AIRWAY_WORDS)
+    expect(shownOutsideTheQuestion()).not.toContain(name)
+    expect(shownOutsideTheQuestion()).not.toMatch(/\bRB1\b(?! to RB10)/)
+
+    // A wrong name changes nothing but the message.
+    const before = JSON.stringify(pane().state.ledger)
+    await choose('RB3')
+    expect(JSON.stringify(pane().state.ledger)).toBe(before)
+    expect(pane().state.events.at(-1)).toBe('misnamed')
+    expect(pane().state.message).toBe(SCOPE_MESSAGES.misnamed)
+    expect(question()?.getAttribute('data-name-segment')).toBe('asked')
+    expect(shownOutsideTheQuestion()).not.toContain(name)
+
+    // The right one names the row and the pin, and the location is called by its name again.
+    await choose('RB1')
+    expect(pane().state.ledger.RB1?.identified).toBe(true)
+    expect(document.querySelector('[data-ledger-row="RB1"] td')?.textContent).toBe('Named')
+    expect(document.querySelector('[data-airway-map] [data-airway-pin="RB1"]')).not.toHaveAttribute(
+      'data-unnamed',
+    )
+    expect(document.querySelectorAll('[data-airway-map] [data-unnamed="true"]')).toHaveLength(17)
+    expect(document.querySelector('[data-name-segment-count]')?.textContent).toBe('1 of 18 named')
+    expect(document.querySelector('[data-goal-now]')?.textContent).toContain(name)
+    // With this segment named there is nothing to ask until the tip is inside another.
+    expect(question()?.getAttribute('data-name-segment')).toBe('waiting')
+  })
+
+  it('gives help that says where to answer, never which segment this is', async () => {
+    await reachPractice('systematic-survey')
+    fireEvent.click(nowButton('Show me where'))
+    await settle()
+    expect(document.querySelector('[data-goal-help]')?.textContent).toMatch(/^Drive into a segment/)
+    expect(pane().helpTarget ?? null).toBeNull()
+    scopePilot().goInto('RB1')
+    await settle()
+    const help = document.querySelector('[data-goal-help]')?.textContent ?? ''
+    expect(help).toMatch(/^Choose this segment’s name/)
+    expect(help).not.toMatch(/\bRB\d|apical/i)
+    expect(pane().helpTarget ?? null).toBeNull()
   })
 })
 

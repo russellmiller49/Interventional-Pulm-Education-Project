@@ -27,6 +27,7 @@ export type CourseVisual =
   | 'tool-states'
   | 'radiation-safety'
   | 'specimen-containers'
+  | 'orientation-compass'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -313,7 +314,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Drive into the middle lobe and the superior segment',
       'inspection',
-      'The scope starts where the bronchus intermedius ends, with opening names off. Meet the three goals.',
+      'The scope starts in the bronchus intermedius: the middle lobe opening is at the top of the view and the lower lobe is ahead. Opening names are off. Meet the three goals.',
     ),
     check('transfer', 'Count the basal openings'),
     close(['common-errors']),
@@ -417,7 +418,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Cross the cords',
       'inspection',
-      'Watch the cords through a few breaths, then cross as they part. Below them, name the trachea.',
+      'Watch the cords through a few breaths, then cross as they part and go on into the trachea.',
     ),
     screen(
       'trachea-and-carina',
@@ -426,11 +427,18 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ['trachea-and-carina'],
       { visual: 'tour', tour: ['TR', 'RMSB', 'LMSB'] },
     ),
+    screen(
+      'where-you-stand',
+      'Where you stand turns the picture',
+      'Choose where you are standing, and watch the view above the carina turn.',
+      ['where-you-stand'],
+      { visual: 'orientation-compass' },
+    ),
     {
       ...practice(
         'Into each main bronchus, and back',
         'inspection',
-        'Start in the trachea. Reach the carina, enter the right main bronchus, come back, then enter the left.',
+        'Start in the trachea. Reach the carina, enter the right main bronchus and come back. Then do the same on the left.',
       ),
       id: 'carina',
       act: 'carina',
@@ -438,15 +446,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     screen('holding', 'Hold the view', 'Read how to keep the scope still while others work.', [
       'holding-the-view',
     ]),
-    {
-      ...practice(
-        'Hold above the carina',
-        'inspection',
-        'The assistant will speak. Acknowledge, capture an image, and stay where you are until the hold ends.',
-      ),
-      id: 'hold-view',
-      act: 'hold',
-    },
     check('transfer', 'Lost after a cough'),
     close(['common-errors']),
   ],
@@ -503,7 +502,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Survey both lungs',
       'inspection',
-      'Start above the carina. Enter each segment, and record it in the table under the controls. RB10 is narrowed.',
+      'Start above the carina. Drive into a segment and a list of names opens under the controls: choose the one you are in. A segment named drops off the list. Name all of them.',
     ),
     check('transfer', 'A mass in the right upper lobe'),
     close(['common-errors']),

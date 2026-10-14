@@ -29,8 +29,19 @@ export const GOAL_GROUP_HEADING: Readonly<Record<ScopeGoalClaim, string>> = {
 /** Before the rows are met they are still a to-do list, and the heading says so. */
 export const GOAL_PENDING_HEADING = 'What this card is waiting for'
 
+/**
+ * The same card in a rewritten section (educator feedback, 2026-10-13: the goal card's wording was
+ * too much and confusing). The course says once, on its hub, what the simulator does not judge, so
+ * these lines only say what to do and when it is done. None of them says the view is a good one.
+ */
+export const PLAIN_GOALS_HEADING = 'Goals for this task'
+export const PLAIN_GOALS_DONE_HEADING = 'Goals met'
+export const PLAIN_NEXT_GOAL_HEADING = 'Your next goal'
+export const PLAIN_DONE_LEAD = 'All the goals for this task are met.'
+
 /** The heading over the rows: a to-do while any is outstanding, a record once they are all met. */
-export function goalListHeading(claim: ScopeGoalClaim, allMet: boolean): string {
+export function goalListHeading(claim: ScopeGoalClaim, allMet: boolean, plain = false): string {
+  if (plain) return allMet ? PLAIN_GOALS_DONE_HEADING : PLAIN_GOALS_HEADING
   return allMet ? GOAL_GROUP_HEADING[claim] : GOAL_PENDING_HEADING
 }
 
@@ -46,7 +57,8 @@ export const GOAL_MODEL_LIMIT =
   'The model records where the tip went, the contacts it counted and the views it marked as lost. It does not judge the bronchoscope image, so nothing on this card says the view on the screen is usable.'
 
 /** The lead on a finished card: what was established, never that the current view is acceptable. */
-export function scopeDoneLead(claim: ScopeGoalClaim): string {
+export function scopeDoneLead(claim: ScopeGoalClaim, plain = false): string {
+  if (plain) return PLAIN_DONE_LEAD
   switch (claim) {
     case 'history':
       return 'Recorded: every step this card asks for.'

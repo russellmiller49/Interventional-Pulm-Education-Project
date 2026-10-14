@@ -226,7 +226,7 @@ export type ScopeAssist =
   | 'align-to-branch'
   /** Jump back to the authored start. */
   | 'teleport-to-start'
-  /** Zero deflection and rotation. */
+  /** Back to the rotation and deflection the step opened with: zero unless the view authors a start. */
   | 'recenter'
   /** The authored camera roll that sets the reviewed reference views at the RUL, RML and LUL. */
   | 'reference-orientation'
@@ -373,6 +373,8 @@ export type ScopeEventId =
   | 'advanced-against-closure'
   | 'tube-exited'
   | 'survey-complete'
+  /** A naming record was given a name that is not the airway the tip is inside. */
+  | 'misnamed'
 
 export type ScopeMetricId =
   | 'currentAirway'
@@ -454,6 +456,14 @@ export interface ScopeViewSpec {
   readonly ledger?: {
     readonly expected: readonly AirwayLabel[] | 'segmental' | 'profile'
     readonly record?: LedgerRecordWords
+    /**
+     * The record is kept by naming (educator feedback, 2026-10-13). While the tip is inside an
+     * airway on the record that has not been named, the pane asks which one it is and offers the
+     * names still left; the right one records it and drops out of the list. Until then the pane
+     * prints that airway's name nowhere: the caption, the readouts and the map say only that it
+     * is not named yet.
+     */
+    readonly naming?: boolean
   }
   readonly script?: ScopeScriptId
   /**
@@ -498,6 +508,8 @@ export type ScopeCommand =
       readonly airway: AirwayLabel
       readonly status: DeclarableStatus
     }
+  /** A naming record's answer: the name the learner gives the airway the tip is inside. */
+  | { readonly type: 'name'; readonly airway: AirwayLabel }
 
 /** An upcoming ostium the tip can see or steer into. */
 export interface OstiumPin {
@@ -506,6 +518,12 @@ export interface OstiumPin {
   /** The child edge the learner steers into to enter it. */
   readonly edgeId: number
   readonly pointLps: Vec3
+  /**
+   * Where the opening's name is drawn: a point on the airway's centerline a little way inside it,
+   * so the name sits in the lumen rather than on the carina beside it. Drawing only: what is in
+   * view, the record and the align assist all read `pointLps`.
+   */
+  readonly labelPointLps?: Vec3
   /**
    * Inside the round optical field — the circle inscribed in the nominal 4:3, 88° frame — and near
    * enough to be seen. Round, so rolling the scope never moves an opening into or out of view

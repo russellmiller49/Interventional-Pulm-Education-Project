@@ -1,0 +1,196 @@
+.compass {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--line, #31485a);
+  border-radius: 1rem;
+  color: var(--ink, #e8f2f8);
+}
+.compass h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.positions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.positions button {
+  min-height: 40px;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line, #31485a);
+  border-radius: 0.5rem;
+  color: var(--ink, #e8f2f8);
+  background: var(--panel, #0b1a26);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.positions button[aria-pressed='true'] {
+  border-color: var(--cyan-bright, #8eeee0);
+  box-shadow: inset 0 0 0 1px var(--cyan-bright, #8eeee0);
+  background: var(--panel-2, #12293a);
+  font-weight: 700;
+}
+.positions button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.figure {
+  margin: 0;
+}
+/* Two panels side by side, stacked where the page is narrow so neither shrinks out of reading. */
+.panels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+}
+.panels svg {
+  display: block;
+  height: auto;
+}
+.bedPanel {
+  flex: 0 1 17rem;
+  min-width: 12rem;
+}
+.screenPanel {
+  flex: 1 1 18rem;
+  max-width: 24rem;
+}
+.figure figcaption {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted, #bad0dc);
+}
+.panelTitle {
+  fill: var(--muted, #bad0dc);
+  font-size: 14px;
+  font-weight: 600;
+}
+.mattress {
+  fill: #12293a;
+  stroke: #496173;
+  stroke-width: 2;
+}
+.pillow {
+  fill: #1c3a4f;
+  stroke: #496173;
+  stroke-width: 1.5;
+}
+.body {
+  fill: #6f8ea3;
+  stroke: #b9d0de;
+  stroke-width: 1.5;
+}
+.limb {
+  fill: none;
+  stroke: #6f8ea3;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.sideWord {
+  fill: var(--muted, #bad0dc);
+  font-size: 13px;
+}
+.scopeLine {
+  fill: none;
+  stroke: #ffce57;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.operator {
+  fill: #ffce57;
+  stroke: #1d1400;
+  stroke-width: 1.5;
+}
+.bezel {
+  fill: #030609;
+  stroke: #31485a;
+  stroke-width: 2;
+}
+.fieldEdge {
+  fill: none;
+  stroke: #030609;
+  stroke-width: 4;
+}
+.ring {
+  fill: none;
+  stroke: #f9d7cd;
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.membrane {
+  fill: #d98d86;
+  stroke: #b96a66;
+  stroke-width: 1.5;
+}
+.fold {
+  fill: none;
+  stroke: #a85652;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.carina {
+  fill: none;
+  stroke: #fbe3db;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+.hour {
+  fill: var(--muted, #bad0dc);
+  font-size: 15px;
+  font-weight: 600;
+}
+.markDisc {
+  fill: #07111c;
+  stroke: #eac074;
+  stroke-width: 1.5;
+}
+.markLetter {
+  fill: #f7e4bd;
+  font-size: 14px;
+  font-weight: 700;
+}
+.opening {
+  fill: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #1a0709;
+  stroke-width: 3px;
+}
+.reading {
+  display: grid;
+  gap: 0.5rem;
+}
+.reading p {
+  margin: 0;
+}
+.reading table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.reading th,
+.reading td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--line, #31485a);
+  text-align: left;
+  vertical-align: top;
+}
+.reading thead th {
+  color: var(--muted, #bad0dc);
+  font-weight: 600;
+}
+.reading td:last-child {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rule {
+  color: var(--muted, #bad0dc);
+  font-size: 0.9rem;
+}

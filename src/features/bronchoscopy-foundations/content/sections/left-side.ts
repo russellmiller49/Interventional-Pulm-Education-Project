@@ -208,14 +208,10 @@ export const section: BronchSectionDefinition = {
     goals: [
       {
         id: 'lingular-division',
-        label: 'Enter the upper lobe, then the lingula, without entering the upper division',
-        test: {
-          type: 'all',
-          tests: [
-            { type: 'event-sequence', events: ['entered:LUL', 'entered:LB4+5'] },
-            { type: 'without', event: 'entered:LUL-UD' },
-          ],
-        },
+        // A wrong turn is retraced, not penalised (educator feedback, 2026-10-13): the goal is met
+        // once the lingula is entered from the upper lobe, however the learner got there.
+        label: 'Enter the upper lobe, then the lingula',
+        test: { type: 'event-sequence', events: ['entered:LUL', 'entered:LB4+5'] },
       },
       {
         id: 'lingular-segments',
@@ -232,18 +228,10 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'superior-segment',
-        label: 'Enter the lower lobe, then LB6, without entering a basal segment',
+        label: 'Enter the lower lobe, then LB6, its superior segment',
         test: {
-          type: 'all',
-          tests: [
-            {
-              type: 'event-sequence',
-              events: ['entered:LB5', 'withdrew-to:LMSB', 'entered:LLL', 'entered:LB6'],
-            },
-            { type: 'without', event: 'entered:LB7+8' },
-            { type: 'without', event: 'entered:LB9' },
-            { type: 'without', event: 'entered:LB10' },
-          ],
+          type: 'event-sequence',
+          events: ['entered:LB5', 'withdrew-to:LMSB', 'entered:LLL', 'entered:LB6'],
         },
       },
     ],

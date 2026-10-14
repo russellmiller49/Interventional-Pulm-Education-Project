@@ -103,6 +103,9 @@ export const DISTAL_VIEW_MM = 8
  * Mid-airway, an advance with the tip aimed at the wall touches it when the wall along the aim is
  * within this many steps. Small segments therefore demand an aligned tip; the trachea and main
  * bronchi forgive a bend. A geometric proxy from the centerline radius, not a collision model.
+ *
+ * Unaided travel only. Guided travel follows the lumen and registers no contact from a bend
+ * (educator feedback, 2026-10-13): how a bent tip meets a wall is learned with a scope in the hand.
  */
 export const WALL_AIM_STEPS = 2
 
@@ -121,8 +124,45 @@ export const HOLD_SECONDS = 5
  */
 export const BRANCH_APPROACH_MM = 6
 
-/** The cone around a branch's direction that counts as aimed into it: the aim guard's own cone. */
+/** The cone around a branch's direction that counts as aimed into it, for the wall proxy above. */
 export const AIM_CONE_DEG = 40
+
+/**
+ * Guided travel's aim guard (educator feedback, 2026-10-13: the driving asked for more precision
+ * than a screen can teach).
+ *
+ * The picture decides. At a fork the scope enters the opening nearest the centre of the picture:
+ * the picture from where the scope waits (`FORK_STANDOFF_MM`) on the way in, and from where the
+ * tip is once it is nearer the fork than that (`guidedFork`). The opening has to be in
+ * the picture (within the cone) and plainly the nearest (by the margin, in degrees between the
+ * view axis and each opening). So an opening the learner has brought toward the centre is the one
+ * entered, with no exact aim asked for: at the main carina a bend of some six degrees toward a
+ * side is enough.
+ *
+ * The margin is set so that a tip left straight still stops at the forks where the course wants a
+ * choice made: the main carina, the end of each main bronchus and of the bronchus intermedius,
+ * the middle lobe's two segments and the superior segment's opening all lie within some ten
+ * degrees of each other in a straight tip's picture. Deeper, where one opening is plainly the way
+ * ahead, a straight tip follows the airway on. A smaller margin let a held Advance run from the
+ * start of a task to a segment with no choice made at all.
+ *
+ * The rule it replaces read the direction each branch leaves the fork in, which the picture does
+ * not show: an opening centred in the view could lose to the airway's continuation.
+ */
+export const GUIDED_AIM_CONE_DEG = 50
+export const GUIDED_AIM_MARGIN_DEG = 12
+/**
+ * Where a guided tip waits when its aim at a fork is undecided: this far short of the fork, so the
+ * picture it is asked to choose from still holds both openings and their names. Right at the fork
+ * the picture is the ridge between them.
+ */
+export const FORK_STANDOFF_MM = 8
+/**
+ * Once the aim has chosen an opening, one movement carries the tip through it and this far inside.
+ * The choice is read from the picture at the waiting place; stopping part-way through the last
+ * stretch would have it read again from a place where the picture has changed.
+ */
+export const FORK_CARRY_MM = 1
 
 /** One insertion command is travelled in increments no longer than this, so no airway is skipped. */
 export const MOTION_INCREMENT_MM = 0.5

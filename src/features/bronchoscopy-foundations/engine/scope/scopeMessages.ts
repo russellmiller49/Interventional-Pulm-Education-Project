@@ -6,8 +6,10 @@ import type { AirwayLabel } from '../../components/scope/types'
  * (checked in `__tests__/scope-engine.test.ts`), and every scripted line says it is scripted.
  */
 export const SCOPE_MESSAGES = {
-  aimRefused:
-    'Aim the tip into one opening before advancing: the aim guard will not choose a branch for you.',
+  aimRefused: 'More than one opening is ahead. Bend the tip toward the one you want, then advance.',
+  forkAhead:
+    'A fork. Advance again to enter the opening at the centre of the view, or bend toward another first.',
+  tipStraightened: 'Through the opening. The tip is straight again, in line with this airway.',
   lumenEnd:
     'The teaching model ends here, one generation inside this segment. Withdraw to continue.',
   entryRefused: (label: AirwayLabel) =>
@@ -41,6 +43,10 @@ export const SCOPE_MESSAGES = {
   accessoryChecked: (words: string) => `Checked against the image: ${words}.`,
   reportDisagrees: (words: string) =>
     `The image shows ${words}. The assistant’s report and the image disagree.`,
+  named: (name: string) => `Yes. This is ${name}.`,
+  misnamed:
+    'Not this segment. Look at which lobe you are in and where the opening sat, then choose again.',
+  nothingToName: 'Drive into a segment you have not named yet, then choose its name.',
   assistNotOffered: 'That help is not offered on this step.',
   noSuchOpening: 'That opening is not ahead of the tip.',
   labelsNotOffered: 'In-view labels are not offered on this step.',
@@ -59,3 +65,8 @@ export const SCRIPT_REPORTS = {
   misreportProtected: 'Assistant (scripted): “It is protected.”',
   protectedNow: 'Assistant (scripted): “Protected now.”',
 } as const
+
+/** Whether the scene's message says the scope is waiting at a fork: a held Advance stops on it. */
+export function isForkWaitMessage(message: string | null): boolean {
+  return message === SCOPE_MESSAGES.forkAhead || message === SCOPE_MESSAGES.aimRefused
+}

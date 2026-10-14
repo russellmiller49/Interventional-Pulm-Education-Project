@@ -5,8 +5,10 @@ import type { AuthoredChoice, BronchSectionDefinition } from '../types'
 /**
  * Larynx, trachea and carina (rewrite, brief 5). The fellow names the laryngeal structures on
  * stills of a normal larynx, crosses the true cords as they open, finds the membranous wall in the
- * trachea, and uses the carina as home base: into each main bronchus and back. The airway tasks of
- * the retired `branch-entry` section (enter each main bronchus, hold a view) are here.
+ * trachea, and uses the carina as home base: into each main bronchus and back. The carina task of
+ * the retired `branch-entry` section is here. Its hold-the-view task was removed on educator
+ * feedback (2026-10-13): it repeated the carina task and what it asked for, a scope held still at
+ * the nose or the bite block, is a thing the hands learn. The teaching screen on holding stays.
  *
  * Sources: the course textbook (S1), the training manual (S2), the faculty manual (S3) and the
  * lectures on inspection and handling (T10, T11).
@@ -44,7 +46,7 @@ const CARINA_VIEW: ScopeViewSpec = {
   controls: ['advance', 'withdraw', 'rotate', 'deflect', 'branchLabels'],
   assists: { 'centerline-lock': true, 'aim-guard': true, 'branch-labels': true },
   defaults: { branchLabels: true },
-  readouts: ['currentAirway', 'contactCount'],
+  readouts: ['currentAirway'],
   litAirways: ['TR', 'RMSB', 'LMSB'],
   boundary: 'Guided travel: the scope follows the lumen. Opening names are on.',
 }
@@ -67,7 +69,7 @@ export const section: BronchSectionDefinition = {
   title: 'Larynx, trachea and carina',
   shortTitle: 'Larynx to carina',
   minutes: 11,
-  activityMinutes: 6,
+  activityMinutes: 5,
   moduleIds: ['M07', 'M05'],
   objectives: [
     {
@@ -142,7 +144,7 @@ export const section: BronchSectionDefinition = {
     },
     {
       id: 'carina-home',
-      text: 'Work from the carina: into each main bronchus and back, without drifting.',
+      text: 'Work from the carina: into each main bronchus and back.',
     },
   ],
 
@@ -209,6 +211,18 @@ export const section: BronchSectionDefinition = {
       sourceRefs: CARINA,
     },
     {
+      // Educator feedback, 2026-10-13: how the openings move on the screen with where the
+      // operator stands. The figure beside it (`OrientationCompass`) turns the view above the
+      // carina; the rule is the course's own synthesis of the standard view its sources teach.
+      id: 'where-you-stand',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Where you stand turns the picture',
+      body: 'The picture turns with the scope, and the scope turns with you. Held square in front of you, the scope puts the side that faces away from you at 12 o’clock.\n\nAt the head of the bed that side is the front of the chest. The membranous wall is at 6 o’clock and the right main bronchus is on your right.\n\nFacing the patient, the picture is half a turn round. At the bedside it is a quarter turn. The airway has not moved: find the membranous wall, and read right and left from it.',
+      claimClass: 'synthesis',
+      sourceRefs: CARINA,
+    },
+    {
       id: 'holding-the-view',
       kind: 'pattern',
       role: 'mechanism',
@@ -254,10 +268,9 @@ export const section: BronchSectionDefinition = {
       mode: 'larynx-entry',
       profile: 'adult-teaching-combined-left-basal-v1',
       start: { kind: 'larynx' },
-      controls: ['advance', 'withdraw', 'rotate', 'deflect', 'declare', 'recenter', 'reset'],
+      controls: ['advance', 'withdraw', 'rotate', 'deflect', 'recenter', 'reset'],
       assists: { recenter: true },
       readouts: ['cordsState', 'deflectionDeg'],
-      ledger: { expected: ['TR'] },
       script: 'breathing-cords',
       litAirways: ['TR'],
       boundary: 'The cords part on each breath in and close with a cough.',
@@ -267,11 +280,6 @@ export const section: BronchSectionDefinition = {
         id: 'cross-glottis-open',
         label: 'Cross the glottis while the true folds are apart',
         test: { type: 'event', event: 'glottis-crossed-open' },
-      },
-      {
-        id: 'name-the-trachea',
-        label: 'Below the folds, name the trachea by its rings and membranous wall',
-        test: { type: 'event-sequence', events: ['entered:TR', 'declared:TR:identified'] },
       },
       {
         id: 'no-advance-against-closure',
@@ -374,71 +382,9 @@ export const section: BronchSectionDefinition = {
           },
         },
         {
-          id: 'no-force',
-          label:
-            'Reach the left main bronchus with no advance refused for want of aim, none made while the model recorded a lost view, and no wall contact recorded',
-          test: {
-            type: 'all',
-            tests: [
-              { type: 'event', event: 'entered:LMSB' },
-              { type: 'without', event: 'wall-contact' },
-              { type: 'without', event: 'aim-refused' },
-              { type: 'without', event: 'advanced-blind' },
-            ],
-          },
-        },
-      ],
-    },
-    hold: {
-      kind: 'scope-lab',
-      outcomeId: 'carina-home',
-      view: {
-        ...CARINA_VIEW,
-        controls: ['advance', 'withdraw', 'rotate', 'deflect', 'capture', 'acknowledge'],
-        readouts: ['depthMm', 'contactCount', 'holdRemaining'],
-        litAirways: ['TR'],
-        script: 'assistant-interrupt',
-        boundary: 'The assistant speaks during this task. Drift is a change in depth.',
-      },
-      goals: [
-        {
-          id: 'acknowledge',
-          label: 'Acknowledge the assistant',
-          test: { type: 'event', event: 'acknowledged' },
-        },
-        {
-          id: 'capture',
-          label: 'Capture an image from above the main carina',
-          test: {
-            type: 'all',
-            tests: [
-              { type: 'event', event: 'captured' },
-              { type: 'location', airway: 'TR' },
-            ],
-          },
-        },
-        {
-          id: 'hold',
-          label: 'Stay above the carina until the hold ends',
-          test: {
-            type: 'all',
-            tests: [
-              { type: 'event', event: 'hold-completed' },
-              { type: 'location', airway: 'TR' },
-            ],
-          },
-        },
-        {
-          id: 'no-drift',
-          label: 'Finish the hold with no drift in depth recorded and no wall contact recorded',
-          test: {
-            type: 'all',
-            tests: [
-              { type: 'event', event: 'hold-completed' },
-              { type: 'without', event: 'drift-detected' },
-              { type: 'without', event: 'wall-contact' },
-            ],
-          },
+          id: 'back-from-left',
+          label: 'Withdraw from the left main bronchus into the trachea',
+          test: { type: 'event-sequence', events: ['entered:LMSB', 'returned-to-trachea'] },
         },
       ],
     },

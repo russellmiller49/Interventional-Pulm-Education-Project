@@ -53,6 +53,7 @@ export const PLAIN_SCOPE_EVENTS = [
   'advanced-against-closure',
   'tube-exited',
   'survey-complete',
+  'misnamed',
 ] as const satisfies readonly PlainScopeEventId[]
 
 export const ACCESSORY_STATES = [

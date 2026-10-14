@@ -106,6 +106,14 @@ export function scopeViewErrors(view: ScopeViewSpec): readonly string[] {
   }
   if (seenControls.has('declare') && !view.ledger)
     errors.push(`${where} offers declarations without an inspection record.`)
+  if (view.ledger?.naming) {
+    if (!seenControls.has('declare'))
+      errors.push(`${where} keeps a naming record without the control that answers it.`)
+    if (seenControls.has('branchLabels') || view.assists['branch-labels'] === true)
+      errors.push(`${where} offers opening names on a record that asks for them.`)
+    if (view.readouts?.includes('parentage'))
+      errors.push(`${where} prints the path to an airway its naming record asks the learner for.`)
+  }
   if (seenControls.has('clearLens') && view.script !== 'lens-contamination')
     errors.push(`${where} offers lens clearing without a scripted smear.`)
 

@@ -334,7 +334,8 @@
 .control[data-control='deflect'] {
   flex: 1 1 10rem;
 }
-.control[data-control='accessory'] {
+.control[data-control='accessory'],
+.control[data-control='declare'] {
   width: 100%;
 }
 .control label {
@@ -545,5 +546,21 @@
   .views[data-bench-suction='true'] .tipCloseup {
     border-left: 0;
     border-top: 1px solid #b6c4c9;
+  }
+}
+
+/* Names and rim ticks travel with the eased picture instead of jumping ahead of it. */
+.ostium,
+.ostiumAnchor,
+.patientTick {
+  transition:
+    left 150ms ease-out,
+    top 150ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ostium,
+  .ostiumAnchor,
+  .patientTick {
+    transition: none;
   }
 }

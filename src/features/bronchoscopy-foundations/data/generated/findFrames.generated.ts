@@ -28,6 +28,28 @@ export const FIND_FRAMES = {
       },
     ],
   },
+  'right-main-origin': {
+    src: '/bronchoscopy-foundations/find-frames/right-main-origin.jpg',
+    sourceFrame: 562,
+    markers: [
+      {
+        id: 'rmb',
+        name: 'Right main bronchus',
+        points: [
+          758, 558, 698, 587, 632, 678, 631, 796, 954, 972, 1074, 930, 1123, 779, 1084, 702, 1018,
+          638, 987, 613, 923, 575, 838, 558,
+        ],
+      },
+      {
+        id: 'lmb',
+        name: 'Left main bronchus',
+        points: [
+          17, 667, 3, 814, 153, 966, 247, 962, 304, 785, 295, 753, 240, 725, 184, 704, 120, 670, 58,
+          658,
+        ],
+      },
+    ],
+  },
   'right-main': {
     src: '/bronchoscopy-foundations/find-frames/right-main.jpg',
     sourceFrame: 620,

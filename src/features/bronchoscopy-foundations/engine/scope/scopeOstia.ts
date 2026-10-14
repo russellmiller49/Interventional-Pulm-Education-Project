@@ -66,6 +66,7 @@ export function upcomingOstia(
           fullLabel: airwayDisplayName(own),
           edgeId: childId,
           pointLps: point,
+          labelPointLps: scopeCase.labelPoint.get(own),
           inView: pointInOpticalField(point, frame, scopeCase.collider),
         })
       } else {
