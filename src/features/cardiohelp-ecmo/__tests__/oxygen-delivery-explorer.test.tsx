@@ -158,11 +158,19 @@ describe('the explorer as the learner drives it', () => {
       Number(document.querySelector('[data-delivery-total]')?.textContent?.replace(/[^\d.]/g, ''))
     const opening = read()
 
-    fireEvent.click(screen.getByRole('button', { name: /Lower the saturation by ten/i }))
+    // One menu holds the three comparisons (tester feedback, 2026-10-13), each named as a change.
+    const menu = screen.getByLabelText('Try a comparison') as HTMLSelectElement
+    expect([...menu.options].map((option) => option.textContent)).toEqual([
+      'Choose a change…',
+      'Lower the saturation by ten',
+      'Halve the hemoglobin',
+      'Halve the cardiac output',
+    ])
+    fireEvent.change(menu, { target: { value: 'drop-saturation' } })
     const afterSaturation = read()
-    fireEvent.click(screen.getByRole('button', { name: /Halve the hemoglobin/i }))
+    fireEvent.change(menu, { target: { value: 'halve-hemoglobin' } })
     const afterCarrier = read()
-    fireEvent.click(screen.getByRole('button', { name: /Halve the cardiac output/i }))
+    fireEvent.change(menu, { target: { value: 'halve-cardiac-output' } })
     const afterFlow = read()
 
     expect(opening - afterSaturation).toBeLessThan((opening - afterCarrier) / 3)
@@ -171,19 +179,23 @@ describe('the explorer as the learner drives it', () => {
     expect(afterFlow).toBeLessThan(opening * 0.6)
   })
 
-  it('returns to this patient, and the reset is inert until something has moved', () => {
+  it('returns to this patient, and offers the reset only once something has moved', () => {
     renderExplorer()
-    const reset = document.querySelector('[data-delivery-reset]') as HTMLButtonElement
-    expect(reset).toBeDisabled()
+    const reset = () => document.querySelector<HTMLButtonElement>('[data-delivery-reset]')
+    // Not drawn disabled: a control that cannot act is left out.
+    expect(reset()).toBeNull()
     const opening = document.querySelector('[data-delivery-total]')?.textContent
 
-    fireEvent.click(screen.getByRole('button', { name: /Halve the hemoglobin/i }))
-    expect(reset).toBeEnabled()
+    fireEvent.change(screen.getByLabelText('Try a comparison'), {
+      target: { value: 'halve-hemoglobin' },
+    })
+    expect(reset()).toBeEnabled()
     expect(document.querySelector('[data-delivery-total]')?.textContent).not.toBe(opening)
 
-    fireEvent.click(reset)
+    fireEvent.click(reset()!)
     expect(document.querySelector('[data-delivery-total]')?.textContent).toBe(opening)
-    expect(reset).toBeDisabled()
+    expect(reset()).toBeNull()
+    expect((screen.getByLabelText('Try a comparison') as HTMLSelectElement).value).toBe('')
   })
 
   /**
@@ -215,11 +227,20 @@ describe('the explorer as the learner drives it', () => {
     expect(judged).toMatch(/says anything on its own about whether/i)
   })
 
-  it('carries a model boundary that names both simplifications, and its sources', () => {
+  /*
+   * Narrowed 2026-10-13. This required a "Model boundary" disclosure naming two simplifications.
+   * A tester asked whether that tab was needed to reach the learning outcome, and under the
+   * teaching-first rules it was not: the binding constant is taught as the number it is, and the
+   * one simplification that changes the arithmetic is said in the line that states the equations.
+   */
+  it('states the equations, says dissolved oxygen is left out, and carries its sources', () => {
     const { view } = renderExplorer()
-    const text = view.container.textContent ?? ''
-    expect(text).toMatch(/dissolved oxygen is left out/i)
-    expect(text).toMatch(/published values differ slightly/i)
+    const equations = view.container.querySelector('[data-delivery-equations]')?.textContent ?? ''
+    expect(equations).toMatch(/Oxygen content \(mL\/dL\) = 1\.34 × hemoglobin/)
+    expect(equations).toMatch(/Oxygen delivery \(mL\/min\) = oxygen content × cardiac output/)
+    expect(equations).toMatch(/dissolved oxygen adds little and is left out/i)
+    expect(view.container.querySelector('[data-model-boundary]')).toBeNull()
+    expect(view.container.textContent ?? '').not.toMatch(/Supplied teaching values/)
     expect(view.container.querySelector('[data-evidence-id]')).not.toBeNull()
   })
 

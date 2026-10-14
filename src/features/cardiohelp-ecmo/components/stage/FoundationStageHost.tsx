@@ -655,6 +655,8 @@ function FoundationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      // The step's way forward stays in view in a flowing task; see `NowCardModel.pinActions`.
+      pinActions: Boolean(presentation),
       where: presentation ? undefined : lookInLine,
       why: activeStep.rationale,
 
@@ -810,6 +812,23 @@ function FoundationStageSession({
             }
     }
   })()
+
+  /*
+   * When the answer / skip row is drawn, and what it offers.
+   *
+   * It used to follow every step. On a reading step there is nothing to reveal and the card's own
+   * button already moves on, so the row was three controls for no question. It is drawn where there
+   * is a question, or where the step's own way forward is not available yet (a comparison that has
+   * not been run). Before an answer it offers the answer and a skip; after one, another attempt.
+   */
+  const stepHasQuestion =
+    Boolean(focusedStory) ||
+    activeStep.interaction.kind === 'prediction' ||
+    activeStep.interaction.kind === 'transfer-item' ||
+    activeStep.interaction.kind === 'attribution'
+  const questionAnswered =
+    stepHasQuestion && (focusedStory ? Boolean(storyCommittedId) : stepPerformed)
+  const supportOffered = stepHasQuestion || (!completionShown && !nowModel.primary)
 
   /*
    * The prediction, when it is a question about a place.
@@ -1467,19 +1486,14 @@ function FoundationStageSession({
         (presentation &&
           !focusedFoundation &&
           activeStep.phase === 'predict' &&
-          foundationPresentationSections[sectionId]) ? (
-          <section className={teachingStyles.section} data-independent-application>
-            <h3 className={teachingStyles.heading}>Apply what you learned</h3>
-            <p className="mt-3">
-              This is a separate teaching case. Read its stated findings; the reference circuit is
-              not the case. Try an optional answer or open the explanation directly.
-            </p>
-            <p className="mt-2">
-              Use Back to review earlier teaching. Earlier answers and completed comparisons remain
-              saved in this session.
-            </p>
-          </section>
-        ) : (
+          foundationPresentationSections[sectionId]) /*
+            A question about a new case stands alone: the teaching panel steps aside for it.
+
+            This slot used to hold a card saying the case was separate, that "the reference circuit
+            is not the case", how to answer, and what Back does. A tester (2026-10-13) read it on a
+            page with no circuit on it and asked what it referred to. Nothing replaces it: the
+            question states its own findings, and the column it stood in is given to the question.
+          */ ? null : (
           <EcmoFoundationTeachingPanel
             sectionId={sectionId}
             state={simulation}
@@ -1584,42 +1598,36 @@ function FoundationStageSession({
           >
             {comparisonLeads && focusedStory ? null : nowBody}
             {comparisonLeads ? null : comparisonBlock}
-            <EcmoOptionalExplanation
-              key={activeStep.id}
-              onContinue={skipStep}
-              onRetry={retryQuestion}
-            >
-              {mapAnswerItem ? (
-                <>
-                  <p>{mapAnswerItem.explanation}</p>
+            {supportOffered ? (
+              <EcmoOptionalExplanation
+                key={activeStep.id}
+                onContinue={questionAnswered || completionShown ? undefined : skipStep}
+                onRetry={questionAnswered ? retryQuestion : undefined}
+              >
+                {!stepHasQuestion || questionAnswered ? null : mapAnswerItem ? (
+                  <>
+                    <p>{mapAnswerItem.explanation}</p>
+                    <ul>
+                      {mapAnswerItem.choices.map((choice) => (
+                        <li key={choice.id}>
+                          <strong>{choice.label}</strong> {choice.rationale}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : focusedStory ? (
+                  <p>{focusedStory.item.explanation}</p>
+                ) : activeStep.interaction.kind === 'attribution' ? (
                   <ul>
-                    {mapAnswerItem.choices.map((choice) => (
-                      <li key={choice.id}>
-                        <strong>{choice.label}</strong> {choice.rationale}
+                    {activeStep.interaction.attribution.candidates.map((candidate) => (
+                      <li key={candidate.id}>
+                        <strong>{candidate.label}</strong> {candidate.rationale}
                       </li>
                     ))}
                   </ul>
-                </>
-              ) : focusedStory ? (
-                <p>{focusedStory.item.explanation}</p>
-              ) : activeStep.interaction.kind === 'attribution' ? (
-                <ul>
-                  {activeStep.interaction.attribution.candidates.map((candidate) => (
-                    <li key={candidate.id}>
-                      <strong>{candidate.label}</strong> {candidate.rationale}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <>
-                  <p>{activeStep.rationale ?? activeStep.instruction}</p>
-                  <p>
-                    Use the teaching and source material on this page. Only running a comparison
-                    produces its Before / After result; moving on does not run it.
-                  </p>
-                </>
-              )}
-            </EcmoOptionalExplanation>
+                ) : null}
+              </EcmoOptionalExplanation>
+            ) : null}
           </ActivityContent>
         </EcmoNowCard>
       </div>

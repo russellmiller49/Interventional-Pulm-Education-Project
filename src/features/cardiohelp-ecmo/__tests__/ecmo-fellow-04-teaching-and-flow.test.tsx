@@ -196,7 +196,7 @@ describe('a prediction step promises no gate, because there is none', () => {
     expect(pageText()).not.toMatch(/held back until you have chosen/)
 
     // The explanation path, with no answer and nothing recorded.
-    fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show answer' }))
     expect(document.querySelector('[data-optional-explanation]')).not.toBeNull()
     expect(latestState().scenario.prediction.committed).toBe(false)
   })
@@ -258,7 +258,8 @@ describe('S2-1: the map question says what the map shows', () => {
   it('claims neither a clean map nor a recall from memory', () => {
     expect(task?.title).not.toMatch(/from memory/i)
     expect(task?.instruction).not.toMatch(/omits/i)
-    expect(task?.instruction).toMatch(/keeps its pressure labels/)
+    // The instruction now only says what to do; the next test checks the labelled map is there.
+    expect(task?.instruction).toMatch(/numbered location on the circuit map/)
   })
 
   it.each(['vv', 'va'] as const)('%s: the labelled map is on screen for that task', (track) => {
@@ -373,7 +374,6 @@ describe('S1-3, S1-4, S1-6: the first section says only what is on its own page'
         </>,
       )
       expect(view.container.textContent ?? '').not.toMatch(/beside you/i)
-      expect(view.container.textContent ?? '').toMatch(/Supplied teaching values/)
     },
   )
 
@@ -639,7 +639,7 @@ describe('S9-3: where a reviewed section leads, and what "reviewed" means', () =
     const stage = buildDrillStageLesson(lesson, lesson.supportMode)
     const last = stage.steps[stage.steps.length - 1]
     openStep(last.id)
-    fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
     const completion = document.querySelector<HTMLElement>('[data-stage-completion]')
     if (!completion) throw new Error('no completion card')
     return { completion, last }
@@ -983,10 +983,8 @@ describe('adversarial review: all six narrative sections teach before an optiona
       expect(pageText()).not.toMatch(
         /before (?:you )?look(?:ing)? further|held back until|commit before|before measuring/i,
       )
-      expect(
-        screen.getByRole('button', { name: 'Show explanation without answering' }),
-      ).toBeEnabled()
-      fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+      expect(screen.getByRole('button', { name: 'Show answer' })).toBeEnabled()
+      fireEvent.click(screen.getByRole('button', { name: 'Show answer' }))
       expect(document.querySelector('[data-optional-explanation]')).not.toBeNull()
       expect(
         document.querySelectorAll('fieldset[data-prediction-choices] input:checked'),
@@ -1015,7 +1013,7 @@ describe('adversarial review: every changed end-card pairing uses the pathway re
       const { lesson } = await mountDrill(id)
       const stage = buildDrillStageLesson(lesson, mode)
       openStep(stage.steps.at(-1)!.id)
-      fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
       const pairing = pairedCaseForLesson(id)
       if (pairing.kind !== 'next-in-unit') throw new Error('expected different mechanism')
       const next = nextPathwaySection(criticalCareLearningPathway('cardiohelp-ecmo', mode), id)

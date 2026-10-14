@@ -26,6 +26,36 @@
   padding: clamp(1rem, 2vw, 1.75rem);
 }
 
+/*
+ * The pinned action row.
+ *
+ * The card becomes a column so the row's containing block is the whole card (a grid item can only
+ * stick inside its own row). While the card runs past the bottom of the view the row rides the
+ * bottom edge, over the card's own content, on the card's own opaque fill; at the end of the card
+ * it is simply the card's foot. The visual column is isolated so nothing drawn inside it (the 3D
+ * scene's labels carry their own stacking order) can come through the row.
+ */
+.flow [data-now-card]:has(> [data-now-footer='pinned']) {
+  --now-pad: clamp(1rem, 2vw, 1.75rem);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.flow [data-now-card] > [data-now-footer='pinned'] {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-inline: calc(-1 * var(--now-pad));
+  padding: 0.75rem var(--now-pad);
+  border-top: 1px solid var(--ecmo-shell-line);
+  border-radius: 0 0 1rem 1rem;
+  background: color-mix(in srgb, var(--ecmo-shell-panel-2) 92%, black);
+  box-shadow: 0 -0.6rem 1rem -0.6rem rgba(0, 0, 0, 0.55);
+}
+.visual {
+  isolation: isolate;
+}
+
 .flow [data-now-focus]:focus-visible {
   outline: 2px solid var(--ecmo-shell-accent);
   outline-offset: 3px;
@@ -46,6 +76,17 @@
 
 .response:empty {
   display: none;
+}
+
+/*
+ * A question about a new case has no teaching beside it. Its empty column is dropped and the
+ * visual, where there is one, takes the width: a question answered on the map gets the whole map.
+ */
+.explanation:has(> [data-pane='teaching']:empty) {
+  display: none;
+}
+.content:has(> .explanation > [data-pane='teaching']:empty) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @media (min-width: 1100px) {
@@ -125,6 +166,10 @@
   }
   .flow [data-now-card] {
     padding: 0.75rem;
+  }
+  .flow [data-now-card]:has(> [data-now-footer='pinned']) {
+    --now-pad: 0.75rem;
+    padding-bottom: 0;
   }
 }
 

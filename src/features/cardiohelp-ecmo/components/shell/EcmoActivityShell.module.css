@@ -503,6 +503,13 @@
   gap: 0.5rem;
 }
 
+/* The action row and the reason it is not available yet, kept together. */
+.nowFooter {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .nowPrimary {
   display: inline-flex;
   align-items: center;
@@ -811,9 +818,30 @@
   scroll-padding-block-start: 1rem;
 }
 
+/*
+ * A pinned action row covers the foot of the view, so keyboard focus must stop short of it. The
+ * row is one line of controls, two when the reason a button is unavailable is printed under it.
+ */
+.shell[data-ecmo-shell='learn'][data-flowing='true']:has([data-now-footer='pinned']) {
+  scroll-padding-block-end: 6.5rem;
+}
+.shell[data-ecmo-shell='learn'][data-flowing='true']:has([data-now-footer='pinned'] :focus) {
+  scroll-padding-block-end: 1rem;
+}
+
 @media (max-width: 1023px), (max-height: 699px) {
   :global(html):has(.shell[data-ecmo-shell='learn'][data-flowing='true']) {
     scroll-padding-block-start: calc(var(--ecmo-document-focus-clearance, 0px) + 1rem);
+    scroll-padding-block-end: 1rem;
+  }
+  :global(html):has(
+    .shell[data-ecmo-shell='learn'][data-flowing='true'] [data-now-footer='pinned']
+  ) {
+    scroll-padding-block-end: 6.5rem;
+  }
+  :global(html):has(
+    .shell[data-ecmo-shell='learn'][data-flowing='true'] [data-now-footer='pinned'] :focus
+  ) {
     scroll-padding-block-end: 1rem;
   }
 

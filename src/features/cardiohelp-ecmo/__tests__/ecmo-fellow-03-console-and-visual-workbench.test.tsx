@@ -382,7 +382,7 @@ describe('B. the work and what it is read against, together', () => {
     const lead = document.querySelector('[data-drill-lead]') as HTMLElement
     expect(lead.contains(choices)).toBe(true)
     expect(choices.querySelector('[data-circuit-readouts]')).not.toBeNull()
-    expect(lead.textContent).toMatch(/Show explanation without answering/)
+    expect(lead.textContent).toMatch(/Show answer/)
     const content = document.querySelector('[data-activity-content]') as HTMLElement
     expect(follows(lead, content)).toBe(true)
     // The readings the prediction is read from come before the map in the circuit panel.

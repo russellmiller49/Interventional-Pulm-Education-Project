@@ -69,7 +69,7 @@ it.each(['gas-source-interruption', 'va-gas-source-interruption'])(
     expect(latestState().scenario.activityStarted).toBe(false)
     expect(latestState().simulationTime).toBe(0)
     expect(latestState().circuit.returnClampClosed).toBe(false)
-    fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show answer' }))
     expect(latestState().simulationTime).toBe(0)
     expect(latestState().scenario.prediction.goalId).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Start guided activity' }))
@@ -93,7 +93,7 @@ it.each(['gas-source-interruption', 'va-gas-source-interruption'])(
 it('keeps a skipped transfer unperformed, and starts it afresh on return', async () => {
   await mountDrill('gas-source-interruption')
   selectTask('gas-source-interruption-transfer')
-  fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
   expect(latestState().scenario.activityStarted).toBe(false)
   expect(latestState().circuit.returnClampClosed).toBe(false)
   expect(
@@ -130,7 +130,7 @@ it('offers feedback, retry, and skip for an actual wrong prediction without grad
   expect(latestState().scenario.prediction.goalId).toBe(authored.commitments[wrong.id].goalId)
   fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
   expect(screen.getByRole('radio', { name: wrong.label })).not.toBeChecked()
-  fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
   expect(stored().scenarioAttempts).toBeUndefined()
   expect(global.fetch).not.toHaveBeenCalled()
 })
@@ -185,9 +185,9 @@ it.each([
   const rows = [...document.querySelectorAll<HTMLButtonElement>('[data-step-list] button')]
   expect(rows.every((button) => !button.disabled)).toBe(true)
   fireEvent.click(rows.at(-1)!)
-  fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show answer' }))
   expect(document.querySelector('[data-optional-explanation]')).not.toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
   expect(stored().completedFoundationSectionIds).toBeUndefined()
   expect(stored().selfPaced.visitedTopicIds).toContain(`learn:${supportMode}:${sectionId}`)
   view.unmount()
@@ -268,7 +268,7 @@ it.each(['gas-source-interruption', 'va-gas-source-interruption'])(
       (step) => step.interaction.kind === 'transfer-scenario',
     )
     for (let i = 0; i < transferIndex; i++) {
-      fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
     }
     expect(latestState().scenario.prediction.committed).toBe(false)
     expect(latestState().scenario.activityStarted).toBe(false)

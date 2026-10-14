@@ -56,7 +56,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Apply the relationship',
       block: 'application',
       instruction:
-        'Use the information in this separate teaching case to interpret the saturation. Choose an answer, then submit it.',
+        'A new patient. Decide what the saturation does and does not tell you about oxygen delivery.',
       lookIn: steps('the answer choices below'),
     },
     {
@@ -66,7 +66,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'application',
       attribution: true,
       instruction:
-        'For each proposed change, choose blood flow, oxygen content, or oxygen consumption. Submit the set to read the reasoning.',
+        'For each change, choose the part of the oxygen balance it acts on: blood flow, oxygen content, or oxygen consumption.',
       lookIn: steps('the changes to attribute below'),
     },
     {
@@ -85,7 +85,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Follow the blood',
       block: 'blood-path',
       instruction:
-        'Follow blood from drainage through the pump and membrane lung to return. The same segment is marked on the existing circuit map.',
+        'Follow blood from drainage through the pump and membrane lung to return. Each stop is highlighted in yellow on the circuit map.',
       lookIn: teaching('Circuit walk'),
     },
     {
@@ -124,8 +124,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Locate a measurement on the map',
       block: 'application',
       mapRetrieval: true,
-      instruction:
-        'An optional check on the circuit map. The map keeps its pressure labels; only the circuit-walk highlighting is off. Select the numbered location that answers the question, then submit beside the map.',
+      instruction: 'Select the numbered location on the circuit map that answers the question.',
       lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
     },
     {

@@ -1080,10 +1080,16 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     expect(stopId()).toBe('walk-membrane')
   })
 
-  it('offers no way back from the first stop, and says so rather than dead-ending', () => {
+  /*
+   * Changed 2026-10-13. The card used to add "This is the first stop in this section." under the
+   * stop, and a tester read it as text repeated from the card's own heading, which already counts
+   * "stop 1 of 4". The count is what says where the learner is; the sentence is gone.
+   */
+  it('offers no way back from the first stop, and lets the count say it is the first', () => {
     mount('circuit-flow-path')
     expect(document.querySelector('[data-now-back]')).toBeNull()
-    expect(walkCard().textContent).toMatch(/first stop in this section/i)
+    expect(walkCard().textContent).toMatch(/stop 1 of 4/i)
+    expect(walkCard().textContent).not.toMatch(/first stop in this section/i)
   })
 
   it('moves focus to the stop heading, so a keyboard lands where the content changed', () => {
@@ -1135,7 +1141,6 @@ describe('the circuit walk, driven the way a learner drives it', () => {
   it('says so on the last stop of a section the walk continues past', () => {
     mount('circuit-flow-path')
     expect(walkCard().textContent).toMatch(/stop 1 of 4/i)
-    expect(walkCard().textContent).toMatch(/first stop in this section/i)
     for (let step = 0; step < 3; step += 1) press('[data-walk-next]')
     expect(walkCard().textContent).toMatch(/stop 4 of 4/i)
     expect(walkCard().textContent).toMatch(/carries on in the next section/i)

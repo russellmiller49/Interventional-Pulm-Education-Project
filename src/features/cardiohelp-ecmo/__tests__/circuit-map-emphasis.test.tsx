@@ -463,7 +463,7 @@ describe('the circuit walk, marked on the real map', () => {
     }
     // The teaching card says where the marking is, in the same words each time.
     expect(document.querySelector('[data-walk-scene-labels]')?.textContent).toMatch(
-      /^Marked on the circuit map and in the bedside scene:/,
+      /^Highlighted in yellow on the circuit map/,
     )
   })
 
