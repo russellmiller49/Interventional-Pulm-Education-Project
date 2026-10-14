@@ -481,7 +481,7 @@ describe('foundation teaching panels', () => {
     expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
     expect(container.querySelector('[data-map-emphasis]')).toBeNull()
     expect(container.querySelector('[data-walk-scene-labels]')?.textContent).toMatch(
-      /^Marked on the circuit map and in the bedside scene:/,
+      /^Highlighted in yellow on the circuit map/,
     )
     // A foundation walk teaches; it never marks a segment as the culprit.
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()

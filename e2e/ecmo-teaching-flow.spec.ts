@@ -74,9 +74,7 @@ for (const viewport of viewports) {
     await others.locator('summary').scrollIntoViewIfNeeded()
     await page.screenshot({ path: info.outputPath('wrong-answer.png') })
     await page.getByRole('button', { name: 'Try again', exact: true }).click()
-    await page
-      .getByRole('button', { name: 'Show explanation without answering', exact: true })
-      .click()
+    await page.getByRole('button', { name: 'Show answer', exact: true }).click()
     await expect(page.locator('[data-optional-explanation]')).toBeVisible()
     await expect(page.locator('fieldset[data-prediction-choices] input:checked')).toHaveCount(0)
 
@@ -90,9 +88,7 @@ for (const viewport of viewports) {
     await expect(page.locator('[data-ecmo-shell]')).not.toContainText(
       /before (?:you )?look(?:ing)? further|before measuring|Committing first/,
     )
-    await page
-      .getByRole('button', { name: 'Show explanation without answering', exact: true })
-      .click()
+    await page.getByRole('button', { name: 'Show answer', exact: true }).click()
     await expect(page.locator('[data-optional-explanation]')).toBeVisible()
     await noOverflow(page)
 
@@ -162,6 +158,14 @@ for (const viewport of viewports) {
     // taught reference values sit above the folded registry instead.
     await expect(page.locator('[data-source-registry-status]')).toHaveCount(0)
     await expect(page.locator('[data-review-status]')).toHaveCount(0)
+    // Tester feedback (2026-10-13): the hub opens on its start action, and the reference values
+    // and sources sit in one closed "About this module" disclosure, opened here by keyboard.
+    const about = page.locator('details[data-hub-about]')
+    await expect(about).not.toHaveAttribute('open', '')
+    await expect(page.locator('[data-reference-values]').first()).toBeHidden()
+    await about.locator(':scope > summary').focus()
+    await page.keyboard.press('Enter')
+    await expect(about).toHaveAttribute('open', '')
     await expect(page.locator('[data-reference-values]').first()).toBeVisible()
     await expect(registry).not.toHaveAttribute('open', '')
     await summary.focus()

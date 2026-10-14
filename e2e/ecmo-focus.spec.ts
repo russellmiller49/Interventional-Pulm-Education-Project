@@ -146,25 +146,24 @@ for (const width of [390, 320]) {
     )
     await settle(page)
     await tabTo(page, 'Continue')
-    // Match the report's pre-wheel position (native focus centering varies by browser version).
-    const initial = await geometry(page)
+    /*
+     * Rewritten 2026-10-13. The step's action row is now pinned to the foot of the view, and a
+     * reading step no longer carries a skip button beside it, so the control before Continue in
+     * the tab order is further up the card and a wheel leaves it above the view. Reverse Tab has
+     * to bring that control back, clear of the site header; forward Tab returns to the pinned row.
+     */
     await page.mouse.move(width / 2, 420)
-    await page.mouse.wheel(0, Math.round(initial.focus.rect.top - 400))
-    await settle(page)
-    await page.mouse.wheel(0, 230)
+    await page.mouse.wheel(0, 400)
     await settle(page)
     const before = await record(page, info, 'before-reverse-tab')
-    expect(before.focus.rect.top).toBeGreaterThan(168)
-    expect(before.focus.rect.top).toBeLessThan(172)
+    expect(before.document.scrollTop).toBeGreaterThan(0)
+    await visibleFocus(page)
     await page.keyboard.press('Shift+Tab')
     await settle(page)
-    await expect(
-      page.getByRole('button', { name: 'Continue without doing this step', exact: true }),
-    ).toBeFocused()
-    const after = await record(page, info, 'after-reverse-tab')
+    await expect(page.getByRole('button', { name: 'Continue', exact: true })).not.toBeFocused()
+    await record(page, info, 'after-reverse-tab')
     await page.screenshot({ path: info.outputPath('reverse-tab.png') })
     await visibleFocus(page)
-    expect(after.document.scrollTop).toBeGreaterThan(before.document.scrollTop - 100)
     await page.keyboard.press('Tab')
     await settle(page)
     await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeFocused()
@@ -380,7 +379,7 @@ test('Prompt03: enlarged emergency strip does not intercept the event or crush c
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320)
   // The alarm changes to a long, medium-priority two-clamp message after de-airing.
   await page.getByRole('button', { name: 'Next step', exact: true }).click()
-  await page.getByRole('button', { name: 'Continue without doing this step', exact: true }).click()
+  await page.getByRole('button', { name: 'Skip', exact: true }).click()
   await page.locator('#cardiohelp-clamp-return').click()
   await page.getByRole('button', { name: 'Next step', exact: true }).click()
   await page.locator('#cardiohelp-clamp-drainage').click()

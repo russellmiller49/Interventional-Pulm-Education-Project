@@ -42,6 +42,15 @@ export interface NowCardModel {
   readonly back?: NowCardAction
   /** Disclosed on request; never part of the default read. */
   readonly why?: string
+  /**
+   * Keep the action row in view at the bottom of the window while the card is taller than it.
+   *
+   * A tester (2026-10-13) could not find the way to the next task: the card's one button sat under a
+   * text column, a circuit map and a row of options, two screens down. In a flowing task the row is
+   * pinned to the bottom of the scrolling view, so the way forward is in the same place on every
+   * step, and it settles into the foot of the card once the learner reaches it.
+   */
+  readonly pinActions?: boolean
   readonly tone?: 'neutral' | 'safety'
 }
 
@@ -63,6 +72,19 @@ export function EcmoNowCard({
   const headingId = useId()
   const reasonId = useId()
   const tone = model.tone ?? 'neutral'
+  const footerShown = Boolean((model.primary && !model.primaryBeforeContent) || model.secondary)
+  const why = model.why ? (
+    <details className={styles.nowWhy} data-now-why>
+      <summary>Why this matters</summary>
+      <p>{model.why}</p>
+    </details>
+  ) : null
+  const disabledReason =
+    model.primary?.disabled && model.primary.disabledReason ? (
+      <p id={reasonId} className={styles.nowStatus} data-now-disabled-reason>
+        {model.primary.disabledReason}
+      </p>
+    ) : null
 
   return (
     <section
@@ -109,32 +131,32 @@ export function EcmoNowCard({
           {model.status}
         </p>
       ) : null}
-      {(model.primary && !model.primaryBeforeContent) || model.secondary ? (
-        <div className={styles.nowActions}>
-          {model.primary && !model.primaryBeforeContent ? (
-            <NowActionControl
-              action={model.primary}
-              className={styles.nowPrimary}
-              reasonId={reasonId}
-              primary
-            />
-          ) : null}
-          {model.secondary ? (
-            <NowActionControl action={model.secondary} className={styles.nowSecondary} />
-          ) : null}
+      {/*
+        A pinned row is the last thing in its card, so the disclosure goes ahead of it there. A card
+        that does not pin keeps the order it has always had, which is also its tab order.
+      */}
+      {model.pinActions ? why : null}
+      {footerShown ? (
+        <div className={styles.nowFooter} data-now-footer={model.pinActions ? 'pinned' : 'inline'}>
+          <div className={styles.nowActions}>
+            {model.primary && !model.primaryBeforeContent ? (
+              <NowActionControl
+                action={model.primary}
+                className={styles.nowPrimary}
+                reasonId={reasonId}
+                primary
+              />
+            ) : null}
+            {model.secondary ? (
+              <NowActionControl action={model.secondary} className={styles.nowSecondary} />
+            ) : null}
+          </div>
+          {disabledReason}
         </div>
-      ) : null}
-      {model.primary?.disabled && model.primary.disabledReason ? (
-        <p id={reasonId} className={styles.nowStatus} data-now-disabled-reason>
-          {model.primary.disabledReason}
-        </p>
-      ) : null}
-      {model.why ? (
-        <details className={styles.nowWhy} data-now-why>
-          <summary>Why this matters</summary>
-          <p>{model.why}</p>
-        </details>
-      ) : null}
+      ) : (
+        disabledReason
+      )}
+      {model.pinActions ? null : why}
     </section>
   )
 }

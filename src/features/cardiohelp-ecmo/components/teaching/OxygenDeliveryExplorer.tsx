@@ -1,17 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
 import {
-  OXYGEN_BINDING_CONSTANT_QUALIFIER,
   OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN,
   OXYGEN_DELIVERY_ARITHMETIC_CLAIMS,
   ecmoOxygenDeliveryFigures,
 } from '../../content/oxygenDeliveryArithmetic'
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
-import { ModelBoundary, TextEquivalent, styles } from './shared'
+import { styles } from './shared'
 
 /**
  * Move one component of oxygen delivery and watch what happens to the rest.
@@ -24,8 +23,13 @@ import { ModelBoundary, TextEquivalent, styles } from './shared'
  * 99 while delivery halves.
  *
  * So the learner drives it. Hemoglobin, arterial saturation and cardiac output each get a control,
- * the two computed figures follow, and the patient's own opening values stay on screen to compare
- * against. The three presets are the comparisons the section is actually about, one tap each.
+ * the two computed figures follow, and the starting values stay on screen to compare against. The
+ * three comparisons the section is actually about sit in one menu.
+ *
+ * A tester review in October 2026 found the surface heavier than its point: a caveat for an opening
+ * line, three buttons and a reset in a row, a paragraph restating every number on screen, and a
+ * model-boundary disclosure. It now opens on the instruction, offers the comparisons as one menu,
+ * states the lesson in a sentence and prints the two equations as equations.
  *
  * What this deliberately does not do, under this module's no-invented-threshold rule: it shows no
  * target delivery, no adequate/inadequate verdict, and no colour-coded zone. It reports what the two
@@ -103,7 +107,7 @@ const CONTROLS: readonly ControlSpec[] = [
   },
   {
     key: 'cardiacOutput',
-    label: 'Cardiac output, the patient’s own',
+    label: 'Cardiac output',
     unit: 'L/min',
     min: 1,
     max: 8,
@@ -116,14 +120,8 @@ interface Preset {
   readonly id: string
   readonly label: string
   readonly key: keyof DeliveryInputs
-  /** The value this comparison needs, before the control's own range is consulted. */
+  /** The value this comparison sets. A halving sets the exact half, so delivery halves exactly. */
   readonly target: (opening: DeliveryInputs) => number
-  /**
-   * For a halving preset, the exact half. The control moves in fixed steps, so the preset sets the
-   * nearest step — 4.5 L/min halves to 2.3, not 2.25 — and the panel then says so and shows the
-   * delivery it actually produced, rather than letting "halve" promise an exact half (S1-5).
-   */
-  readonly exact?: (opening: DeliveryInputs) => number
 }
 
 /**
@@ -134,8 +132,8 @@ interface Preset {
  * lands exactly on it reads as a threshold this section has not sourced. A relative drop makes the
  * same arithmetic point and asserts nothing.
  *
- * A preset is offered only when its value is inside the control's range. That draft clamped instead,
- * which on a case opening at a low cardiac output would have *raised* it while the button said
+ * A comparison is offered only when its value is inside the control's range. That draft clamped
+ * instead, which on a case opening at a low cardiac output would have *raised* it while the menu said
  * "halve" — a control that contradicts its own label.
  */
 const PRESETS: readonly Preset[] = [
@@ -149,15 +147,13 @@ const PRESETS: readonly Preset[] = [
     id: 'halve-hemoglobin',
     label: 'Halve the hemoglobin',
     key: 'hemoglobin',
-    target: (opening) => Math.round(opening.hemoglobin * 5) / 10,
-    exact: (opening) => opening.hemoglobin / 2,
+    target: (opening) => opening.hemoglobin / 2,
   },
   {
     id: 'halve-cardiac-output',
     label: 'Halve the cardiac output',
     key: 'cardiacOutput',
-    target: (opening) => Math.round(opening.cardiacOutput * 5) / 10,
-    exact: (opening) => opening.cardiacOutput / 2,
+    target: (opening) => opening.cardiacOutput / 2,
   },
 ]
 
@@ -174,7 +170,7 @@ interface ResolvedPreset {
   readonly reachable: boolean
 }
 
-/** What a preset would set, and whether the control it moves can go there. */
+/** What a comparison would set, and whether the control it moves can go there. */
 function resolvePreset(preset: Preset, opening: DeliveryInputs): ResolvedPreset {
   const control = CONTROL_BY_KEY[preset.key]
   const target = preset.target(opening)
@@ -189,12 +185,24 @@ function format(value: number, precision: number): string {
   return value.toFixed(precision)
 }
 
-/** "higher than", "lower than", or "the same as" — with a deadband so rounding noise is not movement. */
-function comparison(now: number, opening: number, deadband: number): string {
-  const delta = now - opening
-  if (delta > deadband) return 'higher than'
-  if (delta < -deadband) return 'lower than'
-  return 'the same as'
+/**
+ * A control's value as the learner reads it.
+ *
+ * A halving can land between two steps of the slider — half of 4.5 L/min is 2.25. The readout then
+ * carries the extra digit, so the number on screen is the number the two figures were computed from
+ * and "halve" means exactly half (S1-5).
+ */
+function formatInput(value: number, control: ControlSpec): string {
+  const scale = 10 ** control.precision
+  const onStep = Math.abs(value * scale - Math.round(value * scale)) < 1e-6
+  const text = format(value, onStep ? control.precision : control.precision + 1)
+  return control.unit ? `${text} ${control.unit}` : text
+}
+
+/** How a figure stands against its starting value, in one short line. */
+function againstStart(now: number, start: number, precision: number, unit: string): string {
+  if (format(now, precision) === format(start, precision)) return 'Starting value.'
+  return `${format((now / start) * 100, 0)}% of the starting ${format(start, precision)} ${unit}.`
 }
 
 export function OxygenDeliveryExplorer({
@@ -204,9 +212,10 @@ export function OxygenDeliveryExplorer({
   readonly state: EcmoSimulationState
   readonly sourceIds: readonly string[]
 }) {
+  const comparisonId = useId()
   const arterialSaturation =
     state.supportMode === 'va' ? state.patient.femoralArterialSpo2 : state.patient.spo2
-  // The patient the lesson opened on, kept for comparison and for the reset.
+  // The values the lesson opened on, kept for comparison and for the reset.
   const opening: DeliveryInputs = {
     hemoglobin: Math.round(state.circuit.hemoglobin * 10) / 10,
     saturation: Math.round(arterialSaturation),
@@ -217,11 +226,9 @@ export function OxygenDeliveryExplorer({
 
   const now = oxygenDeliveryFigures(inputs)
   const base = oxygenDeliveryFigures(opening)
-  const appliedPresetSpec = PRESETS.find((preset) => preset.id === appliedPresetId)
-  const appliedPreset = appliedPresetSpec
-    ? { ...resolvePreset(appliedPresetSpec, opening), exact: appliedPresetSpec.exact }
-    : null
-  const appliedExact = appliedPreset?.exact ? appliedPreset.exact(opening) : null
+  const comparisons = PRESETS.map((preset) => resolvePreset(preset, opening)).filter(
+    (resolved) => resolved.reachable,
+  )
   const changed =
     inputs.hemoglobin !== opening.hemoglobin ||
     inputs.saturation !== opening.saturation ||
@@ -237,6 +244,16 @@ export function OxygenDeliveryExplorer({
     setInputs(opening)
   }
 
+  function applyComparison(id: string) {
+    const resolved = comparisons.find((candidate) => candidate.preset.id === id)
+    if (!resolved) {
+      reset()
+      return
+    }
+    setInputs(resolved.inputs)
+    setAppliedPresetId(id)
+  }
+
   return (
     <section
       className={styles.section}
@@ -247,15 +264,12 @@ export function OxygenDeliveryExplorer({
         Move one component and watch the rest
       </h3>
       <p className="mt-2 text-sm leading-6">
-        Supplied teaching values, not a patient you have met: the three start where this
-        module&rsquo;s reference circuit starts its simulated patient. Change any one of them and
-        the two figures below follow.
+        Move one slider, or pick a comparison. Oxygen content and oxygen delivery follow.
       </p>
 
       <div className="mt-3 grid gap-3">
         {CONTROLS.map((control) => {
           const value = inputs[control.key]
-          const openingValue = opening[control.key]
           const controlId = `oxygen-delivery-${control.key}`
           return (
             <div key={control.key} className="grid gap-1" data-delivery-control={control.key}>
@@ -263,10 +277,7 @@ export function OxygenDeliveryExplorer({
                 <label htmlFor={controlId} className="text-sm font-semibold">
                   {control.label}
                 </label>
-                <span className="text-sm tabular-nums">
-                  {format(value, control.precision)}
-                  {control.unit ? ` ${control.unit}` : ''}
-                </span>
+                <span className="text-sm tabular-nums">{formatInput(value, control)}</span>
               </div>
               <input
                 id={controlId}
@@ -275,127 +286,90 @@ export function OxygenDeliveryExplorer({
                 max={control.max}
                 step={control.step}
                 value={value}
-                aria-valuetext={`${format(value, control.precision)}${control.unit ? ` ${control.unit}` : ''}`}
+                aria-valuetext={formatInput(value, control)}
                 onChange={(event) => set(control.key, Number(event.target.value))}
               />
               <p className="text-xs leading-5 text-muted-foreground">
-                Opened at {format(openingValue, control.precision)}
-                {control.unit ? ` ${control.unit}` : ''}.
+                Starting value {formatInput(opening[control.key], control)}.
               </p>
             </div>
           )
         })}
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2" data-delivery-figures>
+      {/*
+        One menu, not a row of buttons. The three comparisons and the reset sat side by side under
+        the figures, and a tester asked for a single dropdown so the surface reads as one control.
+        A comparison this patient's values cannot reach is left out, and the reset appears only once
+        something has moved, so nothing here is drawn disabled.
+      */}
+      <div className="mt-4 flex flex-wrap items-center gap-2" data-delivery-comparisons>
+        <label htmlFor={comparisonId} className="text-sm font-semibold">
+          Try a comparison
+        </label>
+        <select
+          id={comparisonId}
+          // A percentage width, capped: left to size itself a select is as wide as its longest
+          // option and will not shrink, which at a 320 px phone width pushed the page one pixel
+          // sideways. A `max-width` alone does not change that; a percentage `width` does.
+          className="min-h-9 w-full max-w-[17rem] rounded-lg border bg-transparent px-2 text-sm"
+          value={appliedPresetId ?? ''}
+          onChange={(event) => applyComparison(event.target.value)}
+        >
+          <option value="">Choose a change…</option>
+          {comparisons.map(({ preset }) => (
+            <option key={preset.id} value={preset.id} data-delivery-preset={preset.id}>
+              {preset.label}
+            </option>
+          ))}
+        </select>
+        {changed ? (
+          <button
+            type="button"
+            className="inline-flex min-h-9 items-center gap-1 rounded-lg border px-3 text-xs font-semibold"
+            data-delivery-reset
+            onClick={reset}
+          >
+            <RotateCcw aria-hidden="true" className="size-3" /> Reset
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2" data-delivery-figures aria-live="polite">
         <div className="rounded-xl border p-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Oxygen content, per decilitre
-          </p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Oxygen content</p>
           <p className="text-xl font-semibold tabular-nums" data-delivery-content>
             {format(now.content, 1)} mL/dL
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {comparison(now.content, base.content, 0.05)} the {format(base.content, 1)} mL/dL at the
-            opening values
-            {changed ? ` (${format((now.content / base.content) * 100, 0)}% of it)` : ''}.
+            {againstStart(now.content, base.content, 1, 'mL/dL')}
           </p>
         </div>
         <div className="rounded-xl border p-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Oxygen delivery, per minute
-          </p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Oxygen delivery</p>
           <p className="text-xl font-semibold tabular-nums" data-delivery-total>
             {format(now.delivery, 0)} mL/min
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {comparison(now.delivery, base.delivery, 5)} the {format(base.delivery, 0)} mL/min at
-            the opening values
-            {changed ? ` (${format((now.delivery / base.delivery) * 100, 0)}% of it)` : ''}.
+            {againstStart(now.delivery, base.delivery, 0, 'mL/min')}
           </p>
         </div>
       </div>
 
-      {appliedPreset?.exact && appliedPreset.inputs[appliedPreset.preset.key] !== appliedExact ? (
-        <p className="mt-2 text-xs leading-5 text-muted-foreground" data-delivery-nearest-step>
-          This control moves in steps of {CONTROL_BY_KEY[appliedPreset.preset.key].step}{' '}
-          {CONTROL_BY_KEY[appliedPreset.preset.key].unit}, so half of{' '}
-          {format(
-            opening[appliedPreset.preset.key],
-            CONTROL_BY_KEY[appliedPreset.preset.key].precision,
-          )}{' '}
-          is set to the nearest step,{' '}
-          {format(
-            appliedPreset.inputs[appliedPreset.preset.key],
-            CONTROL_BY_KEY[appliedPreset.preset.key].precision,
-          )}
-          , and delivery is {format((now.delivery / base.delivery) * 100, 0)}% of the opening value
-          rather than exactly half.
-        </p>
-      ) : null}
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Comparisons to try">
-        {PRESETS.map((preset) => {
-          const resolved = resolvePreset(preset, opening)
-          return (
-            <button
-              key={preset.id}
-              type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border px-3 text-xs font-semibold"
-              data-delivery-preset={preset.id}
-              data-delivery-preset-reachable={resolved.reachable ? 'true' : 'false'}
-              aria-pressed={appliedPresetId === preset.id}
-              disabled={!resolved.reachable}
-              title={
-                resolved.reachable
-                  ? undefined
-                  : 'From this patient’s opening value, that change falls outside the range these controls span. Move the control by hand instead.'
-              }
-              onClick={() => {
-                setInputs(resolved.inputs)
-                setAppliedPresetId(preset.id)
-              }}
-            >
-              {preset.label}
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          className="inline-flex min-h-9 items-center gap-1 rounded-lg border px-3 text-xs font-semibold"
-          data-delivery-reset
-          disabled={!changed}
-          onClick={reset}
-        >
-          <RotateCcw aria-hidden="true" className="size-3" /> Back to the opening values
-        </button>
-      </div>
-
-      <p className="mt-3 text-sm leading-6" data-delivery-equations>
-        Oxygen content is the hemoglobin multiplied by how much of it is carrying oxygen, at{' '}
-        {OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN} mL of oxygen per gram of fully saturated hemoglobin.
-        Oxygen delivery is that content multiplied by the blood flow carrying it, and the ten in
-        that product only converts decilitres to litres. Neither figure says anything on its own
-        about whether a given patient is getting enough.
+      <p className="mt-3 text-sm font-medium leading-6" data-delivery-takeaway>
+        Taking ten off the saturation lowers delivery by about a tenth. Halving the hemoglobin or
+        the cardiac output halves it.
       </p>
 
-      <TextEquivalent>
-        With a hemoglobin of {format(inputs.hemoglobin, 1)} g/dL, an arterial saturation of{' '}
-        {format(inputs.saturation, 0)}% and a cardiac output of {format(inputs.cardiacOutput, 1)}{' '}
-        L/min, each decilitre of arterial blood carries {format(now.content, 1)} mL of oxygen and{' '}
-        {format(now.delivery, 0)} mL of oxygen reaches the tissues each minute. The opening values
-        were {format(opening.hemoglobin, 1)} g/dL, a saturation of {format(opening.saturation, 0)}%{' '}
-        and {format(opening.cardiacOutput, 1)} L/min, giving {format(base.content, 1)} mL/dL and{' '}
-        {format(base.delivery, 0)} mL/min. In this arithmetic the saturation enters as a fraction,
-        so taking ten off it near the top of the scale moves delivery by about a tenth, while
-        hemoglobin and flow each enter as themselves — halve either one and delivery halves with it.
-        Each control moves in fixed steps, so a halving button sets the nearest step to half.
-      </TextEquivalent>
-
-      <ModelBoundary>
-        {OXYGEN_BINDING_CONSTANT_QUALIFIER} Dissolved oxygen is left out, so the content figure is
-        bound oxygen alone. The flow here is the patient&rsquo;s own cardiac output; on VA the
-        circuit&rsquo;s return is not added to it.
-      </ModelBoundary>
+      <p className="mt-2 text-sm leading-6" data-delivery-equations>
+        Oxygen content (mL/dL) = {OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN} × hemoglobin (g/dL) ×
+        saturation. Oxygen delivery (mL/min) = oxygen content × cardiac output (L/min) × 10.
+        Dissolved oxygen adds little and is left out. Neither figure says anything on its own about
+        whether a given patient is getting enough.
+        {state.supportMode === 'va'
+          ? ' The flow here is the native cardiac output alone; on VA ECMO the circuit’s return adds to it.'
+          : ''}
+      </p>
 
       <div className="mt-3">
         <EcmoSourceList

@@ -148,7 +148,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'Where blood leaves the patient',
     analogy:
       'Drinking through a straw. The pump can only move what actually reaches it, and it has to pull to get it.',
-    checklistLabel: 'What to check at this place',
+    checklistLabel: 'If drainage is poor, check',
     checklist: ['A kinked limb', 'A clotted limb', 'The volume available', 'Cannula position'],
     primarySegmentId: 'drainage',
     // Not `patient`. The terminus resolves to both access sites in the bedside scene, so naming it
@@ -168,9 +168,11 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     ordinal: 2,
     kind: 'instructional',
     title: 'The pump',
+    // Tester feedback (2026-10-13): the stop named a "spinning cone" and never said how a
+    // centrifugal pump moves blood, which is the thing the two pressure zones either side follow from.
     analogy:
-      'A spinning cone, not a syringe. It moves what arrives at its inlet; it does not create volume.',
-    checklistLabel: 'How this place is read',
+      'A centrifugal pump. The spinning rotor draws blood in at its centre and throws it outward to the outlet, so there is suction before the pump and pressure after it. It does not displace a fixed volume the way a roller pump or a syringe does: it moves only what reaches its inlet.',
+    checklistLabel: 'Reading the pump',
     checklist: [
       'The speed is chosen',
       'The flow is what comes back',
@@ -196,7 +198,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'The membrane lung',
     analogy:
       'Thousands of hollow fibres. Blood weaves around the outside, sweep gas blows through the inside, and diffusion does the rest.',
-    checklistLabel: 'What this place does',
+    checklistLabel: 'What the membrane lung does',
     checklist: [
       'Gas exchange happens here',
       'It has a resistance of its own',
@@ -220,7 +222,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     kind: 'instructional',
     title: 'Back to the patient',
     analogy: 'Pushing the drink back down the straw, against whatever is waiting at the far end.',
-    checklistLabel: 'What to check at this place',
+    checklistLabel: 'If return pressure is high, check',
     checklist: [
       'A kinked limb',
       'A clotted limb',

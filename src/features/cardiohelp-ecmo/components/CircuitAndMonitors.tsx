@@ -1256,24 +1256,31 @@ export function CircuitSchematic({
         </div>
       </div>
 
-      <button
-        id="cardiohelp-circuit-check"
-        type="button"
-        className={styles.primaryAction}
-        disabled={!controlsEnabled || state.circuit.circuitInspected}
-        data-guided-help={guidedControlId === 'cardiohelp-circuit-check'}
-        onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
-      >
-        {state.circuit.circuitInspected ? (
-          <>
-            <CheckCircle2 aria-hidden="true" /> Tip-to-tip check documented
-          </>
-        ) : (
-          <>
-            <Inspect aria-hidden="true" /> Perform tip-to-tip circuit and sensor check
-          </>
-        )}
-      </button>
+      {/*
+        Left out where the circuit is shown for reading only. Drawn disabled it was a full-width
+        button under the map that nothing on the step could enable, and a tester (2026-10-13) asked
+        why it was there.
+      */}
+      {controlsEnabled ? (
+        <button
+          id="cardiohelp-circuit-check"
+          type="button"
+          className={styles.primaryAction}
+          disabled={state.circuit.circuitInspected}
+          data-guided-help={guidedControlId === 'cardiohelp-circuit-check'}
+          onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
+        >
+          {state.circuit.circuitInspected ? (
+            <>
+              <CheckCircle2 aria-hidden="true" /> Tip-to-tip check documented
+            </>
+          ) : (
+            <>
+              <Inspect aria-hidden="true" /> Perform tip-to-tip circuit and sensor check
+            </>
+          )}
+        </button>
+      ) : null}
       {state.circuit.circuitInspected ? (
         <div className={styles.inspectionFeedback} role="status" aria-live="polite">
           <CheckCircle2 aria-hidden="true" />
@@ -1538,7 +1545,11 @@ export function PatientMonitor({
   state,
   guidedTarget,
   guidedControlId,
-}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
+  emphasis,
+}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'> & {
+  /** The reading a teaching step is about, highlighted in the map's yellow. */
+  readonly emphasis?: 'map'
+}) {
   const limbStoryDriven =
     state.scenario.activeFaults.includes('distal-limb-ischemia') ||
     state.scenario.correctedFaults.includes('distal-limb-ischemia')
@@ -1625,7 +1636,7 @@ export function PatientMonitor({
               : 'Not modeled: held at the value the case set.'}
           </small>
         </div>
-        <div>
+        <div data-patient-signal="map" data-emphasis={emphasis === 'map' || undefined}>
           <span>MAP</span>
           <strong>{state.patient.meanArterialPressure} mmHg</strong>
         </div>

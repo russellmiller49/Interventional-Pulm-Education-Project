@@ -13,7 +13,6 @@ import {
 import {
   ecmoWalkStopSceneLabelIds,
   ecmoWalkStopSegmentIds,
-  ecmoWalkStopTextEquivalent,
   type EcmoCircuitWalkStop,
   type EcmoCircuitWalkStopId,
   type EcmoWalkComparisonBeat,
@@ -21,7 +20,7 @@ import {
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { useStageSourcesCollected } from '../stage/StageSourcesScope'
-import { ChannelValue, TextEquivalent, styles } from './shared'
+import { ChannelValue, styles } from './shared'
 
 /**
  * The walk, one stop at a time.
@@ -136,6 +135,13 @@ export function EcmoCircuitWalk({
   const sceneLabels = ecmoWalkStopSceneLabelIds(stop, supportMode)
   const readableSites = pastPrediction ? stop.sensorSiteIds.filter(isReadableSite) : []
   const takeawayVisible = pastPrediction || (stop.takeawayVisibility ?? 'always') === 'always'
+  // Said only where the walk crosses a section boundary; a stop in the middle of one needs no note.
+  const continuityNote = [
+    stop.ordinal > 1 && index === 0 ? 'This walk began in the previous section.' : '',
+    !next && stop.ordinal < walkLength ? 'The walk carries on in the next section.' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <section
@@ -170,6 +176,24 @@ export function EcmoCircuitWalk({
       >
         {title}
       </h3>
+
+      {/*
+        Where to look, said before anything else on the card.
+
+        This line used to sit under the short list, in muted type, naming the bedside scene's labels.
+        A tester (2026-10-13) read the list, did not know the map beside it was marking the stop,
+        and reported that "the simulation to the right doesn't make these marks obvious". The marking
+        is the yellow highlight, so the card now says that in the words a learner can match by eye.
+        The bedside scene's label names stay for assistive technology, which cannot see a colour.
+      */}
+      <p className="mt-1 text-sm font-medium leading-6 text-[#ffd166]" data-walk-scene-labels>
+        Highlighted in yellow on the circuit map
+        <span className="sr-only">
+          , and labelled in the bedside scene:{' '}
+          {sceneLabels.map((id) => ecmoSceneLabelName(id, supportMode)).join(' · ')}
+        </span>
+        .
+      </p>
 
       <p className="mt-2 text-sm leading-6">{resolveEcmoModeText(stop.analogy, supportMode)}</p>
 
@@ -213,22 +237,6 @@ export function EcmoCircuitWalk({
           )
         })}
       </ul>
-
-      {/*
-        Where this stop is marked, in words that are always on screen.
-
-        The stop is marked on the pressure-zone map in the simulator pane — which the section opens
-        on every step — and in the bedside scene behind the map's other tab. This card used to draw
-        a small map of its own here; an owner review found it crude beside the real one and the
-        real one hidden, so the marking moved to the drawing the learner is meant to be looking at.
-        This line names the same places from the same strings, and it is visible rather than
-        screen-reader-only because the people it helps most include anyone on a pane too narrow to
-        show the simulator beside this card.
-      */}
-      <p className="mt-3 text-xs leading-5 text-muted-foreground" data-walk-scene-labels>
-        Marked on the circuit map and in the bedside scene:{' '}
-        {sceneLabels.map((id) => ecmoSceneLabelName(id, supportMode)).join(' · ')}.
-      </p>
 
       {readableSites.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-4" data-walk-live-signals>
@@ -302,43 +310,15 @@ export function EcmoCircuitWalk({
         </p>
       ) : null}
 
-      {/*
-        The stop as one paragraph, behind a disclosure.
-
-        This card used to draw a small map of its own, and the paragraph was the equivalent of that
-        drawing. R4-OD-10 retired the minimap and moved the marking onto the real map in the
-        simulator pane — which left a paragraph restating, in order, every line already visible on
-        this card: the analogy, the place detail, the labelled short list, the marked places and the
-        boundary. A learner review in September 2026 circled exactly that stretch and reported "a lot
-        of repeated information".
-
-        Kept rather than deleted, because it is still the one place the whole stop can be read as
-        continuous prose, which is what a learner on a pane too narrow to show the map beside this
-        card actually wants. Collapsed, so it is not the third time through the same words.
-      */}
-      <details className="mt-2" data-walk-text-equivalent>
-        <summary className="cursor-pointer text-xs leading-5 text-muted-foreground">
-          Read this stop as one paragraph
-        </summary>
-        <TextEquivalent>
-          {ecmoWalkStopTextEquivalent(stop, supportMode, {
-            readingsVisible: pastPrediction,
-            position: index + 1,
-          })}
-        </TextEquivalent>
-      </details>
-
       {sourcesCollectedElsewhere ? null : (
         <div className="mt-3" data-walk-sources>
           <EcmoSourceList compact evidenceIds={stop.sourceIds} />
         </div>
       )}
 
-      {navigationInTask ? (
-        <p className="text-sm">
-          {index === 0 ? 'This is the first stop in this section. ' : ''}
-          {stop.ordinal > 1 && index === 0 ? 'This walk began in the previous section. ' : ''}
-          {!next && stop.ordinal < walkLength ? 'The walk carries on in the next section.' : ''}
+      {navigationInTask && continuityNote ? (
+        <p className="mt-3 text-sm text-muted-foreground" data-walk-continuity>
+          {continuityNote}
         </p>
       ) : null}
       {!navigationInTask ? (
@@ -375,7 +355,7 @@ export function EcmoCircuitWalk({
             {previous
               ? `Back: ${resolveEcmoModeText(previous.title, supportMode)}`
               : stop.ordinal === 1
-                ? 'This is the first stop in this section.'
+                ? ''
                 : 'This walk began in the previous section of the lesson and carries on here.'}
             {!next && stop.ordinal < walkLength
               ? ' This is the last stop in this section; the walk carries on in the next section of the lesson.'

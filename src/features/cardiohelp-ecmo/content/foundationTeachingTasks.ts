@@ -56,7 +56,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Apply the relationship',
       block: 'application',
       instruction:
-        'Use the information in this separate teaching case to interpret the saturation. Choose an answer, then submit it.',
+        'A new patient. Decide what the saturation does and does not tell you about oxygen delivery.',
       lookIn: steps('the answer choices below'),
     },
     {
@@ -66,7 +66,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'application',
       attribution: true,
       instruction:
-        'For each proposed change, choose blood flow, oxygen content, or oxygen consumption. Submit the set to read the reasoning.',
+        'For each change, choose the part of the oxygen balance it acts on: blood flow, oxygen content, or oxygen consumption.',
       lookIn: steps('the changes to attribute below'),
     },
     {
@@ -85,7 +85,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Follow the blood',
       block: 'blood-path',
       instruction:
-        'Follow blood from drainage through the pump and membrane lung to return. The same segment is marked on the existing circuit map.',
+        'Follow blood from drainage through the pump and membrane lung to return. Each stop is highlighted in yellow on the circuit map.',
       lookIn: teaching('Circuit walk'),
     },
     {
@@ -103,7 +103,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Find the pressure measurements',
       block: 'pressure-sites',
       instruction:
-        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with Δp, the pressure drop the console calculates between pInt and pArt; the readouts show its running value as the Δp trend.',
+        'Select pVen, pInt, pArt and Δp on the left, one at a time. The circuit map rings where each one is measured. Δp, the pressure drop the console calculates between pInt and pArt, is not a fourth sensor; the readouts show it as the Δp trend.',
       lookIn: teaching('Pressure measurements'),
     },
     {
@@ -112,7 +112,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Compare circuit and patient readings',
       block: 'circuit-patient',
       instruction:
-        'Read circuit pArt alongside the independent patient monitor. These measurements describe different places.',
+        'Compare the circuit’s pArt with the patient’s MAP. Both are highlighted in yellow: pArt on the circuit map, MAP on the bedside monitor.',
       lookIn: teaching('Circuit pressure and patient pressure'),
     },
     {
@@ -124,8 +124,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Locate a measurement on the map',
       block: 'application',
       mapRetrieval: true,
-      instruction:
-        'An optional check on the circuit map. The map keeps its pressure labels; only the circuit-walk highlighting is off. Select the numbered location that answers the question, then submit beside the map.',
+      instruction: 'Select the numbered location on the circuit map that answers the question.',
       lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
     },
     {
@@ -157,18 +156,8 @@ export const ecmoFoundationTeachingTasks: Readonly<
       actionId: 'increase-rpm',
       walkStopId: 'walk-pump-under-load',
       instruction:
-        'Use Increase pump speed by 300 rpm below. The guided control restores the reference, changes only speed, and retains the response after six modeled seconds.',
+        'Use Increase pump speed by 300 rpm below, then read what changed: flow, pVen, and the pressures after the pump.',
       lookIn: comparison('The speed comparison'),
-    },
-    {
-      id: 'observe',
-      phase: 'observe',
-      title: 'Compare the result',
-      block: 'pump-result',
-      comparisonOf: 'act',
-      instruction:
-        'Read Before, After, and Change for flow and pressures. These are the saved values from your speed comparison.',
-      lookIn: steps('the saved comparison below'),
     },
     {
       id: 'loading',

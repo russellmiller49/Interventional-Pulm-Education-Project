@@ -208,15 +208,13 @@ for (const [width, height] of [
 }
 
 for (const width of [1600, 1440, 1024, 390, 320]) {
-  test(`both foundation disclosures, keyboard slider, tasks and reload at ${width}`, async ({
+  test(`the delivery disclosure, keyboard slider, tasks and reload at ${width}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
     await openLesson(page, 'why-extracorporeal-support')
-    const arithmetic = page
-      .locator('summary')
-      .filter({ hasText: 'Explore the delivery arithmetic' })
-    const model = page.locator('summary').filter({ hasText: 'Current components and model detail' })
+    // One disclosure since 2026-10-13: the second ("Current components and model detail") is gone.
+    const arithmetic = page.locator('summary').filter({ hasText: 'Try the numbers' })
     await arithmetic.click()
     for (const slider of await page.locator('[data-now-card] input[type="range"]').all()) {
       await slider.focus()
@@ -229,12 +227,10 @@ for (const width of [1600, 1440, 1024, 390, 320]) {
       expect(rect!.y).toBeGreaterThanOrEqual(0)
       expect(rect!.y + rect!.height).toBeLessThanOrEqual(901)
     }
-    await model.click()
     await readingScroll(page, width >= 1024)
     const continueButton = page.getByRole('button', { name: 'Continue', exact: true })
     await continueButton.focus()
     await expect(continueButton).toBeInViewport()
-    await model.click()
     await arithmetic.click()
     await continueButton.click()
     await expect(page.locator(shellSelector)).toHaveAttribute(

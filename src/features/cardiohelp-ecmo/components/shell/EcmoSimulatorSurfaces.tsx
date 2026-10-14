@@ -27,6 +27,8 @@ export interface EcmoSimulatorSurfacesProps extends SimulationPanelProps {
    * disclosure the learner can open or close.
    */
   readonly leadingSurfaces?: readonly StageSurfaceId[]
+  /** A bedside-monitor reading the step is about, highlighted the way the map highlights a place. */
+  readonly monitorEmphasis?: 'map'
 }
 
 /**
@@ -45,6 +47,7 @@ export function EcmoSimulatorSurfaces({
   safety,
   surfaceIds,
   leadingSurfaces,
+  monitorEmphasis,
   ...panelProps
 }: EcmoSimulatorSurfacesProps) {
   const baseId = useId()
@@ -56,6 +59,7 @@ export function EcmoSimulatorSurfaces({
         state={panelProps.state}
         guidedTarget={panelProps.guidedTarget}
         guidedControlId={panelProps.guidedControlId}
+        emphasis={monitorEmphasis}
       />
     ),
     trends: (
