@@ -198,9 +198,9 @@ describe('N7: explicit, truthful experiment operation', () => {
       chooseStep(taskStepIndex(unitId))
       const card = document.querySelector('[data-current-step]')! as HTMLElement
       // The card names the next move and offers to show where it is; nothing to run yet.
-      expect(card.querySelector('[data-guided-instruction]')?.textContent?.length).toBeGreaterThan(
-        20,
-      )
+      // A pause-or-inspect task says its move in the task itself; the line above the console
+      // repeats it where the learner's hands are.
+      expect(document.querySelector('[data-console-cue]')?.textContent?.length).toBeGreaterThan(20)
       expect(within(card).getByRole('button', { name: /Show me where/ })).toBeEnabled()
       expect(nowPrimary()).toBeNull()
       // One clock control for one patient, directly above the console.
