@@ -24,6 +24,7 @@ import { hemodynamicsPathwaySections } from './pathwayResolver'
 import { HEMODYNAMICS_QUESTION_SORT, type QuestionSort } from './questionSort'
 import { heartRouteStopIds, type RouteStopId } from './routeSpine'
 import {
+  hemodynamicsPracticePairing,
   hemodynamicsSectionIds,
   hemodynamicsSectionSpec,
   isHemodynamicsSectionId,
@@ -40,7 +41,8 @@ import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
  * items, its runtime state and goals, its stops, its spec — and this file arranges them into the
  * one shape every section shares: Recognize, Predict, Act, Observe, Explain, then the transfer as
  * a second, shorter round. Sections whose material has no engine goal at a phase omit that phase
- * rather than inventing one.
+ * rather than inventing one. A section paired to a case ends on it: the case, run embedded on its
+ * own engine, is the last task, after the transfer.
  */
 export type StageSurface =
   | 'none'
@@ -118,6 +120,12 @@ export type HemodynamicsStageInteraction =
   | { readonly kind: 'recognition-practice' }
   /** One atrial-component practice; its renumbered repeat is a choice inside the activity. */
   | { readonly kind: 'component-identification' }
+  /**
+   * The section's paired case as its last task: a fresh patient on the case's own engine, run inside
+   * the section. While it is the current task the section's own patient is paused and its monitor
+   * and docks are not mounted, so only one simulation ever runs.
+   */
+  | { readonly kind: 'case'; readonly caseId: string }
 
 export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageInteraction> {
   /** The control surface the simulator pane opens beside the monitor for this step. */
@@ -142,6 +150,8 @@ export interface HemodynamicsStageLesson extends StageLessonBase<HemodynamicsSta
   readonly runtime: SectionRuntime
   readonly lifecycleActivityId: string
   readonly transferStepIndex: number
+  /** The case step, the section's last task, or -1 when the section ends without a case. */
+  readonly caseStepIndex: number
 }
 
 interface StepInput {
@@ -1206,6 +1216,39 @@ const builders: Readonly<
   'pac-signal-validation': capstoneSteps,
 }
 
+/**
+ * The section's case, appended as its last task when the section is paired to one.
+ *
+ * Appending keeps every earlier step id where it was: ids are positional, and nothing before the
+ * new last step moves. The step the section used to finish on now leads to the case instead.
+ */
+function withCaseStep(
+  sectionId: HemodynamicsSectionId,
+  inputs: readonly StepInput[],
+): readonly StepInput[] {
+  const pairing = hemodynamicsPracticePairing(sectionId)
+  if (!pairing) return inputs
+  const last = inputs.at(-1)
+  const lead =
+    last && last.actionLabel === 'Finish the section'
+      ? [...inputs.slice(0, -1), { ...last, actionLabel: 'Continue to the case' }]
+      : inputs
+  return [
+    ...lead,
+    {
+      phase: 'transfer',
+      title: `Apply it: ${pairing.title}`,
+      instruction:
+        'A fresh patient. Run the case here; nothing from this section’s live patient carries over.',
+      lookIn: { pane: 'simulator', landmark: 'the case brief and its checkpoints' },
+      actionLabel: 'Start the case',
+      interaction: { kind: 'case', caseId: pairing.caseId },
+      surface: 'none',
+      anatomy: 'none',
+    },
+  ]
+}
+
 const lessonCache = new Map<HemodynamicsSectionId, HemodynamicsStageLesson>()
 
 export function hemodynamicsStageLesson(sectionId: string): HemodynamicsStageLesson {
@@ -1219,7 +1262,11 @@ export function hemodynamicsStageLesson(sectionId: string): HemodynamicsStageLes
   const section = hemodynamicsPathwaySections.find((candidate) => candidate.id === sectionId)
   if (!section) throw new Error(`Section ${sectionId} is not on the pathway.`)
   const index = hemodynamicsPathwaySections.indexOf(section)
-  const steps = buildSteps(sectionId, builders[sectionId](runtime), spec.spineStops)
+  const steps = buildSteps(
+    sectionId,
+    withCaseStep(sectionId, builders[sectionId](runtime)),
+    spec.spineStops,
+  )
   const lesson: HemodynamicsStageLesson = {
     sectionId,
     spec,
@@ -1235,6 +1282,7 @@ export function hemodynamicsStageLesson(sectionId: string): HemodynamicsStageLes
     transferStepIndex: steps.findIndex(
       (step) => step.interaction.kind === 'prediction' && step.interaction.round === 1,
     ),
+    caseStepIndex: steps.findIndex((step) => step.interaction.kind === 'case'),
     lifecycleActivityId: section.activityId,
   }
   lessonCache.set(sectionId, lesson)
@@ -1296,6 +1344,24 @@ export function validateHemodynamicsStageLessons(): readonly string[] {
     const phases = lesson.steps.map((step) => step.phase)
     if (phases[0] !== 'recognize') errors.push(`${where} does not open on Recognize.`)
     if (phases.at(-1) !== 'transfer') errors.push(`${where} does not end on a transfer step.`)
+    // A paired section ends on its case, after its transfer; an unpaired one has no case step.
+    const pairing = lesson.spec.practicePairing
+    const caseSteps = lesson.steps.filter((step) => step.interaction.kind === 'case')
+    if (pairing) {
+      const caseStep = lesson.steps[lesson.caseStepIndex]
+      if (caseSteps.length !== 1 || lesson.caseStepIndex !== lesson.steps.length - 1) {
+        errors.push(`${where} must end on exactly one case step.`)
+      } else if (lesson.caseStepIndex <= lesson.transferStepIndex) {
+        errors.push(`${where} puts its case before the transfer.`)
+      } else if (
+        caseStep?.interaction.kind === 'case' &&
+        caseStep.interaction.caseId !== pairing.caseId
+      ) {
+        errors.push(`${where} runs a case it is not paired to.`)
+      }
+    } else if (caseSteps.length > 0) {
+      errors.push(`${where} has a case step but no paired case.`)
+    }
     lesson.steps.forEach((step) => {
       const stepWhere = `${where} step ${step.ordinal}`
       errors.push(

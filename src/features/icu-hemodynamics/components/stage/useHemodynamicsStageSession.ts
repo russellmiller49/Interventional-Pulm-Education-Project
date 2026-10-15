@@ -27,13 +27,21 @@ function stageReducer(
  * a long-hidden tab from replaying minutes in one step when it comes back. `load` replaces the
  * state wholesale; it is how a step's entry state and a restart arrive, and nothing else in the
  * host reaches into the state.
+ *
+ * `running` false pauses the patient: no interval is held and nothing ticks, the development seam
+ * included. It is how the section's last task, its case, gets the only engine on the page while it
+ * is the current task. Resuming measures from the moment it resumes, so the pause is not replayed.
  */
 export const STAGE_TICK_CAP_SECONDS = 1
 
-export function useHemodynamicsStageSession(initial: () => HemodynamicSimulationState) {
+export function useHemodynamicsStageSession(
+  initial: () => HemodynamicSimulationState,
+  running: boolean,
+) {
   const [state, dispatch] = useReducer(stageReducer, undefined, initial)
 
   useEffect(() => {
+    if (!running) return
     const reduceMotion =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
@@ -47,7 +55,7 @@ export function useHemodynamicsStageSession(initial: () => HemodynamicSimulation
       if (seconds > 0) dispatch({ type: 'TICK', seconds })
     }, intervalMs)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [running])
 
   const load = useCallback((next: HemodynamicSimulationState) => {
     dispatch({ type: 'STAGE_LOAD', state: next })
@@ -56,10 +64,11 @@ export function useHemodynamicsStageSession(initial: () => HemodynamicSimulation
   /*
    * A development-only seam for driving the clock from the browser console: a hidden preview tab
    * throttles timers to one a minute after a few minutes, so a catheter in transit or a balloon
-   * waiting to settle cannot be verified there by waiting. Never present in production.
+   * waiting to settle cannot be verified there by waiting. Never present in production, and absent
+   * while the patient is paused, so nothing can tick it behind a running case.
    */
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') return
+    if (!running || process.env.NODE_ENV === 'production' || typeof window === 'undefined') return
     const host = window as unknown as { __hemodynamicsStage?: { tick: (seconds: number) => void } }
     host.__hemodynamicsStage = {
       tick: (seconds: number) => dispatch({ type: 'TICK', seconds: Math.max(0, seconds) }),
@@ -67,7 +76,7 @@ export function useHemodynamicsStageSession(initial: () => HemodynamicSimulation
     return () => {
       delete host.__hemodynamicsStage
     }
-  }, [])
+  }, [running])
 
   return { state, dispatch, load }
 }

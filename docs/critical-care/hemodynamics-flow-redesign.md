@@ -211,6 +211,8 @@ Opening the debrief or transfer from the checkpoint menu cannot reveal them befo
 
 Several sections intentionally point to HD-08. These are references to the same stored case identity, never new assessment requirements or duplicate mandatory cases. The existing mechanism-match versus next-in-unit labels remain. The optional `nextLearn` query on a Practice link is validated against the nine-section registry; completing that case offers the intended next Learn destination.
 
+> **Superseded (October 2026).** Each case is now the last task of the one section that teaches its mechanism (sections 2–8, one case each; HD-02 is offered as a second case on section 8's completion card), embedded in the section with the section's own patient paused. The `nextLearn` query is gone; Practice keeps every case as a list. See `docs/critical-care/mv-hemodynamics-ecmo-format-2026-10.md`.
+
 ## Source-content preservation
 
 | Content family                               | Active use before independent application                                                                                           | Full/reference and post-answer use                                                                                                                                   |

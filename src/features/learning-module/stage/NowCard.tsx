@@ -30,6 +30,11 @@ export interface NowCardModel {
    */
   readonly where?: ReactNode
   readonly primary?: NowCardAction
+  /**
+   * Render the primary action above the card's body instead of in its action row: a comparison
+   * whose result table follows its Run button reads top to bottom in the order it is used.
+   */
+  readonly primaryBeforeContent?: boolean
   readonly secondary?: NowCardAction
   /** A single line of state the learner is waiting on. */
   readonly status?: string
@@ -40,6 +45,15 @@ export interface NowCardModel {
   readonly back?: NowCardAction
   /** Disclosed on request; never part of the default read. */
   readonly why?: string
+  /**
+   * Keep the action row in view at the bottom of the window while the card is taller than it.
+   *
+   * A tester of the ECMO module (2026-10-13) could not find the way to the next task: the card's
+   * one button sat under a text column and a figure, two screens down. A pinned row rides the
+   * bottom of the scrolling view, so the way forward is in the same place on every step, and it
+   * settles into the foot of the card once the learner reaches it. Ported from `EcmoNowCard`.
+   */
+  readonly pinActions?: boolean
   readonly tone?: 'neutral' | 'safety'
 }
 
@@ -60,12 +74,42 @@ export function NowCard({
   const headingId = useId()
   const reasonId = useId()
   const tone = model.tone ?? 'neutral'
+  const primaryInRow = model.primary && !model.primaryBeforeContent ? model.primary : undefined
+  const actions =
+    primaryInRow || model.secondary ? (
+      <div className={styles.nowActions}>
+        {primaryInRow ? (
+          <NowActionControl
+            action={primaryInRow}
+            className={styles.nowPrimary}
+            reasonId={reasonId}
+            primary
+          />
+        ) : null}
+        {model.secondary ? (
+          <NowActionControl action={model.secondary} className={styles.nowSecondary} />
+        ) : null}
+      </div>
+    ) : null
+  const disabledReason =
+    model.primary?.disabled && model.primary.disabledReason ? (
+      <p id={reasonId} className={styles.nowStatus} data-now-disabled-reason>
+        {model.primary.disabledReason}
+      </p>
+    ) : null
+  const why = model.why ? (
+    <details className={styles.nowWhy} data-now-why>
+      <summary>Why this matters</summary>
+      <p>{model.why}</p>
+    </details>
+  ) : null
 
   return (
     <section
       className={styles.now}
       data-now-card
       data-tone={tone}
+      data-pinned-actions={model.pinActions && actions ? true : undefined}
       role={tone === 'safety' ? 'alert' : undefined}
       aria-labelledby={headingId}
     >
@@ -90,38 +134,41 @@ export function NowCard({
           {model.where}
         </p>
       ) : null}
+      {model.primaryBeforeContent && model.primary ? (
+        <div className={styles.nowActions} data-now-primary-first>
+          <NowActionControl
+            action={model.primary}
+            className={styles.nowPrimary}
+            reasonId={reasonId}
+            primary
+          />
+        </div>
+      ) : null}
       {children}
       {model.status ? (
         <p className={styles.nowStatus} data-now-status>
           {model.status}
         </p>
       ) : null}
-      {model.primary || model.secondary ? (
-        <div className={styles.nowActions}>
-          {model.primary ? (
-            <NowActionControl
-              action={model.primary}
-              className={styles.nowPrimary}
-              reasonId={reasonId}
-              primary
-            />
-          ) : null}
-          {model.secondary ? (
-            <NowActionControl action={model.secondary} className={styles.nowSecondary} />
-          ) : null}
-        </div>
-      ) : null}
-      {model.primary?.disabled && model.primary.disabledReason ? (
-        <p id={reasonId} className={styles.nowStatus} data-now-disabled-reason>
-          {model.primary.disabledReason}
-        </p>
-      ) : null}
-      {model.why ? (
-        <details className={styles.nowWhy} data-now-why>
-          <summary>Why this matters</summary>
-          <p>{model.why}</p>
-        </details>
-      ) : null}
+      {/*
+        A pinned row is the last thing in its card, so the disclosure goes ahead of it there. A card
+        that does not pin keeps the order it has always had, which is also its tab order.
+      */}
+      {model.pinActions && actions ? (
+        <>
+          {why}
+          <div className={styles.nowFooter} data-now-footer="pinned">
+            {actions}
+            {disabledReason}
+          </div>
+        </>
+      ) : (
+        <>
+          {actions}
+          {disabledReason}
+          {why}
+        </>
+      )}
     </section>
   )
 }

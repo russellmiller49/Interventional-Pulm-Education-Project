@@ -10,6 +10,14 @@ import {
 } from '../content/stageLessons'
 import { breathStopIds, breathStop } from '../content/breathSpine'
 import { VENTILATION_LAB_STORAGE_KEY } from '../engine/learningLab'
+import {
+  chooseStep,
+  nowPrimary,
+  nowPrimaryLabel,
+  openConsoleScreen,
+  pressClock,
+  setConsoleControl,
+} from '../test-support/stageHost'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -42,9 +50,7 @@ function mount(unitId: string) {
 }
 function openAction(unitId: string) {
   const lesson = ventilationStageLesson(unitId)
-  fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-    target: { value: lesson.steps.findIndex((step) => step.interaction.kind === 'simulator-task') },
-  })
+  chooseStep(lesson.steps.findIndex((step) => step.interaction.kind === 'simulator-task'))
 }
 
 describe('self-paced task presentation and preserved device/measurement behavior', () => {
@@ -54,10 +60,12 @@ describe('self-paced task presentation and preserved device/measurement behavior
       const lesson = mount(unitId)
       expect(ventilationStageLessonErrors(lesson)).toEqual([])
       expect(document.querySelectorAll('[data-current-step]')).toHaveLength(1)
-      expect(document.querySelectorAll('[data-task-workbench]')).toHaveLength(1)
-      expect(
-        screen.getByRole('combobox', { name: 'Choose step' }).querySelectorAll('option'),
-      ).toHaveLength(ventilationPresentedStepIndexes(lesson).length)
+      // One console at most: the PEEP section opens on its worked comparison instead.
+      expect(document.querySelectorAll('[data-ventilation-console]').length).toBeLessThanOrEqual(1)
+      expect(document.querySelectorAll('[data-device]').length).toBeLessThanOrEqual(1)
+      expect(document.querySelectorAll('[data-step-list] li')).toHaveLength(
+        ventilationPresentedStepIndexes(lesson).length,
+      )
       expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBeNull()
     },
   )
@@ -65,7 +73,11 @@ describe('self-paced task presentation and preserved device/measurement behavior
   it('keeps each waveform landmark on one synchronized worked reference without recording a run', () => {
     mount('waveform-anatomy')
     for (const stop of breathStopIds) {
+      // The walk's stops are the breath map's own pins.
       fireEvent.click(screen.getByRole('button', { name: breathStop(stop).title }))
+      expect(
+        screen.getByRole('button', { name: breathStop(stop).title }).getAttribute('aria-pressed'),
+      ).toBe('true')
       const reference = document.querySelector('[data-guided-stop="' + stop + '"]')!
       expect(reference).not.toBeNull()
       const cursors = Array.from(reference.querySelectorAll('[data-time-cursor]')).map((node) =>
@@ -81,19 +93,20 @@ describe('self-paced task presentation and preserved device/measurement behavior
     const unitId = 'mechanics-load-and-pressure'
     mount(unitId)
     openAction(unitId)
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
+    // Nothing to run or capture until every requested change is in place.
+    expect(nowPrimary()).toBeNull()
     fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
       target: { value: '2' },
     })
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    expect(nowPrimary()).toBeNull()
+    openConsoleScreen('tools')
+    fireEvent.click(document.getElementById('mv-hold-inspiratory')!)
+    pressClock('run')
     act(() => jest.advanceTimersByTime(30000))
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeEnabled()
-    fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
-    fireEvent.click(screen.getAllByRole('button', { name: 'Show explanation' })[0])
+    // A live run that reaches the capture gate captures by itself.
+    expect(document.querySelector('[data-captured-result-near-task]')).not.toBeNull()
     expect(screen.getByText('Captured baseline and observed response')).toBeInTheDocument()
-    expect(document.querySelector('[data-no-observation]')).toBeNull()
+    expect(nowPrimaryLabel()).toBe('Continue')
     expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBeNull()
   })
 
@@ -107,40 +120,34 @@ describe('self-paced task presentation and preserved device/measurement behavior
     expect(document.querySelector('[data-metric="plateau"] dd')).toHaveTextContent(
       'Acquire a current inspiratory hold',
     )
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
-    expect(
-      screen
-        .getAllByRole('button', { name: 'Continue' })
-        .every((button) => !(button as HTMLButtonElement).disabled),
-    ).toBe(true)
+    // The hold is still owed: the card offers where to find it, and nothing to run or capture.
+    expect(nowPrimary()).toBeNull()
+    expect(screen.getByRole('button', { name: /Show me where/ })).toBeEnabled()
   })
 
   it.each(ventilatorDeviceProfiles)(
-    '$shortName preserves pending edits and device confirmation across native views without an answer',
+    '$shortName holds a pending edit until the console confirms it, without an answer',
     (profile) => {
       mount('controls-and-goals')
-      fireEvent.click(screen.getByText('Console and experiment options'))
+      fireEvent.click(screen.getByText('Console options'))
       fireEvent.change(screen.getByRole('combobox', { name: 'Console' }), {
         target: { value: profile.id },
       })
       openAction('controls-and-goals')
-      const controlled = () => document.querySelector('[data-controlled-inputs]')!.textContent
-      const before = controlled()
-      fireEvent.change(document.getElementById('mv-quick-vtMl')!, { target: { value: '500' } })
-      if (profile.commitBehavior === 'immediate') expect(controlled()).toContain('500')
-      else expect(controlled()).toBe(before)
-      fireEvent.click(screen.getByRole('button', { name: /View full .* console/ }))
+      setConsoleControl('vtMl', 500, { confirm: false })
       expect(document.querySelectorAll('[data-device]')).toHaveLength(1)
-      fireEvent.click(screen.getByRole('button', { name: 'Return to task controls' }))
-      expect(document.querySelectorAll('#mv-quick-vtMl')).toHaveLength(1)
-      expect(document.getElementById('mv-quick-vtMl')).toHaveValue('500')
-      if (profile.commitBehavior !== 'immediate')
-        fireEvent.click(
-          screen.getByRole('button', {
-            name: profile.id === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm',
-          }),
+      if (profile.commitBehavior === 'immediate') {
+        expect(document.getElementById('mv-pending-confirm')).toBeNull()
+        expect(nowPrimaryLabel()).toMatch(/^Run \d+ s and capture$/)
+      } else {
+        // The requested change is not in place until the console accepts it.
+        expect(nowPrimary()).toBeNull()
+        expect(document.querySelector('[data-guided-instruction]')?.textContent).toMatch(
+          profile.id === 'carefusion-avea' ? /press ACCEPT/ : /press the knob/,
         )
-      expect(controlled()).toContain('500')
+        fireEvent.click(document.getElementById('mv-pending-confirm')!)
+        expect(nowPrimaryLabel()).toMatch(/^Run \d+ s and capture$/)
+      }
       expect(screen.getByRole('combobox', { name: 'Console' })).toBeEnabled()
       expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBeNull()
     },

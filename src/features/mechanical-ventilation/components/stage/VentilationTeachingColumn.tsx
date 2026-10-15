@@ -10,7 +10,6 @@ import {
 import { breathGrammarRows, breathGrammarRowsFor } from '../../content/breathGrammar'
 import { VENTILATION_CONTROL_PANEL } from '../../content/controlPanel'
 import { labMetricLabels } from '../../engine/learningLab'
-import { ventilationStages } from '../../content/learningCurriculum'
 import type {
   VentilationStageLesson,
   VentilationStageStep,
@@ -114,7 +113,7 @@ function GuideBlock({ guide, look }: { guide: VentilationStepGuide; look?: strin
         <p>
           <strong>Readings that will move:</strong>{' '}
           {guide.watch.map((metric) => labMetricLabels[metric].label).join(', ')}. They are under
-          Readings to watch, and the captured comparison shows them before and after.
+          the console, and the captured result shows them before and after.
         </p>
       ) : null}
     </section>
@@ -179,7 +178,12 @@ function Disclosure({
 }
 
 /**
- * One lesson, in the same shape in every section.
+ * One lesson, in the same shape in every section, in the column beside the console.
+ *
+ * October 2026 (owner review): the column no longer repeats the section's kicker, idea and
+ * objective on every step — they are in "What this section is for" on the first task — and a task
+ * step shows only what to do while doing it. Section 1's orientation is the first task's reading,
+ * shown open rather than folded under More detail.
  *
  * The walkthrough (T1) found the parts that teach — the picture and checklist, why it matters, the
  * one table, which control, the live mechanism view, the worked example — folded into seven to ten
@@ -207,6 +211,7 @@ export function VentilationTeachingColumn({
   showCapturedReference = true,
   landmarkChooser = false,
   guideLook,
+  breathMap,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -224,22 +229,26 @@ export function VentilationTeachingColumn({
    * step working on a marked interval names the figure that is on screen. Said once, the same way.
    */
   readonly guideLook?: string
+  /** The full breath map, leading the column on the breath-walk steps. */
+  readonly breathMap?: ReactNode
 }) {
   const headingId = useId()
   const { unit } = lesson
   const spec = ventilationSectionSpec(unit.id)
   const foundation = isFoundationUnit(unit.id)
-  const stage = ventilationStages.find((entry) => entry.id === unit.stage)
   const kind = step.interaction.kind
   const taskStep = kind === 'simulator-task' || kind === 'observe'
-  const readingStep = kind === 'read' || kind === 'walk'
+  const readingStep = kind === 'read' || kind === 'walk' || kind === 'advance-breath'
+  const orientationShown = Boolean(spec.orientation) && step.ordinal === 1
+  /* Section 1's first task is its orientation, and only that: four paragraphs beside the console. */
+  const orientationStep = orientationShown && kind === 'read'
   const reveal = step.teaching === 'reveal'
   const integration = unit.id === 'high-peak-pressure-integration'
   const rows = breathGrammarRowsFor(unit.id)
   const highlighted = new Set(rows.map((row) => row.id))
   const stopCards = landmarkChooser || stops.length === 1 ? stops : []
-  const foundationFigure = foundation && foundationFigureStep(step)
-  const mechanismEvidence = !foundation && readingStep
+  const foundationFigure = foundation && !orientationStep && foundationFigureStep(step)
+  const mechanismEvidence = !foundation && readingStep && !orientationStep
   const boundaryShown = readingStep || reveal
 
   return (
@@ -251,25 +260,26 @@ export function VentilationTeachingColumn({
       data-teaching-focus={step.teaching}
       aria-labelledby={headingId}
     >
-      <p className={styles.kicker}>
-        Lesson · {stage?.title ?? unit.stage} · Section {lesson.index + 1} of {lesson.total} ·{' '}
-        {unit.minutes} min
-      </p>
-      <h3 id={headingId}>{integration ? 'Clinical brief' : unit.title}</h3>
+      <h3 id={headingId} className={integration ? undefined : flow.srOnly}>
+        {integration ? 'Clinical brief' : `${unit.title}: teaching`}
+      </h3>
 
-      <div data-lesson-part="idea" data-teaching-block="framing">
-        <p>
-          <strong>The idea:</strong> {spec.newConcept}
-        </p>
-        <p>
-          <strong>By the end you can:</strong> {spec.objective}
-        </p>
-      </div>
+      {breathMap}
 
       <div data-lesson-part="task">
+        {orientationShown ? (
+          <section data-teaching-block="orientation">
+            <h4>Why a ventilator exists</h4>
+            {spec.orientation!.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </section>
+        ) : null}
         {taskStep && step.guide ? <GuideBlock guide={step.guide} look={guideLook} /> : null}
-        {!taskStep ? stopCards.map((stopId) => <StopCard key={stopId} stopId={stopId} />) : null}
-        {!taskStep ? (
+        {!taskStep && !orientationStep
+          ? stopCards.map((stopId) => <StopCard key={stopId} stopId={stopId} />)
+          : null}
+        {!taskStep && !orientationStep ? (
           <section data-teaching-block="method">
             <h4>The picture and the checklist</h4>
             <p className={styles.analogy}>{unit.analogy}</p>
@@ -342,7 +352,7 @@ export function VentilationTeachingColumn({
       )}
 
       <Disclosure name="More detail" id="more-detail">
-        {spec.orientation ? (
+        {spec.orientation && !orientationShown ? (
           <section data-teaching-block="orientation">
             <h4>Why a ventilator exists</h4>
             {spec.orientation.map((paragraph) => (

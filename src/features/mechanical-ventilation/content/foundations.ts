@@ -24,7 +24,7 @@ export const foundationTeaching: Record<
     explanation:
       'A trigger begins inspiration. In this passive teaching patient the ventilator starts the breath on its timer. Positive flow delivers gas and breath-relative volume rises. Cycling ends inspiration; during expiration, elastic recoil drives negative flow and volume falls.',
     worked:
-      'Follow the highlighted interval across all three traces. Inspiration begins at the first marker; gas delivery continues until the cycling marker. Move the cursor into expiration to see outward flow and falling volume together.',
+      'On a frozen breath, move the cursor from the start of the breath to the end. Inspiration runs from the trigger to cycling, with flow above the zero line while volume climbs. After cycling, flow drops below the zero line while volume returns toward its starting level.',
     boundary:
       'Volume is displayed relative to the breath’s starting reference, not total gas in the lungs. Returning to that reference does not prove complete emptying or exclude trapped gas.',
   },

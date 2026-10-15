@@ -25,6 +25,14 @@ async function primary(page: Page) {
   await control.focus()
   await control.press('Enter')
 }
+/** A section paired to a case ends on it; Skip the case finishes the section without running it. */
+async function skipCase(page: Page) {
+  const skip = page
+    .locator('[data-now-card] [data-now-secondary]')
+    .filter({ hasText: 'Skip the case · finish the section' })
+  await expect(skip).toBeVisible()
+  await skip.click()
+}
 async function capture(page: Page, name: string) {
   const scroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }))
   await page.screenshot({ path: test.info().outputPath(`${name}-viewport.png`) })
@@ -126,6 +134,7 @@ test('pressure flow preserves independent baselines, complete repair and transfe
   await flush(page, 'overdamped')
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
   await page.reload()
   await expect(flow).toHaveAttribute('data-stage', 'pressure-system-1-recognize')
@@ -251,6 +260,7 @@ test('blinded waveform progression retains answers through Back and layout chang
   await primary(page)
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
 })
 test('advancement uses actual transit, confirmation, repair and transfer controls', async ({
@@ -282,6 +292,7 @@ test('advancement uses actual transit, confirmation, repair and transfer control
     .click()
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
 })
 async function acquireWedge(page: Page) {
@@ -314,6 +325,7 @@ test('wedge requires capture, learner deflation and PA return on both acquisitio
   await page.getByRole('button', { name: 'The artery is back', exact: true }).click()
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
 })
 test('thermodilution ledger precedes Fick and keeps disagreement decisions separate', async ({
@@ -355,6 +367,7 @@ test('thermodilution ledger precedes Fick and keeps disagreement decisions separ
   await expect(lab.locator('[data-verdict]')).toHaveAttribute('data-verdict', 'defensible')
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
 })
 
@@ -452,6 +465,7 @@ test('derived inputs withhold only dependent results and retain the first answer
     .click()
   await primary(page)
   await primary(page)
+  await skipCase(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
 })
 
@@ -485,6 +499,39 @@ test('integration restores actual line, catheter and trial evidence before reass
   await primary(page)
   await primary(page)
   await expect(page.locator('[data-stage-completion]')).toBeVisible()
+})
+
+test('a section ends on its case: Start the case, Exit case, and back to the section finished', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await open(page, 'pressure-system')
+  const flow = page.locator('[data-lesson-shell][data-stage]')
+  // The last task, opened from the task list: the case, run inside the section.
+  await page.getByText('Tasks in this section · open any task', { exact: true }).click()
+  await page.locator('[data-step-list] li').last().getByRole('button').click()
+  await expect(flow).toHaveAttribute('data-stage', /^pressure-system-\d+-transfer$/)
+  const caseStep = await flow.getAttribute('data-stage')
+  await expect(
+    page.getByRole('heading', { name: 'Apply it: The numbers do not fit the patient' }),
+  ).toBeVisible()
+  // The section's own patient is not on the page while the case is its task.
+  await expect(page.locator('[data-focused-monitor], [data-dock]')).toHaveCount(0)
+  await primary(page)
+  await expect(page.locator('[data-now-card] [data-case-strip]')).toHaveText(
+    'Case · The numbers do not fit the patient · the last task of Section 2',
+  )
+  await expect(page.locator('[data-now-card] [data-now-primary]')).toHaveCount(0)
+  await capture(page, 'section-2-case-open')
+  await page.getByRole('button', { name: 'Exit case', exact: true }).click()
+  // Back on section 2, still on its last task, with the completion card up.
+  await expect(page).toHaveURL(/activity=pressure-system/)
+  await expect(flow).toHaveAttribute('data-stage', caseStep!)
+  await expect(page.locator('[data-case-flow]')).toHaveCount(0)
+  await expect(page.locator('[data-stage-completion]')).toBeVisible()
+  await expect(
+    page.locator('[data-stage-completion] [data-next-section="waveform-interpretation"]'),
+  ).toBeVisible()
 })
 
 async function openCase(page: Page, route: string) {
@@ -547,11 +594,11 @@ async function debriefAndTransfer(page: Page, name: string) {
     .click()
 }
 
-test('Practice preserves all interventions, retained response, debrief, transfer and next Learn', async ({
+test('Practice preserves all interventions, retained response, debrief, transfer and the way back to the cases', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
-  await openCase(page, '/en/icu-hemodynamics/practice?case=HD-01&nextLearn=waveform-interpretation')
+  await openCase(page, '/en/icu-hemodynamics/practice?case=HD-01')
   await caseInterpretation(page, 'underfilled', 'validate-preload')
   await expect(page.getByRole('region', { name: 'Case debrief' })).toHaveCount(0)
   await caseSignal(page)
@@ -560,9 +607,10 @@ test('Practice preserves all interventions, retained response, debrief, transfer
   await actions.getByRole('button', { name: /^PLR/ }).click()
   await actions.getByRole('button', { name: /^Fluid \+250/ }).click()
   await debriefAndTransfer(page, 'practice-hd01')
-  await expect(page.getByRole('link', { name: 'Continue learning', exact: true })).toHaveAttribute(
+  // On its own page a case ends back at the case list; it no longer carries a next section.
+  await expect(page.getByRole('link', { name: 'Back to all cases', exact: true })).toHaveAttribute(
     'href',
-    /activity=waveform-interpretation/,
+    /\/icu-hemodynamics\/practice$/,
   )
   await page.reload()
   await expect(

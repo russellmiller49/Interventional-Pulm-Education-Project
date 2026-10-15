@@ -105,8 +105,8 @@ const stiffVolume = round({
   title: 'Change the lung, keep the volume',
   hint: 'Volume control holds one of the two things you are comparing. Decide which trace the machine is holding, then ask what a stiffer system does to the other.',
   introduction:
-    'This passive patient is receiving volume-controlled breaths. You can change the lung while the ventilator keeps its settings.',
-  look: 'Compare the top of the pressure trace with the height of the volume trace.',
+    'This passive patient is on volume control. You will make the respiratory system stiffer; the ventilator settings stay as they are.',
+  look: 'Compare peak pressure with the height of the volume trace.',
   prompt:
     'At the same volume and flow settings, what will a stiffer respiratory system do to the next breaths?',
   choices: [
@@ -116,15 +116,15 @@ const stiffVolume = round({
   ],
   correct: 0,
   rationales: [
-    'Volume is the controlled variable. More pressure is needed to deliver it into a less compliant system.',
-    'That is the pressure-control prediction. Here the machine is still targeting volume.',
+    'In volume control, tidal volume is the control variable. A less compliant system needs more pressure to take the same volume.',
+    'That would be pressure control. Here the ventilator is still delivering a set volume.',
     'A stiffer system requires more pressure for a given volume, not less.',
   ],
-  task: 'Move compliance to 0.5× and watch several new breaths. Leave the ventilator settings unchanged.',
+  task: 'Set the teaching patient’s compliance to 0.5× and watch several breaths. Leave the ventilator settings alone.',
   goals: [m('complianceScale', 0.5)],
   watch: ['peak', 'volume', 'plateau'],
   explanation:
-    'The volume target stays the same, while the pressure cost changes. Check that the pressure limit has not interrupted delivery before interpreting the comparison.',
+    'The tidal volume stays the same and the pressure needed to deliver it rises. Before you read anything into that, check that the high-pressure limit did not cut the breath short.',
 })
 const stiffPressure = round({
   ...stiffVolume,
@@ -132,8 +132,9 @@ const stiffPressure = round({
   hint: 'This mode holds a different trace from the one before. Find the trace that is held, then follow the one that is free to move.',
   setup: pressureMode,
   introduction:
-    'The same passive model is now receiving pressure-controlled breaths. Repeat the change in lung stiffness.',
-  prompt: 'With pressure and inspiratory time held constant, what will stiffening this system do?',
+    'The same passive patient is now on pressure control. Make the same stiffness change.',
+  prompt:
+    'With inspiratory pressure and inspiratory time held constant, what will a stiffer respiratory system do?',
   choices: [
     'Pressure rises while volume stays fixed',
     'Pressure stays similar while volume falls',
@@ -141,20 +142,20 @@ const stiffPressure = round({
   ],
   correct: 1,
   rationales: [
-    'That describes volume-targeted delivery. This machine is holding inspiratory pressure.',
-    'The pressure target is unchanged; the stiffer respiratory system takes a smaller volume.',
-    'A mode controls a variable. It does not remove the effects of lung mechanics.',
+    'That is volume control. In pressure control the ventilator holds the inspiratory pressure.',
+    'The set pressure is unchanged, so the stiffer respiratory system takes a smaller tidal volume.',
+    'A mode chooses which variable is controlled. It does not cancel the effect of the lung’s mechanics.',
   ],
   explanation:
-    'The same change in the lung now appears mainly in delivered volume. A mode name is a starting point for deciding what to monitor.',
+    'In pressure control the same stiffening shows up mainly as a smaller delivered tidal volume. The mode tells you which reading to watch.',
 })
 const resistance = round({
   title: 'Find the pressure spent moving gas',
   hint: 'A hold stops flow. Ask which part of the airway pressure exists only while gas is moving.',
   introduction:
-    'The muscles are quiet. Compare flowing pressure with the pressure during an actual occlusion.',
-  look: 'Find the peak on a delivered breath. An inspiratory hold will stop flow at the end of inspiration.',
-  prompt: 'After increasing resistance, which pattern should an inspiratory hold help reveal?',
+    'This patient is passive: no respiratory effort. Compare airway pressure while gas is flowing with the pressure during an inspiratory hold.',
+  look: 'Find peak pressure on a delivered breath. An inspiratory hold stops flow at end-inspiration.',
+  prompt: 'After airway resistance rises, what should an inspiratory hold show?',
   choices: [
     'A larger peak-to-plateau gap',
     'A smaller peak-to-plateau gap',
@@ -162,16 +163,16 @@ const resistance = round({
   ],
   correct: 0,
   rationales: [
-    'Resistance adds a pressure cost while gas flows. The hold removes that flowing component.',
-    'More resistance increases the flowing pressure cost; it does not make the gap smaller.',
-    'The volume target is a ventilator setting and has not changed.',
+    'Resistance adds pressure only while gas is flowing. The hold stops flow, so that part falls away and the plateau is left.',
+    'More resistance raises the pressure needed to move gas; it does not make the gap smaller.',
+    'The set tidal volume is a ventilator setting, and it has not changed.',
   ],
-  task: 'Set resistance to 2×, then perform an inspiratory hold. Watch it occur at a breath boundary.',
+  task: 'Set the teaching patient’s airway resistance to 2×, then perform an inspiratory hold. The hold happens at the end of the next inspiration.',
   goals: [m('resistanceScale', 2), hold],
   seconds: 12,
   watch: ['peak', 'plateau', 'volume'],
   explanation:
-    'Use the actual hold, together with the effort signal. Separating resistance from elastic load requires a valid passive measurement.',
+    'Peak minus plateau is the pressure spent on airway resistance, and it widens when resistance rises. Splitting resistive from elastic pressure needs a valid hold in a passive patient: check the effort trace before you trust the plateau.',
 })
 const timing = round({
   title: 'Give expiration less time',
@@ -229,9 +230,10 @@ const earlierCycle = round({
 const flow = round({
   title: 'Move the gas faster',
   hint: 'Flow is a rate and tidal volume is an amount. Hold the amount fixed and ask how long it takes at the new rate.',
-  introduction: 'You can change inspiratory flow without changing the selected tidal volume.',
-  look: 'Follow the flow rectangle and the time taken for the volume trace to reach its peak.',
-  prompt: 'If flow rises while the tidal-volume target stays fixed, what should happen?',
+  introduction:
+    'In volume control, inspiratory flow and tidal volume are separate settings: you can change one without the other.',
+  look: 'Follow the square flow wave, and how long the volume trace takes to reach its peak.',
+  prompt: 'If inspiratory flow rises and the set tidal volume stays the same, what happens?',
   choices: [
     'The same volume arrives sooner',
     'The selected volume must rise',
@@ -239,23 +241,24 @@ const flow = round({
   ],
   correct: 0,
   rationales: [
-    'A higher rate of delivery reaches the same total sooner. Pressure during flow can also change.',
-    'Flow is a rate; the separate volume target stays fixed.',
+    'Faster flow delivers the same volume in less time. Pressure during flow can also change.',
+    'Flow is a rate; the set tidal volume is a separate setting and stays where it is.',
     'Faster delivery shortens the time needed for the same volume.',
   ],
-  task: 'Increase peak flow to 60 L/min. Watch the flow, volume, and pressure traces together.',
+  task: 'Set peak inspiratory flow to 60 L/min, then watch flow, volume and pressure together.',
   goals: [c('peakFlowLMin', 60)],
   watch: ['ti', 'volume', 'peak'],
   explanation:
-    'Flow describes how fast gas moves. Volume describes how much has moved. Their relationship becomes visible when you change one and watch the other.',
+    'Flow is how fast gas moves; volume is how much has moved. At the same tidal volume, higher flow fills the breath sooner and shortens inspiratory time.',
 })
 const oxygen = round({
   title: 'Separate oxygen from breath delivery',
   hint: 'Ask on which of the three traces — pressure, flow or volume — the oxygen setting appears at all.',
   asks: 'identify',
-  introduction: 'Keep this passive patient’s volume, rate, flow, and PEEP unchanged.',
-  look: 'Use the three tracings for breath delivery and SpO₂ for the oxygenation response.',
-  prompt: 'What does an increase in the oxygen control directly change?',
+  introduction:
+    'The same passive patient. Leave the tidal volume, rate, flow and PEEP where they are.',
+  look: 'Read breath delivery on the three traces, and oxygenation on the SpO₂.',
+  prompt: 'What does raising the set oxygen fraction (FiO₂) change directly?',
   choices: [
     'The volume delivered with each machine inflation',
     'The gas mixture entering the circuit',
@@ -263,16 +266,16 @@ const oxygen = round({
   ],
   correct: 1,
   rationales: [
-    'Volume is a separate setting.',
-    'The oxygen fraction changes immediately at the device. The patient response evolves with simulated time.',
-    'The respiratory cycle is set by other controls.',
+    'Tidal volume is a separate setting.',
+    'The FiO₂ changes at the ventilator at once; the patient’s response develops over time.',
+    'Rate and breath timing are set by other controls.',
   ],
-  task: 'Increase oxygen from 40% to 60%. Let the patient run and compare gas exchange with the breath traces.',
+  task: 'Raise FiO₂ from 40% to 60%. Let the patient run, then compare oxygenation and CO₂ with the breath traces.',
   goals: [c('oxygenPercent', 60)],
   seconds: 30,
   watch: ['spo2', 'volume', 'rate', 'co2'],
   explanation:
-    'A change in gas composition does not directly select a different tidal volume or rate. Oxygenation, CO₂ clearance, and mechanical delivery need distinct observations.',
+    'Changing FiO₂ changes the gas mixture, not the tidal volume or the rate. Oxygenation, CO₂ clearance and breath delivery each have their own reading.',
 })
 const effortHold = round({
   title: 'Test the measurement in an active patient',
@@ -306,46 +309,46 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'waveform-anatomy',
     rounds: [
       round({
-        title: 'Identify expiration on a captured breath',
+        title: 'Reading interval A',
         hint: 'Look at which side of the zero line the flow trace is on at interval A, and which way the volume trace is heading.',
-        introduction: 'Use the marked interval A on the captured complete breath.',
-        look: 'Read all three traces at interval A, marked on the captured breath below. The phase label under the figure can be hidden while you decide and brought back at any time.',
-        prompt: 'Which phase is shown at interval A?',
+        introduction: 'Interval A is marked on one complete breath, held still on the console.',
+        look: 'Read pressure, flow and volume at interval A on the frozen breath.',
+        prompt: 'Which phase is marked at interval A?',
         choices: ['Expiration', 'Inspiration', 'A no-flow occlusion'],
         correct: 0,
         rationales: [
-          'Interval A lies after inspiratory delivery: flow there is negative and breath-relative volume is coming down.',
-          'In this passive example, inspiration has inward flow and accumulating volume.',
-          'A no-flow occlusion would show zero flow and nearly constant volume; pausing the display does not create one.',
+          'Interval A falls after inspiratory flow has ended: flow is below zero and the volume above baseline is falling.',
+          'During inspiration in this passive breath, flow is above zero and volume rises.',
+          'An occlusion would show zero flow and a flat volume trace. Freezing the display is not an occlusion.',
         ],
-        task: 'Try Pause and Run on the live display. You can either pause during outward flow after a full breath, or inspect expiration on the captured complete breath and choose Use this captured interval. The captured alternative needs no timed click.',
+        task: 'Press Run, then Pause while gas is flowing out. Or, on the frozen breath, move the cursor into expiration and choose Use this captured interval.',
         goals: [{ type: 'pause-expiration' }],
         seconds: 0,
         watch: [],
         explanation:
-          'Identifying the phase is a separate answer from operating a playback control. At interval A gas is leaving and the breath-relative volume trace is coming down, which is what identifies expiration in this passive example.',
+          'At interval A gas is leaving the lungs: flow is below zero and volume is falling back toward its starting level. That pattern, not the moment you pressed Pause, identifies expiration in a passive breath.',
       }),
       round({
-        title: 'Read another interval of a complete breath',
+        title: 'Reading interval B',
         hint: 'At interval B, check the sign of flow and whether the volume trace is rising or falling.',
         setup: [set('ratePerMin', 12)],
         introduction:
-          'A second complete breath is captured on a longer respiratory cycle, with the mandatory rate set to 12/min for this part. Inspect interval B.',
-        look: 'Read all three traces at interval B, marked on the captured breath below; do not change a ventilator setting.',
-        prompt: 'Which phase is shown at interval B?',
+          'For this part the set rate is 12/min, so each breath lasts longer. Interval B is marked on one complete breath, held still on the console.',
+        look: 'Read pressure, flow and volume at interval B on the frozen breath. No setting changes in this part.',
+        prompt: 'Which phase is marked at interval B?',
         choices: ['A no-flow occlusion', 'Expiration', 'Inspiration'],
         correct: 2,
         rationales: [
           'Flow is not zero at interval B.',
-          'Expiration in this passive breath has negative flow with falling volume.',
-          'Positive flow accompanies accumulating volume during inspiration.',
+          'During expiration in this passive breath, flow is below zero and volume falls.',
+          'During inspiration, flow is above zero and volume rises.',
         ],
-        task: 'Inspect inspiration on this captured complete breath, then choose Use this captured interval. The exploration cursor moves with the arrow keys and interval B stays where it is. This changes only the view.',
+        task: 'On the frozen breath, move the cursor into inspiration and choose Use this captured interval. The cursor moves with the arrow keys; interval B stays where it is.',
         goals: [{ type: 'inspect-inspiration' }],
         seconds: 0,
         watch: [],
         explanation:
-          'The cycle duration changed, but inspiration still shows gas entering and breath-relative volume rising. Timing the Pause button is not the identification skill.',
+          'A slower rate makes the whole cycle longer, but inspiration still looks the same: flow above zero and volume rising. Reading the traces, not timing a Pause, is the skill.',
       }),
     ],
   },
@@ -356,13 +359,13 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       flow,
       {
         ...flow,
-        title: 'Retrieve flow and volume on a slower inspiration',
+        title: 'Lower inspiratory flow, same tidal volume',
         hint: 'The same amount is delivered at a slower rate: compare the slope of the volume trace and the length of inspiration.',
         setup: [set('peakFlowLMin', 60)],
         introduction:
-          'Retrieve the relationship on a new baseline with inspiratory flow initially 60 L/min; selected tidal volume is unchanged.',
+          'A new starting point: inspiratory flow is 60 L/min and the set tidal volume is unchanged.',
         prompt:
-          'When flow decreases at the same selected tidal volume, which trace comparison should you expect?',
+          'If inspiratory flow falls and the set tidal volume stays the same, how will the volume trace compare?',
         choices: [
           'A steeper volume rise over less time',
           'A slower volume rise over more time',
@@ -372,9 +375,9 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         rationales: [
           'A steeper rise represents faster inward flow.',
           'At lower flow the same volume accumulates over a longer inspiration.',
-          'Flow and selected tidal volume are separate settings.',
+          'Flow and set tidal volume are separate settings.',
         ],
-        task: 'Reduce inspiratory flow to 30 L/min. Keep selected tidal volume fixed and compare the captured traces.',
+        task: 'Set inspiratory flow to 30 L/min, leave the tidal volume where it is, and compare the captured breaths.',
         goals: [c('peakFlowLMin', 30)],
       },
     ],
@@ -384,14 +387,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'modes-and-breath-delivery',
     rounds: [
       round({
-        title: 'A setting and its consequences',
+        title: 'A setting and the measurement that checks it',
         hint: 'One value is what you asked for and one is what came back. Find the one on the monitoring side of the screen.',
         asks: 'identify',
         introduction:
-          'Start from the five main settings: mode, breath size, rate, PEEP and oxygen. Here the breath size is a tidal volume.',
-        look: 'Distinguish the selected volume from the measured exhaled volume and the pressure needed to deliver it.',
+          'Start from the five main settings: mode, breath size, rate, PEEP and oxygen. In volume control, breath size is the set tidal volume.',
+        look: 'Find the set tidal volume, the exhaled volume the ventilator reports, and the peak pressure it took to deliver the breath.',
         prompt:
-          'After increasing selected tidal volume, which separate value tells you the delivered result?',
+          'After you raise the set tidal volume, which value tells you what the patient actually received?',
         choices: [
           'The tidal volume selected on the console',
           'The measured exhaled tidal volume',
@@ -399,15 +402,15 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 1,
         rationales: [
-          'The selected value is the request, not evidence of delivery.',
-          'Exhaled tidal volume is a separate reported result. Compare it with the requested volume.',
-          'Oxygen fraction describes the gas mixture rather than breath size.',
+          'The set value is the request, not proof of delivery.',
+          'Exhaled tidal volume is measured. Compare it with the set volume.',
+          'The oxygen fraction (FiO₂) describes the gas mixture, not breath size.',
         ],
-        task: 'Increase the volume target to 500 mL, then inspect the measured result.',
+        task: 'Set the tidal volume to 500 mL, then read the measured exhaled volume.',
         goals: [c('vtMl', 500)],
         watch: ['volume', 'peak'],
         explanation:
-          'Compare selected tidal volume with measured exhaled tidal volume. Pressure is also worth checking; the mechanics lesson develops that pressure cost.',
+          'The set tidal volume is the request; the measured exhaled tidal volume is the result. Check the peak pressure too: Section 4 explains what that pressure is made of.',
       }),
       oxygen,
     ],
@@ -420,10 +423,10 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffVolume,
         title: 'Separate stiffness from resistance',
-        task: 'Set compliance to 0.5×, then perform an inspiratory hold.',
+        task: 'Set the teaching patient’s compliance to 0.5×, then perform an inspiratory hold.',
         goals: [m('complianceScale', 0.5), hold],
         explanation:
-          'Compare this pressure pattern with the resistance experiment. The elastic component persists when flow stops.',
+          'Compare this with the resistance experiment. Elastic pressure does not go away when flow stops, so a stiffer system shows on the plateau.',
       },
     ],
   },
@@ -434,7 +437,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffVolume,
         introduction:
-          'Retrieve the stiffness experiment from mechanics, now focusing on what conventional VC holds constant. Selected volume and flow stay fixed.',
+          'The stiffness experiment from Section 4, read here for what volume control (VC) holds constant. The set tidal volume and flow stay fixed.',
         relation: {
           kind: 'revisit',
           unitId: 'mechanics-load-and-pressure',
@@ -445,7 +448,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffPressure,
         introduction:
-          'The mode has explicitly switched from conventional VC to conventional PC. The same passive baseline patient now receives fixed pressure above PEEP and fixed inspiratory time. Repeat the stiffness change.',
+          'The mode is now pressure control (PC). The same passive patient receives a set pressure above PEEP for a set inspiratory time. Make the same stiffness change.',
       },
     ],
   },

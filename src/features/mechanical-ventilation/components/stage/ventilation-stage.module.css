@@ -692,3 +692,52 @@
     justify-content: center;
   }
 }
+
+/*
+ * A captured breath drawn on a console's own screen (the frozen breath). The Evita's white screen
+ * takes the light palette; the dark-screen consoles keep the figure's own.
+ */
+.capturedBreath[data-compact] {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.capturedBreath[data-palette='light'] {
+  background: #f8fbfd;
+  border-color: #c9d9e2;
+  color: #16354a;
+}
+.capturedBreath[data-palette='light'][data-compact] {
+  background: transparent;
+}
+.capturedBreath[data-palette='light'] svg text,
+.capturedBreath[data-palette='light'] .axisCaption {
+  fill: #16354a;
+  color: #16354a;
+}
+.capturedBreath[data-palette='light'] .breathTrace {
+  stroke: #176ba2;
+}
+.capturedBreath[data-palette='light'] .breathGrid {
+  stroke: #c9d9e2;
+}
+.capturedBreath[data-palette='light'] .zeroLine {
+  stroke: #5b7486;
+}
+.capturedBreath[data-palette='light'] .markerLine {
+  stroke: #16354a;
+}
+.capturedBreath[data-palette='light'] .markerLabel {
+  fill: #16354a;
+}
+.capturedBreath[data-palette='light'] .cursor {
+  stroke: #c36c00;
+}
+.capturedBreath[data-palette='light'] .phaseBand {
+  fill: #cdeaf2;
+}
+.capturedBreath[data-palette='light'] .quickNote,
+.capturedBreath[data-palette='light'] figcaption {
+  color: #16354a;
+}

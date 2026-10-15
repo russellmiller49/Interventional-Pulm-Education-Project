@@ -23,9 +23,11 @@ import { useHemodynamicsSelfPacedRecord } from './useHemodynamicsSelfPacedRecord
  * The stages as native `<details>`, one per contiguous run of the canonical order; only the group
  * holding the suggested section opens on load. Every count in a summary is derived from the
  * registry. Section chips say in words whether the learner opened a section or marked it reviewed —
- * nothing about answers — and case chips name the presentation, never the diagnosis. Flattening the
- * groups reproduces the canonical order, and the "Up next" chip is the same section the call to
- * action resolves to. Every chip links out whatever the record says.
+ * nothing about answers. A section that ends on a case shows it as the section's last row, named by
+ * its presentation and never its diagnosis; the case runs inside the section, so the row is part of
+ * the section rather than a separate link to Practice. Flattening the groups reproduces the
+ * canonical order, and the "Up next" chip is the same section the call to action resolves to. Every
+ * section chip links out whatever the record says.
  */
 export function HemodynamicsPathwayAccordion({
   record,
@@ -66,52 +68,45 @@ export function HemodynamicsPathwayAccordion({
                 const isReviewed = reviewed.has(section.id)
                 const visited = isSectionVisited(record, section.id)
                 const isNext = section.id === nextId
+                const sectionCase = group.cases.find((entry) => entry.sectionId === section.id)
                 return (
-                  <Link
+                  <div
                     key={section.id}
-                    className={styles.chip}
-                    data-kind="section"
-                    data-reviewed={isReviewed}
-                    data-visited={visited}
-                    data-recommended={isNext}
-                    href={hemodynamicsSectionLinkTarget(section.id)}
+                    className={styles.sectionRows}
+                    data-section-rows={section.id}
                   >
-                    <GraduationCap aria-hidden="true" />
-                    {section.title}
-                    {isReviewed ? ' ✓ reviewed' : visited ? ' · opened' : ''}
-                    {isNext ? <em>Up next</em> : null}
-                  </Link>
+                    <Link
+                      className={styles.chip}
+                      data-kind="section"
+                      data-reviewed={isReviewed}
+                      data-visited={visited}
+                      data-recommended={isNext}
+                      href={hemodynamicsSectionLinkTarget(section.id)}
+                    >
+                      <GraduationCap aria-hidden="true" />
+                      {section.title}
+                      {isReviewed ? ' ✓ reviewed' : visited ? ' · opened' : ''}
+                      {isNext ? <em>Up next</em> : null}
+                    </Link>
+                    {sectionCase ? (
+                      <span
+                        className={styles.caseRow}
+                        data-kind="case"
+                        data-case-id={sectionCase.caseId}
+                      >
+                        <BookOpenCheck aria-hidden="true" />
+                        Last task · Case: {sectionCase.title}
+                      </span>
+                    ) : null}
+                  </div>
                 )
               })}
-              {dedupeCases(group.cases).map((entry) => (
-                <Link
-                  key={entry.caseId}
-                  className={styles.chip}
-                  data-kind="case"
-                  href={{
-                    pathname: `${icuHemodynamicsNavBase}/practice`,
-                    query: { case: entry.caseId },
-                  }}
-                >
-                  <BookOpenCheck aria-hidden="true" />
-                  Case · {entry.title}
-                </Link>
-              ))}
             </div>
           </details>
         </li>
       ))}
     </ol>
   )
-}
-
-function dedupeCases(cases: HemodynamicsPathwayGroup['cases']): HemodynamicsPathwayGroup['cases'] {
-  const seen = new Set<string>()
-  return cases.filter((entry) => {
-    if (seen.has(entry.caseId)) return false
-    seen.add(entry.caseId)
-    return true
-  })
 }
 
 /** "Sections 3–5 · 3 sections · 2 cases · 35 min", every number counted from the registry. */
