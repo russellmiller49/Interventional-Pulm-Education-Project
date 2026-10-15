@@ -379,6 +379,11 @@ export interface HemodynamicCaseDefinition {
   station: string
   title: string
   shortTitle: string
+  /**
+   * About how long one unhurried run takes: brief, signals, an action or two, the debrief and the
+   * transfer. A case that is the last task of a section adds this to the section's minutes.
+   */
+  minutes: number
   presentation: string
   learningObjectives: readonly string[]
   initialParameters: CirculationParameters

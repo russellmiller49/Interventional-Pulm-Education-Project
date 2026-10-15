@@ -1273,7 +1273,8 @@ describe('H4 completion and non-regression', () => {
     expect(activity?.query).toEqual({ activity: 'thermodilution-series' })
     expect(activity?.completionRuleId).toBe('hemodynamics:completion:learn-existing')
     expect(activity?.competencyIds).toEqual(['signal-validation', 'hemodynamic-reassessment'])
-    expect(activity?.estimatedMinutes).toBe(18)
+    // Eighteen minutes of lesson and ten for HD-01, the case that is this section's last task.
+    expect(activity?.estimatedMinutes).toBe(28)
     expect(activity?.prerequisiteActivityIds).toEqual([])
     expect(activity?.curriculumStage).toBe('mechanism')
     expect(activity?.stageOrder).toBe(4)

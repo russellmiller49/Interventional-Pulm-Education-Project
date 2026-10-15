@@ -17,6 +17,10 @@ import { criticalCareModuleCatalog, type CriticalCareCatalogModuleId } from './m
 export const criticalCareLearningPathways: readonly LearningPathway[] = Object.freeze([
   {
     moduleId: 'icu-hemodynamics',
+    /*
+     * Sections 2–8 end on a case, run inside the section (`practicePairing` in the module's
+     * section specs); their minutes include the case's own (`minutes` on the case definition).
+     */
     arcSentence:
       'Ask why, trust the signal, read the waveform, advance the catheter, measure, and integrate',
     sections: [
@@ -34,7 +38,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pressure-system',
         shortTitle: 'Trust the signal',
         title: 'Can this number be trusted?',
-        minutes: 12,
+        minutes: 24,
         description:
           'Walk the line from the tip to the number: level and zero the system, fit the scale, and read the fast-flush response before any pressure is interpreted.',
         stage: 'foundation',
@@ -44,7 +48,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-interpretation',
         shortTitle: 'Identify the chamber',
         title: 'Identify the chamber from the waveform',
-        minutes: 10,
+        minutes: 20,
         description:
           'Walk the four places the tip can sit — right atrium, right ventricle, pulmonary artery, the wedge — and learn to name each from its shape alone.',
         stage: 'mechanism',
@@ -54,7 +58,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-components',
         shortTitle: 'Read the waves',
         title: 'Atrial waves and descents',
-        minutes: 10,
+        minutes: 20,
         description:
           'Identify atrial waves and descents against the ECG, then interpret abnormal components in a confirmed chamber and clinical context.',
         stage: 'mechanism',
@@ -64,7 +68,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'catheter-advancement',
         shortTitle: 'Advance',
         title: 'Where is the tip?',
-        minutes: 15,
+        minutes: 25,
         description:
           'Work a simulated catheter from the introducer to the pulmonary artery, confirming each stop from the tracing rather than the depth, and stopping when the list says stop.',
         stage: 'foundation',
@@ -74,7 +78,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pawp-capture',
         shortTitle: 'Wedge',
         title: 'Listening through a stopped branch',
-        minutes: 15,
+        minutes: 25,
         description:
           'From a confirmed pulmonary-artery position, take a brief end-expiratory wedge, judge whether it is plausible, and prove the occlusion has ended.',
         stage: 'mechanism',
@@ -84,7 +88,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'thermodilution-series',
         shortTitle: 'Measure flow',
         title: 'How much is flowing?',
-        minutes: 18,
+        minutes: 28,
         description:
           'Measure flow with a thermodilution series and a Fick calculation, judging each curve and each input before its number.',
         stage: 'mechanism',
@@ -94,7 +98,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'derived-hemodynamics',
         shortTitle: 'Derive',
         title: 'Numbers made of numbers',
-        minutes: 15,
+        minutes: 25,
         description:
           'Trace each calculated value back to its equation and its inputs, and withhold only what an invalid input actually touches.',
         stage: 'application',
