@@ -301,7 +301,9 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     for (const experiment of ventilationLearningExperiments) {
       const [first, second] = experiment.rounds
       const line = ventilationPartSetupLine(experiment.unitId, 1)
-      if (first.caseId === second.caseId)
+      if (first.caseId === second.caseId && second.mechanicsWithheld)
+        expect(line).toMatch(/again, as a second patient whose difference from Part 1 is not given/)
+      else if (first.caseId === second.caseId)
         expect(line).toMatch(/the same simulated patient as Part 1/)
       else expect(line).toMatch(/a different simulated patient from Part 1/)
       if (second.caseId !== 'MV-LAB') expect(line).toContain(`case ${second.caseId}`)
@@ -314,6 +316,27 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     )
     expect(ventilationPartSetupLine('expiration-and-air-trapping', 0)).toContain(
       'simulated airway resistance ×4 and rate 12/min',
+    )
+  })
+
+  it('never names, above the first task, what the section keeps back until the prediction (MV-L5)', () => {
+    for (const experiment of ventilationLearningExperiments) {
+      const deny = ventilationSectionSpec(experiment.unitId).precommitDenyPatterns
+      for (const roundIndex of [0, 1] as const) {
+        const line = ventilationPartSetupLine(experiment.unitId, roundIndex)
+        expect([experiment.unitId, deny.filter((pattern) => pattern.test(line))]).toEqual([
+          experiment.unitId,
+          [],
+        ])
+      }
+    }
+    // Section 14: the cause of the high peak pressure is not given, so neither is the mechanics
+    // change behind it, and nothing claims the patient is unchanged.
+    expect(ventilationPartSetupLine('high-peak-pressure-integration', 0)).toBe(
+      'Part 1 uses the passive teaching patient.',
+    )
+    expect(ventilationPartSetupLine('high-peak-pressure-integration', 1)).toBe(
+      'Part 2 uses the passive teaching patient again, as a second patient whose difference from Part 1 is not given. It opens on a fresh, paused patient; the run and the captured breaths from Part 1 are not carried over.',
     )
   })
 

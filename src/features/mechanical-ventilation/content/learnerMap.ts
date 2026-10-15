@@ -162,7 +162,10 @@ const controlWords: Readonly<Record<string, readonly [string, string]>> = {
   peepCmH2O: ['PEEP', 'cmH₂O'],
 }
 
-function setupPhrases(setup: readonly VentilationAction[] | undefined): readonly string[] {
+function setupPhrases(
+  setup: readonly VentilationAction[] | undefined,
+  mechanicsWithheld: boolean,
+): readonly string[] {
   const phrases: string[] = []
   for (const action of setup ?? []) {
     if (action.type === 'SELECT_MODE') {
@@ -175,7 +178,7 @@ function setupPhrases(setup: readonly VentilationAction[] | undefined): readonly
           ? `${words[0]} ${action.value}${separator}${words[1]}`
           : `${action.control} ${action.value}`,
       )
-    } else if (action.type === 'SET_TEACHING_MECHANICS') {
+    } else if (action.type === 'SET_TEACHING_MECHANICS' && !mechanicsWithheld) {
       const { complianceScale = 1, resistanceScale = 1 } = action.overrides
       if (complianceScale !== 1) phrases.push(`simulated compliance ×${complianceScale}`)
       if (resistanceScale !== 1) phrases.push(`simulated airway resistance ×${resistanceScale}`)
@@ -196,22 +199,32 @@ function joinList(items: readonly string[]): string {
  * one from Part 1, and nothing said what had been set up. The patient is the round's `caseId`; the
  * starting changes are its `setup` actions; neither is authored a second time here. The last
  * sentence is what moving between parts has always done — it is stated, not changed.
+ *
+ * A part whose changed mechanics are the thing to find (`mechanicsWithheld`, Section 14) does not
+ * name them, and so does not claim "that patient's own settings" either. Its Part 2 is a second
+ * patient on the teaching model, as the round's own introduction says, not "the same" one.
  */
 export function ventilationPartSetupLine(unitId: string, roundIndex: 0 | 1): string {
   const experiment = ventilationExperimentByUnit.get(unitId)
   if (!experiment) throw new Error(`Unknown ventilation section ${unitId}`)
   const round: LabRound = experiment.rounds[roundIndex]
   const other: LabRound = experiment.rounds[roundIndex === 0 ? 1 : 0]
-  const changes = setupPhrases(round.setup)
+  const withheld = round.mechanicsWithheld === true
+  const changes = setupPhrases(round.setup, withheld)
   const starting =
     changes.length > 0
       ? ` It starts with ${joinList(changes)}.`
-      : ' It starts from that patient’s own settings.'
+      : withheld
+        ? ''
+        : ' It starts from that patient’s own settings.'
   if (roundIndex === 0) return `Part 1 uses ${patientPhrase(round.caseId)}.${starting}`
   const same = round.caseId === other.caseId
-  const who = same
-    ? `the same simulated patient as Part 1 (${patientPhrase(round.caseId)})`
-    : `a different simulated patient from Part 1: ${patientPhrase(round.caseId)}`
+  const who =
+    same && withheld
+      ? `${patientPhrase(round.caseId)} again, as a second patient whose difference from Part 1 is not given`
+      : same
+        ? `the same simulated patient as Part 1 (${patientPhrase(round.caseId)})`
+        : `a different simulated patient from Part 1: ${patientPhrase(round.caseId)}`
   return `Part 2 uses ${who}.${starting} It opens on a fresh, paused patient; the run and the captured breaths from Part 1 are not carried over.`
 }
 
