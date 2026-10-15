@@ -17,32 +17,47 @@ import {
   type CriticalCareReadableStorage,
 } from './types'
 
-/** HD/ECMO keep historical envelopes, but current navigation lives in their module stores. */
+/** ECMO keeps historical envelopes, but current navigation lives in its module store. */
 export function isHistoricalOnlyModule(moduleId: string): boolean {
-  return moduleId === 'icu-hemodynamics' || moduleId === 'cardiohelp-ecmo'
+  return moduleId === 'cardiohelp-ecmo'
 }
 
 export function isHistoricalOnlyActivity(activityId: string): boolean {
-  return activityId.startsWith('hemodynamics:') || activityId.startsWith('ecmo:')
+  return activityId.startsWith('ecmo:')
 }
 
 /** Converted modules keep coarse account grades only as historical data. */
 export function isCoarseSyncExcludedModule(moduleId: string): boolean {
   return (
     isHistoricalOnlyModule(moduleId) ||
+    moduleId === 'icu-hemodynamics' ||
     moduleId === 'mechanical-circulatory-support' ||
     moduleId === 'mechanical-ventilation' ||
     moduleId === 'baxter-crrt'
   )
 }
 
-/** Current MCS/CRRT visit rows come from module stores, never normalized history. */
+/** Current HD/MCS/CRRT visit rows come from module stores, never normalized history. */
 export function isHistoricalNormalizedActivity(activityId: string): boolean {
   return (
     isHistoricalOnlyActivity(activityId) ||
+    activityId.startsWith('hemodynamics:') ||
     activityId.startsWith('ventilation:') ||
     activityId.startsWith('mcs:') ||
     activityId.startsWith('crrt:')
+  )
+}
+
+/** A visit as the module adapters project it: no grade, assistance or invented chronology. */
+function isUngradedVisit(progress: CriticalCareActivityProgress): boolean {
+  return (
+    progress.status === 'in-progress' &&
+    progress.attempts === 0 &&
+    progress.bestScore === undefined &&
+    progress.hintCount === undefined &&
+    progress.tricky === undefined &&
+    progress.competencyEvidenceIds.length === 0 &&
+    progress.updatedAt === LEGACY_PROGRESS_EPOCH
   )
 }
 
@@ -53,17 +68,20 @@ export function isCurrentProgressActivity(progress: CriticalCareActivityProgress
   )
     return false
   if (progress.activityId.startsWith('mcs:') || progress.activityId.startsWith('crrt:')) {
-    // The module adapters project visits without grades, assistance or invented chronology.
     // Reject historical rows before catalog authority could downgrade them into false visits.
     return (
-      progress.status === 'in-progress' &&
-      progress.attempts === 0 &&
-      progress.bestScore === undefined &&
-      progress.hintCount === undefined &&
-      progress.tricky === undefined &&
-      progress.competencyEvidenceIds.length === 0 &&
-      progress.updatedAt === LEGACY_PROGRESS_EPOCH &&
+      isUngradedVisit(progress) &&
       (progress.activityId.startsWith('crrt:') || progress.mode === 'guided')
+    )
+  }
+  if (progress.activityId.startsWith('hemodynamics:')) {
+    // Self-paced visits carry no phase and are guided (the applied case: challenge). The case
+    // ledger's rows always carry a phase or the practice mode, so a historical row never passes.
+    return (
+      isUngradedVisit(progress) &&
+      progress.currentPhase === undefined &&
+      progress.mode ===
+        (progress.activityId.startsWith('hemodynamics:assess:') ? 'challenge' : 'guided')
     )
   }
   return true
@@ -72,6 +90,8 @@ export function isCurrentProgressActivity(progress: CriticalCareActivityProgress
 export function isCurrentProgressResume(pointer: CriticalCareResumePointer): boolean {
   if (isHistoricalOnlyActivity(pointer.activityId) || pointer.activityId.startsWith('ventilation:'))
     return false
+  if (pointer.activityId.startsWith('hemodynamics:'))
+    return pointer.payloadVersion === 'icu-hemodynamics-self-paced-v1'
   if (pointer.activityId.startsWith('mcs:'))
     return pointer.payloadVersion === 'mcs-location-v1' && pointer.mode === 'guided'
   if (pointer.activityId.startsWith('crrt:')) return pointer.payloadVersion === 'crrt-selection-v1'
@@ -79,9 +99,13 @@ export function isCurrentProgressResume(pointer: CriticalCareResumePointer): boo
 }
 
 export function isCurrentNormalizedResume(pointer: CriticalCareResumePointer): boolean {
-  // CRRT still supports explicit selection pointers in the shared store. MCS now
-  // resumes exclusively from its module-local location, even if history has a newer date.
-  return !pointer.activityId.startsWith('mcs:') && isCurrentProgressResume(pointer)
+  // CRRT still supports explicit selection pointers in the shared store. MCS and HD now
+  // resume exclusively from their module-local locations, even if history has a newer date.
+  return (
+    !pointer.activityId.startsWith('mcs:') &&
+    !pointer.activityId.startsWith('hemodynamics:') &&
+    isCurrentProgressResume(pointer)
+  )
 }
 
 const MAX_NORMALIZED_COUNTER = 10_000
