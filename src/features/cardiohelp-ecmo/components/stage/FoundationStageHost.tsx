@@ -37,7 +37,7 @@ import {
 import { ecmoSectionSpecById } from '../../content/sectionSpecs'
 import { ecmoStoryProblemsFor } from '../../content/storyProblems'
 import { persistTopicVisit } from '../../engine/progress'
-import type { SupportMode } from '../../engine/types'
+import type { GuidedControlId, SupportMode } from '../../engine/types'
 import {
   createEcmoFoundationSessionState,
   ecmoFoundationRestoreAction,
@@ -70,7 +70,10 @@ import {
 import { FoundationComparison } from '../teaching/FoundationComparison'
 import { type FoundationPressureSite } from '../teaching/CircuitFlowPathPanel'
 import { ecmoSensorSite, ecmoGasPathSegmentIds } from '../../content/circuitSegments'
-import { buildFoundationStageLesson } from './adapters/foundationStageAdapter'
+import {
+  buildFoundationStageLesson,
+  foundationCircuitLocationDisclosure,
+} from './adapters/foundationStageAdapter'
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
@@ -113,9 +116,6 @@ const COMBINED_BASELINE_PRESENTATION = {
   console: true,
   surfaces: ['monitor'],
 } as const
-
-const DEVICE_BOUNDARY_SHORT =
-  'Console follows the U.S. CARDIOHELP Instructions for Use, Revision 2.3 (January 2025). The VV and VA teaching is not limited to the U.S. labeled indication or duration.'
 
 const LOOKING_BACK =
   'You are looking back at an earlier step; nothing you have worked through is lost.'
@@ -230,10 +230,21 @@ function FoundationStageSession({
   const teachingRef = useRef<HTMLDivElement>(null)
   const [baselineGroupIndex, setBaselineGroupIndex] = useState(0)
   const [pressureSite, setPressureSite] = useState<FoundationPressureSite>('pVen')
+  /*
+   * A console or gas-panel control the teaching text is pointing at, lit while the learner hovers
+   * or focuses its name (tester feedback, 2026-10-14: "hover over the text and then highlight those
+   * buttons or dials on the simulation"). Cleared on every step change.
+   */
+  const [pointer, setPointer] = useState<{
+    readonly stepId: string
+    readonly controlId: GuidedControlId | null
+  } | null>(null)
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
   const mappedPresentation = ecmoTaskPresentation(lesson, activeStep)
+  // Kept per step, so a highlight never outlives the text that pointed at it.
+  const pointedControl = pointer?.stepId === activeStep.id ? pointer.controlId : null
   const normalReading =
     (sectionId === 'vv-normal-state' || sectionId === 'va-normal-state') &&
     activeStep.phase === 'recognize'
@@ -862,6 +873,7 @@ function FoundationStageSession({
           name: `ecmo-foundation-${activeStep.id}`,
           ...(focusedMapQuestion
             ? {
+                stemShownElsewhere: true,
                 inlineActions: (
                   <div className={styles.mapQuestionActions} data-map-question-actions>
                     {!stepPerformed && selectedChoiceId ? (
@@ -1057,6 +1069,26 @@ function FoundationStageSession({
 
   const nowBody = (() => {
     const { interaction } = activeStep
+    /*
+     * A question answered on the map, stated where the task starts and in large type.
+     *
+     * The stem used to sit under the map, in body text beside a numbered legend, and a tester
+     * (2026-10-14) asked for the questions to be "standalone or more obvious", and for the
+     * instructions on the pump section's map question to be "bigger and more obvious". The map
+     * keeps the numbered places and the legend keeps the stem for assistive technology.
+     */
+    if (focusedMapQuestion && mapAnswerItem)
+      return (
+        <div className={styles.mapQuestionCallout} data-map-question-callout>
+          <p className={styles.mapQuestionKicker}>Question</p>
+          <p className={styles.mapQuestionStem}>{mapAnswerItem.stem}</p>
+          <p className={styles.mapQuestionHow}>
+            {stepPerformed
+              ? 'Your answer and the explanation are under the map.'
+              : 'Choose a numbered place on the circuit map, then select Submit answer under it.'}
+          </p>
+        </div>
+      )
     if (focusedMapQuestion) return null
     if (focusedStory) {
       const choice = focusedStory.item.choices.find(
@@ -1265,16 +1297,13 @@ function FoundationStageSession({
     </div>
   ) : (
     <div className={styles.stateCard} data-active-state-variant={activeVariant.id}>
-      <p className={shellStyles.kicker}>Model reference for this task</p>
+      <p className={shellStyles.kicker}>The numbers on this page come from</p>
       <p className="font-semibold">{activeVariant.label}</p>
       {running ? null : (
         <p data-clock-held>
           The clock is held here, so the circuit stays as it is until you start it.
         </p>
       )}
-      {activeVariant.modelBoundary ? (
-        <p data-variant-boundary>{activeVariant.modelBoundary}</p>
-      ) : null}
       <div className={styles.stateControls}>
         <button
           type="button"
@@ -1298,16 +1327,12 @@ function FoundationStageSession({
 
   const consoleNode = (
     <>
-      {focusedFoundation ? (
-        <p className={styles.boundaryNote} data-observation-only>
-          Observation-only CARDIOHELP display · use the guided controls for this task.
-        </p>
-      ) : null}
       <FitWidthSurface mode={presentation ? 'actual' : 'fit'} label="CARDIOHELP console">
         <CardiohelpConsole
           state={simulation}
           dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
           controlsEnabled={false}
+          guidedControlId={pointedControl}
         />
       </FitWidthSurface>
       {focusedFoundation ? <CircuitPressureIdentity /> : null}
@@ -1327,7 +1352,9 @@ function FoundationStageSession({
       <EcmoSimulatorSurfaces
         console={presentation && !presentation.console ? null : consoleNode}
         surfaceIds={presentation?.surfaces}
-        safety={focusedFoundation ? stateCard : null}
+        // Not beside a map question: there the directions above say what to do, and a tester
+        // (2026-10-14) asked for the card to go as long as they stay clear.
+        safety={focusedFoundation && !focusedMapQuestion ? stateCard : null}
         state={simulation}
         dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
         controlsEnabled={false}
@@ -1340,7 +1367,14 @@ function FoundationStageSession({
         circuitAutoScroll={false}
         circuitFit="pane"
         circuitViewPreference={circuitViewPreference}
-        locationDisclosure="full"
+        locationDisclosure={foundationCircuitLocationDisclosure(
+          sectionId,
+          stepPerformed,
+          Boolean(foundationTask?.mapRetrieval),
+        )}
+        // The readings a teaching task is about are printed in its own text.
+        liveReadings={focusedFoundation ? 'closed' : 'open'}
+        guidedControlId={pointedControl}
         openSurfaces={openSurfaces}
         onToggleSurface={toggleSurface}
       />
@@ -1391,15 +1425,14 @@ function FoundationStageSession({
               ))}
             </div>
             {section.bullets ? (
-              <ul className="mt-3 grid gap-2" data-lesson-bullets>
+              // A plain list, and no device-scope note under it: the explain page read as a stack of
+              // boxes (tester feedback, 2026-10-14); the device scope is in "About this module".
+              <ul className="mt-3 grid list-disc gap-1 pl-5" data-lesson-bullets>
                 {section.bullets.map((bullet) => (
-                  <li key={bullet} className="rounded-xl border px-3 py-2">
-                    {bullet}
-                  </li>
+                  <li key={bullet}>{bullet}</li>
                 ))}
               </ul>
             ) : null}
-            <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_SHORT}</p>
           </>
         ) : null}
         {/*
@@ -1450,6 +1483,7 @@ function FoundationStageSession({
               (id !== 'vv-topology-heading' && id !== 'va-topology-heading'),
           ),
           baselineGroup,
+          onPointControl: (controlId) => setPointer({ stepId: activeStep.id, controlId }),
           foundationNavigation:
             !presentation &&
             foundationTask &&
@@ -1576,10 +1610,17 @@ function FoundationStageSession({
         <EcmoNowCard model={nowModel}>
           {comparisonLeads ? (
             <div className={styles.comparisonLead} data-comparison-lead>
-              {focusedStory ? nowBody : null}
+              {/*
+                One unit beside the comparison, so on a wide screen the question and the values that
+                answer it sit side by side (tester feedback, 2026-10-14: "should the values be next
+                to the question … so that they change when you select an answer?").
+              */}
+              {focusedStory ? <div data-story-question>{nowBody}</div> : null}
               {comparisonBlock}
             </div>
           ) : null}
+          {/* A map question is stated above the map, not after it. */}
+          {focusedMapQuestion ? nowBody : null}
           <ActivityContent
             presentation={presentation}
             teaching={teaching}
@@ -1589,7 +1630,7 @@ function FoundationStageSession({
                 : null
             }
           >
-            {comparisonLeads && focusedStory ? null : nowBody}
+            {(comparisonLeads && focusedStory) || focusedMapQuestion ? null : nowBody}
             {comparisonLeads ? null : comparisonBlock}
             {supportOffered ? (
               <EcmoOptionalExplanation
@@ -1624,6 +1665,12 @@ function FoundationStageSession({
           </ActivityContent>
         </EcmoNowCard>
       </div>
+      {/*
+        Says where the page's numbers come from. It read "Model reference for this task" with a note
+        that the values were "a teaching anchor … not a set of bedside target values", and on a
+        question page with no circuit drawn a tester (2026-10-14) said there was no model or circuit
+        there to refer to. The teaching panel's live numbers are what it refers to, so it says that.
+      */}
       {!focusedFoundation ? stateCard : null}
       {/* On the Act step the card carries these; rendering them here too would duplicate every id. */}
       {activeStep.interaction.kind === 'bounded-actions' ? null : boundedActions}

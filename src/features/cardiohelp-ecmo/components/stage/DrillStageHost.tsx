@@ -506,6 +506,9 @@ export function DrillStageHost({
       heading: activeStep.title,
       body: activeStep.instruction,
       why: activeStep.rationale,
+      // The way forward stays in view, as in the foundation sections (tester feedback,
+      // 2026-10-14: "No clear start or end to this page").
+      pinActions: Boolean(presentation),
       ...(canGoBack && previousStep
         ? {
             back: {
@@ -737,13 +740,22 @@ export function DrillStageHost({
    */
   const lessonLeads = pairing?.kind === 'next-in-unit' && Boolean(nextSection)
 
-  const explanation = (
+  /*
+   * The answer / skip row: on a question, and on a console task, where Skip means moving on
+   * without doing it. A reading step's own button already moves on, so it carries neither; a
+   * tester met the row there as the first thing under the instruction.
+   */
+  const isQuestion = activeStep.interaction.kind === 'prediction'
+  const questionAnswered = isQuestion && stepPerformed
+  const offerSupport =
+    isQuestion || (!finished && !stepPerformed && activeStep.interaction.kind !== 'read')
+  const explanation = offerSupport ? (
     <EcmoOptionalExplanation
       key={activeStep.id}
-      onContinue={skipStep}
-      onRetry={activeStep.interaction.kind === 'prediction' ? retryPrediction : undefined}
+      onContinue={questionAnswered ? undefined : skipStep}
+      onRetry={questionAnswered ? retryPrediction : undefined}
     >
-      {activeStep.interaction.kind === 'prediction' ? (
+      {questionAnswered ? null : activeStep.interaction.kind === 'prediction' ? (
         <>
           <p>{activeStep.interaction.item.explanation}</p>
           <ul>
@@ -757,9 +769,7 @@ export function DrillStageHost({
       ) : (
         <>
           <p>{activeStep.rationale ?? activeStep.instruction}</p>
-          <p>
-            Expected response in this teaching example; viewing it performs no simulator action.
-          </p>
+          <p>What you should see:</p>
           <ul>
             {activeStep.expectedResponse?.map((line) => (
               <li key={line}>{line}</li>
@@ -768,7 +778,7 @@ export function DrillStageHost({
         </>
       )}
     </EcmoOptionalExplanation>
-  )
+  ) : null
 
   const task = (
     <>

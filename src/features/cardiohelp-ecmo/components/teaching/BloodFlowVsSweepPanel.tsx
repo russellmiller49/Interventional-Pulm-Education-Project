@@ -2,7 +2,7 @@ import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import { ECMO_CONTROL_PANEL, ecmoControlKnob } from '../../content/controlPanel'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
-import type { EcmoSimulationState } from '../../engine/types'
+import type { EcmoSimulationState, GuidedControlId } from '../../engine/types'
 import { EcmoSweepReference } from './EcmoReferenceValues'
 import {
   FoundationTeachingBlock,
@@ -12,6 +12,15 @@ import {
   VaConfigurationLabel,
   styles,
 } from './shared'
+
+/** The console or gas-panel control each of the three adjustments is set on. */
+const CONTROL_BY_KNOB: Readonly<
+  Record<(typeof ECMO_CONTROL_PANEL.knobs)[number]['id'], GuidedControlId>
+> = {
+  'pump-speed': 'cardiohelp-rpm-control',
+  sweep: 'cardiohelp-sweep-control',
+  'oxygen-fraction': 'cardiohelp-fio2-control',
+}
 
 /**
  * Two controls, two paths, two principal effects.
@@ -82,29 +91,47 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
             <h3 id="three-adjustments-heading" className={styles.heading}>
               Three adjustments, two control locations
             </h3>
+            {/*
+              Each name lights its control on the console or the gas panel while it is hovered or
+              focused (tester feedback, 2026-10-14: "hover over the text and then highlight those
+              buttons or dials"). The paragraph after the list is one sentence where there were
+              five; the comparisons' own instructions say they start from the same circuit.
+            */}
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Point at a name to light it up on the simulation.
+            </p>
             <ol className="mt-3 grid list-decimal gap-3 pl-5">
-              {ECMO_CONTROL_PANEL.knobs.map((knob) => (
-                <li key={knob.id} data-control-knob={knob.id}>
-                  <strong>{knob.plainName}</strong>
-                  <p>
-                    {knob.id === 'pump-speed'
-                      ? 'On the pump console.'
-                      : 'On the external gas controls.'}{' '}
-                    {knob.principallyMoves}.
-                  </p>
-                </li>
-              ))}
+              {ECMO_CONTROL_PANEL.knobs.map((knob) => {
+                const controlId = CONTROL_BY_KNOB[knob.id]
+                return (
+                  <li key={knob.id} data-control-knob={knob.id}>
+                    <button
+                      type="button"
+                      className="font-semibold underline decoration-dotted underline-offset-4"
+                      data-point-control={controlId}
+                      onMouseEnter={() => scope?.onPointControl?.(controlId)}
+                      onMouseLeave={() => scope?.onPointControl?.(null)}
+                      onFocus={() => scope?.onPointControl?.(controlId)}
+                      onBlur={() => scope?.onPointControl?.(null)}
+                      onClick={() => scope?.onPointControl?.(controlId)}
+                    >
+                      {knob.plainName}
+                    </button>
+                    <p>
+                      {knob.id === 'pump-speed'
+                        ? 'On the pump console.'
+                        : 'On the external gas controls.'}{' '}
+                      {knob.principallyMoves}.
+                    </p>
+                  </li>
+                )
+              })}
             </ol>
             <p className="mt-3 text-sm leading-6">
-              Sweep-gas oxygen fraction is the oxygen concentration delivered to the membrane lung.
-              The external blender sets it, and the gas panel in this module labels that control{' '}
-              <span data-first-use="sweep-gas-fio2">“Sweep-gas FiO₂”</span>. It is separate from
-              ventilator FiO₂, which describes gas delivered to the native lungs. The two settings
-              describe gas delivered to different sites: the membrane lung and the native lungs.
-            </p>
-            <p className="mt-2 text-sm leading-6">
-              The following guided controls reset to the same starting circuit for every comparison.
-              The changes are not cumulative.
+              <span data-first-use="sweep-gas-fio2">“Sweep-gas FiO₂”</span>
+              {
+                ' is the oxygen fraction of the gas sent to the membrane lung, set on the blender. It is not the ventilator FiO₂, which is the gas sent to the native lungs.'
+              }
             </p>
           </section>
         </FoundationTeachingBlock>

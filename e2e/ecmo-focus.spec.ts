@@ -184,20 +184,35 @@ for (const lesson of [
     await open(page, lesson, true)
     await tabTo(page, 'Sources for this lesson')
     await record(page, info, 'sources')
-    for (let i = 0; i < 3; i++) {
+    /*
+     * Revised 2026-10-14. Drills now pin their action row to the foot of the card, so "Why this
+     * matters" sits before the pinned buttons rather than after them and the press count from
+     * Sources changed. Walk back to it, then forward to Sources, checking every stop is visible.
+     */
+    const why = page.locator('summary').filter({ hasText: /^Why this matters$/ })
+    for (
+      let i = 0;
+      i < 8 && !(await why.evaluate((node) => node === document.activeElement));
+      i++
+    ) {
       await page.keyboard.press('Shift+Tab')
       await settle(page)
     }
-    await expect(page.locator('summary').filter({ hasText: /^Why this matters$/ })).toBeFocused()
+    await expect(why).toBeFocused()
     await record(page, info, 'why-this-matters')
     await page.screenshot({ path: info.outputPath('reverse-tab.png') })
     await visibleFocus(page)
-    for (let i = 0; i < 3; i++) {
+    const sources = page.locator('[data-stage-sources] > summary')
+    for (
+      let i = 0;
+      i < 8 && !(await sources.evaluate((node) => node === document.activeElement));
+      i++
+    ) {
       await page.keyboard.press('Tab')
       await settle(page)
       await visibleFocus(page)
     }
-    await expect(page.locator('[data-stage-sources] > summary')).toBeFocused()
+    await expect(sources).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page.locator('[data-stage-sources]')).toHaveAttribute('open', '')
     await page.keyboard.press('Escape')

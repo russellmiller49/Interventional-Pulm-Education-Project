@@ -259,21 +259,28 @@ describe('S2-1: the map question says what the map shows', () => {
     expect(task?.title).not.toMatch(/from memory/i)
     expect(task?.instruction).not.toMatch(/omits/i)
     // The instruction now only says what to do; the next test checks the labelled map is there.
-    expect(task?.instruction).toMatch(/numbered location on the circuit map/)
+    expect(task?.instruction).toMatch(/sensor labels are hidden until you answer/)
   })
 
-  it.each(['vv', 'va'] as const)('%s: the labelled map is on screen for that task', (track) => {
-    render(<EcmoFoundationLessonActivity sectionId="circuit-flow-path" supportMode={track} />)
-    reachFoundationStep('circuit-flow-path', 'predict')
-    const svg = document.querySelector('#cardiohelp-diagnostic-view svg')
-    // The observations are not hidden to make the question harder: every sensor flag is drawn.
-    expect(svg?.querySelector('[data-sensor-flag="pInt"]')).not.toBeNull()
-    expect(svg?.querySelector('[data-sensor-flag="pVen"]')).not.toBeNull()
-    expect(svg?.querySelector('[data-delta-bracket]')).not.toBeNull()
-    expect(screen.getByRole('heading', { name: 'Locate a measurement on the map' })).toBeVisible()
-    expect(pageText()).not.toMatch(/now omits pressure labels/)
-    expect(document.querySelector('fieldset[data-prediction-choices]')).not.toBeDisabled()
-  })
+  /*
+   * Reversed 2026-10-14 at the owner's request, on a tester's report that she answered "Where in
+   * the blood path does the circuit report pInt?" with the pInt label drawn on the map. The labels
+   * are withheld while the question is open and return with the answer.
+   */
+  it.each(['vv', 'va'] as const)(
+    '%s: the map question hides its labels until answered',
+    (track) => {
+      render(<EcmoFoundationLessonActivity sectionId="circuit-flow-path" supportMode={track} />)
+      reachFoundationStep('circuit-flow-path', 'predict')
+      const svg = document.querySelector('#cardiohelp-diagnostic-view svg')
+      expect(svg?.querySelector('[data-sensor-flag="pInt"]')).toBeNull()
+      expect(svg?.querySelector('[data-sensor-flag="pVen"]')).toBeNull()
+      expect(svg?.querySelector('[data-delta-bracket]')).toBeNull()
+      expect(screen.getByRole('heading', { name: 'Locate a measurement on the map' })).toBeVisible()
+      expect(pageText()).not.toMatch(/now omits pressure labels/)
+      expect(document.querySelector('fieldset[data-prediction-choices]')).not.toBeDisabled()
+    },
+  )
 })
 
 /* ------------------------------------------------------------------------------------------ *
@@ -446,9 +453,10 @@ describe('S4-4: the blender setting, and re-drainage, are explained where they a
 
   it('the control-panel section separates the blender FiO₂ from the ventilator FiO₂ by name', () => {
     const controls = controlPanelBlock('controls')
-    expect(controls).toMatch(/the gas panel in this module labels that control “Sweep-gas FiO₂”/)
+    // One sentence since 2026-10-14 (a tester found the screen "a lot of text"); it still names
+    // both settings and the two places their gas goes.
     expect(controls).toMatch(
-      /describe gas delivered to different sites: the membrane lung and the native lungs/,
+      /“Sweep-gas FiO₂” is the oxygen fraction of the gas sent to the membrane lung, set on the blender\. It is not the ventilator FiO₂, which is the gas sent to the native lungs\./,
     )
     expect(controlPanelBlock('control-pump')).toMatch(
       /Re-drainage is blood the circuit returns and then drains again/,

@@ -1,11 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  ecmoGasPathSegments,
-  ecmoSensorSite,
-  resolveEcmoModeText,
-} from '../../content/circuitSegments'
+import { ecmoSensorSite } from '../../content/circuitSegments'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../engine/types'
 import { useStageTeachingScope } from '../stage/StageTeachingScope'
@@ -87,15 +83,20 @@ export function CircuitFlowPathPanel({
           <h3 id="gas-path-heading" className={styles.heading}>
             Sweep-gas path
           </h3>
+          {/*
+            Two plain paragraphs where there were an arrow chain and a sentence per segment ("A
+            setting here is a request, not proof of delivery"); a tester (2026-10-14) was unsure
+            what she was reading.
+          */}
           <p className="mt-3 text-sm leading-6">
-            Gas supply → external gas controls → gas side of the membrane lung → exhaust. The map
-            draws this separate path with dashed lines.
+            Sweep gas runs from the wall supply through the blender, which sets the sweep rate and
+            its oxygen fraction, into the gas side of the membrane lung and out through the exhaust.
+            On the map it is the dashed line.
           </p>
-          {ecmoGasPathSegments().map((segment) => (
-            <p key={segment.id} className="mt-2 text-sm leading-6">
-              {resolveEcmoModeText(segment.detail, state.supportMode)}
-            </p>
-          ))}
+          <p className="mt-2 text-sm leading-6">
+            Gas and blood never mix. Inside the membrane lung, oxygen moves from the gas into the
+            blood and CO₂ moves from the blood into the gas, across the fibre walls.
+          </p>
           <TextEquivalent>
             Sweep is {gas.sweepLpm.toFixed(1)} L/min and sweep-gas oxygen fraction is{' '}
             {gas.fio2.toFixed(2)}. Blood and gas remain on opposite sides of the membrane.

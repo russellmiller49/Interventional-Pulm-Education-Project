@@ -81,6 +81,11 @@ export interface SimulationPanelProps {
   guidedControlId?: GuidedControlId | null
   /** See {@link CircuitLocationDisclosure}. Defaults to `full`. */
   locationDisclosure?: CircuitLocationDisclosure
+  /**
+   * Whether the live-readings grid beside the map starts open. A teaching step whose own text
+   * carries the reading it is about asks for it closed, so the eye stays on that text.
+   */
+  liveReadings?: 'open' | 'closed'
   /** Essential measurement identity supplied by introductory Learn tasks. */
   circuitMeasurementNote?: string
   /**
@@ -224,6 +229,7 @@ export function CircuitSchematic({
   circuitFrame = 'whole',
   circuitFit = 'poster',
   circuitAutoScroll = true,
+  liveReadings = 'open',
   mapAnswer = null,
   onSaveForLater,
   locationDisclosure = 'full',
@@ -427,7 +433,11 @@ export function CircuitSchematic({
           ? 'Preload-limited drainage pattern'
           : 'No resistance pattern present'
 
-  const readingsBlock = <CircuitLiveReadings state={state} open={!answerable} />
+  // Beside a map question the grid is left out: the question is about a place, and a column of
+  // numbers next to it only competed for attention (tester feedback, 2026-10-14).
+  const readingsBlock = answerable ? null : (
+    <CircuitLiveReadings state={state} open={liveReadings !== 'closed'} />
+  )
 
   return (
     <section
@@ -1131,8 +1141,7 @@ export function CircuitSchematic({
         */}
         {locationsDisclosed ? null : (
           <p className={styles.circuitWithheldNote} data-location-withheld-note>
-            Where each pressure channel is taken is what this lesson asks you to place, so the
-            sensor markers appear on this map once you have committed your prediction.
+            Sensor labels are hidden until you answer.
           </p>
         )}
         {fitted ? null : (

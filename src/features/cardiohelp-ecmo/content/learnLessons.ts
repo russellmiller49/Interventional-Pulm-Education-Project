@@ -262,9 +262,9 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'The pump is stopped: which channels still mean anything?',
       instruction:
-        'Open Parameter list. In this settled initial pump-off state pVen, pInt, pArt and the Δp trend show the unavailable indication rather than a number. Work out what the console can still tell you here, and why the pressure channels are not part of it.',
+        'Open the Parameter list on the console. With the pump stopped, flow reads 0 and the pressures show dashes. Which readings still tell you something, and why are the pressures blank?',
       rationale:
-        'Dashes are a statement, not a gap. The three pressure locations distinguish drainage limitation, return obstruction and oxygenator resistance, but they are flow-dependent circuit-pressure patterns that this educational model does not report in the settled pump-off state. Flow is different: with the sensor connected, zero is a real reading rather than an absent one.',
+        'The pressures are read to tell a drainage problem, a return obstruction and oxygenator resistance apart, and all three only mean something while blood is flowing, so this simulator leaves them blank with the pump stopped. Flow is different: its sensor is connected, so 0 L/min is a real reading. The speed setting, power source and alarm state still mean what they say.',
       actionLabel: 'Open Parameter list',
       actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
       expectedResponse: [
@@ -279,7 +279,7 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Bring a reference circuit up before touring the rest',
       instruction:
-        'Bring the pump up to 3200 rpm on the rotary control. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. This is a reference circuit brought up so the console has something to report; it is not the startup sequence, which comes later on a fresh one.',
+        'The console locks its controls against accidental changes. Press and hold Hold to unlock for a second, then press and hold the up arrow beside the speed dial until it reads 3200 rpm. This only gives the tour a running circuit; the startup sequence comes later, on a fresh one.',
       rationale:
         'Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like, so the tour needs a circuit that is working. What it does not need is a completed startup — nothing here has been diagnostically checked or inspected, and none of it counts toward the pre-use sequence. The progressive climb simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
       actionLabel: 'Ramp to 3200 rpm',

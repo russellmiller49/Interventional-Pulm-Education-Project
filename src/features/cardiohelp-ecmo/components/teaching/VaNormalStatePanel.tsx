@@ -912,22 +912,23 @@ export function VaNormalStatePanel({
         <h3 id="va-beyond-circuit-heading" className={styles.heading}>
           What else belongs to the picture
         </h3>
-        <ul className="mt-3 grid gap-2" data-patient-context>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+        {/* A plain list where there were five bordered cards (tester feedback, 2026-10-14). */}
+        <ul className="mt-3 grid list-disc gap-1 pl-5" data-patient-context>
+          <li className="text-sm leading-6">
             Native cardiac output is not a bystander in venoarterial support. The circuit and the
             heart divide one circulation between them, and a change on either side changes the
             division.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             The native lungs still matter even though the circuit returns arterial blood. Whatever
             the heart ejects has passed through them, and that is the blood the upper body receives.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             Left-sided loading belongs to the picture too. This simulation carries a pulmonary
             congestion state, currently reported as {state.patient.pulmonaryCongestion}, alongside
             the pulse pressure and valve rows above.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             Volume state, temperature, hemoglobin, sedation and the afterload the returning circuit
             blood imposes all sit inside this picture, and every one of them changes how the numbers
             above should be read.
@@ -943,13 +944,13 @@ export function VaNormalStatePanel({
               model does not show it.
             </span>
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             A measurement can also be wrong, and in venoarterial support it can be right about
             something other than what was assumed — which limb a saturation came from is part of
             what the number is. Before a change is treated as physiology, it is worth establishing
             that the channel reporting it is reporting properly, and from where.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             A direction of travel over a window carries more than any one reading taken alone.
           </li>
         </ul>

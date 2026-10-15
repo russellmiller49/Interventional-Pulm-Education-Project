@@ -794,6 +794,32 @@
   color: var(--ecmo-muted, #a7bcc0);
 }
 
+/* After a run: what moved in the map's yellow, what held steady quieter. Not colour alone: weight
+   and the Change column's own sign carry it too. */
+.comparison tr[data-changed='true'] > * {
+  background: rgba(255, 209, 102, 0.1);
+  font-weight: 700;
+}
+.comparison tr[data-changed='true'] > th {
+  box-shadow: inset 4px 0 0 #ffd166;
+  padding-left: 0.6rem;
+}
+.comparison tr[data-changed='true'] > td:last-child {
+  color: #ffd166;
+}
+.comparison tr[data-changed='false'] > * {
+  color: var(--ecmo-muted, #a7bcc0);
+}
+
+/* A story's question and the comparison that answers it, side by side where there is room. */
+@media (min-width: 1280px) {
+  .comparisonLead:has(> [data-story-question]) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+    gap: 1.25rem;
+  }
+}
+
 /*
  * Four short numeric columns stay a table wherever they fit. Only on a box narrower than 20 rem
  * (a 320 px phone, or 200% text) do the whole-word headers stop fitting their columns; there each
@@ -986,4 +1012,37 @@
 
 .workspaceFrame [data-map-question] {
   scroll-margin-top: 5rem;
+}
+
+/* A question answered on the map, stated at the head of the task in large type. */
+.mapQuestionCallout {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: 0.5rem 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--ecmo-shell-accent, #71e1e5);
+  border-left-width: 5px;
+  border-radius: 0.85rem;
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.mapQuestionKicker {
+  margin: 0;
+  color: var(--ecmo-shell-accent, #71e1e5);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mapQuestionStem {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.mapQuestionHow {
+  margin: 0;
+  font-size: 0.95rem;
 }

@@ -85,8 +85,7 @@ export function PumpPressureZonesPanel({
               resistance changes.
             </p>
             <p className="mt-2 text-sm leading-6">
-              This reference is settled and has unrestricted drainage. Its values are set for
-              teaching, not clinical targets.
+              This circuit is settled, with drainage to spare.
             </p>
           </section>
         </FoundationTeachingBlock>
@@ -111,9 +110,12 @@ export function PumpPressureZonesPanel({
             </p>
             <p className="mt-2 text-sm leading-6" data-small-change-note>
               The change is small here, about one mmHg for three hundred more rpm, because this
-              circuit has drainage to spare. On a circuit short of drainage the same speed increase
-              pulls pVen far more negative for little extra flow, and the answer is to assess
-              drainage, not to add speed.
+              circuit has drainage to spare. Drainage runs short when less blood reaches the
+              drainage cannula than the pump is asking for: hypovolemia or bleeding, a cannula that
+              is malpositioned, too small or sucked against the vessel wall, a kinked or clotted
+              drainage limb, or raised intrathoracic or intra-abdominal pressure such as tamponade
+              or tension pneumothorax. Then the same speed increase pulls pVen far more negative for
+              little extra flow, and the answer is to find and treat the cause, not to add speed.
             </p>
             <p className="mt-2 text-sm leading-6">
               After the pump, pInt and pArt rise with the extra flow, and so does Δp: it depends on
@@ -157,21 +159,18 @@ export function PumpPressureZonesPanel({
           comparison), rather than a disclosure under every task of the section. The pArt line that
           stood above it is said by the comparison table and the circuit panel already.
         */}
-        {scope.foundationBlock === 'pump-setting' || scope.foundationBlock === 'pump-load' ? (
-          <details className={styles.section}>
-            <summary className="cursor-pointer font-semibold">More about pressure patterns</summary>
-            <EcmoCircuitWalk
-              {...navigation}
-              pastPrediction
-              onRunComparison={undefined}
-              state={state}
-            />
+        {/*
+          Reference material for the loading task only, said to be optional, and only the part that
+          task is about. On the first task it held a second walk card and a device-specification
+          card under the pressure-pattern table, and a tester (2026-10-14) opened it and asked
+          whether she was supposed to read all of it.
+        */}
+        {scope.foundationBlock === 'pump-load' ? (
+          <details className={styles.section} data-pressure-patterns>
+            <summary className="cursor-pointer font-semibold">
+              Optional: the four pressure patterns
+            </summary>
             <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
-            <GuidedValue
-              guide={ecmoDerivedValueGuides.transmembraneDeltaP}
-              value={circuit.readouts.deltaP.displayed}
-              headingLevel={3}
-            />
           </details>
         ) : null}
       </div>

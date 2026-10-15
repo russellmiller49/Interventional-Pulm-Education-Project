@@ -168,10 +168,10 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     ordinal: 2,
     kind: 'instructional',
     title: 'The pump',
-    // Tester feedback (2026-10-13): the stop named a "spinning cone" and never said how a
-    // centrifugal pump moves blood, which is the thing the two pressure zones either side follow from.
+    // Tester feedback: named a centrifugal pump (2026-10-13), then cut to what the two pressure
+    // zones follow from (2026-10-14: "this entire section can be really simplified").
     analogy:
-      'A centrifugal pump. The spinning rotor draws blood in at its centre and throws it outward to the outlet, so there is suction before the pump and pressure after it. It does not displace a fixed volume the way a roller pump or a syringe does: it moves only what reaches its inlet.',
+      'A centrifugal pump. It pulls blood in, so there is suction before it, and pushes it on, so there is pressure after it. It moves only the blood that reaches it.',
     checklistLabel: 'Reading the pump',
     checklist: [
       'The speed is chosen',
@@ -199,18 +199,19 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     analogy:
       'Thousands of hollow fibres. Blood weaves around the outside, sweep gas blows through the inside, and diffusion does the rest.',
     checklistLabel: 'What the membrane lung does',
+    // Three points where there were four: the resistance and where it is read are one point.
     checklist: [
-      'Gas exchange happens here',
-      'It has a resistance of its own',
-      'That resistance is read across the device',
-      'The gas side never joins the blood',
+      'Oxygen and CO₂ cross the fibre walls here',
+      'Its resistance is read as the pressure drop across it',
+      'Gas and blood never mix',
     ],
     primarySegmentId: 'membrane',
     secondarySegmentIds: ['pre-membrane'],
     sensorSiteIds: ['pInt', 'svo2-venous-cell', 'deltaP'],
     pressureZoneIds: ['across-membrane'],
+    // What a fellow adjusts here, and what it does not do (tester feedback, 2026-10-14).
     takeaway:
-      'The gradient is a difference between two places rather than a reading taken at one, which is why it needs both of them named.',
+      'Sweep gas mainly clears CO₂: turning it up lowers PaCO₂. Oxygenation depends on blood flow and the sweep-gas oxygen fraction, not on how fast the sweep runs.',
     modelBoundary:
       'Clot burden and how a membrane changes over a run are not modelled. The drainage-line saturation is taken at the module’s own venous inlet, not at the patient.',
     sourceIds: [...PLACE_SOURCES],

@@ -129,12 +129,14 @@ describe('the composed activity renders that scope', () => {
   })
 
   it.each(supportedTracks(KEYED_SECTION))(
-    'circuit-flow-path / %s retains named locations before and after an optional response',
+    'circuit-flow-path / %s withholds named locations only while the map question is open',
     (track) => {
       mount(KEYED_SECTION, track)
       expect(renderedDisclosure()).toBe('full')
       reachFoundationStep(KEYED_SECTION, 'predict')
-      expect(renderedDisclosure()).toBe('full')
+      // Revised 2026-10-14 (tester feedback, "The circuit was still labeled when I answered the
+      // question"): the map question's sensor labels are withheld until the answer is in.
+      expect(renderedDisclosure()).toBe('withheld')
       commitPrediction(KEYED_SECTION)
       expect(renderedDisclosure()).toBe('full')
     },

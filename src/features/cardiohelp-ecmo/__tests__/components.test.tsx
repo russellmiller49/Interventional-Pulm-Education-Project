@@ -115,9 +115,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(
       within(nextCard).getByText('The pump is stopped: which channels still mean anything?'),
     ).toBeInTheDocument()
-    expect(
-      within(nextCard).getByText(/show the unavailable indication rather than a number/i),
-    ).toBeInTheDocument()
+    expect(within(nextCard).getByText(/the pressures show dashes/i)).toBeInTheDocument()
     expect(container.querySelector('[data-stage]')).toHaveAttribute(
       'data-stage',
       'startup-screen-parameters',
