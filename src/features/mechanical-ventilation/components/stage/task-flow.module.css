@@ -19,11 +19,6 @@
   font-weight: 700;
   line-height: 1.3;
 }
-.sectionHeader {
-  max-width: 1280px;
-  margin: 1rem auto 0;
-  padding: clamp(0.85rem, 2vw, 1.5rem);
-}
 /*
  * The optional question card in the module's own dark palette (walkthrough V2: a white card on a
  * dark page, tiring over a long sitting). The card's stylesheet reads these variables and keeps its
@@ -173,7 +168,7 @@
 .flow [data-bedside-panel] :is(summary, dd, h2, h3) {
   color: var(--ink);
 }
-.flow [data-task-workbench] [data-bedside-panel][data-compact='true'] details > div {
+.flow [data-console-surface] [data-bedside-panel][data-compact='true'] details > div {
   max-height: none;
   overflow: visible;
 }
@@ -205,31 +200,6 @@
   margin-block: 0.75rem;
 }
 
-.workbench {
-  display: grid;
-  gap: 0.8rem;
-  min-width: 0;
-}
-.experiment {
-  display: grid;
-  gap: 0.8rem;
-  min-width: 0;
-}
-.signals {
-  min-width: 0;
-  display: grid;
-  gap: 0.7rem;
-  align-content: start;
-}
-.controls {
-  min-width: 0;
-  display: grid;
-  gap: 0.7rem;
-  align-content: start;
-}
-.controls:empty {
-  display: none;
-}
 .tools {
   display: flex;
   flex-wrap: wrap;
@@ -322,56 +292,11 @@
   min-width: 0;
 }
 
-/*
- * The experiment, beside the task (MV-PRE-REVIEW-03, N7). Module-dark like every other card in the
- * flow; the stage is carried by the words in the chip and the checklist, and colour only repeats it.
- */
-.experimentPanel {
-  display: grid;
-  gap: 0.6rem;
-  margin-top: 0.75rem;
-  padding: 0.8rem;
-  border: 1px solid #4b7a82;
-  border-radius: 0.7rem;
-  background: #0f2429;
-  min-width: 0;
-}
-.experimentPanel > * {
-  margin: 0;
-}
-.experimentHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 0.75rem;
-}
-.experimentHeader h3 {
-  font-size: 1rem;
-  font-weight: 750;
-}
-.stageChip {
-  display: inline-block;
-  padding: 0.1rem 0.55rem;
-  border: 1px solid #648a91;
-  border-radius: 999px;
-  color: #eaf4f4;
-  font-size: 0.8rem;
-  font-weight: 700;
-  line-height: 1.5;
-}
-.stageChip[data-stage='ready'],
-.stageChip[data-stage='captured'] {
-  border-color: #76d69b;
-  color: #b7f0c9;
-}
-.stageChip[data-stage='awaiting-action'],
-.stageChip[data-stage='not-started'] {
-  border-color: #ffbf62;
-  color: #ffdca6;
-}
+/* The goal checklist on a simulator task's Now card. */
 .goalList {
   display: grid;
   gap: 0.3rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -396,29 +321,6 @@
 .goalList li[data-goal-state='to-do'] .goalMark {
   color: #ffbf62;
 }
-.interval {
-  display: grid;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-}
-.interval progress {
-  width: 100%;
-  height: 0.6rem;
-  accent-color: #71e1e5;
-}
-.experimentPanel .tools > .checkbox {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.9rem;
-}
-.experimentPanel .checkbox input {
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: #71e1e5;
-}
 .srOnly {
   position: absolute;
   width: 1px;
@@ -429,33 +331,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-.experimentPanel .tools > :is(button, a) {
-  min-height: 44px;
-  padding: 0.5rem 0.85rem;
-  border: 1px solid #648a91;
-  border-radius: 0.5rem;
-  background: #193239;
-  color: #eaf4f4;
-  font-size: 0.9rem;
-  font-weight: 650;
-  cursor: pointer;
-}
-.experimentPanel .tools > button[data-run-experiment][data-paused='true'] {
-  border-color: #71e1e5;
-  background: #1d4a52;
-}
-.experimentPanel .tools > button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.experimentPanel .tools > select {
-  min-height: 44px;
-  border: 1px solid #648a91;
-  border-radius: 0.5rem;
-  background: #193239;
-  color: #eaf4f4;
-  padding: 0.4rem;
 }
 /* The lesson: one shape in every section, three named disclosures (T1/S6-2). */
 .flow [data-lesson] > * + * {
@@ -595,9 +470,6 @@
 .timeline > :is(h3, p) {
   grid-column: 1 / -1;
 }
-.experiment[data-native-view='true'] {
-  grid-template-columns: minmax(0, 1fr);
-}
 .timeline table {
   width: 100%;
   font-size: 0.9rem;
@@ -608,16 +480,6 @@
 }
 .timeline th {
   color: #aec5c8;
-}
-.native {
-  min-width: 0;
-  overflow-x: auto;
-}
-.native > div {
-  min-width: 640px;
-}
-.nativeGate {
-  display: none;
 }
 .controlEditor {
   display: grid;
@@ -652,24 +514,8 @@
 }
 
 @media (min-width: 1000px) {
-  .experiment:not([data-native-view='true']):has(.controls:not(:empty)) {
-    grid-template-columns: minmax(0, 1fr) 280px;
-    align-items: start;
-  }
   .comparison {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/*
- * Stacked (below the two-column width): act, then observe. The control column — the requested
- * setting, hold or bedside action — comes before the readings and the live trace, so on a phone the
- * order under the experiment panel is change → readings → trace rather than a scroll past the trace
- * to find the control.
- */
-@media (max-width: 999px) {
-  .experiment:not([data-native-view='true']) > .controls {
-    order: -1;
   }
 }
 
@@ -679,12 +525,6 @@
   }
   .content {
     padding: 0.5rem;
-  }
-  .nativeGate {
-    display: block;
-  }
-  .native {
-    display: none;
   }
   .timeline table {
     font-size: 0.8rem;
@@ -777,4 +617,263 @@
 }
 .flow [data-device='drager-evita-v800-v600'] [data-native-monitor] :is(span, small) {
   color: #42616a;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * The flowing stage (October 2026): one Now card, the console beside the teaching, one clock.
+ * ---------------------------------------------------------------------------------------------- */
+
+.content {
+  max-width: 1440px;
+}
+.flow[data-layout='concept'] .content {
+  max-width: 1180px;
+}
+@media (min-width: 1500px) {
+  .flow:not([data-layout='concept']) .content {
+    max-width: 1840px;
+  }
+}
+
+/* The Now card is a column so its pinned action row can ride the bottom of the view. */
+.flow [data-now-card] {
+  --now-pad: clamp(0.8rem, 2vw, 1.4rem);
+}
+.flow [data-now-card][data-pinned-actions] {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.flow [data-now-card][data-pinned-actions] > * + * {
+  margin-top: 0.6rem;
+}
+.flow [data-now-card] > [data-now-footer='pinned'] {
+  margin-top: 0.75rem;
+}
+.nowFocus:focus {
+  outline: none;
+}
+.nowFocus:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 4px;
+  border-radius: 1rem;
+}
+.cardBody {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.cardBody > * {
+  margin: 0;
+}
+.cardSection {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid #345158;
+}
+.cardSection table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.cardSection :is(th, td) {
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #345158;
+  overflow-wrap: anywhere;
+}
+.guidedInstruction {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid #71e1e5;
+  background: #10262b;
+  font-weight: 600;
+}
+
+/* The console column: the clock bar, the one-line breath map and the console in one cell. */
+.consoleSurface {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  align-content: start;
+}
+.consoleCell {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.consoleFrame {
+  min-width: 0;
+}
+.clockBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #345158;
+  border-radius: 0.6rem;
+  background: #0f2429;
+}
+.clockButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.clockButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+.clockButton[data-paused='true'] {
+  border-color: #71e1e5;
+  background: #1d4a52;
+}
+.clockButton[data-guided-help='true'],
+.sideCard [data-guided-help='true'] {
+  outline: 4px solid #fff;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 8px rgba(113, 225, 229, 0.32),
+    0 0 30px rgba(113, 225, 229, 0.58);
+}
+.clockSpeed select {
+  min-height: 44px;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  padding: 0.35rem;
+}
+.clockTime {
+  font-variant-numeric: tabular-nums;
+  color: #aec5c8;
+}
+.clockBadge {
+  margin-left: auto;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid #648a91;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.clockBadge[data-frozen-badge] {
+  border-color: #ffbf62;
+  color: #ffdca6;
+}
+.traceNote {
+  font-size: 0.875rem;
+  color: #aec5c8;
+}
+.readingsStrip {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.readingsStrip > * {
+  margin: 0;
+}
+.sideCard {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #345158;
+  border-radius: 0.7rem;
+}
+.sideCard > * {
+  margin: 0;
+}
+.sideCard h3 {
+  font-size: 1rem;
+  font-weight: 750;
+}
+.sideCard label {
+  display: grid;
+  gap: 0.35rem;
+}
+.sideCard output {
+  font-weight: 700;
+}
+.sideCard input[type='range'] {
+  width: 100%;
+  accent-color: #71e1e5;
+  min-height: 2rem;
+}
+.sideButton {
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  font-weight: 650;
+  cursor: pointer;
+}
+.sideButton:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.consoleOptions {
+  font-size: 0.9rem;
+}
+.consoleOptions > * + * {
+  margin-top: 0.5rem;
+}
+
+/* Tasks in this section: every task opens. */
+.taskMap {
+  border-top: 1px solid #345158;
+  padding-top: 0.5rem;
+}
+.taskMap > summary {
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.taskMap ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+.taskMap button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #345158;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #eaf4f4;
+  text-align: left;
+  cursor: pointer;
+}
+.taskMap button[aria-current='step'] {
+  border-color: #71e1e5;
+  font-weight: 700;
+  cursor: default;
+}
+.taskMap li[data-step-state='done'] button {
+  color: #b7f0c9;
+}
+.consoleCue {
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border-left: 3px solid #71e1e5;
+  background: #10262b;
+  font-size: 0.9rem;
+  font-weight: 600;
 }

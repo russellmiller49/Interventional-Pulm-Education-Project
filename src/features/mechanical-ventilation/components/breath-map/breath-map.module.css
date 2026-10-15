@@ -293,3 +293,54 @@
 .pin[data-disabled='true'] {
   cursor: default;
 }
+
+/* The walk's pins are real buttons: a full touch target on the drawing. */
+button.pin {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+button.pin:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 3px;
+}
+
+/* The one-line map under the clock bar. */
+.strip {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.6rem;
+  background: rgba(16, 46, 52, 0.35);
+  color: var(--ink, #eaf4f4);
+}
+.stripSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 4rem;
+}
+.stripStops {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--stage-muted, #9fb4b7);
+}
+.stripStops li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.stripStops li[data-lit='true'] {
+  color: var(--ink, #eaf4f4);
+  font-weight: 700;
+}
