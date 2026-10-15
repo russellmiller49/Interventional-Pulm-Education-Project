@@ -14,7 +14,6 @@ import { MechanicalVentilationLearnLanding } from '../components/MechanicalVenti
 import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorConsole'
 import { VentilationWaveformReadingSequence } from '../components/MechanicalVentilationTeachingPanel'
 import { RecordedBreathComparison } from '../components/stage/RecordedBreathComparison'
-import { VentilationExperimentPanel } from '../components/stage/VentilationExperimentPanel'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { headingNeedsReveal, requestTaskHeadingReveal } from '../components/stage/revealTaskHeading'
 import { IDEAL_REFERENCE, IdealizedComparison } from '../components/teaching/IdealizedComparison'
@@ -23,7 +22,7 @@ import { ventilationExperimentStatus } from '../content/experimentStatus'
 import { mechanicalVentilationCaseById } from '../content'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import { plateauAcquisition } from '../content/plateauAcquisition'
-import { ventilationStageLesson } from '../content/stageLessons'
+import { isPresentedVentilationStep, ventilationStageLesson } from '../content/stageLessons'
 import { advanceSimulation, createInitialSimulationState, ventilatorDeviceIds } from '../engine'
 import {
   idealBreaths,
@@ -43,6 +42,14 @@ import { ventilationSimulationReducer } from '../engine/reducer'
 import { VENTILATION_SELF_PACED_KEY } from '../engine/selfPacedProgress'
 import { completedBreath } from '../engine/teachingBreath'
 import type { VentilationAction } from '../engine/types'
+import {
+  chooseStep as chooseTask,
+  nowPrimary,
+  nowPrimaryLabel,
+  pressClock,
+  pressPrimary,
+  setConsoleControl,
+} from '../test-support/stageHost'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -89,11 +96,7 @@ function taskStepIndex(unitId: string) {
     (step) => step.interaction.kind === 'simulator-task',
   )
 }
-function chooseStep(index: number) {
-  fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-    target: { value: index },
-  })
-}
+const chooseStep = (index: number) => chooseTask(index)
 const heading = () => document.querySelector<HTMLElement>('[data-step-heading]')!
 
 /* A lab session driven the way the Learn host drives it. */
@@ -189,75 +192,75 @@ describe('N7: explicit, truthful experiment operation', () => {
   })
 
   it.each(ventilationLearningUnits.map((unit) => unit.id))(
-    '%s puts Run beside the task and drops the engine-language copy',
+    '%s puts the task, its next move and one clock beside one console',
     (unitId) => {
       mount(unitId)
       chooseStep(taskStepIndex(unitId))
-      const card = document.querySelector('[data-current-step]')!
-      expect(card.querySelector('[data-experiment-panel]')).not.toBeNull()
-      expect(
-        within(card as HTMLElement).getByRole('button', { name: 'Run experiment' }),
-      ).toBeEnabled()
-      expect(
-        within(card as HTMLElement).getByRole('button', { name: 'Capture result' }),
-      ).toBeDisabled()
-      // One clock control for one patient.
+      const card = document.querySelector('[data-current-step]')! as HTMLElement
+      // The card names the next move and offers to show where it is; nothing to run yet.
+      // A pause-or-inspect task says its move in the task itself; the line above the console
+      // repeats it where the learner's hands are.
+      expect(document.querySelector('[data-console-cue]')?.textContent?.length).toBeGreaterThan(20)
+      expect(within(card).getByRole('button', { name: /Show me where/ })).toBeEnabled()
+      expect(nowPrimary()).toBeNull()
+      // One clock control for one patient, directly above the console.
       expect(screen.getAllByRole('button', { name: /^(Run|Run experiment|Pause)$/ })).toHaveLength(
         1,
       )
+      expect(document.querySelectorAll('[data-ventilation-console]')).toHaveLength(1)
+      expect(document.querySelector('[data-experiment-panel]')).toBeNull()
       const text = document.body.textContent ?? ''
       expect(text).not.toMatch(/Observe for 0 simulated seconds/)
       expect(text).not.toMatch(/requested action is present/)
     },
   )
 
-  it('captures automatically only when opted in, and only once the gate is actually met', () => {
+  it('captures by default once a live run meets the gate, and not before', () => {
     mount('waveform-anatomy')
     chooseStep(taskStepIndex('waveform-anatomy'))
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.change(document.getElementById('mv-quick-peakFlowLMin')!, { target: { value: '60' } })
-    // Opting in and changing the setting runs nothing.
+    setConsoleControl('peakFlowLMin', 60)
+    // Making the change runs nothing.
     act(() => jest.advanceTimersByTime(3000))
-    expect(
-      document.querySelector('[data-experiment-panel]')!.getAttribute('data-experiment-stage'),
-    ).toBe('awaiting-interval')
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    expect(nowPrimaryLabel()).toBe('Run 12 s and capture')
+    expect(document.querySelector('[data-captured-result]')).toBeNull()
+    pressClock('run')
     act(() => jest.advanceTimersByTime(6000))
     expect(document.querySelector('[data-captured-result]')).toBeNull()
     act(() => jest.advanceTimersByTime(8000))
     expect(
-      document.querySelector('[data-experiment-panel]')!.getAttribute('data-experiment-stage'),
-    ).toBe('captured')
-    expect(document.querySelector('[data-captured-result]')).not.toBeNull()
+      document.querySelector('[data-captured-result-near-task] [data-captured-result]'),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-now-status]')?.textContent).toMatch(/^Captured at /)
+    expect(nowPrimaryLabel()).toBe('Continue')
   })
 
-  it('without the option, a ready result waits for the learner', () => {
+  it('runs the interval and captures in one click', () => {
     mount('waveform-anatomy')
     chooseStep(taskStepIndex('waveform-anatomy'))
-    fireEvent.change(document.getElementById('mv-quick-peakFlowLMin')!, { target: { value: '60' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
-    act(() => jest.advanceTimersByTime(14000))
-    expect(
-      document.querySelector('[data-experiment-panel]')!.getAttribute('data-experiment-stage'),
-    ).toBe('ready')
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeEnabled()
+    setConsoleControl('peakFlowLMin', 60)
+    expect(document.querySelector('[data-now-status]')?.textContent).toBe(
+      'Change in place. Run 12 s and capture.',
+    )
+    pressPrimary()
+    expect(document.querySelector('[data-captured-result]')).not.toBeNull()
+    expect(nowPrimaryLabel()).toBe('Continue')
   })
 
   it('holds automatic capture on a comparison that no longer isolates one change', () => {
-    const ready = runFor(
-      session(
-        'waveform-anatomy',
-        { type: 'START_EXPERIMENT' },
-        engine({ type: 'SET_CONTROL', control: 'peakFlowLMin', value: 60 }),
-      ),
-      12.2,
-    )
-    const confounded: LabSession = { ...ready, confounds: ['Additional input changed: ratePerMin'] }
-    const lab = jest.fn()
-    render(<VentilationExperimentPanel session={confounded} lab={lab} engine={jest.fn()} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    expect(lab).not.toHaveBeenCalledWith({ type: 'COMPARE' })
+    mount('waveform-anatomy')
+    chooseStep(taskStepIndex('waveform-anatomy'))
+    setConsoleControl('peakFlowLMin', 60)
+    // A second, unrequested change: the comparison no longer isolates one input.
+    setConsoleControl('ratePerMin', 18)
+    expect(document.querySelector('[data-confounds]')?.textContent).toMatch(/ratePerMin/)
+    pressClock('run')
+    act(() => jest.advanceTimersByTime(14000))
     expect(document.querySelector('[data-auto-capture-held]')).not.toBeNull()
+    expect(document.querySelector('[data-captured-result]')).toBeNull()
+    // The learner may still capture it on purpose.
+    expect(nowPrimaryLabel()).toBe('Capture result')
+    pressPrimary()
+    expect(document.querySelector('[data-captured-result]')).not.toBeNull()
   })
 })
 
@@ -266,16 +269,15 @@ describe('N7: explicit, truthful experiment operation', () => {
  * ---------------------------------------------------------------------------------------------- */
 
 describe('N4: navigation, focus and scroll', () => {
-  it('reveals and focuses the new heading on Continue, Back and step choice', () => {
+  it('reveals and focuses the new task on Continue, Back and the task list', () => {
     mount('waveform-anatomy')
-    const [top] = screen.getAllByRole('button', { name: 'Continue' })
-    fireEvent.click(top)
+    // One Continue on the card: there is no second one at the foot of the page any more.
+    expect(screen.getAllByRole('button', { name: 'Continue' })).toHaveLength(1)
+    pressPrimary()
     expect(document.activeElement).toBe(heading())
     expect(heading()).toHaveTextContent(ventilationStageLesson('waveform-anatomy').steps[1].title)
     expect(scrollIntoView).toHaveBeenCalledTimes(1)
-    // The bottom Continue — the one the walkthrough pressed.
-    const buttons = screen.getAllByRole('button', { name: 'Continue' })
-    fireEvent.click(buttons[buttons.length - 1])
+    pressPrimary()
     expect(document.activeElement).toBe(heading())
     expect(scrollIntoView).toHaveBeenCalledTimes(2)
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
@@ -283,22 +285,20 @@ describe('N4: navigation, focus and scroll', () => {
     chooseStep(5)
     expect(document.activeElement).toBe(heading())
     expect(scrollIntoView).toHaveBeenCalledTimes(4)
-    // The step count is the heading's description, so it is read with it.
-    const describedBy = heading().getAttribute('aria-describedby')!
-    // MV-PRE-REVIEW-04 (N6): position 5 in the lesson is the fourth of the seven steps shown.
-    expect(document.getElementById(describedBy)).toHaveTextContent(/Step 4 of 7/)
+    // MV-PRE-REVIEW-04 (N6): position 5 in the lesson is the fourth of the seven tasks shown.
+    expect(heading()).toHaveTextContent(/Task 4 of 7/)
   })
 
   it('does not move focus or the page on ticks, Run/Pause, control changes or disclosures', () => {
     mount('waveform-anatomy')
     chooseStep(taskStepIndex('waveform-anatomy'))
     const calls = scrollIntoView.mock.calls.length
-    const run = screen.getByRole('button', { name: 'Run experiment' })
+    const run = document.getElementById('mv-clock-run')!
     run.focus()
     fireEvent.click(run)
     act(() => jest.advanceTimersByTime(5000))
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    fireEvent.change(document.getElementById('mv-quick-peakFlowLMin')!, { target: { value: '60' } })
+    setConsoleControl('peakFlowLMin', 60)
     fireEvent.click(screen.getAllByText('More detail')[0])
     act(() => jest.advanceTimersByTime(2000))
     expect(scrollIntoView.mock.calls.length).toBe(calls)
@@ -309,11 +309,33 @@ describe('N4: navigation, focus and scroll', () => {
     const documentSpy = jest.spyOn(document, 'addEventListener')
     const windowSpy = jest.spyOn(window, 'addEventListener')
     mount('waveform-anatomy')
-    fireEvent.click(screen.getAllByRole('button', { name: 'Continue' })[0])
+    pressPrimary()
     for (const spy of [documentSpy, windowSpy])
       expect(spy.mock.calls.some(([type]) => type === 'focusin' || type === 'focus')).toBe(false)
     documentSpy.mockRestore()
     windowSpy.mockRestore()
+  })
+
+  it('Show me where is the only other thing that moves focus, and only to the control it names', () => {
+    mount('waveform-anatomy')
+    chooseStep(taskStepIndex('waveform-anatomy'))
+    const calls = scrollIntoView.mock.calls.length
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/ }))
+    act(() => jest.advanceTimersByTime(10))
+    expect(document.activeElement?.id).toBe('mv-screen-controls')
+    expect(document.getElementById('mv-screen-controls')).toHaveAttribute(
+      'data-guided-help',
+      'true',
+    )
+    expect(scrollIntoView.mock.calls.length).toBe(calls + 1)
+    // The mark follows the task: once Controls is open, the tile it waits for is marked.
+    fireEvent.click(document.getElementById('mv-screen-controls')!)
+    expect(document.getElementById('mv-control-peakFlowLMin')).toHaveAttribute(
+      'data-guided-help',
+      'true',
+    )
+    // Following the mark moves nothing by itself.
+    expect(scrollIntoView.mock.calls.length).toBe(calls + 1)
   })
 
   it('focuses a new section’s heading only when a section change asked for it', () => {
@@ -344,7 +366,7 @@ describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sectio
     const lesson = mount(unitId)
     const kinds = new Set<string>()
     for (const [index, step] of lesson.steps.entries()) {
-      if (kinds.has(step.interaction.kind)) continue
+      if (!isPresentedVentilationStep(step) || kinds.has(step.interaction.kind)) continue
       kinds.add(step.interaction.kind)
       chooseStep(index)
       expect(screen.queryByText('Teaching and worked references')).toBeNull()
@@ -352,7 +374,8 @@ describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sectio
       expect(lessons).toHaveLength(1)
       const block = lessons[0]
       expect(block.closest('details')).toBeNull()
-      expect(block.querySelector('[data-lesson-part="idea"]')?.textContent).toMatch(/The idea:/)
+      // October 2026: the idea and objective sit once, in What this section is for.
+      expect(block.querySelector('[data-lesson-part="idea"]')).toBeNull()
       expect(block.querySelector('[data-lesson-part="task"]')?.textContent?.length).toBeGreaterThan(
         20,
       )
@@ -580,7 +603,10 @@ describe('S7-2: the model effort row is drawn and named where the task reads it'
   it.each([5, 6])('Section 7 step %i', (index) => {
     mount('expiration-and-air-trapping')
     chooseStep(index)
-    const figure = document.querySelector('[data-task-workbench] [data-captured-breath] svg')!
+    // Paused, the console holds the breath still for reading, with the effort row the task reads.
+    const figure = document.querySelector(
+      '[data-ventilation-console] [data-frozen-breath] [data-captured-breath] svg',
+    )!
     const labels = [...figure.querySelectorAll('text')].map((node) => node.textContent)
     expect(labels).toContain('Effort · model (cmH₂O)')
     expect(labels).toContain('Airway pressure (cmH₂O)')
@@ -762,9 +788,12 @@ describe('B2: the pathway accordion before and after stored progress is read', (
 describe('earlier contracts survive the new workbench', () => {
   it('reading, revealing and navigating record no run, capture or action', () => {
     mount('mechanics-load-and-pressure')
-    for (const button of screen.getAllByRole('button', { name: 'Show explanation' }))
+    for (const button of screen.queryAllByRole('button', { name: 'Show explanation' }))
       fireEvent.click(button)
     fireEvent.click(screen.getAllByText('More detail')[0])
+    chooseStep(1)
+    for (const button of screen.getAllByRole('button', { name: 'Show explanation' }))
+      fireEvent.click(button)
     chooseStep(ventilationStageLesson('mechanics-load-and-pressure').steps.length - 1)
     expect(document.querySelector('[data-no-observation]')).not.toBeNull()
     expect(document.querySelector('[data-captured-result]')).toBeNull()

@@ -19,15 +19,12 @@ import {
 } from 'lucide-react'
 
 import {
-  adaptControlDescriptor,
-  canonicalToNativeControlValue,
   formatMonitorField,
   getVentilatorDeviceProfile,
   getVentilatorModeDescriptor,
   groupControlsForDevice,
   VENTILATOR_CONTROL_GROUP_NOTE,
   nativeToCanonicalControlValue,
-  orderControlsForDevice,
   resolveBreathPhase,
 } from '../content'
 import { plateauReadingValidity, plateauWithheldNote } from '../content/plateauValidity'
@@ -36,12 +33,6 @@ import {
   plateauAcquisitionNote,
   type PlateauAcquisitionStatus,
 } from '../content/plateauAcquisition'
-import {
-  isAdaptivePressureMode,
-  isAdaptiveSupportMode,
-  isSimvMode,
-  isTwoLevelMode,
-} from '../engine'
 import type {
   FlowPattern,
   VentilatorBezelKey,
@@ -52,9 +43,18 @@ import type {
   VentilatorControlKey,
   VentilatorWaveformChannel,
 } from '../engine'
+import {
+  CONSOLE_KNOB_ID,
+  CONSOLE_PENDING_CONFIRM_ID,
+  consoleControlId,
+  consoleHoldId,
+  consoleModeId,
+  consoleScreenId,
+} from '../content/consoleControlIds'
+import { buildConsoleNumericControls, type ConsoleNumericControl } from '../content/consoleControls'
+import { ConsoleWaveformArea, type ConsoleInspection } from './ConsoleWaveformArea'
 import { WaveformLoops, WaveformStrip, type WaveformReadout } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
-import taskStyles from './stage/task-flow.module.css'
 
 /** How this simulator names each flow pattern, and the fallback set for an unsourced device. */
 const flowPatternLabels: Record<FlowPattern, string> = {
@@ -65,30 +65,40 @@ const flowPatternLabels: Record<FlowPattern, string> = {
 }
 const allFlowPatterns = Object.keys(flowPatternLabels) as FlowPattern[]
 
+export type { ConsoleInspection } from './ConsoleWaveformArea'
+
 interface MechanicalVentilatorConsoleProps {
   state: VentilationSimulationState
   dispatch: Dispatch<VentilationAction>
   controlsEnabled: boolean
-  /** Opt-in teaching interface; uses this component's native adapters and pending edit. */
-  teachingControls?: readonly VentilatorControlKey[]
-  nativeView?: boolean
   allowTeachingAnnotations?: boolean
   /** Independent measurement tasks must not expose an unacquired model plateau. */
   withholdUnacquiredPlateau?: boolean
+  /**
+   * `observe` shows the console exactly as it is and lets the learner move between its screens, but
+   * changes nothing the patient receives: every therapy control is disabled. The Learn stage uses it
+   * on reading and explanation steps, so the one console on the page is never a second place to
+   * act. Defaults to `operate`.
+   */
+  mode?: 'operate' | 'observe'
+  /**
+   * The control "Show me where" points at, by its id from `content/consoleControlIds.ts`. The
+   * element carrying that id is marked `data-guided-help` and highlighted; nothing else changes.
+   */
+  guidedControlId?: string | null
+  /**
+   * A frozen breath to draw in place of the live traces on the main screen: the captured baseline
+   * a question is asked about, or the learner's own last breath while paused. The host owns which
+   * samples; the console owns where they are drawn.
+   */
+  inspection?: ConsoleInspection | null
+  /** The pending edit on a knob-and-confirm console, or null once it is confirmed or cancelled. */
+  onPendingChange?: (pending: ConsolePendingSetting | null) => void
 }
 
-interface NumericControl {
-  key: VentilatorControlKey
-  label: string
-  value: number
-  unit: string
-  minimum: number
-  maximum: number
-  step: number
-  rangeNote?: string
-}
+type NumericControl = ConsoleNumericControl
 
-interface PendingSetting {
+export interface ConsolePendingSetting {
   key: VentilatorControlKey
   value: number | string | boolean
   label: string
@@ -101,12 +111,14 @@ function NumericControlTile({
   control,
   selected,
   disabled,
+  guided,
   onSelect,
   onChange,
 }: {
   control: NumericControl
   selected: boolean
   disabled: boolean
+  guided?: boolean
   onSelect: () => void
   onChange: (value: number) => void
 }) {
@@ -119,8 +131,10 @@ function NumericControlTile({
   return (
     <button
       type="button"
+      id={consoleControlId(control.key)}
       className={styles.controlTile}
       data-selected={selected}
+      data-guided-help={guided || undefined}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
       disabled={disabled}
@@ -299,10 +313,12 @@ export function MechanicalVentilatorConsole({
   state,
   dispatch,
   controlsEnabled,
-  teachingControls,
-  nativeView = false,
   allowTeachingAnnotations = true,
   withholdUnacquiredPlateau = false,
+  mode = 'operate',
+  guidedControlId = null,
+  inspection = null,
+  onPendingChange,
 }: MechanicalVentilatorConsoleProps) {
   const settings = state.ventilator.settings
   const profile = getVentilatorDeviceProfile(state.deviceId)
@@ -310,10 +326,6 @@ export function MechanicalVentilatorConsole({
   const pendingMode = state.ventilator.pendingMode
     ? getVentilatorModeDescriptor(state.deviceId, state.ventilator.pendingMode)
     : null
-  const simvActive = isSimvMode(settings.deviceMode)
-  const adaptivePressureActive = isAdaptivePressureMode(settings.deviceMode)
-  const twoLevelActive = isTwoLevelMode(settings.deviceMode)
-  const adaptiveSupportActive = isAdaptiveSupportMode(settings.deviceMode)
   const activeFeatures = profile.features.filter((feature) =>
     feature.compatibleModes.includes(settings.deviceMode),
   )
@@ -321,8 +333,22 @@ export function MechanicalVentilatorConsole({
     ['main', 'modes', 'controls', 'alarms', 'graphics', 'tools'] as const
   ).map((id) => ({ id, label: profile.navigationLabels[id] }))
   const [activeControlKey, setActiveControlKey] = useState<VentilatorControlKey>('peepCmH2O')
-  const [pendingControl, setPendingControl] = useState<PendingSetting | null>(null)
-  const therapyDisabled = !controlsEnabled || state.ventilator.locked
+  const [pendingControl, setPendingControl] = useState<ConsolePendingSetting | null>(null)
+  const observing = mode === 'observe'
+  const therapyDisabled = !controlsEnabled || state.ventilator.locked || observing
+  const guided = (id: string) => (guidedControlId === id ? true : undefined)
+
+  // An observing console holds no half-made edit: there is nothing it could be confirmed with.
+  const [wasObserving, setWasObserving] = useState(observing)
+  if (wasObserving !== observing) {
+    setWasObserving(observing)
+    if (observing) setPendingControl(null)
+  }
+
+  // The host says what the console is waiting for ("Pending PEEP 10 — confirm on the console").
+  useEffect(() => {
+    onPendingChange?.(pendingControl)
+  }, [onPendingChange, pendingControl])
 
   useEffect(() => {
     if (state.deviceId !== 'carefusion-avea' || !pendingControl) return
@@ -330,389 +356,10 @@ export function MechanicalVentilatorConsole({
     return () => window.clearTimeout(timeout)
   }, [pendingControl, state.deviceId])
 
-  const numericControls = useMemo<NumericControl[]>(() => {
-    const controls: NumericControl[] = [
-      {
-        key: 'oxygenPercent',
-        label: 'Oxygen',
-        value: settings.oxygenPercent,
-        unit: '%',
-        minimum: 21,
-        maximum: 100,
-        step: 1,
-      },
-      {
-        key: 'peepCmH2O',
-        label: 'PEEP/CPAP',
-        value: settings.peepCmH2O,
-        unit: 'cmH₂O',
-        minimum: 0,
-        maximum: 30,
-        step: 1,
-      },
-      {
-        key: 'triggerThreshold',
-        label: settings.trigger.type === 'flow' ? 'Flow trigger' : 'Pressure trigger',
-        value:
-          settings.trigger.type === 'flow'
-            ? settings.trigger.thresholdLMin
-            : settings.trigger.thresholdCmH2O,
-        unit: settings.trigger.type === 'flow' ? 'L/min' : 'cmH₂O',
-        minimum:
-          settings.trigger.type === 'flow' ? (settings.mode === 'pressure-support' ? 0.5 : 1) : -15,
-        maximum: settings.trigger.type === 'flow' ? 10 : -0.1,
-        step: settings.trigger.type === 'flow' ? 0.5 : 0.5,
-      },
-      {
-        key: 'highPressureLimitCmH2O',
-        label: 'High pressure',
-        value: settings.highPressureLimitCmH2O,
-        unit: 'cmH₂O',
-        minimum: 10,
-        maximum: 80,
-        step: 1,
-      },
-    ]
-    if (settings.mode === 'volume-ac') {
-      controls.splice(
-        0,
-        0,
-        {
-          key: 'vtMl',
-          label: 'Vt',
-          value: settings.vtMl,
-          unit: 'mL',
-          minimum: 100,
-          maximum: 1000,
-          step: 10,
-        },
-        {
-          key: 'ratePerMin',
-          label: 'Rate',
-          value: settings.ratePerMin,
-          unit: '/min',
-          minimum: 4,
-          maximum: 40,
-          step: 1,
-        },
-      )
-      if (!settings.advanced.autoFlowEnabled) {
-        controls.splice(
-          2,
-          0,
-          {
-            key: 'peakFlowLMin',
-            label: 'Peak flow',
-            value: settings.peakFlowLMin,
-            unit: 'L/min',
-            minimum: 10,
-            maximum: 150,
-            step: 5,
-          },
-          {
-            key: 'pausePercent',
-            label: 'Tip pause',
-            value: settings.pausePercent,
-            unit: '%',
-            minimum: 0,
-            maximum: 50,
-            step: 5,
-          },
-        )
-      }
-    }
-    if (
-      settings.mode === 'pressure-ac' &&
-      !twoLevelActive &&
-      !adaptiveSupportActive &&
-      !adaptivePressureActive
-    ) {
-      controls.splice(
-        0,
-        0,
-        {
-          key: 'deltaPControlCmH2O',
-          label: 'Pcontrol',
-          value: settings.deltaPControlCmH2O,
-          unit: 'cmH₂O',
-          minimum: 5,
-          maximum: 45,
-          step: 1,
-        },
-        {
-          key: 'ratePerMin',
-          label: 'Rate',
-          value: settings.ratePerMin,
-          unit: '/min',
-          minimum: 4,
-          maximum: 40,
-          step: 1,
-        },
-        {
-          key: 'inspiratoryTimeSeconds',
-          label: 'TI',
-          value: settings.inspiratoryTimeSeconds,
-          unit: 's',
-          minimum: 0.2,
-          maximum: 3,
-          step: 0.1,
-        },
-        {
-          key: 'pRampMs',
-          label: 'P-ramp',
-          value: settings.pRampMs,
-          unit: 'ms',
-          minimum: 0,
-          maximum: Math.min(1000, Math.floor((settings.inspiratoryTimeSeconds * 1000) / 3)),
-          step: 10,
-        },
-      )
-    }
-    if (adaptivePressureActive && settings.mode === 'pressure-ac') {
-      controls.unshift(
-        {
-          key: 'ratePerMin',
-          label: 'Rate',
-          value: settings.ratePerMin,
-          unit: '/min',
-          minimum: 4,
-          maximum: 40,
-          step: 1,
-        },
-        {
-          key: 'inspiratoryTimeSeconds',
-          label: 'TI',
-          value: settings.inspiratoryTimeSeconds,
-          unit: 's',
-          minimum: 0.2,
-          maximum: 3,
-          step: 0.1,
-        },
-        {
-          key: 'pRampMs',
-          label: 'P-ramp',
-          value: settings.pRampMs,
-          unit: 'ms',
-          minimum: 0,
-          maximum: Math.min(1000, Math.floor((settings.inspiratoryTimeSeconds * 1000) / 3)),
-          step: 10,
-        },
-      )
-    }
-    if (
-      settings.mode === 'pressure-support' &&
-      settings.deviceMode !== 'proportional-assist' &&
-      settings.deviceMode !== 'volume-support'
-    ) {
-      controls.splice(
-        0,
-        0,
-        {
-          key: 'pressureSupportCmH2O',
-          label: 'Psupport',
-          value: settings.pressureSupportCmH2O,
-          unit: 'cmH₂O',
-          minimum: 0,
-          maximum: 30,
-          step: 1,
-        },
-        {
-          key: 'pRampMs',
-          label: 'P-ramp',
-          value: settings.pRampMs,
-          unit: 'ms',
-          minimum: 0,
-          maximum: 200,
-          step: 10,
-        },
-        {
-          key: 'etsPercent',
-          label: 'ETS',
-          value: settings.etsPercent,
-          unit: '%',
-          minimum: 5,
-          maximum: 80,
-          step: 5,
-        },
-        {
-          key: 'tiMaxSeconds',
-          label: 'TI max',
-          value: settings.tiMaxSeconds,
-          unit: 's',
-          minimum: 0.5,
-          maximum: 3,
-          step: 0.1,
-        },
-        {
-          key: 'apneaRatePerMin',
-          label: 'Apnea rate',
-          value: settings.apneaRatePerMin,
-          unit: '/min',
-          minimum: 5,
-          maximum: 30,
-          step: 1,
-        },
-      )
-    }
-    if (adaptivePressureActive || settings.deviceMode === 'volume-support') {
-      controls.unshift({
-        key: 'targetVtMl',
-        label: 'Target Vt',
-        value: settings.advanced.targetVtMl,
-        unit: 'mL',
-        minimum: 100,
-        maximum: 1000,
-        step: 10,
-      })
-    }
-    if (simvActive) {
-      controls.push(
-        {
-          key: 'spontaneousPressureSupportCmH2O',
-          label: 'Spontaneous PS',
-          value: settings.advanced.spontaneousPressureSupportCmH2O,
-          unit: 'cmH₂O',
-          minimum: 0,
-          maximum: 30,
-          step: 1,
-        },
-        {
-          key: 'spontaneousRampMs',
-          label: 'Spontaneous rise',
-          value: settings.advanced.spontaneousRampMs,
-          unit: 'ms',
-          minimum: 0,
-          maximum: 2000,
-          step: 10,
-        },
-        {
-          key: 'spontaneousCyclePercent',
-          label: 'Spontaneous cycle',
-          value: settings.advanced.spontaneousCyclePercent,
-          unit: '%',
-          minimum: 5,
-          maximum: 80,
-          step: 5,
-        },
-      )
-    }
-    if (twoLevelActive) {
-      controls.unshift(
-        {
-          key: 'pHighCmH2O',
-          label: 'P high',
-          value: settings.advanced.pHighCmH2O,
-          unit: 'cmH₂O',
-          minimum: 5,
-          maximum: 50,
-          step: 1,
-        },
-        {
-          key: 'pLowCmH2O',
-          label: 'P low',
-          value: settings.advanced.pLowCmH2O,
-          unit: 'cmH₂O',
-          minimum: 0,
-          maximum: 20,
-          step: 1,
-        },
-        {
-          key: 'tHighSeconds',
-          label: 'T high',
-          value: settings.advanced.tHighSeconds,
-          unit: 's',
-          minimum: 0.2,
-          maximum: 15,
-          step: 0.1,
-        },
-        {
-          key: 'tLowSeconds',
-          label: 'T low',
-          value: settings.advanced.tLowSeconds,
-          unit: 's',
-          minimum: 0.1,
-          maximum: 3,
-          step: 0.1,
-        },
-        {
-          key: 'spontaneousPressureSupportCmH2O',
-          label: 'Spontaneous PS',
-          value: settings.advanced.spontaneousPressureSupportCmH2O,
-          unit: 'cmH₂O',
-          minimum: 0,
-          maximum: 30,
-          step: 1,
-        },
-      )
-    }
-    if (settings.deviceMode === 'proportional-assist') {
-      controls.unshift({
-        key: 'proportionalSupportPercent',
-        label: 'Proportional support',
-        value: settings.advanced.proportionalSupportPercent,
-        unit: '%',
-        minimum: 5,
-        maximum: 95,
-        step: 5,
-      })
-    }
-    if (adaptiveSupportActive) {
-      controls.unshift({
-        key: 'minuteVolumePercent',
-        label: '%MinVol',
-        value: settings.advanced.minuteVolumePercent,
-        unit: '%',
-        minimum: 25,
-        maximum: 350,
-        step: 5,
-      })
-    }
-    if (settings.deviceMode === 'intellivent-asv') {
-      controls.unshift(
-        {
-          key: 'targetSpO2LowPercent',
-          label: 'Target SpO₂ low',
-          value: settings.advanced.targetSpO2LowPercent,
-          unit: '%',
-          minimum: 85,
-          maximum: 98,
-          step: 1,
-        },
-        {
-          key: 'targetPetCO2MmHg',
-          label: 'Target PetCO₂',
-          value: settings.advanced.targetPetCO2MmHg,
-          unit: 'mm Hg',
-          minimum: 25,
-          maximum: 80,
-          step: 1,
-        },
-      )
-    }
-    const adapted = controls.map((control) => {
-      const descriptor = adaptControlDescriptor(state.deviceId, settings, control)
-      const triggerLabel =
-        control.key === 'triggerThreshold' && settings.trigger.type === 'pressure'
-          ? 'Pressure trigger'
-          : descriptor.label
-      return {
-        ...control,
-        ...descriptor,
-        label: triggerLabel,
-        value: canonicalToNativeControlValue(state.deviceId, settings, control.key, control.value),
-      }
-    })
-    // Each vendor presents the same settings in its own order — the Evita's therapy bar, the
-    // AVEA's primary-control row, the C6's three purpose groups.
-    return orderControlsForDevice(getVentilatorDeviceProfile(state.deviceId).display, adapted)
-  }, [
-    adaptivePressureActive,
-    adaptiveSupportActive,
-    settings,
-    simvActive,
-    state.deviceId,
-    twoLevelActive,
-  ])
+  const numericControls = useMemo(
+    () => buildConsoleNumericControls(state.deviceId, settings),
+    [settings, state.deviceId],
+  )
 
   const displayedControls = numericControls.map((control) =>
     pendingControl?.key === control.key && typeof pendingControl.value === 'number'
@@ -1033,81 +680,11 @@ export function MechanicalVentilatorConsole({
   // A device that publishes its own set offers only those; the rest keep the simulator's four.
   const flowPatternOptions = display.flowPatterns ?? allFlowPatterns
 
-  if (teachingControls && !nativeView) {
-    const relevant = displayedControls.filter((control) => teachingControls.includes(control.key))
-    if (teachingControls.length === 0 && !pendingControl) return null
-    return (
-      <section
-        className={taskStyles.controlEditor}
-        data-teaching-setting-editor
-        aria-label="Ventilator settings · teaching interface"
-      >
-        <h3>Ventilator settings</h3>
-        <p className={taskStyles.note}>
-          {profile.shortName} · {activeMode.label}. Teaching interface using this device’s supported
-          controls.
-        </p>
-        {relevant.map((control) => (
-          <label key={control.key} htmlFor={`mv-quick-${control.key}`}>
-            <span>
-              {control.label}{' '}
-              <output>
-                {control.value} {control.unit}
-              </output>
-            </span>
-            <input
-              id={`mv-quick-${control.key}`}
-              type="range"
-              min={control.minimum}
-              max={control.maximum}
-              step={control.step}
-              value={control.value}
-              disabled={therapyDisabled}
-              onFocus={() => {
-                if (activeControlKey !== control.key) selectControl(control.key)
-              }}
-              onChange={(event) => changeControl(control, Number(event.target.value))}
-            />
-            {control.rangeNote ? <small>{control.rangeNote}</small> : null}
-          </label>
-        ))}
-        {!relevant.length ? (
-          <p className={taskStyles.note}>No ventilator setting change is required for this task.</p>
-        ) : null}
-        {teachingControls.some((key) => !numericControls.some((control) => control.key === key)) ? (
-          <p className={taskStyles.boundary}>
-            A requested control is unavailable in this mode. Use the full console to review the
-            selected mode, or reset this round to its intended baseline.
-          </p>
-        ) : null}
-        {pendingControl ? (
-          <div data-pending-setting>
-            <p role="status">
-              Pending {pendingControl.label}: {pendingControl.displayValue} {pendingControl.unit}.
-              Delivery has not changed.
-            </p>
-            <button type="button" disabled={therapyDisabled} onClick={commitPendingControl}>
-              {state.deviceId === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm'}
-            </button>{' '}
-            <button type="button" onClick={() => setPendingControl(null)}>
-              CANCEL
-            </button>
-          </div>
-        ) : (
-          <p className={taskStyles.note}>
-            {profile.commitBehavior === 'immediate'
-              ? 'Changes apply immediately.'
-              : 'Adjust the value, then confirm to change delivery.'}
-          </p>
-        )}
-      </section>
-    )
-  }
-
   return (
     <section
       className={styles.consoleShell}
       data-device={state.deviceId}
+      data-console-mode={mode}
       aria-label={`${profile.displayName} functional training facsimile`}
     >
       <div className={styles.consoleBezel}>
@@ -1159,16 +736,21 @@ export function MechanicalVentilatorConsole({
               {display.monitorLayout === 'left-column' ? (
                 <MonitorPanel state={state} display={display} />
               ) : null}
-              <div className={styles.waveformStack}>
-                {/*
-                 * Trace order, axis legends, and default scales come from the device profile: the
-                 * AVEA labels its volume trace Vt and runs Paw from -40, the Evita prints mbar.
-                 * A single instantaneous Paw sat at PEEP for most of the cycle, so it read as a
-                 * broken number beside the peak. The pressure trace keeps the derived pressures a
-                 * real console shows, under that vendor's abbreviations.
-                 */}
+              {/*
+               * Trace order, axis legends, and default scales come from the device profile: the
+               * AVEA labels its volume trace Vt and runs Paw from -40, the Evita prints mbar.
+               * A single instantaneous Paw sat at PEEP for most of the cycle, so it read as a
+               * broken number beside the peak. The pressure trace keeps the derived pressures a
+               * real console shows, under that vendor's abbreviations. While a breath is frozen
+               * for inspection, the same slot draws that breath instead.
+               */}
+              <ConsoleWaveformArea
+                className={styles.waveformStack}
+                deviceId={state.deviceId}
+                inspection={inspection}
+              >
                 {display.waveforms.map(renderWaveformChannel)}
-              </div>
+              </ConsoleWaveformArea>
               {display.monitorLayout === 'right-column' ||
               display.monitorLayout === 'right-tiles' ? (
                 <MonitorPanel state={state} display={display} />
@@ -1186,24 +768,26 @@ export function MechanicalVentilatorConsole({
                 <small>Changes apply after confirmation at a breath boundary.</small>
               </div>
               <div className={styles.modeGrid}>
-                {profile.modes.map((mode) => (
+                {profile.modes.map((candidate) => (
                   <button
-                    key={mode.id}
+                    key={candidate.id}
+                    id={consoleModeId(candidate.id)}
                     type="button"
                     className={styles.modeCard}
                     data-selected={
-                      state.ventilator.pendingMode === mode.id ||
-                      (!state.ventilator.pendingMode && settings.deviceMode === mode.id)
+                      state.ventilator.pendingMode === candidate.id ||
+                      (!state.ventilator.pendingMode && settings.deviceMode === candidate.id)
                     }
-                    data-availability={mode.availability}
-                    aria-pressed={state.ventilator.pendingMode === mode.id}
-                    disabled={therapyDisabled || mode.availability !== 'simulated'}
-                    onClick={() => dispatch({ type: 'SELECT_MODE', mode: mode.id })}
+                    data-guided-help={guided(consoleModeId(candidate.id))}
+                    data-availability={candidate.availability}
+                    aria-pressed={state.ventilator.pendingMode === candidate.id}
+                    disabled={therapyDisabled || candidate.availability !== 'simulated'}
+                    onClick={() => dispatch({ type: 'SELECT_MODE', mode: candidate.id })}
                   >
-                    <strong>{mode.label}</strong>
-                    <span>{mode.description}</span>
-                    {mode.availability !== 'simulated' ? (
-                      <small>{mode.availabilityNote ?? 'Source-listed only'}</small>
+                    <strong>{candidate.label}</strong>
+                    <span>{candidate.description}</span>
+                    {candidate.availability !== 'simulated' ? (
+                      <small>{candidate.availabilityNote ?? 'Source-listed only'}</small>
                     ) : null}
                   </button>
                 ))}
@@ -1250,6 +834,7 @@ export function MechanicalVentilatorConsole({
                         control={control}
                         selected={activeControl?.key === control.key}
                         disabled={therapyDisabled}
+                        guided={guided(consoleControlId(control.key))}
                         onSelect={() => selectControl(control.key)}
                         onChange={(value) => {
                           setActiveControlKey(control.key)
@@ -1474,6 +1059,7 @@ export function MechanicalVentilatorConsole({
                   control={displayedControls.find((item) => item.key === 'highPressureLimitCmH2O')!}
                   selected={activeControl?.key === 'highPressureLimitCmH2O'}
                   disabled={therapyDisabled}
+                  guided={guided(consoleControlId('highPressureLimitCmH2O'))}
                   onSelect={() => selectControl('highPressureLimitCmH2O')}
                   onChange={(value) => {
                     setActiveControlKey('highPressureLimitCmH2O')
@@ -1553,6 +1139,8 @@ export function MechanicalVentilatorConsole({
                 <div className={styles.toolGrid}>
                   <button
                     type="button"
+                    id={consoleHoldId('inspiratory')}
+                    data-guided-help={guided(consoleHoldId('inspiratory'))}
                     disabled={therapyDisabled}
                     onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'inspiratory' })}
                   >
@@ -1560,6 +1148,8 @@ export function MechanicalVentilatorConsole({
                   </button>
                   <button
                     type="button"
+                    id={consoleHoldId('expiratory')}
+                    data-guided-help={guided(consoleHoldId('expiratory'))}
                     disabled={therapyDisabled}
                     onClick={() => dispatch({ type: 'PERFORM_HOLD', hold: 'expiratory' })}
                   >
@@ -1616,8 +1206,10 @@ export function MechanicalVentilatorConsole({
             <button
               type="button"
               key={item.id}
+              id={consoleScreenId(item.id)}
               aria-label={item.label}
               aria-current={screen === item.id ? 'page' : undefined}
+              data-guided-help={guided(consoleScreenId(item.id))}
               onClick={() => dispatch({ type: 'SET_SCREEN', screen: item.id })}
             >
               {item.id === 'main' ? <MonitorUp aria-hidden="true" /> : null}
@@ -1640,7 +1232,13 @@ export function MechanicalVentilatorConsole({
               {pendingControl.displayValue} {pendingControl.unit}
             </strong>
           </div>
-          <button type="button" disabled={therapyDisabled} onClick={commitPendingControl}>
+          <button
+            type="button"
+            id={CONSOLE_PENDING_CONFIRM_ID}
+            data-guided-help={guided(CONSOLE_PENDING_CONFIRM_ID)}
+            disabled={therapyDisabled}
+            onClick={commitPendingControl}
+          >
             {state.deviceId === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm'}
           </button>
           <button type="button" onClick={() => setPendingControl(null)}>
@@ -1667,7 +1265,9 @@ export function MechanicalVentilatorConsole({
           </button>
           <button
             type="button"
+            id={CONSOLE_KNOB_ID}
             className={styles.rotaryKnob}
+            data-guided-help={guided(CONSOLE_KNOB_ID)}
             disabled={therapyDisabled}
             onClick={() =>
               pendingControl

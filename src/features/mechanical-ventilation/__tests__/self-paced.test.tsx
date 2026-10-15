@@ -8,6 +8,7 @@ import { ventilationStageLesson } from '../content/stageLessons'
 import { ventilationFinalQuestions } from '../content/learningQuestions'
 import { VENTILATION_SELF_PACED_KEY, parseSelfPacedProgress } from '../engine/selfPacedProgress'
 import type { VentilationAction, VentilationSimulationState } from '../engine/types'
+import { chooseStep } from '../test-support/stageHost'
 
 let consoleState: VentilationSimulationState | undefined
 const pushes: unknown[] = []
@@ -38,16 +39,18 @@ jest.mock('../components/MechanicalVentilatorConsole', () => ({
     state,
     dispatch,
     controlsEnabled,
+    mode = 'operate',
   }: {
     state: VentilationSimulationState
     dispatch: (action: VentilationAction) => void
     controlsEnabled: boolean
+    mode?: 'operate' | 'observe'
   }) => {
     consoleState = state
     return (
       <div>
         <button
-          disabled={!controlsEnabled || state.ventilator.locked}
+          disabled={!controlsEnabled || state.ventilator.locked || mode === 'observe'}
           onClick={() => dispatch({ type: 'SET_CONTROL', control: 'oxygenPercent', value: 70 })}
         >
           Change oxygen
@@ -127,14 +130,17 @@ describe('self-paced public MV (supersedes commitment, grading and replay gates)
       render(<VentilationStageHost unitId={unitId} />)
       boot()
       const lesson = ventilationStageLesson(unitId)
-      fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-        target: { value: lesson.steps.length - 1 },
-      })
+      chooseStep(lesson.steps.length - 1)
       expect(document.querySelector('[data-no-observation]')).not.toBeNull()
-      expect(consoleState?.interventions).toEqual([])
-      expect(consoleState?.prediction.mechanismId).toBeNull()
-      expect(consoleState?.prediction.committed).toBe(false)
-      expect(screen.getByRole('button', { name: 'Change oxygen' })).toBeEnabled()
+      // The last task opens with its explanation and the way on, nothing performed first.
+      expect(document.querySelector('[data-now-primary]')).not.toBeNull()
+      if (unitId !== 'oxygenation-response') {
+        expect(consoleState?.interventions).toEqual([])
+        expect(consoleState?.prediction.mechanismId).toBeNull()
+        expect(consoleState?.prediction.committed).toBe(false)
+        // An explanation step shows the console without making it a second place to act.
+        expect(screen.getByRole('button', { name: 'Change oxygen' })).toBeDisabled()
+      }
       const stored = parseSelfPacedProgress(localStorage.getItem(VENTILATION_SELF_PACED_KEY))
       expect(stored.visited).toEqual([unitId])
       expect(stored.location?.step).toBe(lesson.steps.length - 1)
@@ -148,9 +154,7 @@ describe('self-paced public MV (supersedes commitment, grading and replay gates)
     const lesson = ventilationStageLesson(unitId)
     const mounted = render(<VentilationStageHost unitId={unitId} />)
     boot()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: lesson.predictionStepIndex },
-    })
+    chooseStep(lesson.predictionStepIndex)
     fireEvent.click(screen.getByRole('button', { name: 'Change oxygen' }))
     expect(consoleState?.ventilator.settings.oxygenPercent).toBe(70)
     const reinforcement = document.querySelector('[data-reinforcement]') as HTMLElement
@@ -159,8 +163,8 @@ describe('self-paced public MV (supersedes commitment, grading and replay gates)
     mounted.unmount()
     render(<VentilationStageHost unitId={unitId} />)
     boot()
-    expect(screen.getByRole('combobox', { name: 'Choose step' })).toHaveValue(
-      String(lesson.predictionStepIndex),
+    expect(document.querySelector('[data-current-step]')?.getAttribute('data-current-step')).toBe(
+      lesson.steps[lesson.predictionStepIndex].id,
     )
     expect(consoleState?.simulationTime).toBe(0)
     expect(consoleState?.paused).toBe(true)

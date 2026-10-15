@@ -94,10 +94,6 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             <span>Grouped by stage · open any section · your progress stays on this device</span>
           </div>
           <p className={styles.composition}>{ventilationCompositionLine()}</p>
-          <p className={styles.note}>
-            Reading times are estimates. Optional experiments take longer and depend on the playback
-            speed you choose.
-          </p>
           <button
             type="button"
             className={styles.browseToggle}
@@ -130,40 +126,32 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             <li>
               <Link href={`${mechanicalVentilationNavBase}/learn`}>Learn</Link>
               <span>
-                one ordered pathway of {composition.total} sections on the simulated console: the
-                breath, the controls, then one mechanism at a time, each section offers an optional
-                prediction, an experiment, and its explanation.
+                {composition.total} sections on one running ventilator: the breath, the settings,
+                then one mechanism at a time. Each task is one thing to do, beside the console.
               </span>
             </li>
             <li>
               <Link href={`${mechanicalVentilationNavBase}/practice`}>Practice</Link>
               <span>
-                {ventilationCaseCountPhrase()} that apply what the sections taught — inspect, act,
-                reassess, and explore the explanation — each labelled with the section it builds on.
-                Any case can be opened at any time.
+                {ventilationCaseCountPhrase()}, each labelled with the section it builds on.
               </span>
             </li>
             <li>
               <Link href={`${mechanicalVentilationNavBase}/assess`}>Applications</Link>
-              <span>optional worked questions and clinical cases, available from the start.</span>
+              <span>worked questions and clinical cases, open from the start.</span>
             </li>
           </ol>
           <ul className={styles.principles} aria-label="How the sections teach">
             <li>
               <strong>One breath</strong>
-              Every term is introduced at its place on one breath — the start, the push, the switch,
-              the emptying — and a breath map keeps you oriented in every section.
+              Every term is introduced at its place on one breath — the trigger, inspiration,
+              cycling and expiration — and the breath map under the clock bar shows where each task
+              stands on it.
             </li>
             <li>
               <strong>Five main settings</strong>
               {VENTILATION_CONTROL_PANEL.sentence} {VENTILATION_CONTROL_PANEL.shapingSentence}{' '}
               {VENTILATION_CONTROL_PANEL.monitoringSentence}
-            </li>
-            <li>
-              <strong>Learn, apply, interpret</strong>
-              The first five sections begin with a worked explanation. You can predict a response,
-              inspect or change the patient, and interpret a captured result. Hints and explanations
-              are always available.
             </li>
             <li>
               <strong>The numbers, with their source</strong>

@@ -141,6 +141,8 @@ const WORKED_READING_STOP: Partial<Record<FoundationUnitId, BreathStopId>> = {
 
 /** Steps on which a foundation section's own worked figure is the evidence being read. */
 export function foundationFigureStep(step: VentilationStageStep): boolean {
+  // Watch one breath reads the breath on the console and the map; its worked figure is that breath.
+  if (step.interaction.kind === 'advance-breath') return false
   return (
     step.phase === 'recognize' ||
     ['prediction', 'sort', 'interpret', 'explain'].includes(step.interaction.kind)
@@ -238,10 +240,10 @@ export function FoundationEvidence({
 export function PlaybackAndMeasurementNote() {
   return (
     <p>
-      Run, Pause, step and speed control playback and elapsed simulated time. A hold is a
-      measurement maneuver that occludes flow at a breath boundary. Patient compliance and
-      resistance controls alter simulated patient properties; they are not bedside ventilator
-      settings. The native console and educational setting shortcuts use the same patient state.
+      Run, Pause, One breath and the speed move the simulated clock. A hold is a measurement: it
+      occludes flow at a breath boundary. The teaching-patient sliders change the patient’s
+      compliance and resistance; they are not ventilator settings. Every setting is changed on the
+      console itself.
     </p>
   )
 }

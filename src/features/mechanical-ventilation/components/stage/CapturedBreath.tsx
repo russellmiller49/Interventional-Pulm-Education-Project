@@ -66,6 +66,9 @@ export function CapturedBreath({
   durationSeconds,
   timeWindow,
   retained = false,
+  revealMarkerEvidence = true,
+  compact = false,
+  palette = 'dark',
 }: {
   samples: readonly WaveformSample[]
   label: string
@@ -97,6 +100,20 @@ export function CapturedBreath({
    * 8's 12-second window held two whole 6-second cycles and could verify one onset.
    */
   retained?: boolean
+  /**
+   * Whether the marker's evidence sentence may be printed. False on a surface a learner sees before
+   * committing a prediction about the marked interval: the marker line and its letter are drawn, and
+   * the figure's note and accessible name say only that the interval is marked. The sentence ("gas
+   * moving out … volume falling") is the answer, so it waits for the commitment.
+   */
+  revealMarkerEvidence?: boolean
+  /**
+   * Drawn inside the console screen: the provenance paragraphs (sampling, the volume origin, the
+   * model effort note) are left out here and offered once under the console instead.
+   */
+  compact?: boolean
+  /** The light variant is for the Evita's white screen. */
+  palette?: 'dark' | 'light'
 }) {
   const id = useId()
   const figureRef = useRef<HTMLElement>(null)
@@ -137,8 +154,6 @@ export function CapturedBreath({
    * onsets, so only then is sample 0 a breath's first recorded inspiratory sample.
    */
   const anchored = whole
-  const anchorMl = anchored ? breath[0].volumeMl : 0
-  const origin = anchored ? breathOriginFacts(samples, breath) : null
   const plotted = anchored ? anchorBreathVolume(breath) : breath
   const evidence = marker ? markerEvidence(breath, marker) : null
   const bounds = { ...(axes ?? waveformAxes(plotted)), pmusCmH2O: [-25, 5] as const }
@@ -152,7 +167,6 @@ export function CapturedBreath({
   const first = breath[0].time
   const duration = breath.at(-1)!.time - first
   const timeRange = Math.max(duration, durationSeconds ?? 0)
-  const spacing = sampleSpacingSeconds(breath)
   const windowFrom = timeWindow ? Math.max(0, timeWindow.from) : 0
   const windowTo = timeWindow ? Math.min(timeRange, timeWindow.to) : timeRange
   const zoomed = windowFrom > 0 || windowTo < timeRange
@@ -189,9 +203,11 @@ export function CapturedBreath({
     : `lung volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above the trace baseline`
   const cursorText = `Cursor at ${(rawSample.time - first).toFixed(2)} s. Airway pressure ${rawSample.pawCmH2O.toFixed(1)} cmH₂O; flow ${rawSample.flowLMin.toFixed(1)} L/min; ${volumeClause} over the preceding ${(rawSample.time - rawPrevious.time).toFixed(2)} s.${effort ? ` Model effort ${rawSample.pmusCmH2O.toFixed(1)} cmH₂O; machine ${rawSample.phase}.` : ''}`
   const markerText = marker
-    ? evidence
-      ? markerEvidenceSentence(evidence)
-      : `Interval ${marker.markerId}: ${MARKER_UNAVAILABLE_NOTE}`
+    ? !evidence
+      ? `Interval ${marker.markerId}: ${MARKER_UNAVAILABLE_NOTE}`
+      : revealMarkerEvidence
+        ? markerEvidenceSentence(evidence)
+        : `Interval ${marker.markerId} is marked on this breath.`
     : ''
   const text = markerText ? `${markerText} ${cursorText}` : cursorText
   return (
@@ -199,6 +215,9 @@ export function CapturedBreath({
       className={styles.capturedBreath}
       ref={figureRef}
       data-captured-breath
+      data-palette={palette}
+      data-compact={compact || undefined}
+      data-marker-evidence={marker ? (revealMarkerEvidence ? 'shown' : 'withheld') : undefined}
       data-guided-stop={guided ? stop : undefined}
       data-marker={marker?.markerId}
       data-marker-resolved={marker ? (evidence ? 'true' : 'false') : undefined}
@@ -337,60 +356,16 @@ export function CapturedBreath({
         {whole ? BREATH_TIME_AXIS_LABEL : TRACE_TIME_AXIS_LABEL}
         {zoomed ? ' · zoomed' : ''}
       </p>
-      <p
-        className={styles.quickNote}
-        data-breath-duration={duration.toFixed(2)}
-        data-sample-spacing={spacing.toFixed(3)}
-      >
-        {whole ? 'Breath duration' : 'Trace length'} {duration.toFixed(2)} s
-        {whole ? ', from its first inspiratory sample to the next breath’s' : ''}
-        {spacing > 0
-          ? ` · samples every ${Math.round(spacing * 1000)} ms, so a time is resolved to one sample`
-          : ''}{' '}
-        ·{' '}
-        {durationSeconds
-          ? 'Shared comparison time and signal scales'
-          : 'One time axis for all signals'}
-      </p>
-      {zoomed ? (
-        <p className={styles.quickNote} data-zoom-window>
-          Showing {windowFrom.toFixed(2)}–{windowTo.toFixed(2)} s of this {duration.toFixed(2)}-s
-          breath{whole ? `, counted from its ${BREATH_ORIGIN}` : ''}. The same seconds are spread
-          wider; nothing is retimed or resampled.
-        </p>
-      ) : null}
-      {anchored ? (
-        <p
-          className={styles.quickNote}
-          data-volume-anchor={anchorMl.toFixed(0)}
-          data-first-step-ml={origin?.firstStepMl?.toFixed(1)}
-        >
-          Volume and time are counted from this breath’s {BREATH_ORIGIN}: a convention of the
-          sampled trace, not the instant inspiration began.{' '}
-          {origin && origin.precedingMl !== null && origin.firstStepMl !== null && spacing > 0
-            ? `A sample is recorded after each ${Math.round(spacing * 1000)}-ms step, so that sample already holds one step of flow: raw lung volume was ${origin.precedingMl.toFixed(1)} mL above the trace baseline in the sample before it and ${origin.originMl.toFixed(1)} mL in it. ${
-                Math.abs(origin.firstStepMl) < 0.5
-                  ? 'Here that step is under 1 mL, so the drawn rise is within 1 mL of the volume this breath received.'
-                  : `The drawn rise is therefore about ${Math.abs(origin.firstStepMl).toFixed(0)} mL ${origin.firstStepMl >= 0 ? 'less' : 'more'} than the volume this breath received.`
-              } `
-            : ''}
-          Raw lung volume was {breath.at(-1)!.volumeMl.toFixed(0)} mL when the breath ended; gas
-          that has not left is still in the raw signal, and the trace is not forced back to zero.
-          The drawn rise and the ventilator’s exhaled volume are different quantities and need not
-          agree.
-        </p>
-      ) : (
-        <p className={styles.quickNote}>
-          This slice does not begin at a verified inspiratory onset, so the raw lung-volume signal
-          is drawn under its own name rather than re-zeroed.
-        </p>
+      {compact ? null : (
+        <BreathProvenanceNotes
+          samples={samples}
+          breath={breath}
+          whole={whole}
+          effort={effort}
+          durationSeconds={durationSeconds}
+          zoom={zoomed ? { from: windowFrom, to: windowTo } : null}
+        />
       )}
-      {effort ? (
-        <p className={styles.quickNote}>
-          Effort is a teaching model signal, not routine measured ventilator data. Read the onset
-          and end of effort separately from machine inspiration.
-        </p>
-      ) : null}
       {marker ? (
         <p className={styles.quickNote} data-marker-note={marker.markerId}>
           {markerText}
@@ -455,11 +430,100 @@ export function CapturedBreath({
         <button
           type="button"
           className={styles.toolButton}
+          data-use-captured-interval
           onClick={() => onInspect(rawSample, rawPrevious)}
         >
           Use this captured interval
         </button>
       ) : null}
     </figure>
+  )
+}
+
+/**
+ * How a captured breath is drawn: its duration and sampling, the volume origin, and the model
+ * effort note. Printed under a figure that stands on its own; offered once in a "How this trace is
+ * drawn" disclosure under the console when the figure is drawn on the console's screen.
+ */
+export function BreathProvenanceNotes({
+  samples,
+  breath: givenBreath,
+  whole = true,
+  effort = false,
+  durationSeconds,
+  zoom = null,
+}: {
+  readonly samples: readonly WaveformSample[]
+  /** The slice the figure draws; computed from the samples when not given. */
+  readonly breath?: readonly WaveformSample[]
+  readonly whole?: boolean
+  readonly effort?: boolean
+  readonly durationSeconds?: number
+  readonly zoom?: { readonly from: number; readonly to: number } | null
+}) {
+  const breath = givenBreath ?? (whole ? completedBreath(samples) : samples)
+  if (breath.length < 4) return null
+  const anchored = whole
+  const anchorMl = anchored ? breath[0].volumeMl : 0
+  const origin = anchored ? breathOriginFacts(samples, breath) : null
+  const duration = breath.at(-1)!.time - breath[0].time
+  const spacing = sampleSpacingSeconds(breath)
+  return (
+    <>
+      <p
+        className={styles.quickNote}
+        data-breath-duration={duration.toFixed(2)}
+        data-sample-spacing={spacing.toFixed(3)}
+      >
+        {whole ? 'Breath duration' : 'Trace length'} {duration.toFixed(2)} s
+        {whole ? ', from its first inspiratory sample to the next breath’s' : ''}
+        {spacing > 0
+          ? ` · samples every ${Math.round(spacing * 1000)} ms, so a time is resolved to one sample`
+          : ''}{' '}
+        ·{' '}
+        {durationSeconds
+          ? 'Shared comparison time and signal scales'
+          : 'One time axis for all signals'}
+      </p>
+      {zoom ? (
+        <p className={styles.quickNote} data-zoom-window>
+          Showing {zoom.from.toFixed(2)}–{zoom.to.toFixed(2)} s of this {duration.toFixed(2)}-s
+          breath{whole ? `, counted from its ${BREATH_ORIGIN}` : ''}. The same seconds are spread
+          wider; nothing is retimed or resampled.
+        </p>
+      ) : null}
+      {anchored ? (
+        <p
+          className={styles.quickNote}
+          data-volume-anchor={anchorMl.toFixed(0)}
+          data-first-step-ml={origin?.firstStepMl?.toFixed(1)}
+        >
+          Volume and time are counted from this breath’s {BREATH_ORIGIN}: a convention of the
+          sampled trace, not the instant inspiration began.{' '}
+          {origin && origin.precedingMl !== null && origin.firstStepMl !== null && spacing > 0
+            ? `A sample is recorded after each ${Math.round(spacing * 1000)}-ms step, so that sample already holds one step of flow: raw lung volume was ${origin.precedingMl.toFixed(1)} mL above the trace baseline in the sample before it and ${origin.originMl.toFixed(1)} mL in it. ${
+                Math.abs(origin.firstStepMl) < 0.5
+                  ? 'Here that step is under 1 mL, so the drawn rise is within 1 mL of the volume this breath received.'
+                  : `The drawn rise is therefore about ${Math.abs(origin.firstStepMl).toFixed(0)} mL ${origin.firstStepMl >= 0 ? 'less' : 'more'} than the volume this breath received.`
+              } `
+            : ''}
+          Raw lung volume was {breath.at(-1)!.volumeMl.toFixed(0)} mL when the breath ended; gas
+          that has not left is still in the raw signal, and the trace is not forced back to zero.
+          The drawn rise and the ventilator’s exhaled volume are different quantities and need not
+          agree.
+        </p>
+      ) : (
+        <p className={styles.quickNote}>
+          This slice does not begin at a verified inspiratory onset, so the raw lung-volume signal
+          is drawn under its own name rather than re-zeroed.
+        </p>
+      )}
+      {effort ? (
+        <p className={styles.quickNote}>
+          Effort is a teaching model signal, not routine measured ventilator data. Read the onset
+          and end of effort separately from machine inspiration.
+        </p>
+      ) : null}
+    </>
   )
 }

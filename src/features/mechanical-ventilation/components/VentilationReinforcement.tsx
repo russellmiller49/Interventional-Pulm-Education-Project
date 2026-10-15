@@ -85,7 +85,7 @@ export function VentilationReinforcement({
   const reasoned = choices.filter((item) => item.rationale)
   return (
     <section className={styles.question} data-reinforcement={id}>
-      <p className={styles.eyebrow}>Optional reinforcement</p>
+      <p className={styles.eyebrow}>Question</p>
       <p>{purpose}</p>
       <fieldset>
         <legend>{prompt}</legend>

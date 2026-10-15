@@ -120,8 +120,8 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 /**
  * Whether the captured breath a pause-or-inspect round works on is on screen, and if not, why.
  *
- * `'open'`: the round's baseline breath is drawn in the experiment panel for the learner to choose
- * an interval on. `'not-started'`: no baseline has been captured for this application yet.
+ * `'open'`: the round's baseline breath is frozen on the console for the learner to choose an
+ * interval on. `'not-started'`: no baseline has been captured for this application yet.
  * `'captured'`: the result is in, and the retained comparison has replaced the figure. Null for a
  * round that asks for neither a pause nor an interval. The panel draws the figure from this and the
  * step's instruction names the figure from this, so a sentence cannot point at a figure that is not
@@ -144,18 +144,17 @@ export function inspectionFigureState(session: LabSession): InspectionFigureStat
 /**
  * The look line for a step that works on a marked interval, said about what is actually shown.
  *
- * The round's authored look line was written beside the question, where the marked worked
- * reference and its phase label sit under it. On the steps that perform the round the figure is
- * the experiment panel's captured breath — or nothing yet, or the retained comparison — so the
- * sentence is chosen by which of those is on screen. It names the authored marker by its own
+ * The round's authored look line was written beside the question. On the steps that perform the
+ * round the figure is the baseline breath frozen on the console — or nothing yet, or the retained
+ * comparison — so the sentence is chosen by which of those is on screen. It names the authored marker by its own
  * letter and decides nothing about it.
  */
 export function markedIntervalLook(markerId: string, figure: InspectionFigureState): string {
   if (figure === 'open')
-    return `Read all three traces at interval ${markerId}, marked on the captured breath in the Experiment panel. Interval ${markerId} stays where it is; the exploration cursor is yours to move to the interval you choose.`
+    return `Read all three traces at interval ${markerId}, marked on the frozen breath on the console. Interval ${markerId} stays where it is; the exploration cursor is yours to move to the interval you choose.`
   if (figure === 'captured')
     return 'The result for this part is captured. Read the retained baseline and result.'
-  return `Start the experiment to capture the baseline breath for this part; interval ${markerId} is marked on it in the Experiment panel.`
+  return `Start this part to freeze its baseline breath on the console; interval ${markerId} is marked on it.`
 }
 
 export function ventilationExperimentStatus(session: LabSession): ExperimentStatus {
@@ -275,4 +274,49 @@ export function ventilationExperimentStatus(session: LabSession): ExperimentStat
       ? 'Change in place; response interval running.'
       : 'Change in place; paused. Run the experiment to continue.',
   }
+}
+
+/** A pending edit on a knob-and-confirm console, as the console reports it. */
+export interface PendingConsoleEdit {
+  readonly label: string
+  readonly displayValue: string
+  readonly unit?: string
+}
+
+/** Model seconds still to run before the result can be captured; 0 when nothing has to elapse. */
+export function remainingIntervalSeconds(status: ExperimentStatus): number {
+  if (status.intervalSeconds <= 0) return 0
+  return Math.max(0, status.intervalSeconds - (status.elapsedSeconds ?? 0))
+}
+
+/**
+ * The one line the Now card and the help dialog print under a simulator task: what the experiment
+ * is waiting for, in a sentence. "Waiting for: set the PEEP to 10 cmH₂O." / "Pending PEEP 10 —
+ * confirm on the console." / "Change in place. Run 45 s and capture." / "Captured at 57.0 s."
+ * It reads the same projection as everything else here and decides nothing.
+ */
+export function nowCardStatusLine(
+  status: ExperimentStatus,
+  pending: PendingConsoleEdit | null = null,
+): string {
+  if (status.stage === 'captured')
+    return `Captured at ${(status.capturedAtSeconds ?? 0).toFixed(1)} s of model time.`
+  if (pending)
+    return `Pending ${pending.label} ${pending.displayValue}${pending.unit ? ` ${pending.unit}` : ''} — confirm on the console.`
+  if (status.backgroundPaused)
+    return 'The clock stopped when this page went to the background. Press Run to carry on.'
+  if (status.stage === 'not-started') return 'This part has not started yet.'
+  const next = status.goals.find((goal) => goal.state === 'to-do' || goal.state === 'repeat')
+  if (next) return `Waiting for: ${next.label}${next.note ? ` (${next.note})` : ''}.`
+  const inProgress = status.goals.find((goal) => goal.state === 'in-progress')
+  if (inProgress)
+    return `${capitalize(inProgress.label)}: ${inProgress.note}.${status.running ? '' : ' Press Run on the clock bar to let it happen.'}`
+  if (status.stage === 'awaiting-measurement')
+    return status.running
+      ? 'Waiting for one complete breath on the record.'
+      : 'Waiting for one complete breath on the record. Press Run on the clock bar.'
+  const remaining = remainingIntervalSeconds(status)
+  if (status.stage === 'ready' || remaining <= 0)
+    return 'Everything requested is in place. Capture the result.'
+  return `Change in place. Run ${Math.ceil(remaining)} s and capture.`
 }

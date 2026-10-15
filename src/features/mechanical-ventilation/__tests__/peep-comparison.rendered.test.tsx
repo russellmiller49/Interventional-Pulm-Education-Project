@@ -5,6 +5,7 @@ import { MechanicalVentilationTeachingPanel } from '../components/MechanicalVent
 import { ventilationStageLesson } from '../content/stageLessons'
 import { createPeepComparisonBaseline } from '../engine/peepComparison'
 import { VENTILATION_SELF_PACED_KEY } from '../engine/selfPacedProgress'
+import { chooseStep, nowPrimary, pressPrimary } from '../test-support/stageHost'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -45,7 +46,9 @@ function mount() {
   return rendered
 }
 function expectNoInventedEvidence() {
-  expect(document.querySelector('[data-task-workbench]')).toHaveAttribute('data-session-time', '0')
+  // The worked comparison is its own model: the learner's patient, where it is on screen, has not run.
+  const surface = document.querySelector('[data-console-surface]')
+  if (surface) expect(surface).toHaveAttribute('data-session-time', '0')
   expect(document.querySelector('[data-recorded-breath-comparison]')).toBeNull()
   legacyKeys.forEach((key) => expect(localStorage.getItem(key)).toBe(`legacy:${key}`))
   const stored = JSON.parse(localStorage.getItem(VENTILATION_SELF_PACED_KEY)!)
@@ -95,11 +98,7 @@ it('reveals the explanation without an answer, run or hold; keeps wrong-choice f
     /wait-only arm is the control/,
   )
   expect(screen.queryByRole('columnheader', { name: /PEEP changed/ })).toBeNull()
-  fireEvent.click(
-    within(screen.getByRole('navigation', { name: 'Step navigation' })).getByRole('button', {
-      name: 'Continue',
-    }),
-  )
+  pressPrimary()
   expect(screen.getAllByRole('radio')).toHaveLength(3)
   fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
   fireEvent.click(screen.getAllByRole('button', { name: 'Show explanation' }).at(-1)!)
@@ -113,17 +112,13 @@ it('reveals the explanation without an answer, run or hold; keeps wrong-choice f
       .length,
   ).toBeGreaterThan(0)
   fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
-  fireEvent.click(
-    within(screen.getByRole('navigation', { name: 'Step navigation' })).getByRole('button', {
-      name: 'Continue',
-    }),
-  )
-  expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
-  expect(
-    within(screen.getByRole('navigation', { name: 'Step navigation' })).getByRole('button', {
-      name: 'Continue',
-    }),
-  ).toBeEnabled()
+  pressPrimary()
+  // The task on the separate patient: nothing to run or capture until PEEP is set, the console
+  // control is one click away, and every other task stays open from the task list.
+  expect(nowPrimary()).toBeNull()
+  expect(screen.getByRole('button', { name: /Show me where/ })).toBeEnabled()
+  const later = [...document.querySelectorAll<HTMLButtonElement>('[data-step-list] button')].at(-1)!
+  expect(later).toBeEnabled()
   expectNoInventedEvidence()
 })
 
@@ -137,17 +132,23 @@ it('restarts the comparison and resumes only reading location, including an olde
     }),
   )
   const mounted = mount()
-  expect(screen.getByRole('combobox', { name: 'Choose step' })).toHaveValue('3')
+  const lesson = ventilationStageLesson('oxygenation-response')
+  // A saved position past the end of the reorganised section reopens it at its first task.
+  const current = () =>
+    document.querySelector('[data-current-step]')?.getAttribute('data-current-step')
+  expect(current()).toBe(lesson.steps[0].id)
+  expect(document.querySelector('[data-stage-resumed-note]')?.textContent).toMatch(
+    /reorganised; it reopens at its first task/,
+  )
   fireEvent.click(screen.getByRole('button', { name: 'Run comparison' }))
   fireEvent.click(screen.getByRole('button', { name: 'Restart section' }))
   expect(screen.queryByRole('columnheader', { name: /PEEP changed/ })).toBeNull()
-  fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-    target: { value: '2' },
-  })
+  chooseStep(1)
   fireEvent.click(screen.getByRole('button', { name: 'Run comparison' }))
   mounted.unmount()
   mount()
-  expect(screen.getByRole('combobox', { name: 'Choose step' })).toHaveValue('2')
+  expect(current()).toBe(lesson.steps[1].id)
+  expect(document.querySelector('[data-stage-resumed-note]')).toBeNull()
   expect(screen.queryByRole('columnheader', { name: /PEEP changed/ })).toBeNull()
   expect(
     ventilationStageLesson('oxygenation-response').steps.filter(
