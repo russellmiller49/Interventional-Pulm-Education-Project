@@ -1,7 +1,7 @@
 'use client'
 
 import type { Route } from 'next'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { criticalCareReferences } from '@/features/critical-care/content/references'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
@@ -132,6 +132,26 @@ const TRANSFER_OPTIONS = [
 ] as const
 
 /**
+ * How a case sits inside a Learn section when it runs there rather than on its own page.
+ *
+ * A section paired to a case ends on it (owner direction, 2026-10-14): the case is the section's
+ * last task, embedded in the section's task card, and the way out goes back to the section rather
+ * than to Practice. Section eight also offers a second case on its mechanism once it is finished.
+ */
+export interface HemodynamicCaseEmbedding {
+  readonly sectionId: string
+  readonly sectionTitle: string
+  /** One-based position of the section on the pathway. */
+  readonly sectionNumber: number
+  /** The section's last task (the default), or the further case its completion card offers. */
+  readonly relation?: 'last-task' | 'second-case'
+  /** Exit case, and Save for later on the device check: close the case and go back to the section. */
+  readonly onReturnToSection: () => void
+  /** The end of the case: back to the section, which is then finished. */
+  readonly onCaseFinished: () => void
+}
+
+/**
  * One Practice case, or the applied case opened from the former Assess page.
  *
  * Self-paced (HD-01): every checkpoint opens at any point — a working frame is optional, actions do
@@ -140,18 +160,24 @@ const TRANSFER_OPTIONS = [
  * bundled-credit refusal, the modeled response needs model time, and the transfer is marked done only
  * when the line has actually been re-levelled and its flush response classified and corrected.
  * Nothing about a run is written: no attempts, scores, hints, mastery or resume checkpoints. The only
- * record is that the case was opened on this device.
+ * record is that the case was opened on this device, in either variant.
+ *
+ * `embedded` runs the same case inside a Learn section, as its last task. The section's stage is
+ * then the frame (no module frame of its own), a strip names the case and its section in place of
+ * the Practice breadcrumb and title, and Exit case and the end of the case go back to the section.
+ * The section pauses its own patient while the case is its current task, so this case's engine is
+ * the only one running.
  */
 export function HemodynamicCaseActivity({
   caseId,
   mode,
   locale = 'en',
-  nextLearn,
+  embedded,
 }: {
   readonly caseId: string
   readonly mode: CaseMode
   readonly locale?: string
-  readonly nextLearn?: string
+  readonly embedded?: HemodynamicCaseEmbedding
 }) {
   const definition = requireValue(
     hemodynamicCaseById.get(caseId),
@@ -517,8 +543,14 @@ export function HemodynamicCaseActivity({
   }
 
   function exitCase() {
+    if (embedded) {
+      embedded.onReturnToSection()
+      return
+    }
     router.push(`/icu-hemodynamics/${section}` as Route)
   }
+  // Inside a section the case's headings sit under the section task card's own heading.
+  const Heading = embedded ? 'h3' : 'h2'
 
   const requiredCompleted = definition.requiredInterventionIds.filter((id) =>
     state.completedInterventionIds.includes(id),
@@ -889,7 +921,7 @@ export function HemodynamicCaseActivity({
   )
   const currentTask = (
     <section className={flowStyles.caseTask} aria-label="Current case task">
-      <h2>{objectives[phase]}</h2>
+      <Heading data-case-heading>{objectives[phase]}</Heading>
       {taskControls}
       {hintVisible ? <p data-case-hint>{definition.guidedPrompt}</p> : null}
       {feedback}
@@ -897,32 +929,43 @@ export function HemodynamicCaseActivity({
   )
 
   return (
-    <IcuHemodynamicsModuleFrameV2
-      locale={locale}
-      activeHref={`/icu-hemodynamics/${section}`}
-      activityMode
-      documentFlow
-    >
+    <CaseFrame embedded={embedded !== undefined} locale={locale} section={section}>
       <SimulationLaunchGate
         activityTitle={definition.title}
         minimumViewport="tablet"
         bandwidthClass="standard"
         estimatedSizeLabel="Under 2 MB after shared application assets"
-        lightweightAlternativeHref={`/icu-hemodynamics/${section}`}
+        /*
+         * Inside a section there is no lighter page to send a learner to — the section is the page
+         * they are on — so the device check offers Continue and Save for later, back to the section.
+         */
+        lightweightAlternativeHref={embedded ? undefined : `/icu-hemodynamics/${section}`}
         onSaveForLater={exitCase}
         theme="dark"
       >
         <div
           className={flowStyles.caseFlow}
           data-case-flow
+          data-embedded={embedded ? (embedded.relation ?? 'last-task') : undefined}
           data-phase={phase}
           data-feedback-mode={holdFeedback ? 'deferred' : 'immediate'}
         >
           <header>
-            <Link href={`/icu-hemodynamics/${section}` as Route}>
-              {mode === 'challenge' ? 'Applied case' : 'Practice'} · <span>{caseId}</span>
-            </Link>
-            <h1>{definition.title}</h1>
+            {embedded ? (
+              <p className={flowStyles.caseStrip} data-case-strip>
+                Case · {definition.title} ·{' '}
+                {embedded.relation === 'second-case'
+                  ? `a second case on the mechanism of Section ${embedded.sectionNumber}`
+                  : `the last task of Section ${embedded.sectionNumber}`}
+              </p>
+            ) : (
+              <>
+                <Link href={`/icu-hemodynamics/${section}` as Route}>
+                  {mode === 'challenge' ? 'Applied case' : 'Practice'} · <span>{caseId}</span>
+                </Link>
+                <h1>{definition.title}</h1>
+              </>
+            )}
             <div className={flowStyles.caseActions}>
               <button
                 type="button"
@@ -974,7 +1017,7 @@ export function HemodynamicCaseActivity({
             </div>
           </header>
           <section className={flowStyles.caseBrief} aria-label="Patient brief">
-            <h2>Patient brief</h2>
+            <Heading data-case-heading>Patient brief</Heading>
             <p>{definition.presentation}</p>
             <p>
               Adult ICU · HR {metricValue(state.measurements.heartRateBpm)} /min · PEEP{' '}
@@ -1001,7 +1044,7 @@ export function HemodynamicCaseActivity({
           ) : null}
           {phase === 'explain' ? (
             <section className={flowStyles.caseDebrief} aria-label="Case debrief">
-              <h2>{objectives.explain}</h2>
+              <Heading data-case-heading>{objectives.explain}</Heading>
               {taskControls}
               {!state.completed ? (
                 <p data-debrief-before-reassessment>
@@ -1090,6 +1133,7 @@ export function HemodynamicCaseActivity({
                   before={observedSystemState(baseline)}
                   now={observedNow}
                   elapsedSeconds={state.timeSeconds - baseline.timeSeconds}
+                  heading={Heading}
                 />
               ) : null}
               <HemodynamicNativeWorkspace
@@ -1105,22 +1149,52 @@ export function HemodynamicCaseActivity({
             </>
           )}
           {message ? <p role="status">{message}</p> : null}
-          {transferComplete ? (
+          {transferComplete && embedded ? (
+            <div data-transfer-complete data-case-finished>
+              <p role="status">Case finished.</p>
+              <div className={flowStyles.caseActions}>
+                <button type="button" onClick={embedded.onCaseFinished}>
+                  Back to Section {embedded.sectionNumber}: {embedded.sectionTitle}
+                </button>
+              </div>
+            </div>
+          ) : transferComplete ? (
             <p role="status" data-transfer-complete>
               Transfer line revalidated in this visit. Nothing about the run is saved.{' '}
-              <Link
-                href={
-                  nextLearn
-                    ? { pathname: '/icu-hemodynamics/learn', query: { activity: nextLearn } }
-                    : '/icu-hemodynamics/learn'
-                }
-              >
-                Continue learning
-              </Link>
+              {mode === 'challenge' ? (
+                <Link href="/icu-hemodynamics/learn">Continue learning</Link>
+              ) : (
+                <Link href="/icu-hemodynamics/practice">Back to all cases</Link>
+              )}
             </p>
           ) : null}
         </div>
       </SimulationLaunchGate>
+    </CaseFrame>
+  )
+}
+
+/** The module's frame for a case on its own page; inside a section the stage host is the frame. */
+function CaseFrame({
+  embedded,
+  locale,
+  section,
+  children,
+}: {
+  readonly embedded: boolean
+  readonly locale: string
+  readonly section: 'practice' | 'assess'
+  readonly children: ReactNode
+}) {
+  if (embedded) return <>{children}</>
+  return (
+    <IcuHemodynamicsModuleFrameV2
+      locale={locale}
+      activeHref={`/icu-hemodynamics/${section}`}
+      activityMode
+      documentFlow
+    >
+      {children}
     </IcuHemodynamicsModuleFrameV2>
   )
 }
@@ -1157,14 +1231,16 @@ function BeforeAndCurrent({
   before,
   now,
   elapsedSeconds,
+  heading: Heading = 'h2',
 }: {
   readonly before: ObservedSystemState
   readonly now: ObservedSystemState
   readonly elapsedSeconds: number
+  readonly heading?: 'h2' | 'h3'
 }) {
   return (
     <section className={flowStyles.comparison} aria-label="Retained case observations">
-      <h2>Before action and current response</h2>
+      <Heading data-case-heading>Before action and current response</Heading>
       <p>
         Recorded just before your first recorded frame or action, and now,{' '}
         {elapsedSeconds.toFixed(0)} model seconds later. MAP is the monitor’s last beat at each

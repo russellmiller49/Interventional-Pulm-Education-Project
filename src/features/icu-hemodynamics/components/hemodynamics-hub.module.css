@@ -162,6 +162,26 @@
   text-transform: uppercase;
 }
 
-.chip[data-kind='case'] {
-  border-style: dashed;
+/* A section and, under it, the case that is its last task. */
+.sectionRows {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+  min-width: 0;
+}
+
+.caseRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.85rem;
+  color: var(--lm-v2-muted, #64748b);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.caseRow svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
 }

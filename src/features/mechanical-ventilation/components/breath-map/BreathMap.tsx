@@ -71,6 +71,89 @@ export interface BreathMapAnswer {
   readonly revealed?: { readonly keyedChoiceId: string }
 }
 
+/** The breath walk: one stop selected at a time, chosen on the map's own pins. */
+export interface BreathMapWalk {
+  readonly selected: BreathStopId
+  readonly onSelect: (stopId: BreathStopId) => void
+}
+
+const STRIP_HEIGHT = 64
+
+function stripPath(): string {
+  const points: string[] = []
+  for (let index = 0; index <= SAMPLES; index += 1) {
+    const t = index / SAMPLES
+    const value = breathMapTrace(t).pressure
+    const y = STRIP_HEIGHT - 8 - value * (STRIP_HEIGHT - 18)
+    points.push(`${index === 0 ? 'M' : 'L'}${xAt(t).toFixed(1)} ${y.toFixed(1)}`)
+  }
+  return points.join(' ')
+}
+
+const shortStopName = (stopId: BreathStopId) => breathStop(stopId).title.split(' — ')[0]
+
+/**
+ * The map as a one-line "you are here" under the clock bar: the pressure trace of one schematic
+ * breath with its four stops numbered, and the stops this step stands at lit. The full map, with
+ * all three traces, leads the teaching column on the breath-walk steps.
+ */
+function BreathMapStrip({ emphasis }: { readonly emphasis: readonly BreathStopId[] }) {
+  const lit = new Set(emphasis)
+  const litStops = breathStopIds.filter((id) => lit.has(id))
+  const where =
+    litStops.length === 0
+      ? 'the whole breath'
+      : litStops.map((id) => shortStopName(id).toLowerCase()).join(' and ')
+  return (
+    <section
+      className={styles.strip}
+      data-breath-map
+      data-breath-map-variant="strip"
+      data-emphasis={litStops.length > 0 ? 'some' : 'none'}
+      data-lit={litStops.join(' ')}
+      aria-label="Breath map"
+    >
+      <svg
+        className={styles.stripSvg}
+        viewBox={`0 0 ${VIEW_WIDTH} ${STRIP_HEIGHT}`}
+        role="img"
+        aria-label={`Breath map, schematic: one breath in four stops. This step stands at ${where}.`}
+      >
+        {breathStopIds.map((stopId) => {
+          const { from, to } = breathMapSegments[stopId]
+          const x = xAt(from)
+          const width = xAt(to) - x
+          return (
+            <g key={stopId} data-breath-segment={stopId} data-lit={lit.has(stopId)}>
+              <rect
+                className={styles.band}
+                data-lit={lit.has(stopId)}
+                x={x}
+                y={2}
+                width={width}
+                height={STRIP_HEIGHT - 4}
+                rx={5}
+              />
+              <text className={styles.segmentLabel} data-lit={lit.has(stopId)} x={x + 8} y={15}>
+                {breathStop(stopId).ordinal}
+              </text>
+            </g>
+          )
+        })}
+        <path className={`${styles.trace} ${styles.tracePressure}`} d={stripPath()} />
+      </svg>
+      <ol className={styles.stripStops} aria-hidden="true">
+        {breathStopIds.map((stopId) => (
+          <li key={stopId} data-lit={lit.has(stopId)}>
+            <span className={styles.number}>{breathStop(stopId).ordinal}</span>
+            {shortStopName(stopId)}
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
 /**
  * One breath, four stops, and where you are.
  *
@@ -87,11 +170,32 @@ export function BreathMap({
   emphasis,
   caption,
   answer,
+  walk,
+  variant = 'full',
 }: {
   readonly emphasis: readonly BreathStopId[]
   /** "You are here: Trigger — the start." Absent when the step stands at the whole breath. */
   readonly caption?: string
   readonly answer?: BreathMapAnswer
+  /** The breath walk: each stop becomes a pin to stand at. */
+  readonly walk?: BreathMapWalk
+  /** `strip`: the one-line map under the clock bar. */
+  readonly variant?: 'full' | 'strip'
+}) {
+  if (variant === 'strip') return <BreathMapStrip emphasis={emphasis} />
+  return <FullBreathMap emphasis={emphasis} caption={caption} answer={answer} walk={walk} />
+}
+
+function FullBreathMap({
+  emphasis,
+  caption,
+  answer,
+  walk,
+}: {
+  readonly emphasis: readonly BreathStopId[]
+  readonly caption?: string
+  readonly answer?: BreathMapAnswer
+  readonly walk?: BreathMapWalk
 }) {
   const titleId = useId()
   const descriptionId = useId()
@@ -114,6 +218,7 @@ export function BreathMap({
     <section
       className={styles.map}
       data-breath-map
+      data-breath-map-variant="full"
       data-emphasis={litStops.length > 0 ? 'some' : 'none'}
       data-lit={litStops.join(' ')}
       aria-labelledby={titleId}
@@ -126,7 +231,9 @@ export function BreathMap({
       </div>
       <p className={styles.caption} data-breath-map-caption data-empty={!caption}>
         {caption ??
-          'One passive volume-controlled breath, start to finish. The live traces are on the console above.'}
+          (walk
+            ? 'Choose a numbered stop to stand at it. The live traces are on the console.'
+            : 'One passive volume-controlled breath, start to finish. The live traces are on the console.')}
       </p>
       <div className={styles.frame}>
         <svg
@@ -228,6 +335,29 @@ export function BreathMap({
                 >
                   {stopNumber(stopId)}
                 </label>
+              )
+            })
+          : null}
+        {walk && !answer
+          ? breathStopIds.map((stopId) => {
+              const { from, to } = breathMapSegments[stopId]
+              const left = ((xAt(from) + xAt(to)) / 2 / VIEW_WIDTH) * 100
+              const selected = walk.selected === stopId
+              return (
+                <button
+                  key={stopId}
+                  type="button"
+                  className={styles.pin}
+                  data-breath-pin={stopId}
+                  data-walk-stop={stopId}
+                  data-selected={selected}
+                  aria-pressed={selected}
+                  aria-label={breathStop(stopId).title}
+                  style={{ left: `${left}%`, top: '50%' }}
+                  onClick={() => walk.onSelect(stopId)}
+                >
+                  {stopNumber(stopId)}
+                </button>
               )
             })
           : null}

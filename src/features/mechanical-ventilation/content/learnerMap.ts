@@ -225,13 +225,12 @@ export function ventilationRoundRelationLine(round: LabRound): string | null {
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Time: an estimate, and what it does not include
+ * Time: an estimate
  * ---------------------------------------------------------------------------------------------- */
 
 /**
- * The simulated seconds a section's two optional experiments ask the learner to watch, from the
- * rounds' own intervals. This is model time at 1×: a faster clock shortens the wait, and reading,
- * choosing and holds are not counted. It is not a measured learner duration.
+ * The simulated seconds a section's two experiments ask the learner to watch, from the rounds' own
+ * intervals. This is model time at 1×: a faster clock or Run and capture shortens the wait.
  */
 export function ventilationExperimentSeconds(unitId: string): number {
   const experiment = ventilationExperimentByUnit.get(unitId)
@@ -239,13 +238,9 @@ export function ventilationExperimentSeconds(unitId: string): number {
   return experiment.rounds.reduce((total, round) => total + round.seconds, 0)
 }
 
+/** "About 5 minutes" — the section's estimate, without the caveats it used to carry (October 2026). */
 export function ventilationSectionTimeLine(unitId: string): string {
   const unit = ventilationUnitById.get(unitId)
   if (!unit) throw new Error(`Unknown ventilation section ${unitId}`)
-  const seconds = ventilationExperimentSeconds(unitId)
-  const experiments =
-    seconds > 0
-      ? ` The optional experiments add about ${seconds} seconds of simulated time at 1×, less on a faster clock.`
-      : ' The optional parts here have no timed run.'
-  return `About ${unit.minutes} minutes to read.${experiments}`
+  return `About ${unit.minutes} minutes`
 }

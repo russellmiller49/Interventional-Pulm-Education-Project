@@ -24,6 +24,8 @@ export function hemodynamicsTaskPresentation(
 ): HemodynamicsTaskPresentation {
   const task = step.interaction.kind
   const reading = task === 'read' || task === 'explain'
+  // A section's last task is its case, which brings its own monitor and workspace.
+  if (task === 'case') return { kind: 'case', monitor: 'none', anatomy: 'none', controls: false }
   switch (section) {
     case 'why-measure':
       return { kind: 'concept', monitor: 'none', anatomy: 'none', controls: false }

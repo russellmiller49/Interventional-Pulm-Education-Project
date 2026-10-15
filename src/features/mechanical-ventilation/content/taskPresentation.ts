@@ -34,12 +34,27 @@ export type VentilationPresentationKind =
   | 'response-lab'
   | 'patient-case'
 
+/**
+ * How a step is laid out on the page, on the shared flow body:
+ *
+ * - `concept`: the teaching column is the step; the console sits beside it in observe mode (or the
+ *   worked PEEP comparison, in Section 9).
+ * - `breath-walk`: the breath map leads the teaching column and the console beside it is frozen or
+ *   stepped one breath at a time.
+ * - `console-lab`: the console, with the clock bar above it, is the visual and comes first.
+ * - `patient-case`: the console plus the bedside findings for the integration sections.
+ */
+export type VentilationTaskLayout = 'concept' | 'breath-walk' | 'console-lab' | 'patient-case'
+
 export interface VentilationTaskPresentation {
   readonly kind: VentilationPresentationKind
   readonly surface: 'reference' | 'question' | 'working' | 'comparison'
   readonly landmark: string
   readonly effort: boolean
   readonly patient: 'none' | 'protection' | 'bedside'
+  readonly layout: VentilationTaskLayout
+  /** Whether the console takes therapy changes on this step (`operate`) or only shows (`observe`). */
+  readonly consoleMode: 'operate' | 'observe'
 }
 
 interface UnitPresentation {
@@ -96,6 +111,7 @@ export const ventilationUnitPresentation = {
 const surfaceByInteraction = {
   read: 'reference',
   walk: 'reference',
+  'advance-breath': 'reference',
   locate: 'question',
   prediction: 'question',
   sort: 'question',
@@ -117,6 +133,23 @@ const landmarks: Record<VentilationPresentationKind, string> = {
   'patient-case': 'the patient findings, working simulation, and reassessment',
 }
 
+function layoutFor(
+  unitId: string,
+  interaction: VentilationStageInteraction,
+  patient: VentilationTaskPresentation['patient'],
+): VentilationTaskLayout {
+  if (unitId === 'oxygenation-response' && interaction.kind !== 'simulator-task') return 'concept'
+  if (patient === 'bedside') return 'patient-case'
+  if (interaction.kind === 'read') return 'concept'
+  if (interaction.kind === 'walk' || interaction.kind === 'advance-breath') return 'breath-walk'
+  return 'console-lab'
+}
+
+const operatedInteractions: ReadonlySet<VentilationStageInteraction['kind']> = new Set([
+  'prediction',
+  'simulator-task',
+])
+
 export function ventilationTaskPresentation(
   unitId: string,
   interaction: VentilationStageInteraction,
@@ -132,11 +165,14 @@ export function ventilationTaskPresentation(
       ? unit.reference
       : unit.application
   const round = ventilationExperimentByUnit.get(unitId)?.rounds[roundIndexOf(interaction)]
+  const patient = unit.patient ?? 'none'
   return {
     kind,
     surface,
     landmark: landmarks[kind],
     effort: (unit.effort ?? false) || (round ? roundInvokesEffort(round) : false),
-    patient: unit.patient ?? 'none',
+    patient,
+    layout: layoutFor(unitId, interaction, patient),
+    consoleMode: operatedInteractions.has(interaction.kind) ? 'operate' : 'observe',
   }
 }

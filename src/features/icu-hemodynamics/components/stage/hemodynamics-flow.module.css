@@ -196,10 +196,25 @@
   font-size: 1.8rem;
   font-weight: 700;
 }
-.caseFlow h2 {
+.caseFlow h2,
+.caseFlow [data-case-heading] {
   font-size: 1.2rem;
   font-weight: 650;
   margin-bottom: 0.75rem;
+}
+/*
+ * The case as a section's last task: it sits inside the section's task card, which already gives
+ * it a width and a gutter, and a one-line strip names it in place of the Practice breadcrumb.
+ */
+.caseFlow[data-embedded] {
+  max-width: none;
+  padding: 0;
+}
+.caseStrip {
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--cyan-bright);
 }
 .caseActions {
   display: flex;

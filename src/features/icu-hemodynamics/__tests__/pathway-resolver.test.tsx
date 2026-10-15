@@ -8,7 +8,7 @@ import {
   hemodynamicsPathwaySections,
   suggestedHemodynamicsSection,
 } from '../content/pathwayResolver'
-import { hemodynamicsSectionIds } from '../content/sectionSpecs'
+import { hemodynamicsPracticePairing, hemodynamicsSectionIds } from '../content/sectionSpecs'
 import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY } from '../engine/learnProgress'
 import {
   createEmptySelfPacedRecord,
@@ -100,6 +100,14 @@ describe('the resolver', () => {
     expect(hemodynamicsCompositionLine()).toBe(
       `${composition.total} sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · ${composition.minutes} min`,
     )
+    // The seven cases that end their sections count in the time: 121 min of lessons, 72 of cases.
+    expect(hemodynamicsCompositionLine()).toBe(
+      '9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 193 min',
+    )
+    for (const section of hemodynamicsPathwaySections) {
+      const pairing = hemodynamicsPracticePairing(section.id)
+      if (pairing) expect(section.minutes).toBeGreaterThan(pairing.minutes)
+    }
   })
 
   it('groups the one order into contiguous runs that flatten back to it', () => {
@@ -119,6 +127,19 @@ describe('the resolver', () => {
         expect(hemodynamicCases.map((d) => d.title)).toContain(entry.title)
       }
     }
+  })
+
+  it('lists a case only beside the section it ends, and none for the orientation or the capstone', () => {
+    const cases = hemodynamicsPathwayGroups().flatMap((group) => group.cases)
+    expect(cases.map((entry) => [entry.sectionId, entry.caseId])).toEqual([
+      ['pressure-system', 'HD-08'],
+      ['waveform-interpretation', 'HD-04'],
+      ['waveform-components', 'HD-07'],
+      ['catheter-advancement', 'HD-03'],
+      ['pawp-capture', 'HD-06'],
+      ['thermodilution-series', 'HD-01'],
+      ['derived-hemodynamics', 'HD-05'],
+    ])
   })
 })
 
@@ -140,6 +161,20 @@ describe('the surfaces', () => {
     expect(document.querySelectorAll('[data-kind="section"]')).toHaveLength(
       hemodynamicsSectionIds.length,
     )
+    // A case is the last row of the section it ends, not a separate link out to Practice.
+    expect(
+      document.querySelector('[data-section-rows="pressure-system"] [data-kind="case"]')
+        ?.textContent,
+    ).toBe('Last task · Case: The numbers do not fit the patient')
+    expect(
+      document.querySelector('[data-section-rows="why-measure"] [data-kind="case"]'),
+    ).toBeNull()
+    expect(
+      document.querySelector('[data-section-rows="pac-signal-validation"] [data-kind="case"]'),
+    ).toBeNull()
+    expect(document.querySelectorAll('[data-pathway-accordion] [data-kind="case"]')).toHaveLength(7)
+    expect(document.querySelector('[data-pathway-accordion] a[data-kind="case"]')).toBeNull()
+    expect(document.querySelector('[data-pathway-accordion] a[href*="/practice"]')).toBeNull()
   })
 
   it('says Start, Continue or Resume from the same resolver', () => {
@@ -185,6 +220,9 @@ describe('the surfaces', () => {
     expect(document.querySelector('[data-pathway-composition]')?.textContent).toBe(
       hemodynamicsCompositionLine(),
     )
+    expect(
+      screen.getByRole('link', { name: 'All cases (also inside their sections)' }),
+    ).toHaveAttribute('href', '/icu-hemodynamics/practice')
     expect(
       document.querySelectorAll('[data-pathway-accordion] a[data-kind="section"]'),
     ).toHaveLength(hemodynamicsSectionIds.length)

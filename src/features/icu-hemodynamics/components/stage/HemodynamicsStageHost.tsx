@@ -37,7 +37,7 @@ import { isOffMapTarget } from '../../content/mapAnswerTargets'
 import { unidentifiedTraceDescription } from '../../content/introductoryTeaching'
 import { waveformAtlasById } from '../../content/waveformAtlas'
 import { routeStop, routeStopNumber, type RouteStopId } from '../../content/routeSpine'
-import { hemodynamicsPracticePairing } from '../../content/sectionSpecs'
+import { hemodynamicsSecondCase } from '../../content/sectionSpecs'
 import { hemodynamicsStageLesson, type HemodynamicsStageStep } from '../../content/stageLessons'
 import { hemodynamicsStageSources } from '../../content/stageSources'
 import {
@@ -71,6 +71,7 @@ import {
   DerivedProvenanceDrill,
   DerivedTransferComparison,
 } from '../DerivedHemodynamicsWorkbench'
+import { HemodynamicCaseActivity } from '../HemodynamicCaseActivity'
 import { IcuHemodynamicsModuleFrameV2 } from '../IcuHemodynamicsModuleFrameV2'
 import {
   catheterMapCaption,
@@ -120,6 +121,11 @@ import { hemodynamicsTaskPresentation } from '../../content/taskPresentation'
  * met on the simulator count, and a skipped step takes no before/after snapshot. What stays enforced
  * is the simulation's own safety: while the balloon is up the learner cannot leave the step, go back,
  * restart or change sections until it is down.
+ *
+ * A section paired to a case ends on it: the case is the last task, run inside the task card on the
+ * case's own engine. While that task is current the section's patient is paused and its monitor and
+ * docks are not mounted, so two simulations never run at once; Exit case, the end of the case and
+ * Skip the case all finish the section and bring its completion card up.
  */
 export function HemodynamicsStageHost({
   sectionId,
@@ -246,9 +252,8 @@ function HemodynamicsStageSession({
 }) {
   const router = useRouter()
   const lesson = useMemo(() => hemodynamicsStageLesson(sectionId), [sectionId])
-  const { state, dispatch, load } = useHemodynamicsStageSession(lesson.runtime.initial)
   const nextSection = nextPathwaySection(hemodynamicsPathway, sectionId)
-  const pairing = hemodynamicsPracticePairing(sectionId)
+  const secondCase = hemodynamicsSecondCase(sectionId)
   const stageSources = useMemo(() => hemodynamicsStageSources(lesson.sectionId), [lesson.sectionId])
   const { record } = useHemodynamicsSelfPacedRecord()
 
@@ -275,9 +280,15 @@ function HemodynamicsStageSession({
   const [derivedSeparated, setDerivedSeparated] = useState(false)
   const [derivedDisagreementPreserved, setDerivedDisagreementPreserved] = useState(false)
   const [derivedThresholdResolved, setDerivedThresholdResolved] = useState(false)
+  // The case open on the section's last task, if any, and the cases opened in this visit.
+  const [openCaseId, setOpenCaseId] = useState<string | null>(null)
+  const [casesOpened, setCasesOpened] = useState<readonly string[]>([])
+  const [completionFocusRequest, setCompletionFocusRequest] = useState(0)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
+  const completionRef = useRef<HTMLElement>(null)
   const focusedTask = useRef<string | null>(null)
+  const previousCaseId = useRef<string | null>(null)
 
   const progress = deriveStageProgress(lesson, commitments)
   const liveIndex = progress.liveIndex
@@ -288,6 +299,14 @@ function HemodynamicsStageSession({
   const performedIds = progress.performedIds
   const finished = commitments.finished
   const interaction = activeStep.interaction
+  /*
+   * One engine at a time (report P-06 is why the lab used to be a link). On the case step the case
+   * owns the only simulation: the section's patient stops ticking, and its monitor and docks are
+   * not mounted. Moving to any other task resumes it from where it stopped.
+   */
+  const onCaseStep = interaction.kind === 'case'
+  const runningCaseId = onCaseStep ? openCaseId : null
+  const { state, dispatch, load } = useHemodynamicsStageSession(lesson.runtime.initial, !onCaseStep)
   const presentation = hemodynamicsTaskPresentation(lesson.sectionId, activeStep)
   /*
    * One rule, consulted by every route out of a step (HD-PRE-REVIEW-01 / report L5-07).
@@ -462,7 +481,7 @@ function HemodynamicsStageSession({
 
   /** Open any step live: later ones are reached without doing the steps between; earlier ones restart. */
   function moveTo(target: number) {
-    if (held) return
+    if (held || runningCaseId) return
     const index = Math.max(0, Math.min(target, lesson.steps.length - 1))
     if (index === liveIndex && viewIndex === null) return
     const entry = entryStateFor(lesson, index, liveIndex)
@@ -474,7 +493,7 @@ function HemodynamicsStageSession({
   }
 
   function goBack() {
-    if (held || activeIndex <= 0) return
+    if (held || runningCaseId || activeIndex <= 0) return
     setViewIndex(activeIndex - 1)
   }
 
@@ -511,6 +530,38 @@ function HemodynamicsStageSession({
     setViewIndex(null)
     updateSelfPacedRecord((current) => withSectionReviewed(current, lesson.sectionId, true))
   }
+
+  /* ---------------------------------------------------------------- *
+   * The case: the section's last task, and the second case section eight offers
+   * ---------------------------------------------------------------- */
+  function openCase(caseId: string) {
+    if (held) return
+    // The second case opens from the completion card, which can be read from any task.
+    if (liveIndex === lesson.caseStepIndex) setViewIndex(null)
+    else moveTo(lesson.caseStepIndex)
+    setOpenCaseId(caseId)
+    setCasesOpened((current) => (current.includes(caseId) ? current : [...current, caseId]))
+  }
+
+  /** Exit case, the end of the case and Skip the case: the section is finished either way. */
+  function closeCase() {
+    setOpenCaseId(null)
+    if (!finished) finish()
+    setCompletionFocusRequest((count) => count + 1)
+  }
+
+  useEffect(() => {
+    const previous = previousCaseId.current
+    previousCaseId.current = runningCaseId
+    // The case replaces the task card's body; the card's heading is where reading resumes.
+    if (runningCaseId && !previous) nowFocusRef.current?.focus({ preventScroll: true })
+  }, [runningCaseId])
+
+  useEffect(() => {
+    if (completionFocusRequest === 0) return
+    completionRef.current?.focus({ preventScroll: true })
+    completionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [completionFocusRequest])
 
   /* ---------------------------------------------------------------- *
    * The walk, the map, and confirming a place
@@ -757,7 +808,7 @@ function HemodynamicsStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
-  const canGoBack = activeIndex > 0 && !held
+  const canGoBack = activeIndex > 0 && !held && !runningCaseId
   const showWhereAction =
     firstUnmetKey && !performedNow && !lookingBack
       ? {
@@ -829,6 +880,42 @@ function HemodynamicsStageSession({
         ...(canRedo
           ? { secondary: { label: 'Do this task now', onActivate: () => moveTo(activeIndex) } }
           : {}),
+      }
+    }
+    if (interaction.kind === 'case') {
+      const kicker = `${stepPosition} · Apply`
+      if (runningCaseId) {
+        // The case drives from here: its checkpoints are its progress and its own exits lead back.
+        const second =
+          runningCaseId !== interaction.caseId ? hemodynamicCaseById.get(runningCaseId) : null
+        return {
+          kicker,
+          heading: second ? `A second case on this mechanism: ${second.title}` : activeStep.title,
+          body: activeStep.instruction,
+        }
+      }
+      const start = {
+        label: casesOpened.includes(interaction.caseId)
+          ? 'Run the case again'
+          : activeStep.actionLabel,
+        onActivate: () => openCase(interaction.caseId),
+        icon: <ArrowRight aria-hidden="true" />,
+      }
+      if (finished) {
+        return {
+          ...base,
+          kicker,
+          status: reviewed
+            ? 'Section finished and marked reviewed on this device.'
+            : 'Section finished.',
+          secondary: start,
+        }
+      }
+      return {
+        ...base,
+        kicker,
+        primary: start,
+        secondary: { label: 'Skip the case · finish the section', onActivate: closeCase },
       }
     }
     if (finished && isLastStep) {
@@ -1468,11 +1555,6 @@ function HemodynamicsStageSession({
     </StageTeachingScope>
   )
 
-  const completionLead =
-    pairing.kind === 'mechanism-match'
-      ? 'Apply it to the paired case in Practice, starting fresh, or continue to the next section.'
-      : 'A case in this part of the pathway is ready in Practice whenever it is useful.'
-
   const task = (
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
@@ -1491,7 +1573,27 @@ function HemodynamicsStageSession({
           }
         >
           <div className={flowStyles.taskContent} data-flow-reading={readingPart}>
-            {readingPart ? (
+            {onCaseStep ? (
+              runningCaseId ? (
+                <HemodynamicCaseActivity
+                  key={runningCaseId}
+                  caseId={runningCaseId}
+                  mode="practice"
+                  locale={locale}
+                  embedded={{
+                    sectionId: lesson.sectionId,
+                    sectionTitle: lesson.title,
+                    sectionNumber: lesson.index + 1,
+                    relation:
+                      interaction.kind === 'case' && runningCaseId !== interaction.caseId
+                        ? 'second-case'
+                        : 'last-task',
+                    onReturnToSection: closeCase,
+                    onCaseFinished: closeCase,
+                  }}
+                />
+              ) : null
+            ) : readingPart ? (
               <FlowPrerequisite key={readingPart} part={readingPart} state={state} />
             ) : (
               <>
@@ -1557,7 +1659,7 @@ function HemodynamicsStageSession({
                 <button
                   type="button"
                   aria-current={index === activeIndex ? 'step' : undefined}
-                  disabled={held || index === activeIndex}
+                  disabled={held || runningCaseId !== null || index === activeIndex}
                   onClick={() => {
                     if (index < liveIndex) setViewIndex(index)
                     else if (index === liveIndex) returnToLive()
@@ -1572,15 +1674,16 @@ function HemodynamicsStageSession({
           })}
         </ol>
       </details>
-      {finished ? (
+      {finished && !runningCaseId ? (
         <section
+          ref={completionRef}
+          tabIndex={-1}
           className={stageStyles.completion}
           role="status"
           aria-live="polite"
           data-stage-completion
         >
           <h3>Section finished</h3>
-          <p>{completionLead}</p>
           <p data-reviewed-state={reviewed ? 'reviewed' : 'not-reviewed'}>
             {reviewed
               ? 'Marked reviewed on this device. Nothing about your answers is saved.'
@@ -1598,45 +1701,39 @@ function HemodynamicsStageSession({
               {reviewed ? 'Undo: not reviewed yet' : 'Mark as reviewed'}
             </button>
           </p>
-          {pairing.kind === 'next-in-unit' ? (
-            <p data-practice-pairing-note>It applies a different mechanism from this section.</p>
-          ) : null}
-          <div className={stageStyles.completionActions}>
-            <button
-              type="button"
-              className={shellStyles.nowPrimary}
-              data-practice-pairing={pairing.kind}
-              disabled={held}
-              onClick={() =>
-                router.push({
-                  pathname: `${icuHemodynamicsNavBase}/practice`,
-                  query: {
-                    case: pairing.caseId,
-                    ...(nextSection ? { nextLearn: nextSection.id } : {}),
-                  },
-                })
-              }
-            >
-              {pairing.kind === 'mechanism-match'
-                ? `Apply this in Practice: ${pairing.title}`
-                : `A case in this part of the pathway: ${pairing.title}`}
-              <ArrowRight aria-hidden="true" />
-            </button>
-            {nextSection ? (
+          {secondCase ? (
+            <p data-second-case={secondCase.caseId}>
               <button
                 type="button"
                 className={shellStyles.nowSecondary}
+                disabled={held}
+                onClick={() => openCase(secondCase.caseId)}
+              >
+                A second case on this mechanism: {secondCase.title}
+              </button>
+            </p>
+          ) : null}
+          <div className={stageStyles.completionActions}>
+            {nextSection ? (
+              <button
+                type="button"
+                className={shellStyles.nowPrimary}
+                data-next-section={nextSection.id}
+                disabled={held}
                 onClick={() => goToSection(nextSection.id)}
               >
                 Continue to the next section: {nextSection.title}
+                <ArrowRight aria-hidden="true" />
               </button>
             ) : (
               <button
                 type="button"
-                className={shellStyles.nowSecondary}
+                className={shellStyles.nowPrimary}
+                disabled={held}
                 onClick={() => router.push(`${icuHemodynamicsNavBase}/assess`)}
               >
                 Open the applied case
+                <ArrowRight aria-hidden="true" />
               </button>
             )}
           </div>

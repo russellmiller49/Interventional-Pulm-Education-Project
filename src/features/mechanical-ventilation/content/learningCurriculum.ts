@@ -131,10 +131,10 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     explanation:
       'A ventilator helps move gas into the respiratory system. A signal starts inspiration, support is delivered, inspiration ends, and gas flows out. Moving gas supports breathing; oxygen transfer and CO₂ removal still depend on the patient’s lungs and circulation.',
     checklist: [
-      'Find the beginning of inspiration.',
-      'Follow gas moving in.',
-      'Find the change to expiration.',
-      'Follow gas moving out before the next breath.',
+      'Find where inspiration begins: the trigger.',
+      'Follow inspiratory flow into the lungs.',
+      'Find where inspiration ends: cycling.',
+      'Follow expiratory flow out, before the next breath begins.',
     ],
     example: {
       situation: 'Watch the normal supported breath below. The patient is passive in this drawing.',

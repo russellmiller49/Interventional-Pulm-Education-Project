@@ -4082,6 +4082,48 @@ line.waveformAnnotation {
 }
 
 /*
+ * "Show me where": the one control a Learn task is waiting for, marked on the console itself
+ * (ported from the ECMO console). The Evita's white screen takes a dark ring instead of a white one.
+ */
+.consoleShell [data-guided-help='true'] {
+  position: relative;
+  z-index: 8;
+  outline: 4px solid #fff !important;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 8px rgba(113, 225, 229, 0.32),
+    0 0 30px rgba(113, 225, 229, 0.58) !important;
+  animation: mvGuidedHelpPulse 1.1s ease-in-out infinite;
+  scroll-margin: 25vh 0;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] [data-guided-help='true'] {
+  outline-color: #0b3954 !important;
+  box-shadow:
+    0 0 0 8px rgba(23, 107, 162, 0.28),
+    0 0 26px rgba(23, 107, 162, 0.5) !important;
+}
+
+@keyframes mvGuidedHelpPulse {
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consoleShell [data-guided-help='true'] {
+    animation: none;
+  }
+}
+
+/* The frozen breath fills the trace slot on the main screen. */
+.waveformStack[data-frozen-breath] {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  overflow: visible;
+}
+
+/*
  * A screen too narrow, at the reader's text size, for the value column, the waveform labels and a
  * trace side by side: the values become a band above or below the waveforms (in the order the
  * device has them) and the waveforms take the full width. A reflow, not a smaller font. 16 rem is

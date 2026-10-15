@@ -38,7 +38,6 @@ import { TroubleshootingPanel } from '../TroubleshootingPanel'
 import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
 import type { HemodynamicSimulationState } from '../../engine/types'
-import { Link } from '@/i18n/navigation'
 
 import { IntroductoryTeaching } from './IntroductoryTeaching'
 import styles from './hemodynamics-stage.module.css'
@@ -453,25 +452,20 @@ function DeeperReference({
           <StageBlock kind="after-commitment" heading="Vary the technique yourself">
             {/*
               The thermodilution lab with adjustable volume, temperature, respiratory phase and
-              injection time lives in the Practice workspace, on that case's own engine. It is
-              linked rather than embedded: a second copy here would be a second patient running
-              beside this lesson's (report P-06).
+              injection time lives in the case workspace, on that case's own engine. It used to be
+              a link out of the lesson, because a second copy here would be a second patient running
+              beside this lesson's (report P-06). The case is now this section's last task: it runs
+              inside the section, and this section's patient is paused while it does.
             */}
-            <section className={styles.teachingCard} data-teaching-block="thermodilution-lab-link">
+            <section className={styles.teachingCard} data-teaching-block="thermodilution-lab">
               <p className={styles.kicker}>Vary the technique yourself</p>
               <p>
-                The Practice cases include a thermodilution lab where the injectate volume, its
-                temperature, the respiratory timing and the length of the injection can each be
-                changed and the curve regenerated. In a case, open{' '}
+                The case at the end of this section includes a thermodilution lab where the
+                injectate volume, its temperature, the respiratory timing and the length of the
+                injection can each be changed and the curve regenerated. In the case, open{' '}
                 <strong>Cardiac-output trials</strong>.
               </p>
-              <p>
-                <Link href={{ pathname: '/icu-hemodynamics/practice', query: { case: 'HD-01' } }}>
-                  Open the thermodilution lab in Practice case HD-01
-                </Link>{' '}
-                — this leaves the lesson; the sections you have opened stay recorded on this device,
-                and the lesson&apos;s live patient is not carried over.
-              </p>
+              <p data-thermodilution-lab-note>The lab is the last task of this section.</p>
             </section>
           </StageBlock>
         </>

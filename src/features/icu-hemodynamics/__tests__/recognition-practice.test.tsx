@@ -20,6 +20,7 @@ import {
   clickPrimary,
   currentStepId,
   installDom,
+  leaveTask,
   mountSection,
   nowPrimary,
   nowStatus,
@@ -515,7 +516,7 @@ describe('on the lesson stage', () => {
     while (!document.querySelector('[data-stage-completion]') && guard-- > 0) {
       // No Explain step claims a hands-on step this section never asks for.
       expect(document.querySelector('[data-before-after-absent]')).toBeNull()
-      clickPrimary()
+      leaveTask()
     }
     expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
     // Only the walk, which the primary action really walked stop by stop, is simulation work done.

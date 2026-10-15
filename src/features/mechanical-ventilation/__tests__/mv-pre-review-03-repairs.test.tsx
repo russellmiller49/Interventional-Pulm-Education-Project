@@ -45,11 +45,7 @@ import {
   ventilationReferenceMarkers,
 } from '../content/referenceEvidence'
 import { ventilationSectionLabel } from '../content/learnerMap'
-import {
-  resolvePresentedStepIndex,
-  ventilationPresentedStepIndexes,
-  ventilationStageLesson,
-} from '../content/stageLessons'
+import { ventilationPresentedStepIndexes, ventilationStageLesson } from '../content/stageLessons'
 import { VENTILATION_SELF_PACED_KEY } from '../engine/selfPacedProgress'
 import {
   createLabSession,
@@ -68,6 +64,14 @@ import { EFFORT_DETECTION_FLOOR_CMH2O } from '../engine/physics'
 import { ventilationSimulationReducer } from '../engine/reducer'
 import { completedBreath } from '../engine/teachingBreath'
 import type { VentilationAction, WaveformSample } from '../engine/types'
+import {
+  chooseSection,
+  chooseStep as chooseTask,
+  nowPrimary,
+  nowPrimaryLabel,
+  pressClock,
+  setConsoleControl,
+} from '../test-support/stageHost'
 
 const mockPush = jest.fn()
 jest.mock('@/i18n/navigation', () => ({
@@ -129,15 +133,26 @@ function mount(unitId: string) {
   boot()
   return ventilationStageLesson(unitId)
 }
-function chooseStep(index: number) {
-  fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-    target: { value: index },
-  })
-}
+const chooseStep = (index: number) => chooseTask(index)
 const heading = () => document.querySelector<HTMLElement>('[data-step-heading]')!
 const card = () => document.querySelector<HTMLElement>('[data-current-step]')!
-const panel = () => document.querySelector<HTMLElement>('[data-experiment-panel]')!
-const stage = () => panel().getAttribute('data-experiment-stage')
+/** The breath frozen on the console, where the one-breath inspection now lives. */
+const consoleFigure = () =>
+  document.querySelector<HTMLElement>('[data-ventilation-console] [data-captured-breath]')
+const stage = () =>
+  document.querySelector('[data-experiment-stage]')?.getAttribute('data-experiment-stage')
+const running = () =>
+  document.querySelector('[data-experiment-stage]')?.getAttribute('data-running')
+/** Where a part's task and question sit in a lesson, by kind rather than by a fixed position. */
+const taskIndex = (unitId: string, round: 0 | 1) =>
+  ventilationStageLesson(unitId).steps.findIndex(
+    (step) => step.interaction.kind === 'simulator-task' && step.interaction.round === round,
+  )
+const questionIndex = (unitId: string, round: 0 | 1) =>
+  ventilationStageLesson(unitId).steps.findIndex(
+    (step) => step.interaction.kind === 'prediction' && step.interaction.round === round,
+  )
+const guideText = () => document.querySelector('[data-teaching-block="guide"]')?.textContent ?? ''
 const runSeconds = (seconds: number) => act(() => jest.advanceTimersByTime(seconds * 1000))
 /** The page going to the background or coming back, as the browser reports it. */
 function setVisibility(next: DocumentVisibilityState) {
@@ -248,20 +263,19 @@ describe('R1: who paused decides what a pause can count for', () => {
     expect('pauseOrigin' in labCheckpoint(suspended)).toBe(false)
   })
 
-  it('2–5 · rendered: hidden with automatic capture on captures nothing; the learner’s own pause then does', () => {
+  it('2–5 · rendered: a hidden page captures nothing, though capture is automatic; the learner’s own pause then does', () => {
     mount(SECTION_1)
-    chooseStep(2)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    chooseStep(taskIndex(SECTION_1, 0))
+    pressClock('run')
     runSeconds(EXPIRATORY_SECONDS)
-    expect(panel().getAttribute('data-running')).toBe('true')
+    expect(running()).toBe('true')
 
     // The review's reproduction: the page is hidden; the app pauses the model for it.
     setVisibility('hidden')
-    expect(panel().getAttribute('data-running')).toBe('false')
+    expect(running()).toBe('false')
     expect(stage()).toBe('awaiting-action')
     expect(document.querySelector('[data-captured-result]')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
+    expect(nowPrimary()).toBeNull()
     expect(document.querySelector('[data-background-pause]')?.textContent).toMatch(
       /was not your pause/,
     )
@@ -273,32 +287,28 @@ describe('R1: who paused decides what a pause can count for', () => {
     setVisibility('visible')
     runSeconds(2)
     expect(stage()).toBe('awaiting-action')
-    expect(panel().querySelector('[data-goal-state]')?.getAttribute('data-goal-state')).toBe(
-      'to-do',
-    )
     expect(document.querySelector('[data-captured-result]')).toBeNull()
-    expect(panel().getAttribute('data-running')).toBe('false')
+    expect(running()).toBe('false')
 
     // The learner carries on: one more breath, then their own Pause during outward flow.
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    pressClock('run')
     expect(document.querySelector('[data-background-pause]')).toBeNull()
     runSeconds(3.8)
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    // Automatic capture was left on, and now the gate it reads is really open.
+    // Capture is automatic, and now the gate it reads is really open.
     expect(stage()).toBe('captured')
     expect(document.querySelector('[data-captured-result]')).not.toBeNull()
   })
 
-  it('rendered: the same instant, paused by the learner, is ready — and waits for them without the option', () => {
+  it('rendered: the same instant, paused by the learner, is the reading the task asked for', () => {
     mount(SECTION_1)
-    chooseStep(2)
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    chooseStep(taskIndex(SECTION_1, 0))
+    pressClock('run')
     runSeconds(EXPIRATORY_SECONDS)
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    expect(stage()).toBe('ready')
     expect(document.querySelector('[data-background-pause]')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeEnabled()
-    expect(document.querySelector('[data-captured-result]')).toBeNull()
+    expect(stage()).toBe('captured')
+    expect(nowPrimaryLabel()).toBe('Continue')
   })
 
   it('6 · a pause on an unrelated step or round fabricates no inspection', () => {
@@ -321,12 +331,14 @@ describe('R1: who paused decides what a pause can count for', () => {
 
   it('6 · rendered: Run and Pause on the reading step leave the experiment step with nothing done', () => {
     mount(SECTION_1)
-    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+    // On the reading step the clock may already be running; Pause it, run it, pause it again.
+    if (document.getElementById('mv-clock-run')?.getAttribute('data-paused') === 'true')
+      pressClock('run')
     runSeconds(EXPIRATORY_SECONDS)
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    chooseStep(2)
+    chooseStep(taskIndex(SECTION_1, 0))
     expect(stage()).toBe('awaiting-action')
-    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
+    expect(nowPrimary()).toBeNull()
   })
 
   it('7 · advancing one breath is not a pause, wherever it leaves the breath', () => {
@@ -343,15 +355,14 @@ describe('R1: who paused decides what a pause can count for', () => {
     expect(stepped.pauseOrigin ?? null).toBeNull()
   })
 
-  it('7 · rendered: one-breath stepping with automatic capture on captures nothing', () => {
+  it('7 · rendered: one-breath stepping captures nothing, though capture is automatic', () => {
     mount(SECTION_1)
-    chooseStep(2)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    chooseStep(taskIndex(SECTION_1, 0))
+    pressClock('run')
     runSeconds(2)
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Advance one breath' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Advance one breath' }))
+    pressClock('one-breath')
+    pressClock('one-breath')
     expect(stage()).toBe('awaiting-action')
     expect(document.querySelector('[data-captured-result]')).toBeNull()
   })
@@ -379,20 +390,20 @@ describe('R1: who paused decides what a pause can count for', () => {
     expect(inspection(resumed)).toBeUndefined()
   })
 
-  it('8 · rendered: Reset patient removes the background-pause note and the automatic-capture choice', () => {
+  it('8 · rendered: Reset patient removes the background-pause note and starts the part again', () => {
     mount(SECTION_1)
-    chooseStep(2)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    chooseStep(taskIndex(SECTION_1, 0))
+    pressClock('run')
     runSeconds(EXPIRATORY_SECONDS)
     setVisibility('hidden')
     setVisibility('visible')
     expect(document.querySelector('[data-background-pause]')).not.toBeNull()
     fireEvent.click(document.querySelector<HTMLElement>('[data-reset-patient]')!)
     expect(document.querySelector('[data-background-pause]')).toBeNull()
-    expect(screen.getByRole('checkbox', { name: /Capture automatically/ })).not.toBeChecked()
     expect(stage()).toBe('awaiting-action')
-    expect(panel().querySelector('[data-model-time]')?.textContent).toMatch(/0\.0 s/)
+    expect(document.querySelector('[data-clock-bar] [data-model-time]')?.textContent).toMatch(
+      /^0\.0 s$/,
+    )
   })
 
   it('reads page visibility in one place, and not in the evidence layer', () => {
@@ -400,7 +411,9 @@ describe('R1: who paused decides what a pause can count for', () => {
     for (const file of [
       'engine/learningLab.ts',
       'content/experimentStatus.ts',
-      'components/stage/VentilationExperimentPanel.tsx',
+      'components/stage/VentilationStageHost.tsx',
+      'components/stage/VentilationConsoleSurface.tsx',
+      'components/stage/VentilationClockBar.tsx',
     ])
       expect(source(file)).not.toMatch(/visibilityState|document\.hidden/)
     expect(source('components/stage/useVentilationLabSession.ts')).toMatch(/origin: 'background'/)
@@ -521,30 +534,35 @@ describe('capture gate: a result is captured only with a complete breath deliver
  * ---------------------------------------------------------------------------------------------- */
 
 describe('R2: Section 1’s experiment step shows the interval its instruction names', () => {
-  const marked = /interval ([AB]), marked on the captured breath/
+  const marked = /interval ([AB]), marked on the frozen breath/
   const markerLines = (root: ParentNode, letter: string) =>
     [...root.querySelectorAll(`[data-breath-marker="${letter}"] line`)].map((line) =>
       line.getAttribute('x1'),
     )
+  /** Commit the part's prediction, as a learner does before the task. */
+  const commit = (choice: string) => {
+    fireEvent.click(screen.getByLabelText(choice))
+    fireEvent.click(screen.getByRole('button', { name: 'Compare my choice' }))
+  }
 
-  it('reproduces the report: step 3 says "interval A, marked on the captured breath" — and now it is', () => {
-    mount(SECTION_1)
-    chooseStep(2)
-    expect(card().textContent).toMatch(/Step 3 of 7/)
-    const look = card().querySelector('[data-step-look]')!.textContent!
+  it('reproduces the report: the task says "interval A, marked on the frozen breath" — and it is, on the console', () => {
+    const lesson = mount(SECTION_1)
+    chooseStep(taskIndex(SECTION_1, 0))
+    const position = ventilationPresentedStepIndexes(lesson).indexOf(taskIndex(SECTION_1, 0)) + 1
+    expect(card().textContent).toMatch(new RegExp(`Task ${position} of `))
+    const look = markedIntervalLook('A', 'open')
     expect(look).toMatch(marked)
-    expect(look).toMatch(/in the Experiment panel/)
-    // The line no longer promises the phase-label toggle of the question's worked figure.
-    expect(look).not.toMatch(/phase label/)
-    const figure = panel().querySelector('[data-captured-breath]')!
+    expect(look).toMatch(/on the console/)
+    expect(look).not.toMatch(/Experiment panel|phase label/)
+    // The lesson's "What to look at" says that sentence, beside the figure it names.
+    expect(guideText()).toContain(look)
+    const figure = consoleFigure()!
     expect(figure.getAttribute('data-marker')).toBe('A')
     expect(figure.getAttribute('data-marker-resolved')).toBe('true')
     // On every row of the figure, and named in its caption.
     expect(markerLines(figure, 'A')).toHaveLength(3)
     expect(figure.querySelectorAll('[data-marker-letter="A"]')).toHaveLength(3)
-    expect(figure.querySelector('figcaption')?.textContent).toMatch(/interval A marked/)
-    // The lesson's "What to look at" says the same sentence, not a second version.
-    expect(document.querySelector('[data-teaching-block="guide"]')?.textContent).toContain(look)
+    expect(figure.querySelector('figcaption')?.textContent).toMatch(/interval A/)
   })
 
   it('takes the marker’s identity and phase from the Batch-01 evidence contract', () => {
@@ -558,113 +576,99 @@ describe('R2: Section 1’s experiment step shows the interval its instruction n
     expect(evidence.volumeChangeMl).toBeLessThan(0)
 
     mount(SECTION_1)
-    chooseStep(2)
-    // The figure prints the sentence the contract builds from these samples...
-    expect(panel().querySelector('[data-marker-note="A"]')?.textContent).toBe(
+    chooseStep(questionIndex(SECTION_1, 0))
+    // Before the prediction the letter is drawn and the evidence sentence is not.
+    expect(consoleFigure()?.getAttribute('data-marker')).toBe('A')
+    expect(consoleFigure()?.querySelector('[data-marker-note="A"]')?.textContent).toBe(
+      'Interval A is marked on this breath.',
+    )
+    commit('Expiration')
+    // Committed: the figure prints the sentence the contract builds from these samples...
+    expect(consoleFigure()?.querySelector('[data-marker-note="A"]')?.textContent).toBe(
       markerEvidenceSentence(evidence),
     )
-    // ...and it is the same interval, on the same breath, as the question's worked reference.
-    chooseStep(1)
-    expect(card().querySelector('[data-marker-note="A"]')?.textContent).toBe(
+    // ...and it is the same interval, on the same breath, on the task that follows.
+    chooseStep(taskIndex(SECTION_1, 0))
+    expect(consoleFigure()?.querySelector('[data-marker-note="A"]')?.textContent).toBe(
       markerEvidenceSentence(evidence),
     )
   })
 
   it('keeps the exploration cursor independent of the marker', () => {
     mount(SECTION_1)
-    chooseStep(2)
-    const figure = panel().querySelector('[data-captured-breath]')!
+    chooseStep(taskIndex(SECTION_1, 0))
+    const figure = consoleFigure()!
     const before = markerLines(figure, 'A')
     const cursor = () =>
       figure.querySelector('[data-time-cursor]')!.getAttribute('data-time-cursor')
     const cursorBefore = cursor()
-    const slider = within(figure as HTMLElement).getByRole('slider', {
+    const slider = within(figure).getByRole('slider', {
       name: 'Exploration cursor, separate from interval A',
     })
     fireEvent.change(slider, { target: { value: '40' } })
     expect(cursor()).not.toBe(cursorBefore)
     expect(markerLines(figure, 'A')).toEqual(before)
-    // Using the chosen interval is still the learner's own inspection, wherever the marker is.
+    // Using the chosen interval is still the learner's own inspection, wherever the marker is,
+    // and it is captured at once: there is no interval to wait for.
     fireEvent.change(slider, { target: { value: '120' } })
-    fireEvent.click(
-      within(figure as HTMLElement).getByRole('button', { name: /Use this captured/ }),
-    )
-    expect(stage()).toBe('ready')
+    fireEvent.click(within(figure).getByRole('button', { name: /Use this captured/ }))
+    expect(stage()).toBe('captured')
   })
 
-  it('never prints "marked on the captured breath" on a card that shows no marker', () => {
+  it('never says "marked on the frozen breath" where no marked breath is on the console', () => {
     const lesson = mount(SECTION_1)
     const check = () => {
-      const named = card().textContent?.match(marked)
+      const named = document.querySelector('[data-stage-frame]')?.textContent?.match(marked)
       if (named)
         expect(
-          card().querySelectorAll(`[data-breath-marker="${named[1]}"]`).length,
+          document.querySelectorAll(`[data-ventilation-console] [data-breath-marker="${named[1]}"]`)
+            .length,
         ).toBeGreaterThan(0)
       return Boolean(named)
     }
-    // Every step as first reached, then the experiment steps again after a capture.
-    // MV-PRE-REVIEW-04 (N6): the steps the learner is shown. The observe and interpret steps drew
-    // the task step's panel and the explanation step's comparison again; they are still lesson
-    // steps and open on those screens.
     const shown = ventilationPresentedStepIndexes(lesson)
     const seen = shown.map((index) => {
       chooseStep(index)
       return check()
     })
-    expect(seen.filter(Boolean).length).toBeGreaterThanOrEqual(4)
-    expect(resolvePresentedStepIndex(lesson, 3)).toBe(2)
-    expect(resolvePresentedStepIndex(lesson, 4)).toBe(5)
-    chooseStep(2)
-    const figure = panel().querySelector('[data-captured-breath]') as HTMLElement
+    expect(seen.filter(Boolean).length).toBeGreaterThanOrEqual(2)
+    // After a capture the task says what is there now: the retained comparison.
+    chooseStep(taskIndex(SECTION_1, 0))
+    const figure = consoleFigure()!
     fireEvent.change(within(figure).getByRole('slider'), { target: { value: '120' } })
     fireEvent.click(within(figure).getByRole('button', { name: /Use this captured/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
-    for (const index of [2, resolvePresentedStepIndex(lesson, 3)]) {
-      chooseStep(index)
-      expect(check()).toBe(false)
-      expect(card().querySelector('[data-step-look]')?.textContent).toBe(
-        markedIntervalLook('A', 'captured'),
-      )
-    }
+    expect(stage()).toBe('captured')
+    expect(check()).toBe(false)
+    expect(guideText()).toContain(markedIntervalLook('A', 'captured'))
   })
 
-  it('names the figure by what is on screen: not started, open, captured', () => {
-    // Straight to an experiment step without passing through the chooser: a saved reading
-    // location on the former observe step opens the task step, and this part's baseline has not
-    // been captured yet.
+  it('names the figure by what is on screen, and a resumed task opens on its baseline breath', () => {
+    // Straight to the task without passing through the task list: a saved reading location on
+    // the task opens it with this part's baseline frozen on the console, marker and all.
     localStorage.setItem(
       VENTILATION_SELF_PACED_KEY,
       JSON.stringify({
         version: 1,
         visited: [SECTION_1],
-        location: { section: 'learn', id: SECTION_1, step: 3 },
+        location: { section: 'learn', id: SECTION_1, step: taskIndex(SECTION_1, 0) },
       }),
     )
     mount(SECTION_1)
-    expect(card().textContent).toMatch(/Step 3 of 7/)
-    expect(panel().querySelector('[data-captured-breath]')).toBeNull()
-    expect(card().querySelector('[data-step-look]')?.textContent).toBe(
-      markedIntervalLook('A', 'not-started'),
+    expect(card().getAttribute('data-current-step')).toBe(
+      ventilationStageLesson(SECTION_1).steps[taskIndex(SECTION_1, 0)].id,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Start the experiment/ }))
-    expect(card().querySelector('[data-step-look]')?.textContent).toBe(
-      markedIntervalLook('A', 'open'),
-    )
-    expect(panel().querySelectorAll('[data-breath-marker="A"]')).toHaveLength(3)
+    expect(guideText()).toContain(markedIntervalLook('A', 'open'))
+    expect(consoleFigure()?.querySelectorAll('[data-breath-marker="A"]')).toHaveLength(3)
     expect(inspectionFigureState(session(SECTION_1, 0))).toBe('open')
     expect(inspectionFigureState(session(SECTION_2, 0))).toBeNull()
+    expect(markedIntervalLook('A', 'not-started')).toMatch(/Start this part/)
   })
 
   it('does the same for interval B on the second application', () => {
-    const lesson = mount(SECTION_1)
-    const index = lesson.steps.findIndex(
-      (step) => step.interaction.kind === 'simulator-task' && step.interaction.round === 1,
-    )
-    chooseStep(index)
-    expect(card().querySelector('[data-step-look]')?.textContent).toMatch(
-      /interval B, marked on the captured breath in the Experiment panel/,
-    )
-    const figure = panel().querySelector('[data-captured-breath]')!
+    mount(SECTION_1)
+    chooseStep(taskIndex(SECTION_1, 1))
+    expect(guideText()).toMatch(/interval B, marked on the frozen breath on the console/)
+    const figure = consoleFigure()!
     expect(figure.getAttribute('data-marker')).toBe('B')
     expect(figure.querySelectorAll('[data-breath-marker="B"]')).toHaveLength(3)
     const marker = ventilationReferenceMarker(SECTION_1, 1)!
@@ -675,21 +679,20 @@ describe('R2: Section 1’s experiment step shows the interval its instruction n
     expect(evidence.sample.phase).toBe('inspiration')
   })
 
-  it('changes no answer key, option or authored look line', () => {
+  it('changes no answer key or option, and asks the question beside the marked breath', () => {
     const [first, second] = ventilationExperimentByUnit.get(SECTION_1)!.rounds
     expect(first.choices).toEqual(['Expiration', 'Inspiration', 'A no-flow occlusion'])
     expect(first.correct).toBe(0)
     expect(second.choices).toEqual(['A no-flow occlusion', 'Expiration', 'Inspiration'])
     expect(second.correct).toBe(2)
-    expect(first.look).toMatch(/^Read all three traces at interval A, marked on the captured/)
     expect(first.goals).toEqual([{ type: 'pause-expiration' }])
     expect(second.goals).toEqual([{ type: 'inspect-inspiration' }])
-    // The question step still reads the authored line beside its own marked, guided reference.
     mount(SECTION_1)
-    chooseStep(1)
+    chooseStep(questionIndex(SECTION_1, 0))
     expect(card().querySelector('[data-step-look]')?.textContent).toBe(first.look)
-    expect(card().querySelector('[data-captured-breath]')?.getAttribute('data-marker')).toBe('A')
-    expect(card().querySelector('[data-phase-label]')).not.toBeNull()
+    expect(consoleFigure()?.getAttribute('data-marker')).toBe('A')
+    // No phase label is printed beside the question it would answer.
+    expect(document.querySelector('[data-phase-label]')).toBeNull()
   })
 })
 
@@ -834,16 +837,15 @@ describe('R3: the figures name their origin as what was sampled', () => {
 
   it('S2-1: labels the reading "calculated" in the live readings and the captured table', () => {
     mount(SECTION_2)
-    chooseStep(2)
+    chooseStep(taskIndex(SECTION_2, 0))
     const reading = document.querySelector('[data-live-readings] [data-metric="ti"]')!
     expect(reading.querySelector('dt')?.textContent).toBe('Inspiratory time · calculated')
     expect(reading.querySelector('[data-inspiratory-time-step-note]')?.textContent).toMatch(
       /0\.62 or 0\.64 s/,
     )
-    fireEvent.change(document.getElementById('mv-quick-peakFlowLMin')!, { target: { value: '60' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    setConsoleControl('peakFlowLMin', 60)
+    pressClock('run')
     runSeconds(14)
-    fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
     const headers = [...document.querySelectorAll('[data-captured-result] tbody th')].map((th) =>
       th.textContent?.replace(/\s+/g, ' '),
     )
@@ -896,9 +898,10 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
     act(() => navigate(unitId))
     boot()
   }
-  const lastStepLink = (unitId: string) => {
+  /** The last task's way on: the Now card's pinned primary action. */
+  const lastStepContinue = (unitId: string) => {
     chooseStep(ventilationStageLesson(unitId).steps.length - 1)
-    return screen.getByRole('link', {
+    return screen.getByRole('button', {
       name: `Continue to ${ventilationSectionLabel(next(unitId).id)}`,
     })
   }
@@ -942,9 +945,9 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
   it('ordinary same-tab Continue to the next section lands on its heading', () => {
     routerNavigates()
     open(SECTION_1)
-    const link = lastStepLink(SECTION_1)
-    // A plain click is handled here, through the router; the browser does not also follow the href.
-    expect(fireEvent.click(link)).toBe(false)
+    const button = lastStepContinue(SECTION_1)
+    expect(button).toHaveAttribute('data-now-primary')
+    fireEvent.click(button)
     boot()
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/mechanical-ventilation/learn',
@@ -957,57 +960,32 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
   it('the same-tab section chooser lands on the chosen section’s heading', () => {
     routerNavigates()
     open(SECTION_1)
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose section' }), {
-      target: { value: SECTION_7 },
-    })
+    chooseSection(7)
     boot()
     expect(heading()).toHaveTextContent(ventilationStageLesson(SECTION_7).steps[0].title)
     expect(focused()).toBe(true)
   })
 
-  it.each([
-    ['Command-click', { metaKey: true }],
-    ['Ctrl-click', { ctrlKey: true }],
-    ['Shift-click', { shiftKey: true }],
-    ['Alt-click', { altKey: true }],
-    ['middle click', { button: 1 }],
-  ])('reproduces the report: %s leaves no request in this tab', (_name, init) => {
+  /*
+   * The last task's Continue is the Now card's pinned button (October 2026), not a link, so there
+   * is no modified click that opens the next section elsewhere; the modified-click cases the review
+   * reported belong to that link and went with it. What a modifier still must not do is change
+   * what a plain click does.
+   */
+  it('treats a modified click on the last task’s Continue as the same plain, same-tab navigation', () => {
     routerNavigates()
     open(SECTION_1)
-    const link = lastStepLink(SECTION_1)
-    link.focus()
-    // Left to the browser, which opens the destination elsewhere: not prevented, not pushed.
-    expect(fireEvent.click(link, init)).toBe(true)
+    fireEvent.click(lastStepContinue(SECTION_1), { metaKey: true })
     boot()
-    expect(mockPush).not.toHaveBeenCalled()
-    expect(heading()).toHaveTextContent(ventilationStageLesson(SECTION_1).steps.at(-1)!.title)
-    // Then this tab goes somewhere by other means, within the old 15-second window: the very
-    // section the link pointed at, and an unrelated one. Neither takes focus.
-    runSeconds(3)
-    arriveBy(SECTION_2)
+    expect(mockPush).toHaveBeenCalledTimes(1)
     expect(heading()).toHaveTextContent(ventilationStageLesson(SECTION_2).steps[0].title)
-    expect(focused()).toBe(false)
-    arriveBy(SECTION_7)
-    expect(focused()).toBe(false)
-    expect(scrollIntoView).toHaveBeenCalledTimes(1) // the step chooser, before the click
-  })
-
-  it('a link that opens its own context is left alone as well', () => {
-    routerNavigates()
-    open(SECTION_1)
-    const link = lastStepLink(SECTION_1)
-    link.setAttribute('target', '_blank')
-    expect(fireEvent.click(link)).toBe(true)
-    boot()
-    expect(mockPush).not.toHaveBeenCalled()
-    arriveBy(SECTION_2)
-    expect(focused()).toBe(false)
+    expect(focused()).toBe(true)
   })
 
   it('a navigation that does not happen leaves nothing for a later arrival', () => {
     // The router accepts the push and goes nowhere: the origin section is still on screen.
     open(SECTION_1)
-    fireEvent.click(lastStepLink(SECTION_1))
+    fireEvent.click(lastStepContinue(SECTION_1))
     boot()
     expect(mockPush).toHaveBeenCalledTimes(1)
     expect(heading()).toHaveTextContent(ventilationStageLesson(SECTION_1).steps.at(-1)!.title)
@@ -1029,7 +1007,7 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
   it('back and forward after an arrival do not focus again', () => {
     routerNavigates()
     open(SECTION_1)
-    fireEvent.click(lastStepLink(SECTION_1))
+    fireEvent.click(lastStepContinue(SECTION_1))
     boot()
     expect(focused()).toBe(true)
     // Back to the section it came from, then forward again: plain arrivals, both.
@@ -1047,10 +1025,9 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
         navigate(target.query.activity),
       )
     open(SECTION_1)
-    const chooser = screen.getByRole('combobox', { name: 'Choose section' })
     act(() => {
-      fireEvent.change(chooser, { target: { value: SECTION_2 } })
-      fireEvent.change(chooser, { target: { value: SECTION_7 } })
+      chooseSection(2)
+      chooseSection(7)
     })
     boot()
     expect(heading()).toHaveTextContent(ventilationStageLesson(SECTION_7).steps[0].title)
@@ -1062,15 +1039,14 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
 
   it('still moves nothing on Run, Pause, capture, ticks, overlay or zoom', () => {
     mount(SECTION_2)
-    chooseStep(2)
+    chooseStep(taskIndex(SECTION_2, 0))
     const calls = scrollIntoView.mock.calls.length
-    const run = screen.getByRole('button', { name: 'Run experiment' })
+    const run = document.getElementById('mv-clock-run')!
     run.focus()
-    fireEvent.change(document.getElementById('mv-quick-peakFlowLMin')!, { target: { value: '60' } })
+    setConsoleControl('peakFlowLMin', 60)
     fireEvent.click(run)
     runSeconds(14)
-    fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
+    expect(document.querySelector('[data-captured-result]')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Overlay' }))
     fireEvent.click(screen.getByRole('button', { name: 'Zoom to inspiration' }))
     runSeconds(2)

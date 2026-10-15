@@ -28,10 +28,15 @@ describe('the fourteen stage lessons', () => {
           kind: 'prediction',
           round: 1,
         })
+      // Section 1 is its own eight tasks (October 2026); the other foundations add two
+      // interpretation steps the learner is not walked through separately.
+      const sectionOne = lesson.sectionId === 'breathing-with-support'
       expect(lesson.steps.length).toBe(
         matchedPeep
           ? 4
-          : (lesson.sectionId === 'controls-and-goals' ? 9 : 8) +
+          : sectionOne
+            ? 8
+            : (lesson.sectionId === 'controls-and-goals' ? 9 : 8) +
               (isFoundationUnit(lesson.sectionId) ? 2 : 0),
       )
       expect(lesson.steps.map((step) => step.ordinal)).toEqual(
@@ -53,7 +58,9 @@ describe('the fourteen stage lessons', () => {
       ).toEqual(
         matchedPeep
           ? ['recognize', 'predict', 'act', 'explain']
-          : ['recognize', 'predict', 'act', 'observe', 'explain'],
+          : sectionOne
+            ? ['recognize', 'recognize', 'predict', 'act', 'explain']
+            : ['recognize', 'predict', 'act', 'observe', 'explain'],
       )
       if (!matchedPeep)
         expect(lesson.steps.slice(-3).every((step) => step.phase === 'transfer')).toBe(true)

@@ -333,6 +333,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'preload-and-flow',
     title: 'A narrow pulse pressure after volume loss',
     shortTitle: 'Underfilled shock',
+    minutes: 10,
     presentation:
       'An adult remains tachycardic with cool extremities after acute volume loss. The arterial trace is narrow; filling pressures are low.',
     learningObjectives: [
@@ -379,6 +380,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'vascular-tone',
     title: 'Warm shock with a low diastolic pressure',
     shortTitle: 'Vasodilatory sepsis',
+    minutes: 8,
     presentation:
       'An adult with suspected infection has warm extremities, a bounding pulse, low diastolic pressure, and persistent hypotension after initial resuscitation.',
     learningObjectives: [
@@ -419,6 +421,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'pump-failure',
     title: 'Low flow with pulmonary congestion',
     shortTitle: 'LV cardiogenic shock',
+    minutes: 10,
     presentation:
       'An adult has cool extremities, pulmonary edema, a high PAWP, and a low cardiac index despite compensatory vascular tone.',
     learningObjectives: [
@@ -470,6 +473,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'rv-afterload',
     title: 'Abrupt RV pressure overload',
     shortTitle: 'Acute PE / RV shock',
+    minutes: 10,
     presentation:
       'An adult develops sudden hypoxemia, systemic hypotension, high RAP, high PAP, and a low-flow state with a relatively low PAWP.',
     learningObjectives: [
@@ -525,6 +529,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'pulmonary-hypertension',
     title: 'Decompensated pre-capillary PH with RV failure',
     shortTitle: 'Precapillary PH crisis',
+    minutes: 10,
     presentation: `An adult with known pulmonary vascular disease has rising RAP, low output, high PAP, and PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg.`,
     learningObjectives: [
       `Apply the current >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU pre-capillary definition.`,
@@ -578,6 +583,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'congestion-and-peep',
     title: 'Post-capillary PH with biventricular congestion',
     shortTitle: 'Congestion + PEEP',
+    minutes: 10,
     presentation:
       'An intubated adult has high RAP, elevated PAWP, secondary pulmonary hypertension, reduced flow, and substantial PEEP transmission.',
     learningObjectives: [
@@ -631,6 +637,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'obstructive-shock',
     title: 'Pressure equalization with a falling pulse pressure',
     shortTitle: 'Cardiac tamponade',
+    minutes: 10,
     presentation:
       'An adult has tachycardia, a narrow pulse pressure, high and converging diastolic filling pressures, and respiratory variation in flow.',
     learningObjectives: [
@@ -683,6 +690,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'signal-validation',
     title: 'The numbers do not fit the patient',
     shortTitle: 'Artifacts and false wedge',
+    minutes: 12,
     presentation:
       'The monitor shows internally inconsistent pressures while bedside perfusion appears unchanged. The last cardiac outputs were reported as disagreeing with each other; their curves are not available in this case, so any cardiac output here has to be acquired again.',
     learningObjectives: [
