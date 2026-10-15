@@ -108,8 +108,9 @@ it('reveals the explanation without an answer, run or hold; keeps wrong-choice f
   fireEvent.click(screen.getByRole('radio', { name: 'SpO₂ rises with unchanged exhaled volume' }))
   fireEvent.click(screen.getByRole('button', { name: 'Compare my choice' }))
   expect(
-    screen.getAllByText('Stable delivery adds context but does not identify a circulatory cost.')
-      .length,
+    screen.getAllByText(
+      'An unchanged exhaled volume is useful context, but it does not show a circulatory cost.',
+    ).length,
   ).toBeGreaterThan(0)
   fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
   pressPrimary()
