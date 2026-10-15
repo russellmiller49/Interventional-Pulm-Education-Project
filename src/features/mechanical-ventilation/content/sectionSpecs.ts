@@ -209,7 +209,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide whether a delivered breath is sized to this patient’s predicted body weight and whether the plateau you are reading is valid.',
     recognizeTitle: 'Is this breath sized to this lung?',
     recognizeInstruction:
-      'This passive adult is receiving a larger breath than the earlier sections. Read the exhaled volume and think about what it should be compared against.',
+      'This passive adult is receiving a larger tidal volume than in the earlier sections. Read the exhaled tidal volume and decide what it should be measured against.',
     stops: ['inspiration'],
     knobStrip: strip({
       'breath-size': thisKnob(
@@ -227,7 +227,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide from the expiratory flow trace whether a breath finished emptying before the next one began.',
     recognizeTitle: 'Watch the breath empty',
     recognizeInstruction:
-      'This passive patient empties slowly. Watch the flow trace below zero and see where it is when the next breath starts.',
+      'This passive patient exhales slowly. Watch expiratory flow, below the zero line, and note where it is when the next breath starts.',
     stops: ['expiration'],
     knobStrip: strip({
       rate: thisKnob(
@@ -253,7 +253,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Localize a timing mismatch to the start of the breath or to the end of inspiration, from the effort trace and the flow trace.',
     recognizeTitle: 'Where does the mismatch live?',
     recognizeInstruction:
-      'Watch this patient for several breaths with the dashed effort trace in view. Then identify where the patient and machine disagree using the response choices beside the tracing.',
+      'Watch this patient for several breaths with the dashed effort trace in view. Then choose where on the breath the patient and the ventilator disagree, and commit your answer.',
     stops: ['trigger', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -277,7 +277,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'After a change on the oxygenation axis, say which readings show the benefit and which show the cost.',
     recognizeTitle: 'More than the saturation',
     recognizeInstruction:
-      'This patient’s saturation is low. Before changing anything, find the saturation, the peak pressure, the exhaled volume and the blood pressure on the screen — you will read all four.',
+      'This patient’s SpO₂ is low. Before changing anything, find the SpO₂, the peak pressure, the exhaled tidal volume and the blood pressure on the screen: you will read all four.',
     stops: [],
     knobStrip: strip({
       peep: thisKnob(
@@ -307,7 +307,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Given a change in rate or breath size, say which readings move at once and which move over minutes — and which control does not move carbon dioxide at all.',
     recognizeTitle: 'Two clocks: the breath and the blood gas',
     recognizeInstruction:
-      'Find the total rate, the minute ventilation and the modeled carbon dioxide on the screen. Two of them will move the moment a setting changes; one will not.',
+      'Find the total rate, the minute ventilation and the modeled PaCO₂ on the screen. Two of them move the moment a setting changes; the third lags behind.',
     stops: ['expiration'],
     knobStrip: strip({
       rate: thisKnob(
@@ -331,7 +331,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Given a striking feature on one trace, follow the whole breath in order and name the discriminating observation.',
     recognizeTitle: 'Where do the extra breaths come from?',
     recognizeInstruction:
-      'The displayed rate is higher than the set rate. Watch several breaths against the dashed effort trace, then identify where the extra breaths originate using the response choices beside the tracing.',
+      'The total rate is higher than the set rate. Watch several breaths against the dashed effort trace, then choose where on the breath the extra breaths begin, and commit your answer.',
     stops: ['trigger', 'inspiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -349,7 +349,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Distinguish a delivery mismatch during the push from a trigger or cycling mismatch, and name the reassessment each one needs.',
     recognizeTitle: 'Where does this patient’s discomfort live?',
     recognizeInstruction:
-      'This patient starts every supported breath but is uncomfortable. Watch the early part of each push against the effort trace, then identify the interval using the response choices beside the tracing.',
+      'This patient triggers every pressure-support breath but is uncomfortable. Watch several breaths against the effort trace, then choose where on the breath the mismatch is, and commit your answer.',
     stops: ['inspiration', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -376,7 +376,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide which finding would show that an intervention helped this patient, and which findings only show that it was performed.',
     recognizeTitle: 'The person before the machine',
     recognizeInstruction:
-      'This awake patient is distressed. Read the available patient context, then assess the patient and communicate before changing a setting.',
+      'This awake patient is distressed. Read the patient context and the bedside actions available before you change any setting.',
     recognizeLookIn: {
       pane: 'simulator',
       landmark: 'Patient context and bedside actions',
@@ -399,7 +399,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'From a high peak pressure alone, decide which measurement discriminates the candidate mechanisms and what each result would mean.',
     recognizeTitle: 'One alarm, cause not supplied',
     recognizeInstruction:
-      'A passive patient has a high peak pressure and the cause is not given. Decide which measurement you would take first, then take it.',
+      'This passive patient has a high peak pressure, and the cause is not given. Decide which measurement you would take first, then take it.',
     stops: ['inspiration', 'expiration'],
     knobStrip: strip({
       mode: noKnob(

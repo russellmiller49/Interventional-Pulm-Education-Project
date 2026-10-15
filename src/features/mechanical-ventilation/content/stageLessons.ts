@@ -176,11 +176,11 @@ const controlNames: Partial<Record<string, { name: string; unit: string }>> = {
   vtMl: { name: 'the tidal volume', unit: 'mL' },
   peakFlowLMin: { name: 'the inspiratory flow', unit: 'L/min' },
   oxygenPercent: { name: 'the oxygen', unit: '%' },
-  peepCmH2O: { name: 'the PEEP', unit: 'cmH₂O' },
+  peepCmH2O: { name: 'PEEP', unit: 'cmH₂O' },
   ratePerMin: { name: 'the rate', unit: '/min' },
   triggerThreshold: { name: 'the flow trigger', unit: 'L/min' },
-  etsPercent: { name: 'the cycle-off', unit: '%' },
-  pRampMs: { name: 'the rise time', unit: 'ms' },
+  etsPercent: { name: 'the cycle-off (ETS)', unit: '%' },
+  pRampMs: { name: 'the rise time (P-ramp)', unit: 'ms' },
 }
 
 const interventionPhrases: Record<string, string> = {
@@ -202,8 +202,10 @@ function capitalize(text: string): string {
 export function labGoalPhrase(goal: LabGoal): string {
   if (goal.type === 'control') {
     const control = controlNames[goal.key]
+    // "26/min" and "50%" are written closed up, as the round copy writes them; "60 L/min" is not.
+    const separator = control && (control.unit === '%' || control.unit === '/min') ? '' : ' '
     return control
-      ? `set ${control.name} to ${goal.value} ${control.unit}`
+      ? `set ${control.name} to ${goal.value}${separator}${control.unit}`
       : `set ${goal.key} to ${goal.value}`
   }
   if (goal.type === 'mechanics') {
@@ -699,13 +701,13 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
               ...steps[0],
               title: 'Compare matched PEEP examples',
               instruction:
-                'Run the worked comparison or open its explanation. Compare both arms at the same elapsed time.',
+                'Choose Run comparison, or Explain this comparison. Read the PEEP-changed arm against the wait-only arm at the same elapsed time.',
               lookIn: {
                 pane: 'teaching' as const,
                 landmark: 'One PEEP change, the same elapsed time',
               },
             },
-            { ...steps[1], title: 'Optional: interpret the tradeoff', gate: 'open' as const },
+            { ...steps[1], title: 'Interpret the tradeoff', gate: 'open' as const },
             { ...steps[2], title: 'Try a separate patient', gate: 'open' as const },
             { ...steps[4], title: 'Review the response and its limits', gate: 'open' as const },
           ]
