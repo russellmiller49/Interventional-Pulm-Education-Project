@@ -85,12 +85,12 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Tell inspiration from expiration on the running traces, and say where one breath ends and the next begins.',
     recognizeTitle: 'Why a ventilator exists',
     recognizeInstruction:
-      'Read the four short paragraphs under “Why a ventilator exists”, then watch the console for a few breaths. The patient is passive and the machine is doing all the work.',
+      'Read the four short paragraphs, then watch the console for a few breaths. This patient is passive: the ventilator starts every breath and does all of the work of moving gas.',
     recognizeLookIn: {
       pane: 'teaching',
       landmark: 'Why a ventilator exists',
       alsoPane: 'simulator',
-      alsoLandmark: 'the live console',
+      alsoLandmark: 'the console, running',
     },
     stops: [],
     knobStrip: strip({
@@ -98,7 +98,20 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
         'This section changes nothing. It reads the breath the machine is already giving.',
       ),
     }),
-    precommitDenyPatterns: [/flow below zero/i, /falling volume/i, /arrives sooner/i],
+    /*
+     * The last three are the marked interval's own evidence sentence ("flow −20.0 L/min (gas
+     * moving out) and volume falling by 12 mL"), which the frozen breath prints only after the
+     * prediction is committed. They are written to that sentence: the live flow trace's axis
+     * legend ("above the zero line is gas moving in") is a convention, not an answer.
+     */
+    precommitDenyPatterns: [
+      /flow below zero/i,
+      /falling volume/i,
+      /arrives sooner/i,
+      /volume (rising|falling)/i,
+      /\(gas moving (in|out)\)/i,
+      /flow [^.]*negative/i,
+    ],
     practicePairing: { kind: 'next-in-unit', caseId: 'MV-01' },
     orientation: [
       'A ventilator takes over one job the body normally does for itself: moving gas in and out of the lungs. It does this by pushing gas in under pressure and then letting the lungs empty.',
@@ -114,7 +127,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     objective: 'Given a change on one trace, say what the other two must show at the same moment.',
     recognizeTitle: 'Walk the breath',
     recognizeInstruction:
-      'Stand at each of the four stops on the breath map in turn. At each one, find the moment on the live console and read what the three traces do there.',
+      'Choose each of the four numbered stops on the breath map in turn. At each one, find the same moment on the console and read pressure, flow and volume there.',
     stops: ['trigger', 'inspiration', 'cycling', 'expiration'],
     knobStrip: strip(),
     shapingNote:
@@ -133,7 +146,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Pair each of the five main settings with the reading that shows whether the patient received it.',
     recognizeTitle: 'The five main settings',
     recognizeInstruction:
-      'Find the five main settings on the console — mode, breath size, rate, PEEP and oxygen. Then find the monitoring values beside them. The first group is what you ask for; the second is what happened.',
+      'Open Controls on the console and find the five main settings: mode, breath size, rate, PEEP and oxygen. Then find the measured values on the main screen. Settings are what you ask for; measurements are what the patient received.',
     stops: ['inspiration'],
     knobStrip: strip({
       'breath-size': thisKnob(
@@ -152,7 +165,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Using a valid inspiratory hold, decide whether a rise in peak pressure came from moving gas or from a stiffer system.',
     recognizeTitle: 'Two loads in one pressure',
     recognizeInstruction:
-      'Watch the pressure trace during the push. Notice the quick step at the start and the slower climb to the peak; they are not the same thing. The hold control is on the console.',
+      'Watch airway pressure during inspiration: a quick step at the start, then a slower climb to the peak. They are two different things. The inspiratory hold is on the console’s Tools screen.',
     stops: ['inspiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -174,7 +187,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'For a stiffer system under volume control and under pressure control, name the reading that will move and the one that will not.',
     recognizeTitle: 'What this breath holds constant',
     recognizeInstruction:
-      'Look at the mode on the console. Under volume control the machine promises a volume; the pressure is whatever that costs. Watch a few breaths with that promise in mind.',
+      'Find the mode on the console. In volume control the ventilator delivers a set tidal volume, and the pressure is whatever that volume requires. Watch a few breaths with that in mind.',
     stops: ['inspiration'],
     knobStrip: strip({
       mode: thisKnob(

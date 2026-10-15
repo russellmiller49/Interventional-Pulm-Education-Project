@@ -389,7 +389,8 @@ describe('the steps a learner is shown (N6)', () => {
       SECTION_IDS.map((id) => [id, ventilationStageLesson(id).steps.length]),
     )
     expect(counts).toEqual({
-      'breathing-with-support': 10,
+      // October 2026: Section 1 is eight tasks, with no hidden observe or interpret step.
+      'breathing-with-support': 8,
       'waveform-anatomy': 10,
       'controls-and-goals': 11,
       'mechanics-load-and-pressure': 10,
@@ -428,7 +429,7 @@ describe('the steps a learner is shown (N6)', () => {
     }
     expect(
       ventilationPresentedStepIndexes(ventilationStageLesson('breathing-with-support')),
-    ).toEqual([0, 1, 2, 5, 6, 7, 9])
+    ).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
     expect(ventilationPresentedStepIndexes(ventilationStageLesson('lung-protection'))).toEqual([
       0, 1, 2, 4, 5, 6, 7,
     ])
@@ -470,13 +471,13 @@ describe('the steps a learner is shown (N6)', () => {
     const before = Object.keys(localStorage).sort()
     render(<VentilationStageHost unitId="breathing-with-support" />)
     boot()
-    // Position 4 was "Interpret your recorded result"; it opens that part's explanation.
+    // Position 4 is the first part's explanation in the eight-task section.
     expect(document.querySelector('[data-current-step]')!.getAttribute('data-current-step')).toBe(
-      ventilationStageLesson('breathing-with-support').steps[5].id,
+      ventilationStageLesson('breathing-with-support').steps[4].id,
     )
-    expect(document.querySelector('[data-current-step]')!.textContent).toMatch(/Task 4 of 7/)
+    expect(document.querySelector('[data-current-step]')!.textContent).toMatch(/Task 5 of 8/)
     // Answer the optional question on its own step, then read what was stored.
-    chooseStep(1)
+    chooseStep(2)
     fireEvent.click(screen.getByLabelText('Expiration'))
     fireEvent.click(screen.getByRole('button', { name: 'Compare my choice' }))
     expect(document.querySelector('[data-choice-verdict]')).not.toBeNull()
@@ -485,16 +486,14 @@ describe('the steps a learner is shown (N6)', () => {
     expect(Object.keys(after).sort()).toEqual(['location', 'version', 'visited'])
     expect(after.version).toBe(1)
     expect(Object.keys(after.location).sort()).toEqual(['id', 'section', 'step'])
-    expect(after.location).toEqual({ section: 'learn', id: 'breathing-with-support', step: 1 })
+    expect(after.location).toEqual({ section: 'learn', id: 'breathing-with-support', step: 2 })
     expect(JSON.stringify(after)).not.toMatch(/Expiration|choice|answer/i)
     expect(Object.keys(localStorage).sort()).toEqual(before)
   })
 
-  it('states the reading time and derives the experiment time from the rounds', () => {
-    expect(ventilationSectionTimeLine('ventilation-and-co2')).toBe(
-      'About 7 minutes to read. The optional experiments add about 180 seconds of simulated time at 1×, less on a faster clock.',
-    )
-    expect(ventilationSectionTimeLine('breathing-with-support')).toMatch(/have no timed run/)
+  it('states the section time as an estimate, with no caveats attached (October 2026)', () => {
+    expect(ventilationSectionTimeLine('ventilation-and-co2')).toBe('About 7 minutes')
+    expect(ventilationSectionTimeLine('breathing-with-support')).toBe('About 5 minutes')
     render(<VentilationStageHost unitId="ventilation-and-co2" />)
     boot()
     expect(document.querySelector('[data-section-time]')?.textContent).toBe(

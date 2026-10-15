@@ -230,6 +230,12 @@ function VentilationStageSession({
     if (targetStep.interaction.kind === 'simulator-task') lab({ type: 'START_EXPERIMENT' })
     if (targetStep.interaction.kind === 'advance-breath')
       engine({ type: 'SET_PAUSED', paused: true })
+    // A question about a marked interval is asked on that breath, held still on the console.
+    if (
+      targetStep.interaction.kind === 'prediction' &&
+      ventilationReferenceMarker(unitId, targetRound)
+    )
+      engine({ type: 'SET_PAUSED', paused: true })
     setEntry({
       stepId: targetStep.id,
       at: targetRound === session.round ? session.simulation.simulationTime : 0,
@@ -276,6 +282,7 @@ function VentilationStageSession({
     [simulatorTask, captured, round.goals, session, pending, interaction.kind, performed],
   )
   const nextGuided = guidedTasks?.find((task) => !task.satisfied) ?? null
+  const readingTask = roundManeuver(round) === 'pause'
   const whereControlId =
     interaction.kind === 'advance-breath' && !performed
       ? 'mv-clock-one-breath'
@@ -303,6 +310,15 @@ function VentilationStageSession({
       count: current?.stepId === step.id ? current.count + 1 : 1,
     }))
   }
+
+  /*
+   * Section 1 opens with the console running beside why a ventilator exists: the first thing a
+   * learner sees is breaths being delivered. Run and Pause are transient, so this records nothing.
+   */
+  const orientationRuns = unitId === 'breathing-with-support' && step.ordinal === 1
+  useEffect(() => {
+    if (orientationRuns) engine({ type: 'SET_PAUSED', paused: false })
+  }, [orientationRuns, restartCount, engine])
 
   /*
    * A simulator task is always worked on its part's experiment: arriving on one — by Continue, the
@@ -413,10 +429,8 @@ function VentilationStageSession({
             ? { label: pending.label, displayValue: pending.displayValue, unit: pending.unit }
             : null,
         )
-    : interaction.kind === 'advance-breath'
-      ? performed
-        ? 'A new breath has gone by on the console.'
-        : 'Press One breath on the clock bar.'
+    : interaction.kind === 'advance-breath' && performed
+      ? 'A new breath has gone by on the console.'
       : undefined
 
   const nowModel: NowCardModel = {
@@ -588,7 +602,12 @@ function VentilationStageSession({
         </section>
       ) : null}
       {goalList}
-      {simulatorTask && !captured && nextGuided ? (
+      {/*
+        The next move on the console, when it adds to the task: which screen, which tile, which
+        confirm key. A pause-or-inspect task already says its whole move in the task itself; there
+        the line appears only above the console.
+      */}
+      {simulatorTask && !captured && nextGuided && !readingTask ? (
         <p className={styles.guidedInstruction} data-guided-instruction>
           {nextGuided.instruction}
         </p>

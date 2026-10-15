@@ -244,7 +244,7 @@ export function roundActionTitle(round: LabRound): string {
 function maneuverNote(maneuver: VentilationManeuver): string {
   switch (maneuver) {
     case 'pause':
-      return 'Pausing only freezes the display. No setting changes and the patient is not affected; the point is to read all three traces at one instant. Press Run to let the breath go on.'
+      return 'Pause freezes the console. No setting changes and the patient is unaffected; the point is to read all three traces at one instant. Press Run to carry on.'
     case 'hold':
       return 'A hold closes the valves for a moment at the end of the push, so flow stops and the pressure settles to what the filled lung is holding. No setting changes.'
     default:
@@ -260,7 +260,7 @@ function guideFor(round: LabRound, foundation = false): VentilationStepGuide {
     watch: maneuver === 'pause' ? [] : round.watch,
     note:
       foundation && round.goals.some((g) => g.type === 'mechanics')
-        ? `These controls simulate changes to the patient’s respiratory-system compliance or airway resistance. Keep ventilator settings fixed.${round.goals.some((g) => g.type === 'hold') ? ' A hold is a separate measurement maneuver; perform it after the requested change.' : ''}`
+        ? `These sliders change the teaching patient’s respiratory-system compliance or airway resistance, not a ventilator setting. Leave the ventilator settings alone.${round.goals.some((g) => g.type === 'hold') ? ' The hold is a measurement: perform it after the change.' : ''}`
         : maneuverNote(maneuver),
   }
 }
@@ -417,9 +417,9 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     {
       phase: 'recognize',
       title: foundation?.title ?? spec.recognizeTitle,
-      instruction: foundation
-        ? 'Inspect the worked reference below, then apply the concept to your own breath or experiment.'
-        : spec.recognizeInstruction,
+      // The section's own first instruction, as authored on its spec (October 2026: the generic
+      // "inspect the worked reference below" line that replaced it on Sections 1–5 is gone).
+      instruction: spec.recognizeInstruction,
       rationale: unit.increment,
       actionLabel:
         recognizeInteraction.kind === 'walk'
@@ -457,9 +457,8 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       title:
         unitId === 'breathing-with-support' ? 'Identify the marked phase' : 'Predict the response',
       instruction: `${first.introduction} ${first.look}`,
-      rationale: foundation
-        ? 'Apply the concept you just studied. Your first answer is retained, and a wrong prediction can be corrected by observing the actual response.'
-        : 'Committing to an answer before the change is made is what turns watching into learning: the response then confirms or corrects something you actually thought.',
+      rationale:
+        'Committing to an answer before you watch is what turns watching into learning: the response then confirms or corrects something you actually thought.',
       actionLabel: 'Commit my prediction',
       interaction: { kind: 'prediction', round: 0, item: ventilationRoundItem(unitId, 0) },
       lookIn:
@@ -483,10 +482,10 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         : actInstruction(first),
       rationale:
         roundManeuver(first) === 'pause'
-          ? 'Playback changes the display and elapsed time; captured inspection changes only the view. Phase identification is recorded separately.'
+          ? 'Run and Pause move the clock; reading the frozen breath changes nothing about the patient. The phase you identify is recorded on its own.'
           : roundManeuver(first) === 'change'
-            ? 'Use the task control or the selected native console to make the change. The step is done once the patient is receiving it.'
-            : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
+            ? 'Make the change on the console. The task is done once the patient is receiving it and the result is captured.'
+            : 'You are taking a measurement, not treating anything. The task is done once the maneuver has happened on the console.',
       actionLabel: 'Continue',
       interaction: { kind: 'simulator-task', round: 0, goals: first.goals, withObservation: false },
       lookIn:
@@ -524,7 +523,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       phase: 'explain',
       title: first.title,
       instruction: foundation
-        ? 'Compare the recorded response with your observation, then review the mechanism.'
+        ? 'Read the before-and-after, answer what changed, then read why.'
         : roundManeuver(first) === 'pause'
           ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation under it. The picture and checklist are available with this comparison.'
           : 'Read the verdict on your prediction and what actually changed, then the explanation under it. The picture and checklist are available with this comparison.',
@@ -638,26 +637,79 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     }
   }
 
+  /*
+   * Section 1 in eight tasks (owner review, October 2026): why a ventilator exists, with the
+   * console running beside it; one breath, advanced and frozen on the console; then each part as
+   * question → task → explanation. The hidden observe and interpret steps are gone from this
+   * section; their content was already on the task and explanation steps.
+   */
+  const byKind = (kind: VentilationStageInteraction['kind'], round: VentilationRoundIndex) =>
+    steps.find(
+      (candidate) =>
+        candidate.interaction.kind === kind &&
+        'round' in candidate.interaction &&
+        candidate.interaction.round === round,
+    )!
+  const sectionOneSteps: Omit<VentilationStageStep, 'ordinal' | 'id' | 'presentation'>[] = [
+    {
+      ...steps[0],
+      title: spec.recognizeTitle,
+      lookIn: spec.recognizeLookIn ?? steps[0].lookIn,
+    },
+    {
+      phase: 'recognize',
+      title: 'Watch one breath',
+      instruction:
+        'Press One breath on the clock bar. The console moves on by exactly one breath and holds it still. Find where inspiration begins, where it ends, and the emptying that follows before the next breath.',
+      rationale:
+        'Everything on the screen belongs to a part of one breath: the trigger, inspiration, cycling and expiration.',
+      actionLabel: 'Continue',
+      interaction: { kind: 'advance-breath' },
+      lookIn: {
+        pane: 'simulator',
+        landmark: ON_SIMULATOR.oneBreath,
+        alsoPane: 'teaching',
+        alsoLandmark: 'the breath map',
+      },
+      gate: 'open',
+      stops: [],
+      teaching: 'framing',
+    },
+    /*
+     * Every task title is in the task list from the start, so none of them names the phase a
+     * question asks for: "Pause or inspect expiration" answered the first question before it was
+     * asked.
+     */
+    { ...byKind('prediction', 0), title: 'Which phase is marked at A?' },
+    { ...byKind('simulator-task', 0), title: 'Catch the phase on the live breath' },
+    byKind('explain', 0),
+    { ...byKind('prediction', 1), title: 'Which phase is marked at B?' },
+    { ...byKind('simulator-task', 1), title: 'Choose the interval on the frozen breath' },
+    byKind('explain', 1),
+  ]
+
   // MV-02 replaces the two-question sequence with one replay and one optional interpretation.
   // Preserve the existing host, real experiment and stable unit ID; every reading step is open.
   const publicSteps =
-    unitId === 'oxygenation-response'
-      ? [
-          {
-            ...steps[0],
-            title: 'Compare matched PEEP examples',
-            instruction:
-              'Run the worked comparison or open its explanation. Compare both arms at the same elapsed time.',
-            lookIn: {
-              pane: 'teaching' as const,
-              landmark: 'One PEEP change, the same elapsed time',
+    unitId === 'breathing-with-support'
+      ? sectionOneSteps
+      : unitId === 'oxygenation-response'
+        ? [
+            {
+              ...steps[0],
+              title: 'Compare matched PEEP examples',
+              instruction:
+                'Run the worked comparison or open its explanation. Compare both arms at the same elapsed time.',
+              lookIn: {
+                pane: 'teaching' as const,
+                landmark: 'One PEEP change, the same elapsed time',
+              },
             },
-          },
-          { ...steps[1], title: 'Optional: interpret the tradeoff', gate: 'open' as const },
-          { ...steps[2], title: 'Try a separate patient', gate: 'open' as const },
-          { ...steps[4], title: 'Review the response and its limits', gate: 'open' as const },
-        ]
-      : steps
+            { ...steps[1], title: 'Optional: interpret the tradeoff', gate: 'open' as const },
+            { ...steps[2], title: 'Try a separate patient', gate: 'open' as const },
+            { ...steps[4], title: 'Review the response and its limits', gate: 'open' as const },
+          ]
+        : steps
 
   const built: VentilationStageStep[] = publicSteps.map((step, position) => ({
     ...step,
