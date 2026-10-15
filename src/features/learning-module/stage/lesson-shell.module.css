@@ -554,6 +554,43 @@
   height: 0.9rem;
 }
 
+/* The action row and the reason it is not available yet, kept together. */
+.nowFooter {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/*
+ * The pinned action row (ported from the ECMO shell, tester 2026-10-13).
+ *
+ * The card stops sticking to the top and becomes a column, so the row's containing block is the
+ * whole card (a grid item can only stick inside its own grid area). While the card runs past the
+ * bottom of the view the row rides the bottom edge on the card's own opaque fill; at the end of the
+ * card it is simply the card's foot.
+ */
+.now[data-pinned-actions] {
+  --now-pad: 1rem;
+  position: relative;
+  top: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.now[data-pinned-actions] > [data-now-footer='pinned'] {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-inline: calc(-1 * var(--now-pad));
+  margin-top: 0.25rem;
+  padding: 0.75rem var(--now-pad);
+  border-top: 1px solid var(--stage-line);
+  border-radius: 0 0 1rem 1rem;
+  background: color-mix(in srgb, var(--stage-panel-2) 92%, black);
+  box-shadow: 0 -0.6rem 1rem -0.6rem rgba(0, 0, 0, 0.55);
+}
+
 /* ------------------------------------------------------------------ *
  * Help dialog
  * ------------------------------------------------------------------ */
