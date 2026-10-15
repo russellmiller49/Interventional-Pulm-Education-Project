@@ -121,9 +121,11 @@ export function FoundationComparison({
       */}
       <p className={styles.comparisonTiming} role="status">
         {comparison
-          ? comparison.after.simulationTime > before.simulationTime
-            ? `After is read ${comparison.after.simulationTime - before.simulationTime} seconds after the change.`
-            : 'Before and after, side by side.'
+          ? `${
+              comparison.after.simulationTime > before.simulationTime
+                ? `After is read ${comparison.after.simulationTime - before.simulationTime} seconds after the change.`
+                : 'Before and after, side by side.'
+            } The readings that changed are highlighted.`
           : 'Run the comparison to fill in After and Change.'}
       </p>
       {actionId === 'load-return-resistance' ? (
@@ -158,7 +160,13 @@ export function FoundationComparison({
                     ),
                   )
             return (
-              <tr key={key} data-comparison-signal={key}>
+              <tr
+                key={key}
+                data-comparison-signal={key}
+                // Lit once the comparison has run, so the eye finds what moved (tester feedback,
+                // 2026-10-14: "I'm not exactly sure which value was changing").
+                data-changed={comparison && delta !== null ? delta !== 0 : undefined}
+              >
                 <th scope="row">
                   {label}
                   {unit ? <span className={styles.comparisonUnit}>{unit}</span> : null}

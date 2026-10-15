@@ -312,7 +312,10 @@ export function OxygenDeliveryExplorer({
           // A percentage width, capped: left to size itself a select is as wide as its longest
           // option and will not shrink, which at a 320 px phone width pushed the page one pixel
           // sideways. A `max-width` alone does not change that; a percentage `width` does.
-          className="min-h-9 w-full max-w-[17rem] rounded-lg border bg-transparent px-2 text-sm"
+          // Opaque and dark-schemed: on a transparent fill the browser drew its option list light on
+          // light, and a tester (2026-10-14) reported the menu text as hard to see.
+          className="min-h-9 w-full max-w-[17rem] rounded-lg border border-[#71e1e5]/60 bg-[#0b2328] px-2 text-sm text-[#eaf4f4]"
+          style={{ colorScheme: 'dark' }}
           value={appliedPresetId ?? ''}
           onChange={(event) => applyComparison(event.target.value)}
         >

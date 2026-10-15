@@ -820,10 +820,10 @@
 
 /*
  * A pinned action row covers the foot of the view, so keyboard focus must stop short of it. The
- * row is one line of controls, two when the reason a button is unavailable is printed under it.
+ * row's measured height is published on the root by `EcmoNowCard`.
  */
 .shell[data-ecmo-shell='learn'][data-flowing='true']:has([data-now-footer='pinned']) {
-  scroll-padding-block-end: 6.5rem;
+  scroll-padding-block-end: calc(var(--ecmo-pinned-footer-height, 5.5rem) + 1rem);
 }
 .shell[data-ecmo-shell='learn'][data-flowing='true']:has([data-now-footer='pinned'] :focus) {
   scroll-padding-block-end: 1rem;
@@ -837,7 +837,7 @@
   :global(html):has(
     .shell[data-ecmo-shell='learn'][data-flowing='true'] [data-now-footer='pinned']
   ) {
-    scroll-padding-block-end: 6.5rem;
+    scroll-padding-block-end: calc(var(--ecmo-pinned-footer-height, 5.5rem) + 1rem);
   }
   :global(html):has(
     .shell[data-ecmo-shell='learn'][data-flowing='true'] [data-now-footer='pinned'] :focus

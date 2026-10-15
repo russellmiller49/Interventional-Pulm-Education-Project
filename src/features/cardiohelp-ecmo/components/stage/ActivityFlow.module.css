@@ -21,6 +21,11 @@
   max-width: 980px;
 }
 
+/* A story step sets its question beside its result, so it takes the width of a two-column task. */
+.flow[data-presentation='comparison-lab']:has([data-story-question]) {
+  max-width: 1280px;
+}
+
 .flow [data-now-card] {
   position: static;
   padding: clamp(1rem, 2vw, 1.75rem);
@@ -54,6 +59,38 @@
 }
 .visual {
   isolation: isolate;
+}
+
+/* Too tall to pin (large text, a short window): the row is simply the foot of the card. */
+.flow [data-now-card] > [data-now-footer='pinned'][data-pin-unfits='true'] {
+  position: static;
+  box-shadow: none;
+}
+
+/*
+ * A slow, quiet pulse on the pinned primary action, so the way forward reads as the thing to press
+ * rather than the simulation beside it (tester feedback, 2026-10-14: "some kind of non-distracting
+ * animation"). A soft ring every few seconds; it stops while the button is hovered or focused, and
+ * never runs for a learner who has asked for reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .flow [data-now-footer='pinned'] [data-now-primary]:not(:disabled) {
+    animation: nowPrimaryCue 3s ease-in-out infinite;
+  }
+  .flow [data-now-footer='pinned'] [data-now-primary]:is(:hover, :focus-visible) {
+    animation: none;
+  }
+}
+
+@keyframes nowPrimaryCue {
+  0%,
+  55%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(113, 225, 229, 0);
+  }
+  25% {
+    box-shadow: 0 0 0 7px rgba(113, 225, 229, 0.3);
+  }
 }
 
 .flow [data-now-focus]:focus-visible {

@@ -49,25 +49,43 @@ export function EcmoReferenceValues({
   readonly ids: readonly EcmoNumberId[]
   readonly children?: ReactNode
 }) {
+  /*
+   * Sources as numbers beside each value and named once under the list. Each value used to carry
+   * its full citation in brackets, and a tester (2026-10-14) said the references did not need to
+   * sit right next to the values. Every value still says which source it rests on.
+   */
+  const sourceNames: string[] = []
+  const numbersFor = (sources: Parameters<typeof citation>[0]) =>
+    sources.map((source) => {
+      const name = citation([source])
+      if (!sourceNames.includes(name)) sourceNames.push(name)
+      return sourceNames.indexOf(name) + 1
+    })
+  const rows = ids.map((id) => {
+    const row = ECMO_NUMBERS.get(id)
+    return { id, row, refs: numbersFor(row.sources) }
+  })
   return (
     <section className={BOX_CLASS} data-reference-values>
       <h4 className="text-xs font-semibold">{title}</h4>
       <dl className="mt-1 grid gap-1">
-        {ids.map((id) => {
-          const row = ECMO_NUMBERS.get(id)
-          return (
-            <div key={id} data-teaching-number={id}>
-              <dt className="inline font-medium">{`${row.label}: `}</dt>
-              <dd className="inline">
-                <strong>{row.value}</strong>
-                {`${row.note ? `. ${row.note}` : ''} `}
-                <small>{`(${citation(row.sources)})`}</small>
-              </dd>
-            </div>
-          )
-        })}
+        {rows.map(({ id, row, refs }) => (
+          <div key={id} data-teaching-number={id}>
+            <dt className="inline font-medium">{`${row.label}: `}</dt>
+            <dd className="inline">
+              <strong>{row.value}</strong>
+              {row.note ? `. ${row.note}` : ''}
+              <sup className="ml-0.5" data-reference-number>
+                {refs.join(',')}
+              </sup>
+            </dd>
+          </div>
+        ))}
       </dl>
       <p className="mt-1">{ECMO_TYPICAL_VALUES_LINE}</p>
+      <p className="mt-1 text-muted-foreground" data-reference-sources>
+        {`Sources: ${sourceNames.map((name, index) => `${index + 1} ${name}`).join(' · ')}`}
+      </p>
       {children}
     </section>
   )

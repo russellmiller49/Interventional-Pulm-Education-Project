@@ -268,7 +268,9 @@ it.each(['gas-source-interruption', 'va-gas-source-interruption'])(
       (step) => step.interaction.kind === 'transfer-scenario',
     )
     for (let i = 0; i < transferIndex; i++) {
-      fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+      // A reading step has no Skip since 2026-10-14: its own button moves on and runs nothing.
+      const skip = screen.queryByRole('button', { name: 'Skip' })
+      fireEvent.click(skip ?? document.querySelector<HTMLButtonElement>('[data-now-primary]')!)
     }
     expect(latestState().scenario.prediction.committed).toBe(false)
     expect(latestState().scenario.activityStarted).toBe(false)

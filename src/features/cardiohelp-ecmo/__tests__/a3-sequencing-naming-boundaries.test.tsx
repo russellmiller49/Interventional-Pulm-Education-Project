@@ -164,7 +164,8 @@ describe('A3.3: the stopped pump is one question, not the whole tour', () => {
     const step = orientation.steps.find((item) => item.id === 'startup-screen-parameters')
     expect(step).toBeDefined()
     expect(step?.title).toMatch(/which channels still mean anything/i)
-    expect(step?.instruction).toMatch(/unavailable indication rather than a number/i)
+    expect(step?.instruction).toMatch(/the pressures show dashes/i)
+    expect(step?.instruction).toMatch(/Which readings still tell you something/i)
 
     const answers = step?.expectedResponse.join(' ') ?? ''
     // Flow is interpretable here: zero is a reading, not an absence, while its sensor is connected.
@@ -202,7 +203,10 @@ describe('A3.3: the stopped pump is one question, not the whole tour', () => {
 
   it('describes the ramp as a simulated progressive climb, not as bedside technique', () => {
     const step = orientation.steps.find((item) => item.id === 'startup-bring-circuit-up')
-    expect(step?.instruction).toMatch(/climbs progressively while it is held/i)
+    // Revised 2026-10-14: the instruction now says how to unlock the console and hold the arrow,
+    // because a tester could not make the speed control respond while the console was locked.
+    expect(step?.instruction).toMatch(/Press and hold Hold to unlock/i)
+    expect(step?.instruction).toMatch(/hold the up arrow beside the speed dial/i)
     const copy = `${step?.instruction ?? ''} ${step?.rationale ?? ''}`
     expect(copy).toMatch(/simulates a ramp/i)
     // The removed claim: holding a computer key is not how a bedside pump is brought up.

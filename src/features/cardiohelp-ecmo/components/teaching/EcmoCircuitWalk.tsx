@@ -54,6 +54,26 @@ function isReadableSite(siteId: string): siteId is ReadableSiteId {
   return siteId in CHANNEL_BY_SITE
 }
 
+/**
+ * The sensors at a stop, in one plain list.
+ *
+ * It read "Reported here: return pressure (pArt) · post-membrane blood saturation (Post-oxygenator
+ * saturation) · the flow and bubble sensor (Flow / bubble sensor)", and a tester (2026-10-14) asked
+ * what it meant. A console channel keeps its label with what it is in brackets; a named sensor is
+ * simply named.
+ */
+function measuredHere(siteIds: readonly string[]): string {
+  const names = siteIds.map((siteId) => {
+    const site = ecmoSensorSite(siteId as Parameters<typeof ecmoSensorSite>[0])
+    return site.deviceLabel.length <= 5
+      ? `${site.deviceLabel} (${site.plainName})`
+      : site.deviceLabel.replace(' / ', ' and ').replace(/^./, (first) => first.toLowerCase())
+  })
+  return names.length > 1
+    ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+    : (names[0] ?? '')
+}
+
 export interface EcmoCircuitWalkProps {
   readonly stops: readonly EcmoCircuitWalkStop[]
   readonly activeStopId: EcmoCircuitWalkStopId
@@ -198,18 +218,10 @@ export function EcmoCircuitWalk({
       <p className="mt-2 text-sm leading-6">{resolveEcmoModeText(stop.analogy, supportMode)}</p>
 
       {/*
-        What happens at this place, from the segment registry.
-
-        This sentence was the circuit-walk stop list's, and the list became the walk — so without it
-        the registry's own per-place prose had no renderer at all while its tests went on asserting
-        it. Gated, because two of the six say where a channel is reported, and this section's
-        prediction asks exactly that.
+        The segment registry's sentence about this place ("Generates the flow by pulling on drainage
+        and pushing into the membrane") used to follow the analogy. A tester (2026-10-14) called it
+        misplaced and hard to follow on two stops; the analogy and the short list carry the stop.
       */}
-      {pastPrediction ? (
-        <p className="mt-2 text-sm leading-6" data-walk-place-detail>
-          {resolveEcmoModeText(ecmoCircuitSegment(stop.primarySegmentId).detail, supportMode)}
-        </p>
-      ) : null}
 
       {/*
         The short list, with the label that says what kind of list it is.
@@ -257,14 +269,7 @@ export function EcmoCircuitWalk({
 
       {pastPrediction && stop.sensorSiteIds.length > 0 ? (
         <p className="mt-2 text-xs leading-5" data-walk-reported-here>
-          Reported here:{' '}
-          {stop.sensorSiteIds
-            .map((siteId) => {
-              const site = ecmoSensorSite(siteId)
-              return `${site.plainName} (${site.deviceLabel})`
-            })
-            .join(' · ')}
-          .
+          {`Measured here: ${measuredHere(stop.sensorSiteIds)}.`}
         </p>
       ) : null}
 

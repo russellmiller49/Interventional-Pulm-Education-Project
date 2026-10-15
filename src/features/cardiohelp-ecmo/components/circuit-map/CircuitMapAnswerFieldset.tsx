@@ -48,6 +48,8 @@ export interface CircuitMapAnswerProps {
   readonly onSelect: (choiceId: string) => void
   /** Local foundation opt-in: visible question and submit/feedback beside the map. */
   readonly inlineActions?: ReactNode
+  /** The question is printed in large type above the task; the legend stays for assistive tech. */
+  readonly stemShownElsewhere?: boolean
 }
 
 interface Option {
@@ -126,7 +128,9 @@ export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
       >
         <legend
           id={legendId}
-          className={props.inlineActions ? styles.mapAnswerStem : 'sr-only'}
+          className={
+            props.inlineActions && !props.stemShownElsewhere ? styles.mapAnswerStem : 'sr-only'
+          }
           data-map-question={props.inlineActions ? true : undefined}
         >
           {item.stem}

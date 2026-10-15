@@ -199,6 +199,15 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
         <h3 id="series-path-heading" className={styles.heading}>
           The circuit in series with the patient
         </h3>
+        {/*
+          A tester (2026-10-14) asked whether this drawing was different from the patient-and-circuit
+          map earlier in the pathway. It is the same circuit, drawn as one loop to show the order.
+        */}
+        <p className="mt-2 text-sm leading-6" data-series-same-circuit>
+          The same VV circuit as the map in the earlier sections, drawn here as one loop so the
+          order is easy to follow: blood leaves the veins, passes through the circuit, returns to
+          the veins, and only then goes through the patient&rsquo;s own heart and lungs.
+        </p>
 
         <VvSeriesLoopDiagram />
 

@@ -13,16 +13,20 @@
  * These are rendered checks: each one mounts the real host and reads what a learner would see.
  *
  * Block 6 holds her second batch, five reports later the same day on the pressure tasks of the
- * circuit walk and the speed comparison of the pump section.
+ * circuit walk and the speed comparison of the pump section. Block 7 holds her third batch
+ * (2026-10-14): the map questions, the walk and gas-path text, the pump section's reference
+ * material, the sweep section, reference-value citations, and the first console drill.
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { CardiohelpHub } from '../components/CardiohelpHub'
+import { EcmoCircuitPressureReference } from '../components/teaching/EcmoReferenceValues'
 import { FoundationStageHost } from '../components/stage/FoundationStageHost'
 import { ecmoCircuitWalkStopsForSection } from '../content/circuitWalk'
 import { resolveEcmoModeText } from '../content/circuitSegments'
 import { ecmoFoundationTeachingTasks } from '../content/foundationTeachingTasks'
+import { mountDrill, nowCard, resetStageHarness } from '../test-support/learnStageHarness'
 import {
   currentFoundationStep,
   reachFoundationStep,
@@ -53,8 +57,9 @@ jest.mock('../components/EcmoCircuit3D', () => ({
 const OXYGEN = 'why-extracorporeal-support'
 const WALK = 'circuit-flow-path'
 const PUMP = 'pump-and-pressure-zones'
+const SWEEP = 'blood-flow-versus-sweep'
 
-function mount(sectionId: typeof OXYGEN | typeof WALK | typeof PUMP) {
+function mount(sectionId: typeof OXYGEN | typeof WALK | typeof PUMP | typeof SWEEP) {
   return render(<FoundationStageHost sectionId={sectionId} supportMode="vv" />)
 }
 
@@ -167,7 +172,9 @@ describe('2. teaching stands where notes about the simulator stood', () => {
     const pump = ecmoCircuitWalkStopsForSection(WALK).find((stop) => stop.id === 'walk-pump')!
     const analogy = resolveEcmoModeText(pump.analogy, 'vv')
     expect(analogy).toMatch(/^A centrifugal pump\./)
-    expect(analogy).toMatch(/draws blood in at its centre and throws it outward/)
+    // Simplified again 2026-10-14: suction before it, pressure after it, nothing about displacement.
+    expect(analogy).toMatch(/suction before it/)
+    expect(analogy).not.toMatch(/displace/)
     expect(analogy).not.toMatch(/spinning cone/)
   })
 
@@ -357,9 +364,104 @@ describe('6. the second batch: the pressure tasks and the speed comparison', () 
     expect(
       document.querySelectorAll('[data-now-card] [data-circuit-pressure-identity]'),
     ).toHaveLength(1)
-    // The pressure-patterns reference sits on the two tasks it is about, not this one.
-    expect(text).not.toMatch(/More about pressure patterns/)
+    // The pressure-patterns reference sits on the loading task only, marked optional (2026-10-14).
+    expect(text).not.toMatch(/the four pressure patterns/)
     reachFoundationStep(PUMP, 'loading')
-    expect(pageText()).toMatch(/More about pressure patterns/)
+    expect(pageText()).toMatch(/Optional: the four pressure patterns/)
+  })
+})
+
+describe('7. the third batch (2026-10-14)', () => {
+  it('states a map question above the map, with its labels and side readings out of the way', () => {
+    mount(WALK)
+    reachFoundationStep(WALK, 'predict')
+    const callout = document.querySelector('[data-map-question-callout]')!
+    expect(callout.textContent).toMatch(
+      /^QuestionWhere in the blood path does the circuit report pInt\?/,
+    )
+    // Above the circuit, not under it.
+    const map = document.querySelector('#cardiohelp-circuit-panel')!
+    expect(callout.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(map).toHaveAttribute('data-location-disclosure', 'withheld')
+    expect(document.querySelector('[data-circuit-readouts]')).toBeNull()
+    expect(document.querySelector('[data-model-reference="compact"]')).toBeNull()
+  })
+
+  it('keeps the walk to the analogy, the short list and what is measured there', () => {
+    mount(WALK)
+    expect(document.querySelector('[data-walk-place-detail]')).toBeNull()
+    expect(document.querySelector('[data-walk-reported-here]')?.textContent).toBe(
+      'Measured here: pVen (drainage pressure).',
+    )
+    // Live readings start closed; the stop prints the one it is about.
+    expect(document.querySelector<HTMLDetailsElement>('[data-circuit-readouts]')?.open).toBe(false)
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-now-primary]')!)
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-now-primary]')!)
+    const membrane = document.querySelector('[data-circuit-walk]')!
+    expect(membrane.querySelectorAll('[data-walk-checklist] li')).toHaveLength(3)
+    expect(membrane.textContent).toMatch(/Sweep gas mainly clears CO₂/)
+    expect(membrane.textContent).not.toMatch(/difference between two places/)
+    reachFoundationStep(WALK, 'gas-path')
+    expect(pageText()).not.toMatch(/A setting here is a request/)
+    expect(pageText()).toMatch(/Gas and blood never mix/)
+  })
+
+  it('says what "short of drainage" means, and keeps the pattern table optional and in place', () => {
+    mount(PUMP)
+    expect(pageText()).not.toMatch(/the four pressure patterns/)
+    reachFoundationStep(PUMP, 'act')
+    expect(pageText()).toMatch(/hypovolemia or bleeding, a cannula that\s+is malpositioned/)
+    reachFoundationStep(PUMP, 'loading')
+    const patterns = document.querySelector<HTMLDetailsElement>('[data-pressure-patterns]')!
+    expect(patterns.open).toBe(false)
+    expect(patterns.querySelector('summary')?.textContent).toBe(
+      'Optional: the four pressure patterns',
+    )
+    expect(patterns.querySelector('[data-circuit-walk]')).toBeNull()
+    // Once run, the rows that moved are marked and the ones that held are not.
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-comparison-run]')!)
+    const changed = (key: string) =>
+      document.querySelector(`[data-comparison-signal="${key}"]`)?.getAttribute('data-changed')
+    expect(changed('rpmSetpoint')).toBe('false')
+    expect(changed('displayedBloodFlow')).toBe('true')
+    expect(changed('pInt')).toBe('true')
+  })
+
+  it('lights a console control while its name is pointed at', () => {
+    mount(SWEEP)
+    const name = document.querySelector('[data-point-control="cardiohelp-rpm-control"]')!
+    const control = () => document.getElementById('cardiohelp-rpm-control')
+    expect(control()).toHaveAttribute('data-guided-help', 'false')
+    fireEvent.mouseEnter(name)
+    expect(control()).toHaveAttribute('data-guided-help', 'true')
+    fireEvent.mouseLeave(name)
+    expect(control()).toHaveAttribute('data-guided-help', 'false')
+    expect(pageText()).not.toMatch(/The following guided controls reset/)
+  })
+
+  it('numbers the reference values and names their sources once, under the list', () => {
+    const { container } = render(<EcmoCircuitPressureReference />)
+    const box = container.querySelector('[data-reference-values]')!
+    expect(box.querySelector('dl')?.textContent).not.toMatch(/\(Schmidt|\(CARDIOHELP-i/)
+    expect(box.querySelectorAll('[data-reference-number]').length).toBeGreaterThan(0)
+    expect(box.querySelector('[data-reference-sources]')?.textContent).toMatch(/^Sources: 1 .+ 2 /)
+  })
+
+  it('opens the first drill with a pinned way forward and says to unlock before raising speed', async () => {
+    resetStageHarness()
+    await mountDrill('startup-sensor-orientation')
+    // A reading step: its own button moves on, so there is no answer / skip row.
+    expect(document.querySelector('[data-optional-support]')).toBeNull()
+    expect(nowCard().querySelector('[data-now-footer]')).toHaveAttribute(
+      'data-now-footer',
+      'pinned',
+    )
+    const ramp = await import('../content/learnLessons').then(
+      ({ cardiohelpLearnLessonsBySupportMode }) =>
+        cardiohelpLearnLessonsBySupportMode.vv[0].steps.find(
+          (step) => step.id === 'startup-bring-circuit-up',
+        ),
+    )
+    expect(ramp?.instruction).toMatch(/^The console locks its controls/)
   })
 })

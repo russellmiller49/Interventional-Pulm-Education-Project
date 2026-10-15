@@ -124,7 +124,10 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Locate a measurement on the map',
       block: 'application',
       mapRetrieval: true,
-      instruction: 'Select the numbered location on the circuit map that answers the question.',
+      // The labels are withheld until the answer is in; the host now honours `mapRetrieval` (it
+      // passed "full" for every task, and a tester answered with the pInt label in view).
+      instruction:
+        'Find where the circuit measures this pressure. The map’s sensor labels are hidden until you answer.',
       lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
     },
     {
@@ -145,7 +148,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'pump-setting',
       walkStopId: 'walk-pump-under-load',
       instruction:
-        'Identify pump speed as the selected setting and blood flow as its measured result. Read how drainage and downstream resistance affect that relationship.',
+        'Read the two numbers on the left: pump speed is the setting, blood flow is the result. The next tasks change one thing at a time and watch the other.',
       lookIn: teaching('Setting and resulting flow'),
     },
     {
@@ -195,7 +198,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Apply the loading principle',
       block: 'application',
       instruction:
-        'Use the speed, flow, and drainage-pressure trend in this separate case. Select a place on the map and submit beside it.',
+        'Use the speed, flow and drainage-pressure trend in this case to decide where the problem is.',
       lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
     },
   ],
