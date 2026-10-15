@@ -5,7 +5,6 @@ describe('critical-care recovery feature flags', () => {
     expect(resolveCriticalCareFeatureFlags({})).toEqual({
       criticalCareDashboardV2: true,
       hemodynamicsGuidedV2: true,
-      ventilationLearnV2: false,
       mcsChromeV2: false,
       ecmoChromeV2: false,
       crrtChromeV2: false,
@@ -29,12 +28,12 @@ describe('critical-care recovery feature flags', () => {
 
   it('falls back safely for invalid values without coupling flags together', () => {
     const resolved = resolveCriticalCareFeatureFlags({
-      VENTILATION_LEARN_V2: 'yes',
+      MCS_CHROME_V2: 'yes',
       ECMO_CHROME_V2: 'not-a-boolean',
     })
 
-    expect(resolved.ventilationLearnV2).toBe(true)
+    expect(resolved.mcsChromeV2).toBe(true)
     expect(resolved.ecmoChromeV2).toBe(false)
-    expect(criticalCareFeatureFlagNames).toHaveLength(7)
+    expect(criticalCareFeatureFlagNames).toHaveLength(6)
   })
 })
