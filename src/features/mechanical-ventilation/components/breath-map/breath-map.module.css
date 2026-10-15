@@ -326,8 +326,9 @@ button.pin:focus-visible {
 }
 .stripStops {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.25rem;
+  /* Four across where they fit; two rows of two on a phone, never a label run into the next. */
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.25rem 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
