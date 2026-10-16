@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { caseFixture } from '@/features/socrates-study/testing/fixtures'
-import { refreshSharedLibrary } from '@/app/[locale]/socrates-library/actions'
+import {
+  refreshSharedLibrary,
+  saveSharedSlide,
+  publishSharedSlide,
+} from '@/app/[locale]/socrates-library/actions'
 import { SharedSlideLibrary } from '../components/SharedSlideLibrary'
 import { PROGRESS_KEY, type LearningMode } from '../model'
 import type { SharedSlide } from '../shared-library'
@@ -12,8 +16,12 @@ jest.mock('@/app/[locale]/socrates-library/actions', () => ({
   publishSharedSlide: jest.fn(),
 }))
 jest.mock('@/features/socrates-builder/components/SocratesBuilder', () => ({
-  SocratesBuilder: () => <div>Slide editor</div>,
+  SocratesBuilder: (props: unknown) => {
+    mockEditor(props)
+    return <div>Slide editor</div>
+  },
 }))
+const mockEditor = jest.fn()
 const mockViewer = jest.fn()
 jest.mock('@/features/socrates-study/components/StudyViewer', () => ({
   StudyViewer: (props: unknown) => {
@@ -149,4 +157,57 @@ describe('shared preview background refreshes', () => {
     )
     expect(localStorage.getItem(PROGRESS_KEY)).toBeNull()
   })
+})
+
+test('library edit and preview navigation preserves five Teaching assignments and annotations', () => {
+  const slides: SharedSlide[] = Array.from({ length: 5 }, (_, index) => {
+    const document = caseFixture()
+    document.recordId = `70000000-0000-4000-8000-00000000000${index + 1}`
+    document.title = `Saved slide ${index + 1}`
+    return {
+      id: document.recordId,
+      importKey: `local:${document.recordId}`,
+      version: 1,
+      assignment: 'teaching',
+      publishedRevision: null,
+      publishedAssignment: null,
+      publishedAt: null,
+      updatedAt: '2026-10-16T00:00:00Z',
+      document,
+    }
+  })
+  const original = JSON.stringify(slides)
+  render(
+    <SharedSlideLibrary locale="es" userId="editor" canPublish={false} initialSlides={slides} />,
+  )
+  expect(screen.getByRole('link', { name: 'Open earlier saved slides' })).toHaveAttribute(
+    'href',
+    '/es/socrates-library/legacy',
+  )
+  expect(screen.getByRole('link', { name: 'Open published modules ↗' })).toHaveAttribute(
+    'href',
+    '/es/socrates/learn',
+  )
+  for (const slide of slides) {
+    const card = screen.getByRole('heading', { name: slide.document.title }).closest('article')!
+    fireEvent.click(within(card).getByRole('button', { name: 'Edit slide' }))
+    expect(mockEditor.mock.lastCall[0]).toMatchObject({
+      mode: 'shared',
+      embedded: true,
+      initialActiveDocument: slide.document,
+      initialDocuments: [slide.document],
+    })
+    expect(screen.getByRole('combobox', { name: /assign/i })).toHaveValue('teaching')
+    for (const mode of ['teaching', 'testing']) {
+      fireEvent.click(screen.getByRole('button', { name: `Preview ${mode}` }))
+      fireEvent.click(screen.getByRole('button', { name: 'Return to editing' }))
+      expect(mockEditor.mock.lastCall[0].initialActiveDocument.annotations).toEqual(
+        slide.document.annotations,
+      )
+    }
+    fireEvent.click(screen.getByRole('button', { name: '← All slides' }))
+  }
+  expect(JSON.stringify(slides)).toBe(original)
+  expect(saveSharedSlide).not.toHaveBeenCalled()
+  expect(publishSharedSlide).not.toHaveBeenCalled()
 })

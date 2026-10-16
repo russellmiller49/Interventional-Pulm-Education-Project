@@ -113,6 +113,14 @@ export function SharedSlideLibrary({
         </div>
         <a href={`/${locale}/socrates/learn`}>Open published modules ↗</a>
       </header>
+      <details>
+        <summary>Earlier saved slides</summary>
+        <p>
+          Slides saved before the shared library may still be in the earlier workspace.{' '}
+          <a href={`/${locale}/socrates-library/legacy`}>Open earlier saved slides</a> to review or
+          export that work. Browser drafts remain available through the import controls below.
+        </p>
+      </details>
       <div className={styles.status} role="status">
         {library.busy
           ? 'Saving to the team…'

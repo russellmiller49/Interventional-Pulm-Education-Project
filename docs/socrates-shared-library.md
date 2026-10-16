@@ -6,7 +6,13 @@ The browser demo links to it and retains the existing private browser drafts.
 
 ## Author workflow
 
-1. Open **Shared team library** from the browser slide workspace.
+1. Open **SOCRATES Library** from the Site admin dashboard or account dashboard,
+   or **Shared team library** from the browser slide workspace. The former
+   `/[locale]/socrates-builder` entry redirects to this library. **Earlier saved
+   slides** opens `/[locale]/socrates-library/legacy` for saved author cases that
+   are not library members; it keeps the earlier save/export workflow available.
+   No cases are automatically imported, reassigned, or published. Keep an already
+   open editor tab open until unfinished work is saved or exported.
 2. Choose **Import this browser’s drafts** or **Import library file** once. The
    latter accepts the prepared curriculum package or an exported author library.
    Workbook hash and source row identify a prepared slide across browsers; repeat
