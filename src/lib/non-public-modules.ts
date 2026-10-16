@@ -78,6 +78,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'Read-only procedure workspaces for the three exemplar procedures, with a demo-data-only readiness view. Draft-watermarked; no writes.',
   },
   {
+    path: '/literature-atlas',
+    title: 'Literature Atlas (tester preview)',
+    group: 'IP tooling',
+    summary:
+      'Read-only evidence map of the interventional pulmonology literature: browse and filter about 37,000 included articles on a topic map, list and matrix; read machine-generated study briefs (about 5,300, labelled as not physician-reviewed unless reviewed) and compare up to six side by side or up to 50 in an evidence table. Nothing is saved. Served from the separate Atlas service through a same-origin relay; in the beta-testing hub.',
+  },
+  {
     path: '/literature',
     title: 'IP Literature Explorer',
     group: 'IP tooling',

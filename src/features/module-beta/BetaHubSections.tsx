@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 import type { BetaModule } from './catalog'
 import type { BetaRollout } from './rollout'
 
-const groups = ['Bronchoscopy', 'Devices', 'Critical care'] as const
+const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
 function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
   return (

@@ -45,6 +45,12 @@ export const betaModules = [
     group: 'Devices',
   },
   {
+    id: 'literature-atlas',
+    title: 'Literature Atlas',
+    path: '/literature-atlas',
+    group: 'Literature',
+  },
+  {
     id: 'cardiohelp-ecmo',
     title: 'Cardiohelp ECMO',
     path: '/cardiohelp-ecmo',

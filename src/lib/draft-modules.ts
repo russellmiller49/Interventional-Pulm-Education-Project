@@ -74,6 +74,7 @@ const unlistedModulePathPrefixes = [
   ...(!courseAvailability.pccmIntroCourseOpen ? ['/pccm-intro-course'] : []),
   '/ebus-guided',
   '/eus-b-simulator',
+  '/literature-atlas',
   '/medical-thoracoscopy/wolf-preview',
   '/development-beta',
   '/admin/module-feedback',

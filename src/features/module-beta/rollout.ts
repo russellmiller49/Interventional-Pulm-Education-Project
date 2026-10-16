@@ -36,6 +36,7 @@ export const betaRollout: BetaRollout = {
   'peripheral-imaging': { stage: 'preview' },
   'bronchoscopy-foundations': { stage: 'preview' },
   devices: { stage: 'preview' },
+  'literature-atlas': { stage: 'preview' },
   'cardiohelp-ecmo': { stage: 'preview' },
   'baxter-crrt': { stage: 'preview' },
   'icu-hemodynamics': { stage: 'preview' },
