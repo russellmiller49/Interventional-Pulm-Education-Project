@@ -307,7 +307,7 @@ button.pin:focus-visible {
   outline-offset: 3px;
 }
 
-/* The one-line map under the clock bar. */
+/* The one-line map at the head of the text column, on console steps that are not a breath walk. */
 .strip {
   display: grid;
   gap: 0.25rem;

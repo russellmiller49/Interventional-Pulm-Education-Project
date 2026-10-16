@@ -80,7 +80,6 @@ function surface(session: LabSession, unitId: string, round: 0 | 1) {
       onPendingChange={() => undefined}
       onSelectDevice={() => undefined}
       onResetPatient={() => undefined}
-      showMapStrip
     />
   )
 }

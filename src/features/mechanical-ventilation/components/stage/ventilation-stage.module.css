@@ -703,6 +703,27 @@
   border-radius: 0;
   background: transparent;
 }
+/*
+ * On the compact console of the desktop workspace (`[data-mv-density='laptop']`), the caption,
+ * cursor and note around the frozen breath keep a screen's line spacing rather than the reading
+ * text's 1.6, so the screen and the console's tab row fit the pane together. The plot is unchanged.
+ */
+[data-mv-density='laptop'] .capturedBreath[data-compact] {
+  padding-block: 0.4rem;
+  line-height: 1.3;
+}
+/*
+ * There, the caption ("Baseline breath", "Your last breath") is the badge on the clock bar pinned
+ * directly above the screen, so it is said once on screen and kept for assistive technology.
+ */
+[data-mv-density='laptop'] .capturedBreath[data-compact] > figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .capturedBreath[data-palette='light'] {
   background: #f8fbfd;
   border-color: #c9d9e2;

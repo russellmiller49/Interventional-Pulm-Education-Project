@@ -1912,9 +1912,9 @@
  *
  * These sizes were authored for the legacy lab workspace and were reachable only from it, so the
  * Learn workspace always paid full price for the console — an 888px stack in a pane that a
- * standard laptop can only make about 260px tall. `[data-mv-density='laptop']` is set by
- * `useVentilationWorkspaceDensity` from the Learn viewport's measured box, so the same compaction
- * now applies wherever the workspace is genuinely short. Nothing here scales or transforms: traces
+ * standard laptop can only make about 260px tall. `[data-mv-density='laptop']` is set by the Learn
+ * host on the console surface in the desktop workspace, where the console shares a viewport-tall
+ * pane with its clock bar (2026-10-15). Nothing here scales or transforms: traces
  * and labels stay real text and real vectors at a smaller but still readable size, so a screen
  * reader and a magnifier see what the screen shows.
  */
@@ -1961,6 +1961,33 @@
 [data-mv-density='laptop'] .waveformTextEquivalent {
   padding-block: 0.42rem;
   margin-top: 0.45rem;
+}
+
+/*
+ * The monitored-value column at a device's own line spacing rather than the reading text's 1.6,
+ * which it inherits from the Learn flow. The column's rows are flexible, so its content sets the
+ * screen's height: at 1.6 the C6's five values made a 534px screen around a 437px trace.
+ */
+[data-mv-density='laptop'] .mmpPanel,
+[data-mv-density='laptop'] .patientDataBanner {
+  line-height: 1.2;
+}
+
+/*
+ * The bezel, header and alarm bar at the sizes the live course's laptop view already used
+ * (`[data-live-learning='true']`, below). The screen keeps its content height, so a frozen breath
+ * with its effort row is never clipped.
+ */
+[data-mv-density='laptop'] .consoleShell {
+  padding: 8px;
+}
+[data-mv-density='laptop'] .consoleHeader {
+  min-height: 36px;
+  padding-block: 7px;
+}
+[data-mv-density='laptop'] .alarmBar {
+  min-height: 30px;
+  padding-block: 6px;
 }
 
 .workflowLayout {

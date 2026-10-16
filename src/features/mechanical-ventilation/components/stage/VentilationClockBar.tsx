@@ -20,12 +20,19 @@ export function VentilationClockBar({
   engine,
   frozenLabel,
   guidedControlId,
+  cue = null,
 }: {
   readonly state: VentilationSimulationState
   readonly engine: Dispatch<VentilationAction>
   /** What the console screen is showing while it is frozen, or null while it is live. */
   readonly frozenLabel: string | null
   readonly guidedControlId?: string | null
+  /**
+   * The task's next move, in the bar's own row where it fits: a separate line under the bar cost
+   * the console pane a row of height. A visual repeat of the Now card's instruction, so it is
+   * hidden from assistive technology, which reads that instruction once on the card.
+   */
+  readonly cue?: string | null
 }) {
   const guided = (id: string) => (guidedControlId === id ? true : undefined)
   return (
@@ -74,6 +81,11 @@ export function VentilationClockBar({
       <span className={styles.clockTime} aria-live="off" data-model-time>
         {state.simulationTime.toFixed(1)} s
       </span>
+      {cue ? (
+        <p className={styles.consoleCue} data-console-cue aria-hidden="true">
+          Next: {cue}
+        </p>
+      ) : null}
       {frozenLabel ? (
         <span className={styles.clockBadge} data-frozen-badge>
           {frozenLabel}

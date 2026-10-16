@@ -104,6 +104,38 @@ test('a setting is made on the console, then Run and capture puts the result bes
   await expect(primary(page)).toHaveText('Continue')
 })
 
+test('on a desktop the text is left of the console and each scrolls on its own', async ({
+  page,
+}) => {
+  // Two sections, each opened on a cold dev server.
+  test.setTimeout(90_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  // A reading step (once a narrower column) and a console step (once console-first).
+  for (const sectionId of ['controls-and-goals', 'waveform-anatomy']) {
+    await openSection(page, sectionId)
+    if (sectionId === 'waveform-anatomy') await chooseTask(page, 'inspiratory flow to 60 L/min')
+    const text = page.locator('[data-flow-teaching]')
+    const visual = page.locator('[data-flow-visual]')
+    const t = (await text.boundingBox())!
+    const v = (await visual.boundingBox())!
+    expect(t.x + t.width).toBeLessThanOrEqual(v.x)
+    expect(t.width + v.width).toBeGreaterThan(1300)
+    await expect(text.locator('[data-now-card]')).toBeVisible()
+    const scrollTop = (pane: typeof text) => pane.evaluate((el) => el.scrollTop)
+    await page.mouse.move(t.x + t.width / 2, t.y + t.height / 2)
+    await page.mouse.wheel(0, 500)
+    await expect.poll(() => scrollTop(text)).toBeGreaterThan(0)
+    expect(await scrollTop(visual)).toBe(0)
+    expect(await page.evaluate(() => scrollY)).toBe(0)
+    await expect(page.locator('[data-clock-bar]')).toBeInViewport()
+    // The clock and the whole console screen down to its tab row, in the pane without scrolling.
+    const tabs = (await page.locator('[data-flow-visual] [data-device] nav').boundingBox())!
+    const clock = (await page.locator('[data-flow-visual] [data-clock-bar]').boundingBox())!
+    expect(clock.y).toBeGreaterThanOrEqual(v.y - 1)
+    expect(tabs.y + tabs.height).toBeLessThanOrEqual(v.y + v.height + 1)
+  }
+})
+
 test('the way on is pinned and visible at laptop and phone widths', async ({ page }) => {
   for (const viewport of [
     { width: 1366, height: 768 },

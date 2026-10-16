@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type ReactNode,
 } from 'react'
@@ -104,6 +105,26 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 const ventilationPathway = criticalCareLearningPathway('mechanical-ventilation')
 
+/*
+ * The fixed desktop workspace: the same viewport the shared activity frame and the site's scroll
+ * lock use (`globals.css`, `mechanical-ventilation-module.module.css`). Inside it the section is two
+ * panes that scroll on their own — the task and its reading on the left, the console on the right —
+ * and the page itself does not scroll. Below it the section flows in the document.
+ */
+const WORKSPACE_QUERY = '(min-width: 1024px) and (min-height: 700px)'
+function subscribeToWorkspace(onChange: () => void) {
+  const media = window.matchMedia?.(WORKSPACE_QUERY)
+  media?.addEventListener('change', onChange)
+  return () => media?.removeEventListener('change', onChange)
+}
+function useWorkspaceLayout(): boolean {
+  return useSyncExternalStore(
+    subscribeToWorkspace,
+    () => window.matchMedia?.(WORKSPACE_QUERY).matches ?? false,
+    () => false,
+  )
+}
+
 /** One section of the Learn pathway, on the shared flowing stage (the ECMO format). */
 export function VentilationStageHost({
   unitId,
@@ -154,6 +175,7 @@ function VentilationStageSession({
   const previousIndex = position > 0 ? presented[position - 1] : null
   const nextIndex = position < presented.length - 1 ? presented[position + 1] : null
   const [device] = useState<VentilatorDeviceId>(readDevicePreference)
+  const workspace = useWorkspaceLayout()
   const { session, engine, lab } = useVentilationLabSession({
     unitId,
     device,
@@ -191,7 +213,13 @@ function VentilationStageSession({
   useLayoutEffect(() => {
     if (!revealRequested.current) return
     revealRequested.current = false
-    if (headingRef.current) revealTaskHeading(headingRef.current)
+    if (!headingRef.current) return
+    revealTaskHeading(headingRef.current)
+    // In the desktop workspace the console pane scrolls on its own; a new task starts at its top.
+    const visualPane = headingRef.current
+      .closest('[data-flow-content]')
+      ?.querySelector<HTMLElement>(':scope > [data-flow-visual]')
+    if (visualPane) visualPane.scrollTop = 0
   }, [index, restartCount])
   useLayoutEffect(() => {
     if (consumeTaskHeadingReveal(unitId) && headingRef.current)
@@ -650,13 +678,21 @@ function VentilationStageSession({
    * ------------------------------------------------------------------------------------------ */
 
   const breathWalk = presentation.layout === 'breath-walk'
-  const walkMap = breathWalk ? (
+  const peepVisual = peepLesson && !simulatorTask
+  /*
+   * The breath map leads the text column: the full map on a breath-walk step, the one-line strip
+   * on any other console step. The strip used to sit between the clock bar and the console, where
+   * it cost the console pane the row its tab bar needed; it orients the reading, so it goes with it.
+   */
+  const breathMap = breathWalk ? (
     <BreathMap
       emphasis={interaction.kind === 'walk' ? [walkStop] : step.stops}
       caption={interaction.kind === 'walk' ? breathMapCaption([walkStop]) : undefined}
       walk={interaction.kind === 'walk' ? { selected: walkStop, onSelect: setWalkStop } : undefined}
     />
-  ) : null
+  ) : peepVisual ? null : (
+    <BreathMap variant="strip" emphasis={step.stops} />
+  )
 
   const teaching = (
     <VentilationTeachingColumn
@@ -668,11 +704,10 @@ function VentilationStageSession({
       showCapturedReference={!marker}
       landmarkChooser={interaction.kind === 'walk'}
       guideLook={simulatorTask ? lookLine : undefined}
-      breathMap={walkMap}
+      breathMap={breathMap}
     />
   )
 
-  const peepVisual = peepLesson && !simulatorTask
   const visual = peepVisual ? (
     <VentilationPeepComparison
       key={restartCount}
@@ -687,7 +722,7 @@ function VentilationStageSession({
       lab={lab}
       guidedControlId={guidedControlId}
       onPendingChange={setPending}
-      showMapStrip={!breathWalk}
+      density={workspace ? 'laptop' : undefined}
       cue={
         simulatorTask && !captured && nextGuided
           ? nextGuided.instruction
@@ -774,6 +809,80 @@ function VentilationStageSession({
     </HelpDialog>
   )
 
+  const sourcesBlock = (
+    <section
+      className={styles.block}
+      id={VENTILATION_SOURCES_ID}
+      aria-labelledby={`${VENTILATION_SOURCES_ID}-heading`}
+    >
+      <h2 id={`${VENTILATION_SOURCES_ID}-heading`}>Sources</h2>
+      <VentilationSourceList records={sources.records} claimsVisible />
+    </section>
+  )
+
+  /*
+   * The text column: the task, its reading, the section's purpose and task list, and — in the
+   * desktop workspace, where the page does not scroll — the sources. It is always on the left of
+   * the visual, and on top of it when the two stack. Below the workspace the sources stay at the
+   * end of the page, after the console, so a phone does not read the whole list before the work.
+   */
+  const textColumn = (
+    <>
+      <div
+        ref={headingRef}
+        tabIndex={-1}
+        data-now-focus
+        data-step-heading
+        data-current-step={step.id}
+        className={styles.nowFocus}
+      >
+        <NowCard model={nowModel}>{cardChildren}</NowCard>
+      </div>
+      {teaching}
+      {position === 0 ? (
+        <details className={stageStyles.objectives} data-stage-objectives>
+          <summary>What this section is for</summary>
+          <p>{lesson.spec.objective}</p>
+          <p>
+            <strong>One new idea:</strong> {lesson.spec.newConcept}
+          </p>
+          <p className={styles.note} data-section-time>
+            {ventilationSectionTimeLine(unitId)}
+          </p>
+        </details>
+      ) : null}
+      <details className={styles.taskMap} data-task-map>
+        <summary>Tasks in this section</summary>
+        <ol data-step-list>
+          {presented.map((stepIndex, order) => {
+            const row = lesson.steps[stepIndex]
+            const rowState =
+              stepIndex === index
+                ? 'current'
+                : ventilationStepPerformed(row, session, { enteredAtSeconds: 0 }) &&
+                    order < position
+                  ? 'done'
+                  : 'open'
+            return (
+              <li key={row.id} data-step-state={rowState} data-step-id={row.id}>
+                <button
+                  type="button"
+                  aria-current={stepIndex === index ? 'step' : undefined}
+                  disabled={stepIndex === index}
+                  onClick={() => navigateToStep(stepIndex)}
+                >
+                  {order + 1}. {row.title}
+                  {rowState === 'done' ? ' · done' : ''}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      </details>
+      {workspace ? sourcesBlock : null}
+    </>
+  )
+
   return (
     <MechanicalVentilationModuleFrame
       locale={locale}
@@ -781,83 +890,22 @@ function VentilationStageSession({
       activityMode
       taskFlow
     >
-      <div className={styles.flow} data-stage-frame data-layout={presentation.layout}>
+      <div
+        className={styles.flow}
+        data-stage-frame
+        data-layout={presentation.layout}
+        data-workspace={workspace || undefined}
+      >
         <LessonShell
           section="learn"
           stage={step.id}
           module="mechanical-ventilation"
           label="Self-paced mechanical ventilation section"
           header={header}
-          footer={
-            <section
-              className={styles.block}
-              id={VENTILATION_SOURCES_ID}
-              aria-labelledby={`${VENTILATION_SOURCES_ID}-heading`}
-            >
-              <h2 id={`${VENTILATION_SOURCES_ID}-heading`}>Sources</h2>
-              <VentilationSourceList records={sources.records} claimsVisible />
-            </section>
-          }
+          footer={workspace ? undefined : sourcesBlock}
         >
           <div className={styles.content}>
-            <div
-              ref={headingRef}
-              tabIndex={-1}
-              data-now-focus
-              data-step-heading
-              data-current-step={step.id}
-              className={styles.nowFocus}
-            >
-              <NowCard model={nowModel}>{cardChildren}</NowCard>
-            </div>
-            <FlowContent
-              kind={presentation.layout}
-              teaching={teaching}
-              visual={visual}
-              visualFirst={
-                presentation.layout === 'console-lab' || presentation.layout === 'patient-case'
-              }
-            />
-            {position === 0 ? (
-              <details className={stageStyles.objectives} data-stage-objectives>
-                <summary>What this section is for</summary>
-                <p>{lesson.spec.objective}</p>
-                <p>
-                  <strong>One new idea:</strong> {lesson.spec.newConcept}
-                </p>
-                <p className={styles.note} data-section-time>
-                  {ventilationSectionTimeLine(unitId)}
-                </p>
-              </details>
-            ) : null}
-            <details className={styles.taskMap} data-task-map>
-              <summary>Tasks in this section</summary>
-              <ol data-step-list>
-                {presented.map((stepIndex, order) => {
-                  const row = lesson.steps[stepIndex]
-                  const rowState =
-                    stepIndex === index
-                      ? 'current'
-                      : ventilationStepPerformed(row, session, { enteredAtSeconds: 0 }) &&
-                          order < position
-                        ? 'done'
-                        : 'open'
-                  return (
-                    <li key={row.id} data-step-state={rowState} data-step-id={row.id}>
-                      <button
-                        type="button"
-                        aria-current={stepIndex === index ? 'step' : undefined}
-                        disabled={stepIndex === index}
-                        onClick={() => navigateToStep(stepIndex)}
-                      >
-                        {order + 1}. {row.title}
-                        {rowState === 'done' ? ' · done' : ''}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ol>
-            </details>
+            <FlowContent kind={presentation.layout} teaching={textColumn} visual={visual} />
           </div>
         </LessonShell>
         {helpDialog}
