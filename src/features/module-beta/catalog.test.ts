@@ -39,6 +39,11 @@ describe('beta module boundaries', () => {
     expect(betaModuleForPath('/admin/users')).toBeUndefined()
     expect(betaModuleForPath('/devices-extra')).toBeUndefined()
   })
+  it('lists the Literature Atlas preview but never the site-admin Literature Explorer', () => {
+    expect(betaModuleForPath('/en/literature-atlas')?.id).toBe('literature-atlas')
+    expect(betaModuleForPath('/literature')).toBeUndefined()
+    expect(betaModuleForPath('/en/literature/methods')).toBeUndefined()
+  })
   it('keeps only lesson context from URLs, never tokens or arbitrary query values', () => {
     expect(
       feedbackPagePath(

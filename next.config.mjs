@@ -99,6 +99,7 @@ const betaFramePaths = [
   '/icu-hemodynamics/:path*',
   '/mechanical-ventilation/:path*',
   '/mechanical-circulatory-support/:path*',
+  '/literature-atlas/:path*',
 ]
 const betaFrameHeaders = ['', '/:locale(en|es|zh-CN)'].flatMap((prefix) =>
   betaFramePaths.map((source) => ({
@@ -109,6 +110,15 @@ const betaFrameHeaders = ['', '/:locale(en|es|zh-CN)'].flatMap((prefix) =>
     ],
   })),
 )
+
+// The Literature Atlas relay is framed by its module page. Its route handler sets the Atlas's own
+// CSP (with frame-ancestors 'self'), so this rule keeps the site's other security headers but
+// neither adds the site CSP nor denies same-origin framing.
+const literatureAtlasRelayHeaders = securityHeaders
+  .filter((header) => header.key !== 'Content-Security-Policy')
+  .map((header) =>
+    header.key === 'X-Frame-Options' ? { key: header.key, value: 'SAMEORIGIN' } : header,
+  )
 
 const immutableAssetHeaders = [
   {
@@ -288,8 +298,12 @@ const nextConfig = {
       {
         // Apply security headers to HTML pages only, not static app assets.
         source:
-          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/|peripheral-ablation/).*)',
+          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/|peripheral-ablation/|api/literature-atlas).*)',
         headers: securityHeaders,
+      },
+      {
+        source: '/api/literature-atlas/:path*',
+        headers: literatureAtlasRelayHeaders,
       },
       {
         // Allow the bundled SoCal EBUS app to render inside the same-site iframe.

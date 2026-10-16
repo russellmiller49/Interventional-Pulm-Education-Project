@@ -50,6 +50,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // The EUS-B simulator is a development preview: reachable by direct link, noindex. Its page
   // embeds a standalone entry of the EBUS course build, which is already a public training embed.
   '/eus-b-simulator',
+  // The Literature Atlas tester preview: a read-only evidence map framed from the Atlas service
+  // through `/api/literature-atlas/`. Reachable by direct link without an account, noindex.
+  '/literature-atlas',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
   '/procedures',
@@ -90,6 +93,7 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // and reachable by direct link, noindex. `/intro-bronchoscopy` is a separate module.
   '/bronchoscopy-foundations',
   '/ebus-guided',
+  '/literature-atlas',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
   '/preference-cards',
@@ -480,6 +484,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'ebus-guided') return 'ebus-guided'
 
   if (first === 'eus-b-simulator') return 'eus-b-simulator'
+
+  if (first === 'literature-atlas') return 'literature-atlas'
 
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'

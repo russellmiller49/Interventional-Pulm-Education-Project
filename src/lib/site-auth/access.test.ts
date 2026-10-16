@@ -234,6 +234,28 @@ describe('main site auth access helpers', () => {
     }
   })
 
+  it('keeps the Literature Atlas tester preview public-unlisted and apart from the Explorer', () => {
+    for (const path of [
+      '/literature-atlas',
+      '/es/literature-atlas',
+      '/zh-CN/literature-atlas',
+      '/literature-atlas/anything',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('literature-atlas')
+    }
+    // The shared `/literature` stem must not open the site-admin Explorer, nor the other way round.
+    for (const path of ['/literature', '/en/literature/methods', '/literature-atlasx']) {
+      expect(isPublicUnlistedPath(path)).toBe(false)
+    }
+    expect(getRequiredEntitlement('/literature/methods', params())).toBe('site_admin')
+    // The relay is an API route, not a module page: the proxy passes every `/api/` path and the
+    // route sets its own noindex header.
+    expect(resolveSiteModuleId('/api/literature-atlas/map')).toBeNull()
+  })
+
   it('tracks the protected SOCRATES builder separately from the public demo', () => {
     expect(isPublicPath('/socrates-builder')).toBe(false)
     expect(isPublicUnlistedPath('/socrates-builder')).toBe(false)

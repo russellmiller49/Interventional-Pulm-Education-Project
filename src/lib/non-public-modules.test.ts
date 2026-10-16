@@ -36,6 +36,7 @@ describe('non-public module index', () => {
   it('reads access from the site gate rather than recording it', () => {
     // Derived, not stored — so the page cannot claim a level the proxy does not enforce.
     expect(moduleAccessMode('/critical-care')).toBe('direct-link')
+    expect(moduleAccessMode('/literature-atlas')).toBe('direct-link')
     expect(moduleAccessMode('/login')).toBe('public')
     expect(moduleAccessMode('/dashboard')).toBe('sign-in')
   })
@@ -46,6 +47,7 @@ describe('beta direct-link access', () => {
     '/preference-cards',
     '/critical-care',
     '/pleural-procedures/pleural-ultrasound-simulator',
+    '/literature-atlas',
   ]
 
   it.each(betaLinkModules)('lets a signed-out beta tester open %s', (path) => {
