@@ -58,6 +58,11 @@ export interface LabRound {
    * S12-1). Printed above the part so a repeat reads as a revisit and an early use as a preview.
    */
   readonly relation?: LabRoundRelation
+  /**
+   * The teaching patient's changed mechanics are what this part asks the learner to find (MV-L5),
+   * so the part-setup line above the first task does not name them.
+   */
+  readonly mechanicsWithheld?: true
 }
 export type LabQuestionKind = 'predict' | 'identify' | 'interpret' | 'reflect'
 export interface LabRoundRelation {
@@ -589,7 +594,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         seconds: 45,
         watch: ['spo2', 'map', 'peak', 'volume'],
         explanation:
-          'Compare your patient’s response with the matched comparison. Waiting alone changes oxygenation in this case. This patient’s compliance is different at the new PEEP, but a plateau read during inspiratory effort does not establish static compliance. Read oxygenation, tidal volume, airway pressure and MAP together.',
+          'Compare your patient’s response with the matched comparison. This patient’s compliance is different at the new PEEP, but a plateau read during inspiratory effort does not establish static compliance. Read oxygenation, tidal volume, airway pressure and MAP together.',
       }),
       oxygen,
     ],
@@ -806,6 +811,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'One high-pressure presentation',
         hint: 'During the hold flow is zero. Ask what happens to the part of the pressure that was there only because gas was moving.',
         setup: [mechanics(1, 3)],
+        mechanicsWithheld: true,
         introduction:
           'This passive patient has a high peak pressure, and the cause is not given. Measure before you decide.',
         prompt:
@@ -829,6 +835,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Same presentation, a different patient',
         hint: 'Ask which part of the pressure remains once flow has stopped, and what that part depends on.',
         setup: [mechanics(0.4, 1)],
+        mechanicsWithheld: true,
         introduction:
           'A second passive patient also has a high peak pressure. Measure again from the start.',
         prompt:

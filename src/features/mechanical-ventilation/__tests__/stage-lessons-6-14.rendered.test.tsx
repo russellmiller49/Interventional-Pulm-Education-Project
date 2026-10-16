@@ -7,9 +7,8 @@
  * reads only the steps up to the prediction. Section 9 is left out: its matched PEEP comparison is
  * openly disclosed by design.
  *
- * The part-setup line ("It starts with …") is generated from a round's setup in `learnerMap.ts` and
- * is not scanned: in Section 14 it names the teaching patient's mechanics before the hold, which is
- * ticket MV-L5 in `docs/clinical-language/mechanical-ventilation-sections-6-14.md`.
+ * The part-setup line ("It starts with …") is scanned too: Section 14's no longer names the
+ * teaching patient's mechanics before the hold (MV-L5).
  */
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
@@ -56,14 +55,12 @@ const SECTIONS = [
   'high-peak-pressure-integration',
 ]
 
-/** The Now card and the task list, the question's own choices and the part-setup line removed. */
+/** The Now card and the task list, the question's own choices removed. */
 function precommitSurfaceText(): string {
   const parts: string[] = []
   for (const root of document.querySelectorAll<HTMLElement>('[data-now-card], [data-task-map]')) {
     const copy = root.cloneNode(true) as HTMLElement
-    copy
-      .querySelectorAll('[data-prediction-choices], fieldset, [data-part-setup]')
-      .forEach((node) => node.remove())
+    copy.querySelectorAll('[data-prediction-choices], fieldset').forEach((node) => node.remove())
     parts.push(copy.textContent ?? '')
     copy
       .querySelectorAll('[aria-label]')
