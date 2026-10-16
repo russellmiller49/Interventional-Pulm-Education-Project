@@ -34,6 +34,7 @@ export default async function SocratesBuilderPage({ params }: PageProps) {
         <a href={`/${locale}/socrates-library`}>Return to SOCRATES Library</a>
       </header>
       <SocratesBuilder
+        protectUnsavedChanges
         access={bootstrap.access}
         initialDocuments={bootstrap.documents}
         sandboxCleanupDocuments={bootstrap.sandboxDocuments}

@@ -473,3 +473,71 @@ describe('SOCRATES companion builder', () => {
     expect(screen.getByText('No sandbox submissions to clean up.')).toBeVisible()
   })
 })
+
+describe('earlier saved slides leave protection', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  function unloadAllowed() {
+    return window.dispatchEvent(new Event('beforeunload', { cancelable: true }))
+  }
+
+  it('guards dirty and failed saves, clears after acknowledgment, and cleans up on unmount', async () => {
+    const document = {
+      ...createStarterSocratesDocument(),
+      recordId: 'd4f843a9-e280-4df0-a569-988837703cbe',
+      revision: 3,
+    }
+    const view = render(
+      <SocratesBuilder
+        protectUnsavedChanges
+        access={{ canPersist: true, canPublish: false, userEmail: 'editor@example.com' }}
+        initialDocuments={[document]}
+      />,
+    )
+    expect(unloadAllowed()).toBe(true)
+    fireEvent.change(screen.getByLabelText('Title', { exact: true }), {
+      target: { value: 'Unsaved edit' },
+    })
+    expect(unloadAllowed()).toBe(false)
+    mockSave.mockResolvedValueOnce({ ok: false, error: 'Synthetic connection failure' })
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }))
+    await screen.findByText('Synthetic connection failure')
+    expect(unloadAllowed()).toBe(false)
+    let acknowledge!: (result: unknown) => void
+    mockSave.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          acknowledge = resolve
+        }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }))
+    expect(unloadAllowed()).toBe(false)
+    acknowledge({ ok: true, document: { ...document, title: 'Unsaved edit', revision: 4 } })
+    await screen.findByText(/Draft revision 4 saved/)
+    expect(unloadAllowed()).toBe(true)
+    fireEvent.change(screen.getByLabelText('Title', { exact: true }), {
+      target: { value: 'Another edit' },
+    })
+    expect(unloadAllowed()).toBe(false)
+    view.unmount()
+    expect(unloadAllowed()).toBe(true)
+  })
+
+  it.each(['local', 'shared', 'sandbox'] as const)(
+    'leaves %s mode unload handling unchanged',
+    (mode) => {
+      render(
+        <SocratesBuilder
+          protectUnsavedChanges
+          mode={mode}
+          access={localAccess}
+          initialDocuments={[]}
+        />,
+      )
+      fireEvent.change(screen.getByLabelText('Title', { exact: true }), {
+        target: { value: 'Mode-owned recovery' },
+      })
+      expect(unloadAllowed()).toBe(true)
+    },
+  )
+})

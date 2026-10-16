@@ -2,17 +2,25 @@ import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
 const mockLoadBootstrap = jest.fn()
+const mockBuilder = jest.fn()
 
 jest.mock('@/features/socrates-builder/server/data', () => ({
   loadSocratesBuilderBootstrap: () => mockLoadBootstrap(),
 }))
 
 jest.mock('@/features/socrates-builder/components/SocratesBuilder', () => ({
-  SocratesBuilder: ({ access }: { access: { canPersist: boolean } }) => (
-    <div data-testid="socrates-builder-route">
-      {access.canPersist ? 'Persistent builder' : 'Local preview'}
-    </div>
-  ),
+  SocratesBuilder: (props: {
+    access: { canPersist: boolean }
+    protectUnsavedChanges?: boolean
+  }) => {
+    mockBuilder(props)
+    const { access } = props
+    return (
+      <div data-testid="socrates-builder-route">
+        {access.canPersist ? 'Persistent builder' : 'Local preview'}
+      </div>
+    )
+  },
 }))
 
 import SocratesBuilderPage, { metadata } from './page'
@@ -35,6 +43,7 @@ describe('SOCRATES earlier saved slides route', () => {
 
     expect(jest.mocked(setRequestLocale)).toHaveBeenCalledWith('en')
     expect(mockLoadBootstrap).toHaveBeenCalledTimes(1)
+    expect(mockBuilder.mock.lastCall[0].protectUnsavedChanges).toBe(true)
     expect(screen.getByRole('link', { name: 'Return to SOCRATES Library' })).toHaveAttribute(
       'href',
       '/en/socrates-library',

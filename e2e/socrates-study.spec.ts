@@ -399,6 +399,39 @@ test('library and retired builder navigation keep editor authorization', async (
   }
 })
 
+test('earlier saved slides protect unsaved work when returning to the library', async ({
+  page,
+  context,
+}) => {
+  await login(context, 'admin')
+  await page.goto('/en/socrates-library/legacy')
+  const vignette = page.getByLabel('Case vignette')
+  const original = await vignette.inputValue()
+  const edited = original + '\nSynthetic unsaved return-link check.'
+  await vignette.fill(edited)
+  const returnLink = page.getByRole('link', { name: 'Return to SOCRATES Library', exact: true })
+  const dialogPromise = page.waitForEvent('dialog', { timeout: 10000 })
+  const clickPromise = returnLink.click({ noWaitAfter: true })
+  const dialog = await dialogPromise
+  expect(dialog.type()).toBe('beforeunload')
+  await dialog.dismiss()
+  await clickPromise
+  await expect(page).toHaveURL(/\/en\/socrates-library\/legacy$/)
+  await expect(vignette).toHaveValue(edited)
+  await page.getByRole('button', { name: 'Save draft', exact: true }).click()
+  await expect(page.getByText(/Draft revision \d+ saved/)).toBeVisible()
+  let unexpectedDialogs = 0
+  page.on('dialog', async (next) => {
+    unexpectedDialogs++
+    await next.dismiss()
+  })
+  await returnLink.click()
+  await expect(page).toHaveURL(/\/en\/socrates-library$/)
+  expect(unexpectedDialogs).toBe(0)
+  await page.goto('/en/socrates-library/legacy')
+  await expect(vignette).toHaveValue(edited)
+})
+
 test('admin monitoring/export and earlier saved slide case fields', async ({ page, context }) => {
   await login(context, 'admin')
   await page.goto('/en/admin/socrates')
