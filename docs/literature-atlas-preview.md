@@ -1,8 +1,9 @@
 # Literature Atlas tester preview
 
 `/literature-atlas` puts the Literature Atlas — a read-only evidence map of the interventional
-pulmonology literature with a machine-generated study brief for each article — on the website as a
-module in development. It is separate from the site-admin Literature Explorer at `/literature`,
+pulmonology literature (about 37,000 included articles, about 5,300 with a machine-generated study
+brief; side-by-side compare of up to 6 and an evidence table of up to 50 selected articles, kept only
+in the link) — on the website as a module in development. It is separate from the site-admin Literature Explorer at `/literature`,
 which this work does not touch.
 
 ## Owner decisions (2026-10-15)

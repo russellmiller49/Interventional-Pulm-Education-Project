@@ -82,7 +82,7 @@ export const nonPublicModules: NonPublicModule[] = [
     title: 'Literature Atlas (tester preview)',
     group: 'IP tooling',
     summary:
-      'Read-only evidence map of the interventional pulmonology literature: browse and filter the article set on a topic map and list, with a machine-generated study brief for each article, labelled as not physician-reviewed. Served from the separate Atlas service through a same-origin relay; in the beta-testing hub.',
+      'Read-only evidence map of the interventional pulmonology literature: browse and filter about 37,000 included articles on a topic map, list and matrix; read machine-generated study briefs (about 5,300, labelled as not physician-reviewed unless reviewed) and compare up to six side by side or up to 50 in an evidence table. Nothing is saved. Served from the separate Atlas service through a same-origin relay; in the beta-testing hub.',
   },
   {
     path: '/literature',
