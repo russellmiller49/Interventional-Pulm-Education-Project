@@ -102,6 +102,7 @@ interface SocratesBuilderProps {
   mode?: SocratesBuilderMode
   sandboxCleanupDocuments?: SocratesSlideDocument[]
   embedded?: boolean
+  protectUnsavedChanges?: boolean
   onDocumentsChange?: (documents: SocratesSlideDocument[]) => void
   onLocalWorkspaceChange?: (workspace: WebOverlayWorkspace) => string | null
   onPreviewTeaching?: (document: SocratesSlideDocument) => void
@@ -206,6 +207,7 @@ export function SocratesBuilder({
   mode = 'protected',
   sandboxCleanupDocuments = [],
   embedded = false,
+  protectUnsavedChanges = false,
   onDocumentsChange,
   onLocalWorkspaceChange,
   onPreviewTeaching,
@@ -267,6 +269,19 @@ export function SocratesBuilder({
     () => new Set(document.annotations.map((annotation) => annotation.id)),
     [document.annotations],
   )
+
+  useEffect(() => {
+    // The recovery page uses full-page links; keep its in-memory edits protected
+    // until the existing save workflow acknowledges them. Shared/local modes
+    // retain their own recovery and unload handling.
+    if (!protectUnsavedChanges || mode !== 'protected' || (!dirty && !saving)) return
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [dirty, mode, protectUnsavedChanges, saving])
 
   useEffect(() => {
     if (!isSandbox) return

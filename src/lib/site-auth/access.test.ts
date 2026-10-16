@@ -192,6 +192,7 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/es/pccm-intro-course', params())).toBe('pccm_intro_course')
     expect(getRequiredEntitlement('/socrates-library', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/es/socrates-library', params())).toBe('socrates_editor')
+    expect(getRequiredEntitlement('/socrates-library/legacy', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/socrates-builder', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/es/socrates-builder', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/socrates-builder/slides/new', params())).toBe('socrates_editor')
