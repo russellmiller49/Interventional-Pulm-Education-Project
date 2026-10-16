@@ -387,13 +387,13 @@ test('library and retired builder navigation keep editor authorization', async (
   for (const route of routes) {
     const response = await page.request.get(route, { maxRedirects: 0 })
     expect(response.status()).toBe(307)
-    expect(new URL(response.headers().location).pathname).toBe('/en/login')
+    expect(new URL(response.headers().location, response.url()).pathname).toBe('/en/login')
   }
   await login(context)
   for (const route of routes) {
     const response = await page.request.get(route, { maxRedirects: 0 })
     expect(response.status()).toBe(307)
-    const destination = new URL(response.headers().location)
+    const destination = new URL(response.headers().location, response.url())
     expect(destination.pathname).toBe('/en/dashboard')
     expect(destination.searchParams.get('required')).toBe('socrates_editor')
   }

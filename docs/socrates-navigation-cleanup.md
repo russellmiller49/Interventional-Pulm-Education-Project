@@ -34,8 +34,24 @@ also touches the shared access-policy implementation, which this patch leaves in
 
 ## Validation evidence
 
-Final results and exact head are recorded in the draft PR. Commands/logs from the
-isolated worktree:
+Results: **33 Jest suites / 240 tests passed**; TypeScript passed; scoped ESLint,
+Prettier and `git diff --check` passed; **105 disposable PostgreSQL checks passed**.
+The final focused Chromium run passed **2/2** (Site Admin/library/redirect/recovery
+and anonymous/participant authorization). The broader Chromium run passed **9/11**,
+including protected desktop/mobile unsaved preview and earlier-case save/reload.
+Two existing browser-demo journeys failed:
+
+- Browser-only v2 preview timed out looking for **Reveal teaching interpretation**;
+  the snapshot instead shows the current stepped teaching navigation.
+- Bootstrap-generated browser draft could not locate **Learner narrative (after
+  reveal)** in the editor before opening its preview.
+
+Neither the failing test bodies nor the demo, learning workspace or lesson
+implementations changed from the baseline (`git diff` for those implementations
+is empty). A separate baseline runtime run was NOT RUN; these are recorded
+failures in untouched flows, not claimed to be proven baseline passes/failures.
+Screenshots and traces were retained; the new library screenshot was opened and
+visually checked. Exact head is recorded in the draft PR. Commands/logs:
 
 - Focused Jest: `npm test -- --runInBand src/features/socrates-builder
 src/features/socrates-demo src/features/socrates-learning src/features/socrates-study
