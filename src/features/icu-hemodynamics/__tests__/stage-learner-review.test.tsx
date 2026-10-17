@@ -54,6 +54,17 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
+/**
+ * One task, two columns (owner, 2026-10-16): the Now card and the reading are the task's text
+ * column, and the monitor, map and controls are its visual column beside it (under it when the two
+ * stack). Both belong to the same task body — there are still no permanent panes or workspace tabs.
+ */
+function inTaskVisual(selector: string): Element | null {
+  const content = document.querySelector('[data-flow-content]')
+  expect(content?.querySelector(':scope > [data-flow-teaching] [data-now-card]')).not.toBeNull()
+  return content?.querySelector(`:scope > [data-flow-visual] ${selector}`) ?? null
+}
+
 describe('activity-specific presentation replaces permanent panes', () => {
   it('keeps the question, observation and primary action in one task', () => {
     mountSection('pressure-system')
@@ -62,8 +73,8 @@ describe('activity-specific presentation replaces permanent panes', () => {
       'signal-lab',
     )
     expect(screen.queryByRole('tablist', { name: 'Workspace panel views' })).not.toBeInTheDocument()
-    expect(document.querySelector('[data-now-card] [data-focused-monitor]')).not.toBeNull()
-    expect(document.querySelector('[data-now-card] [data-catheter-map]')).not.toBeNull()
+    expect(inTaskVisual('[data-focused-monitor]')).not.toBeNull()
+    expect(inTaskVisual('[data-catheter-map]')).not.toBeNull()
     expect(document.querySelectorAll('[data-now-primary]')).toHaveLength(1)
   })
 
@@ -256,12 +267,12 @@ describe('one coherent compact task', () => {
     expect(screen.getByRole('heading', { name: 'Normal atrial components' })).toBeInTheDocument()
     expect(screen.queryByRole('tablist', { name: 'Workspace panel views' })).not.toBeInTheDocument()
     clickPrimary()
-    expect(document.querySelector('[data-now-card] [data-component-activity]')).not.toBeNull()
+    expect(inTaskVisual('[data-component-activity]')).not.toBeNull()
   })
   it('keeps blinded map answers and submission together', () => {
     mountSection('waveform-interpretation')
     advanceToPrediction('waveform-interpretation')
-    expect(document.querySelector('[data-now-card] [data-catheter-map-answer]')).not.toBeNull()
+    expect(inTaskVisual('[data-catheter-map-answer]')).not.toBeNull()
     expect(document.querySelector('[data-now-card] [data-question-check]')).toBeDisabled()
     expect(document.querySelector('[data-now-card] [data-now-primary]')).toBeEnabled()
     expect(document.querySelectorAll('[data-now-primary]')).toHaveLength(1)

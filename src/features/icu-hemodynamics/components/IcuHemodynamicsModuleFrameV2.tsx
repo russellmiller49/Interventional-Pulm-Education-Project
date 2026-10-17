@@ -45,18 +45,24 @@ export const icuHemodynamicsModuleNavItems: readonly ModuleNavItem[] = [
 /**
  * Shared shell for the hub and every section page: module identity row, section nav, and the
  * safety boundary. In activity mode the shell hands the viewport to the lesson stage inside it.
+ *
+ * `documentFlow` stages scroll the document. `desktopWorkspace` (Learn) keeps that below a desktop
+ * viewport and, on one, is the fixed workspace again: the page does not scroll and the stage's
+ * text and visual panes scroll on their own (owner, 2026-10-16, as for mechanical ventilation).
  */
 export function IcuHemodynamicsModuleFrameV2({
   activeHref,
   locale = 'en',
   activityMode = false,
   documentFlow = false,
+  desktopWorkspace = false,
   children,
 }: {
   readonly activeHref: string
   readonly locale?: string
   readonly activityMode?: boolean
   readonly documentFlow?: boolean
+  readonly desktopWorkspace?: boolean
   readonly children: ReactNode
 }) {
   return (
@@ -64,6 +70,10 @@ export function IcuHemodynamicsModuleFrameV2({
       className={activityMode ? styles.moduleShell : undefined}
       data-activity-mode={activityMode || undefined}
       data-document-flow={documentFlow || undefined}
+      data-desktop-workspace={desktopWorkspace || undefined}
+      data-learning-scroll-owner={
+        activityMode ? (desktopWorkspace || !documentFlow ? 'workspace' : 'document') : undefined
+      }
     >
       <ModuleFrameV2
         eyebrow="Critical care · Hemodynamic reasoning"

@@ -724,6 +724,33 @@
 }
 
 /*
+ * Learn on a desktop is the fixed workspace (owner, 2026-10-16): the shell is the viewport beneath
+ * the site header and the section's text and visual panes scroll on their own, so the learner reads
+ * on with the monitor and its controls still in view. `hemodynamics-flow.module.css` fills it; below
+ * this viewport Learn keeps the document flow above.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true'] [data-activity-frame] {
+    display: grid;
+    height: 100%;
+    overflow: hidden;
+  }
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true']
+    [data-activity-frame]
+    > div:last-child {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/*
  * HD-PRE-REVIEW-02 (report L6-02): the captured occlusion trace the wedge cursor is moved across,
  * with the simulation's modeled respiratory phase drawn beneath it. The shaded band is the one
  * cardiac cycle the cursor's value averages.

@@ -233,7 +233,9 @@ for (const viewport of [
   { width: 768, height: 1024 },
   { width: 390, height: 844 },
 ]) {
-  test(`every section opens in document flow at ${viewport.width}x${viewport.height}`, async ({
+  // A desktop is the fixed two-pane workspace (owner, 2026-10-16); anything smaller scrolls the page.
+  const desktop = viewport.width >= 1024 && viewport.height >= 700
+  test(`every section opens with the text ahead of the visual at ${viewport.width}x${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
@@ -241,6 +243,19 @@ for (const viewport of [
       await open(page, section)
       await expect(page.getByRole('tablist', { name: 'Workspace panel views' })).toHaveCount(0)
       await expect(page.locator('[data-now-card]')).toBeVisible()
+      const layout = await page.evaluate(() => {
+        const text = document.querySelector('[data-flow-teaching]')?.getBoundingClientRect()
+        const visual = document.querySelector('[data-flow-visual]')?.getBoundingClientRect()
+        return {
+          height: document.documentElement.scrollHeight,
+          panes: text && visual ? { text, visual } : null,
+        }
+      })
+      if (desktop) expect(layout.height).toBeLessThanOrEqual(viewport.height + 1)
+      if (layout.panes && viewport.width >= 1100)
+        expect(layout.panes.text.right).toBeLessThanOrEqual(layout.panes.visual.left + 1)
+      else if (layout.panes)
+        expect(layout.panes.text.bottom).toBeLessThanOrEqual(layout.panes.visual.top + 1)
       await capture(page, `${section}-${viewport.width}x${viewport.height}`)
     }
   })
