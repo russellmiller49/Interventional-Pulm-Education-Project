@@ -16,12 +16,33 @@
   position: static;
 }
 .activity {
-  max-width: 1160px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 1.5rem 1.25rem;
 }
-.flow[data-presentation='concept'] .activity {
-  max-width: 850px;
+/*
+ * Every step with a visual takes the same width (owner, 2026-10-16: no narrow columns beside unused
+ * screen). A step that is reading only — no monitor, controls or tracing — keeps a reading measure;
+ * a case keeps the full width for its own workspace.
+ */
+@media (min-width: 1500px) {
+  .activity,
+  .references {
+    max-width: 1840px;
+  }
+}
+.activity[data-single-column='reading'] {
+  max-width: 56rem;
+}
+
+/*
+ * The text column: the task card (teaching, then the question or the next move), the section's
+ * purpose and task list, and in the desktop workspace the sources. Always ahead of the visual: on
+ * its left, or above it. Block flow, not a grid: a grid here makes every forced layout in the
+ * visual pane size the whole lesson again (mechanical ventilation measured 11.9 s to first task).
+ */
+.flow [data-flow-teaching] > * + * {
+  margin-top: 1rem;
 }
 .flow [data-now-card] {
   position: static;
@@ -72,7 +93,7 @@
   font-weight: 700;
 }
 .references {
-  max-width: 1160px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 1.25rem 2rem;
   font-size: 0.875rem;
@@ -448,4 +469,151 @@
   margin-top: 0.5rem;
   box-shadow: none;
   backdrop-filter: none;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * The desktop workspace (owner, 2026-10-16, as for mechanical ventilation): the text on the left,
+ * the monitor and its controls on the right, each scrolling on its own so the learner reads on with
+ * the visual still in view. The module shell is the viewport beneath the site header
+ * (`hemodynamics-stage.module.css`); the section header and any catheter hold keep their rows and
+ * the task body takes the rest. The sources end the text column (the host puts them there).
+ *
+ * Two panes need room, so they are a container query in rem on the task body: it follows the
+ * reader's text size, which a media query does not. Narrower than 75rem (a 1024–1240 px window, or
+ * enlarged text) the task body is one column — text, then the visual — scrolling as one pane.
+ * ---------------------------------------------------------------------------------------------- */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .flow[data-lesson-shell] {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    height: auto;
+    min-height: 0;
+  }
+  .flow[data-lesson-shell] > header {
+    grid-row: 1;
+  }
+  .flow[data-lesson-shell] > .safety {
+    grid-row: 2;
+  }
+  .flow[data-lesson-shell] > .activity {
+    grid-row: 3;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    min-height: 0;
+    padding-block: 0.5rem;
+    container: hemo-activity / inline-size;
+  }
+  /*
+   * Positioned, so each scroller is the containing block of what it holds: an absolutely positioned
+   * screen-reader line deep inside otherwise escapes it and lengthens the locked page.
+   */
+  .flow[data-lesson-shell][data-presentation] .activity > [data-flow-content] {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    min-height: 0;
+    margin-block: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  /* Inside a pane the monitor column stays at the pane's top, not the site header's. */
+  .activity .pairedLead:not(:has([data-held-view])) {
+    top: 0;
+  }
+  .flow[data-lesson-shell] > .references {
+    grid-row: 4;
+  }
+  /* The sources at the foot of the text column, opened in place. */
+  .activity [data-flow-teaching] > .references {
+    max-width: none;
+    padding: 0 0 1rem;
+  }
+}
+
+@container hemo-activity (min-width: 75rem) {
+  .flow[data-lesson-shell][data-presentation] .activity > [data-flow-content][data-has-visual] {
+    grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+  .activity > [data-flow-content][data-has-visual] > :is([data-flow-teaching], [data-flow-visual]) {
+    position: relative;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .activity > [data-flow-content][data-has-visual] > [data-flow-teaching] {
+    padding-right: 0.35rem;
+  }
+  .activity > [data-flow-content][data-has-visual] > [data-flow-visual] {
+    scroll-padding-top: 1rem;
+  }
+  /*
+   * Two visuals need more of the width than the text. In the integration section the all-channel
+   * monitor sits with its tools beside it rather than under it (below); the three flush responses
+   * compared on one axis need the width they were laid out at.
+   */
+  .flow[data-lesson-shell][data-presentation='case']
+    .activity
+    > [data-flow-content][data-has-visual]:has(
+      [data-simulator-surface] > div:first-child > [data-monitor-column]:not(:empty) + *
+    ) {
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+  }
+  .flow[data-lesson-shell][data-presentation]
+    .activity
+    > [data-flow-content][data-has-visual]:has([data-dynamic-response-comparison]) {
+    grid-template-columns: minmax(16rem, 19rem) minmax(0, 1fr);
+  }
+  .activity > [data-flow-content][data-has-visual] > [data-flow-visual] {
+    container: hemo-visual / inline-size;
+  }
+}
+
+@container hemo-activity (min-width: 90rem) {
+  .flow[data-lesson-shell][data-presentation] .activity > [data-flow-content][data-has-visual] {
+    grid-template-columns: minmax(24rem, 30rem) minmax(0, 1fr);
+  }
+}
+
+/*
+ * The integration section's all-channel monitor and its tools side by side once the visual pane is
+ * wide enough, so a control and the tracings it changes fit the pane together: the five channels
+ * alone are about 690 px tall, and stacked, a tool under them was out of the pane at 900 px. The
+ * monitor keeps its place while the tools beside it scroll.
+ */
+@container hemo-visual (min-width: 56rem) {
+  .flow[data-presentation='case']
+    .activity
+    [data-simulator-surface]
+    > div:first-child:has(> [data-monitor-column]:not(:empty) + *) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .flow[data-presentation='case']
+    .activity
+    [data-simulator-surface]
+    > div:first-child:has(> [data-monitor-column]:not(:empty) + *)
+    > [data-monitor-column] {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/*
+ * The three flush responses compared on one axis line their plots up by row (`fast-flush.module.css`)
+ * at the width they were laid out and verified at, the 1046 px the task card gave them. Wider, a
+ * caption that wraps in one panel and not another moves that panel's plot out of line.
+ */
+.activity [data-dynamic-response-comparison] {
+  max-width: 1046px;
 }

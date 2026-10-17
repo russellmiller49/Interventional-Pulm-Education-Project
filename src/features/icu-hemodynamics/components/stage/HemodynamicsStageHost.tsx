@@ -11,6 +11,7 @@ import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdi
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
+import { FlowContent } from '@/features/learning-module/stage/FlowContent'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import {
   NowCard,
@@ -80,12 +81,13 @@ import {
 } from '../catheter-map/CatheterMap'
 import { useHemodynamicsSelfPacedRecord } from '../useHemodynamicsSelfPacedRecord'
 import { HemodynamicsExplanation, HemodynamicsQuestionBlock } from './HemodynamicsQuestion'
-import { HemodynamicsSimulatorPane } from './HemodynamicsSimulatorPane'
+import { HemodynamicsSimulatorPane, simulatorPaneShows } from './HemodynamicsSimulatorPane'
 import { HemodynamicsSourceList } from './HemodynamicsSourceList'
 import { HemodynamicsStoryProblems } from './HemodynamicsStoryProblems'
 import { HemodynamicsTeachingColumn } from './HemodynamicsTeachingColumn'
 import { QuestionSortControl } from './QuestionSortControl'
 import { quickControlId } from './StageDocks'
+import { useWorkspaceLayout } from './useWorkspaceLayout'
 import { AtrialComponentActivity } from './AtrialComponentActivity'
 import { emptyRecognitionRecord } from '../WaveformRecognitionDrill'
 import { WaveformAtlasFigure } from '../WaveformAtlasFigure'
@@ -286,6 +288,7 @@ function HemodynamicsStageSession({
   const [completionFocusRequest, setCompletionFocusRequest] = useState(0)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
+  const workspace = useWorkspaceLayout()
   const completionRef = useRef<HTMLElement>(null)
   const focusedTask = useRef<string | null>(null)
   const previousCaseId = useRef<string | null>(null)
@@ -347,6 +350,11 @@ function HemodynamicsStageSession({
     if (previous === null) return
     nowFocusRef.current?.focus({ preventScroll: true })
     nowFocusRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    // In the desktop workspace the visual pane scrolls on its own; a new task starts at its top.
+    const visualPane = nowFocusRef.current
+      ?.closest('[data-flow-content]')
+      ?.querySelector<HTMLElement>(':scope > [data-flow-visual]')
+    if (visualPane) visualPane.scrollTop = 0
   }, [activeStep.id, readingPart])
 
   useEffect(() => {
@@ -1081,7 +1089,7 @@ function HemodynamicsStageSession({
         choicesElsewhere={
           step.interaction.mapTargets ? (
             <p className={stageStyles.taskInstruction} data-map-answer-note>
-              Choose a place on the catheter map above.
+              Choose a place on the catheter map.
               {chosen ? ` Chosen: ${chosen.label}.` : ''}
             </p>
           ) : undefined
@@ -1555,7 +1563,48 @@ function HemodynamicsStageSession({
     </StageTeachingScope>
   )
 
-  const task = (
+  /*
+   * The visual column: the simulator, when this step draws one, and the question's tracing. A case
+   * (its own monitor and workspace) and a reading part have none, and neither does a step whose
+   * simulator would be empty; those are one column.
+   */
+  const readingOnly = onCaseStep || readingPart !== undefined
+  const simulatorShown =
+    !readingOnly &&
+    simulatorPaneShows({
+      presentation,
+      surface: activeStep.surface,
+      state,
+      baseline: taskBaselines[activeStep.id],
+      hasWorkbench: extraSurface !== null,
+    })
+  const visual =
+    !readingOnly && (simulatorShown || questionFigure) ? (
+      <>
+        {simulatorShown ? simulator : null}
+        {questionFigure}
+      </>
+    ) : null
+
+  const sources = (
+    <footer className={flowStyles.references}>
+      <StageSourcesFooter
+        count={stageSources.evidenceIds.length}
+        label="Sources for this section"
+        claimsVisible={revealOpen}
+      >
+        <HemodynamicsSourceList records={stageSources.records} claimsVisible={revealOpen} />
+      </StageSourcesFooter>
+    </footer>
+  )
+
+  /*
+   * The text column: the task card (the teaching, then the question or the next move — teaching
+   * first, as every section reads), the section's purpose and task list, and — in the desktop
+   * workspace, where the page does not scroll — the sources, one line that opens in place. Always
+   * ahead of the visual: on its left, or above it. Below the workspace the sources end the page.
+   */
+  const textColumn = (
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard
@@ -1609,8 +1658,6 @@ function HemodynamicsStageSession({
                   </section>
                 ) : null}
                 {teaching}
-                {simulator}
-                {questionFigure}
                 {nowBody}
               </>
             )}
@@ -1739,7 +1786,12 @@ function HemodynamicsStageSession({
           </div>
         </section>
       ) : null}
+      {workspace ? sources : null}
     </>
+  )
+
+  const task = (
+    <FlowContent kind={presentation.kind} teaching={textColumn} visual={visual ?? undefined} />
   )
 
   const header = (
@@ -1797,12 +1849,14 @@ function HemodynamicsStageSession({
       activeHref={`${icuHemodynamicsNavBase}/learn`}
       activityMode
       documentFlow
+      desktopWorkspace
     >
       <HemodynamicsTaskDrafts taskId={activeStep.id}>
         <StageSourcesScope>
           <div
             className={`${shellStyles.shell} ${flowStyles.flow}`}
             data-lesson-shell
+            data-critical-care-activity-shell="true"
             data-stage={activeStep.id}
             data-presentation={presentation.kind}
             aria-label="Guided ICU hemodynamics section"
@@ -1852,16 +1906,13 @@ function HemodynamicsStageSession({
                 </p>
               </aside>
             ) : null}
-            <div className={flowStyles.activity}>{task}</div>
-            <footer className={flowStyles.references}>
-              <StageSourcesFooter
-                count={stageSources.evidenceIds.length}
-                label="Sources for this section"
-                claimsVisible={revealOpen}
-              >
-                <HemodynamicsSourceList records={stageSources.records} claimsVisible={revealOpen} />
-              </StageSourcesFooter>
-            </footer>
+            <div
+              className={flowStyles.activity}
+              data-single-column={visual ? undefined : onCaseStep ? 'case' : 'reading'}
+            >
+              {task}
+            </div>
+            {workspace ? null : sources}
             {helpDialog}
           </div>
         </StageSourcesScope>

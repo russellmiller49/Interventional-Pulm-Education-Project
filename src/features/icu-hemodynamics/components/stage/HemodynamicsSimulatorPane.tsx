@@ -35,6 +35,49 @@ import styles from './hemodynamics-stage.module.css'
 import flowStyles from './hemodynamics-flow.module.css'
 import type { HemodynamicsTaskPresentation } from '../../content/taskPresentation'
 
+/** The surfaces whose dock is empty: `dock` below returns nothing for them. */
+const UNDOCKED_SURFACES: ReadonlySet<StageSurface> = new Set([
+  'none',
+  'component-identification',
+  'question-trace',
+  'derived',
+])
+
+export function stageSurfaceHasDock(surface: StageSurface): boolean {
+  return !UNDOCKED_SURFACES.has(surface)
+}
+
+/**
+ * Whether the pane draws anything for a Learn step (one with a `presentation`): a monitor, an
+ * anatomy surface, an open dock, a retained demonstration comparison or a step workbench. A step
+ * with none of them is reading only, and the stage lays it out as one column rather than beside an
+ * empty pane.
+ */
+export function simulatorPaneShows({
+  presentation,
+  surface,
+  state,
+  baseline,
+  hasWorkbench,
+}: {
+  readonly presentation: HemodynamicsTaskPresentation
+  readonly surface: StageSurface
+  readonly state: HemodynamicSimulationState
+  readonly baseline?: HemodynamicSimulationState
+  readonly hasWorkbench: boolean
+}): boolean {
+  const showControls =
+    presentation.controls || state.catheter.balloonInflated || state.catheter.floatBalloonInflated
+  const lineDemo = surface === 'level-demo' || surface === 'zero-demo' || surface === 'scale-demo'
+  return (
+    presentation.monitor !== 'none' ||
+    presentation.anatomy !== 'none' ||
+    (showControls && stageSurfaceHasDock(surface)) ||
+    (lineDemo && baseline !== undefined) ||
+    hasWorkbench
+  )
+}
+
 /**
  * The simulator pane: the monitor, the controls the step opens, and the catheter map.
  *
