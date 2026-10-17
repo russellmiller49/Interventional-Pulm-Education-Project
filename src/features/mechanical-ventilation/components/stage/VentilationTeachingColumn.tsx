@@ -197,7 +197,8 @@ function Disclosure({
  *   3. the evidence this step asks you to read, when it asks — a worked figure or a separate
  *      normal reference — shown, with the limit that applies to it right beside it;
  *   4. the same three named disclosures: Worked example, More detail, Model limits. Sources are the
- *      list at the end of the page, and the lesson says so.
+ *      list below the lesson (the end of the text pane on a desktop, the end of the page below it),
+ *      and the lesson says so.
  * Sections 1–5 are shorter (they have fewer mechanism panels) but not a different template.
  * Nothing here is expanded on every step: a step shows its own reference and folds the rest under
  * a name that says what is inside.
@@ -445,8 +446,7 @@ export function VentilationTeachingColumn({
       )}
 
       <p className={flow.note}>
-        Sources for this section are listed{' '}
-        <a href={`#${VENTILATION_SOURCES_ID}`}>at the end of the page</a>.
+        Sources for this section are listed <a href={`#${VENTILATION_SOURCES_ID}`}>below</a>.
       </p>
     </section>
   )

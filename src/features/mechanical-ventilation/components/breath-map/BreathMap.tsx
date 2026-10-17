@@ -179,7 +179,7 @@ export function BreathMap({
   readonly answer?: BreathMapAnswer
   /** The breath walk: each stop becomes a pin to stand at. */
   readonly walk?: BreathMapWalk
-  /** `strip`: the one-line map under the clock bar. */
+  /** `strip`: the one-line map at the head of the text column on a console step. */
   readonly variant?: 'full' | 'strip'
 }) {
   if (variant === 'strip') return <BreathMapStrip emphasis={emphasis} />

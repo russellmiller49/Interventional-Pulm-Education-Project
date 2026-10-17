@@ -16,9 +16,10 @@ const scrollRoutes = [
     owner: 'document',
   },
   {
+    // Text and console panes that scroll on their own on a desktop (owner, 2026-10-15).
     id: 'mv',
     route: '/en/mechanical-ventilation/learn?activity=ventilation-and-co2',
-    owner: 'document',
+    owner: 'workspace',
   },
   {
     id: 'mcs',

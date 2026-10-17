@@ -32,7 +32,6 @@ import {
 import { holdStatus } from '../../engine/learningMeasurements'
 import type { VentilationAction, VentilatorDeviceId } from '../../engine/types'
 import { BedsidePanel } from '../BedsidePanel'
-import { BreathMap } from '../breath-map/BreathMap'
 import {
   MechanicalVentilatorConsole,
   type ConsoleInspection,
@@ -131,8 +130,8 @@ export function useOpeningRecord(session: LabSession) {
 }
 
 /**
- * The simulator, as one surface: the clock bar, a one-line breath map, the console itself, the
- * readings the step watches, and only the side cards this round needs — the teaching patient's
+ * The simulator, as one surface: the clock bar, the console itself, the readings the step watches,
+ * and only the side cards this round needs — the teaching patient's
  * mechanics, the bedside actions, the bedside findings, the predicted-body-weight card. The device
  * picker and Reset patient are folded at the foot.
  *
@@ -150,8 +149,8 @@ export function VentilationConsoleSurface({
   onPendingChange,
   onSelectDevice,
   onResetPatient,
-  showMapStrip,
   cue = null,
+  density,
 }: {
   readonly session: LabSession
   readonly step: VentilationStageStep
@@ -162,14 +161,17 @@ export function VentilationConsoleSurface({
   readonly onPendingChange: (pending: ConsolePendingSetting | null) => void
   readonly onSelectDevice: (device: VentilatorDeviceId) => void
   readonly onResetPatient: () => void
-  /** False on the breath-walk steps, where the full map leads the teaching column instead. */
-  readonly showMapStrip: boolean
   /**
-   * The task's next move, repeated in one line above the console: the Now card says it at the top
-   * of the page, and this says it where the learner's hands are once they have scrolled to the
-   * console.
+   * The task's next move, repeated on the clock bar: the Now card says it in the text column, and
+   * this says it where the learner's hands are, above the console.
    */
   readonly cue?: string | null
+  /**
+   * `laptop` in the desktop workspace, where the console shares a viewport-tall pane with its
+   * clock: the console's compact sizes (`mechanical-ventilation.module.css`, "Compact console"),
+   * so its screen, its tab row and its hardware keys fit the pane together.
+   */
+  readonly density?: 'laptop'
 }) {
   const state = session.simulation
   const presentation = step.presentation
@@ -211,6 +213,7 @@ export function VentilationConsoleSurface({
       data-console-surface
       data-console-mode={presentation.consoleMode}
       data-session-time={state.simulationTime}
+      data-mv-density={density}
     >
       <div className={styles.consoleCell}>
         <VentilationClockBar
@@ -218,13 +221,8 @@ export function VentilationConsoleSurface({
           engine={engine}
           frozenLabel={inspection?.label ?? null}
           guidedControlId={guidedControlId}
+          cue={cue}
         />
-        {cue ? (
-          <p className={styles.consoleCue} data-console-cue aria-hidden="true">
-            Next: {cue}
-          </p>
-        ) : null}
-        {showMapStrip ? <BreathMap variant="strip" emphasis={step.stops} /> : null}
         <div
           className={styles.consoleFrame}
           data-ventilation-console

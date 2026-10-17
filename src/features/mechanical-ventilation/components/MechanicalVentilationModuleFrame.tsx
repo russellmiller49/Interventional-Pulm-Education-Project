@@ -55,7 +55,9 @@ const releaseLabel =
 
 /**
  * Shared shell for the hub and every section page: module identity row, section nav, and the
- * safety boundary. In activity mode the shell hands the viewport to the lesson stage inside it.
+ * safety boundary. In activity mode the shell hands the viewport to the lesson stage inside it:
+ * on a desktop the page does not scroll and the stage's panes scroll on their own; below that the
+ * stage flows with the document. A task flow outside activity mode (a case) scrolls the document.
  */
 export function MechanicalVentilationModuleFrame({
   locale = 'en',
@@ -75,7 +77,7 @@ export function MechanicalVentilationModuleFrame({
       className={styles.moduleShell}
       data-activity-mode={activityMode || undefined}
       data-task-flow={taskFlow || undefined}
-      data-learning-scroll-owner={activityMode && !taskFlow ? 'workspace' : 'document'}
+      data-learning-scroll-owner={activityMode ? 'workspace' : 'document'}
       aria-label="Mechanical ventilation module"
     >
       <ModuleFrameV2
