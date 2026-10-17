@@ -355,7 +355,10 @@ export function Navigation() {
             </Link>
           </div>
           <DesktopNav items={navigationItems} activePath={pathname} />
-          <div className="hidden shrink-0 items-center justify-end gap-2 lg:flex">
+          <div
+            className="hidden shrink-0 items-center justify-end gap-2 lg:flex"
+            data-site-nav="desktop"
+          >
             <Button asChild variant="ghost" size="icon" className="h-9 w-9 min-[1700px]:hidden">
               <Link href={'/search' as Route} aria-label={nav('searchResources')}>
                 <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
