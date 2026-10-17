@@ -2,25 +2,45 @@ import type { ReactNode } from 'react'
 import type { McsPresentationKind } from '../../content/taskPresentation'
 import styles from './mcs-flow.module.css'
 
-/** The task is one reading/action surface. Each mechanism gives its visual a different role. */
+/**
+ * The task card's text: the teaching and the task, in the order each kind of task reads.
+ *
+ * The simulator is not in here. It used to be, arranged differently for each kind of task — beside
+ * the reading, under the question, inside a "Revisit the current circulation" or "Current pathway
+ * and readings" disclosure — and it now has the right-hand pane on every task, as in the ICU
+ * hemodynamics and mechanical ventilation sections. What stays per kind is the reading order of
+ * the text:
+ *
+ * - A reading task (a guided example, the walk) teaches first and then offers its controls.
+ * - A comparison or an explanation (Observe, Explain) puts the comparison first and the
+ *   explanation under it.
+ * - A question on a lab (timing, pump loading, the mechanism comparison) asks first; its mechanism
+ *   explanation is one click away beneath, so the question is met before its answer.
+ * - A patient case asks first and teaches after.
+ */
 export function McsTaskPresentation({
   kind,
   teaching,
-  visual,
   action,
   explaining,
   reference,
 }: {
   kind: McsPresentationKind
   teaching: ReactNode
-  visual: ReactNode
   action: ReactNode
   explaining: boolean
   reference: boolean
 }) {
   const explanation = <div className={styles.explanation}>{teaching}</div>
-  const observation = <div className={styles.observation}>{visual}</div>
   const decision = <div className={styles.decision}>{action}</div>
+  const labWithQuestion =
+    !reference &&
+    (kind === 'timing-lab' || kind === 'pump-loading-lab' || kind === 'mechanism-comparison')
+  const teachesFirst =
+    !explaining &&
+    (reference || kind === 'circulation-reader') &&
+    kind !== 'patient-case' &&
+    !(kind === 'parameter-reader' && !reference)
   return (
     <div
       className={styles.presentation}
@@ -33,83 +53,23 @@ export function McsTaskPresentation({
         <>
           {decision}
           {explanation}
-          <details>
-            <summary>Revisit the current circulation</summary>
-            {observation}
+        </>
+      ) : labWithQuestion ? (
+        <>
+          {decision}
+          <details data-mechanism-explanation>
+            <summary>Mechanism explanation</summary>
+            {explanation}
           </details>
         </>
-      ) : kind === 'timing-lab' ? (
-        <>
-          {observation}
-          <div className={styles.timingDiscussion}>
-            {reference ? explanation : null}
-            {decision}
-            {!reference ? (
-              <details>
-                <summary>Mechanism explanation</summary>
-                {explanation}
-              </details>
-            ) : null}
-          </div>
-        </>
-      ) : kind === 'mechanism-comparison' ? (
-        reference ? (
-          <>
-            {explanation}
-            {decision}
-            <details>
-              <summary>Live reference patient and optional views</summary>
-              {observation}
-            </details>
-          </>
-        ) : (
-          <>
-            {decision}
-            <details>
-              <summary>Current pathway and readings</summary>
-              {observation}
-            </details>
-            <details>
-              <summary>Mechanism explanation</summary>
-              {explanation}
-            </details>
-          </>
-        )
-      ) : kind === 'circulation-reader' ? (
-        <>
-          <div className={styles.reader}>
-            {explanation}
-            {observation}
-          </div>
-          {decision}
-        </>
-      ) : kind === 'parameter-reader' && reference ? (
+      ) : teachesFirst ? (
         <>
           {explanation}
           {decision}
-          <details>
-            <summary>Patient observations and support pathway</summary>
-            {observation}
-          </details>
-        </>
-      ) : kind === 'pump-loading-lab' ? (
-        <>
-          {reference ? explanation : null}
-          <div className={styles.loading}>
-            {observation}
-            {decision}
-          </div>
-          {!reference ? (
-            <details>
-              <summary>Mechanism explanation</summary>
-              {explanation}
-            </details>
-          ) : null}
         </>
       ) : (
         <>
           {decision}
-          {observation}
           {explanation}
         </>
       )}

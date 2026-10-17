@@ -37,6 +37,3 @@ export function mcsTaskPresentation(
     return 'pump-loading-lab'
   return kind
 }
-
-/** Deployment rollback changes the host presentation only; the same reducer and content remain. */
-export const MCS_TASK_PRESENTATIONS_ENABLED = true

@@ -73,17 +73,12 @@ export function McsSectionRecap({
 
       {explainIndex >= 0 ? (
         <p data-recap-reflection>
-          <strong>Optional reflection:</strong> {contract.reassessmentPrompt}{' '}
+          <strong>Reflection:</strong> {contract.reassessmentPrompt}{' '}
           <button type="button" onClick={() => onRevisit(explainIndex)}>
             Open it with its worked response
           </button>
         </p>
       ) : null}
-
-      <p className={styles.footnote} data-recap-boundary>
-        Visited marks show where you have been: a way back, not a record of answers and not a
-        measure of what you know.
-      </p>
     </section>
   )
 }

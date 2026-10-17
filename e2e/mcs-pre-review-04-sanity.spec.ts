@@ -30,10 +30,18 @@ async function open(page: Page, section: string) {
   }
   await expect(page.locator('[data-now-card]')).toBeVisible()
 }
+/** The task card's one way on (Next stop on the walk, Continue elsewhere); waits for the card to change. */
 async function forward(page: Page) {
-  const before = await page.locator('[data-now-card] p').first().textContent()
-  await page.locator('[data-step-bar-continue]').click()
-  await expect(page.locator('[data-now-card] p').first()).not.toHaveText(before!)
+  const where = () =>
+    page
+      .locator('[data-now-card]')
+      .evaluate(
+        (card) =>
+          `${card.querySelector('p')?.textContent ?? ''} | ${card.querySelector('h2')?.textContent ?? ''}`,
+      )
+  const before = await where()
+  await page.locator('[data-now-primary]').click()
+  await expect.poll(where).not.toBe(before)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -48,7 +56,7 @@ for (const width of [1280, 390]) {
       await forward(page)
     const sort = page.locator('[data-control-panel-sort]')
     const before = await page.evaluate((k) => localStorage.getItem(k), key)
-    await page.getByRole('button', { name: 'Show example classifications' }).click()
+    await page.getByRole('button', { name: 'Show the sort' }).click()
     await expect(sort.locator('[data-sort-outcome-label]')).toHaveText(
       Array(7).fill('Example classification.'),
     )
@@ -59,8 +67,10 @@ for (const width of [1280, 390]) {
         .evaluateAll((xs) => xs.every((x) => !(x as HTMLSelectElement).value)),
     ).toBe(true)
     await page.getByRole('button', { name: 'Try again', exact: true }).click()
+    // Check the sort appears once every row has a bin.
+    await expect(page.getByRole('button', { name: 'Check the sort' })).toHaveCount(0)
     for (const select of await sort.locator('select').all()) await select.selectOption({ index: 1 })
-    await page.getByRole('button', { name: 'Compare classifications' }).click()
+    await page.getByRole('button', { name: 'Check the sort' }).click()
     await page.getByRole('button', { name: 'Try again', exact: true }).click()
     expect(
       await sort

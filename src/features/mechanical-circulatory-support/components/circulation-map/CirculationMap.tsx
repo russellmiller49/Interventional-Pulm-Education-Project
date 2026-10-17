@@ -440,11 +440,6 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
       ) : null}
 
       {answer ? <CirculationMapAnswerRows answer={answer} options={orderedOptions} /> : null}
-
-      <p className={styles.footnote}>
-        A teaching schematic, not anatomy to scale. The pathway drawn follows the mechanism on
-        screen; the readings are on the monitor beside it.
-      </p>
     </div>
   )
 }

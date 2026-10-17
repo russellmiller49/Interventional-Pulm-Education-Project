@@ -85,8 +85,12 @@ describe('every step says where it is worked', () => {
     expect(document.querySelector('[data-now-where]')).toBeNull()
     walkTheLoop()
     expect(currentStepId()).toBe('mcs-foundations-mechanisms-recognize')
+    // The answer is in the task card; the circulation it is about is the simulator beside it,
+    // drawn once.
     expect(document.querySelector('[data-now-card] fieldset')).not.toBeNull()
-    expect(document.querySelector('[data-now-card] [data-circulation-map]')).not.toBeNull()
+    expect(document.querySelector('[data-flow-visual] [data-circulation-map]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-circulation-map]')).toHaveLength(1)
+    expect(document.querySelector('[data-now-where]')).toBeNull()
   })
 
   it('repeats the current task instruction in the help dialog', () => {
@@ -164,10 +168,24 @@ describe('the card keeps its promises', () => {
     performAction(sectionId)
     continueStep()
     expect(currentStepId()).toBe(`${sectionId}-observe`)
-    expect(document.querySelector('[data-captured-results]')?.textContent).toContain(
-      'Observed in this run.',
+    const results = document.querySelector('[data-captured-results]')
+    expect(results?.textContent).toMatch(
+      /^Your run\. .+, read at \d+\.\d{2} s \(start at \d+\.\d{2} s\)\./,
     )
-    expect(document.querySelector('[data-before-after]')?.textContent).toContain('Observed change')
+    const table = document.querySelector('[data-before-after]')!
+    expect([...table.querySelectorAll('thead th')].map((cell) => cell.textContent)).toEqual([
+      'Reading',
+      'Before',
+      'After',
+      'Change',
+    ])
+    // Every row is a captured reading, and says whether it moved.
+    const rows = [...table.querySelectorAll('tbody tr')]
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      expect(row.getAttribute('data-changed')).toMatch(/^(true|false)$/)
+      expect(row.textContent).not.toContain('not captured')
+    }
     expect(document.querySelector('[data-before-after-labels]')).toBeNull()
     expect(nowPrimary()?.textContent).toBe('Continue')
   })
@@ -209,7 +227,17 @@ describe('compact task continuity', () => {
   it('keeps the map answer and next action together without tabs', () => {
     mountSection('impella-suction-purge-rv')
     expect(document.querySelector('[data-map-answer-prompt]')).not.toBeNull()
-    expect(nowCard().querySelector('[data-circulation-map]')).not.toBeNull()
+    // The question is asked over the map it is answered on, in the simulator column.
+    const visual = document.querySelector<HTMLElement>('[data-flow-visual]')!
+    const callout = visual.querySelector('[data-map-question-callout]')
+    const contract = mcsSectionLearningContractById.get('impella-suction-purge-rv')!
+    expect(callout?.textContent).toContain(contract.recognizePrompt)
+    const answer = visual.querySelector<HTMLElement>('[data-circulation-map] [data-map-answer]')!
+    expect(answer).not.toBeNull()
+    // Choosing on the map puts Check answer in the card, beside the one way forward.
+    const correct = contract.recognizeOptions.find((option) => option.correct)!
+    fireEvent.click(within(answer).getByRole('radio', { name: new RegExp(correct.label) }))
+    expect(within(nowCard()).getByRole('button', { name: 'Check answer' })).toBeEnabled()
     expect(nowPrimary()).not.toBeNull()
     expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0)
   })

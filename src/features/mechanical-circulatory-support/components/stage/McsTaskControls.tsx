@@ -28,8 +28,8 @@ export function McsTaskControls({
   if (!controls.length)
     return (
       <p data-task-controls-locked>
-        No adjustment is suggested for this task. Explore all supported controls below if you want
-        to vary the model.
+        Nothing to adjust on this task. Every device control is under All device controls, at the
+        foot of this pane.
       </p>
     )
   return (
@@ -37,12 +37,12 @@ export function McsTaskControls({
       {controls.map((control) => {
         const meaning =
           control.id === 'control:patient-svr' || control.id === 'control:patient-rv-contractility'
-            ? 'Simulated patient condition'
+            ? 'Patient condition'
             : control.id === 'control:lvad-thrombosis' ||
                 control.id === 'control:impella-left-position'
-              ? 'Model fault'
+              ? 'Complication'
               : control.id === 'control:impella-right-enable'
-                ? 'Simulated device configuration'
+                ? 'Device configuration'
                 : 'Device setting'
         const range = (
           label: string,
@@ -181,7 +181,7 @@ export function McsTaskControls({
               : null}
             {control.id === 'control:impella-left-position' && state.device.kind === 'impella' ? (
               <label>
-                Simulated placement condition
+                Placement
                 <select
                   aria-label="Placement state"
                   value={state.device.left.position}
@@ -250,9 +250,8 @@ export function McsTaskControls({
         )
       })}
       <p className={styles.footnote}>
-        These controls focus the suggested exercise. All supported controls remain available below.
-        Patient properties and fault selectors create experimental conditions; they are not bedside
-        treatments. Captures use the session model time, not a clinical stabilization interval.
+        Patient-condition and complication controls set up what to read; they are not bedside
+        treatments.
       </p>
     </section>
   )

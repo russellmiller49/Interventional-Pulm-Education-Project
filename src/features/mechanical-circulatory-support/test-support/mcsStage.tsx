@@ -141,7 +141,10 @@ function clickPrimary(): void {
 
 /* ------------------------------------------------------------------ drivers */
 
-/** The walk on the section that walks the loop: Next stop until the last stop, then Continue. */
+/**
+ * The guided introduction and the walk on the sections that have them: the primary is Next stop
+ * until the walk's last stop, then Continue.
+ */
 export function completeIntroductorySteps(sectionId: string): void {
   const lesson = buildMcsStageLesson(sectionId)
   for (let guard = 0; guard < 30; guard += 1) {
@@ -179,7 +182,7 @@ export function answerIdentification(
   )
   if (!option) throw new Error(`${sectionId}: no ${choose} identification option`)
   chooseByLabel(option.label)
-  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Check answer' }))
 }
 
 /** Predict: choose the authored best answer (or a named plausibility) and commit it. */
@@ -193,21 +196,16 @@ export function commitPrediction(
     contract.predictionItem.choices.find((candidate) => candidate.plausibility === plausibility) ??
     contract.predictionItem.choices[0]
   chooseByLabel(choice.label)
-  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Check answer' }))
 }
 
-/** The Continue inside the prediction's verdict, which is the way past the commit point. */
+/** Past the prediction's verdict: the task card's one Continue, pinned at its foot. */
 export function continueFromVerdict(): void {
   clickPrimary()
 }
 
+/** The task card's one Continue, pinned at its foot. */
 export function continueStep(): void {
-  if (nowPrimary()?.textContent === 'Record observation') {
-    fireEvent.click(
-      within(nowCard()).getByRole('radio', { name: 'Unchanged within displayed precision' }),
-    )
-    clickPrimary()
-  }
   clickPrimary()
 }
 
@@ -290,7 +288,7 @@ export function commitSort(): void {
     const id = row.getAttribute('data-sort-candidate') ?? ''
     fireEvent.change(within(row).getByRole('combobox'), { target: { value: answers[id] ?? '' } })
   }
-  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare classifications' }))
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Check the sort' }))
 }
 
 /** Transfer: work the required actions in the new patient, by their visible controls. */
@@ -356,7 +354,7 @@ export function performTransferWork(sectionId: string): void {
     )
     fireEvent.click(
       within(observation as HTMLElement).getByRole('button', {
-        name: 'Record transfer observation',
+        name: 'Check answer',
       }),
     )
   }
@@ -369,7 +367,7 @@ export function commitTransfer(sectionId: string): void {
     transfer.item.choices.find((choice) => choice.plausibility === 'best') ??
     transfer.item.choices[0]
   chooseByLabel(best.label)
-  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
+  fireEvent.click(within(nowCard()).getByRole('button', { name: 'Check answer' }))
 }
 
 /** Walks a section from its first step to a worked-through completion, through the interface. */

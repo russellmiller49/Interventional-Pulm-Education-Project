@@ -1,18 +1,13 @@
 'use client'
 
-import { lazy, Suspense, useEffect, useId, useRef, type Dispatch } from 'react'
+import { lazy, Suspense, type Dispatch } from 'react'
 
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 
 import type { McsLearnControlId } from '../../content/learnControls'
 import type { McsMonitorTargetId } from '../../content/primarySurfaces'
-import {
-  MCS_STAGE_SURFACES,
-  MCS_STAGE_SURFACE_LABELS,
-  type McsStageLesson,
-  type McsStageSurfaceId,
-} from '../../content/stageLessons'
+import type { McsStageLesson, McsStageSurfaceId } from '../../content/stageLessons'
 import type { McsAction, McsSimulationState } from '../../engine/types'
 import {
   CirculationMap,
@@ -32,12 +27,13 @@ const McsAnatomy3D = lazy(() =>
 )
 
 /**
- * The simulator pane: the bedside monitor always, and three surfaces beside it.
+ * The simulator pane: the right-hand pane of every task but the unloading comparison.
  *
- * The circulation map, the controls and the three-dimensional view each sit behind a disclosure.
- * Every surface stays mounted; closed is `hidden`, not unmounted, so the controls keep their ids
- * and a step's spotlight can open-then-find. The map scrolls its own pane into view when a step
- * opens it, so the marked place is on screen without a click.
+ * Under the clock bar (the host's), a timing lab leads with its timing figure, then the circulation
+ * map where the task reads or answers on it, the task's own controls, the current readings, the
+ * full monitor in a disclosure that opens where the task points at it, and the three-dimensional
+ * view on request. The module's one statement that this is a teaching simulator is in the frame;
+ * the pane does not repeat it.
  */
 export function McsSimulatorPane({
   lesson,
@@ -48,20 +44,18 @@ export function McsSimulatorPane({
   flowAccountWithheld,
   emphasis,
   mapAnswer,
-  highlightControl,
   openSurfaces,
   onToggleSurface,
-  mapPreference,
   teachingAvailable = false,
-  timingIdentification = false,
   allowedActionIds,
   focusedControls = false,
+  highlightControl,
   monitorPointedAt = false,
   monitorOpen = monitorPointedAt,
   onMonitorToggle,
   stepKey,
 }: {
-  readonly presentation?: McsPresentationKind
+  readonly presentation: McsPresentationKind
   readonly lesson: McsStageLesson
   readonly state: McsSimulationState
   readonly dispatch: Dispatch<McsAction>
@@ -72,10 +66,9 @@ export function McsSimulatorPane({
   readonly highlightControl?: McsLearnControlId
   readonly openSurfaces: ReadonlySet<McsStageSurfaceId>
   readonly onToggleSurface: (surface: McsStageSurfaceId, open: boolean) => void
-  /** The step id that opened the map on entry, or null; the map scrolls into view once per value. */
+  /** The step id that opened the map on entry, or null. */
   readonly mapPreference: string | null
   readonly teachingAvailable?: boolean
-  readonly timingIdentification?: boolean
   readonly allowedActionIds?: readonly string[]
   readonly focusedControls?: boolean
   /**
@@ -88,86 +81,22 @@ export function McsSimulatorPane({
   /** The step on screen: each step starts its disclosures in that step's own default. */
   readonly stepKey?: string
 }) {
-  const baseId = useId()
-  const mapRef = useRef<HTMLDivElement>(null)
   const monitorTarget: McsMonitorTargetId | undefined =
     lesson.contract.primarySurface === 'monitor'
       ? (lesson.contract.primaryTarget as McsMonitorTargetId)
       : undefined
 
-  /*
-   * A step that opens the map leads with it: the map sits above the monitor, at the top of the
-   * pane, so the marked place is on screen without scrolling. Scrolling the pane to the map was
-   * tried first and could not be made to land — the monitor above it re-flows for seconds after a
-   * step is entered, and its alarm band changes height with the ticks — so the order of the
-   * surfaces carries the emphasis instead, the way the section contracts already say which surface
-   * leads. On every step the pane starts at its top.
-   */
-  const mapLeads = mapPreference !== null
-  useEffect(() => {
-    const scroller = mapRef.current?.closest<HTMLElement>('[role="region"]')
-    scroller?.scrollTo({ top: 0 })
-  }, [mapPreference])
-
-  const surfaceBody = (surface: McsStageSurfaceId) => {
-    switch (surface) {
-      case 'map':
-        return (
-          <div
-            ref={mapRef}
-            data-map-anchor
-            role={presentation || lesson.introductory ? 'group' : undefined}
-            aria-label={
-              presentation || lesson.introductory ? 'Circulation map scroll area' : undefined
-            }
-            className={presentation || lesson.introductory ? styles.readableMap : undefined}
-            tabIndex={presentation || lesson.introductory ? 0 : undefined}
-          >
-            {lesson.introductory ? (
-              <p className={styles.footnote}>
-                If the map extends beyond this view, scroll horizontally to inspect the full path at
-                readable label size.
-              </p>
-            ) : null}
-            <CirculationMap state={state} emphasis={emphasis} answer={mapAnswer} />
-          </div>
-        )
-      case 'controls':
-        return focusedControls ? (
-          <McsTaskControls
-            state={state}
-            dispatch={dispatch}
-            allowedActionIds={allowedActionIds ?? []}
-          />
-        ) : (
-          <McsControls
-            state={state}
-            dispatch={dispatch}
-            highlightControl={highlightControl}
-            allowedActionIds={allowedActionIds}
-          />
-        )
-      case 'anatomy':
-        return (
-          <SimulationLaunchGate
-            activityTitle="Three-dimensional view of the heart and the device"
-            minimumViewport="desktop"
-            bandwidthClass="heavy"
-            estimatedSizeLabel="Interactive heart and device model"
-            lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
-            theme="dark"
-          >
-            <Suspense
-              fallback={<p className={shellStyles.meta}>Loading the three-dimensional view…</p>}
-            >
-              <McsAnatomy3D state={state} />
-            </Suspense>
-          </SimulationLaunchGate>
-        )
-      default:
-        return null
-    }
-  }
+  const map = (
+    <div
+      data-map-anchor
+      role="group"
+      aria-label="Circulation map scroll area"
+      className={styles.readableMap}
+      tabIndex={0}
+    >
+      <CirculationMap state={state} emphasis={emphasis} answer={mapAnswer} />
+    </div>
+  )
 
   const fullMonitor = (
     <McsMonitor
@@ -179,191 +108,114 @@ export function McsSimulatorPane({
       withholdFlowAccount={flowAccountWithheld}
     />
   )
-  const monitor =
-    teachingAvailable && lesson.introductory ? (
-      <div className={styles.block} data-reference-readings>
-        <h3>Reference readings</h3>
-        <p>
-          Mean arterial pressure {state.metrics.mapMmHg.toFixed(0)} mm Hg · modeled concurrent
-          native flow {state.metrics.nativeFlowLMin.toFixed(1)} L/min.
-        </p>
-        <p>
-          {state.device.kind === 'iabp'
-            ? 'IABP: no separate pump-flow stream.'
-            : `Simulated pump estimate ${state.metrics.deviceFlowLMin.toFixed(1)} L/min.`}{' '}
-          Modeled effective systemic flow {state.metrics.effectiveSystemicFlowLMin.toFixed(1)}{' '}
-          L/min.
-        </p>
-        <details>
-          <summary>Full monitor and derived measurements</summary>
-          {fullMonitor}
-        </details>
-      </div>
-    ) : (
-      fullMonitor
-    )
-  const controlsLead =
-    focusedControls &&
-    allowedActionIds?.some((id) => !id.startsWith('inspect:') && !id.startsWith('device:select:'))
-  const surfaceOrder: readonly McsStageSurfaceId[] = mapLeads
-    ? ['map', 'controls', 'anatomy']
-    : [...MCS_STAGE_SURFACES]
 
-  if (timingIdentification) return <McsTimingFigure state={state} annotated={false} />
-
-  if (presentation) {
-    const showMap =
-      presentation === 'circulation-reader' ||
-      (presentation === 'mechanism-comparison' && !teachingAvailable) ||
-      presentation === 'pump-loading-lab' ||
-      mapAnswer !== null
-    const controls = allowedActionIds?.some(
-      (id) =>
-        !id.startsWith('inspect:') && !id.startsWith('device:select:') && id !== 'team:escalate',
-    )
-    return (
-      <div
-        className={styles.simulator}
-        data-simulator-surfaces
-        data-map-leads={showMap || undefined}
-      >
-        {/*
-         * The reference's legend and measured limits start open on the first timing step and on
-         * the step that names the relationship; on the demonstrations between they are folded,
-         * keyed by step so each step starts from its own default (F39).
-         */}
-        {presentation === 'timing-lab' ? (
-          <McsTimingFigure
-            key={`timing-${stepKey ?? ''}`}
-            state={state}
-            detailOpen={
-              stepKey === undefined ||
-              stepKey.endsWith('-normal-beat') ||
-              stepKey.endsWith('-recognize')
-            }
-          />
-        ) : null}
-        {showMap ? (
-          <section data-surface="map">
-            <h3>Circulation map</h3>
-            {surfaceBody('map')}
-          </section>
-        ) : null}
-        {controls ? (
-          <section data-surface="controls">
-            <h3>Controls for this task</h3>
-            {surfaceBody('controls')}
-          </section>
-        ) : null}
-        {!(
-          teachingAvailable &&
-          (presentation === 'circulation-reader' || presentation === 'mechanism-comparison')
-        ) ? (
-          <McsTaskReadings state={state} kind={presentation} withholdFlow={flowAccountWithheld} />
-        ) : null}
-        {/*
-         * Collapsed by default everywhere it used to be — including the steps whose own words say
-         * "Look here" at one of its traces, so the target of the instruction was behind a closed
-         * disclosure (F03). Those steps open it. It is keyed by step, so a learner who closes it
-         * keeps that preference on revisit; each unvisited step starts at its own default.
-         * Opening or closing it is display only: no model action, no clock tick, no progress.
-         */}
-        <details
-          key={`monitor-${stepKey ?? ''}`}
-          open={monitorOpen}
-          onToggle={(event) => onMonitorToggle?.(event.currentTarget.open)}
-          data-monitor-disclosure
-          data-monitor-pointed-at={monitorPointedAt || undefined}
-        >
-          <summary>
-            Full monitor and derived measurements
-            {monitorPointedAt ? ' · opened because this step points at it' : ''}
-          </summary>
-          {fullMonitor}
-        </details>
-        {!showMap ? (
-          <details>
-            <summary>Circulation map</summary>
-            {surfaceBody('map')}
-          </details>
-        ) : null}
-        {predictionCommitted || teachingAvailable ? (
-          <section data-surface="anatomy">
-            <button
-              type="button"
-              aria-expanded={openSurfaces.has('anatomy')}
-              onClick={() => onToggleSurface('anatomy', !openSurfaces.has('anatomy'))}
-            >
-              Optional three-dimensional view
-            </button>
-            {openSurfaces.has('anatomy') ? surfaceBody('anatomy') : null}
-          </section>
-        ) : null}
-        <p className={styles.boundaryNote} data-device-boundary>
-          Generic educational representation. No product display or manufacturer alarm limit is
-          reproduced.
-        </p>
-      </div>
-    )
-  }
-
+  const showMap =
+    presentation === 'circulation-reader' ||
+    (presentation === 'mechanism-comparison' && !teachingAvailable) ||
+    presentation === 'pump-loading-lab' ||
+    mapAnswer !== null
+  const controls = allowedActionIds?.some(
+    (id) =>
+      !id.startsWith('inspect:') && !id.startsWith('device:select:') && id !== 'team:escalate',
+  )
   return (
-    <div
-      className={styles.simulator}
-      data-simulator-surfaces
-      data-map-leads={mapLeads || undefined}
-    >
-      {controlsLead ? (
-        <section className={styles.surface} data-surface="controls" data-open="true">
-          <h3 className={styles.surfaceHeading}>Controls for this task</h3>
-          <div className={styles.surfaceBody}>{surfaceBody('controls')}</div>
+    <div className={styles.simulator} data-simulator-surfaces data-map-leads={showMap || undefined}>
+      {/*
+       * The reference's legend and measured limits start open on the first timing step and on
+       * the step that names the relationship; on the demonstrations between they are folded,
+       * keyed by step so each step starts from its own default (F39).
+       */}
+      {presentation === 'timing-lab' ? (
+        <McsTimingFigure
+          key={`timing-${stepKey ?? ''}`}
+          state={state}
+          detailOpen={
+            stepKey === undefined ||
+            stepKey.endsWith('-normal-beat') ||
+            stepKey.endsWith('-recognize')
+          }
+        />
+      ) : null}
+      {showMap ? (
+        <section data-surface="map">
+          <h3>Circulation map</h3>
+          {map}
         </section>
       ) : null}
-      {lesson.sectionId === 'iabp-timing-triggering' ? <McsTimingFigure state={state} /> : null}
-      {mapLeads ? null : monitor}
-      <div className={styles.surfaces}>
-        {surfaceOrder
-          .filter(
-            (surface) =>
-              !(controlsLead && surface === 'controls') &&
-              (surface === 'map' || predictionCommitted || teachingAvailable),
-          )
-          .map((surface) => {
-            const open = openSurfaces.has(surface)
-            const panelId = `${baseId}-${surface}`
-            return (
-              <section
-                key={surface}
-                className={styles.surface}
-                data-surface={surface}
-                data-open={open}
+      {controls ? (
+        <section data-surface="controls">
+          <h3>Controls for this task</h3>
+          {focusedControls ? (
+            <McsTaskControls
+              state={state}
+              dispatch={dispatch}
+              allowedActionIds={allowedActionIds ?? []}
+            />
+          ) : (
+            <McsControls
+              state={state}
+              dispatch={dispatch}
+              highlightControl={highlightControl}
+              allowedActionIds={allowedActionIds}
+            />
+          )}
+        </section>
+      ) : null}
+      {!(
+        teachingAvailable &&
+        (presentation === 'circulation-reader' || presentation === 'mechanism-comparison')
+      ) ? (
+        <McsTaskReadings state={state} kind={presentation} withholdFlow={flowAccountWithheld} />
+      ) : null}
+      {/*
+       * Collapsed by default, except on the steps whose own words say "Look here" at one of its
+       * traces (F03). It is keyed by step, so a learner who closes it keeps that preference on
+       * revisit; each unvisited step starts at its own default. Opening or closing it is display
+       * only: no model action, no clock tick, no progress.
+       */}
+      <details
+        key={`monitor-${stepKey ?? ''}`}
+        open={monitorOpen}
+        onToggle={(event) => onMonitorToggle?.(event.currentTarget.open)}
+        data-monitor-disclosure
+        data-monitor-pointed-at={monitorPointedAt || undefined}
+      >
+        <summary>Full monitor and derived measurements</summary>
+        {fullMonitor}
+      </details>
+      {!showMap ? (
+        <details>
+          <summary>Circulation map</summary>
+          {map}
+        </details>
+      ) : null}
+      {predictionCommitted || teachingAvailable ? (
+        <section data-surface="anatomy">
+          <button
+            type="button"
+            aria-expanded={openSurfaces.has('anatomy')}
+            onClick={() => onToggleSurface('anatomy', !openSurfaces.has('anatomy'))}
+          >
+            Three-dimensional view
+          </button>
+          {openSurfaces.has('anatomy') ? (
+            <SimulationLaunchGate
+              activityTitle="Three-dimensional view of the heart and the device"
+              minimumViewport="desktop"
+              bandwidthClass="heavy"
+              estimatedSizeLabel="Interactive heart and device model"
+              lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
+              theme="dark"
+            >
+              <Suspense
+                fallback={<p className={shellStyles.meta}>Loading the three-dimensional view…</p>}
               >
-                <h3 className={styles.surfaceHeading}>
-                  <button
-                    type="button"
-                    className={styles.surfaceToggle}
-                    aria-expanded={open}
-                    aria-controls={panelId}
-                    onClick={() => onToggleSurface(surface, !open)}
-                  >
-                    {MCS_STAGE_SURFACE_LABELS[surface]}
-                    <span className={styles.surfaceToggleHint}>{open ? 'Hide' : 'Show'}</span>
-                  </button>
-                </h3>
-                <div id={panelId} className={styles.surfaceBody} hidden={!open}>
-                  {/* References may open anatomy before questioning. Independent tasks gate it;
-                      closed 3D stays unmounted and uses the existing optional launch gate. */}
-                  {surface === 'anatomy' && !open ? null : surfaceBody(surface)}
-                </div>
-              </section>
-            )
-          })}
-      </div>
-      {mapLeads ? monitor : null}
-      <p className={styles.boundaryNote} data-device-boundary>
-        The monitor, the map and the controls are a simulation built for teaching. No product
-        display is imitated and no alarm limit is reproduced.
-      </p>
+                <McsAnatomy3D state={state} />
+              </Suspense>
+            </SimulationLaunchGate>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   )
 }

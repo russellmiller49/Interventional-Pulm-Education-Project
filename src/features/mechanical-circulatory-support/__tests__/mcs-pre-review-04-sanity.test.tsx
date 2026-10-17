@@ -30,11 +30,14 @@ afterEach(() => {
   teardownMcsStage()
 })
 
+/** The task card's one way forward (Next stop on the walk, Continue elsewhere). */
+function continueOn() {
+  fireEvent.click(document.querySelector<HTMLButtonElement>('[data-now-primary]')!)
+}
+
 function openSort() {
   mountSection('mcs-foundations-mechanisms')
-  for (let i = 0; i < 20 && !document.querySelector('[data-control-panel-sort]'); i++) {
-    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-step-bar-continue]')!)
-  }
+  for (let i = 0; i < 30 && !document.querySelector('[data-control-panel-sort]'); i++) continueOn()
   expect(document.querySelector('[data-control-panel-sort]')).not.toBeNull()
 }
 
@@ -46,7 +49,7 @@ it('allows an unanswered sort to reveal every classification, retry, and continu
       (s) => !s.value,
     ),
   ).toBe(true)
-  fireEvent.click(screen.getByRole('button', { name: /Show example classifications/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show the sort' }))
   expect(document.querySelectorAll('[data-sort-outcome-label]').length).toBeGreaterThan(0)
   for (const verdict of document.querySelectorAll('[data-sort-outcome-label]')) {
     expect(verdict).toHaveTextContent('Example classification.')
@@ -59,7 +62,7 @@ it('allows an unanswered sort to reveal every classification, retry, and continu
     expect(select).toBeEnabled()
     expect(select).toHaveValue('')
   }
-  fireEvent.click(document.querySelector<HTMLButtonElement>('[data-step-bar-continue]')!)
+  continueOn()
   expect(document.querySelector('[data-control-panel-sort]')).toBeNull()
 })
 
@@ -70,7 +73,7 @@ it('clears sort answers when Try again says it does', () => {
   )) {
     fireEvent.change(select, { target: { value: select.options[1].value } })
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Compare classifications' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Check the sort' }))
   fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
   for (const select of document.querySelectorAll<HTMLSelectElement>(
     '[data-control-panel-sort] select',
@@ -186,7 +189,8 @@ it('renders no review status on the optional preparatory reference or after ente
     screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
   ).not.toBeInTheDocument()
   expect(document.querySelector('[data-source-review-hold]')).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to the model' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Skip to the patient' }))
+  expect(document.querySelector('[data-prerequisite-reference]')).toBeNull()
   expect(
     screen.queryByText(/MCS-03-\d+|NOT REVIEWED|source-owner review required/i),
   ).not.toBeInTheDocument()

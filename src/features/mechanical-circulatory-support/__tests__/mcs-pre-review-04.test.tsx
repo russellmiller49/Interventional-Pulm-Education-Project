@@ -36,7 +36,6 @@ import {
   currentStepId,
   mountSection,
   nowCard,
-  nowStatus,
   performAction,
   setupMcsStage,
   storedLessonIds,
@@ -77,12 +76,23 @@ function storedEnvelope(): {
   }
 }
 
+/** The task card's one way forward: Next stop on the walk, Continue everywhere else. */
+function primary(): HTMLButtonElement {
+  return document.querySelector<HTMLButtonElement>('[data-now-primary]')!
+}
+
+function clockReading(): string {
+  return `${document.querySelector('[data-clock-bar]')?.getAttribute('data-clock-state') ?? ''} · ${
+    document.querySelector('[data-clock-time]')?.textContent ?? ''
+  }`
+}
+
 function goToKind(sectionId: string, kind: string) {
   const lesson = buildMcsStageLesson(sectionId)
   const target = lesson.steps.find((step) => step.interaction.kind === kind)
   if (!target) throw new Error(`${sectionId} has no ${kind} step`)
   for (let guard = 0; guard < 40 && currentStepId() !== target.id; guard += 1) {
-    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-step-bar-continue]')!)
+    fireEvent.click(primary())
   }
   expect(currentStepId()).toBe(target.id)
   return target
@@ -163,7 +173,7 @@ describe('the no-answer and skip-all paths', () => {
       const lesson = buildMcsStageLesson(sectionId)
       const last = lesson.steps[lesson.steps.length - 1]
       for (let guard = 0; guard < 40 && currentStepId() !== last.id; guard += 1) {
-        const button = document.querySelector<HTMLButtonElement>('[data-step-bar-continue]')!
+        const button = primary()
         expect(button).toBeEnabled()
         fireEvent.click(button)
       }
@@ -240,9 +250,6 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
     const feedback = document.querySelector('[data-identify-feedback]')!
     expect(feedback).toHaveAttribute('data-verdict-outcome', 'not-correct')
     expect(feedback).toHaveTextContent(/What holds:/)
-    expect(document.querySelector('[data-try-again-note]')).toHaveTextContent(
-      /clears your answer to this question only/i,
-    )
 
     fireEvent.click(within(nowCard()).getByRole('button', { name: 'Try again' }))
     expect(document.querySelector('[data-identify-feedback]')).toBeNull()
@@ -250,7 +257,7 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
     expect(within(nowCard()).queryByRole('button', { name: 'Try again' })).toBeNull()
     // Nothing about the wrong answer or the retry was stored.
     expect(window.localStorage.getItem(PROGRESS_KEY)).not.toMatch(/organs-perfused|retry|attempt/)
-    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-step-bar-continue]')!)
+    fireEvent.click(primary())
     expect(currentStepId()).toBe(`${sectionId}-predict`)
   })
 
@@ -258,10 +265,20 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
     const sectionId = 'mcs-foundations-signals'
     mountSection(sectionId)
     completeIntroductorySteps(sectionId)
-    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show explanation' }))
-    expect(document.querySelector('[data-provided-explanation]')).toHaveTextContent(
-      /does not submit an answer/,
+    const show = within(nowCard()).getByRole('button', { name: 'Show answer' })
+    expect(show).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(show)
+    expect(within(nowCard()).getByRole('button', { name: 'Hide answer' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
     )
+    // The answer is read, not given: the correct option's own explanation, with nothing chosen.
+    const correct = buildMcsStageLesson(sectionId).contract.recognizeOptions.find(
+      (option) => option.correct,
+    )!
+    const provided = document.querySelector('[data-provided-explanation]')!
+    expect(provided.querySelector('h3')).toHaveTextContent('Answer')
+    expect(provided).toHaveTextContent(correct.feedback)
     expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
     expect(document.querySelector('[data-identify-feedback]')).toBeNull()
     for (const radio of document.querySelectorAll<HTMLInputElement>(
@@ -283,7 +300,7 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
       const step = goToKind(sectionId, 'explain')
       const lesson = buildMcsStageLesson(sectionId)
       const reflection = document.querySelector<HTMLElement>('[data-optional-reflection]')!
-      expect(reflection).toHaveTextContent(/Optional reflection/i)
+      expect(reflection).toHaveTextContent(/^Reflection/)
       expect(reflection.querySelector('[data-reflection-prompt]')).toHaveTextContent(
         lesson.contract.reassessmentPrompt,
       )
@@ -296,12 +313,11 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
       const stage = document.querySelector('[data-mcs-stage]')!
       expect(stage.querySelectorAll('textarea, input[type="text"]')).toHaveLength(0)
       expect(stageText()).not.toMatch(/response saved|answer saved/i)
-      expect(nowStatus()).toMatch(/Nothing is typed or saved/)
 
       // The card's own instruction is the step's work, not the unanswerable question.
       expect(nowCard().querySelector('h2 + p')).toHaveTextContent(step.instruction)
       expect(within(nowCard()).queryByRole('button', { name: 'Try again' })).toBeNull()
-      expect(within(nowCard()).queryByRole('button', { name: 'Show explanation' })).toBeNull()
+      expect(within(nowCard()).queryByRole('button', { name: 'Show answer' })).toBeNull()
       const hasSort = step.interaction.kind === 'explain' && Boolean(step.interaction.sort)
       expect(Boolean(within(nowCard()).queryByRole('button', { name: 'Hint' }))).toBe(hasSort)
     },
@@ -309,15 +325,24 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
 })
 
 describe('F07 — a worked explanation is labelled as one', () => {
+  /*
+   * The label and the status line that said so went in the text-left round: the card no longer
+   * narrates itself. What stays is the thing they described — the section's teaching is in the task
+   * card, ahead of the question, before anything is answered — and that nothing claims it is held
+   * back until a commitment.
+   */
   it('says the explanation is on the page before the optional question', () => {
     const sectionId = 'mcs-foundations-signals'
     mountSection(sectionId)
     completeIntroductorySteps(sectionId)
-    expect(document.querySelector('[data-worked-explanation-label]')).toHaveTextContent(
-      /Worked explanation · open before, during or after the optional question/,
-    )
-    expect(nowStatus()).toMatch(/worked explanation is already on this page/)
-    expect(nowStatus()).toMatch(/nothing is counted/)
+    const teaching = nowCard().querySelector('[data-teaching-column]')
+    const question = nowCard().querySelector('fieldset[data-prediction-choices]')
+    expect(teaching).not.toBeNull()
+    expect(question).not.toBeNull()
+    expect(
+      teaching!.compareDocumentPosition(question!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
     expect(stageText()).not.toMatch(/covered until you commit|appears after submission/)
   })
 })
@@ -380,7 +405,7 @@ describe('F42 — the glossary from inside a lesson', () => {
       'fieldset[data-prediction-choices] input[type="radio"]',
     )!
     fireEvent.click(first)
-    const identity = document.querySelector('[data-session-identity]')!.textContent
+    const clock = clockReading()
     const step = currentStepId()
 
     fireEvent.click(screen.getByRole('button', { name: 'Glossary' }))
@@ -395,7 +420,7 @@ describe('F42 — the glossary from inside a lesson', () => {
 
     expect(currentStepId()).toBe(step)
     expect(first.checked).toBe(true)
-    expect(document.querySelector('[data-session-identity]')!.textContent).toBe(identity)
+    expect(clockReading()).toBe(clock)
   })
 
   it('is on every step of every section', () => {
@@ -504,10 +529,12 @@ describe('F18 — an optional clean timing view that hides no alarm', () => {
     mountSection(sectionId)
     goToKind(sectionId, 'identify')
     const letters = () => document.querySelectorAll('[data-iabp-landmark]').length
-    const alarm = () => document.querySelector('[data-context-strip], [data-stage-alarm]')
+    // The alarm chip on the clock bar, at the head of the simulator.
+    const alarm = () => document.querySelector('[data-clock-bar] [data-alarm-priority]')
     expect(letters()).toBeGreaterThan(0)
-    const alarmBefore = stageText().includes('Inflation before aortic-valve closure')
-    expect(alarmBefore).toBe(true)
+    const alarmBefore = alarm()?.textContent
+    expect(alarm()).not.toHaveAttribute('data-alarm-priority', 'none')
+    expect(stageText()).toContain('Inflation before aortic-valve closure')
 
     const toggle = screen.getByRole('checkbox', { name: /Optional clean view/ })
     fireEvent.click(toggle)
@@ -517,7 +544,7 @@ describe('F18 — an optional clean timing view that hides no alarm', () => {
     )
     // The model's alarm is still named: nothing was withheld to make the question harder.
     expect(stageText()).toContain('Inflation before aortic-valve closure')
-    expect(alarm).toBeDefined()
+    expect(alarm()?.textContent).toBe(alarmBefore)
 
     fireEvent.click(toggle)
     expect(letters()).toBeGreaterThan(0)
