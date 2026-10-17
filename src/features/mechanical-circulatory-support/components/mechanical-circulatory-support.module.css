@@ -355,7 +355,8 @@
   font-weight: 800;
   text-decoration: none;
 }
-.heroActions a:last-child {
+/* A second, secondary link. The one Continue is the first link and keeps the filled style. */
+.heroActions a:not(:first-child) {
   color: var(--navy-2);
   background: #fff;
   box-shadow: inset 0 0 0 1px #c7d8d4;
@@ -368,7 +369,6 @@
   height: 1rem;
 }
 
-.progressCard,
 .workbenchHero > aside {
   display: grid;
   align-content: center;
@@ -381,39 +381,12 @@
     linear-gradient(145deg, #0c3d47, #061b24);
   box-shadow: 0 24px 55px rgba(8, 39, 46, 0.18);
 }
-.progressCard > span {
-  color: #76ddcf;
-  font-size: 0.68rem;
-  font-weight: 850;
-  letter-spacing: 0.13em;
-}
-.progressCard > strong,
 .workbenchHero > aside strong {
   margin-top: 0.5rem;
   color: #fff;
   font-size: clamp(3.3rem, 6vw, 5.4rem);
   letter-spacing: -0.06em;
 }
-.progressCard > div {
-  height: 0.45rem;
-  margin: 0.4rem 0 1rem;
-  overflow: hidden;
-  border-radius: 1rem;
-  background: #254f57;
-}
-.progressCard > div i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #59cfc1, #abebdf);
-}
-.progressCard p {
-  margin: 0;
-  color: #d0e4e0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-.progressCard small,
 .workbenchHero > aside small {
   margin-top: 1rem;
   color: #92b6b7;
@@ -751,40 +724,6 @@
   margin-top: auto;
   color: #092e36;
   background: #83ddd2;
-}
-.releaseReview {
-  padding: 1rem 1.2rem;
-  margin: 1rem 0;
-  border-left: 0.3rem solid var(--amber);
-  color: #604b22;
-  background: #fff7e7;
-}
-.releaseReview p {
-  margin: 0.3rem 0 0;
-  font-size: 0.82rem;
-  line-height: 1.55;
-}
-.releaseReview details {
-  margin-top: 0.7rem;
-  font-size: 0.72rem;
-}
-.releaseReview summary {
-  cursor: pointer;
-  font-weight: 850;
-}
-.releaseReview ul {
-  display: grid;
-  gap: 0.25rem;
-  padding-left: 1.1rem;
-}
-.releaseReview li[data-complete='true'] {
-  color: #276c5f;
-}
-.releaseReview li small {
-  display: block;
-  margin-top: 0.15rem;
-  color: #806d48;
-  line-height: 1.4;
 }
 
 .deviceTabs {
@@ -2820,7 +2759,6 @@
   .workbenchHero h1 {
     font-size: clamp(2.15rem, 12vw, 3.6rem);
   }
-  .progressCard,
   .workbenchHero > aside {
     border-radius: 1rem;
   }
@@ -4506,12 +4444,9 @@
 /* ── Route and case orientation ─────────────────────────────────────────────── */
 .routeOrientation {
   display: grid;
-  gap: 1rem;
-  padding: 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: 1.1rem;
-  background: #fff;
+  gap: 0.85rem;
 }
+
 .routeGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
@@ -4785,8 +4720,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
 }
-.pathwaySection,
-.referenceSection {
+.pathwaySection {
   margin-top: 2.4rem;
 }
 .incrementList {
@@ -5126,12 +5060,9 @@
  * do, one Start/Resume, and the optional refresher. Light surface, the hero's own ink.
  */
 .hubObjectives {
-  position: relative;
-  z-index: 1;
   max-width: 850px;
-  margin-top: 1.25rem;
 }
-.hubObjectives h2 {
+.hubObjectives h3 {
   margin: 0;
   color: var(--navy);
   font-size: 1.05rem;
@@ -5165,8 +5096,8 @@
   outline-offset: 2px;
   border-radius: 0.2rem;
 }
-.hubHero > div > p.hubTimeNote,
-.hubHero > div > p.hubRefresher {
+.hubAboutBody p.hubTimeNote,
+.hubAboutBody p.hubRefresher {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   line-height: 1.5;
@@ -5189,4 +5120,160 @@
 .workbenchScope[data-mcs-studio='true'] [role='group'][aria-label='MCS shared activity phases'],
 .workbenchScope[data-mcs-studio='true'] [data-critical-care-activity-shell] header h1 + span {
   display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The hub, simplified (2026-10-17, after the ECMO tester's "one thing to do, then what is all the
+ * other stuff for?"): the hero is one line and the one Continue, the pathway follows it, the rest
+ * is one closed "About this module", and the module's boundary statement is a disclosure rather
+ * than a banner.
+ * ------------------------------------------------------------------------- */
+
+/*
+ * The hero lost its history card, so it is one column at every width; and it holds one line and one
+ * action now, so it is sized to leave the start of the pathway on the first screen.
+ */
+.hubHero {
+  grid-template-columns: minmax(0, 1fr);
+}
+.hubHero > div {
+  padding: clamp(1.4rem, 3vw, 2.6rem);
+}
+.hubHero h1 {
+  margin-top: 0;
+  font-size: clamp(2.15rem, 4vw, 3.6rem);
+  text-wrap: balance;
+}
+.hubHero .heroActions {
+  margin-top: 1.3rem;
+}
+.sectionHeading p.hubComposition {
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.hubAbout {
+  margin-top: 2.4rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff;
+}
+.hubAbout > summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  align-items: baseline;
+  min-height: 44px;
+  padding: 0.95rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+}
+.hubAbout > summary::-webkit-details-marker {
+  display: none;
+}
+.hubAbout > summary::before {
+  content: '▸';
+  color: var(--teal-text);
+}
+.hubAbout[open] > summary::before {
+  content: '▾';
+}
+.hubAbout > summary h2 {
+  display: inline;
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.hubAbout > summary span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.hubAbout[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+.hubAboutBody {
+  display: grid;
+  gap: 1.6rem;
+  padding: 1.1rem 1.1rem 1.4rem;
+}
+.hubAboutBody > section {
+  min-width: 0;
+}
+/* Only the About's own headings and paragraphs: the reference blocks keep their own styles. */
+.hubAboutBody > section > h3 {
+  margin: 0 0 0.5rem;
+  color: var(--navy);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.hubAboutBody > section > p,
+.routeOrientation > p {
+  max-width: 76ch;
+  margin: 0.75rem 0 0;
+  color: #2f4a50;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.hubAboutBody > section > h3 + p,
+.routeOrientation > p {
+  margin-top: 0;
+}
+
+.boundaryDisclosure > summary {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 24px;
+  cursor: pointer;
+  list-style: none;
+}
+.boundaryDisclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.boundaryDisclosure > summary svg {
+  width: 1rem;
+  height: 1rem;
+}
+.boundaryDisclosure > p {
+  max-width: 76ch;
+  margin: 0.3rem 0 0;
+}
+
+/* The shared frame draws the notice as a full-width bar; closed, this one is the size of its name. */
+.moduleShell section[role='note']:has(.boundaryDisclosure) {
+  width: fit-content;
+  max-width: calc(100% - 2 * clamp(1rem, 3vw, 2.5rem));
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+.moduleShell section[role='note']:has(.boundaryDisclosure[open]) {
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.9rem;
+}
+
+/*
+ * The reference blocks, one container deeper inside About, met the overflow `.foundationMaterial`
+ * answers above: opened at 390 px, the Impella card's flow table set the cards' column width and
+ * the page scrolled 27 px sideways. Same answer, for the tracks and for the items, so the table's
+ * own wrapper scrolls it instead.
+ */
+.referenceBlock .pathwayCards,
+.referenceBlock .pathwayCardGrid,
+.referenceBlock .pathwayCard,
+.referenceBlock .pathwayCardFields {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1200px) {
+  .referenceBlock .pathwayCardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.referenceBlock :global(section),
+.referenceBlock :global(article),
+.referenceBlock :global(div),
+.referenceBlock :global(dl),
+.referenceBlock :global(table) {
+  min-width: 0;
 }

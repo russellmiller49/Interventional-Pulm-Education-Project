@@ -101,38 +101,49 @@ const SCORE_LANGUAGE =
 /* ------------------------------------------------------------------ F02 hub */
 
 for (const size of SIZES) {
-  test(`F02 · hub leads with audience, objectives, Start and an optional refresher (${size.name})`, async ({
+  test(`F02 · hub opens on Start, the pathway under it, the rest in About this module (${size.name})`, async ({
     page,
   }) => {
     await page.setViewportSize(size)
     await page.goto(MCS, { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('[data-hub-audience]')).toBeVisible()
-    const objectives = page.locator('[data-hub-objective]')
-    expect(await objectives.count()).toBeGreaterThanOrEqual(3)
-    expect(await objectives.count()).toBeLessThanOrEqual(5)
-
     const start = page.locator('[data-mcs-continue]')
     await expect(start).toHaveText(/^Start — /)
-    // The way in comes before the pathway and before any reviewer material.
+    // The way in is on the first screen, and the pathway follows it before anything else.
+    const startBox = (await start.boundingBox())!
+    expect(startBox.y + startBox.height).toBeLessThanOrEqual(size.height)
     const order = await page.evaluate(() => {
       const top = (selector: string) =>
         document.querySelector(selector)!.getBoundingClientRect().top + window.scrollY
       return {
-        objectives: top('[data-hub-objectives]'),
         start: top('[data-mcs-continue]'),
         pathway: top('#mcs-hub-pathway'),
-        reviewer: top('[data-review-governance]'),
+        about: top('details[data-hub-about]'),
       }
     })
-    expect(order.objectives).toBeLessThan(order.start)
     expect(order.start).toBeLessThan(order.pathway)
-    expect(order.pathway).toBeLessThan(order.reviewer)
+    expect(order.pathway).toBeLessThan(order.about)
 
-    await expect(page.locator('[data-hub-refresher]')).toContainText('not required')
+    // Everything else is folded: the About disclosure and the one boundary statement are closed.
+    const about = page.locator('details[data-hub-about]')
+    expect(await about.evaluate((node) => (node as HTMLDetailsElement).open)).toBe(false)
+    await expect(page.locator('[data-hub-objectives]')).toBeHidden()
+    const boundary = page.locator('details[data-mcs-boundary]')
+    await expect(boundary).toHaveCount(1)
+    await expect(boundary.locator('> summary')).toHaveText(/^Teaching simulator/)
+    await expect(boundary.locator('p')).toBeHidden()
+    await expect(page.locator('[data-review-governance]')).toHaveCount(0)
     await expect(page.locator('[data-reviewer-layer]')).toHaveCount(0)
-    await expect(page.locator('[data-review-governance]')).toContainText(
-      'This is a teaching simulator.',
-    )
+    expect(await documentOverflow(page)).toBeLessThanOrEqual(1)
+
+    // Opened, each says what it holds and still fits.
+    await boundary.locator('> summary').click()
+    await expect(boundary.locator('p')).toContainText('Its numbers come from a model')
+    await about.locator('> summary').click()
+    await expect(page.locator('[data-hub-audience]')).toBeVisible()
+    const objectives = page.locator('[data-hub-objective]')
+    expect(await objectives.count()).toBeGreaterThanOrEqual(3)
+    expect(await objectives.count()).toBeLessThanOrEqual(5)
+    await expect(page.locator('[data-hub-refresher]')).toContainText('not required')
     expect(await documentOverflow(page)).toBeLessThanOrEqual(1)
 
     // An objective's link opens its section directly: the refresher gates nothing.
@@ -634,6 +645,8 @@ test('200% text at 390 px · hub objectives, the recap and the glossary stay ins
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(MCS, { waitUntil: 'domcontentloaded' })
   await enlargeText(page)
+  // The objectives are in the hub's closed "About this module"; open it to read them.
+  await page.locator('details[data-hub-about] > summary').click()
   await expect(page.locator('[data-hub-objectives]')).toBeVisible()
   // The blocks this slice added sit inside the viewport. (The hub as a whole already scrolled
   // sideways at this size before this slice; that is recorded in the handoff, not asserted here.)
@@ -694,6 +707,7 @@ for (const theme of ['light', 'dark'] as const) {
         })
 
     await page.goto(MCS, { waitUntil: 'domcontentloaded' })
+    await page.locator('details[data-hub-about] > summary').click()
     await expect(page.locator('[data-hub-objective]').first()).toBeVisible()
     expect(await contrast('[data-hub-objective]')).toBeGreaterThanOrEqual(4.5)
     expect(await contrast('[data-hub-refresher]')).toBeGreaterThanOrEqual(4.5)
