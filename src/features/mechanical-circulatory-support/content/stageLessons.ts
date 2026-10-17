@@ -260,7 +260,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       'recognize',
       'walk',
       'Walk the loop',
-      'Follow the circulation one stop at a time. Each stop lights on the Circulation map and names what a device does there; the few things to check at that place are in the Teaching panel, under On the loop.',
+      'Follow the circulation one stop at a time. Each stop lights on the Circulation map and names what a device does there; what to check at that place is listed under On the loop.',
       'Next stop',
       { kind: 'walk' },
       'Every device in this module is read on the same loop, and every later section stands at one of these stops. Walking it once is what makes a later "where" question answerable.',

@@ -7,12 +7,18 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(`${root}/learn?lesson=iabp-efficacy-limits`)
   await page.locator('[data-now-card], [data-prerequisite-reference]').first().waitFor()
-  const prerequisite = page.getByRole('button', { name: 'Continue to the model' })
-  if (await prerequisite.count()) await prerequisite.click()
-  await expect(page.locator('[data-step-bar-continue]')).toBeVisible()
+  // The section's one reference page before the patient; its way on is "Begin the patient example"
+  // ("Skip to the patient" is offered only before a reference's last page).
+  const prerequisite = page.getByRole('button', {
+    name: /^(Skip to the patient|Begin the patient example)$/,
+  })
+  if (await prerequisite.count()) await prerequisite.first().click()
+  await expect(page.locator('[data-now-primary]')).toBeVisible()
 })
 
-for (const selector of ['[data-step-bar-continue]', '[data-now-primary]']) {
+// The step bar's second Continue went with the text-left layout (2026-10-17); the task card's own
+// Continue, pinned to the foot of the text pane, is the one way on.
+for (const selector of ['[data-now-primary]']) {
   for (const activation of ['click', 'Enter', 'Space', 'double-click']) {
     test(`${selector}: ${activation} advances exactly one task`, async ({ page }) => {
       const button = page.locator(selector)
@@ -33,7 +39,7 @@ test('the learner’s monitor preference survives forward, back and rerender', a
   await expect(monitor).toHaveAttribute('open', '')
   await monitor.locator(':scope > summary').click()
   await expect(monitor).not.toHaveAttribute('open')
-  await page.locator('[data-step-bar-continue]').click()
+  await page.locator('[data-now-primary]').click()
   await expect(monitor).toHaveAttribute('open', '')
   await page.getByRole('button', { name: /Back to/ }).click()
   await expect(monitor).not.toHaveAttribute('open')
@@ -64,8 +70,10 @@ for (const width of [320, 390]) {
   test(`cutaway legend words fit at ${width}px and 200% text`, async ({ page }) => {
     await page.goto(`${root}/learn?lesson=impella-unloading-placement`)
     await page.locator('[data-now-card], [data-prerequisite-reference]').first().waitFor()
-    const prerequisite = page.getByRole('button', { name: 'Continue to the model' })
-    if (await prerequisite.count()) await prerequisite.click()
+    const prerequisite = page.getByRole('button', {
+      name: /^(Skip to the patient|Begin the patient example)$/,
+    })
+    if (await prerequisite.count()) await prerequisite.first().click()
     await page.setViewportSize({ width, height: 844 })
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
     const legend = page.locator('[data-cutaway-legend]')

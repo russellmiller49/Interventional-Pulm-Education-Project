@@ -14,16 +14,16 @@ export function McsTaskReadings({
 }) {
   const m = state.metrics
   const fields: [string, number | null | undefined, string, string][] = [
-    ['Mean arterial pressure', m.mapMmHg, 'mm Hg', 'Modeled pressure'],
-    ['Right atrial pressure', m.rapMmHg, 'mm Hg', 'Modeled filling pressure'],
-    ['Wedge pressure', m.pcwpMmHg, 'mm Hg', 'Modeled filling pressure'],
+    ['Mean arterial pressure', m.mapMmHg, 'mm Hg', 'Arterial line'],
+    ['Right atrial pressure', m.rapMmHg, 'mm Hg', 'Right-sided filling'],
+    ['Wedge pressure', m.pcwpMmHg, 'mm Hg', 'Left-sided filling'],
     ...(!withholdFlow
       ? ([
-          ['Concurrent native flow', m.nativeFlowLMin, 'L/min', 'Modeled forward flow'],
+          ['Concurrent native flow', m.nativeFlowLMin, 'L/min', 'The heart’s own forward flow'],
           ...(state.device.kind === 'iabp'
             ? []
             : [
-                ['Left pump estimate', m.leftDeviceFlowLMin, 'L/min', 'Simulated device estimate'],
+                ['Left pump estimate', m.leftDeviceFlowLMin, 'L/min', 'Estimated by the console'],
                 ...(state.device.kind === 'impella' && state.device.right.enabled
                   ? [
                       [
@@ -39,12 +39,12 @@ export function McsTaskReadings({
             'Effective systemic flow',
             m.effectiveSystemicFlowLMin,
             'L/min',
-            'Modeled flow accounting',
+            'What reaches the body',
           ],
         ] as [string, number | null | undefined, string, string][])
       : []),
     ...(kind === 'pump-loading-lab' || kind === 'parameter-reader'
-      ? ([['LV volume', m.lvedvMl, 'mL', 'Modeled volume']] as [
+      ? ([['LV volume', m.lvedvMl, 'mL', 'End-diastolic']] as [
           string,
           number | null | undefined,
           string,
@@ -53,8 +53,8 @@ export function McsTaskReadings({
       : []),
     ...(state.device.kind === 'lvad'
       ? ([
-          ['Electrical pump power', m.pumpPowerW, 'W', 'Derived teaching value'],
-          ['Pulsatility index', m.pulsatilityIndex, '', 'Derived teaching value'],
+          ['Electrical pump power', m.pumpPowerW, 'W', 'Measured by the controller'],
+          ['Pulsatility index', m.pulsatilityIndex, '', 'From the flow pulse'],
         ] as [string, number | null | undefined, string, string][])
       : []),
   ]
@@ -73,10 +73,6 @@ export function McsTaskReadings({
         ))}
       </dl>
       {state.device.kind === 'iabp' ? <p>IABP has no separate pump-flow stream.</p> : null}
-      <p>
-        Patient examination, mentation, urine output, skin findings and lactate trends require
-        bedside evaluation; they are not simulated.
-      </p>
     </section>
   )
 }

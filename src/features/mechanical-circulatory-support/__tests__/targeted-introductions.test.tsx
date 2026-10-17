@@ -50,9 +50,13 @@ function reachAct(id: string) {
   continueFromVerdict()
 }
 
-/** The run's identity line: which run this is and its simulated time. No seed is rendered. */
-function sessionIdentity(): string {
-  return document.querySelector('[data-session-identity]')?.textContent ?? ''
+/** The one clock, at the head of the simulator: its state and the simulated time. */
+function clockState(): string {
+  return document.querySelector('[data-clock-bar]')?.getAttribute('data-clock-state') ?? ''
+}
+
+function clockTime(): string {
+  return document.querySelector('[data-clock-time]')?.textContent ?? ''
 }
 
 describe('targeted introductions through the actual host', () => {
@@ -78,7 +82,9 @@ describe('targeted introductions through the actual host', () => {
     const id = 'mcs-foundations-mechanisms'
     mountSection(id)
     reachAct(id)
-    expect(sessionIdentity()).not.toMatch(/seed|Example number/i)
+    expect(document.querySelector('[data-clock-bar]')?.textContent).not.toMatch(
+      /seed|Example number/i,
+    )
     for (const [device, label] of [
       ['lvad', /Select durable LVAD/],
       ['impella', /Select Impella CP/],
@@ -102,7 +108,7 @@ describe('targeted introductions through the actual host', () => {
           `[data-comparison-metric="effectiveSystemicFlowLMin"] [data-device="${device}"]`,
         )?.textContent,
       ).toBe(actual.metrics.effectiveSystemicFlowLMin.toFixed(2))
-      expect(row.textContent).toContain('Captured at 8.00 s')
+      expect(row.textContent).toContain('Started at 8.00 s · read 8 s later · same patient')
       expect(row.textContent).not.toMatch(/Example number|\bseed\b/i)
     }
     expect(nowPrimary()).toBeEnabled()
@@ -127,7 +133,7 @@ describe('targeted introductions through the actual host', () => {
     expect(nowPrimary()).toBeEnabled()
     fireEvent.change(placement, { target: { value: 'too-deep' } })
     expect(nowPrimary()).toBeEnabled()
-    fireEvent.click(screen.getByRole('button', { name: 'Reset this model exercise' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Start this exercise again' }))
     expect(placement).toHaveValue('correct')
     expect(nowPrimary()).toBeEnabled()
     expect(storedLessonIds()).toEqual([])
@@ -144,13 +150,13 @@ describe('targeted introductions through the actual host', () => {
     expect(row.textContent).toContain('decreased')
     expect(nowPrimary()).toBeEnabled()
     fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Increased' }))
-    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Compare answer' }))
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Check answer' }))
     expect(document.querySelector('[data-observation-feedback]')).toHaveAttribute(
       'data-correct',
       'false',
     )
     expect(document.querySelector('[data-observation-feedback]')?.textContent).toContain(
-      'Not correct.',
+      'Not correct. It decreased.',
     )
     expect(within(nowCard()).getByRole('radio', { name: 'Decreased' })).toBeDisabled()
   })
@@ -162,36 +168,47 @@ describe('targeted introductions through the actual host', () => {
     performAction(id)
     continueStep()
     continueStep()
-    const priorIdentity = sessionIdentity()
+    // The new patient is the transfer step's own: its context is on the card, and not before.
+    expect(document.querySelector('[data-transfer-context]')).toBeNull()
     continueStep()
-    const transferIdentity = sessionIdentity()
-    expect(priorIdentity).not.toMatch(/^Transfer patient/)
-    expect(transferIdentity).toMatch(/^Transfer patient/)
+    expect(currentStepId()).toBe(`${id}-transfer`)
+    expect(document.querySelector('[data-transfer-context]')).not.toBeNull()
+    expect(clockState()).not.toBe('held')
     commitTransfer(id)
     fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
       target: { value: 'pressure' },
     })
     expect(storedLessonIds()).toEqual([]) // Changing source alone is insufficient.
-    const current = sessionIdentity()
+    const current = clockTime()
+    // Back: the earlier task as it was left, held, with nothing live to change.
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(sessionIdentity()).toMatch(/^Captured review/)
+    expect(currentStepId()).toBe(`${id}-explain`)
+    expect(clockState()).toBe('held')
+    expect(document.querySelector('[data-now-status]')).toHaveTextContent(
+      'An earlier task, as you left it.',
+    )
+    expect(document.querySelector('[data-transfer-context]')).toBeNull()
     expect(document.querySelectorAll('[data-task-controls] input:not(:disabled)')).toHaveLength(0)
+    expect(document.querySelector('[data-full-exploration]')).toBeNull()
     continueStep()
-    expect(sessionIdentity()).toBe(current)
+    // Return: the same transfer patient and the same moment, the work still done.
+    expect(currentStepId()).toBe(`${id}-transfer`)
+    expect(clockState()).not.toBe('held')
+    expect(clockTime()).toBe(current)
     expect(screen.getByRole('combobox', { name: 'Trigger source' })).toHaveValue('pressure')
     const observation = document.querySelector('[data-transfer-observation]')! as HTMLElement
     fireEvent.click(
       within(observation).getByRole('radio', { name: 'Unchanged within displayed precision' }),
     )
-    fireEvent.click(
-      within(observation).getByRole('button', { name: 'Record transfer observation' }),
-    )
+    fireEvent.click(within(observation).getByRole('button', { name: 'Check answer' }))
     expect(storedLessonIds()).toEqual([])
     expect(document.querySelector('[data-transfer-observation-feedback]')).not.toBeNull()
     fireEvent.click(within(nowCard()).getByRole('button', { name: 'Try again' }))
     expect(document.querySelector('[data-transfer-observation-feedback]')).toBeNull()
     expect(within(observation).getByRole('radio', { name: 'Increased' })).toBeEnabled()
     expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
+    // Try again clears the answers, not the patient or the work done on it.
+    expect(screen.getByRole('combobox', { name: 'Trigger source' })).toHaveValue('pressure')
   })
 
   it('keeps existing completion and attempt history across direct-link entry and a remount', () => {

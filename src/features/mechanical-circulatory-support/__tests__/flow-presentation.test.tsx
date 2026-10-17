@@ -42,12 +42,18 @@ it.each(mcsStageLessonIds)(
 
 it('switches only the conceptual mechanism drawing without changing the patient or recording work', () => {
   mountSection('mcs-foundations-mechanisms')
-  const before = document.querySelector('[data-session-identity]')?.textContent
+  // The clock bar heads the simulator: the device on the patient, its setting and the time.
+  const reading = () =>
+    `${document.querySelector('[data-clock-time]')?.textContent} | ${
+      document.querySelector('[data-context-line]')?.textContent
+    }`
+  const before = reading()
+  expect(before).toMatch(/\d+\.\d s \| Device · mechanism/)
   const storedBefore = window.localStorage.getItem('interventionalpulm:mcs-progress:v1')
   fireEvent.click(screen.getByRole('button', { name: 'Durable LVAD (continuous-flow pump)' }))
   expect(document.querySelector('[data-pathway="durable-continuous-flow-lvad"]')).not.toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Impella (LV-to-aorta microaxial pump)' }))
-  expect(document.querySelector('[data-session-identity]')?.textContent).toBe(before)
+  expect(reading()).toBe(before)
   expect(window.localStorage.getItem('interventionalpulm:mcs-progress:v1')).toBe(storedBefore)
 })
 

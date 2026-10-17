@@ -38,9 +38,9 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
     >
       <h3 id="story-problems-heading">Story problems</h3>
       <p className={styles.storyIntro}>
-        Two constructed illustrations, each sixty seconds. A colleague does one thing for a reason
-        that sounds sensible. Try an optional prediction or view the worked example directly. Run
-        the provided change on a separate copy of the circulation and compare the values.
+        Two short problems. In each, a colleague does one thing for a reason that sounds sensible.
+        Predict what happens or open the worked example, then run the change on a copy of this
+        circulation and compare the values.
       </p>
       {stories.map((story) => (
         <StoryCard

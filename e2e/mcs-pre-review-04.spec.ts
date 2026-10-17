@@ -42,40 +42,56 @@ async function openLesson(page: Page, lesson: string) {
   await expect(page.locator('[data-now-card]')).toBeVisible()
 }
 
+/** The task card's kicker: "Task N of M". */
 async function stepKicker(page: Page) {
   return (await page.locator('[data-now-card] p').first().textContent()) ?? ''
 }
 
-/** Continue until the step of the given 1-based ordinal is on screen; a pre-hydration click is retried. */
-async function goToStep(page: Page, ordinal: number) {
-  for (let guard = 0; guard < 40; guard += 1) {
-    const kicker = await stepKicker(page)
-    const current = Number(kicker.match(/Step (\d+) of/)?.[1] ?? 0)
-    if (current >= ordinal) return
-    await page.locator('[data-step-bar-continue]').click()
-    await page
-      .waitForFunction(
-        (previous) => (document.querySelector('[data-now-card] p')?.textContent ?? '') !== previous,
-        kicker,
-        { timeout: 4000 },
-      )
-      .catch(() => undefined)
-  }
-  throw new Error(`step ${ordinal} was not reached`)
+/**
+ * The task card's one way on — Next stop on the walk, Continue elsewhere — then wait for the card
+ * to change (its kicker, or the walk stop in its heading). A pre-hydration click is retried by the
+ * caller's loop.
+ */
+async function advance(page: Page) {
+  const before = await page.evaluate(() => {
+    const card = document.querySelector('[data-now-card]')
+    return `${card?.querySelector('p')?.textContent} | ${card?.querySelector('h2')?.textContent}`
+  })
+  await page.locator('[data-now-primary]').click()
+  await page
+    .waitForFunction(
+      (previous) => {
+        const card = document.querySelector('[data-now-card]')
+        return (
+          `${card?.querySelector('p')?.textContent} | ${card?.querySelector('h2')?.textContent}` !==
+          previous
+        )
+      },
+      before,
+      { timeout: 4000 },
+    )
+    .catch(() => undefined)
 }
 
-async function goToPhase(page: Page, phase: string) {
+/** Continue until the task of the given 1-based ordinal is on screen. */
+async function goToStep(page: Page, ordinal: number) {
   for (let guard = 0; guard < 40; guard += 1) {
-    const kicker = await stepKicker(page)
-    if (new RegExp(`· ${phase}$`, 'i').test(kicker.trim())) return
-    await page.locator('[data-step-bar-continue]').click()
-    await page
-      .waitForFunction(
-        (previous) => (document.querySelector('[data-now-card] p')?.textContent ?? '') !== previous,
-        kicker,
-        { timeout: 4000 },
-      )
-      .catch(() => undefined)
+    const current = Number((await stepKicker(page)).match(/Task (\d+) of/)?.[1] ?? 0)
+    if (current >= ordinal) return
+    await advance(page)
+  }
+  throw new Error(`task ${ordinal} was not reached`)
+}
+
+/** Continue until the section's task for this phase (`<section>-<phase>`) is on screen. */
+async function goToPhase(page: Page, phase: string) {
+  const suffix = `-${phase.toLowerCase()}`
+  for (let guard = 0; guard < 40; guard += 1) {
+    const stage = await page
+      .locator('[data-critical-care-activity-shell]')
+      .getAttribute('data-stage')
+    if (stage?.endsWith(suffix)) return
+    await advance(page)
   }
   throw new Error(`phase ${phase} was not reached`)
 }
@@ -170,11 +186,12 @@ for (const size of SIZES) {
       'organ response is the top',
     )
     expect(await page.locator('[data-mcs-stage]').innerText()).not.toMatch(/bottom rung/i)
-    // The optional detail is a native disclosure, reachable from the keyboard.
-    const detail = page.locator('[data-rung-detail="oxygen-delivery"] summary')
-    await detail.focus()
+    // The optional detail is a native disclosure, reachable from the keyboard. The teaching-first
+    // round (0be5dda9) kept it on the organ-response rung only.
+    const rung = page.locator('[data-rung-detail="organ-response"]').first()
+    await rung.locator('> summary').focus()
     await page.keyboard.press('Enter')
-    await expect(page.locator('[data-rung-detail="oxygen-delivery"]')).toHaveAttribute('open', '')
+    await expect(rung).toHaveAttribute('open', '')
     // The panel's own text equivalent is a visible, closed disclosure — not screen-reader-only.
     const inWords = page.locator('[data-panel-section="signals-ladder"] > [data-text-equivalent]')
     await expect(inWords.locator('> summary')).toBeVisible()
@@ -190,9 +207,16 @@ test('no answer → explanation → continue, through a whole section, to a reca
 }) => {
   await openLesson(page, 'mcs-foundations-signals')
   await goToPhase(page, 'Recognize')
-  await goToStep(page, 4)
-  await expect(page.locator('[data-worked-explanation-label]')).toBeVisible()
-  await page.locator('[data-now-card]').getByRole('button', { name: 'Show explanation' }).click()
+  await expect.poll(() => stepKicker(page)).toMatch(/Task 4 of 9/)
+  // The section's teaching is in the card, ahead of the question, before anything is answered.
+  await expect(page.locator('[data-now-card] [data-teaching-column]')).toBeVisible()
+  const show = page.locator('[data-now-card]').getByRole('button', { name: 'Show answer' })
+  await expect(show).toHaveAttribute('aria-expanded', 'false')
+  await show.click()
+  // The same control now hides it again.
+  await expect(
+    page.locator('[data-now-card]').getByRole('button', { name: 'Hide answer' }),
+  ).toHaveAttribute('aria-expanded', 'true')
   await expect(page.locator('[data-provided-explanation]')).toBeVisible()
   expect(await page.locator('input[type="radio"]:checked').count()).toBe(0)
 
@@ -217,7 +241,7 @@ test('no answer → explanation → continue, through a whole section, to a reca
   // A recap link goes back to a step.
   await recap.locator('[data-recap-revisit-disclosure] > summary').click()
   await recap.locator('[data-recap-step]').nth(3).click()
-  await expect.poll(() => stepKicker(page)).toMatch(/Step 4 of 9/)
+  await expect.poll(() => stepKicker(page)).toMatch(/Task 4 of 9/)
 })
 
 test('wrong answer → supported explanation → retry → continue, with no total', async ({ page }) => {
@@ -226,7 +250,7 @@ test('wrong answer → supported explanation → retry → continue, with no tot
   const card = page.locator('[data-now-card]')
   await expect(card.getByRole('button', { name: 'Try again' })).toHaveCount(0)
   await page.getByLabel(/Whether the organs are being perfused/).check()
-  await card.getByRole('button', { name: 'Compare answer' }).click()
+  await card.getByRole('button', { name: 'Check answer' }).click()
   const feedback = page.locator('[data-identify-feedback]')
   await expect(feedback).toContainText('Not correct.')
   await expect(feedback).toContainText('Organ response is the top of the ladder')
@@ -235,8 +259,8 @@ test('wrong answer → supported explanation → retry → continue, with no tot
   await expect(feedback).toHaveCount(0)
   expect(await page.locator('input[type="radio"]:checked').count()).toBe(0)
   expect(await storedProgress(page)).not.toMatch(/organs-perfused|attempt/)
-  await page.locator('[data-step-bar-continue]').click()
-  await expect.poll(() => stepKicker(page)).toMatch(/Step 5 of 9/)
+  await page.locator('[data-now-primary]').click()
+  await expect.poll(() => stepKicker(page)).toMatch(/Task 5 of 9/)
 })
 
 test('F11 · Hint is this item’s nudge and Help is the instruction; focus returns to the trigger', async ({
@@ -275,8 +299,11 @@ test('F11 · the Explain question is an optional reflection with a worked respon
   await expect(worked).toHaveAttribute('open', '')
   await expect(worked).toContainText('Lead with the limiting problem')
   expect(await storedProgress(page)).not.toMatch(/reflection|response/i)
-  await page.locator('[data-step-bar-continue]').click()
-  await expect.poll(() => stepKicker(page)).toMatch(/Transfer/)
+  await page.locator('[data-now-primary]').click()
+  await expect(page.locator('[data-critical-care-activity-shell]')).toHaveAttribute(
+    'data-stage',
+    'iabp-efficacy-limits-transfer',
+  )
 })
 
 test('review all: every optional explanation and reference opened on every step, then continue', async ({
@@ -284,7 +311,7 @@ test('review all: every optional explanation and reference opened on every step,
 }) => {
   await openLesson(page, 'mcs-device-selection-integration')
   for (let step = 1; step <= 6; step += 1) {
-    await expect.poll(() => stepKicker(page)).toMatch(new RegExp(`Step ${step} of 6`))
+    await expect.poll(() => stepKicker(page)).toMatch(new RegExp(`Task ${step} of 6`))
     // Open every closed disclosure in the lesson, innermost last, until none is left closed.
     for (let pass = 0; pass < 6; pass += 1) {
       const opened = await page.evaluate(() => {
@@ -299,15 +326,15 @@ test('review all: every optional explanation and reference opened on every step,
       await page.waitForTimeout(100)
     }
     expect(await page.locator('[data-mcs-stage] details:not([open])').count()).toBe(0)
-    const show = page.locator('[data-now-card]').getByRole('button', { name: 'Show explanation' })
+    const show = page.locator('[data-now-card]').getByRole('button', { name: 'Show answer' })
     if (await show.count()) {
       await show.click()
       await expect(page.locator('[data-provided-explanation]')).toBeVisible()
     }
     // Nothing was answered by reading, and the way on still works.
     expect(await page.locator('[data-mcs-stage] input[type="radio"]:checked').count()).toBe(0)
-    await expect(page.locator('[data-step-bar-continue]')).toBeEnabled()
-    if (step < 6) await page.locator('[data-step-bar-continue]').click()
+    await expect(page.locator('[data-now-primary]')).toBeEnabled()
+    if (step < 6) await page.locator('[data-now-primary]').click()
   }
   await expect(page.locator('[data-section-recap]')).toBeVisible()
   expect(await page.locator('[data-mcs-stage]').innerText()).not.toMatch(SCORE_LANGUAGE)
@@ -373,7 +400,6 @@ test('F18 · the optional clean timing view hides letters, never the alarm, and 
 }) => {
   await openLesson(page, 'iabp-timing-triggering')
   await goToStep(page, 6)
-  await expect(page.locator('[data-now-card] h2 + p').first()).toContainText('annotated')
   const letters = page.locator('[data-iabp-landmark]')
   expect(await letters.count()).toBeGreaterThan(0)
   const stage = page.locator('[data-mcs-stage]')
@@ -455,20 +481,31 @@ for (const size of SIZES) {
     await openLesson(page, 'impella-unloading-placement')
     await goToStep(page, 3)
     await page.locator('fieldset[data-prediction-choices] input[type="radio"]').first().check()
-    const before = {
-      kicker: await stepKicker(page),
-      identity: await page.locator('[data-session-identity]').innerText(),
-      scroll: await page.evaluate(() => window.scrollY),
-    }
     const trigger = page.locator('[data-glossary-trigger]')
     await trigger.focus()
+    // Where the learner is: the task, the clock, and every scroller (in the desktop workspace the
+    // page does not scroll; the text pane, or the one task pane, does).
+    const place = () =>
+      page.evaluate(() => ({
+        page: window.scrollY,
+        text: document.querySelector('[data-flow-teaching]')?.scrollTop ?? 0,
+        pane: document.querySelector('[data-flow-content]')?.scrollTop ?? 0,
+      }))
+    const clock = () =>
+      page
+        .locator('[data-clock-bar]')
+        .evaluate(
+          (bar) =>
+            `${bar.getAttribute('data-clock-state')} · ${bar.querySelector('[data-clock-time]')?.textContent}`,
+        )
+    const before = { kicker: await stepKicker(page), clock: await clock(), place: await place() }
     await page.keyboard.press('Enter')
     const dialog = page.locator('dialog[open]')
     await expect(dialog).toContainText('Glossary')
     await expect(dialog.locator('[data-term-id]')).toHaveCount(8)
     await expect(dialog.locator('[data-naming-row="impella-cp"]')).toContainText('Impella 5.5')
     await expect(dialog.locator('[data-naming-row="lvad"]')).toContainText(
-      'not a HeartMate 3 simulator',
+      'controller works as the HeartMate 3 controller does',
     )
     // The dialog fits the viewport and scrolls inside itself.
     const box = await dialog.boundingBox()
@@ -477,7 +514,8 @@ for (const size of SIZES) {
     await expect(page.locator('dialog[open]')).toHaveCount(0)
     await expect(trigger).toBeFocused()
     expect(await stepKicker(page)).toBe(before.kicker)
-    expect(await page.locator('[data-session-identity]').innerText()).toBe(before.identity)
+    expect(await clock()).toBe(before.clock)
+    expect(await place()).toEqual(before.place)
     expect(
       await page.locator('fieldset[data-prediction-choices] input[type="radio"]:checked').count(),
     ).toBe(1)
@@ -504,8 +542,8 @@ for (const size of SIZES) {
       await page.waitForTimeout(500)
     }
     const studio = page.locator('[data-mechanism-studio]')
-    await expect(studio).toContainText('open sandbox on this module’s reference patient')
-    await expect(studio).toContainText('no case to solve, no question to answer and no debrief')
+    await expect(studio).toContainText('open sandbox on the reference patient')
+    await expect(studio).toContainText('There is no case to solve and nothing here is recorded')
     // The six-stage stepper and the mode badge are gone for the sandbox.
     await expect(
       page.locator('[role="group"][aria-label="MCS shared activity phases"]'),
@@ -622,7 +660,8 @@ for (const lesson of ['mcs-foundations-signals', 'mcs-device-selection-integrati
     await page.setViewportSize({ width: 320, height: 740 })
     await openLesson(page, lesson)
     await expect(page.locator('[data-glossary-trigger]')).toBeVisible()
-    await expect(page.locator('[data-step-bar-continue]')).toBeVisible()
+    // The one way on is the card's Continue, pinned to the foot of the text pane.
+    await expect(page.locator('[data-now-footer="pinned"] [data-now-primary]')).toBeInViewport()
     await expect(page.locator('[data-model-limits]')).toHaveCount(0)
     expect(await documentOverflow(page)).toBeLessThanOrEqual(1)
   })

@@ -17,10 +17,18 @@ async function openLesson(page: Page, lesson: string) {
   await expect(page.locator('[data-now-card]')).toBeVisible()
 }
 
+/** The task card's one way on: Next stop on the walk (same task, next stop), Continue elsewhere. */
 async function continueStep(page: Page) {
-  const prior = await page.locator('[data-mcs-task-flow]').getAttribute('data-stage')
-  await page.locator('[data-step-bar-continue]').click()
-  await expect(page.locator('[data-mcs-task-flow]')).not.toHaveAttribute('data-stage', prior!)
+  const where = () =>
+    page.evaluate(
+      () =>
+        `${document.querySelector('[data-mcs-task-flow]')?.getAttribute('data-stage')} | ${
+          document.querySelector('[data-now-card] h2')?.textContent
+        }`,
+    )
+  const prior = await where()
+  await page.locator('[data-now-primary]').click()
+  await expect.poll(where).not.toBe(prior)
 }
 
 async function reach(page: Page, selector: string) {
@@ -76,24 +84,23 @@ for (const size of [
     await page.setViewportSize(size)
     await openLesson(page, 'mcs-foundations-signals')
     await expect(page.getByText('Clinical perfusion evaluation', { exact: true })).toBeVisible()
-    await page.locator('[data-run-details] summary').click()
-    await expect(page.locator('[data-run-details] p')).toContainText(
-      'The simulated clock moves only while display playback runs',
-    )
-    await expect(page.locator('[data-run-details]')).not.toContainText(/Example number|seed/i)
+    // The run is identified by the one clock at the head of the simulator (it replaced the run
+    // details): whether the circulation runs and its simulated time, with no seed or example number.
+    const clock = page.locator('[data-flow-visual] [data-clock-bar]')
+    await expect(clock).toHaveAttribute('data-clock-state', 'paused')
+    await expect(clock.locator('[data-clock-time]')).toHaveText(/^Paused at \d+\.\d s$/)
+    await expect(clock).not.toContainText(/Example number|seed/i)
     await capture(page, 'clinical-perfusion-and-identity')
     await reach(page, '[data-task-readings]')
-    await expect(page.locator('[data-task-readings]')).toContainText(
-      'bedside evaluation; they are not simulated.',
-    )
     await reach(page, '[data-causal-ladder-summary]')
     await page
       .getByText('Reading the result: pressure, flow, oxygen delivery, patient response', {
         exact: true,
       })
       .click()
+    // Patient response is clinical evaluation: taught as what is read at the bedside.
     await expect(page.locator('[data-causal-ladder-summary]')).toContainText(
-      'require clinical evaluation; these responses are not simulated.',
+      'Mentation, urine output, skin findings and the lactate trend are read at the bedside.',
     )
     await capture(page, 'clinical-boundaries')
     await openLesson(page, 'lvad-parameters-assessment')
@@ -117,13 +124,13 @@ for (const size of [
       await expect(page.locator(`[data-now-card] [data-mcs-control="${id}"]`).first()).toBeEnabled()
     }
     await reach(page, '[data-retained-comparison]')
-    await page.getByText('Captured configurations and patient identity', { exact: true }).click()
+    await page.getByText('Settings for each run', { exact: true }).click()
     for (const id of ['iabp', 'impella', 'lvad']) {
       await expect(page.locator(`[data-comparison-device="${id}"] small`)).toContainText(
-        /Captured at \d+\.\d\d s/,
+        /Started at \d+\.\d\d s/,
       )
       await expect(page.locator(`[data-comparison-device="${id}"] small`)).toContainText(
-        'observation 8 s · patient',
+        'read 8 s later · same patient',
       )
     }
     await capture(page, 'captured-identities')

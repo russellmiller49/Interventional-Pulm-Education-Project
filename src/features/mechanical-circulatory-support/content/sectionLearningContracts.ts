@@ -698,7 +698,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'The rhythm becomes atrial fibrillation with variable cycle lengths, and some assisted beats land in the wrong place.',
     transferPrompt:
-      'Decide how to evaluate a trigger change with an irregular rhythm, then change the trigger source in the Controls under the monitor.',
+      'Decide how to evaluate a trigger change with an irregular rhythm, then change the trigger source under Controls for this task.',
     completionCondition:
       'Recorded once inflation has been returned to within 20 ms of the notch, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -1194,7 +1194,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'A left-sided pump is running at a high level when preload falls abruptly and a suction pattern appears with a lower effective flow.',
     transferPrompt:
-      'Choose the safest immediate response, then make that change to the performance level in the Controls under the monitor.',
+      'Choose the safest immediate response, then make that change to the performance level under Controls for this task.',
     completionCondition:
       'Recorded once right-sided support has been started, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {

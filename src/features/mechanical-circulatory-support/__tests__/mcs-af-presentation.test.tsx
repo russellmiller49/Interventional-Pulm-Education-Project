@@ -119,9 +119,7 @@ describe('the limitation is at the trigger control, before the trigger is chosen
     expect(description!.textContent).toContain(MCS_AF_TRIGGER_LIMIT.modelRating)
     expect(description!.textContent).toContain(MCS_AF_TRIGGER_LIMIT.atTheControl)
     // Nothing has been performed yet: the note precedes the choice, it does not report on it.
-    expect(document.querySelector('[data-transfer-work-status]')?.textContent).toBe(
-      'You can explore any controls or continue without performing the suggested exercise.',
-    )
+    expect(document.querySelector('[data-transfer-work-status]')?.textContent).toBe('')
     expect(document.querySelector('[data-transfer-work]')?.getAttribute('data-met')).toBe('false')
   })
 
@@ -199,7 +197,7 @@ describe('the limitation is at the trigger control, before the trigger is chosen
     const card = document.querySelector<HTMLElement>('[data-now-card]')!
 
     fireEvent.click(within(card).getByLabelText(new RegExp(keepEcg.label.slice(0, 60))))
-    fireEvent.click(within(card).getByRole('button', { name: 'Compare answer' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Check answer' }))
 
     const verdict = document.querySelector<HTMLElement>('[data-verdict]')!
     expect(verdict.textContent).toContain(keepEcg.rationale)

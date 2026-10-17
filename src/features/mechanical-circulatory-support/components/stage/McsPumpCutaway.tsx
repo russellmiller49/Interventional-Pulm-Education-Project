@@ -146,8 +146,8 @@ export function McsPumpCutaway() {
         </li>
       </ul>
       <figcaption>
-        Aligned conceptual reference · not to scale. Blood flow and catheter insertion run in
-        different directions. No insertion depth or manipulation technique is represented.
+        Not to scale. Blood flows from the inlet in the ventricle to the outlet in the aorta, the
+        opposite direction to the one the catheter was inserted.
       </figcaption>
     </figure>
   )
