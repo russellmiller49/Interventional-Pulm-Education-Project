@@ -522,6 +522,25 @@ body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
   }
 }
 
+/*
+ * The site header switches to its compact menu by the room it has in rem, not only by the
+ * viewport's pixels (`lg:` in the navigation), so enlarged text gets the compact menu too. At 200 %
+ * text the desktop row wrapped to three or four rows, 297–377 px of a 900 px window; the threshold
+ * is the `lg` breakpoint in rem, so at the default text size nothing changes from 1024 px up.
+ * `SiteHeaderHeight` keeps `--site-header-height` equal to whatever the header measures.
+ */
+.site-header {
+  container: site-header / inline-size;
+}
+@container site-header (max-width: 62rem) {
+  .site-header [data-site-nav='desktop'] {
+    display: none;
+  }
+  .site-header [data-site-nav='mobile'] {
+    display: flex;
+  }
+}
+
 /* Scroll ownership belongs to the active module boundary: a direct child of #main-content
    containing an activity shell. That boundary declares "document" or "workspace" once.
    Only the exact "document" value opts out; missing/invalid declarations retain the legacy
