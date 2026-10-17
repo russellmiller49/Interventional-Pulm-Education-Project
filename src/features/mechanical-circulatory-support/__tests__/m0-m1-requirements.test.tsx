@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 
 jest.mock('@/i18n/navigation', () =>
   jest
@@ -23,7 +23,6 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 )
 
 import { McsHub } from '../components/McsHub'
-import { MCS_TEACHING_SIMULATOR_STATEMENT } from '../content/modelLimits'
 import {
   MCS_PRODUCT_FLOW_BOUNDARY,
   MCS_RECOMMENDED_FIRST_SECTION_ID,
@@ -77,12 +76,13 @@ beforeEach(() => {
 })
 
 describe('M0/M1 §5 — the module front door', () => {
-  it('states once, in the primary path, that this is a teaching simulator, with no review status', async () => {
+  it('states once that this is a teaching simulator, with no review status', async () => {
     const container = await renderHub()
-    const governance = container.querySelector('[data-review-governance]') as HTMLElement
-    expect(governance).not.toBeNull()
-    expect(governance.closest('details')).toBeNull()
-    expect(governance.textContent).toContain(MCS_TEACHING_SIMULATOR_STATEMENT)
+    // The one statement is the frame's closed "Teaching simulator" disclosure (2026-10-17); the
+    // hub's second copy under the reference blocks is gone. The disclosure's own checks are in
+    // `hub-one-thing-to-do.rendered.test.tsx`.
+    expect(container.querySelectorAll('details[data-mcs-boundary]')).toHaveLength(1)
+    expect(container.querySelector('[data-review-governance]')).toBeNull()
 
     // Review status and the release checklist are project metadata: none of it is on the hub.
     expect(container.querySelector('details[data-reviewer-layer]')).toBeNull()
@@ -110,25 +110,18 @@ describe('M0/M1 §5 — the module front door', () => {
     expect(cta!.textContent).toMatch(/A pressure that looks fine/i)
     expect(container.querySelectorAll('[data-mcs-continue]')).toHaveLength(1)
 
-    // The order is said to be a recommendation, and the map says so beside it.
-    const pathway = screen
-      .getByRole('heading', { name: /9 sections, in one order/i })
-      .closest('section')
-    expect(pathway).not.toBeNull()
-    expect(within(pathway!).getByText(/not a lock/i)).toBeInTheDocument()
-
     // Recommending is not gating: no gating mechanism exists on the front door.
     expect(container.querySelectorAll('a[aria-disabled="true"]')).toHaveLength(0)
     expect(container.querySelectorAll('button[disabled]')).toHaveLength(0)
     expect(container.querySelector('[data-locked="true"]')).toBeNull()
     expect(container.querySelector('[aria-describedby*="prerequisite"]')).toBeNull()
 
-    // The only place the page says "lock" is the sentence denying that the order is one.
+    // Nor any word for one. (The sentence denying the order was a lock went with the hub's
+    // 2026-10-17 simplification: the open map says it.)
     const lockMentions = Array.from(container.querySelectorAll('p, li, span, strong'))
       .map((node) => node.textContent ?? '')
       .filter((text) => /\block(ed|s)?\b/i.test(text))
-    expect(lockMentions.length).toBeGreaterThan(0)
-    expect(lockMentions.every((text) => /not a lock/i.test(text))).toBe(true)
+    expect(lockMentions).toEqual([])
 
     // Every section is reachable directly from the map, and every device track from its card.
     expect(

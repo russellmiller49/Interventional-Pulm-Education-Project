@@ -89,11 +89,14 @@ function goToKind(sectionId: string, kind: string) {
 }
 
 describe('F02 — the hub', () => {
-  it('leads with the audience, the objectives, one way in and an optional refresher', async () => {
+  // Since 2026-10-17 the hub leads with Start alone; the audience, objectives, refresher and time
+  // note are in its closed "About this module" (see `hub-one-thing-to-do.rendered.test.tsx`).
+  it('keeps the audience, the objectives and an optional refresher beside one way in', async () => {
     render(<McsHub />)
     await settle()
-    expect(document.querySelector('[data-hub-audience]')).toHaveTextContent(/adult-ICU clinicians/)
-    const objectives = document.querySelectorAll('[data-hub-objective]')
+    const about = document.querySelector<HTMLElement>('details[data-hub-about]')!
+    expect(about.querySelector('[data-hub-audience]')).toHaveTextContent(/adult-ICU clinicians/)
+    const objectives = about.querySelectorAll('[data-hub-objective]')
     expect(objectives).toHaveLength(MCS_HUB_OBJECTIVES.length)
     for (const objective of objectives) {
       expect(objective.querySelectorAll('a').length).toBeGreaterThan(0)
@@ -102,7 +105,7 @@ describe('F02 — the hub', () => {
     expect(start).toHaveTextContent(/^Start — /)
     expect(start.getAttribute('href')).toMatch(/learn\?lesson=mcs-foundations-signals/)
 
-    const refresher = document.querySelector('[data-hub-refresher]')!
+    const refresher = about.querySelector('[data-hub-refresher]')!
     expect(refresher).toHaveTextContent(/Optional refresher/)
     expect(refresher).toHaveTextContent(/not required/)
     expect(within(refresher as HTMLElement).getByRole('link')).toHaveAttribute(
@@ -111,7 +114,7 @@ describe('F02 — the hub', () => {
     )
     // The refresher is a link, not a gate: Start does not route through it.
     expect(start.getAttribute('href')).not.toMatch(/hemodynamics/)
-    expect(document.querySelector('[data-hub-time-note]')).toHaveTextContent(
+    expect(about.querySelector('[data-hub-time-note]')).toHaveTextContent(
       /Minutes are estimates for the main path/,
     )
   })
@@ -139,18 +142,15 @@ describe('F02 — the hub', () => {
     expect(window.localStorage.getItem(PROGRESS_KEY)).toBe(before)
   })
 
-  it('states that this is a teaching simulator after the pathway, with no review status', async () => {
+  it('states that this is a teaching simulator once, folded, with no review status', async () => {
     render(<McsHub />)
     await settle()
-    const reviewer = document.querySelector<HTMLElement>('[data-review-governance]')!
-    expect(reviewer).toHaveTextContent(/This is a teaching simulator\./)
-    expect(reviewer).not.toHaveTextContent(/pending clinical review|NOT REVIEWED/i)
+    const boundary = document.querySelector<HTMLDetailsElement>('details[data-mcs-boundary]')!
+    expect(boundary.open).toBe(false)
+    expect(boundary).toHaveTextContent(/^Teaching simulator/)
+    expect(document.body).not.toHaveTextContent(/pending clinical review|NOT REVIEWED/i)
+    expect(document.querySelector('[data-review-governance]')).toBeNull()
     expect(document.querySelector('[data-reviewer-layer]')).toBeNull()
-    // It follows the reference material rather than standing between the hero and the pathway.
-    const pathway = document.querySelector('#mcs-hub-pathway')!
-    expect(
-      pathway.compareDocumentPosition(reviewer) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
     expect(document.querySelector('[data-reference="glossary"] [data-naming-table]')).not.toBeNull()
   })
 })

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Languages } from 'lucide-react'
+import { Info, Languages } from 'lucide-react'
 
 import { ModuleFrameV2 } from '@/features/learning-module/components/ModuleFrameV2'
 import { HandoffContent } from '@/i18n/handoff'
@@ -50,13 +50,25 @@ export function McsModuleFrame({
           theme={theme}
           activityMode={activityMode}
           safetyNotice={
-            <>
-              <strong>Teaching simulator.</strong>{' '}
-              <span>
+            /*
+              The module's one boundary statement, as a disclosure (ECMO tester feedback,
+              2026-10-13, carried here 2026-10-17).
+
+              It was a full-width banner above the first thing a learner reads. The statement is
+              unchanged and stays on every page the frame draws it on; it opens from its own name
+              rather than standing in front of the content.
+            */
+            <details className={styles.boundaryDisclosure} data-mcs-boundary>
+              <summary>
+                <strong>Teaching simulator</strong>
+                <Info aria-hidden="true" />
+                <span className="sr-only">About this simulator</span>
+              </summary>
+              <p>
                 Its numbers come from a model, not from a patient or a real console. At the bedside,
                 work from the patient and the device&rsquo;s instructions for use.
-              </span>
-            </>
+              </p>
+            </details>
           }
         >
           {locale !== 'en' ? (
