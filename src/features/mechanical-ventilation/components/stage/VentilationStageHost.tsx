@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   useTransition,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import { ArrowRight, LocateFixed } from 'lucide-react'
 
@@ -125,6 +126,37 @@ function useWorkspaceLayout(): boolean {
   )
 }
 
+/*
+ * Whether the workspace is two panes or one. The panes are a container query on the task body
+ * (`task-flow.module.css`), in rem so they follow the reader's text size; this reads the answer off
+ * the layout instead of restating the threshold — the console is beside the text, or below it. A
+ * window resize changes the task body, and a text-size change that switches the layout changes the
+ * text column's width, so observing the two catches every switch.
+ */
+function useSideBySidePanes(content: RefObject<HTMLDivElement | null>, workspace: boolean) {
+  const [sideBySide, setSideBySide] = useState(true)
+  useLayoutEffect(() => {
+    const root = content.current
+    if (!workspace || !root) return undefined
+    const text = root.querySelector<HTMLElement>(
+      ':scope > [data-flow-content] > [data-flow-teaching]',
+    )
+    const visual = root.querySelector<HTMLElement>(
+      ':scope > [data-flow-content] > [data-flow-visual]',
+    )
+    if (!text || !visual) return undefined
+    const check = () =>
+      setSideBySide(visual.getBoundingClientRect().left >= text.getBoundingClientRect().right - 1)
+    check()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(check)
+    observer.observe(root)
+    observer.observe(text)
+    return () => observer.disconnect()
+  }, [content, workspace])
+  return sideBySide
+}
+
 /** One section of the Learn pathway, on the shared flowing stage (the ECMO format). */
 export function VentilationStageHost({
   unitId,
@@ -176,6 +208,8 @@ function VentilationStageSession({
   const nextIndex = position < presented.length - 1 ? presented[position + 1] : null
   const [device] = useState<VentilatorDeviceId>(readDevicePreference)
   const workspace = useWorkspaceLayout()
+  const contentRef = useRef<HTMLDivElement>(null)
+  const sideBySide = useSideBySidePanes(contentRef, workspace)
   const { session, engine, lab } = useVentilationLabSession({
     unitId,
     device,
@@ -822,9 +856,11 @@ function VentilationStageSession({
 
   /*
    * The text column: the task, its reading, the section's purpose and task list, and — in the
-   * desktop workspace, where the page does not scroll — the sources. It is always on the left of
-   * the visual, and on top of it when the two stack. Below the workspace the sources stay at the
-   * end of the page, after the console, so a phone does not read the whole list before the work.
+   * desktop workspace's two panes, where the page does not scroll — the sources. It is always on
+   * the left of the visual, and on top of it when the two stack. Wherever the console comes after
+   * the text — the workspace as one pane (a 1024–1240 px window, or enlarged text), or the page
+   * below the workspace — the sources come after the console: the open list runs 1,600–3,400 px,
+   * and the learner would otherwise scroll through all of it before reaching the work.
    */
   const textColumn = (
     <>
@@ -879,7 +915,7 @@ function VentilationStageSession({
           })}
         </ol>
       </details>
-      {workspace ? sourcesBlock : null}
+      {workspace && sideBySide ? sourcesBlock : null}
     </>
   )
 
@@ -904,8 +940,10 @@ function VentilationStageSession({
           header={header}
           footer={workspace ? undefined : sourcesBlock}
         >
-          <div className={styles.content}>
-            <FlowContent kind={presentation.layout} teaching={textColumn} visual={visual} />
+          <div ref={contentRef} className={styles.content}>
+            <FlowContent kind={presentation.layout} teaching={textColumn} visual={visual}>
+              {workspace && !sideBySide ? sourcesBlock : null}
+            </FlowContent>
           </div>
         </LessonShell>
         {helpDialog}

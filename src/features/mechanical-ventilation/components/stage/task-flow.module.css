@@ -865,8 +865,15 @@
  * The desktop workspace (owner, 2026-10-15): text on the left, the visual on the right, and each
  * scrolls on its own so the learner can read on with the console still in view. The module shell
  * is the viewport beneath the site header (`mechanical-ventilation-module.module.css`); the section
- * header keeps its row and the two panes share the rest. The same viewport as the site's scroll
- * lock and the host's `useWorkspaceLayout`, which moves the sources into the text pane here.
+ * header keeps its row and the task body takes the rest. The same viewport as the site's scroll
+ * lock and the host's `useWorkspaceLayout`.
+ *
+ * Two panes need room, so they are a container query in rem on the task body: it follows the
+ * reader's text size, which a media query does not. At 200 % text in a 1440 px window the 20rem text
+ * column was 640 px and the console beside it had 702 px — 22rem — to reflow into, its traces 384 px
+ * wide; at 1024 px the console pane was 578 px. Narrower than 75rem (a 1024–1240 px window, or
+ * enlarged text) the task body is one column — the text, then the console, then the sources —
+ * scrolling as one pane, as ICU hemodynamics does.
  * ---------------------------------------------------------------------------------------------- */
 @media (min-width: 1024px) and (min-height: 700px) {
   .flow {
@@ -892,44 +899,38 @@
     min-height: 0;
     grid-template-rows: minmax(0, 1fr);
     padding-block: 0.4rem;
+    container: mv-task / inline-size;
   }
   /* The section title is the workspace's heading row, not a page hero: the panes take the height. */
   .flow [data-lesson-shell] h1 {
     font-size: clamp(1.4rem, 1.9vw, 1.85rem);
   }
-  .content > [data-flow-content] {
-    grid-template-rows: minmax(0, 1fr);
+  /*
+   * One pane by default: the task body scrolls as a whole, the text first. Positioned, so each
+   * scroller is the containing block of what it holds: an absolutely positioned screen-reader line
+   * deep inside otherwise escapes it, lengthens the locked page and lets a focus or a step change
+   * scroll the whole workspace up under the site header.
+   */
+  .flow[data-stage-frame] .content > [data-flow-content] {
+    position: relative;
+    align-content: start;
     min-height: 0;
     margin-block: 0;
-  }
-  .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
-    grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr);
-    align-items: stretch;
-  }
-  /*
-   * Positioned, so each pane is the containing block of what it holds: an absolutely positioned
-   * screen-reader line deep in a pane otherwise escapes its scroller, lengthens the locked page
-   * and lets a focus or a step change scroll the whole workspace up under the site header.
-   */
-  .content > [data-flow-content] > :is([data-flow-teaching], [data-flow-visual]) {
-    position: relative;
-    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
-  }
-  /* Room between the text and its pane's scrollbar; the console keeps its full width. */
-  .content > [data-flow-content] > [data-flow-teaching] {
-    padding-right: 0.35rem;
-  }
-  /*
-   * The clock stays at the head of the console pane while the console under it scrolls, and a
-   * control brought into view by focus or "Show me where" stops below it, not under it.
-   */
-  .content > [data-flow-content] > [data-flow-visual] {
     scroll-padding-top: 5rem;
   }
+  /* Outweighs the shared stage's two columns from 1100 px (`FlowContent.module.css`). */
+  .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /*
+   * The clock stays at the head of the console while the console under it scrolls — at the top of
+   * its own pane, or of the one pane — and a control brought into view by focus or "Show me where"
+   * stops below it, not under it.
+   */
   .content > [data-flow-content] > [data-flow-visual] [data-clock-bar] {
     position: sticky;
     top: 0;
@@ -942,7 +943,31 @@
   }
 }
 
-@media (min-width: 1500px) and (min-height: 700px) {
+@container mv-task (min-width: 75rem) {
+  .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
+    grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+  .content > [data-flow-content][data-has-visual] > :is([data-flow-teaching], [data-flow-visual]) {
+    position: relative;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  /* Room between the text and its pane's scrollbar; the console keeps its full width. */
+  .content > [data-flow-content][data-has-visual] > [data-flow-teaching] {
+    padding-right: 0.35rem;
+  }
+  .content > [data-flow-content][data-has-visual] > [data-flow-visual] {
+    scroll-padding-top: 5rem;
+  }
+}
+
+@container mv-task (min-width: 90rem) {
   .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
     grid-template-columns: minmax(24rem, 30rem) minmax(0, 1fr);
   }

@@ -7,7 +7,10 @@
  *     the reading on its right);
  *   - on a desktop the page does not scroll and the two columns scroll on their own, so the
  *     sources move to the end of the text column; below that they stay at the end of the page,
- *     after the console.
+ *     after the console;
+ *   - the two columns need a task body 75rem wide (a container query, so it follows the reader's
+ *     text size); narrower — a 1024–1240 px window, or enlarged text — the workspace is one pane,
+ *     the text, then the console, then the sources.
  *
  * jsdom performs no layout, so the geometry is browser-measured (both panes 712 px tall at
  * 1660 × 900, page locked); this holds the DOM order, the scroll-owner declaration and the
@@ -116,6 +119,30 @@ describe('Learn layout: where the sources go', () => {
     )
   })
 
+  it('follows the console when the desktop workspace is one pane', () => {
+    emulateDesktop(true)
+    // The layout's answer, as the browser would give it: the console below the text, not beside it.
+    const rect = jest
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: Element) {
+        const top = this.hasAttribute('data-flow-visual') ? 900 : 0
+        return DOMRect.fromRect({ x: 0, y: top, width: 960, height: 800 })
+      })
+    try {
+      render(<VentilationStageHost unitId="waveform-anatomy" />)
+      act(() => jest.advanceTimersByTime(10))
+      const sources = document.getElementById('mv-section-sources')!
+      const content = document.querySelector('[data-flow-content]')!
+      expect(document.querySelector('[data-stage-frame]')).toHaveAttribute('data-workspace', 'true')
+      expect(document.querySelector('[data-flow-teaching]')!.contains(sources)).toBe(false)
+      // Inside the one scrolling pane, after the console; not in the shell's footer below it.
+      expect(content.contains(sources)).toBe(true)
+      expect(precedes(document.querySelector('[data-flow-visual]')!, sources)).toBe(true)
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
   it('stays at the end of the page, after the console, when the columns stack', () => {
     emulateDesktop(false)
     render(<VentilationStageHost unitId="waveform-anatomy" />)
@@ -195,6 +222,18 @@ describe('Learn layout: the stylesheet rules behind it', () => {
     expect(flow).toMatch(/\.flow \[data-flow-teaching\] > \* \+ \* \{\s*margin-top: 1rem;/)
     // The clock stays at the head of the console pane while the console under it scrolls.
     expect(workspace).toMatch(/\[data-flow-visual\] \[data-clock-bar\] \{[^}]*position: sticky;/)
+    // Two panes from a 75rem task body, measured in the container so it follows the text size;
+    // narrower, the task body itself is the one scroller.
+    expect(workspace).toMatch(/\.content \{[^}]*container: mv-task \/ inline-size;/)
+    expect(workspace).toMatch(
+      /\.content > \[data-flow-content\] \{[^}]*position: relative;[^}]*overflow-y: auto;/,
+    )
+    const twoPanes = workspace.slice(workspace.indexOf('@container mv-task (min-width: 75rem)'))
+    expect(twoPanes).toMatch(/^@container mv-task \(min-width: 75rem\) \{/)
+    expect(twoPanes).toMatch(
+      /\[data-has-visual\] \{[^}]*grid-template-columns: minmax\(20rem, 0\.8fr\) minmax\(0, 1\.2fr\);[^}]*overflow: hidden;/,
+    )
+    expect(flow).not.toMatch(/@media \(min-width: 1500px\)[^{]*\{\s*\.flow\[data-stage-frame\]/)
     const shell = read('mechanical-ventilation-module.module.css')
     expect(shell).toMatch(
       /@media \(min-width: 1024px\) and \(min-height: 700px\) \{\s*\.moduleShell\[data-activity-mode='true'\]\[data-task-flow='true'\] \{[^}]*height: calc\(100dvh - var\(--site-header-height, 4rem\)\);[^}]*overflow: hidden;/,

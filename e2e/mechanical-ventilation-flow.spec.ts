@@ -136,6 +136,60 @@ test('on a desktop the text is left of the console and each scrolls on its own',
   }
 })
 
+test('a narrower desktop or enlarged text makes the workspace one pane: text, console, sources', async ({
+  page,
+}) => {
+  test.setTimeout(90_000)
+  // Both under the 75rem the two panes need: a 1024 px window, and 200 % text at 1440 px.
+  for (const { viewport, text } of [
+    { viewport: { width: 1024, height: 768 }, text: 1 },
+    { viewport: { width: 1440, height: 900 }, text: 2 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await openSection(page, 'waveform-anatomy')
+    if (text !== 1) await page.addStyleTag({ content: `html { font-size: ${text * 100}%; }` })
+    await chooseTask(page, 'inspiratory flow to 60 L/min')
+    const pane = page.locator('[data-flow-content]')
+    const textColumn = page.locator('[data-flow-teaching]')
+    const visual = page.locator('[data-flow-visual]')
+    await expect
+      .poll(async () => (await textColumn.boundingBox())!.width)
+      .toBeGreaterThan(viewport.width - 120)
+    const t = (await textColumn.boundingBox())!
+    const v = (await visual.boundingBox())!
+    // The text above the console, the console the full width of the task body.
+    expect(t.y + t.height).toBeLessThanOrEqual(v.y + 1)
+    expect(v.width).toBeGreaterThan(viewport.width - 120)
+    // The sources follow the console in the one pane.
+    expect(
+      await page.evaluate(() => {
+        const sources = document.getElementById('mv-section-sources')
+        const consoleColumn = document.querySelector('[data-flow-visual]')!
+        return Boolean(
+          sources &&
+          document.querySelector('[data-flow-content]')!.contains(sources) &&
+          consoleColumn.compareDocumentPosition(sources) & Node.DOCUMENT_POSITION_FOLLOWING,
+        )
+      }),
+    ).toBe(true)
+    // One scroller: the task body moves, the page does not, and nothing runs off to the side.
+    const p = (await pane.boundingBox())!
+    await page.mouse.move(p.x + p.width / 2, p.y + p.height / 2)
+    await page.mouse.wheel(0, 600)
+    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+    // At 200 % text the site header's links wrap to three rows, taller than the
+    // `--site-header-height` the workspace is sized under; that is the site header, not this stage.
+    if (text === 1)
+      expect(
+        await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
+      ).toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    expect(await pane.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
+  }
+})
+
 test('the way on is pinned and visible at laptop and phone widths', async ({ page }) => {
   for (const viewport of [
     { width: 1366, height: 768 },
