@@ -79,11 +79,6 @@ export function McsTeachingColumn({
          * then reveal". The label says the explanation is a worked one and the question an optional
          * check, so nobody is told an answer is hidden when it is not.
          */}
-        {!pending && (phase === 'recognize' || phase === 'predict') ? (
-          <p className={styles.kicker} data-worked-explanation-label>
-            Worked explanation · open before, during or after the optional question
-          </p>
-        ) : null}
         <h3>{pending ? 'Apply the concept' : 'Why it moved'}</h3>
         {pending ? (
           <p>

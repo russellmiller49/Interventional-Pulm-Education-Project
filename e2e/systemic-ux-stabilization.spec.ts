@@ -22,9 +22,10 @@ const scrollRoutes = [
     owner: 'workspace',
   },
   {
+    // The same text-and-simulator workspace as mechanical ventilation and hemodynamics (2026-10-17).
     id: 'mcs',
     route: '/en/mechanical-circulatory-support/learn?lesson=iabp-timing-triggering',
-    owner: 'document',
+    owner: 'workspace',
   },
   {
     id: 'bbt',
@@ -340,6 +341,8 @@ async function nativeWorkspaceScroll(page: Page) {
     elements.findIndex((el) => {
       const r = el.getBoundingClientRect()
       return (
+        // A closed disclosure's content keeps a layout box in Chrome; it is not on screen.
+        !el.closest('details:not([open])') &&
         ['auto', 'scroll'].includes(getComputedStyle(el).overflowY) &&
         el.scrollHeight > el.clientHeight + 80 &&
         r.height > 100 &&

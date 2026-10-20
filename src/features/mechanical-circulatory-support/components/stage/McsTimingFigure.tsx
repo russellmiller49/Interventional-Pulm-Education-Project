@@ -74,7 +74,7 @@ export function McsTimingFigure({
             <span>
               {cleanView
                 ? 'Untick to bring the letters back at once. The model’s alarm and the balloon band stay on screen.'
-                : 'For reading the trace before the letters. Nothing is withheld: the letters return whenever you untick it.'}
+                : 'Read the trace before the letters; untick to bring them back.'}
             </span>
           </p>
         ) : null}

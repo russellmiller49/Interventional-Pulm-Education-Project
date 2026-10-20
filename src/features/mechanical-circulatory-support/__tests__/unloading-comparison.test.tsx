@@ -215,15 +215,17 @@ describe('self-paced unloading example through the actual host', () => {
     openComparison()
     continueStep()
     expect(currentStepId()).toBe('impella-unloading-placement-recognize')
-    const map = screen.getByRole('list', { name: 'All lesson tasks' })
+    const map = () => document.querySelector<HTMLElement>('[data-step-list]')!
     fireEvent.click(
-      within(map).getByRole('button', { name: 'Guided example: ventricular unloading' }),
+      within(map()).getByRole('button', { name: /Guided example: ventricular unloading/ }),
     )
+    // The provided example again, as a reading: its own figure and no live patient beside it.
     compareVisibleOutputs(6)
-    expect(document.querySelector('[data-session-identity]')).toHaveTextContent('Worked comparison')
-    fireEvent.click(within(map).getByRole('button', { name: 'Move the inlet out of position' }))
+    expect(document.querySelector('[data-unloading-comparison]')).not.toBeNull()
+    expect(document.querySelector('[data-flow-visual]')).toBeNull()
+    fireEvent.click(within(map()).getByRole('button', { name: /Move the inlet out of position/ }))
     expect(screen.getByRole('combobox', { name: 'Placement state' })).toHaveValue('correct')
-    expect(screen.getByRole('button', { name: 'Explore all supported controls' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'All device controls' })).toBeEnabled()
     expect(document.querySelector('[data-unloading-comparison]')).toBeNull()
   })
 

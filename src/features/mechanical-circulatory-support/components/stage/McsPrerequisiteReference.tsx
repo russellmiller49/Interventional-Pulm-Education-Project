@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import { mcsComparisonPathways } from '../teaching/selectors'
 import { McsCirculationSketch } from './McsPathwayTour'
 import styles from './mcs-flow.module.css'
@@ -48,27 +49,28 @@ export function McsPrerequisiteReference({
   const page = pages[index]
   return (
     <section className={styles.tour} data-prerequisite-reference>
-      <p>
-        Reference · {index + 1} of {pages.length} · optional reading
+      <p className={shellStyles.kicker}>
+        Before the patient · {index + 1} of {pages.length}
       </p>
       <h2>{page.title}</h2>
       <p>{page.text}</p>
       {index === 0 ? (
         <McsCirculationSketch device={sectionId === 'iabp-efficacy-limits' ? 'iabp' : 'impella'} />
       ) : null}
-      <p>
-        This conceptual reference does not display the upcoming patient’s diagnosis or model
-        settings.
-      </p>
-      <button type="button" onClick={onContinue}>
-        Continue to the model
-      </button>
-      <button
-        type="button"
-        onClick={() => (index < pages.length - 1 ? setIndex(index + 1) : onContinue())}
-      >
-        {index < pages.length - 1 ? 'Next reference' : 'Begin the patient example'}
-      </button>
+      <div className={styles.referenceActions}>
+        <button
+          type="button"
+          className={shellStyles.nowPrimary}
+          onClick={() => (index < pages.length - 1 ? setIndex(index + 1) : onContinue())}
+        >
+          {index < pages.length - 1 ? 'Next reference' : 'Begin the patient example'}
+        </button>
+        {index < pages.length - 1 ? (
+          <button type="button" className={shellStyles.nowSecondary} onClick={onContinue}>
+            Skip to the patient
+          </button>
+        ) : null}
+      </div>
     </section>
   )
 }
