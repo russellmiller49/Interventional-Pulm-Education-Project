@@ -651,17 +651,17 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Reconstructing planes from a DTS acquisition',
-        body: 'Digital tomosynthesis acquires a series of projections as the C-arm moves through a limited arc. Shifting and adding those projections brings one depth into register: structures at that depth reinforce, and structures at other depths blur out of plane. The result reduces superimposition and adds depth information that a single projection lacks. Think of sliding a stack of transparencies until one object lines up.',
+        body: 'Digital tomosynthesis sweeps the C-arm through a limited arc and takes a series of images. The reconstruction adds them so that the shadows of structures at one depth line up and reinforce, while everything above and below that depth is blurred out. Scroll through the depths and each level comes into focus in turn: that is a DTS plane. It reduces superimposition and adds depth information that a single projection lacks.',
         sources: ['saad', 'frontier'],
       },
       {
         title: 'Depth resolution depends on angular coverage',
         kind: 'after-commitment',
-        body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge. In-plane edges can look sharp while depth remains elongated or blurred, and small voxels do not repair this anisotropy (resolution that differs by direction): a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a system may resolve the unmeasured directions from a registered prior scan or a learned model and render a CT-like image, which removes the visible sign of the limit without removing the limit.',
+        body: 'Because the arc is limited, depth along the beam is measured less well than the image plane: a nodule and a needle can look sharp across the image yet stretched in depth, and small voxels do not change that. Some systems fill the poorly measured direction from a registered prior scan or a learned model and render a CT-like image, which hides the limit without removing it.',
         sources: ['saad', 'sumner', 'podder'],
         detail: {
-          title: 'More projections: state the constraint',
-          body: 'More projections at a fixed exposure per projection increase total exposure. Dividing a fixed total exposure among more projections changes sampling and noise differently. Projection count alone does not specify image quality, acquisition time or dose.',
+          title: 'The physics behind the limit',
+          body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge, which leaves anisotropy (resolution that differs by direction): in-plane edges can look sharp while depth stays elongated or blurred, and a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a prior scan or a model decides what fills the unmeasured direction. More projections at a fixed exposure per projection increase total exposure; dividing a fixed total exposure among more projections changes sampling and noise differently, so projection count alone does not specify image quality, acquisition time or dose.',
         },
       },
       {

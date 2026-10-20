@@ -1,6 +1,7 @@
 import { DTS } from '../lib/tomosynthesis'
 import { LESION_CENTER } from '../lib/physics'
 import { dtsArc, dtsPlaneQuad, missingWedge, smearWidth } from '../components/suite/dtsModel'
+import { focusReading } from '../components/suite/views/TomosynthesisView'
 
 test('every authored DTS sweep has the atlas count, symmetric endpoints and a central projection', () => {
   for (const sweep of DTS.sweeps) {
@@ -23,4 +24,12 @@ test('a matched plane has zero spread while greater mismatch and a wider sweep i
   expect(smearWidth(-18, -18, 40)).toBe(0)
   expect(smearWidth(-18, 0, 20)).toBeLessThan(smearWidth(-18, 0, 40))
   expect(smearWidth(-18, 0, 40)).toBeLessThan(smearWidth(-18, 18, 40))
+})
+
+describe('the DTS panel says which object is in focus', () => {
+  it('names the nodule at its plane, the tool at its plane, and neither between', () => {
+    expect(focusReading(0, 30)).toMatch(/^the nodule is in focus/)
+    expect(focusReading(-18, 30)).toMatch(/^the tool is in focus/)
+    expect(focusReading(-9, 30)).toMatch(/^neither/)
+  })
 })

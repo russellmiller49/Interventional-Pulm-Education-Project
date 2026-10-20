@@ -487,6 +487,15 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
     </>
   )
 }
+/** Which object is in focus at the selected depth, in words: the reading the spread numbers support. */
+export function focusReading(planeDepth: number, sweepDeg: number): string {
+  const nodule = smearWidth(0, planeDepth, sweepDeg) < 1
+  const tool = smearWidth(DTS.toolPlaneRelativeMm, planeDepth, sweepDeg) < 1
+  if (nodule) return 'the nodule is in focus and the tool is blurred.'
+  if (tool) return 'the tool is in focus and the nodule is blurred.'
+  return 'neither the nodule nor the tool is in focus. Scroll the depth.'
+}
+
 export function TomosynthesisPanels({
   model,
   inputs,
@@ -507,8 +516,8 @@ export function TomosynthesisPanels({
       )}
       <p>
         {prior
-          ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
-          : 'Thirteen projections across the arc. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
+          ? 'The display colour-codes the image source: gray from the DTS images, teal from the planning CT.'
+          : 'The images taken across the arc are added at the chosen depth. Dashed arc: the directions the arc never covered, the missing wedge. Bars on the focal plane: how far each object is blurred at this depth.'}
       </p>
       {prior && enabled && (
         <fieldset className={styles.controls}>
@@ -542,6 +551,9 @@ export function TomosynthesisPanels({
         </fieldset>
       )}
       <ProjectionFilmstrip model={model} />
+      <p data-focus-readout>
+        <strong>At this depth:</strong> {focusReading(inputs.planeDepth, inputs.sweepDeg)}
+      </p>
       <p data-spread-readout>
         Tool-plane spread:{' '}
         {smearWidth(DTS.toolPlaneRelativeMm, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm ·
@@ -549,13 +561,16 @@ export function TomosynthesisPanels({
       </p>
       {/* Report 4.6: the readout defined from the arithmetic that prints it (`smearWidth`), not
           from a guess. */}
-      <p data-spread-definition>
-        Spread is how far across the image each object is smeared at the selected plane: the
-        difference between where it lands at the two ends of the arc once the images are shifted for
-        that depth. It is zero when the plane passes through the object and grows with the object’s
-        distance from the plane and with the arc, so the plane where an object’s spread reaches zero
-        is the plane it lies in.
-      </p>
+      <details>
+        <summary>What spread means</summary>
+        <p data-spread-definition>
+          Spread is how far across the image each object is smeared at the selected plane: the
+          difference between where it lands at the two ends of the arc once the images are shifted
+          for that depth. It is zero when the plane passes through the object and grows with the
+          object’s distance from the plane and with the arc, so the plane where an object’s spread
+          reaches zero is the plane it lies in.
+        </p>
+      </details>
     </section>
   )
 }

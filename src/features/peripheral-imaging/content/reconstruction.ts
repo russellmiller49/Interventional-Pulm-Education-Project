@@ -51,7 +51,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
     analogy:
       'Think of sliding a stack of transparencies until one object lines up: what sits at the chosen depth reinforces, and everything nearer or further spreads into a smear.',
     measured:
-      'A short arc of images — thirteen in this section — acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
+      'A short series of images acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
     built: [
       'Choose a depth. Every structure sitting at that depth lands on the same spot in each image once the images are shifted by the amount that depth would move between views.',
       'Shift each image by that amount and average them. What sits at the chosen depth reinforces; everything nearer or further spreads out and fades into a smear. Repeat for another depth and another picture appears.',
@@ -73,7 +73,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
       'Anything about a structure the arc never covered from a useful angle, however clean the image of it looks.',
     ],
     boundary:
-      'The DTS image in this course is the plain version: thirteen projections, shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur stays visible; it is the cue a CT-like rendering does not leave you.',
+      'The DTS image in this course is the plain version: the projections shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur stays visible; it is the cue a CT-like rendering does not leave you.',
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
     shownIn: 'dts-acquisition',
   },
