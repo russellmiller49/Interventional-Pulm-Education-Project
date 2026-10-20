@@ -419,7 +419,14 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['plane'],
     ),
     work('Review the reconstructed planes', 'multiplanar'),
-    compare('Compare limited-angle depth behavior', 'multiplanar'),
+    compare('Compare limited-angle depth behavior', 'multiplanar', [
+      'sweep',
+      'sweepCenter',
+      'plane',
+      'planeTool',
+      'planeLesion',
+      'planeDeeper',
+    ]),
     // Independent sanity review of PR #279 (finding F3, CHK-S10, 2026-09-24): the check's stem
     // (`dts-1`) is conceptual, "structures are elongated in the depth direction", and states its
     // evidence in words. The image beside it was one reconstructed plane, which cannot show

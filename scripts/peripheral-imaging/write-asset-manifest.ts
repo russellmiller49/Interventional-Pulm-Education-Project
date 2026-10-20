@@ -31,6 +31,12 @@ const entries = [
       'Derived CT atlas with its baked nodule and an added authored tool; parallel projections and high-pass filtering',
   },
   {
+    path: 'anatomy/dts-grid.png',
+    sourceSha256: anatomy.sourceSha256,
+    source:
+      'Derived CT atlas with its baked nodule and the same authored tool; parallel projections on a 5/6-degree grid for off-centre arcs, high-pass filtered',
+  },
+  {
     path: 'anatomy/fluoroview-carm.glb',
     sourceSha256: hash('public/fluoroview/cases/patient-new/carm/c_arm_animation.glb'),
     source:

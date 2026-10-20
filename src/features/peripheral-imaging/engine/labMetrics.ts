@@ -208,6 +208,16 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       default: 30,
     },
     {
+      key: 'sweepCenter',
+      kind: 'range',
+      label: 'Centre of the DTS arc',
+      min: -30,
+      max: 30,
+      step: 10,
+      unit: '°',
+      default: 0,
+    },
+    {
       key: 'plane',
       kind: 'range',
       label: 'DTS plane depth',
@@ -565,6 +575,8 @@ export type LabMetricId =
   | 'interFrameTravelMm'
   | 'intervalMs'
   | 'sweepDeg'
+  | 'sweepCentreDeg'
+  | 'rayCrossesAtCentre'
   | 'planeMm'
   | 'centered'
   | 'ready'
@@ -607,6 +619,8 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   interFrameTravelMm: { label: 'Travel between frames', unit: ' mm', digits: 1 },
   intervalMs: { label: 'Time between acquired frames', unit: ' ms', digits: 0 },
   sweepDeg: { label: 'DTS arc', unit: '°', digits: 0 },
+  sweepCentreDeg: { label: 'Centre of the DTS arc', unit: '°', digits: 0 },
+  rayCrossesAtCentre: { label: 'Anatomy over the nodule at the arc’s centre' },
   planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
   centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
@@ -663,6 +677,10 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
   interFrameTravelMm: 'How far the tool travels between one acquired frame and the next.',
   intervalMs: 'The time between acquired frames: one second divided by the pulse rate.',
   sweepDeg: 'The angular width of the DTS arc.',
+  sweepCentreDeg:
+    'The C-arm obliquity at the middle of the arc. The reconstructed planes lie square to the beam there, so moving the centre tilts them.',
+  rayCrossesAtCentre:
+    'What the X-ray path through the centre of the nodule crosses at the arc’s centre, read from the CT. Structures on that path lie above and below the nodule in depth, where a limited arc blurs them into it.',
   planeMm: 'The depth of the reconstructed plane relative to the target plane.',
   centered: 'Whether the lesion lies within 8 mm of center on both scout images.',
   ready: 'Centered, with all four pre-spin checks confirmed.',
@@ -738,8 +756,15 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         intervalMs: metrics.intervalMs,
       }
     }
-    case 'dts':
-      return { sweepDeg: n('sweep'), planeMm: n('plane') }
+    case 'dts': {
+      const centre = n('sweepCenter')
+      return {
+        sweepDeg: n('sweep'),
+        planeMm: n('plane'),
+        sweepCentreDeg: centre,
+        rayCrossesAtCentre: rayCrossingLabel(tableCrossing(centre, 0)),
+      }
+    }
     case 'acquisition': {
       const centered = centeredForTeaching(n('offsetX'), n('offsetDepth'))
       const ready = centered && ACQUISITION_CHECKS.every((key) => f(key))

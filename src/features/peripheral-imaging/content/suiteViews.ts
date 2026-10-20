@@ -55,6 +55,7 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
   ],
   dts: [
     { input: 'sweepDeg', control: 'sweep' },
+    { input: 'sweepCenterDeg', control: 'sweepCenter' },
     { input: 'planeDepth', control: 'plane' },
   ],
   acquisition: [
@@ -208,7 +209,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
     animation: { kind: 'sweep', autoplay: true, loop: false },
-    readouts: ['sweepDeg', 'planeMm'],
+    controls: ['sweep', 'plane', 'planeTool', 'planeLesion', 'planeDeeper'],
+    readouts: ['sweepDeg', 'planeMm', 'rayCrossesAtCentre'],
   }),
   'dts-interpretation': view('dts-interpretation', {
     mode: 'dts-prior',

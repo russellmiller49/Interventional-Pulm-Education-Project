@@ -75,6 +75,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
     speedMmS: n('temporal', 'speed'),
     phase: 0,
     sweepDeg: n('dts', 'sweep'),
+    sweepCenterDeg: 0,
     planeDepth: n('dts', 'plane'),
     priorLayer: 'measured',
     orbitSpanDeg: 200,

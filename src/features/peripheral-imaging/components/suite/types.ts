@@ -101,6 +101,8 @@ export interface SuiteInputs {
   /** Clock seconds for the time view. */
   readonly phase: number
   readonly sweepDeg: number
+  /** The C-arm obliquity at the middle of the DTS arc; 0 is a frontal arc. */
+  readonly sweepCenterDeg: number
   readonly planeDepth: number
   readonly priorLayer: 'measured' | 'prior' | 'blend'
   readonly orbitSpanDeg: number
