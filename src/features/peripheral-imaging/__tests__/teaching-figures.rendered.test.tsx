@@ -10,7 +10,7 @@ import {
   targetRayGeometry,
   TOOL_VIEW_FRAME,
 } from '../components/figures/teachingFigureModel'
-import { ConspicuityPair } from '../components/figures/CheckImages'
+import { WedgeDependencyFigure, ConspicuityPair } from '../components/figures/CheckImages'
 import { TeachingPanels } from '../components/stage/TeachingPanels'
 import {
   FIXED_MOBILE_COMPARISON,
@@ -92,6 +92,7 @@ describe('the teaching figures are declared data and validate at import', () => 
         .concat(
           ...(
             [
+              'current-anatomy',
               'two-dimensional',
               'changing-anatomy',
               'cbct-acquisition',
@@ -102,6 +103,7 @@ describe('the teaching figures are declared data and validate at import', () => 
         )
         .filter((activity) => activity.content.includes(ref))
         .map((activity) => activity.id)
+    expect(placed('@wedge-dependency')).toEqual(['current-anatomy:setup'])
     expect(placed('@two-axis-example')).toEqual(['two-dimensional:case'])
     expect(placed('@artifact-strip')).toEqual(['changing-anatomy:timeline'])
     expect(placed('@team-readiness')).toEqual(['cbct-acquisition:scouts'])
@@ -115,9 +117,16 @@ describe('the teaching figures are declared data and validate at import', () => 
         '@fixed-mobile-comparison',
         '@team-readiness',
         '@two-axis-example',
+        '@wedge-dependency',
       ].sort(),
     )
     // Each figure follows the block it illustrates.
+    const setup = imagingLearningActivities('current-anatomy').find(
+      (activity) => activity.id === 'current-anatomy:setup',
+    )!
+    expect(setup.content.indexOf('@wedge-dependency')).toBe(
+      setup.content.indexOf('Position the patient so the lesion side is up') + 1,
+    )
     const step = imagingLearningActivities('two-dimensional')[0]
     expect(step.content.indexOf('@two-axis-example')).toBe(
       step.content.indexOf('A two-axis fluoroscopy technique') + 1,
@@ -439,4 +448,22 @@ describe('OD4-10 · the team-readiness aid', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(teamReadinessText()))
     expect(teamReadinessText().split('\n')[1]).toBe(TEAM_READINESS_STATUS)
   })
+})
+
+describe('the wedge figure shows dependency moving with position', () => {
+  it('draws the supine and wedged levels with captions that say where the nodule lies', async () => {
+    render(<WedgeDependencyFigure />)
+    await ready('[data-teaching-figure="current-anatomy:wedge-dependency"]')
+    const figure = document.querySelector(
+      '[data-teaching-figure="current-anatomy:wedge-dependency"]',
+    )!
+    expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(2)
+    // The vertebral-body line needs bone the synthetic chest here does not have; model-truth holds
+    // it to the real CT.
+    expect(figure.querySelector('[data-figure-panel="supine"]')).toHaveTextContent(/inside it/)
+    expect(figure.querySelector('[data-figure-panel="wedged"]')).toHaveTextContent(
+      /risen above the dashed line and is clear of it/,
+    )
+    expect(figure.textContent).not.toMatch(/simulated|teaching model|model(ed|led)?\b/i)
+  }, 30_000)
 })

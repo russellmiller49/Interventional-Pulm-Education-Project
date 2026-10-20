@@ -196,6 +196,9 @@ function rollAxial(x: number, y: number, degrees: number): [number, number] {
   return [rx, ry]
 }
 
+/** Inside the scan's 352 mm square at any roll. */
+const ROLLED_FIELD_RADIUS_MM = 172
+
 /** The front of the vertebral body on the midline at a level: the first bone walking back. */
 export function vertebralBodyFront(sample: CtSampler, z: number): number | null {
   for (let y = -40; y >= -140; y -= 0.5) if (sample(0, y, z) > 200) return y
@@ -218,7 +221,16 @@ export function dependentOpacityImages(
       ? patient
       : (x, y, z) => {
           const [px, py] = rollAxial(x, y, -wedgeDeg)
-          return patient(px, py, z)
+          // A round field of view inside the scan, so a rolled level shows no corner of the volume;
+          // its edge is softened over a few millimetres so it does not step at display size.
+          const outside = smooth(
+            ROLLED_FIELD_RADIUS_MM - 3,
+            ROLLED_FIELD_RADIUS_MM,
+            Math.hypot(px, py),
+          )
+          if (outside >= 1) return -1000
+          const hu = patient(px, py, z)
+          return hu + outside * (-1000 - hu)
         }
   /** Signed distance from the patient's midline, patient-left positive, of a room-frame point. */
   const lateral = (x: number, y: number) => (wedgeDeg === 0 ? x : rollAxial(x, y, -wedgeDeg)[0])

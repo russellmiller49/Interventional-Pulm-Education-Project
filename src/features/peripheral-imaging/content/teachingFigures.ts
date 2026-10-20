@@ -149,6 +149,28 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     ],
   },
   {
+    id: 'current-anatomy:wedge-dependency',
+    contentRef: '@wedge-dependency',
+    label:
+      'The same axial level through both lower lobes under anesthesia, supine and with a wedge under the left side.',
+    panels: [
+      {
+        id: 'supine',
+        title: 'Supine',
+        medium: 'simulated-on-model',
+        caption:
+          'Opacity fills the posterior part of both lungs. The nodule lies below the dashed line, inside it.',
+      },
+      {
+        id: 'wedged',
+        title: 'Wedge under the left side, 30°',
+        medium: 'simulated-on-model',
+        caption:
+          'The right lung is now lowest and the opacity forms there. The nodule has risen above the dashed line and is clear of it.',
+      },
+    ],
+  },
+  {
     id: 'changing-anatomy:artifact-strip',
     contentRef: '@artifact-strip',
     label: 'Motion on a coronal plane; truncation and a new dependent opacity on axial planes.',
