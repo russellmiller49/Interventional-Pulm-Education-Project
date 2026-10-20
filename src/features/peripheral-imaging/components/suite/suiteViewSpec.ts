@@ -62,6 +62,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
   const result: { -readonly [K in keyof SuiteInputs]: SuiteInputs[K] } = {
     orbit: n('geometry', 'orbit'),
     tilt: n('geometry', 'tilt'),
+    wedgeDeg: 0,
     toolDepth: n('geometry', 'depth'),
     geometry: DEFAULT_GEOMETRY,
     fieldPercent: n('field', 'field'),

@@ -5,7 +5,7 @@ import { useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { LESION_CENTER, type Point3 } from '../../lib/physics'
-import { cameraPose } from './cameraPose'
+import { cameraPose, OVERVIEW_VIEWS } from './cameraPose'
 import type { SuiteFrame } from './suiteModel'
 import type { SuiteCamera } from './types'
 
@@ -47,6 +47,7 @@ export function CameraRig({
   roomComposition = false,
   monitorOffset,
   command,
+  rollDeg = 0,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
@@ -58,6 +59,12 @@ export function CameraRig({
   roomComposition?: boolean
   monitorOffset?: Point3
   command?: CameraCommand | null
+  /**
+   * The patient rolled about the long axis (a wedge). The scene's patient-side objects are drawn in
+   * a group rolled by this angle, so the camera rolls with them: the beam view stays behind the
+   * physical tube, and the overview views keep the room's up so the patient, not the room, tilts.
+   */
+  rollDeg?: number
 }) {
   const { camera, invalidate, size } = useThree()
   const controls = useRef<OrbitControlsImpl>(null)
@@ -90,15 +97,30 @@ export function CameraRig({
       monitorOffset,
     ],
   )
+  const rolled = useMemo(() => {
+    if (rollDeg === 0) return config
+    const a = (rollDeg * Math.PI) / 180
+    const roll = ([x, y, z]: readonly number[]): Point3 => [
+      x * Math.cos(a) - y * Math.sin(a),
+      x * Math.sin(a) + y * Math.cos(a),
+      z,
+    ]
+    return {
+      ...config,
+      position: roll(config.position),
+      target: roll(config.target),
+      up: (OVERVIEW_VIEWS as readonly SuiteCamera[]).includes(view) ? config.up : roll(config.up),
+    }
+  }, [config, rollDeg, view])
   const resetNonce = command?.kind === 'reset' ? command.nonce : 0
   useEffect(() => {
-    camera.position.set(...config.position)
-    camera.up.set(...config.up)
-    camera.lookAt(...config.target)
+    camera.position.set(...rolled.position)
+    camera.up.set(...rolled.up)
+    camera.lookAt(...rolled.target)
     camera.updateProjectionMatrix()
     controls.current?.update()
     invalidate()
-  }, [camera, invalidate, config, resetNonce])
+  }, [camera, invalidate, rolled, resetNonce])
   useEffect(() => {
     const orbit = controls.current
     if (!orbit || !command || command.kind === 'reset') return
@@ -115,7 +137,7 @@ export function CameraRig({
   return (
     <OrbitControls
       ref={controls}
-      target={config.target}
+      target={rolled.target}
       enabled={enabled}
       enablePan={false}
       enableZoom={false}

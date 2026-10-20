@@ -492,26 +492,23 @@
 }
 .tissues {
   display: flex;
-  gap: 10px 22px;
+  gap: 8px 18px;
   flex-wrap: wrap;
   margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: 12px;
 }
-.tissues dt {
+.tissues li {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.tissues dt span {
+.tissues li span {
   display: inline-block;
   width: 9px;
   height: 9px;
   border: 1px solid var(--suite-card-muted);
-}
-.tissues dd {
-  margin: 3px 0;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
 }
 .signalProfile > p:last-child {
   font-size: 12px;

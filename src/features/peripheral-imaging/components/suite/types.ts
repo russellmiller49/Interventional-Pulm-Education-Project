@@ -78,8 +78,15 @@ export type SuiteAnimationKind = 'pulse' | 'sweep' | 'orbit' | 'transducer' | 'e
  * the acquisition offsets match the lab control keys one for one.
  */
 export interface SuiteInputs {
+  /** The C-arm's own obliquity, in the room. */
   readonly orbit: number
   readonly tilt: number
+  /**
+   * The patient rolled about the long axis, left side lifted (a wedge). The scene draws the chest
+   * rolled and the gantry where the C-arm is; every projection is through the patient, at
+   * `orbit − wedgeDeg`.
+   */
+  readonly wedgeDeg: number
   readonly toolDepth: number
   /** Source–isocenter, source–detector, detector field; defaults 720 / 1200 / 640 (the DRR's config). */
   readonly geometry: { readonly sod: number; readonly sid: number; readonly field: number }

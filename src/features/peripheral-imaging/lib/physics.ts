@@ -40,6 +40,15 @@ export function beamDirection(orbit: number, tilt = 0): Point3 {
     b = radians(tilt)
   return [-Math.sin(a) * Math.cos(b), Math.cos(a) * Math.cos(b), Math.sin(b)]
 }
+/**
+ * Roll a point about the patient's long axis through the isocentre; positive lifts the patient's
+ * left side (a wedge under it). Every detector axis is Rz(orbit) of a fixed axis, so projecting a
+ * rolled point at `orbit` is projecting the unrolled point at `orbit − degrees`.
+ */
+export function rollAboutLongAxis([x, y, z]: Point3, degrees: number): Point3 {
+  const a = radians(degrees)
+  return [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a), z]
+}
 /** Cone projection in detector-plane mm; matches the original FluoroView volume renderer. */
 export function projectToDetector(
   point: Point3,

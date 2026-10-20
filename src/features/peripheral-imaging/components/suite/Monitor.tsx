@@ -64,6 +64,7 @@ export function Monitor({
   captureEnabled = true,
   frameContext,
   fieldProcessing,
+  wedgeDeg = 0,
 }: {
   pose: DrrPose
   depth: number
@@ -88,6 +89,8 @@ export function Monitor({
    * area. With it the display range and the scatter veil follow the field.
    */
   fieldProcessing?: { readonly rect: FieldRect; readonly areaFraction: number }
+  /** A wedge under the patient: `pose.orbit` is through the patient, the caption gives the C-arm's. */
+  wedgeDeg?: number
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -124,7 +127,10 @@ export function Monitor({
   }
   // Report 2.6: the caption names the angles the way the sliders do ("C-arm obliquity", "Beam
   // tilt"), so one quantity has one name. The values are the same signed model angles.
-  const label = `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
+  const label =
+    wedgeDeg === 0
+      ? `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
+      : `C-arm obliquity ${pose.orbit + wedgeDeg}° · wedge ${wedgeDeg}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
   const currentOverlay = overlay ?? (
     <ProjectionOverlays
       orbit={pose.orbit}

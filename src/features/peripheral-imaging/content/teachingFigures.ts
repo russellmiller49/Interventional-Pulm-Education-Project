@@ -187,20 +187,20 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'Planning CT through the lesion, with candidate beams',
         medium: 'model-output',
         caption:
-          'Each line is the target ray whose path lengths the table gives: from the X-ray tube’s focal spot, through the center of the lesion, to the detector, with its arrowhead at the detector end. It is drawn as its projection onto this axial image. The tube lies off the image beyond the line’s other end, and the ray crosses this slice only at the lesion. The rays spread out from the tube and the lesion lies off the isocentre, so each line’s angle on the image differs by a few degrees from its C-arm obliquity.',
+          'Each line is the target ray the table reads: from the X-ray tube’s focal spot, through the center of the lesion, to the detector, with its arrowhead at the detector end. It is drawn as its projection onto this axial image, and crosses this slice only at the lesion. The beam spreads from the tube, so each line’s angle differs by a few degrees from its C-arm obliquity.',
       },
       {
         id: 'strip',
         title: 'What each ray crosses',
         medium: 'model-output',
         caption:
-          'Millimeters of tissue along each ray, on the tube side and the detector side of the lesion, grouped by density.',
+          'What the X-ray path through the centre of the nodule crosses besides lung and chest wall, at each C-arm obliquity.',
       },
       {
         id: 'tilt',
         title: 'Beam tilt at the chosen obliquity',
         medium: 'model-output',
-        caption: 'The same comparison as the beam is tilted, at the chosen obliquity.',
+        caption: 'The same reading as the beam is tilted, at the chosen obliquity.',
       },
       {
         id: 'projections',

@@ -176,7 +176,7 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     expect(document.querySelectorAll('[data-signal-comparison] button')).toHaveLength(0)
   })
 
-  it('captions the set and each effect plainly, and prints the ray numbers it computed', async () => {
+  it('captions the set and each effect plainly, and names the anatomy over the nodule', async () => {
     render(<ConspicuityComparison />)
     await ready('[data-teaching-figure="signal:conspicuity-set"]')
     const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
@@ -191,8 +191,9 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     )
     expect(figure.textContent).not.toMatch(/simulated|teaching model|model(ed|led)?\b/i)
     expect(figure.querySelector('[data-ray-readout]')).toHaveTextContent(
-      /C-arm obliquity is −20° \(detector toward the patient’s left\)\. Soft-tissue density on the ray through the lesion: \d+ mm frontal, \d+ mm at −20°\./,
+      'Here the C-arm obliquity is −20° (detector toward the patient’s left). Over the nodule frontally: Heart and mediastinum, rib. At −20°: Rib.',
     )
+    expect(figure.textContent).not.toMatch(/\d+ mm/)
     expect(figure.textContent).not.toMatch(/\b(LAO|RAO)\b/)
     expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(4)
   }, 30_000)
@@ -202,14 +203,9 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     render(<ConspicuityComparison />)
     await ready('[data-teaching-figure="signal:conspicuity-set"]')
     const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
-    const [frontal, changed] = (
-      figure.querySelector('[data-ray-readout]')!.textContent!.match(/\d+ mm/g) ?? []
-    ).map((value) => Number.parseInt(value, 10))
-    // The note is conditional on the shortening it describes; the synthetic chest here has it.
-    expect(changed).toBeLessThan(frontal)
     const note = figure.querySelector('[data-later-example-note]')
     expect(note).toHaveTextContent(
-      'At −20° the ray through the lesion crosses less soft tissue; the later −35° example shows a different pattern, with the overlap redistributed along the ray.',
+      'The later −35° example shows a different overlap. Over the nodule at −35°: Spine.',
     )
     expect(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY).toBe(-35)
     expect(note!.textContent).not.toMatch(/best|optimal|ideal|recommend|always|should|choose/i)
@@ -286,13 +282,20 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
       'After: C-arm obliquity −20°, detector toward the patient’s left',
     )
     expect(figure.querySelector('[data-tool-view="-20"]')).toHaveTextContent('C-arm obliquity −20°')
-    // Every number the reading paragraph prints is a number in the strip table.
-    const strip = [...figure.querySelectorAll('[data-target-ray] td')].map(
-      (cell) => cell.textContent,
+    // The reading names what the strip table names, and prints no millimetres.
+    const row = (obliquity: number) =>
+      figure.querySelector(`[data-target-ray="${obliquity}"] td`)!.textContent
+    expect(row(0)).toBe('Heart and mediastinum, rib')
+    expect(row(-20)).toBe('Rib')
+    const reading = figure.querySelector('[data-two-axis-reading]')!.textContent!
+    expect(reading).toMatch(
+      /Frontally, the X-ray path through the nodule crosses the heart and mediastinum plus a rib\./,
     )
-    const printed =
-      figure.querySelector('[data-two-axis-reading]')!.textContent!.match(/\d+ mm/g) ?? []
-    for (const value of printed) expect(strip.join(' ')).toContain(value)
+    expect(reading).toMatch(/the heart comes off the path; it now crosses a rib\./)
+    expect(figure.textContent).not.toMatch(/\d+ mm|soft[- ]tissue density/)
+    expect(figure.querySelector('[data-tilt-reading]')).toHaveTextContent(
+      'At C-arm obliquity −20° none of these tilts brings the heart or the diaphragm over the nodule, so this lesion needs no tilt to clear them. Tilting to −10° or +20° brings the spine over it instead.',
+    )
   }, 30_000)
 
   it('draws each beam as the axial projection of the target ray from the tube, and says so (F1)', async () => {
@@ -311,7 +314,7 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
       )
     }
     const caption = figure.querySelector('[data-figure-panel="axial"] figcaption')!
-    expect(caption).toHaveTextContent(/the target ray whose path lengths the table gives/)
+    expect(caption).toHaveTextContent(/the target ray the table reads/)
     expect(caption).toHaveTextContent(/from the X-ray tube’s focal spot/)
     expect(caption).toHaveTextContent(/drawn as its projection onto this axial image/)
     expect(caption).toHaveTextContent(/crosses this slice only at the lesion/)

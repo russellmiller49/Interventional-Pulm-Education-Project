@@ -9,6 +9,7 @@ import { SectionGlossary } from '../components/stage/SectionGlossary'
 import { LabDock } from '../components/suite/LabDock'
 import { DosePanels } from '../components/suite/views/DoseView'
 import { SignalReadout } from '../components/suite/views/SignalView'
+import { tableCrossing } from '../lib/rayCrossingTable'
 import { StaffPanels } from '../components/suite/views/StaffView'
 import { resolveSuiteInputs } from '../components/suite/suiteViewSpec'
 import { DOSE_NOTE_TEMPLATE_LINES } from '../content/doseQuantities'
@@ -526,12 +527,30 @@ describe('reports 2.11, 3.9, 7.1, 7.3 and 3.6 — the suite panels explain their
     )
   })
 
-  it('the target-ray readout says what the strip is and names no organ', () => {
-    render(<SignalReadout profile={null} />)
+  it('the path readout names the anatomy over the nodule, with no millimetre table', () => {
+    const crossing = tableCrossing(0, 0)
+    render(
+      <SignalReadout
+        crossing={crossing}
+        segments={[
+          { start: [0, -150, 0], end: [0, -130, 0], kind: 'chestWall', lengthMm: 20 },
+          { start: [0, -130, 0], end: [0, -125, 0], kind: 'rib', lengthMm: 5 },
+          { start: [0, -125, 0], end: [0, -29, 0], kind: 'lung', lengthMm: 96 },
+          { start: [0, -29, 0], end: [0, -11, 0], kind: 'nodule', lengthMm: 18 },
+          { start: [0, -11, 0], end: [0, 60, 0], kind: 'mediastinum', lengthMm: 71 },
+        ]}
+      />,
+    )
     const meaning = document.querySelector('[data-ray-meaning]')?.textContent ?? ''
-    expect(meaning).toMatch(/One X-ray path from the tube through the lesion/)
-    expect(meaning).toMatch(/shows density, not which organ it is/)
-    expect(meaning).not.toMatch(/heart|mediastinum/)
+    expect(meaning).toMatch(/X-ray path from the tube through the centre of the nodule/)
+    expect(meaning).toMatch(/superimposed on the nodule/)
+    // The frontal view of this nodule: behind the heart, with a posterior rib on the path.
+    expect(document.querySelector('[data-ray-crossing]')?.textContent).toBe(
+      'Over the nodule: Heart and mediastinum, rib',
+    )
+    const legend = [...document.querySelectorAll('[data-ray-structure]')].map((n) => n.textContent)
+    expect(legend).toEqual(['Nodule', 'Heart and mediastinum', 'Rib', 'Lung', 'Chest wall'])
+    expect(document.body.textContent).not.toMatch(/\bmm\b|density/)
   })
 })
 
