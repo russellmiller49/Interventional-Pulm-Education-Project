@@ -213,7 +213,8 @@ test('projection teaching, comparison, explanation before an answer, retry and r
   // The demonstration did not do the learner's work: no Continue, but a way on without it.
   await expect(primary(page)).toHaveCount(0)
   await expect(skip(page)).toHaveText('Skip this step')
-  await setRange(page, 'C-arm obliquity', 35)
+  // LAO 24° changes the projection and leaves only lung over the nodule (expert-session round).
+  await setRange(page, 'C-arm obliquity', -24)
   await primary(page).click()
   await setRange(page, 'C-arm obliquity', 0)
   await primary(page).click()
@@ -620,7 +621,7 @@ test('required-image failure counts nothing as seen, keeps explanation and retry
   // Contract change (PI-01): the failed image no longer holds the learner on this step.
   await expect(skip(page)).toHaveText('Continue without the image')
   await skip(page).click()
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await expect(page.locator('[data-now-status]')).toContainText('without completing it')
   await expectNoStoredResponses(page)
@@ -647,7 +648,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await capture(page, info, `projection-${width}.png`)
     await primary(page).focus()
     await page.keyboard.press('Enter')
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
     await expect(page.locator('[data-now-focus]')).toBeFocused()
   }
   for (const width of [900, 1440]) {
@@ -660,7 +661,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await primary(page).scrollIntoViewIfNeeded()
     await capture(page, info, `projection-text-200-percent-${width}.png`)
     await primary(page).click()
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
   }
 })
 
@@ -713,7 +714,9 @@ for (const id of [
     await openSection(page, id)
     await advanceReading(page, id)
     if (id === 'projection') {
-      await controlRange(page, 'orbit', 35)
+      // LAO 24° leaves only lung over the nodule: the obliquity read off the axial CT.
+      await controlRange(page, 'orbit', -24)
+      await expect(page.locator('[data-readout="rayCrosses"]')).toContainText('Lung only')
       await primary(page).click()
       await controlRange(page, 'orbit', 0)
       await primary(page).click()
@@ -740,6 +743,9 @@ for (const id of [
       await controlRange(page, 'plane', 0)
       await primary(page).click()
       await controlRange(page, 'sweep', 50)
+      // Expert-session round, part 2: centre the arc where the heart and spine are off the nodule.
+      await controlRange(page, 'sweepCenter', -20)
+      await expect(page.locator('[data-readout="rayCrossesAtCentre"]')).toContainText('Rib')
       await primary(page).click()
       // PR #279 sanity review (F3, CHK-S10): the check is the written scenario its stem is, with no
       // reconstructed plane beside it, so it offers no plane to browse and no plane readout.
@@ -854,7 +860,7 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
   await expect(page.locator('[data-baseline-image] img')).toHaveCount(1)
   const fingerprint = async () => page.locator('[data-baseline-image] img').getAttribute('src')
   const baseline = await fingerprint()
-  await controlRange(page, 'orbit', 35)
+  await controlRange(page, 'orbit', -24)
   await page.getByText('Course outline', { exact: true }).click()
   await page.setViewportSize({ width: 1024, height: 768 })
   await page.getByText('Course outline', { exact: true }).click()
@@ -3437,4 +3443,52 @@ test('expert session: the DTS compare step moves the arc’s centre and reconstr
   await expect(page.locator('[data-focus-readout]')).toContainText('the nodule is in focus')
   // The position overlay is placed for a frontal arc only.
   await expect(page.locator('[data-dts-overlay-toggle]')).toHaveCount(0)
+})
+
+/* ------------------------------------------------------------------ *
+ * Expert session, part 2 (2026-10-20): the rules the educators' slides confirmed, on the lab. Every
+ * angle here is pinned in model-truth.test.ts (`content/angleRules.ts`).
+ * ------------------------------------------------------------------ */
+
+test('expert session, part 2: at LAO 20° a posterior rib lies over the nodule and 3° cranial takes it off', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'signal', 'lab-task')
+  const readout = page.locator('[data-readout="rayCrosses"] dd')
+  await controlRange(page, 'orbit', -20)
+  await controlRange(page, 'tilt', 0)
+  await expect(readout).toHaveText('Rib')
+  await controlRange(page, 'tilt', 3)
+  await expect(readout).toHaveText('Lung only')
+  await expect(page.locator('[data-now-status]')).toContainText('Checklist complete')
+})
+
+test('expert session, part 2: Section 19 runs one nodule through the workflow on a wedge', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await advanceToKind(page, 'suite-cases', 'lab-task')
+  const anatomy = page.locator('[data-readout="rayCrosses"] dd')
+  const view = page.locator('[data-readout="viewObliquityDeg"] dd')
+  await expect(page.locator('#peripheral-imaging-control-wedge')).toBeEnabled({ timeout: 60000 })
+  await page.locator('#peripheral-imaging-control-wedge').selectOption('15')
+  await controlRange(page, 'orbit', -9)
+  // The C-arm is at LAO 9°; through the rolled chest the projection is LAO 24°.
+  await expect(view).toHaveText('-24°')
+  await expect(anatomy).toHaveText('Lung only')
+  await controlRange(page, 'field', 70)
+  await controlRange(page, 'zoom', 1.5)
+  await expect(page.locator('[data-now-status]')).toContainText('Checklist complete')
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'suite-cases:compare')
+  await controlRange(page, 'orbit', -5)
+  await expect(anatomy).toHaveText('Rib')
+  await controlRange(page, 'tilt', 3)
+  await expect(anatomy).toHaveText('Lung only')
+  await page.locator('#peripheral-imaging-control-wedge').selectOption('0')
+  await controlRange(page, 'tilt', 0)
+  await controlRange(page, 'orbit', -24)
+  await expect(view).toHaveText('-24°')
+  await expect(anatomy).toHaveText('Lung only')
+  await expect(primary(page)).toBeEnabled()
 })
