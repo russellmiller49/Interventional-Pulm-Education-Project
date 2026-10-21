@@ -28,12 +28,12 @@ export const IMAGING_TASK_LEADS: Readonly<Partial<Record<ImagingSectionId, Imagi
       'Capture a new contour. Only a new acquisition puts the contour back on the lesion; switching the old one off does not.',
   },
   projection: {
-    act: 'Rotate the C-arm with the tool and the lesion held still. Their separation on the image changes although neither has moved.',
+    act: 'Rotate the C-arm with the tool and the lesion held still. Their separation on the image changes although neither has moved. Then plan as you would from the CT: pick the obliquity side, rotate until the heart leaves the nodule, and use beam tilt where the diaphragm or a rib is in the way. Anatomy over the nodule names what the path crosses at each angle.',
     observe:
       'Bring the C-arm back to 0° and compare with the saved baseline. The tool and the lesion overlap again: the depth between them is still there, and the frontal view cannot show it.',
   },
   signal: {
-    act: 'Rotate the C-arm and follow the X-ray path through the lesion. Watch which dense structures cross it at each angle.',
+    act: 'Rotate the C-arm and follow the X-ray path through the lesion. Watch which dense structures cross it at each angle. Then, at an LAO projection with the heart off the nodule, change the beam tilt a degree at a time and watch a rib slide onto the path and off it.',
   },
   field: {
     act: 'Close the collimators in two stages and watch the image. First narrow the field as far as the planned tool path and both landmarks allow: this is the field for advancing the tool. Then, with the tool at the lesion, keep narrowing until the spine is outside the field, and see the lung, the lesion and the tool gain contrast.',
@@ -46,12 +46,12 @@ export const IMAGING_TASK_LEADS: Readonly<Partial<Record<ImagingSectionId, Imagi
       'Set the pulse width back, then lower the pulse rate. The tool now travels farther between frames, with the same blur in each.',
   },
   'two-dimensional': {
-    act: 'Work the image as you would at the table: change the projection, collimate around the lesion without losing the tool path, then zoom the stored image to inspect it.',
+    act: 'Work the image in the order of the workflow: project the nodule clear of the heart, collimate around it without losing the tool path, then zoom the stored image to inspect it.',
   },
   'dts-acquisition': {
     act: 'Scroll the plane through the tool, then through the lesion. Each is sharp at its own depth and blurs as the plane moves away from it.',
     observe:
-      'Change the sweep angle and scroll again. A wider arc shortens the range of depth over which a structure stays sharp.',
+      'Change the sweep angle and scroll again. A wider arc shortens the range of depth over which a structure stays sharp. Then move the centre of the arc toward LAO and read the anatomy over the nodule at the arc’s centre: once the heart is off that path, the nodule stands out in its own plane.',
   },
   'cbct-acquisition': {
     act: 'Center the lesion on both scout images, go through the four checks you would call out with the team before a spin, then run the spin.',
@@ -78,6 +78,11 @@ export const IMAGING_TASK_LEADS: Readonly<Partial<Record<ImagingSectionId, Imagi
     act: 'Move the operator closer to the patient and farther away. Scatter exposure falls with the square of the distance from the patient.',
     observe:
       'Place the shield, then rotate the C-arm. See where the tube, the patient and the shield now sit relative to the operator.',
+  },
+  'suite-cases': {
+    act: 'Set the case up in the order of the workflow. Put the wedge under the left side, then rotate the C-arm toward LAO within the obliquity the room allows, reading the projection through the patient and the anatomy over the nodule as you go. When only lung lies over it, collimate around the lesion without losing the tool path or the landmarks, then zoom the stored image.',
+    observe:
+      'Nudge the beam tilt a degree at a time and watch a rib cross the nodule. Then take the wedge out: the same projection now needs the C-arm itself to rotate further into LAO.',
   },
   'dose-reporting': {
     act: 'Change the field area and leave the air kerma alone. The kerma–area product changes in proportion to the area.',

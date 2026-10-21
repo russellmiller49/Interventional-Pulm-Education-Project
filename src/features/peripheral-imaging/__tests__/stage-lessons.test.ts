@@ -49,7 +49,19 @@ describe('the stage lessons', () => {
       'explain',
       'prediction',
     ])
+    // Expert-session round, part 2: Section 5 reads the angles off the CT on its own screen, and
+    // Section 19's matching task became the run-through on the geometry lab.
     expect(imagingStageLesson('projection').steps.map((s) => s.interaction.kind)).toEqual([
+      'read',
+      'read',
+      'read',
+      'lab-task',
+      'observe',
+      'prediction',
+      'explain',
+      'prediction',
+    ])
+    expect(imagingStageLesson('suite-cases').steps.map((s) => s.interaction.kind)).toEqual([
       'read',
       'read',
       'lab-task',

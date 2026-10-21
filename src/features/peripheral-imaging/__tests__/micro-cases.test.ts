@@ -27,17 +27,24 @@ describe('the practice case registry', () => {
   })
 
   it('pairs no case to a section that teaches no mechanism', () => {
+    // Expert-session round, part 2 (owner-approved plan, A9): Sections 4 and 5 now teach the setup
+    // and the choice of angles, and each has one practice case for it.
+    const foundationWithPractice = ['current-anatomy', 'projection']
     const stray = peripheralImagingSectionIds.filter(
-      (id) => !pairedSectionIds.includes(id) && microCasesForSection(id).length > 0,
+      (id) =>
+        !pairedSectionIds.includes(id) &&
+        !foundationWithPractice.includes(id) &&
+        microCasesForSection(id).length > 0,
     )
     expect(stray).toEqual([])
   })
 
   it('holds the number of cases the plan asked for', () => {
     // One per mechanism/application section, and a second where the section fills two rows of the
-    // diagnostic table. The plan's estimate was fourteen to eighteen.
+    // diagnostic table. The plan's estimate was fourteen to eighteen; the expert-session round added
+    // four (setup, the obliquity, the nudge and the centre of the DTS arc).
     expect(imagingMicroCases.length).toBeGreaterThanOrEqual(14)
-    expect(imagingMicroCases.length).toBeLessThanOrEqual(18)
+    expect(imagingMicroCases.length).toBeLessThanOrEqual(20)
   })
 
   it('lists cases in the order the course teaches their sections', () => {

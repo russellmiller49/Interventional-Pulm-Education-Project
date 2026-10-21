@@ -202,10 +202,13 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       for (let i = 0; i < 6; i++) clickPrimary()
       break
     case 'projection':
-      setRange('orbit', observe ? 0 : 35)
+      // LAO 24° leaves only lung over the nodule (the obliquity is read off the axial CT).
+      setRange('orbit', observe ? 0 : -24)
       break
     case 'signal':
-      setRange('orbit', -35)
+      // At LAO 20° a posterior rib lies over the nodule; 3° cranial takes it off.
+      setRange('orbit', -20)
+      setRange('tilt', 3)
       break
     case 'field':
       if (observe) {
@@ -228,9 +231,23 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       setRange('zoom', 1.5)
       break
     case 'two-dimensional':
-      setRange('orbit', 35)
+      setRange('orbit', -20)
       setRange('field', 90)
       setRange('zoom', 1.5)
+      break
+    case 'suite-cases':
+      if (observe) {
+        setRange('orbit', -5)
+        setRange('tilt', 3)
+        setSelect('wedge', '0')
+        setRange('orbit', -24)
+        setRange('tilt', 0)
+      } else {
+        setSelect('wedge', '15')
+        setRange('orbit', -9)
+        setRange('field', 70)
+        setRange('zoom', 1.5)
+      }
       break
     case 'current-anatomy':
       if (observe) clickControl('capture')
@@ -244,8 +261,10 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       }
       break
     case 'dts-acquisition':
-      if (observe) setRange('sweep', 50)
-      else {
+      if (observe) {
+        setRange('sweep', 50)
+        setRange('sweepCenter', -20)
+      } else {
         setRange('plane', -18)
         setRange('plane', 0)
       }

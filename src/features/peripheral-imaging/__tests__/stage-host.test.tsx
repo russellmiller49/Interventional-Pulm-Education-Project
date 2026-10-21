@@ -67,6 +67,8 @@ it('replay and model reset never answer anything or satisfy the guided goal', ()
   fireEvent.click(screen.getByRole('button', { name: 'Change projection only' }))
   setRange('orbit', 50)
   fireEvent.click(screen.getByRole('button', { name: 'Replay demonstration' }))
+  // Three reading screens: parallax, the angles from the CT, alignment versus advancement.
+  clickPrimary()
   clickPrimary()
   clickPrimary()
   expect(currentStepId()).toBe(lesson.steps.find((s) => s.interaction.kind === 'lab-task')!.id)
@@ -207,6 +209,7 @@ it('back, restart and reload start the section again and restore no answer', () 
 
 it('looking back at a skipped step says it was not done and puts its controls away', () => {
   const { lesson } = mountSection('projection')
+  clickPrimary()
   clickPrimary()
   clickPrimary()
   const act = lesson.steps.find((step) => step.interaction.kind === 'lab-task')!

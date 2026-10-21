@@ -168,7 +168,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'beam',
     layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: ['separationMm', 'depthMm', 'rayCrosses'],
+    // The anatomy readout sits second so that, with the two controls, it stays above the action bar.
+    readouts: ['separationMm', 'rayCrosses', 'depthMm'],
   }),
   signal: view('signal', {
     mode: 'signal',
@@ -282,7 +283,10 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     mode: 'projection',
     litStop: 'display',
     camera: 'suite',
-    layers: [...ANATOMY, ...SUITE, 'monitor'],
+    layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
+    controls: ['wedge', 'orbit', 'tilt', 'field', 'zoom'],
+    // Five controls already fill the dock; the anatomy readout comes first so it stays in view.
+    readouts: ['rayCrosses', 'viewObliquityDeg', 'contextRetained'],
   }),
 }
 

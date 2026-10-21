@@ -1,5 +1,6 @@
-import type { LabGoal } from '../engine/labGoalEvaluation'
+import { FIELD_FOR_PATH_MAX, type LabGoal } from '../engine/labGoalEvaluation'
 import { ACQUISITION_CHECK_KEYS, type LabMetricId } from '../engine/labMetrics'
+import { ANGLE_EXAMPLES } from './angleRules'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import type { ImagingSectionId } from './pathway'
 
@@ -117,6 +118,11 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         id: 'touched-orbit',
         label: 'Change the projection with tool and lesion held fixed',
       },
+      {
+        type: 'event',
+        id: 'lung-only-seen',
+        label: 'Find an obliquity and tilt with only lung over the nodule',
+      },
     ],
     observe: [
       {
@@ -135,6 +141,12 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         type: 'event',
         id: 'touched-orbit',
         label: 'Compare a different CT projection with the baseline',
+      },
+      {
+        type: 'event',
+        id: 'rib-moved-by-tilt',
+        label:
+          'With the heart off the nodule, nudge the beam tilt until a rib moves onto or off it',
       },
     ],
     observe: [],
@@ -187,9 +199,11 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   'two-dimensional': {
     act: [
       {
-        type: 'event',
-        id: 'touched-orbit',
-        label: 'Choose another projection to inspect the relationship',
+        type: 'metric',
+        metric: 'mediastinumOnRay',
+        op: 'eq',
+        value: false,
+        label: 'Project the nodule clear of the heart',
       },
       {
         type: 'event',
@@ -227,8 +241,15 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         id: 'touched-sweep',
         label: 'Change the DTS arc and compare its depth uncertainty',
       },
+      {
+        type: 'metric',
+        metric: 'rayCrossesAtCentre',
+        op: 'eq',
+        value: 'Rib',
+        label: 'Move the centre of the arc until the heart and spine are off the nodule',
+      },
     ],
-    watch: ['sweepDeg', 'planeMm'],
+    watch: ['sweepDeg', 'sweepCentreDeg', 'rayCrossesAtCentre', 'planeMm'],
   },
   'cbct-acquisition': {
     act: [centeredGoal, ...acquisitionChecks, capturedGoal],
@@ -334,6 +355,65 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     ],
     observe: [],
     watch: ['kapGyCm2', 'kapMicroGyM2'],
+  },
+  // Expert-session round, part 2 (A7): one nodule through the workflow. Every goal holds at once at
+  // a 15° wedge and LAO 9° (model-truth.test.ts); the nudge and the clear view without the wedge
+  // are the comparison.
+  'suite-cases': {
+    act: [
+      {
+        type: 'value',
+        key: 'wedge',
+        op: 'eq',
+        value: ANGLE_EXAMPLES.wedge.wedge,
+        label: 'Put the wedge under the left side',
+      },
+      {
+        type: 'value',
+        key: 'orbit',
+        op: 'abs-lte',
+        value: ANGLE_EXAMPLES.runThroughOrbitLimit,
+        label: 'Keep the C-arm within the obliquity the docked platform allows',
+      },
+      {
+        type: 'metric',
+        metric: 'rayCrosses',
+        op: 'eq',
+        value: 'Lung only',
+        label: 'Reach a projection with only lung over the nodule',
+      },
+      {
+        type: 'metric',
+        metric: 'irradiatedAreaPct',
+        op: 'lte',
+        value: (FIELD_FOR_PATH_MAX * FIELD_FOR_PATH_MAX) / 100,
+        label: 'Narrow the collimated field around the lesion',
+      },
+      {
+        type: 'metric',
+        metric: 'contextRetained',
+        op: 'eq',
+        value: true,
+        label: 'Keep the planned tool path and both landmarks in the field',
+      },
+      { type: 'event', id: 'touched-zoom', label: 'Inspect the stored image with display zoom' },
+    ],
+    observe: [
+      {
+        type: 'event',
+        id: 'rib-moved-by-tilt',
+        label: 'Nudge the beam tilt until a rib moves onto or off the nodule',
+      },
+      { type: 'value', key: 'wedge', op: 'eq', value: 0, label: 'Take the wedge out' },
+      {
+        type: 'metric',
+        metric: 'rayCrosses',
+        op: 'eq',
+        value: 'Lung only',
+        label: 'Find the clear projection again with the C-arm alone',
+      },
+    ],
+    watch: ['viewObliquityDeg', 'rayCrosses', 'contextRetained'],
   },
 }
 

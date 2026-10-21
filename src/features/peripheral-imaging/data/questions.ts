@@ -1116,6 +1116,119 @@ export const QUESTIONS: Question[] = [
     'A dose notification is set on an index that accumulates across one patient’s imaging, and it prompts review (AAPM suggests the first at 3 Gy, then every 1 Gy): the total so far, the record, the imaging still planned and any follow-up. It is not peak skin dose and not a statement about equipment performance. Record the quantity, its units and the acquisitions it includes.',
     ['aapm12', 'wabip', 'skin'],
   ),
+  // Expert-session round, part 2 (2026-10-20): practice and integrated items for planning the
+  // projection, positioning, the nudge and the centre of the DTS arc. Every direction they key is
+  // pinned in model-truth.test.ts; all are drafts pending physician review.
+  item(
+    'current-anatomy-practice-1',
+    'choose',
+    'What should the setup include before the first image?',
+    'b',
+    [
+      [
+        'Prone positioning, so that the posterior lung stays uppermost for the whole case.',
+        'Prone positioning does lift the posterior lung, but it changes anesthesia, airway access and the platform setup far more than a wedge does, and a wedge under the nodule side lifts that lung out of the dependent zone on any platform.',
+      ],
+      [
+        'A recruitment maneuver with anesthesia, and a wedge under the left side.',
+        'Dependent atelectasis can begin soon after induction and keep progressing, and nobody can reliably predict who will develop it. Recruiting before the first image keeps aerated lung around the nodule, and lifting the nodule side moves it out of the dependent lung. Settle the position before registration.',
+      ],
+      [
+        'Supine positioning, with a recruitment maneuver if the nodule is lost on imaging.',
+        'Waiting for the nodule to disappear makes recruitment a rescue. By then the collapsing lung has removed the contrast around the nodule and moved it away from the navigation target, and the planning images no longer match the lung.',
+      ],
+    ],
+    'Prevent atelectasis and position the patient before the first image: recruit with anesthesia and lift the nodule side, rather than rescuing a nodule that has already been lost.',
+    ['ilocate', 'vespa'],
+  ),
+  item(
+    'projection-practice-1',
+    'choose',
+    'Which obliquity should the team plan first?',
+    'b',
+    [
+      [
+        'RAO, rotating until the nodule moves away from the spine on the axial CT.',
+        'RAO swings the receptor toward the patient’s right, so for a right anterior nodule the beam meets the chest wall head-on at the nodule rather than running along it. The pleura beside the nodule is seen en face, and the line through the nodule runs back across the mediastinum.',
+      ],
+      [
+        'LAO, rotating until the line through the nodule clears the mediastinum on the axial CT.',
+        'For a right anterior nodule, a hand laid flat on the chest wall over it gives LAO: the beam runs along the chest wall through the nodule, which also shows the pleura beside it edge-on. The axial CT then says how far to rotate, until the line through the nodule misses the mediastinum.',
+      ],
+      [
+        'Frontal, with cranial angulation planned on the sagittal CT instead of any obliquity.',
+        'Cranial or caudal angulation moves the receptor along the body. It does not move a nodule off the mediastinum or show the anterior chest wall edge-on; the axial CT decides the obliquity, and the sagittal then adds any tilt.',
+      ],
+    ],
+    'Read the obliquity off the axial CT: a hand on the chest wall over the nodule gives the side (left anterior and right posterior nodules call for RAO, right anterior and left posterior for LAO), and the axial image gives how far.',
+    ['setser', 'tg272'],
+  ),
+  item(
+    'signal-practice-3',
+    'optimize',
+    'Which small change lays the nodule onto the rib’s shadow?',
+    'c',
+    [
+      [
+        'A few more degrees of LAO obliquity, to slide the nodule toward the rib.',
+        'Obliquity swings the receptor around the chest and shifts structures sideways against each other. The posterior ribs run roughly across the image here, so it is cranial or caudal angulation that moves the nodule up or down against them, and more LAO risks bringing the spine back over it.',
+      ],
+      [
+        'A few degrees of cranial angulation, to tip the beam toward the head.',
+        'Cranial angulation lowers the nodule against a rib behind it on a monitor with the head at the top, so it moves the nodule away from the rib above it. It would lay the nodule onto a rib in front of it instead.',
+      ],
+      [
+        'A few degrees of caudal angulation, to tip the beam toward the feet.',
+        'Structures behind the nodule and in front of it shift in opposite directions. With caudal angulation the nodule rises against a rib behind it, so a few degrees lays it onto the posterior rib just above. Make one small change, then look again.',
+      ],
+    ],
+    'Name the rib before you nudge. Caudal angulation raises the nodule against a rib behind it and lowers it against a rib in front of it; cranial does the reverse. A few degrees is usually enough.',
+    ['setser', 'tg272'],
+  ),
+  item(
+    'dts-acquisition-practice-3',
+    'dts',
+    'What gives the best chance of seeing the nodule clearly in its plane?',
+    'c',
+    [
+      [
+        'Repeat the frontal acquisition across a wider arc and review thinner planes.',
+        'A wider arc does narrow the range of depths that blur into each plane, so this helps. But the heart still lies along the central beam in front of the nodule, and what remains of its blur still falls across the nodule’s plane.',
+      ],
+      [
+        'Keep the frontal centre and scroll to a shallower plane, away from the haze.',
+        'The haze is the heart in front of the nodule, blurred across every plane by the limited arc. Scrolling moves the plane away from the nodule as well; it does not take the heart off the central beam.',
+      ],
+      [
+        'Wedge the left side up and centre the arc on the view that clears the heart.',
+        'The planes lie square to the beam at the centre of the arc, and what lies in front of and behind the nodule along that beam blurs into its plane. Rolling the patient brings the clear view within the C-arm’s reach, so lung rather than heart lies along the central beam.',
+      ],
+    ],
+    'Centre the DTS arc on the projection that shows the nodule clear. If the C-arm cannot rotate that far, a wedge under the nodule side rolls the chest toward it, or the arc can run asymmetrically where the system allows.',
+    ['saad', 'frontier'],
+  ),
+  item(
+    'case-9',
+    'choose',
+    'Before any fluoroscopy, the team reviews the planning CT of a small solid nodule in the posterior left lung. On the axial image the heart lies directly in front of it; on the sagittal image the dome of the diaphragm rises in front of it and below it. The lung has been recruited and a wedge is under the left side. Which projection plan fits the CT?',
+    'b',
+    [
+      [
+        'RAO until the heart clears, then caudal angulation to move the nodule off the dome.',
+        'For a nodule behind the heart in the left lung, RAO swings the receptor to the right and keeps the heart on the line through the nodule. Caudal angulation then runs that line down into the dome and the upper abdomen.',
+      ],
+      [
+        'LAO until the heart clears, then cranial rather than caudal angulation if more is needed.',
+        'A left posterior nodule calls for LAO, which swings the front of the line through the nodule to the left of the heart. The dome lies in front and below, so cranial angulation lifts the line above it, whereas caudal runs it into the abdomen.',
+      ],
+      [
+        'Frontal with caudal angulation, then LAO only if the nodule is still hidden.',
+        'Caudal angulation steep enough to take the heart off this nodule brings the diaphragm over it instead, so the first image trades one structure for another. The axial CT already said which obliquity would clear the heart.',
+      ],
+    ],
+    'Plan both angles from the CT before the first frame: the obliquity from the axial image, the cranial or caudal angle from the sagittal, and the second projection the same way.',
+    ['setser', 'tg272'],
+  ),
 ]
 
 /**

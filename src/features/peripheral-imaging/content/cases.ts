@@ -6,7 +6,7 @@ import { isImagingSectionId, PERIPHERAL_IMAGING_MODULE_ID, type ImagingSectionId
 import { toClinicalLearningItem } from './stageItems'
 
 /**
- * The eight integrated cases: suite situations that draw on several sections, on the page the
+ * The nine integrated cases: suite situations that draw on several sections, on the page the
  * course's old Assess address still opens.
  *
  * They began as the draft's capstone — decided once, in one sitting, after every section, against
@@ -19,6 +19,8 @@ import { toClinicalLearningItem } from './stageItems'
  * Prompt 04 (OD4-05, 2026-09-22) revised three cases. Their questions changed, so they are new
  * cases under new ids in the same slots; the earlier items stay in the bank and their addresses
  * redirect (`LEGACY_INTEGRATED_CASE_ADDRESSES`).
+ *
+ * The expert-session round (part 2, 2026-10-20) added a ninth, planning the projection from the CT.
  */
 
 /** Stable item identity. The name predates the conversion and is kept so item ids do not move. */
@@ -76,6 +78,12 @@ const CASE_DEFINITIONS: readonly {
     presentationTitle: 'KAP components on the dose report',
     pairedSectionId: 'dose-reporting',
   },
+  {
+    // Expert-session round, part 2 (2026-10-20): planning both angles from the CT.
+    id: 'case-9',
+    presentationTitle: 'Planning the projection before the first image',
+    pairedSectionId: 'projection',
+  },
 ]
 
 /**
@@ -132,7 +140,7 @@ export function imagingCasesPairedTo(sectionId: ImagingSectionId): readonly Imag
 
 export function validateImagingCases(): readonly string[] {
   const errors: string[] = []
-  if (imagingCases.length !== 8) errors.push('The integrated case set must hold eight cases.')
+  if (imagingCases.length !== 9) errors.push('The integrated case set must hold nine cases.')
   const ids = new Set<string>()
   for (const imagingCase of imagingCases) {
     const where = `Case ${imagingCase.id}`

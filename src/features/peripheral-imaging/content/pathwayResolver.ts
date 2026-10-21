@@ -127,8 +127,9 @@ export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
   },
   {
     id: 'fluoroscopy',
-    title: 'Optimize 2D fluoroscopy',
-    description: 'Compare projection, conspicuity, field and temporal sampling in a coached case.',
+    title: 'Create the contrast',
+    description:
+      'Choose the projection from the CT, use the anatomy behind the nodule, then collimate, time and work the 2D image in order.',
     sectionIds: ['projection', 'signal', 'field', 'time', 'two-dimensional'],
   },
   {
