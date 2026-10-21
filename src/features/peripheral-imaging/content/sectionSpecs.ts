@@ -229,7 +229,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     precommitDenyPatterns: [/only superimposed/i, /projection change (did|does) not move/i],
     modelBoundary:
       'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions.',
-    capstoneCaseId: null,
+    capstoneCaseId: 'case-9',
     sourceIds: ['setser', 'tg272', 'pritchett'],
   },
   {
@@ -571,12 +571,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'suite-cases',
-    recognizeTitle: 'One suite, every troubleshooting row',
+    recognizeTitle: 'One nodule, the whole workflow',
     newConcept:
       'Every finding in the suite arises at one component of image formation, and naming it guides the next step.',
     objective: 'Apply the imaging and radiation-safety principles to new procedural decisions.',
     incrementSentence:
-      'This section adds nothing new. Every row of the troubleshooting table, in the order the suite presents them.',
+      'This section adds nothing new. It runs one nodule through the 2D workflow in order, then applies the course to new decisions.',
     prerequisiteSectionIds: [
       'two-dimensional',
       'dts-interpretation',
@@ -589,12 +589,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     ],
     chainStops: ['source', 'beam', 'patient', 'detector', 'reconstruction', 'display'],
     grammarRowIds: [],
-    act: { kind: 'sort', sortId: 'where-it-lives' },
+    act: { kind: 'lab' },
     controlStrip: {
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'Every row of the table. Name where the problem arises before reaching for a control.',
+        'Every control in its place in the workflow. Name where a problem arises before reaching for one.',
     },
     precommitDenyPatterns: [
       /superimposition or lesion identity/i,
@@ -602,7 +602,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anatomy in the X-ray path or/i,
     ],
     modelBoundary:
-      'The findings in this section are the troubleshooting table’s rows, written for teaching; the eight integrated cases on their own page are teaching scenarios, not patient records.',
+      'The run-through uses the course CT with its authored nodule and tool, and the wedge rolls that CT about its long axis; the room’s limit on C-arm rotation is part of the teaching scenario. The integrated cases on their own page are teaching scenarios, not patient records.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'aapm12'],
   },

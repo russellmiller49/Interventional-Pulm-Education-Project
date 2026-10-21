@@ -48,6 +48,22 @@ interface MicroCaseDefinition {
  * reviewed sources; every item is `reviewStatus: 'draft'` pending subject-matter review.
  */
 const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
+  // Expert-session round, part 2 (2026-10-20): setup, the obliquity from the axial CT, the nudge and
+  // the centre of the DTS arc. Their directions are pinned in model-truth.test.ts.
+  {
+    id: 'current-anatomy-practice-1',
+    sectionId: 'current-anatomy',
+    presentationTitle: 'Setting up for a posterior nodule',
+    situation:
+      'A 14 mm solid nodule lies in the posterior left lower lobe, a few centimetres from the posterior chest wall. The patient is about to be intubated for navigation bronchoscopy, with the C-arm and the navigation platform in the room. Nothing has been imaged yet, and the team is agreeing the setup with anesthesia.',
+  },
+  {
+    id: 'projection-practice-1',
+    sectionId: 'projection',
+    presentationTitle: 'Planning a right anterior nodule',
+    situation:
+      'A 12 mm solid nodule lies in the right upper lobe against the anterior chest wall on the planning CT, with the mediastinum medial to it and slightly behind. Nothing has been imaged yet. The team is choosing the first oblique projection before the catheter is advanced.',
+  },
   {
     id: 'signal-practice-1',
     sectionId: 'signal',
@@ -61,6 +77,13 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
     presentationTitle: 'Washed-out image after an oblique projection',
     situation:
       'After a planned change of C-arm projection, the lesion is clear of the mediastinum and the needle is in view. The image now looks washed out rather than noisy, with low contrast across the whole field. Collimation is unchanged from the frontal projection and still includes most of the hemithorax, and the patient’s arm lies across the beam, well away from the lesion. Window/level and monitor brightness are as they were before the rotation.',
+  },
+  {
+    id: 'signal-practice-3',
+    sectionId: 'signal',
+    presentationTitle: 'Nodule just below a rib',
+    situation:
+      'At the planned LAO projection the heart and the spine are off a small nodule. On the monitor, with the head at the top, the nodule sits just below the lower edge of a rib, over a field of vessel shadows, and its margin is hard to follow. The CT shows that this rib lies behind the nodule. Anesthesia is ready to hold the breath.',
   },
   {
     id: 'field-practice-1',
@@ -103,6 +126,13 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
     presentationTitle: 'DTS depth mismatch',
     situation:
       'A needle has been advanced toward a peripheral nodule in the right lower lobe, and one DTS acquisition has been obtained across the available arc, with the tool still and the breath held throughout. Scrolling the reconstructed planes, the nodule is brightest on one plane, the needle tip is bright on that same plane, and so is a vessel crossing the region. The vessel stays bright through the neighbouring planes and never narrows onto one. The tip’s own brightness peaks on a plane slightly shallower than the nodule’s.',
+  },
+  {
+    id: 'dts-acquisition-practice-3',
+    sectionId: 'dts-acquisition',
+    presentationTitle: 'Faint nodule on a frontal DTS acquisition',
+    situation:
+      'A DTS acquisition centred on the frontal view has been reconstructed for a small nodule in the posterior left lung, behind the heart. The nodule is faint in its own plane, under a broad haze that never sharpens on any plane. On the axial CT the line through the nodule runs through the heart straight on, and through lung and a rib at 20° LAO. With the robotic platform docked, the arc cannot be centred beyond about 10° of LAO.',
   },
   {
     id: 'dts-interpretation-practice-1',

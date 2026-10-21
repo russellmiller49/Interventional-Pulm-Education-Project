@@ -104,15 +104,17 @@ describe('reports 1.4 and 8.2 — a heading names the task the activity runs', (
     expect(evidence.id).toBe('imaging-questions:evidence')
   })
 
-  it("the last section's matching activity names the components it matches to", () => {
+  it("the last section's hands-on step names the run-through it is, on the geometry lab", () => {
+    // Expert-session round, part 2 (A7): the matching task of report 8.2 became a run-through of
+    // one nodule through the workflow. The step keeps its record key.
     const lesson = imagingStageLesson('suite-cases')
-    const sort = lesson.steps.find((step) => step.interaction.kind === 'sort')!
-    expect(sort.id).toBe('suite-cases:guided')
-    expect(sort.title).toBe('Match each finding to its component of image formation')
-    if (sort.interaction.kind !== 'sort') throw new Error('unreachable')
-    // Its origins really are the six components, and no decision is asked for.
-    expect(sort.interaction.sort.origins).toHaveLength(6)
-    expect(sort.title).not.toMatch(/decision/i)
+    const act = lesson.steps.find((step) => step.interaction.kind === 'lab-task')!
+    expect(act.id).toBe('suite-cases:guided')
+    expect(act.title).toBe('Wedge, project, collimate and inspect')
+    if (act.interaction.kind !== 'lab-task') throw new Error('unreachable')
+    expect(act.interaction.lab).toBe('geometry')
+    expect(act.suite.controls).toEqual(['wedge', 'orbit', 'tilt', 'field', 'zoom'])
+    expect(lesson.steps.some((step) => step.interaction.kind === 'sort')).toBe(false)
   })
 
   it('pins the remaining reading screen whose title still says choose', () => {
@@ -191,16 +193,10 @@ describe('report PR2 — a reviewed section points at its own practice case, and
       (sectionId) => microCasesForSection(sectionId).length === 0,
     )
     expect(mapped.length).toBeGreaterThan(0)
-    // These six have no authored practice case; the reviewed card must link nothing for them
-    // rather than borrow another section's case.
-    expect(unmapped).toEqual([
-      'imaging-questions',
-      'chain-walk',
-      'good-image',
-      'current-anatomy',
-      'projection',
-      'suite-cases',
-    ])
+    // These four have no authored practice case; the reviewed card must link nothing for them
+    // rather than borrow another section's case. (Sections 4 and 5 gained theirs in the
+    // expert-session round.)
+    expect(unmapped).toEqual(['imaging-questions', 'chain-walk', 'good-image', 'suite-cases'])
     for (const sectionId of mapped)
       expect(microCasesForSection(sectionId)[0].sectionId).toBe(sectionId)
   })

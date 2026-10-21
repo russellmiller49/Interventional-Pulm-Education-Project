@@ -129,7 +129,7 @@ describe('the teaching figures are declared data and validate at import', () => 
     )
     const step = imagingLearningActivities('two-dimensional')[0]
     expect(step.content.indexOf('@two-axis-example')).toBe(
-      step.content.indexOf('A two-axis fluoroscopy technique') + 1,
+      step.content.indexOf('The 2D workflow, in order') + 1,
     )
   })
 

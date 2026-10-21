@@ -63,14 +63,25 @@ import {
 import { rayProfile } from '../lib/rayProfile'
 import { RAY_CROSSING_TABLE, tableCrossing } from '../lib/rayCrossingTable'
 import {
+  beamSource,
   crossingBits,
   crossingFromMm,
   labelStructures,
+  pathSegments,
+  rayCrossingLabel,
   STRUCTURE_CODE,
   structureAt,
   structuresOnRay,
   type StructureVolume,
 } from '../lib/rayStructures'
+import {
+  ANGLE_EXAMPLES,
+  COURSE_NODULE_QUADRANT,
+  OBLIQUITY_ALONG_CHEST_WALL,
+  obliquityName,
+  type ChestWallQuadrant,
+} from '../content/angleRules'
+import { viewObliquity, WEDGE_CONTROL } from '../engine/labMetrics'
 
 /*
  * Prompt 04's figures make claims about the course's own teaching CT: which obliquity moves the
@@ -883,6 +894,13 @@ describe('a wedge under the nodule side lifts it out of the dependent lung', () 
     expect(supine.nodule!.y).toBeGreaterThan(supine.equatorPx!)
   })
 
+  it('a 15° wedge under the left side and LAO 9° give the clear LAO 24° view', () => {
+    const { wedge, orbit } = ANGLE_EXAMPLES.wedge
+    expect(viewObliquity(orbit, wedge)).toBe(ANGLE_EXAMPLES.clearOblique.obliquity)
+    expect(Math.abs(orbit)).toBeLessThanOrEqual(ANGLE_EXAMPLES.runThroughOrbitLimit)
+    expect(WEDGE_CONTROL.options?.some((option) => option.value === wedge)).toBe(true)
+  })
+
   it('moves the opacity into the lung that is now lowest', () => {
     const wedged = dependentOpacityImages(volume, { wedgeDeg: 30 })
     const { sizePx } = wedged
@@ -895,5 +913,89 @@ describe('a wedge under the nodule side lifts it out of the dependent lung', () 
       }
     // The image shows the patient's right on the left; lifting the left side drops the right lung.
     expect(changed.right).toBeGreaterThan(1.5 * changed.left)
+  })
+})
+
+describe('the angle rules the expert session taught, held to this CT and this convention', () => {
+  /*
+   * Expert-session round, part 2: the educators' slides confirmed each rule below. The angles are
+   * this CT's own; positive obliquity is RAO (detector toward the patient's right) and positive tilt
+   * is cranial (detector toward the head), as the monitor caption and the glossary state.
+   */
+  let structures: StructureVolume
+  beforeAll(() => {
+    structures = labelStructures(volume)
+  })
+  const clear = (obliquity: number, tilt: number) =>
+    rayCrossingLabel(tableCrossing(obliquity, tilt)) === 'Lung only'
+
+  it('a beam along the chest wall at the nodule: left anterior or right posterior is RAO, right anterior or left posterior LAO', () => {
+    const normals: Record<ChestWallQuadrant, [number, number]> = {
+      'left anterior': [1, 1],
+      'left posterior': [1, -1],
+      'right anterior': [-1, 1],
+      'right posterior': [-1, -1],
+    }
+    for (const [quadrant, [left, anterior]] of Object.entries(normals) as [
+      ChestWallQuadrant,
+      [number, number],
+    ][]) {
+      const side = OBLIQUITY_ALONG_CHEST_WALL[quadrant]
+      const beam = beamDirection(side === 'RAO' ? 45 : -45, 0)
+      // The beam runs along the chest wall: square to the outward normal at the nodule.
+      expect(Math.abs(beam[0] * left + beam[1] * anterior)).toBeLessThan(1e-9)
+      // The opposite side's 45° view crosses the chest wall instead.
+      const other = beamDirection(side === 'RAO' ? -45 : 45, 0)
+      expect(Math.abs(other[0] * left + other[1] * anterior)).toBeGreaterThan(1)
+    }
+  })
+
+  it('the course nodule is left posterior: left of the spine, with the heart in front of it', () => {
+    expect(COURSE_NODULE_QUADRANT).toBe('left posterior')
+    expect(LESION_CENTER[0]).toBeGreaterThan(SPINE_COLUMN.x + SPINE_COLUMN.halfWidth)
+    let first: number | null = null
+    for (let y = LESION_CENTER[1] + LESION_RADIUS + 1; y < 140 && first === null; y++) {
+      const code = structureAt(structures, [LESION_CENTER[0], y, LESION_CENTER[2]])
+      if (code !== STRUCTURE_CODE.lung) first = code
+    }
+    expect(first).toBe(STRUCTURE_CODE.mediastinum)
+  })
+
+  it('read the obliquity off the axial: only the LAO side clears the heart, and LAO 24° leaves lung only', () => {
+    for (let obliquity = 0; obliquity <= 75; obliquity++)
+      expect(tableCrossing(obliquity, 0).mediastinum).toBe(true)
+    const { obliquity, tilt } = ANGLE_EXAMPLES.clearOblique
+    expect(clear(obliquity, tilt)).toBe(true)
+    expect(obliquityName(obliquity)).toBe('LAO 24°')
+  })
+
+  it('read the tilt off the sagittal: straight on, cranial clears the heart; caudal only trades it for the diaphragm', () => {
+    const { obliquity, tilt } = ANGLE_EXAMPLES.cranialFrontal
+    for (const t of [tilt, tilt + 1, tilt + 2]) expect(clear(obliquity, t)).toBe(true)
+    for (let t = -25; t < 0; t++) {
+      const crossing = tableCrossing(obliquity, t)
+      expect(crossing.mediastinum || crossing.diaphragm).toBe(true)
+    }
+    expect(tableCrossing(obliquity, -6).diaphragm).toBe(true)
+  })
+
+  it('the nudge at LAO 20°: a posterior rib lies over the nodule, and 3° cranial takes it off', () => {
+    const { obliquity, tilt } = ANGLE_EXAMPLES.ribOblique
+    expect(obliquity).toBe(TWO_AXIS_EXAMPLE.chosenObliquity)
+    expect(rayCrossingLabel(tableCrossing(obliquity, tilt))).toBe('Rib')
+    expect(rayCrossingLabel(tableCrossing(obliquity, tilt - 2))).toBe('Rib')
+    for (let t = 2; t <= 4; t++) expect(clear(obliquity, t)).toBe(true)
+    expect(clear(obliquity, ANGLE_EXAMPLES.ribNudgeTilt)).toBe(true)
+    // The rib lies behind the nodule, on the tube side of the path: a posterior rib.
+    const source = beamSource(obliquity, tilt)
+    const detector = source.map((n, i) => n + (LESION_CENTER[i] - n) * 3) as [
+      number,
+      number,
+      number,
+    ]
+    const distance = (point: readonly number[]) => Math.hypot(...point.map((n, i) => n - source[i]))
+    const rib = pathSegments(structures, source, detector).find((segment) => segment.kind === 'rib')
+    expect(rib).toBeDefined()
+    expect(distance(rib!.end)).toBeLessThan(distance(LESION_CENTER) - LESION_RADIUS)
   })
 })

@@ -242,6 +242,20 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Baseline · frontal overlap', 'Change projection only'],
       ['orbit'],
     ),
+    // Expert-session round, part 2: choosing the angles from the CT gets its own reading step.
+    read(
+      'angles',
+      'Plan the obliquity and tilt from the CT',
+      [
+        'Three reasons to angle the C-arm',
+        'Read the obliquity off the axial CT',
+        'Read the cranial or caudal angle off the sagittal CT',
+      ],
+      'suite',
+      'comparison',
+      ['Planned obliquity · lung only', 'Planned tilt · straight on'],
+      ['orbit', 'tilt'],
+    ),
     read(
       'alignment',
       'Choose a view for alignment or advancement',
@@ -278,6 +292,15 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'comparison',
       ['CT superimposition · baseline', 'CT superimposition · changed view'],
       ['orbit'],
+    ),
+    read(
+      'ribs',
+      'Use the ribs, and nudge with beam tilt',
+      ['Put the ribs to work', 'The nudge: a few degrees of cranial or caudal angulation'],
+      'suite',
+      'comparison',
+      ['Heart off · rib over the nodule', 'Nudged cranial · rib off'],
+      ['orbit', 'tilt'],
     ),
     work('Change the projection and compare silhouettes', 'comparison'),
     ...finish('comparison', 'signal'),
@@ -357,7 +380,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'case',
       'The tool is visible. What is still uncertain?',
-      ['@purpose', 'A two-axis fluoroscopy technique', '@two-axis-example', '@worked'],
+      ['@purpose', 'The 2D workflow, in order', '@two-axis-example', '@worked'],
       'suite',
       'comparison',
       [
@@ -403,7 +426,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'arc',
       'Prepare and inspect the acquisition arc',
-      ['Prepare the DTS acquisition'],
+      ['Centre the arc on the view that shows the nodule', 'Prepare the DTS acquisition'],
       'suite',
       'acquisition',
       ['Acquisition arc'],
@@ -664,9 +687,25 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'questions',
       'record',
     ),
-    // Report 8.2 (fellow walkthrough, PDF p.44): the task places eight findings against the six
-    // components of image formation; no decision is asked for, and the prompt already says so.
-    work('Match each finding to its component of image formation', 'record', 'case'),
+    // Expert-session round, part 2 (A7): the matching task (report 8.2) gave way to a run-through of
+    // one nodule on the geometry lab, with the wedge as a control.
+    read(
+      'run-through',
+      'Plan one nodule through the workflow',
+      ['One nodule through the workflow'],
+      'suite',
+      'comparison',
+      ['Supine · within the room’s obliquity', 'Wedged · same C-arm angle'],
+      ['wedge'],
+    ),
+    work('Wedge, project, collimate and inspect', 'comparison', 'suite', [
+      'wedge',
+      'orbit',
+      'tilt',
+      'field',
+      'zoom',
+    ]),
+    compare('Nudge the tilt, then take the wedge out', 'comparison', ['wedge', 'orbit', 'tilt']),
     ...finish('record', 'case'),
   ],
 }

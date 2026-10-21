@@ -339,6 +339,8 @@ describe('integrated-case slots and their old addresses', () => {
       'case-6',
       'case-7',
       'case-8-v2',
+      // Expert-session round, part 2: planning the projection from the CT.
+      'case-9',
     ])
     expect(LEGACY_INTEGRATED_CASE_ADDRESSES).toEqual({
       'case-4': 'case-4-v2',
@@ -351,7 +353,7 @@ describe('integrated-case slots and their old addresses', () => {
       expect(imagingCaseById.get(current)!.item.id).toBe(`capstone:${current}`)
     }
     expect(resolveIntegratedCaseAddress('case-1')).toBe('case-1')
-    expect(resolveIntegratedCaseAddress('case-9')).toBeNull()
+    expect(resolveIntegratedCaseAddress('case-10')).toBeNull()
     expect(resolveIntegratedCaseAddress('constructor')).toBeNull()
     // A case title names the situation; the image-based case's no longer states its finding.
     expect(imagingCaseById.get('case-5-v2')!.presentationTitle).not.toMatch(/beyond/i)

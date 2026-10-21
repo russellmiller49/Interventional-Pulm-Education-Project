@@ -206,6 +206,19 @@ export function labStateAfterChange(
     if (typeof separation === 'number' && separation >= 10) {
       events = withEvent(events, 'separation-seen')
     }
+    // Expert-session round, part 2: a projection with nothing but lung over the nodule, and the
+    // nudge — a change of beam tilt alone, with the heart off the nodule before and after, that
+    // lays a rib over the nodule or takes it off.
+    if (readouts.rayCrosses === 'Lung only') events = withEvent(events, 'lung-only-seen')
+    if (touched.length === 1 && touched[0] === 'tilt') {
+      const before = labReadouts(lab, state.values, lessonId)
+      if (
+        before.mediastinumOnRay === false &&
+        readouts.mediastinumOnRay === false &&
+        before.ribOnRay !== readouts.ribOnRay
+      )
+        events = withEvent(events, 'rib-moved-by-tilt')
+    }
   }
 
   if (lab === 'field' && touched.includes('field')) {

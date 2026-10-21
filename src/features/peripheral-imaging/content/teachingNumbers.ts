@@ -40,6 +40,12 @@ export const PI_NUMBER_ONLY_SOURCES = [
       'International Commission on Radiological Protection. ICRP Statement on Tissue Reactions / Early and Late Effects of Radiation in Normal Tissues and Organs. ICRP Publication 118. Ann ICRP. 41(1–2).',
   },
   {
+    id: 'hwang2018',
+    shortName: 'Hwang, Br J Radiol',
+    title:
+      'Hwang EJ, Kim H, Park CM, Yoon SH, Lim HJ, Goo JM. Cone beam computed tomography virtual navigation-guided transthoracic biopsy of small (≤ 1 cm) pulmonary nodules: impact of nodule visibility during real-time fluoroscopy. Br J Radiol. 2018;91(1087):20170805. doi:10.1259/bjr.20170805',
+  },
+  {
     id: 'chen2014',
     shortName: 'Chen, Ann Am Thorac Soc',
     title:
@@ -165,6 +171,20 @@ export const PI_NUMBERS = defineTeachingNumbers('peripheral-imaging', {
     note: 'Overall yield 69%; the probe identified 96% of the lesions.',
     checkedBy: ABSTRACT_ONLY,
     ...CHECKED,
+  },
+  // Expert-session round, part 2: the educators' slides open on this study; checked 2026-10-20.
+  'fluoro-visibility-accuracy': {
+    label: 'Diagnostic accuracy by nodule visibility on live fluoroscopy',
+    value: '89.1% when the nodule was visible on live fluoroscopy and 76.7% when it was not',
+    appliesTo:
+      'A retrospective series of 213 nodules of 1 cm or less biopsied percutaneously under CBCT virtual navigation, of which 29.6% were not visible',
+    class: 'expert-reference',
+    sources: [cite('hwang2018', 2018, 'Abstract, Results')],
+    note: 'Percutaneous, not bronchoscopic, biopsy. Visibility was the only independent predictor of diagnostic accuracy (odds ratio 2.49); complication rates did not differ.',
+    checkedBy: ABSTRACT_ONLY,
+    checkedOn: '2026-10-20',
+    signedBy: null,
+    signedOn: null,
   },
   'vespa-atelectasis': {
     label: 'Any atelectasis on chest CT 20 to 30 minutes after airway placement',

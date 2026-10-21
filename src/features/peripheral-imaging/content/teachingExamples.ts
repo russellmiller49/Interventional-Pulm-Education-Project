@@ -1,5 +1,6 @@
 import type { LabValues } from '../engine/labMetrics'
 import type { LabId } from '../types'
+import { ANGLE_EXAMPLES, obliquityName } from './angleRules'
 import type { ImagingSectionId } from './pathway'
 
 /** Authored examples, 2026-09-13. No setting here is a clinical target or a device specification. */
@@ -182,11 +183,44 @@ const sampling: readonly TeachingExample[] = [
   },
 ]
 
+/** Expert-session round, part 2: the angles read off the CT for this course's nodule. */
+const plannedAngles: readonly TeachingExample[] = [
+  {
+    title: 'Planned obliquity · lung only',
+    look: `Rotated toward LAO, the side a hand on the chest gives for this left posterior nodule, to ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)}: the path through the nodule now misses the heart, and Anatomy over the nodule reads lung only.`,
+    values: { orbit: ANGLE_EXAMPLES.clearOblique.obliquity, tilt: 0, depth: 30 },
+  },
+  {
+    title: 'Planned tilt · straight on',
+    look: `No obliquity, ${ANGLE_EXAMPLES.cranialFrontal.tilt}° cranial: the path through the nodule rises above the heart. Caudal angulation would clear the heart only by bringing the diaphragm over the nodule.`,
+    values: { orbit: 0, tilt: ANGLE_EXAMPLES.cranialFrontal.tilt, depth: 30 },
+  },
+]
+
+/** Expert-session round, part 2: the nudge at the two-axis view. */
+const ribNudge: readonly TeachingExample[] = [
+  {
+    title: 'Heart off · rib over the nodule',
+    look: `At ${obliquityName(ANGLE_EXAMPLES.ribOblique.obliquity)} the heart is off the nodule, and a posterior rib lies across the path through it.`,
+    values: { orbit: ANGLE_EXAMPLES.ribOblique.obliquity, tilt: 0, depth: 0 },
+  },
+  {
+    title: 'Nudged cranial · rib off',
+    look: `${ANGLE_EXAMPLES.ribNudgeTilt}° of cranial angulation lowers the nodule against the posterior rib, and the rib leaves the path through it. Caudal angulation would move it the other way.`,
+    values: {
+      orbit: ANGLE_EXAMPLES.ribOblique.obliquity,
+      tilt: ANGLE_EXAMPLES.ribNudgeTilt,
+      depth: 0,
+    },
+  },
+]
+
 export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstration | null {
   switch (id) {
     case 'chain-walk':
-    case 'projection':
       return { lab: 'geometry', examples: projection }
+    case 'projection':
+      return { lab: 'geometry', examples: [...projection, ...plannedAngles] }
     case 'good-image':
       return {
         lab: 'geometry',
@@ -215,6 +249,29 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
             title: 'CT superimposition · changed view',
             look: 'Only the C-arm angle changes. Compare the anatomical silhouettes and what the X-ray path through the lesion crosses.',
             values: { orbit: -35, tilt: 0, depth: 0 },
+          },
+          ...ribNudge,
+        ],
+      }
+    case 'suite-cases':
+      // Expert-session round, part 2 (A7): the same C-arm angle, supine and on the wedge.
+      return {
+        lab: 'geometry',
+        examples: [
+          {
+            title: 'Supine · within the room’s obliquity',
+            look: `The C-arm is at ${obliquityName(ANGLE_EXAMPLES.wedge.orbit)}, as far as the room allows toward the clear view. Supine, that is also the projection through the patient, and the heart still lies over the nodule.`,
+            values: { orbit: ANGLE_EXAMPLES.wedge.orbit, tilt: 0, depth: 22, wedge: 0 },
+          },
+          {
+            title: 'Wedged · same C-arm angle',
+            look: `The same C-arm angle with a ${ANGLE_EXAMPLES.wedge.wedge}° wedge under the left side: the chest rolls, the projection through the patient becomes ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)}, and only lung lies over the nodule.`,
+            values: {
+              orbit: ANGLE_EXAMPLES.wedge.orbit,
+              tilt: 0,
+              depth: 22,
+              wedge: ANGLE_EXAMPLES.wedge.wedge,
+            },
           },
         ],
       }

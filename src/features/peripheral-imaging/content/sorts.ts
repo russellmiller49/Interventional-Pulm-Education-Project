@@ -1,6 +1,6 @@
 import { SOURCE_BY_ID } from '../data/sources'
 import type { SourceId } from '../types'
-import { chainStop, isChainStopId } from './imagingChain'
+import { isChainStopId } from './imagingChain'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import type { ImagingSectionId } from './pathway'
 
@@ -9,7 +9,7 @@ import type { ImagingSectionId } from './pathway'
  *
  * Each sort is a set of statements the learner places into a small set of origins — the four
  * imaging questions, the fluoroscopy controls, the three uses of a reconstruction, the thing to
- * change first, the component of image formation a problem arises at — committed as a set and
+ * change first — committed as a set and
  * graded row by row in words. Every origin must be the answer to something (a decoy origin is a trick),
  * and every string passes the copy gate at import.
  */
@@ -35,15 +35,6 @@ export interface ImagingSort {
   readonly origins: readonly SortOrigin[]
   readonly rows: readonly SortRow[]
   readonly sourceIds: readonly SourceId[]
-}
-
-function chainOrigins(
-  ids: readonly ('source' | 'beam' | 'patient' | 'detector' | 'reconstruction' | 'display')[],
-): readonly SortOrigin[] {
-  return ids.map((id) => {
-    const stop = chainStop(id)
-    return { id, label: stop.title, definition: stop.plainName }
-  })
 }
 
 export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
@@ -365,72 +356,6 @@ export const IMAGING_SORTS: readonly ImagingSort[] = Object.freeze([
       },
     ],
     sourceIds: ['setser', 'tg272', 'wabip'],
-  },
-  {
-    id: 'where-it-lives',
-    sectionId: 'suite-cases',
-    prompt:
-      'Eight findings from the troubleshooting table. For each, say at which component of image formation the problem arises.',
-    originsAreChainStops: true,
-    origins: chainOrigins(['source', 'beam', 'patient', 'detector', 'reconstruction', 'display']),
-    rows: [
-      {
-        id: 'tool-visible-lesion-uncertain',
-        statement: 'The tool is visible; the lesion is uncertain.',
-        origin: 'patient',
-        rationale:
-          'Lesion identity and the current anatomy are questions about the patient, not about the tool.',
-      },
-      {
-        id: 'structure-overlaps',
-        statement: 'A structure is superimposed on the lesion.',
-        origin: 'beam',
-        rationale:
-          'Two objects on one X-ray path project to the same location. Superimposition arises from beam geometry.',
-      },
-      {
-        id: 'grainy-washed',
-        statement: 'The image is noisy or low in contrast.',
-        origin: 'source',
-        rationale:
-          'Photon output and scatter determine noise and contrast; they begin at the X-ray tube.',
-      },
-      {
-        id: 'edges-duplicate',
-        statement: 'Edges duplicate, or instruments lag behind their movement.',
-        origin: 'detector',
-        rationale:
-          'How often and for how long the detector acquires determines what motion does to the image.',
-      },
-      {
-        id: 'depth-uncertain',
-        statement: 'A depth relationship remains uncertain after two projections.',
-        origin: 'reconstruction',
-        rationale:
-          'A DTS acquisition or a CBCT spin resolves it, which is a reconstruction question.',
-      },
-      {
-        id: 'reconstructed-overlap',
-        statement: 'A reconstructed tool overlaps the lesion on a thick slab.',
-        origin: 'display',
-        rationale:
-          'Which component, which planes and which slab thickness are displayed is a display and interpretation question.',
-      },
-      {
-        id: 'setup-changed',
-        statement: 'The anatomy or the setup has changed since the last image.',
-        origin: 'patient',
-        rationale: 'Changes in the anatomy since the last acquisition belong to the patient.',
-      },
-      {
-        id: 'dose-alert',
-        statement: 'A dose index or a dose notification appears.',
-        origin: 'detector',
-        rationale:
-          'The quantity, its units and the modes it covers are defined where the beam is measured.',
-      },
-    ],
-    sourceIds: ['setser', 'wabip', 'aapm12'],
   },
 ])
 
