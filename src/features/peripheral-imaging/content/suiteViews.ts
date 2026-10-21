@@ -35,6 +35,7 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
   geometry: [
     { input: 'orbit', control: 'orbit' },
     { input: 'tilt', control: 'tilt' },
+    { input: 'wedgeDeg', control: 'wedge' },
     { input: 'toolDepth', control: 'depth' },
     { input: 'fieldPercent', control: 'field' },
     { input: 'crop', control: 'crop' },
@@ -54,6 +55,7 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
   ],
   dts: [
     { input: 'sweepDeg', control: 'sweep' },
+    { input: 'sweepCenterDeg', control: 'sweepCenter' },
     { input: 'planeDepth', control: 'plane' },
   ],
   acquisition: [
@@ -166,7 +168,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'beam',
     layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: ['separationMm', 'depthMm'],
+    readouts: ['separationMm', 'depthMm', 'rayCrosses'],
   }),
   signal: view('signal', {
     mode: 'signal',
@@ -174,7 +176,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'beam',
     layers: [...ANATOMY, 'Ribs and spine', ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: [],
+    readouts: ['rayCrosses'],
     defaults: { toolDepth: 0 },
   }),
   field: view('field', {
@@ -196,7 +198,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   'two-dimensional': view('two-dimensional', {
     mode: 'projection',
     controls: ['orbit', 'tilt', 'field', 'crop', 'cropWidth', 'zoom'],
-    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    readouts: ['rayCrosses', 'irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
     litStop: 'display',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
@@ -207,7 +209,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
     animation: { kind: 'sweep', autoplay: true, loop: false },
-    readouts: ['sweepDeg', 'planeMm'],
+    controls: ['sweep', 'plane', 'planeTool', 'planeLesion', 'planeDeeper'],
+    readouts: ['sweepDeg', 'planeMm', 'rayCrossesAtCentre'],
   }),
   'dts-interpretation': view('dts-interpretation', {
     mode: 'dts-prior',

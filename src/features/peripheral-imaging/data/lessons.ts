@@ -261,6 +261,23 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
+        // Expert-session feedback, 2026-10 (owner-approved plan): recruitment as part of setting up
+        // every case. A practice pattern, not a trial result; VESPA tested a bundle (Section 16).
+        title: 'Prevent atelectasis before the first image',
+        body: 'Atelectasis in the dependent lung can develop soon after induction and keep progressing through the case, and it is hard to predict in an individual patient. It defeats imaging twice: lung collapsing around a nodule removes the aerated lung that gives it contrast, and lung that keeps changing after the planning images moves the lesion away from the navigation target. Make ventilation part of setting up every case rather than a rescue once the lesion is lost.',
+        points: [
+          'Agree the ventilation strategy with anesthesia before induction.',
+          'Perform a recruitment maneuver before the first image, and again after airway inspection and suctioning.',
+          'Individualize: severe emphysema or hemodynamic instability can argue against a recruitment maneuver.',
+        ],
+        sources: ['ilocate', 'vespa'],
+      },
+      {
+        title: 'Position the patient so the lesion side is up',
+        body: 'Atelectasis forms in whatever lung is lowest. A wedge under the lesion side, or a lateral position, lifts that lung out of the dependent zone; it works with any navigation platform and adds little to the setup. Prone positioning does the same for a posterior lesion but changes anesthesia, airway access and platform setup far more. A position change also alters access, clearance and registration, so settle the position before registration and the first images.',
+        sources: ['ilocate'],
+      },
+      {
         title: 'When the lesion is not where it was expected',
         body: 'When the expected lesion is not seen, first check coverage and acquisition quality. The lesion may be outside the reconstruction volume, faint, obscured by atelectasis or hemorrhage, or displaced since the planning CT. Re-localize the lesion on current imaging before deciding whether to redirect, change modality, or reconsider the procedure.',
         sources: ['setser', 'mobile', 'ilocate'],
@@ -270,13 +287,14 @@ export const LESSONS: Lesson[] = [
       scenario:
         'A posterior lower-lobe lesion is clear on the planning CT but becomes inseparable from a new dependent opacity during the case.',
       reasoning:
-        'Navigation may still be registered to central structures while the peripheral lung has changed. Address atelectasis with anesthesia and reconfirm the lesion on current imaging; more precise navigation cannot restore the original anatomy.',
+        'Navigation may still be registered to central structures while the peripheral lung has changed. Address atelectasis with anesthesia, with a recruitment maneuver and a position that lifts the lesion side, and reconfirm the lesion on current imaging; more precise navigation cannot restore the original anatomy.',
     },
     lab: 'registration',
     labTask:
       'Change the anatomy, then toggle the stored contour. Note which information is still current.',
     takeaway: [
       'Review the airway and nearby hazards on the planning CT before instrumentation.',
+      'Set up ventilation and position with anesthesia before the first image.',
       'Treat every image as a record of one respiratory and anatomical state.',
       'A lesion that cannot be found needs an explanation.',
     ],
@@ -439,15 +457,19 @@ export const LESSONS: Lesson[] = [
         title: 'Collimate the spine out of the field',
         body: 'Collimating the beam to exclude highly radiopaque structures such as the spine can substantially improve how well you see a pulmonary target and the instruments used to reach it. Three mechanisms contribute: less scatter, automatic image processing that works on the lung, and more favorable automatic exposure control. The tool path has to stay in the field while the tool is advancing, so this is the field for working at the lesion.',
         points: [
-          'Less scatter. Photons that undergo Compton scattering in the patient reach the detector from unintended directions and add a background signal that lowers contrast. A tighter field irradiates less tissue, so fewer scattered photons are produced and fewer reach the detector. A needle, a catheter or a robotic bronchoscope then stands out better against the lung, which matters most for a subtle peripheral lesion or the tip of a small biopsy instrument.',
-          'Grayscale spent on the lung. The image processing sets displayed brightness, contrast and grayscale from what is in the field. A spine that fills much of the image takes the bright end of the range, so part of the available grayscale goes to anatomy that is irrelevant to the procedure. With the spine out of the field the same range is spread across the lung, the lesion and the instrument, and small differences in attenuation, such as a needle or forceps against a lesion, are easier to see. How much this helps depends on the system.',
-          'Automatic exposure set by the lung. Automatic exposure control adjusts kV, mA and pulse width to hold the detector signal in its measuring field. Dense structures in that field push it toward a more penetrating beam, which lowers contrast in the lung and can wash out the aerated lung beside them. With them excluded, the system regulates to the lung, the lesion and the instrument.',
+          'Less scatter: a tighter field irradiates less tissue, so less scattered radiation reaches the detector to lower contrast.',
+          'Grayscale spent on the lung: with the spine out of the field, image processing spreads the display range across the lung, the lesion and the instrument.',
+          'Automatic exposure control set by the lung: dense bone in its measuring field pushes it toward a more penetrating, lower-contrast beam.',
         ],
+        detail: {
+          title: 'Why each of the three helps',
+          body: 'Photons that undergo Compton scattering in the patient reach the detector from unintended directions and add a background signal that lowers contrast; a tighter field produces fewer of them, so a needle, a catheter or a robotic bronchoscope stands out better against the lung, which matters most for a subtle peripheral lesion or the tip of a small biopsy instrument. The image processing sets displayed brightness, contrast and grayscale from what is in the field: a spine that fills much of the image takes the bright end of the range, and with it excluded the same range is spread across the lung, the lesion and the instrument, so small differences in attenuation, such as a needle or forceps against a lesion, are easier to see; how much this helps depends on the system. Automatic exposure control adjusts kV, mA and pulse width to hold the detector signal in its measuring field; dense structures there push it toward a more penetrating beam, which lowers contrast in the lung and can wash out the aerated lung beside them, and with them excluded the system regulates to the lung, the lesion and the instrument.',
+        },
         sources: ['wabip', 'tg125', 'tg272'],
       },
       {
         title: 'Display zoom versus acquisition magnification',
-        body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system.',
+        body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system. When it improves edge recognition of a small nodule or a fine instrument, it often does so at a higher dose rate; collimating to the smaller field at the same time keeps the irradiated area, the scatter and the kerma–area product down.',
         sources: ['tg272', 'tg125'],
         detail: {
           title: 'Device-dependent limits of magnification modes',
@@ -629,17 +651,17 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Reconstructing planes from a DTS acquisition',
-        body: 'Digital tomosynthesis acquires a series of projections as the C-arm moves through a limited arc. Shifting and adding those projections brings one depth into register: structures at that depth reinforce, and structures at other depths blur out of plane. The result reduces superimposition and adds depth information that a single projection lacks. Think of sliding a stack of transparencies until one object lines up.',
+        body: 'Digital tomosynthesis sweeps the C-arm through a limited arc and takes a series of images. The reconstruction adds them so that the shadows of structures at one depth line up and reinforce, while everything above and below that depth is blurred out. Scroll through the depths and each level comes into focus in turn: that is a DTS plane. It reduces superimposition and adds depth information that a single projection lacks.',
         sources: ['saad', 'frontier'],
       },
       {
         title: 'Depth resolution depends on angular coverage',
         kind: 'after-commitment',
-        body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge. In-plane edges can look sharp while depth remains elongated or blurred, and small voxels do not repair this anisotropy (resolution that differs by direction): a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a system may resolve the unmeasured directions from a registered prior scan or a learned model and render a CT-like image, which removes the visible sign of the limit without removing the limit.',
+        body: 'Because the arc is limited, depth along the beam is measured less well than the image plane: a nodule and a needle can look sharp across the image yet stretched in depth, and small voxels do not change that. Some systems fill the poorly measured direction from a registered prior scan or a learned model and render a CT-like image, which hides the limit without removing it.',
         sources: ['saad', 'sumner', 'podder'],
         detail: {
-          title: 'More projections: state the constraint',
-          body: 'More projections at a fixed exposure per projection increase total exposure. Dividing a fixed total exposure among more projections changes sampling and noise differently. Projection count alone does not specify image quality, acquisition time or dose.',
+          title: 'The physics behind the limit',
+          body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge, which leaves anisotropy (resolution that differs by direction): in-plane edges can look sharp while depth stays elongated or blurred, and a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a prior scan or a model decides what fills the unmeasured direction. More projections at a fixed exposure per projection increase total exposure; dividing a fixed total exposure among more projections changes sampling and noise differently, so projection count alone does not specify image quality, acquisition time or dose.',
         },
       },
       {

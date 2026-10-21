@@ -1,6 +1,6 @@
 'use client'
 
-import { CONSPICUITY_SET } from '../../content/teachingFigures'
+import { CONSPICUITY_SET, teachingFigure } from '../../content/teachingFigures'
 import { FigureCanvas } from './FigureCanvas'
 import {
   conspicuityImages,
@@ -290,6 +290,99 @@ export function Sides({
         {right}
       </text>
     </g>
+  )
+}
+
+/**
+ * Section 4's positioning step: the same axial level under anesthesia, supine and with a wedge
+ * under the left side. The opacity forms in whatever lung is lowest; lifting the lesion side moves
+ * the nodule above the level of the front of the vertebral body and out of it.
+ */
+const WEDGE_FIGURE_DEG = 30
+function wedgeDependencyImages(volume: Uint8Array) {
+  return {
+    supine: dependentOpacityImages(volume),
+    wedged: dependentOpacityImages(volume, { wedgeDeg: WEDGE_FIGURE_DEG }),
+  }
+}
+
+export function WedgeDependencyFigure() {
+  const declaration = teachingFigure('current-anatomy:wedge-dependency')
+  const volume = useTeachingVolume()
+  const model = useFigureComputation(volume.data, wedgeDependencyImages)
+  const state = volume.state === 'failed' ? 'failed' : model ? 'ready' : 'loading'
+  const size = DEPENDENT_OPACITY.sizePx
+  return (
+    <section
+      className={styles.figure}
+      data-teaching-figure={declaration.id}
+      data-figure-state={state}
+    >
+      <p className={styles.kicker}>Position changes what is dependent</p>
+      <p className={styles.modelLabel} data-model-label>
+        {declaration.label}
+      </p>
+      <FigureStatus state={state} />
+      <div className={styles.panelGridWide}>
+        {declaration.panels.map((panel) => {
+          const images = model ? (panel.id === 'supine' ? model.supine : model.wedged) : null
+          return (
+            <figure
+              key={panel.id}
+              className={styles.panel}
+              data-figure-panel={panel.id}
+              data-panel-medium={panel.medium}
+            >
+              <p className={styles.panelTitle}>{panel.title}</p>
+              <FigureCanvas
+                pixels={images?.current ?? null}
+                size={size}
+                label={
+                  panel.id === 'supine'
+                    ? 'Axial level through both lower lobes, supine: opacity fills the posterior part of both lungs and covers a small nodule in the posterior left lung'
+                    : `The same level with the left side lifted ${WEDGE_FIGURE_DEG} degrees: the opacity lies in the right lung and the nodule, now higher, is clear of it`
+                }
+                overlay={
+                  images ? (
+                    <>
+                      <Sides size={size} left="R" right="L" />
+                      {images.equatorPx !== null ? (
+                        <line
+                          x1={0}
+                          x2={size}
+                          y1={images.equatorPx}
+                          y2={images.equatorPx}
+                          stroke="#77dccf"
+                          strokeWidth="1.2"
+                          strokeDasharray="5 4"
+                          data-vertebral-level
+                        />
+                      ) : null}
+                      {images.nodule ? (
+                        <circle
+                          cx={images.nodule.x}
+                          cy={images.nodule.y}
+                          r={images.nodule.r + 5}
+                          fill="none"
+                          stroke="#f0c27d"
+                          strokeWidth="1.4"
+                          strokeDasharray="3 3"
+                        />
+                      ) : null}
+                    </>
+                  ) : undefined
+                }
+              />
+              <figcaption>{panel.caption}</figcaption>
+            </figure>
+          )
+        })}
+      </div>
+      <p className={styles.note}>
+        Dashed circle: the nodule. Dashed teal line: level with the front of the vertebral body.
+        Each image is drawn as the patient lies on the table, so the floor is at the bottom.
+      </p>
+    </section>
   )
 }
 

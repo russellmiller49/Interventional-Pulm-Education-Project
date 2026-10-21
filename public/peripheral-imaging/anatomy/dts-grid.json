@@ -1,0 +1,15 @@
+{
+  "schema": "peripheral-imaging-dts-grid/v1",
+  "generator": "scripts/peripheral-imaging/build-dts-grid.py (Slicer Python)",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "sourceAtlasSha256": "46258feb2edd8397007697ca5ea151ec66e5acd78cf75ea9a53125b4b8fe8b7b",
+  "angleStepDeg": {
+    "numerator": 5,
+    "denominator": 6
+  },
+  "kMin": -72,
+  "kMax": 72,
+  "columns": 13,
+  "tileSize": 192,
+  "method": "The same parallel ray sums, instrument and horizontal Gaussian high-pass as dts-projections.png, at every multiple of 5/6 degree from -60 to +60."
+}

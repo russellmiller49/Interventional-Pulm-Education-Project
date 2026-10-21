@@ -213,7 +213,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
           },
           {
             title: 'CT superimposition · changed view',
-            look: 'Only the C-arm angle changes. Compare the anatomical silhouettes and the density bands along the X-ray path through the lesion.',
+            look: 'Only the C-arm angle changes. Compare the anatomical silhouettes and what the X-ray path through the lesion crosses.',
             values: { orbit: -35, tilt: 0, depth: 0 },
           },
         ],

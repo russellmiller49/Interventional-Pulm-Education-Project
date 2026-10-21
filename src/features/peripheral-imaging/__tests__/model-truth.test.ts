@@ -25,6 +25,7 @@ import {
   motionSceneSampler,
   movingSceneSampler,
   posteriorPleura,
+  vertebralBodyFront,
 } from '../components/figures/simulatedFindings'
 import {
   AXIAL_VIEW,
@@ -60,6 +61,16 @@ import {
   windowRelationship,
 } from '../lib/physics'
 import { rayProfile } from '../lib/rayProfile'
+import { RAY_CROSSING_TABLE, tableCrossing } from '../lib/rayCrossingTable'
+import {
+  crossingBits,
+  crossingFromMm,
+  labelStructures,
+  STRUCTURE_CODE,
+  structureAt,
+  structuresOnRay,
+  type StructureVolume,
+} from '../lib/rayStructures'
 
 /*
  * Prompt 04's figures make claims about the course's own teaching CT: which obliquity moves the
@@ -717,5 +728,172 @@ describe('the simulated motion doubles what breathing moves, and nothing else', 
       for (let i = 0; i < still.length; i += 4) if (Math.abs(still[i] - moved[i]) > 12) differing++
       expect(differing).toBeGreaterThan(300)
     }
+  })
+})
+
+describe('the anatomy-over-the-nodule readout reads the CT', () => {
+  let structures: StructureVolume
+  beforeAll(() => {
+    structures = labelStructures(volume)
+  })
+
+  it('labels the heart, the lung, the chest wall, the abdomen and the spine where the CT has them', () => {
+    const code = (point: [number, number, number]) => structureAt(structures, point)
+    // Heart and mediastinum at and above the level of the nodule.
+    expect(code([0, 40, -10])).toBe(STRUCTURE_CODE.mediastinum)
+    expect(code([20, 30, 0])).toBe(STRUCTURE_CODE.mediastinum)
+    // Aerated lung on both sides, including the left lower lobe between the nodule and its dome.
+    expect(code([-100, -20, 20])).toBe(STRUCTURE_CODE.lung)
+    expect(code([85, -20, -60])).toBe(STRUCTURE_CODE.lung)
+    // Lateral chest wall is neither mediastinum nor abdomen.
+    expect(code([-160, 0, 0])).toBe(STRUCTURE_CODE.soft)
+    // Liver under the right dome and the upper abdomen under the left.
+    expect(code([-80, -20, -100])).toBe(STRUCTURE_CODE.diaphragm)
+    expect(code([80, -60, -100])).toBe(STRUCTURE_CODE.diaphragm)
+    // The cardiac apex sits on the left dome with lung only above it; it is not abdomen.
+    expect(code([100, 80, -33])).not.toBe(STRUCTURE_CODE.diaphragm)
+    // Bone in the vertebral column is spine, bone in the posterior chest wall is rib.
+    let spine = 0
+    for (let y = -125; y <= -75; y++) if (code([0, y, 0]) === STRUCTURE_CODE.spine) spine++
+    expect(spine).toBeGreaterThan(5)
+    expect(code([71, -133, -25])).toBe(STRUCTURE_CODE.rib)
+  })
+
+  it('bakes every whole-degree view of the table from this atlas', () => {
+    expect(RAY_CROSSING_TABLE.atlasSha256).toBe(metadata.atlasSha256)
+    expect(RAY_CROSSING_TABLE.target).toEqual(LESION_CENTER)
+    const { obliquity, tilt, rows } = RAY_CROSSING_TABLE
+    expect(rows).toHaveLength(tilt.max - tilt.min + 1)
+    let mismatches = 0
+    for (let t = tilt.min; t <= tilt.max; t++) {
+      expect(rows[t - tilt.min]).toHaveLength(obliquity.max - obliquity.min + 1)
+      for (let o = obliquity.min; o <= obliquity.max; o++) {
+        const live = crossingBits(crossingFromMm(structuresOnRay(structures, o, t)))
+        if (live !== Number.parseInt(rows[t - tilt.min][o - obliquity.min], 16)) mismatches++
+      }
+    }
+    expect(mismatches).toBe(0)
+  }, 60_000)
+
+  it('frontally the nodule lies over the heart; the two-axis example’s obliquity clears it', () => {
+    expect(tableCrossing(0, 0).mediastinum).toBe(true)
+    expect(tableCrossing(TWO_AXIS_EXAMPLE.chosenObliquity, 0).mediastinum).toBe(false)
+  })
+
+  it('a 3° nudge of beam tilt moves a rib onto or off the nodule', () => {
+    // Frontally the path through the nodule crosses a posterior rib; 3° caudal takes it off.
+    expect(tableCrossing(0, 0).rib).toBe(true)
+    expect(tableCrossing(0, -3).rib).toBe(false)
+  })
+
+  it('caudal angulation steep enough to clear the heart brings the diaphragm over the nodule', () => {
+    expect(tableCrossing(0, -6).mediastinum).toBe(false)
+    expect(tableCrossing(0, -6).diaphragm).toBe(true)
+    expect(tableCrossing(0, 0).diaphragm).toBe(false)
+  })
+})
+
+describe('the nudge: what cranial or caudal angulation does to a nodule relative to the ribs', () => {
+  /*
+   * +v on the detector is superior on the monitor: the DRR's V axis is the physics v (pinned in
+   * suiteModel.test.ts against FluoroView's detector frame) and the overlays draw 256 − v. Positive
+   * tilt is cranial (detector toward the head). So the rule a fellow can use at the table is the
+   * sign of how far the nodule moves against a rib behind it and a rib in front of it.
+   */
+  const firstBoneAlongFrontalRay = (sign: 1 | -1) => {
+    const { source } = rayThrough(suiteFrame(0, 0), LESION_CENTER)
+    const delta = LESION_CENTER.map((n, i) => n - source[i])
+    const length = Math.hypot(...delta)
+    const direction = delta.map((n) => n / length)
+    let run = 0
+    for (let s = LESION_RADIUS + 1; s < 220; s += 0.5) {
+      const point = LESION_CENTER.map((n, i) => n + sign * direction[i] * s) as [
+        number,
+        number,
+        number,
+      ]
+      if (sampleAnatomy(volume, point) > 200) {
+        if (++run >= 8) return point
+      } else run = 0
+    }
+    return null
+  }
+  const nearestAnteriorRib = () => {
+    const { source } = rayThrough(suiteFrame(0, 0), LESION_CENTER)
+    const delta = LESION_CENTER.map((n, i) => n - source[i])
+    let best: { point: [number, number, number]; distance: number } | null = null
+    for (let x = 80; x <= 140; x += 1)
+      for (let y = 60; y <= 130; y += 1)
+        for (let z = -70; z <= 10; z += 1) {
+          if (sampleAnatomy(volume, [x, y, z]) <= 200) continue
+          const t = (y - LESION_CENTER[1]) / delta[1]
+          const distance = Math.hypot(
+            x - (LESION_CENTER[0] + delta[0] * t),
+            z - (LESION_CENTER[2] + delta[2] * t),
+          )
+          if (!best || distance < best.distance) best = { point: [x, y, z], distance }
+        }
+    return best
+  }
+  const relative = (rib: [number, number, number], tilt: number) =>
+    rayThrough(suiteFrame(0, tilt), LESION_CENTER).uv[1] -
+    rayThrough(suiteFrame(0, tilt), rib).uv[1]
+
+  it('caudal moves the nodule up against the rib behind it, and down against a rib in front of it', () => {
+    const behind = firstBoneAlongFrontalRay(-1)
+    const front = nearestAnteriorRib()
+    expect(behind).not.toBeNull()
+    expect(front).not.toBeNull()
+    if (!behind || !front) return
+    // Both are ribs, not the vertebral column, one behind the nodule and one in front of it.
+    for (const rib of [behind, front.point])
+      expect(Math.abs(rib[0] - SPINE_COLUMN.x)).toBeGreaterThan(SPINE_COLUMN.halfWidth)
+    expect(behind[1]).toBeLessThan(LESION_CENTER[1])
+    expect(front.point[1]).toBeGreaterThan(LESION_CENTER[1])
+    // The anterior rib beside the nodule's projection, not one a rib space away.
+    expect(front.distance).toBeLessThan(15)
+    // 3° caudal: the nodule rises against the posterior rib, by most of a rib's projected height.
+    expect(relative(behind, -3) - relative(behind, 0)).toBeGreaterThan(8)
+    // and drops against the anterior rib; cranial reverses both.
+    expect(relative(front.point, -3) - relative(front.point, 0)).toBeLessThan(-5)
+    expect(relative(behind, 3) - relative(behind, 0)).toBeLessThan(-8)
+    expect(relative(front.point, 3) - relative(front.point, 0)).toBeGreaterThan(5)
+  })
+})
+
+describe('a wedge under the nodule side lifts it out of the dependent lung', () => {
+  it('draws the equator level with the front of the vertebral body', () => {
+    const supine = dependentOpacityImages(volume)
+    const front = vertebralBodyFront(ctSampler(volume), DEPENDENT_OPACITY.sliceZ)
+    expect(front).not.toBeNull()
+    expect(supine.equatorPx).not.toBeNull()
+    const [, equatorY] = dependentOpacityPoint(0, supine.equatorPx! - 0.5)
+    expect(Math.abs(equatorY - front!)).toBeLessThan(1)
+    // The vertebral body sits behind the lungs' front and in front of their dependent bases.
+    expect(front!).toBeLessThan(-50)
+    expect(front!).toBeGreaterThan(-90)
+  })
+
+  it('supine, the check’s nodule lies in the opacity; wedged 30°, it lies above the equator and clear of it', () => {
+    const supine = dependentOpacityImages(volume)
+    const wedged = dependentOpacityImages(volume, { wedgeDeg: 30 })
+    expect(supine.noduleCover).toBeGreaterThan(0.9)
+    expect(wedged.noduleCover).toBeLessThan(0.1)
+    expect(wedged.nodule!.y).toBeLessThan(wedged.equatorPx!)
+    expect(supine.nodule!.y).toBeGreaterThan(supine.equatorPx!)
+  })
+
+  it('moves the opacity into the lung that is now lowest', () => {
+    const wedged = dependentOpacityImages(volume, { wedgeDeg: 30 })
+    const { sizePx } = wedged
+    const changed = { left: 0, right: 0 }
+    for (let row = 0; row < sizePx; row++)
+      for (let col = 0; col < sizePx; col++) {
+        const i = (row * sizePx + col) * 4
+        if (wedged.current[i] - wedged.planning[i] > 20)
+          changed[col < sizePx / 2 ? 'right' : 'left']++
+      }
+    // The image shows the patient's right on the left; lifting the left side drops the right lung.
+    expect(changed.right).toBeGreaterThan(1.5 * changed.left)
   })
 })

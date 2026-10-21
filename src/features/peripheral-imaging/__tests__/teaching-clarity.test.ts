@@ -343,7 +343,10 @@ describe('reports 3.3, 4.4, 2.14 and 2.11 — the rule or the worked example lea
       (b) => b.title === 'Depth resolution depends on angular coverage',
     )!
     const s11 = LESSONS.find((l) => l.id === 'dts-interpretation')!
-    expect(s10.body).toMatch(/anisotropy \(resolution that differs by direction\)/)
+    // The depth-resolution physics sits in the block's collapsed panel (2026-10 simplification);
+    // the term is still glossed where it is used.
+    expect(s10.detail!.body).toMatch(/anisotropy \(resolution that differs by direction\)/)
+    expect(s10.body).not.toMatch(/anisotropy/)
     expect(s11.blocks.find((b) => /prior CT can improve/.test(b.title))!.body).toMatch(
       /regularization — an added rule that favours one solution/,
     )

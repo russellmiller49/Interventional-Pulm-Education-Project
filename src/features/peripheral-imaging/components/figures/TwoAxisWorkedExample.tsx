@@ -9,6 +9,8 @@ import {
   teachingFigure,
   TWO_AXIS_EXAMPLE,
 } from '../../content/teachingFigures'
+import { tableCrossing } from '../../lib/rayCrossingTable'
+import { rayCrossingLabel, rayCrossingPhrase } from '../../lib/rayStructures'
 import { FigureCanvas } from './FigureCanvas'
 import {
   AXIAL_VIEW,
@@ -51,21 +53,23 @@ function DashedLesion({
   )
 }
 
-function rayRow(ray: TargetRay) {
+function crossingRow(ray: TargetRay) {
   return (
     <tr key={`${ray.obliquity}:${ray.tilt}`} data-target-ray={ray.obliquity} data-tilt={ray.tilt}>
       <th scope="row">{signedDegrees(ray.obliquity)}</th>
-      <td data-label="Tube side">
-        {ray.tubeSide.soft} mm soft tissue
-        {ray.tubeSide.bone > 0 ? `, ${ray.tubeSide.bone} mm bone` : ''}
+      <td data-label="Over the nodule">
+        {rayCrossingLabel(tableCrossing(ray.obliquity, ray.tilt))}
       </td>
-      <td data-label="Detector side">
-        {ray.detectorSide.soft} mm soft tissue
-        {ray.detectorSide.bone > 0 ? `, ${ray.detectorSide.bone} mm bone` : ''}
-      </td>
-      <td data-label="Soft tissue, whole ray">{ray.softTotal} mm</td>
     </tr>
   )
+}
+
+/** "−10° or +20°". */
+function degreeList(values: readonly number[]): string {
+  const signed = values.map(signedDegrees)
+  return signed.length <= 1
+    ? (signed[0] ?? '')
+    : `${signed.slice(0, -1).join(', ')} or ${signed[signed.length - 1]}`
 }
 
 function toolDescription(view: ToolView): string {
@@ -126,13 +130,21 @@ export function TwoAxisWorkedExample() {
   const arrowId = `${useId().replace(/:/g, '')}-arrow`
   const panel = (id: string) => declaration.panels.find((entry) => entry.id === id)!
   const chosen = TWO_AXIS_EXAMPLE.chosenObliquity
-  const frontalRay = model?.strip.find((ray) => ray.obliquity === 0)
-  const chosenRay = model?.strip.find((ray) => ray.obliquity === chosen)
-  const beyond = model?.strip.find((ray) => ray.obliquity === -35)
-  const opposite = model?.strip.find((ray) => ray.obliquity === -chosen)
-  const clears =
-    frontalRay && chosenRay ? chosenRay.detectorSide.soft < frontalRay.detectorSide.soft : false
-  const tiltNeeded = model ? model.tiltRangeMm > TWO_AXIS_EXAMPLE.tiltToleranceMm : true
+  // What lies over the nodule, from the table baked from this CT (model-truth holds it to the CT).
+  const frontal = tableCrossing(0, 0)
+  const chosenCrossing = tableCrossing(chosen, 0)
+  const beyond = tableCrossing(-35, 0)
+  const opposite = tableCrossing(-chosen, 0)
+  const clears = frontal.mediastinum && !chosenCrossing.mediastinum
+  const tiltObliquity = TWO_AXIS_EXAMPLE.tiltCheck.obliquity
+  const tiltRows = TWO_AXIS_EXAMPLE.tiltCheck.tilts.map((tilt) => ({
+    tilt,
+    crossing: tableCrossing(tiltObliquity, tilt),
+  }))
+  const softTissueRows = tiltRows.filter(
+    (row) => row.crossing.mediastinum || row.crossing.diaphragm,
+  )
+  const spineRows = tiltRows.filter((row) => row.crossing.spine)
   return (
     <section
       className={styles.figure}
@@ -262,28 +274,24 @@ export function TwoAxisWorkedExample() {
             <thead>
               <tr>
                 <th scope="col">C-arm obliquity</th>
-                <th scope="col">Tube side</th>
-                <th scope="col">Detector side</th>
-                <th scope="col">Soft tissue, whole ray</th>
+                <th scope="col">Over the nodule</th>
               </tr>
             </thead>
-            <tbody>{model ? model.strip.map(rayRow) : null}</tbody>
+            <tbody>{model ? model.strip.map(crossingRow) : null}</tbody>
           </table>
         </div>
       </div>
 
-      {model && frontalRay && chosenRay ? (
+      {model ? (
         <p data-two-axis-reading>
-          <strong>Reading it for this lesion.</strong> Frontally, the detector-side part of the ray
-          crosses {frontalRay.detectorSide.soft} mm of soft-tissue density anterior to the lesion.{' '}
+          <strong>Reading it for this lesion.</strong> Frontally, the X-ray path through the nodule
+          crosses {rayCrossingPhrase(frontal)}.{' '}
           {clears
-            ? `At C-arm obliquity ${signedDegrees(chosen)} (${obliquityDirection(chosen)}) that part crosses ${chosenRay.detectorSide.soft} mm, and the whole ray ${chosenRay.softTotal} mm instead of ${frontalRay.softTotal} mm.`
-            : `At C-arm obliquity ${signedDegrees(chosen)} it crosses ${chosenRay.detectorSide.soft} mm.`}{' '}
-          {beyond
-            ? `Going further, to ${signedDegrees(beyond.obliquity)}, lengthens the tube-side path instead: ${beyond.tubeSide.soft} mm of soft-tissue density and ${beyond.tubeSide.bone} mm of bone density.`
-            : null}{' '}
-          {opposite && frontalRay && opposite.detectorSide.soft > frontalRay.detectorSide.soft
-            ? `The opposite sign, ${signedDegrees(opposite.obliquity)}, swings the detector-side part through more of it: ${opposite.detectorSide.soft} mm.`
+            ? `At C-arm obliquity ${signedDegrees(chosen)} (${obliquityDirection(chosen)}) the heart comes off the path; it now crosses ${rayCrossingPhrase(chosenCrossing)}.`
+            : `At C-arm obliquity ${signedDegrees(chosen)} (${obliquityDirection(chosen)}) it crosses ${rayCrossingPhrase(chosenCrossing)}.`}{' '}
+          Going further, to {signedDegrees(-35)}, it crosses {rayCrossingPhrase(beyond)}.{' '}
+          {opposite.mediastinum
+            ? `The opposite sign, ${signedDegrees(-chosen)}, keeps the heart on the path.`
             : null}{' '}
           Another lesion position needs its own reading: the individual lesion, not a memorized
           rule, decides the angle.
@@ -294,25 +302,20 @@ export function TwoAxisWorkedExample() {
         <p className={styles.panelTitle}>{panel('tilt').title}</p>
         <table className={styles.table}>
           <caption className={styles.panelCaption}>
-            {panel('tilt').caption} C-arm obliquity{' '}
-            {signedDegrees(TWO_AXIS_EXAMPLE.tiltCheck.obliquity)}.
+            {panel('tilt').caption} C-arm obliquity {signedDegrees(tiltObliquity)}.
           </caption>
           <thead>
             <tr>
               <th scope="col">Beam tilt</th>
-              <th scope="col">Tube side</th>
-              <th scope="col">Detector side</th>
-              <th scope="col">Soft tissue, whole ray</th>
+              <th scope="col">Over the nodule</th>
             </tr>
           </thead>
           <tbody>
             {model
-              ? model.tilts.map((ray) => (
-                  <tr key={ray.tilt} data-tilt-row={ray.tilt}>
-                    <th scope="row">{signedDegrees(ray.tilt)}</th>
-                    <td data-label="Tube side">{ray.tubeSide.soft} mm soft tissue</td>
-                    <td data-label="Detector side">{ray.detectorSide.soft} mm soft tissue</td>
-                    <td data-label="Soft tissue, whole ray">{ray.softTotal} mm</td>
+              ? tiltRows.map((row) => (
+                  <tr key={row.tilt} data-tilt-row={row.tilt}>
+                    <th scope="row">{signedDegrees(row.tilt)}</th>
+                    <td data-label="Over the nodule">{rayCrossingLabel(row.crossing)}</td>
                   </tr>
                 ))
               : null}
@@ -320,9 +323,9 @@ export function TwoAxisWorkedExample() {
         </table>
         {model ? (
           <p className={styles.panelCaption} data-tilt-reading>
-            {tiltNeeded
-              ? `Across these tilts the detector-side path changes by ${model.tiltRangeMm} mm, so the tilt is worth choosing from the sagittal CT.`
-              : `Across these tilts the detector-side path changes by only ${model.tiltRangeMm} mm, so this lesion needs no tilt. Tilt earns its place when the sagittal CT shows a structure over the lesion.`}
+            {softTissueRows.length === 0
+              ? `At C-arm obliquity ${signedDegrees(tiltObliquity)} none of these tilts brings the heart or the diaphragm over the nodule, so this lesion needs no tilt to clear them.${spineRows.length > 0 ? ` Tilting to ${degreeList(spineRows.map((row) => row.tilt))} brings the spine over it instead.` : ''}`
+              : `Tilting brings the heart or the diaphragm over the nodule at ${degreeList(softTissueRows.map((row) => row.tilt))}, so the tilt is worth choosing from the sagittal CT.`}
           </p>
         ) : null}
       </div>

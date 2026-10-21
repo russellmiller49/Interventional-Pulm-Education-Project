@@ -14,6 +14,7 @@ import { ReconstructionComparison } from './ReconstructionComparison'
 import { SectionGlossary } from './SectionGlossary'
 import { ArtifactCauseStrip } from '../figures/ArtifactCauseStrip'
 import { FixedMobileComparison, TeamReadinessAid } from '../figures/CbctReferenceAids'
+import { WedgeDependencyFigure } from '../figures/CheckImages'
 import { TwoAxisWorkedExample } from '../figures/TwoAxisWorkedExample'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { Link } from '@/i18n/navigation'
@@ -98,6 +99,7 @@ function TeachingReference({
   const { spec } = lesson
   // Prompt 04 figures and reference aids sit beside the block they illustrate. Rereading the
   // section's teaching at a check is text: the figure stays on its own step.
+  if (ref === '@wedge-dependency') return review ? null : <WedgeDependencyFigure />
   if (ref === '@two-axis-example') return review ? null : <TwoAxisWorkedExample />
   if (ref === '@artifact-strip') return review ? null : <ArtifactCauseStrip />
   if (ref === '@fixed-mobile-comparison') return review ? null : <FixedMobileComparison />

@@ -13,6 +13,8 @@ import {
   windowRelationship,
   type Point3,
 } from '../lib/physics'
+import { tableCrossing } from '../lib/rayCrossingTable'
+import { rayCrossingLabel } from '../lib/rayStructures'
 
 /**
  * The lab controls and the arithmetic behind every readout, in one place.
@@ -99,6 +101,29 @@ const FIELD_CONTROLS: readonly LabControlSpec[] = [
   },
 ]
 
+/**
+ * A wedge under the patient's left side, the nodule side, rolls the chest about its long axis. It
+ * changes which lung is dependent, and it changes the view for a given C-arm angle: rolling the
+ * patient by w is the same projection as rotating the C-arm by −w, which is how a wedge buys a view
+ * (or a sweep centre) the C-arm cannot reach.
+ */
+export const WEDGE_CONTROL: LabControlSpec = {
+  key: 'wedge',
+  kind: 'select',
+  label: 'Wedge under the patient’s left side',
+  options: [
+    { value: 0, label: 'None (supine)' },
+    { value: 15, label: '15°' },
+    { value: 30, label: '30°' },
+  ],
+  default: 0,
+}
+
+/** The projection through the patient: the C-arm obliquity less the wedge. */
+export function viewObliquity(orbit: number, wedge: number): number {
+  return orbit - wedge
+}
+
 export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = {
   geometry: [
     ...FIELD_CONTROLS,
@@ -132,12 +157,13 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       unit: ' mm',
       default: (lessonId) => (lessonId === 'signal' ? 0 : 22),
     },
+    WEDGE_CONTROL,
     {
       key: 'resetGeometry',
       kind: 'action',
       label: 'Reset geometry',
       default: false,
-      patch: { orbit: 0, tilt: 0, depth: 22 },
+      patch: { orbit: 0, tilt: 0, depth: 22, wedge: 0 },
     },
   ],
   field: FIELD_CONTROLS,
@@ -180,6 +206,16 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       step: 10,
       unit: '°',
       default: 30,
+    },
+    {
+      key: 'sweepCenter',
+      kind: 'range',
+      label: 'Centre of the DTS arc',
+      min: -30,
+      max: 30,
+      step: 10,
+      unit: '°',
+      default: 0,
     },
     {
       key: 'plane',
@@ -526,6 +562,11 @@ export type LabMetricId =
   | 'depthMm'
   | 'irradiatedAreaPct'
   | 'contextRetained'
+  | 'rayCrosses'
+  | 'ribOnRay'
+  | 'mediastinumOnRay'
+  | 'diaphragmOnRay'
+  | 'viewObliquityDeg'
   | 'spineInField'
   | 'zoomAddsExposure'
   | 'pulseRate'
@@ -534,6 +575,8 @@ export type LabMetricId =
   | 'interFrameTravelMm'
   | 'intervalMs'
   | 'sweepDeg'
+  | 'sweepCentreDeg'
+  | 'rayCrossesAtCentre'
   | 'planeMm'
   | 'centered'
   | 'ready'
@@ -562,6 +605,11 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   separationMm: { label: 'Projected tool–lesion separation', unit: ' mm', digits: 1 },
   depthMm: { label: 'True depth offset along the X-ray path', unit: ' mm', digits: 0 },
   contextRetained: { label: 'Lesion, tool path and landmarks in the field' },
+  rayCrosses: { label: 'Anatomy over the nodule' },
+  ribOnRay: { label: 'Rib over the nodule' },
+  mediastinumOnRay: { label: 'Heart or mediastinum over the nodule' },
+  diaphragmOnRay: { label: 'Diaphragm over the nodule' },
+  viewObliquityDeg: { label: 'Projection through the patient', unit: '°', digits: 0 },
   spineInField: { label: 'Spine in the field' },
   irradiatedAreaPct: { label: 'Irradiated area vs the open field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
@@ -571,6 +619,8 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   interFrameTravelMm: { label: 'Travel between frames', unit: ' mm', digits: 1 },
   intervalMs: { label: 'Time between acquired frames', unit: ' ms', digits: 0 },
   sweepDeg: { label: 'DTS arc', unit: '°', digits: 0 },
+  sweepCentreDeg: { label: 'Centre of the DTS arc', unit: '°', digits: 0 },
+  rayCrossesAtCentre: { label: 'Anatomy over the nodule at the arc’s centre' },
   planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
   centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
@@ -607,6 +657,15 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
     'The collimated field’s area as a share of the open field, from the field width squared. Scatter is produced in the irradiated tissue, so less area means less scatter reaching the detector.',
   contextRetained:
     'Whether the lesion, both numbered landmarks and the whole dashed planned tool path fall inside the field.',
+  rayCrosses:
+    'What the X-ray path through the centre of the nodule crosses besides lung and chest wall, read from the CT: the heart and mediastinum, the diaphragm, the spine or a rib. Lung only means nothing dense lies over the nodule in this projection.',
+  ribOnRay: 'Whether the X-ray path through the centre of the nodule crosses a rib.',
+  mediastinumOnRay:
+    'Whether the X-ray path through the centre of the nodule crosses the heart or mediastinum.',
+  diaphragmOnRay:
+    'Whether the X-ray path through the centre of the nodule passes below the diaphragm, through the upper abdomen.',
+  viewObliquityDeg:
+    'The C-arm obliquity less the wedge: rolling the patient 30° gives the same image as rotating the C-arm 30° the other way.',
   spineInField:
     'Whether any of the vertebral column lies inside the collimated field. With it outside, the display range and the automatic exposure control are set by the lung, the lesion and the tool.',
   zoomAddsExposure: 'Always no: display zoom re-displays acquired pixels and delivers no X-rays.',
@@ -618,6 +677,10 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
   interFrameTravelMm: 'How far the tool travels between one acquired frame and the next.',
   intervalMs: 'The time between acquired frames: one second divided by the pulse rate.',
   sweepDeg: 'The angular width of the DTS arc.',
+  sweepCentreDeg:
+    'The C-arm obliquity at the middle of the arc. The reconstructed planes lie square to the beam there, so moving the centre tilts them.',
+  rayCrossesAtCentre:
+    'What the X-ray path through the centre of the nodule crosses at the arc’s centre, read from the CT. Structures on that path lie above and below the nodule in depth, where a limited arc blurs them into it.',
   planeMm: 'The depth of the reconstructed plane relative to the target plane.',
   centered: 'Whether the lesion lies within 8 mm of center on both scout images.',
   ready: 'Centered, with all four pre-spin checks confirmed.',
@@ -651,17 +714,24 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
   const f = (key: string) => labFlag(lab, values, key, lessonId)
   switch (lab) {
     case 'geometry': {
-      const orbit = n('orbit'),
+      // Every projection is computed through the patient, so a wedge counts as obliquity.
+      const orbit = viewObliquity(n('orbit'), n('wedge')),
         tilt = n('tilt'),
         depth = n('depth')
       const target = projectToDetector(LESION_CENTER, orbit, tilt)
       const tip = projectToDetector(toolTipForDepth(depth), orbit, tilt)
+      const crossing = tableCrossing(orbit, tilt)
       return {
         separationMm: Math.hypot(target[0] - tip[0], target[1] - tip[1]),
         depthMm: depth,
         irradiatedAreaPct: n('field') ** 2 / 100,
         zoomAddsExposure: false,
         contextRetained: fieldContextCoverage(n('field'), orbit, tilt),
+        rayCrosses: rayCrossingLabel(crossing),
+        ribOnRay: crossing.rib,
+        mediastinumOnRay: crossing.mediastinum,
+        diaphragmOnRay: crossing.diaphragm,
+        viewObliquityDeg: orbit,
       }
     }
     case 'field': {
@@ -686,8 +756,15 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         intervalMs: metrics.intervalMs,
       }
     }
-    case 'dts':
-      return { sweepDeg: n('sweep'), planeMm: n('plane') }
+    case 'dts': {
+      const centre = n('sweepCenter')
+      return {
+        sweepDeg: n('sweep'),
+        planeMm: n('plane'),
+        sweepCentreDeg: centre,
+        rayCrossesAtCentre: rayCrossingLabel(tableCrossing(centre, 0)),
+      }
+    }
     case 'acquisition': {
       const centered = centeredForTeaching(n('offsetX'), n('offsetDepth'))
       const ready = centered && ACQUISITION_CHECKS.every((key) => f(key))

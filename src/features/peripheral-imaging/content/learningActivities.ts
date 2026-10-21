@@ -206,6 +206,19 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['overlay'],
     ),
     read(
+      'setup',
+      'Set up ventilation and position before the first image',
+      [
+        'Prevent atelectasis before the first image',
+        'Position the patient so the lesion side is up',
+        '@wedge-dependency',
+      ],
+      'suite',
+      'comparison',
+      ['Planning / initial current state'],
+      [],
+    ),
+    read(
       'mismatch',
       'Compare a stored contour after anatomy changes',
       ['@worked', 'When the lesion is not where it was expected'],
@@ -406,7 +419,14 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['plane'],
     ),
     work('Review the reconstructed planes', 'multiplanar'),
-    compare('Compare limited-angle depth behavior', 'multiplanar'),
+    compare('Compare limited-angle depth behavior', 'multiplanar', [
+      'sweep',
+      'sweepCenter',
+      'plane',
+      'planeTool',
+      'planeLesion',
+      'planeDeeper',
+    ]),
     // Independent sanity review of PR #279 (finding F3, CHK-S10, 2026-09-24): the check's stem
     // (`dts-1`) is conceptual, "structures are elongated in the depth direction", and states its
     // evidence in words. The image beside it was one reconstructed plane, which cannot show
@@ -700,6 +720,7 @@ export function imagingLearningActivities(
  * they illustrate (Prompt 04: OD4-06, OD4-08, OD4-09, OD4-10).
  */
 export const IMAGING_FIGURE_REFS = [
+  '@wedge-dependency',
   '@two-axis-example',
   '@artifact-strip',
   '@fixed-mobile-comparison',

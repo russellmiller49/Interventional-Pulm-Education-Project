@@ -4,22 +4,28 @@ import { Line } from '@react-three/drei'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import {
   DTS,
+  dtsGridPixel,
+  dtsGridTile,
   dtsPixel,
+  loadDtsGrid,
   loadDtsProjections,
+  reconstructOffCentrePlane,
   reconstructTeachingPlane,
 } from '../../../lib/tomosynthesis'
 import { sampleAnatomy } from '../../../lib/anatomy'
-import { LESION_CENTER, radians, type Point3 } from '../../../lib/physics'
+import { radians, type Point3 } from '../../../lib/physics'
 import { add, chainStopAnchors, scale, suiteFrame } from '../suiteModel'
 import {
   DTS_PLANE,
   dtsArc,
   dtsOverlayObjects,
+  dtsPlanePoint,
   dtsPlaneQuad,
   missingWedge,
   priorPlaneGray,
   priorPlanePoint,
   smearWidth,
+  toolTipDepth,
 } from '../dtsModel'
 import { Quad } from '../SceneGeometry'
 import { useCtVolumeState } from '../CtSliceImages'
@@ -34,9 +40,12 @@ export function useTomosynthesis(
   reducedMotion: boolean,
 ) {
   const active = view.mode === 'dts' || view.mode === 'dts-prior'
+  // The prior-CT comparison is a frontal arc; only the acquisition view moves the arc's centre.
+  const centre = view.mode === 'dts' ? inputs.sweepCenterDeg : 0
   const [data, setData] = useState<Uint8ClampedArray | null>(null)
+  const [grid, setGrid] = useState<Uint8ClampedArray | null>(null)
   const [failed, setFailed] = useState(false)
-  const playbackKey = `${inputs.sweepDeg}:${view.mode}:${enabled}:${reducedMotion}`
+  const playbackKey = `${inputs.sweepDeg}:${centre}:${view.mode}:${enabled}:${reducedMotion}`
   const defaultCount =
     !enabled || reducedMotion || view.mode === 'dts-prior' ? DTS.viewsPerSweep : 0
   const [playback, setPlayback] = useState<{ key: string; count: number; playing: boolean | null }>(
@@ -61,6 +70,22 @@ export function useTomosynthesis(
       current = false
     }
   }, [active])
+  // The off-centre atlas is large and only needed once the centre moves.
+  const needsGrid = active && centre !== 0
+  useEffect(() => {
+    if (!needsGrid) return
+    let current = true
+    void loadDtsGrid()
+      .then((p) => {
+        if (current) setGrid(p)
+      })
+      .catch(() => {
+        if (current) setFailed(true)
+      })
+    return () => {
+      current = false
+    }
+  }, [needsGrid])
   const running =
     active &&
     Boolean(data) &&
@@ -83,7 +108,12 @@ export function useTomosynthesis(
   const images = useMemo(() => {
     if (!active || !data || !DTS.sweeps.includes(inputs.sweepDeg)) return null
     if (selectedLayer !== 'measured' && !volume) return null
-    const measured = reconstructTeachingPlane(data, inputs.sweepDeg, inputs.planeDepth)
+    if (centre !== 0 && !grid) return null
+    const measured =
+      centre === 0
+        ? reconstructTeachingPlane(data, inputs.sweepDeg, inputs.planeDepth)
+        : reconstructOffCentrePlane(grid!, inputs.sweepDeg, centre, inputs.planeDepth)
+    if (!measured) return null
     const pixels = new Uint8ClampedArray(measured)
     if (selectedLayer !== 'measured' && volume) {
       for (let row = 0; row < 256; row++)
@@ -99,20 +129,17 @@ export function useTomosynthesis(
     const plane = document.createElement('canvas')
     plane.width = plane.height = 256
     plane.getContext('2d')!.putImageData(new ImageData(pixels, 256, 256), 0, 0)
-    const projections = dtsArc(inputs.sweepDeg, inputs.geometry).map((sample, i) => {
+    const projections = dtsArc(inputs.sweepDeg, inputs.geometry, centre).map((sample, i) => {
+      const tile = centre === 0 ? null : dtsGridTile(sample.angle)
+      const pixel = (x: number, y: number) =>
+        tile === null ? dtsPixel(data, inputs.sweepDeg, i, x, y) : dtsGridPixel(grid!, tile, x, y)
       const canvas = document.createElement('canvas')
       canvas.width = canvas.height = DTS.tileSize
       const ctx = canvas.getContext('2d')!,
         image = ctx.createImageData(DTS.tileSize, DTS.tileSize)
       for (let y = 0; y < DTS.tileSize; y++)
         for (let x = 0; x < DTS.tileSize; x++) {
-          const gray = Math.max(
-            0,
-            Math.min(
-              255,
-              (dtsPixel(data, inputs.sweepDeg, i, x, DTS.tileSize - 1 - y) - 128) * 1.4 + 95,
-            ),
-          )
+          const gray = Math.max(0, Math.min(255, (pixel(x, DTS.tileSize - 1 - y) - 128) * 1.4 + 95))
           const p = (y * DTS.tileSize + x) * 4
           image.data[p] = image.data[p + 1] = image.data[p + 2] = gray
           image.data[p + 3] = 255
@@ -121,7 +148,17 @@ export function useTomosynthesis(
       return { ...sample, canvas }
     })
     return { plane, projections }
-  }, [active, data, inputs.sweepDeg, inputs.planeDepth, inputs.geometry, selectedLayer, volume])
+  }, [
+    active,
+    data,
+    grid,
+    centre,
+    inputs.sweepDeg,
+    inputs.planeDepth,
+    inputs.geometry,
+    selectedLayer,
+    volume,
+  ])
   const step = () => {
     setPlayback({
       key: playbackKey,
@@ -154,7 +191,8 @@ export function useTomosynthesis(
       setPlayback({ key: playbackKey, count: defaultCount, playing: null })
       setLayer(null)
     },
-    angle: dtsArc(inputs.sweepDeg)[Math.max(0, count - 1)]?.angle ?? 0,
+    angle: dtsArc(inputs.sweepDeg, undefined, centre)[Math.max(0, count - 1)]?.angle ?? centre,
+    centre,
   }
 }
 export type Tomosynthesis = ReturnType<typeof useTomosynthesis>
@@ -176,7 +214,8 @@ export function TomosynthesisView({
   inputs: SuiteInputs
   prior: boolean
 }) {
-  const arc = dtsArc(inputs.sweepDeg, inputs.geometry)
+  const centre = model.centre
+  const arc = dtsArc(inputs.sweepDeg, inputs.geometry, centre)
   const consoleAnchor = chainStopAnchors(suiteFrame(0)).reconstruction
   const focalPlane = prior
     ? [
@@ -185,13 +224,13 @@ export function TomosynthesisView({
         [100, 100],
         [-100, 100],
       ].map(([x, y]) => add(consoleAnchor, [x, y + 100, 30]))
-    : dtsPlaneQuad(inputs.planeDepth)
+    : dtsPlaneQuad(inputs.planeDepth, centre)
   return (
     <group>
       {!prior && (
         <>
           <Line points={arc.map((p) => p.source)} color="#81ccbc" lineWidth={2} />
-          {missingWedge(inputs.sweepDeg).map(([start, end], i) => (
+          {missingWedge(inputs.sweepDeg, centre).map(([start, end], i) => (
             <Line
               key={i}
               points={Array.from({ length: 45 }, (_, j) => {
@@ -220,13 +259,17 @@ export function TomosynthesisView({
               />
             )
           })}
-          {[0, DTS.toolPlaneRelativeMm].map((depth, i) => {
+          {[0, toolTipDepth(centre)].map((depth, i) => {
             const width = smearWidth(depth, inputs.planeDepth, inputs.sweepDeg)
-            const center = add(LESION_CENTER, [i ? -20 : 0, inputs.planeDepth - 1, i ? 18 : 0])
+            const across = i ? -20 : 0
+            const z = i ? 18 : 0
             return (
               <Line
-                key={depth}
-                points={[add(center, [-width / 2, 0, 0]), add(center, [width / 2, 0, 0])]}
+                key={i}
+                points={[
+                  dtsPlanePoint(across - width / 2, inputs.planeDepth - 1, z, centre),
+                  dtsPlanePoint(across + width / 2, inputs.planeDepth - 1, z, centre),
+                ]}
                 color={i ? '#e7f6f2' : '#e9b66e'}
                 lineWidth={5}
               />
@@ -273,6 +316,8 @@ export function TomosynthesisMonitor({
   const failed = model.failed || (model.selectedLayer !== 'measured' && model.priorFailed)
   const state = failed ? 'failed' : model.images ? 'ready' : 'loading'
   const [overlay, setOverlay] = useState(false)
+  // The marks are placed for planes square to a frontal beam; a tilted plane gets none.
+  allowOverlay = allowOverlay && model.centre === 0
   const toggleId = useId()
   // The planning CT was acquired before the tool was placed; there is no tool in it to point at.
   const objects = dtsOverlayObjects(planeDepth).filter(
@@ -487,6 +532,15 @@ function ProjectionFilmstrip({ model }: { model: Tomosynthesis }) {
     </>
   )
 }
+/** Which object is in focus at the selected depth, in words: the reading the spread numbers support. */
+export function focusReading(planeDepth: number, sweepDeg: number, centre = 0): string {
+  const nodule = smearWidth(0, planeDepth, sweepDeg) < 1
+  const tool = smearWidth(toolTipDepth(centre), planeDepth, sweepDeg) < 1
+  if (nodule) return 'the nodule is in focus and the tool is blurred.'
+  if (tool) return 'the tool is in focus and the nodule is blurred.'
+  return 'neither the nodule nor the tool is in focus. Scroll the depth.'
+}
+
 export function TomosynthesisPanels({
   model,
   inputs,
@@ -507,8 +561,8 @@ export function TomosynthesisPanels({
       )}
       <p>
         {prior
-          ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
-          : 'Thirteen projections across the arc. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
+          ? 'The display colour-codes the image source: gray from the DTS images, teal from the planning CT.'
+          : 'The images taken across the arc are added at the chosen depth. Dashed arc: the directions the arc never covered, the missing wedge. Bars on the focal plane: how far each object is blurred at this depth.'}
       </p>
       {prior && enabled && (
         <fieldset className={styles.controls}>
@@ -542,20 +596,27 @@ export function TomosynthesisPanels({
         </fieldset>
       )}
       <ProjectionFilmstrip model={model} />
+      <p data-focus-readout>
+        <strong>At this depth:</strong>{' '}
+        {focusReading(inputs.planeDepth, inputs.sweepDeg, model.centre)}
+      </p>
       <p data-spread-readout>
         Tool-plane spread:{' '}
-        {smearWidth(DTS.toolPlaneRelativeMm, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm ·
+        {smearWidth(toolTipDepth(model.centre), inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm ·
         target-plane spread: {smearWidth(0, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm.
       </p>
       {/* Report 4.6: the readout defined from the arithmetic that prints it (`smearWidth`), not
           from a guess. */}
-      <p data-spread-definition>
-        Spread is how far across the image each object is smeared at the selected plane: the
-        difference between where it lands at the two ends of the arc once the images are shifted for
-        that depth. It is zero when the plane passes through the object and grows with the object’s
-        distance from the plane and with the arc, so the plane where an object’s spread reaches zero
-        is the plane it lies in.
-      </p>
+      <details>
+        <summary>What spread means</summary>
+        <p data-spread-definition>
+          Spread is how far across the image each object is smeared at the selected plane: the
+          difference between where it lands at the two ends of the arc once the images are shifted
+          for that depth. It is zero when the plane passes through the object and grows with the
+          object’s distance from the plane and with the arc, so the plane where an object’s spread
+          reaches zero is the plane it lies in.
+        </p>
+      </details>
     </section>
   )
 }

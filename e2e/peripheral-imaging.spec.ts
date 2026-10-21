@@ -3364,3 +3364,77 @@ for (const condition of PROMPT04_CONDITIONS) {
     await expect(dialog).not.toBeVisible()
   })
 }
+
+/* ------------------------------------------------------------------ *
+ * AABIP expert session (2026-10): name the anatomy over the nodule, set up before the first
+ * image, and centre the DTS arc. Values come from the table baked from the course CT
+ * (`data/rayCrossings.json`), which model-truth holds to the atlas.
+ * ------------------------------------------------------------------ */
+
+test('expert session: the projection readout names the anatomy over the nodule as the C-arm moves', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'projection', 'lab-task')
+  const readout = page.locator('[data-readout="rayCrosses"] dd')
+  await controlRange(page, 'orbit', 0)
+  await controlRange(page, 'tilt', 0)
+  await expect(readout).toHaveText('Heart and mediastinum, rib')
+  // A 3° caudal nudge takes the posterior rib off the path through the nodule.
+  await controlRange(page, 'tilt', -3)
+  await expect(readout).toHaveText('Heart and mediastinum')
+  // The two-axis example's obliquity clears the heart.
+  await controlRange(page, 'tilt', 0)
+  await controlRange(page, 'orbit', -20)
+  await expect(readout).toHaveText('Rib')
+})
+
+test('expert session: the signal view draws the path through the nodule by named anatomy, without millimetres', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'signal', 'lab-task')
+  const panel = page.locator('[data-ray-profile-state]')
+  await expect(panel).toHaveAttribute('data-ray-profile-state', 'ready', { timeout: 60000 })
+  await controlRange(page, 'orbit', 0)
+  await controlRange(page, 'tilt', 0)
+  await expect(page.locator('[data-ray-crossing]')).toHaveText(
+    'Over the nodule: Heart and mediastinum, rib',
+  )
+  const legend = await page.locator('[data-ray-structure]').allTextContents()
+  expect(legend).toEqual(expect.arrayContaining(['Nodule', 'Heart and mediastinum', 'Rib', 'Lung']))
+  await expect(panel).not.toContainText(/\bmm\b/)
+})
+
+test('expert session: Section 4 sets up ventilation and position with a supine-versus-wedged figure', async ({
+  page,
+}) => {
+  await openSection(page, 'current-anatomy')
+  await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'current-anatomy:setup')
+  const column = page.locator('[data-text-column]')
+  await expect(column).toContainText('Prevent atelectasis before the first image')
+  await expect(column).toContainText('Position the patient so the lesion side is up')
+  const figure = page.locator('[data-teaching-figure="current-anatomy:wedge-dependency"]')
+  await expect(figure).toHaveAttribute('data-figure-state', 'ready', { timeout: 60000 })
+  await expect(figure.locator('[data-figure-canvas="drawn"]')).toHaveCount(2)
+  await expect(figure.locator('[data-vertebral-level]')).toHaveCount(2)
+})
+
+test('expert session: the DTS compare step moves the arc’s centre and reconstructs a tilted plane', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'dts-acquisition', 'observe')
+  await expect(page.locator('#peripheral-imaging-control-sweepCenter')).toBeVisible()
+  await expect(page.locator('[data-readout="rayCrossesAtCentre"] dd')).toHaveText(
+    'Heart and mediastinum, rib',
+  )
+  await controlRange(page, 'plane', 0)
+  await controlRange(page, 'sweepCenter', -20)
+  await expect(page.locator('[data-readout="rayCrossesAtCentre"] dd')).toHaveText('Rib')
+  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready', {
+    timeout: 60000,
+  })
+  await expect(page.locator('[data-focus-readout]')).toContainText('the nodule is in focus')
+  // The position overlay is placed for a frontal arc only.
+  await expect(page.locator('[data-dts-overlay-toggle]')).toHaveCount(0)
+})

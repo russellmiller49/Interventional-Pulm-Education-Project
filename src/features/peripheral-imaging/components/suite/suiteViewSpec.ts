@@ -62,6 +62,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
   const result: { -readonly [K in keyof SuiteInputs]: SuiteInputs[K] } = {
     orbit: n('geometry', 'orbit'),
     tilt: n('geometry', 'tilt'),
+    wedgeDeg: 0,
     toolDepth: n('geometry', 'depth'),
     geometry: DEFAULT_GEOMETRY,
     fieldPercent: n('field', 'field'),
@@ -74,6 +75,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
     speedMmS: n('temporal', 'speed'),
     phase: 0,
     sweepDeg: n('dts', 'sweep'),
+    sweepCenterDeg: 0,
     planeDepth: n('dts', 'plane'),
     priorLayer: 'measured',
     orbitSpanDeg: 200,

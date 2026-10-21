@@ -7,6 +7,8 @@ import {
   signedDegrees,
   teachingFigure,
 } from '../../content/teachingFigures'
+import { tableCrossing } from '../../lib/rayCrossingTable'
+import { rayCrossingLabel } from '../../lib/rayStructures'
 import { FigureCanvas } from './FigureCanvas'
 import { conspicuityImages, type ConspicuityImages, type LesionMark } from './teachingFigureModel'
 import { useFigureComputation } from './useFigureComputation'
@@ -99,20 +101,18 @@ export function ConspicuityComparison() {
             {panel.id === 'superimposition' && model ? (
               <p className={styles.panelCaption} data-ray-readout>
                 Here the C-arm obliquity is {signedDegrees(changed)} ({obliquityDirection(changed)}
-                ). Soft-tissue density on the ray through the lesion:{' '}
-                {model.rays.reference.softTotal} mm frontal, {model.rays.changed.softTotal} mm at{' '}
-                {signedDegrees(changed)}.
+                ). Over the nodule frontally: {rayCrossingLabel(tableCrossing(0, 0))}. At{' '}
+                {signedDegrees(changed)}: {rayCrossingLabel(tableCrossing(changed, 0))}.
               </p>
             ) : null}
-            {panel.id === 'superimposition' &&
-            model &&
-            model.rays.changed.softTotal < model.rays.reference.softTotal ? (
+            {panel.id === 'superimposition' && model ? (
               // PR #279 sanity review: the section's later demonstration uses another angle. The
               // two are not in conflict, and this says what each one shows.
               <p className={styles.panelCaption} data-later-example-note>
-                At {signedDegrees(changed)} the ray through the lesion crosses less soft tissue; the
-                later {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)} example shows a
-                different pattern, with the overlap redistributed along the ray.
+                The later {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)} example shows a
+                different overlap. Over the nodule at{' '}
+                {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)}:{' '}
+                {rayCrossingLabel(tableCrossing(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY, 0))}.
               </p>
             ) : null}
           </figure>

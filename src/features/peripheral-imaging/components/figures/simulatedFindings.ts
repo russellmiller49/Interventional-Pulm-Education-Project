@@ -16,7 +16,7 @@
  *   largest at the lung bases and nil at the spine and the posterior chest wall, which stay sharp.
  */
 import { ctSampler, type CtSampler } from '../../lib/ctProjection'
-import { LESION_CENTER, type Point3 } from '../../lib/physics'
+import { LESION_CENTER, rollAboutLongAxis, type Point3 } from '../../lib/physics'
 import { priorPlaneGray } from '../suite/dtsModel'
 import type { LesionMark } from './teachingFigureModel'
 
@@ -131,6 +131,7 @@ function dependentSurface(
   columnX: (col: number) => number,
   lowest: { readonly left: number; readonly right: number },
 ): readonly (number | null)[] {
+  // `columnX` is the column's distance from the patient's midline, signed patient-left positive.
   const line: (number | null)[] = found.map(() => null)
   for (const side of ['left', 'right'] as const) {
     const columns = found.flatMap((_, col) => {
@@ -183,29 +184,82 @@ export interface DependentOpacityImages {
   readonly noduleMm: readonly [number, number] | null
   /** How much of the opacity covers the nodule's centre, 0–1. */
   readonly noduleCover: number
+  /** The roll the level is drawn at: 0 supine, positive with the patient's left side lifted. */
+  readonly wedgeDeg: number
+  /** The image row level with the front of the vertebral body; lung below it is dependent. */
+  readonly equatorPx: number | null
 }
 
-export function dependentOpacityImages(volume: Uint8Array): DependentOpacityImages {
-  const sample = ctSampler(volume)
+/** Roll an axial point about the isocentre: positive lifts the patient's left side. */
+function rollAxial(x: number, y: number, degrees: number): [number, number] {
+  const [rx, ry] = rollAboutLongAxis([x, y, 0], degrees)
+  return [rx, ry]
+}
+
+/** Inside the scan's 352 mm square at any roll. */
+const ROLLED_FIELD_RADIUS_MM = 172
+
+/** The front of the vertebral body on the midline at a level: the first bone walking back. */
+export function vertebralBodyFront(sample: CtSampler, z: number): number | null {
+  for (let y = -40; y >= -140; y -= 0.5) if (sample(0, y, z) > 200) return y
+  return null
+}
+
+/**
+ * The same level supine, or wedged: rolled about the long axis with the patient's left side lifted
+ * by `wedgeDeg`. The image is drawn as the patient lies in the room, so gravity stays toward the
+ * bottom of the image and the opacity forms in whatever lung is now lowest. The check's nodule is
+ * fixed in the patient, so it rolls with the chest.
+ */
+export function dependentOpacityImages(
+  volume: Uint8Array,
+  { wedgeDeg = 0 }: { readonly wedgeDeg?: number } = {},
+): DependentOpacityImages {
+  const patient = ctSampler(volume)
+  const sample: CtSampler =
+    wedgeDeg === 0
+      ? patient
+      : (x, y, z) => {
+          const [px, py] = rollAxial(x, y, -wedgeDeg)
+          // A round field of view inside the scan, so a rolled level shows no corner of the volume;
+          // its edge is softened over a few millimetres so it does not step at display size.
+          const outside = smooth(
+            ROLLED_FIELD_RADIUS_MM - 3,
+            ROLLED_FIELD_RADIUS_MM,
+            Math.hypot(px, py),
+          )
+          if (outside >= 1) return -1000
+          const hu = patient(px, py, z)
+          return hu + outside * (-1000 - hu)
+        }
+  /** Signed distance from the patient's midline, patient-left positive, of a room-frame point. */
+  const lateral = (x: number, y: number) => (wedgeDeg === 0 ? x : rollAxial(x, y, -wedgeDeg)[0])
   const { sizePx, sliceZ, reachMm, denseShare, pleuralShare, opacityHu, ceilingMm } =
     DEPENDENT_OPACITY
-  const columnX = (col: number) => dependentOpacityPoint(col, 0)[0]
+  const roomX = (col: number) => dependentOpacityPoint(col, 0)[0]
   const found = Array.from({ length: sizePx }, (_, col) =>
-    posteriorPleura(sample, columnX(col), sliceZ),
+    posteriorPleura(sample, roomX(col), sliceZ),
   )
+  // Where each column lies relative to the midline, measured at its pleura (or behind the lung).
+  const columnX = (col: number) => lateral(roomX(col), found[col] ?? -110)
   // The most dependent point of each lung: the opacity is deepest there.
   const lowest = { left: Infinity, right: Infinity }
   found.forEach((y, col) => {
-    const x = columnX(col)
     if (y === null) return
-    const side = x > 0 ? 'left' : 'right'
+    const side = columnX(col) > 0 ? 'left' : 'right'
     lowest[side] = Math.min(lowest[side], y)
   })
   const pleura = dependentSurface(found, columnX, lowest)
   const noduleSpec = DEPENDENT_OPACITY.nodule
-  const nodulePleura = posteriorPleura(sample, noduleSpec.xMm, sliceZ)
+  // Placed on the supine level, then rolled with the chest.
+  const nodulePleura = posteriorPleura(patient, noduleSpec.xMm, sliceZ)
   const noduleMm: [number, number] | null =
-    nodulePleura === null ? null : [noduleSpec.xMm, nodulePleura + noduleSpec.fromPleuraMm]
+    nodulePleura === null
+      ? null
+      : rollAxial(noduleSpec.xMm, nodulePleura + noduleSpec.fromPleuraMm, wedgeDeg)
+  const bodyFront = vertebralBodyFront(patient, sliceZ)
+  // The "equator": the level of the front of the vertebral body, level in the room.
+  const equatorMm = bodyFront === null ? null : rollAxial(0, bodyFront, wedgeDeg)[1]
 
   const withNodule = (x: number, y: number, hu: number) => {
     if (!noduleMm) return hu
@@ -220,7 +274,13 @@ export function dependentOpacityImages(volume: Uint8Array): DependentOpacityImag
     // A few millimetres behind the pleural line are partial-volume lung, and fill with it.
     if (pleuraY === null || y < pleuraY - 6) return 0
     // Dependent means low: the opacity thins out with height above the lowest point of the lung.
-    const aboveLowest = y - lowest[x > 0 ? 'left' : 'right']
+    // Supine the two lungs' lowest points lie level and each lung is measured from its own; rolled,
+    // height is measured from the lowest point of the chest, so the lifted lung is less dependent.
+    const aboveLowest =
+      y -
+      (wedgeDeg === 0
+        ? lowest[lateral(x, y) > 0 ? 'left' : 'right']
+        : Math.min(lowest.left, lowest.right))
     const depth =
       pleuralShare * (y - pleuraY) +
       (1 - pleuralShare) * aboveLowest +
@@ -260,6 +320,8 @@ export function dependentOpacityImages(volume: Uint8Array): DependentOpacityImag
             pleura[Math.min(sizePx - 1, Math.max(0, Math.floor(mark[0])))],
           )
         : 0,
+    wedgeDeg,
+    equatorPx: equatorMm === null ? null : dependentOpacityPixelOf(0, equatorMm)[1],
   }
 }
 
