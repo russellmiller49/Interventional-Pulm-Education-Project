@@ -1,0 +1,111 @@
+/*
+ * A coronal or sagittal reference plane (ReferenceCtView). Fills whatever pane the bench gives it:
+ * the picture keeps its true proportions and centres in the space left by the toolbar and slider.
+ * Palette tokens (--line, --muted, --ink) come from the module frame, as in nav-bench.module.css.
+ */
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: none;
+  padding: 0.35rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+.title {
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+.toolbar button {
+  margin-left: auto;
+  min-height: 32px;
+  padding: 3px 9px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+.toolbar button[aria-pressed='true'] {
+  border-color: #7fe3ff;
+  box-shadow: 0 0 0 1px #7fe3ff inset;
+}
+.slot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  background: #050c11;
+}
+.slot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.slot svg:focus-visible {
+  outline: 3px solid #f1ca79;
+  outline-offset: -3px;
+}
+.letters text {
+  fill: #ffffff;
+  font:
+    700 9px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  stroke: #000000;
+  stroke-width: 2px;
+  paint-order: stroke;
+  pointer-events: none;
+}
+.cursor {
+  opacity: 0;
+}
+.slot svg:focus .cursor {
+  opacity: 1;
+}
+.load {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  background: #071018e6;
+  font-size: 0.85rem;
+}
+.sliderRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.45rem;
+  flex: none;
+  padding: 0.35rem 0.65rem 0.45rem;
+  border-top: 1px solid var(--line);
+}
+.sliderRow button {
+  min-height: 32px;
+  padding: 3px 9px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.sliderRow input[type='range'] {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+.readout {
+  min-width: 4.6rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.84rem;
+  color: var(--ink);
+}
