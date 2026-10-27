@@ -189,6 +189,7 @@ Thumbs.db
 *.eps
 *.raw
 !public/airway-anatomy/case-001/ct/*.raw
+!public/airway-anatomy/dolphin-001/ct/*.raw
 !public/bronch-navigation-trainer/app/**/*.raw
 !public/fluoroview/cases/**/ct/ct_preview_uint8.raw
 *.cr2

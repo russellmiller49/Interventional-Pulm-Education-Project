@@ -108,10 +108,34 @@ import {
   subscribeToScopeTrackerProfileChanges,
 } from '@/lib/scope-input/core'
 
-const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
-const ORIENTATION_CALIBRATION_URL = resolveAdminAirwayAssetPath(
-  '/airway-anatomy/case-001/scope_orientation_calibration.json',
-)
+/** The case a module instance loads. Everything else comes from the case manifest. */
+export interface AirwayAnatomyCaseSource {
+  manifestUrl: string
+  title: string
+  /**
+   * Reviewed flexible-roll defaults. The local calibration writer only edits case-001's file,
+   * so a case without one has no calibration mode.
+   */
+  orientationCalibrationUrl?: string
+  /** Bronch Quest's difficulty tiers are built on human lobar and segmental names. */
+  challenge: boolean
+}
+
+export const HUMAN_AIRWAY_CASE: AirwayAnatomyCaseSource = {
+  manifestUrl: resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json'),
+  title: 'Synchronized Airway Anatomy',
+  orientationCalibrationUrl: resolveAdminAirwayAssetPath(
+    '/airway-anatomy/case-001/scope_orientation_calibration.json',
+  ),
+  challenge: true,
+}
+
+export const DOLPHIN_AIRWAY_CASE: AirwayAnatomyCaseSource = {
+  manifestUrl: resolveAdminAirwayAssetPath('/airway-anatomy/dolphin-001/case_manifest.json'),
+  title: 'Synchronized Dolphin Airway',
+  challenge: false,
+}
+
 const ORIENTATION_WRITE_ENDPOINT = '/api/airway-anatomy/scope-orientation'
 const AIRWAY_CALIBRATION_QUERY_PARAM = 'airwayCalibration'
 const SCOPE_ORIENTATION_PROFILE_QUERY_PARAM = 'scopeProfile'
@@ -141,7 +165,11 @@ interface CurrentLocation {
   name: string
 }
 
-export function AirwayAnatomyModule() {
+export function AirwayAnatomyModule({
+  source = HUMAN_AIRWAY_CASE,
+}: {
+  source?: AirwayAnatomyCaseSource
+}) {
   const [loadedCase, setLoadedCase] = useState<LoadedCase | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [scopeState, setScopeState] = useState<ScopeState | null>(null)
@@ -173,6 +201,7 @@ export function AirwayAnatomyModule() {
         ? buildTransportFrames(
             loadedCase.graph,
             scopeOrientationProfile === 'flexible' ? loadedCase.manifest.orientationLandmarks : [],
+            loadedCase.manifest.interaction.rootUpLps,
           )
         : null,
     [loadedCase, scopeOrientationProfile],
@@ -206,15 +235,17 @@ export function AirwayAnatomyModule() {
   }, [loadedCase])
 
   useEffect(() => {
-    setCalibrationMode(isAirwayOrientationCalibrationMode())
-  }, [])
+    setCalibrationMode(
+      Boolean(source.orientationCalibrationUrl) && isAirwayOrientationCalibrationMode(),
+    )
+  }, [source.orientationCalibrationUrl])
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       try {
-        const manifestResponse = await fetch(MANIFEST_URL)
+        const manifestResponse = await fetch(source.manifestUrl)
         if (!manifestResponse.ok) {
           throw new Error(`Unable to load airway anatomy manifest (${manifestResponse.status}).`)
         }
@@ -235,7 +266,7 @@ export function AirwayAnatomyModule() {
           graphResponse.json() as Promise<AirwayGraph>,
           labelsResponse.json() as Promise<CenterlineLabels>,
           ctResponse.arrayBuffer(),
-          fetchScopeOrientationCalibration(manifest.id),
+          fetchScopeOrientationCalibration(manifest.id, source.orientationCalibrationUrl),
         ])
 
         if (cancelled) return
@@ -272,7 +303,7 @@ export function AirwayAnatomyModule() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [source.manifestUrl, source.orientationCalibrationUrl])
 
   const graphIndex = useMemo(
     () => (loadedCase ? createGraphIndex(loadedCase.graph) : null),
@@ -690,7 +721,7 @@ export function AirwayAnatomyModule() {
                   </span>
                 </div>
                 <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-                  Synchronized Airway Anatomy
+                  {source.title}
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -716,37 +747,39 @@ export function AirwayAnatomyModule() {
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('explore')
-                      game.actions.stop()
-                    }}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                      mode === 'explore'
-                        ? 'bg-slate-700 text-white'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                    aria-pressed={mode === 'explore'}
-                  >
-                    <Compass className="h-4 w-4" />
-                    Explore
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('challenge')}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                      mode === 'challenge'
-                        ? 'bg-cyan-500 text-slate-950'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                    aria-pressed={mode === 'challenge'}
-                  >
-                    <Gamepad2 className="h-4 w-4" />
-                    Challenge
-                  </button>
-                </div>
+                {source.challenge ? (
+                  <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('explore')
+                        game.actions.stop()
+                      }}
+                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                        mode === 'explore'
+                          ? 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                      aria-pressed={mode === 'explore'}
+                    >
+                      <Compass className="h-4 w-4" />
+                      Explore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('challenge')}
+                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                        mode === 'challenge'
+                          ? 'bg-cyan-500 text-slate-950'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                      aria-pressed={mode === 'challenge'}
+                    >
+                      <Gamepad2 className="h-4 w-4" />
+                      Challenge
+                    </button>
+                  </div>
+                ) : null}
                 <Button
                   type="button"
                   variant="secondary"
@@ -1224,9 +1257,10 @@ function ControlPanel({
   )
 }
 
-async function fetchScopeOrientationCalibration(caseId: string) {
+async function fetchScopeOrientationCalibration(caseId: string, url: string | undefined) {
+  if (!url) return createEmptyScopeOrientationCalibration(caseId)
   try {
-    const response = await fetch(ORIENTATION_CALIBRATION_URL, { cache: 'no-store' })
+    const response = await fetch(url, { cache: 'no-store' })
     if (!response.ok) {
       return createEmptyScopeOrientationCalibration(caseId)
     }
@@ -1622,6 +1656,11 @@ function boundsForGraph(graph: AirwayGraph): { center: Vec3; radius: number } {
     max[2] = Math.max(max[2], point[2])
   }
   const center: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
-  const radius = Math.max(160, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) * 0.62)
+  // The last term only matters for a tall case such as the dolphin's nose-to-lung airway.
+  const radius = Math.max(
+    160,
+    Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) * 0.62,
+    (max[2] - min[2]) * 0.92,
+  )
   return { center, radius }
 }
