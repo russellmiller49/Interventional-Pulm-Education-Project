@@ -5,10 +5,16 @@
  * asset, fetch and redirect under this route's prefix. The relay strips the prefix and forwards
  * the rest of the path and the query unchanged, never forwards the visitor's cookies or
  * credentials, and returns only the response headers it sets itself. Unset origin → 404.
+ * Downloads (`/export/…`) are limited per client and keep the Atlas's attachment file name.
  * Contract and go-live steps: docs/literature-atlas-preview.md.
  */
 
+import { clientOf, takeDownload } from './downloads'
+
 const PREFIX = '/api/literature-atlas'
+const EXPORT_PATH = '/export/'
+// The Atlas names its files `atlas-<kind>-<date>.<csv|json>`; any other disposition is dropped.
+const ATTACHMENT = /^attachment; filename="[A-Za-z0-9][A-Za-z0-9._-]{0,99}"$/
 const TIMEOUT_MS = 15000
 const ROBOTS = 'noindex, nofollow, noarchive'
 // Used only if the Atlas omits its own policy, which it should never do.
@@ -22,6 +28,7 @@ const ALLOWED_MEDIA_TYPES = new Set([
   'application/javascript',
   'application/octet-stream',
   'text/plain',
+  'text/csv',
 ])
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 const NULL_BODY_STATUSES = new Set([204, 205, 304])
@@ -75,6 +82,16 @@ async function relay(request: Request, method: 'GET' | 'HEAD') {
   const target = new URL(`${origin}${upstreamPath}${search}`)
   if (target.origin !== origin) return plain('Not found.', 404)
 
+  const isDownload = upstreamPath.startsWith(EXPORT_PATH)
+  if (isDownload) {
+    const wait = takeDownload(clientOf(request.headers))
+    if (wait > 0) {
+      return plain('Too many downloads from this connection. Please wait a few minutes.', 429, {
+        'Retry-After': String(wait),
+      })
+    }
+  }
+
   let upstream: Response
   try {
     upstream = await fetch(target, {
@@ -110,12 +127,16 @@ async function relay(request: Request, method: 'GET' | 'HEAD') {
 
   const withoutBody = method === 'HEAD' || NULL_BODY_STATUSES.has(upstream.status)
   if (withoutBody) await upstream.body?.cancel()
+  const disposition = upstream.headers.get('content-disposition')
   return new Response(withoutBody ? null : upstream.body, {
     status: upstream.status,
     headers: relayHeaders({
       'Content-Type': contentType,
       'Cache-Control': cacheControl(upstreamPath, mediaType),
       'Content-Security-Policy': upstream.headers.get('content-security-policy') ?? FALLBACK_CSP,
+      ...(isDownload && disposition && ATTACHMENT.test(disposition)
+        ? { 'Content-Disposition': disposition }
+        : {}),
     }),
   })
 }

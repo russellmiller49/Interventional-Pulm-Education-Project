@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { DOWNLOAD_LIMITS, resetDownloads } from './downloads'
 import { GET, HEAD, POST } from './route'
 
 const ORIGIN = 'http://literature-atlas.railway.internal:8920'
@@ -32,8 +33,10 @@ describe('Literature Atlas relay', () => {
 
   beforeEach(() => {
     process.env.LITERATURE_ATLAS_ORIGIN = ORIGIN
+    resetDownloads()
   })
   afterEach(() => {
+    jest.restoreAllMocks()
     global.fetch = originalFetch
     if (originalOrigin === undefined) delete process.env.LITERATURE_ATLAS_ORIGIN
     else process.env.LITERATURE_ATLAS_ORIGIN = originalOrigin
@@ -211,6 +214,88 @@ describe('Literature Atlas relay', () => {
     const response = await GET(request('/api/literature-atlas/map'))
     expect(response.status).toBe(502)
     expect(response.headers.get('cache-control')).toBe('no-store')
+  })
+
+  describe('downloads', () => {
+    const CSV = 'text/csv; charset=utf-8'
+    const NAME = 'attachment; filename="atlas-articles-2026-10-28.csv"'
+
+    function download(client: string, path = '/api/literature-atlas/export/articles.csv?q=stent') {
+      return GET(request(path, { headers: { 'x-forwarded-for': `${client}, 10.0.0.1` } }))
+    }
+
+    function csvUpstream(disposition: string | null = NAME) {
+      return mockFetch(
+        upstream('# citation: x\narticle_id\nA1\n', {
+          headers: {
+            'content-type': CSV,
+            ...(disposition ? { 'content-disposition': disposition } : {}),
+          },
+        }),
+      )
+    }
+
+    it('relays a CSV export with its attachment file name', async () => {
+      csvUpstream()
+      const response = await download('198.51.100.1')
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe(CSV)
+      expect(response.headers.get('content-disposition')).toBe(NAME)
+      expect(response.headers.get('cache-control')).toBe('no-store')
+      expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive')
+      expect(await response.text()).toContain('article_id')
+    })
+
+    it.each([
+      'attachment; filename="../../etc/passwd"',
+      'attachment; filename="a.csv"; filename*=UTF-8\'\'evil.html',
+      'inline; filename="atlas.csv"',
+      'attachment',
+    ])('drops the disposition %p', async (disposition) => {
+      csvUpstream(disposition)
+      const response = await download('198.51.100.2')
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-disposition')).toBeNull()
+    })
+
+    it('never passes a disposition outside the export paths', async () => {
+      mockFetch(upstream('<html></html>', { headers: { 'content-disposition': NAME } }))
+      const response = await GET(request('/api/literature-atlas/list'))
+      expect(response.headers.get('content-disposition')).toBeNull()
+    })
+
+    it('limits each client and lets the window reset', async () => {
+      const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000)
+      const fetchMock = jest
+        .fn()
+        .mockImplementation(async () => upstream('x', { headers: { 'content-type': CSV } }))
+      global.fetch = fetchMock
+      for (let i = 0; i < DOWNLOAD_LIMITS.perClient; i++) {
+        expect((await download('198.51.100.3')).status).toBe(200)
+      }
+      const refused = await download('198.51.100.3')
+      expect(refused.status).toBe(429)
+      expect(Number(refused.headers.get('retry-after'))).toBe(DOWNLOAD_LIMITS.windowMs / 1000)
+      expect(refused.headers.get('cache-control')).toBe('no-store')
+      expect(fetchMock).toHaveBeenCalledTimes(DOWNLOAD_LIMITS.perClient)
+
+      expect((await download('198.51.100.4')).status).toBe(200) // another client
+      expect((await GET(request('/api/literature-atlas/list'))).status).toBe(200) // pages are not counted
+
+      now.mockReturnValue(1_000_000 + DOWNLOAD_LIMITS.windowMs)
+      expect((await download('198.51.100.3')).status).toBe(200)
+    })
+
+    it('caps all clients together', async () => {
+      jest.spyOn(Date, 'now').mockReturnValue(2_000_000)
+      global.fetch = jest
+        .fn()
+        .mockImplementation(async () => upstream('x', { headers: { 'content-type': CSV } }))
+      for (let i = 0; i < DOWNLOAD_LIMITS.overall; i++) {
+        expect((await download(`203.0.113.${i % 250}.${Math.floor(i / 250)}`)).status).toBe(200)
+      }
+      expect((await download('192.0.2.99')).status).toBe(429)
+    })
   })
 
   it('relays HEAD as HEAD with headers and no body', async () => {
