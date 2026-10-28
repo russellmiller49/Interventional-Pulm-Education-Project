@@ -1,0 +1,101 @@
+{
+  "schema": "airway_anatomy_case/v1",
+  "id": "airway-anatomy-dolphin-001",
+  "title": "Dolphin Airway Synchronized Bronchoscopy",
+  "version": "1.0.0",
+  "coordinateSystem": "LPS",
+  "units": "mm",
+  "safetyLabel": "Educational simulation only - not for diagnosis, treatment, or procedure guidance.",
+  "sourcePolicy": "Raw CT and segmentation remain in Local-Data/Dolphin_bronch. The app loads assets derived by scripts/airway-anatomy/build-dolphin-case.py.",
+  "assetBaseUrl": "/airway-anatomy/dolphin-001",
+  "assets": {
+    "airwayGlb": "/airway-anatomy/dolphin-001/lumen.glb",
+    "reviewedLumenGlb": "/airway-anatomy/dolphin-001/lumen.glb",
+    "airwayGraphJson": "/airway-anatomy/dolphin-001/metadata/airway_graph.json",
+    "centerlineLabelsJson": "/airway-anatomy/dolphin-001/metadata/centerline_labels.json",
+    "ctPreviewRaw": "/airway-anatomy/dolphin-001/ct/dolphin_ct_preview_i16.raw"
+  },
+  "airwayTransform": {
+    "sceneScale": 1,
+    "rotationDeg": [0, 0, 0],
+    "positionOffsetMm": [0, 0, 0],
+    "note": "lumen.glb is written in patient LPS millimeters."
+  },
+  "airwaySurfaceTransform": {
+    "sceneScale": 1,
+    "rotationDeg": [0, 0, 0],
+    "positionOffsetMm": [0, 0, 0],
+    "note": "lumen.glb is aligned with the CT and centerlines."
+  },
+  "ct": {
+    "sourceNrrd": "3 DOLPHIN LUNG 1.25MM.nrrd",
+    "previewRaw": "ct/dolphin_ct_preview_i16.raw",
+    "previewRawUrl": "/airway-anatomy/dolphin-001/ct/dolphin_ct_preview_i16.raw",
+    "format": "int16-raw",
+    "sizeXyz": [248, 217, 291],
+    "originalSizeXyz": [512, 512, 639],
+    "strideXyz": [2, 2, 2],
+    "spacingXyzMm": [2.539061999999999, 2.539061999999999, 2.4999999999999996],
+    "originalSpacingXyzMm": [1.2695309999999995, 1.2695309999999995, 1.2499999999999998],
+    "originLps": [-333.4608, -354.3303, -894.5],
+    "directionLps": [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    "space": "left-posterior-superior",
+    "windowPresets": [
+      {
+        "id": "lung",
+        "label": "Lung",
+        "low": -1000,
+        "high": -300
+      },
+      {
+        "id": "mediastinal",
+        "label": "Mediastinal",
+        "low": -160,
+        "high": 240
+      },
+      {
+        "id": "bone",
+        "label": "Bone",
+        "low": -450,
+        "high": 1050
+      }
+    ],
+    "sourceSha256": "025fd9a4a98997e275b83147ae28ed12b60c84f760c0147642fb13da4727d8e0"
+  },
+  "geometryValidation": {
+    "schema": "lumen-validation/v1",
+    "closed": true,
+    "sourceSha256": "af768138ea89dd653364dbfe02060a7f63b645cf2f7642166fcc89031e97455f",
+    "displaySha256": "5b53da43054d1718ebb4905611e6f4f48df08dad156c3d52eab3e53db6c0a6ec",
+    "coordinateSystem": "LPS",
+    "units": "mm",
+    "topology": {
+      "boundary": 0,
+      "nonmanifold": 0,
+      "components": 1
+    }
+  },
+  "orientationLandmarks": [
+    {
+      "id": "trachea",
+      "label": "Trachea",
+      "edgeId": 3,
+      "distanceMm": 90.1,
+      "targetEdgeId": 7,
+      "oppositeEdgeId": 8,
+      "screenDirection": "left",
+      "expectation": "Ventral wall at the top; the right tracheal bronchus and right principal bronchus to the right"
+    }
+  ],
+  "ostialLandmarks": [],
+  "interaction": {
+    "rootNodeId": 0,
+    "carinaNodeId": 6,
+    "defaultEdgeId": 0,
+    "initialDistanceMm": 4,
+    "stepMm": 3,
+    "lookAheadMm": 14,
+    "trailMaxPoints": 240,
+    "rootUpLps": [0, 0, 1]
+  }
+}

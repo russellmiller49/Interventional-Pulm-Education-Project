@@ -42,6 +42,8 @@ export interface AirwayAnatomyCaseManifest {
     stepMm: number
     lookAheadMm: number
     trailMaxPoints: number
+    /** Screen-up at the start of the root edge, in LPS; anterior when omitted. */
+    rootUpLps?: Vec3
   }
 }
 

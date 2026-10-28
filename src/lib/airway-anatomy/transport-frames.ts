@@ -17,10 +17,14 @@ import type { AirwayGraph, OrientationLandmark, ScopePoseSnapshot, Vec3 } from '
 export interface TransportFrames {
   at(edgeId: number, distanceMm: number): OpticalFrame
 }
-/** Built once per case/profile. Corrections are inherited through the tree, not reset at forks. */
+/**
+ * Built once per case/profile. Corrections are inherited through the tree, not reset at forks.
+ * `rootUp` sets screen-up where the root edge starts; anterior when omitted.
+ */
 export function buildTransportFrames(
   graph: AirwayGraph,
   landmarks: OrientationLandmark[] = [],
+  rootUp?: Vec3,
 ): TransportFrames {
   const nodes = new Map(graph.nodes.map((n) => [n.id, n]))
   const edges = new Map(graph.edges.map((e) => [e.id, e]))
@@ -37,7 +41,7 @@ export function buildTransportFrames(
       const behind = sampleEdgePose(edge, Math.max(0, d - 2)).point
       const ahead = sampleEdgePose(edge, Math.min(edge.lengthMm, d + 2)).point
       const forward = unit(minus(ahead, behind))
-      const frame = previous ? transport(previous, p, forward) : makeFrame(p, forward)
+      const frame = previous ? transport(previous, p, forward) : makeFrame(p, forward, rootUp)
       frames.push(frame)
       distances.push(d)
       previous = frame
