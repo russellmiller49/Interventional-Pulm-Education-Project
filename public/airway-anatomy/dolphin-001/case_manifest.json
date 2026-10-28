@@ -81,16 +81,16 @@
       "label": "Trachea",
       "edgeId": 3,
       "distanceMm": 105.6,
-      "targetEdgeId": 8,
-      "oppositeEdgeId": 7,
+      "targetEdgeId": 9,
+      "oppositeEdgeId": 8,
       "screenDirection": "left",
-      "expectation": "Dorsal wall at the top; the right tracheal bronchus and right principal bronchus to the left"
+      "expectation": "Dorsal wall at the top; the right tracheal bronchus and right main bronchus to the left"
     }
   ],
   "ostialLandmarks": [],
   "interaction": {
     "rootNodeId": 0,
-    "carinaNodeId": 6,
+    "carinaNodeId": 7,
     "defaultEdgeId": 0,
     "initialDistanceMm": 4,
     "stepMm": 3,

@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 const learningObjectives = [
-  'Follow the dolphin airway from the bony nasal passages down the nasopharynx, and enter the glottis at the tip of the laryngeal spout rather than the fornix beside it.',
-  'Identify the right tracheal bronchus cranial to the carina and follow each principal bronchus through its unlobed lung.',
+  'Follow the dolphin airway from the nares down the nasopharynx, and enter the glottis at the tip of the laryngeal spout (goosebeak) rather than the fornix beside it.',
+  'Identify the right tracheal bronchus (RTB) cranial to the carina and follow the right and left main bronchi (RMB, LMB) through their numbered branches.',
   'Correlate the scope tip with axial, coronal, and sagittal CT through the skull, neck, and thorax.',
 ]
 
@@ -52,14 +52,16 @@ export default function DolphinAirwayPage() {
           <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
             <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
               In the dolphin the larynx is separated from the oral cavity: the arytenoid and
-              epiglottic cartilages form a long tube, the laryngeal spout, that rises into the
-              nasopharynx and is held there by the palatopharyngeal sphincter. The scope starts in
-              the left bony nasal passage below the nasal plugs and descends the nasopharynx to the
+              epiglottic cartilages form a long tube, the laryngeal spout or goosebeak, that rises
+              into the nasopharynx and is held there by the palatopharyngeal sphincter. The scope
+              starts in the left naris below the nasal plugs and descends the nasopharynx to the
               spout, with the nasopharyngeal fornix on either side. It enters the glottis at the
-              spout tip and continues through the trachea to the right tracheal bronchus and the
-              principal bronchi. The view is oriented as for an animal in sternal recumbency: dorsal
-              at the top of the screen and the animal&rsquo;s right on the screen left. The
-              bronchoscopic view, the 3D airway, and the CT all follow the same scope tip.
+              spout tip, passes the larynx into the trachea, and continues to the right tracheal
+              bronchus and the main bronchi. The view is oriented as for an animal in sternal
+              recumbency: dorsal at the top of the screen and the animal&rsquo;s right on the screen
+              left. Airway names follow the bottlenose dolphin bronchoscopy guide of the U.S. Navy
+              Marine Mammal Program and the National Marine Mammal Foundation. The bronchoscopic
+              view, the 3D airway, and the CT all follow the same scope tip.
             </p>
 
             <div className="rounded-lg border border-border/70 bg-card/70 p-6">

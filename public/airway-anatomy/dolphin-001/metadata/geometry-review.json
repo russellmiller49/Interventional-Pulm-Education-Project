@@ -1,22 +1,191 @@
 {
   "sourceSegmentationSha256": "af768138ea89dd653364dbfe02060a7f63b645cf2f7642166fcc89031e97455f",
-  "centralPathEdgeIds": [0, 1, 3, 4, 5],
+  "centralPathEdgeIds": [0, 1, 3, 4, 5, 6],
   "sideBranches": [
     {
-      "edgeId": 6,
-      "label": "TB",
+      "edgeId": 7,
+      "label": "RTB",
       "subtreeMm": 471.3
     }
   ],
-  "LPBBranches": 14,
-  "RPBBranches": 13,
-  "carinaNodeId": 6,
-  "trachealBronchusEdgeId": 6,
+  "trachealBronchusDivisions": {
+    "RT1": 11,
+    "RT2": 16,
+    "RT3": 17
+  },
+  "LMBBranches": [
+    {
+      "label": "LB1",
+      "edgeId": 12,
+      "fromCarinaMm": 55.2,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB2",
+      "edgeId": 22,
+      "fromCarinaMm": 118.6,
+      "direction": "Dorsal"
+    },
+    {
+      "label": "LB3",
+      "edgeId": 40,
+      "fromCarinaMm": 159.3,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB4",
+      "edgeId": 63,
+      "fromCarinaMm": 183.5,
+      "direction": "Dorsomedial"
+    },
+    {
+      "label": "LB5",
+      "edgeId": 78,
+      "fromCarinaMm": 188.2,
+      "direction": "Dorsolateral"
+    },
+    {
+      "label": "LB6",
+      "edgeId": 92,
+      "fromCarinaMm": 213.6,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB7",
+      "edgeId": 101,
+      "fromCarinaMm": 235.2,
+      "direction": "Medial"
+    },
+    {
+      "label": "LB8",
+      "edgeId": 106,
+      "fromCarinaMm": 252.1,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB9",
+      "edgeId": 115,
+      "fromCarinaMm": 275.6,
+      "direction": "Dorsomedial"
+    },
+    {
+      "label": "LB10",
+      "edgeId": 120,
+      "fromCarinaMm": 292.6,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB11",
+      "edgeId": 124,
+      "fromCarinaMm": 319.1,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB12",
+      "edgeId": 129,
+      "fromCarinaMm": 338.7,
+      "direction": "Medial"
+    },
+    {
+      "label": "LB13",
+      "edgeId": 132,
+      "fromCarinaMm": 354.5,
+      "direction": "Lateral"
+    },
+    {
+      "label": "LB14",
+      "edgeId": 137,
+      "fromCarinaMm": 374.0,
+      "direction": "Medial"
+    }
+  ],
+  "RMBBranches": [
+    {
+      "label": "RB1",
+      "edgeId": 15,
+      "fromCarinaMm": 110.6,
+      "direction": "Dorsolateral"
+    },
+    {
+      "label": "RB3",
+      "edgeId": 24,
+      "fromCarinaMm": 147.5,
+      "direction": "Dorsal"
+    },
+    {
+      "label": "RB2",
+      "edgeId": 45,
+      "fromCarinaMm": 156.2,
+      "direction": "Lateral"
+    },
+    {
+      "label": "RB5",
+      "edgeId": 64,
+      "fromCarinaMm": 183.1,
+      "direction": "Dorsal"
+    },
+    {
+      "label": "RB4",
+      "edgeId": 83,
+      "fromCarinaMm": 188.8,
+      "direction": "Lateral"
+    },
+    {
+      "label": "RB6",
+      "edgeId": 97,
+      "fromCarinaMm": 219.7,
+      "direction": "Lateral"
+    },
+    {
+      "label": "RB7",
+      "edgeId": 104,
+      "fromCarinaMm": 238.6,
+      "direction": "Dorsomedial"
+    },
+    {
+      "label": "RB8",
+      "edgeId": 111,
+      "fromCarinaMm": 259.4,
+      "direction": "Lateral"
+    },
+    {
+      "label": "RB10",
+      "edgeId": 116,
+      "fromCarinaMm": 283.2,
+      "direction": "Medial"
+    },
+    {
+      "label": "RB9",
+      "edgeId": 123,
+      "fromCarinaMm": 290.9,
+      "direction": "Lateral"
+    },
+    {
+      "label": "RB11",
+      "edgeId": 126,
+      "fromCarinaMm": 297.8,
+      "direction": "Dorsal"
+    },
+    {
+      "label": "RB12",
+      "edgeId": 130,
+      "fromCarinaMm": 315.3,
+      "direction": "Medial"
+    },
+    {
+      "label": "RB13",
+      "edgeId": 135,
+      "fromCarinaMm": 327.1,
+      "direction": "Lateral"
+    }
+  ],
+  "carinaNodeId": 7,
+  "trachealBronchusEdgeId": 7,
   "spout": {
     "approachLps": [-11.0, -128.35, -269.5],
     "glottisLps": [-3.38, -133.43, -282.0],
     "approachToGlottisMm": 15.5,
-    "fornixEdgeIds": [137, 138]
+    "fornixEdgeIds": [138, 139]
   },
   "topology": {
     "boundary": 0,
@@ -37,171 +206,171 @@
       "fromDepthMm": 0.318
     },
     {
-      "edgeIds": [50],
+      "edgeIds": [51],
       "fromDepthMm": 0.316
     },
     {
-      "edgeIds": [50],
+      "edgeIds": [51],
       "fromDepthMm": 0.213
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": 0.268
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": -0.001
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": -0.059
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": -0.029
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": 0.147
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": 0.301
     },
     {
-      "edgeIds": [54],
+      "edgeIds": [55],
       "fromDepthMm": 0.255
     },
     {
-      "edgeIds": [65],
+      "edgeIds": [66],
       "fromDepthMm": 0.094
     },
     {
-      "edgeIds": [82],
+      "edgeIds": [83],
       "fromDepthMm": 0.317
     },
     {
-      "edgeIds": [82],
+      "edgeIds": [83],
       "fromDepthMm": 0.296
     },
     {
-      "edgeIds": [82],
+      "edgeIds": [83],
       "fromDepthMm": 0.328
     },
     {
-      "edgeIds": [82],
+      "edgeIds": [83],
       "fromDepthMm": 0.343
     },
     {
-      "edgeIds": [87],
+      "edgeIds": [88],
       "fromDepthMm": 0.25
     },
     {
-      "edgeIds": [87],
+      "edgeIds": [88],
       "fromDepthMm": 0.064
     },
     {
-      "edgeIds": [87],
+      "edgeIds": [88],
       "fromDepthMm": -0.17
     },
     {
-      "edgeIds": [87],
+      "edgeIds": [88],
       "fromDepthMm": -0.31
     },
     {
-      "edgeIds": [87],
+      "edgeIds": [88],
       "fromDepthMm": -0.454
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.344
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.316
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.16
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.026
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.12
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.085
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.007
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.126
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.286
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.232
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.008
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.071
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": -0.136
     },
     {
-      "edgeIds": [89],
+      "edgeIds": [90],
       "fromDepthMm": 0.094
     },
     {
-      "edgeIds": [90],
+      "edgeIds": [91],
       "fromDepthMm": 0.233
     },
     {
-      "edgeIds": [102],
+      "edgeIds": [103],
       "fromDepthMm": 0.293
     },
     {
-      "edgeIds": [102],
+      "edgeIds": [103],
       "fromDepthMm": 0.253
     },
     {
-      "edgeIds": [107],
+      "edgeIds": [108],
       "fromDepthMm": 0.272
     },
     {
-      "edgeIds": [107],
+      "edgeIds": [108],
       "fromDepthMm": -0.038
     },
     {
-      "edgeIds": [107],
+      "edgeIds": [108],
       "fromDepthMm": -0.281
     },
     {
-      "edgeIds": [65],
+      "edgeIds": [66],
       "truncatedAtPoint": 35
     },
     {
-      "edgeIds": [90],
+      "edgeIds": [91],
       "truncatedAtPoint": 21
     },
     {
-      "edgeIds": [107],
+      "edgeIds": [108],
       "truncatedAtPoint": 17
     }
   ]

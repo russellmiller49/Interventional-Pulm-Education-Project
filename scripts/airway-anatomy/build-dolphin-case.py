@@ -31,9 +31,13 @@ nasopharyngeal fornix on either side; the fornix on each side is a short blind b
 there, and the route enters the glottis in a straight line (route_through_spout).
 The pouch at the top of the trachea is in the lumen surface but not in the graph.
 
+Airway names follow the bottlenose dolphin bronchoscopy guide of the U.S. Navy Marine
+Mammal Program and the National Marine Mammal Foundation (GUIDE_BRANCH_NUMBERS records
+how this CT's branches map onto its RB/LB numbers).
+
 The view is oriented for an animal in sternal recumbency (Tsang et al., J Wildl Dis
 2002;38:224-7): caudal up in the bony nasal passage, which becomes dorsal up in the
-trachea, with the right principal bronchus on the screen left.
+trachea, with the right main bronchus on the screen left.
 
 Usage: python3 scripts/airway-anatomy/build-dolphin-case.py [--skip-ct]
 """
@@ -91,24 +95,39 @@ ADITUS_SEED_IJK = (249, 338, 549)
 LARYNGEAL_SLIT_SEED_IJK = (249, 339, 540)
 NASOPHARYNX_SEED_IJK = (253, 331, 567)
 ADITUS_RADIUS_VOXELS = 10
-# The laryngeal lumen opens into the wide cranial trachea here.
-LARYNX_TRACHEA_SEED_IJK = (240, 352, 481)
+# The spout's lumen opens into the wide laryngeal cavity here.
+SPOUT_BASE_SEED_IJK = (240, 352, 481)
 # Bronchial end points are taken only caudal to this slice.
 BRONCHIAL_ENDPOINT_MAX_Z = 455
 CT_STRIDE_XYZ = (2, 2, 2)
 CENTERLINE_SPACING_MM = 0.75
 MIN_CENTERLINE_CLEARANCE_MM = 0.35
 
+# Names follow the bottlenose dolphin bronchoscopy guide of the U.S. Navy Marine Mammal Program and
+# the National Marine Mammal Foundation: blowhole, nares, goosebeak, larynx, laryngotracheal
+# junction; TRA; RTB with RT1-RT3; RMB and LMB with RB1-RB14 and LB1-LB14.
 LABELS = {
-    "LNP": "Left bony nasal passage",
-    "RNP": "Right bony nasal passage",
+    "LNP": "Left naris (bony nasal passage)",
+    "RNP": "Right naris (bony nasal passage)",
     "NPX": "Nasopharynx",
-    "LS": "Laryngeal spout",
     "NPF": "Nasopharyngeal fornix",
-    "TR": "Trachea",
-    "TB": "Right tracheal bronchus",
-    "RPB": "Right principal bronchus",
-    "LPB": "Left principal bronchus",
+    "LS": "Laryngeal spout (goosebeak)",
+    "LX": "Larynx",
+    "TRA": "Trachea",
+    "RTB": "Right tracheal bronchus",
+    "RMB": "Right main bronchus",
+    "LMB": "Left main bronchus",
+}
+# Below the spout Tsang et al. describe a pear-shaped laryngeal cavity 4-5 cm long before the
+# trachea. No cricoid cartilage is visible on this CT, so the laryngotracheal junction is put here.
+LARYNX_LENGTH_MM = 45
+# The guide's number for each branch off a main bronchus, by this CT's order of origin from the
+# carina. The left follows order of origin. On the right three pairs arise within 10 mm of each
+# other (CT 2/3, 4/5, 9/10); the guide's tree and views number the lateral one of each first.
+# This CT shows 13 right-sided branches; the guide names 14.
+GUIDE_BRANCH_NUMBERS = {
+    "R": (1, 3, 2, 5, 4, 6, 7, 8, 10, 9, 11, 12, 13),
+    "L": tuple(range(1, 15)),
 }
 
 
@@ -323,7 +342,13 @@ def build_centerline_graph(
     # Every bronchial end point reaches the root through the trachea, larynx and nasopharynx.
     caudal_end = min((v for v in kept if v != right_naris), key=lambda v: global_voxels[v, 2])
     central = np.array(path_to_root(caudal_end, root, predecessors))
-    split_voxels = {nearest(ADITUS_SEED_IJK, central), nearest(LARYNX_TRACHEA_SEED_IJK, central)}
+    spout_base = nearest(SPOUT_BASE_SEED_IJK, central)
+    below = central[list(central).index(spout_base) :]
+    # Measured on the smoothed path the centerline will follow, not the voxel staircase.
+    smoothed = ndi.gaussian_filter1d(global_voxels[below] * geometry.spacing, sigma=2.0, axis=0, mode="nearest")
+    steps = np.linalg.norm(np.diff(smoothed, axis=0), axis=1)
+    junction = int(below[np.searchsorted(np.cumsum(steps), LARYNX_LENGTH_MM) + 1])
+    split_voxels = {nearest(ADITUS_SEED_IJK, central), spout_base, junction}
     segments = tree_segments(children, root, split_voxels)
     return assemble_graph(segments, children, root, global_voxels, clearance, voxels, geometry, split_voxels)
 
@@ -539,9 +564,9 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     carina["kind"] = "carina"
 
     internal_breaks = [i for i, e in enumerate(central) if nodes[edges[e]["endNodeId"]]["kind"] == "internal"]
-    if len(internal_breaks) != 2:
-        raise ValueError(f"Expected two split points on the central path, found {len(internal_breaks)}")
-    aditus_index, larynx_end_index = internal_breaks
+    if len(internal_breaks) != 3:
+        raise ValueError(f"Expected three split points on the central path, found {len(internal_breaks)}")
+    aditus_index, spout_end_index, larynx_end_index = internal_breaks
     first_fork = nodes[edges[central[0]]["endNodeId"]]
     if len(first_fork["childEdgeIds"]) != 2:
         raise ValueError("Expected the left and right nasal passages to meet at the first fork")
@@ -550,10 +575,12 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
             edge_labels[edge_id] = ("LNP", LABELS["LNP"])
         elif position <= aditus_index:
             edge_labels[edge_id] = ("NPX", LABELS["NPX"])
-        elif position <= larynx_end_index:
+        elif position <= spout_end_index:
             edge_labels[edge_id] = ("LS", LABELS["LS"])
+        elif position <= larynx_end_index:
+            edge_labels[edge_id] = ("LX", LABELS["LX"])
         else:
-            edge_labels[edge_id] = ("TR", LABELS["TR"])
+            edge_labels[edge_id] = ("TRA", LABELS["TRA"])
     right_passage = next(e for e in first_fork["childEdgeIds"] if e != central[1])
     for edge_id in subtree(right_passage):
         edge_labels[edge_id] = ("RNP", LABELS["RNP"])
@@ -567,34 +594,60 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         for side in parent_node["childEdgeIds"]:
             if side not in (edge_id, right_passage):
                 tracheal_sides.append((side, edge_labels[central[position - 1]][0]))
-    right_sides = [s for s, parent in tracheal_sides if parent == "TR" and mean_x(s) < carina["lps"][0]]
+    right_sides = [s for s, parent in tracheal_sides if parent == "TRA" and mean_x(s) < carina["lps"][0]]
     tracheal_bronchus = max(right_sides, key=lambda e: totals[e]) if right_sides else None
     for side, parent_abbr in tracheal_sides:
-        abbr = "TB" if side == tracheal_bronchus else parent_abbr
+        abbr = "RTB" if side == tracheal_bronchus else parent_abbr
         for edge_id in subtree(side):
             edge_labels[edge_id] = (abbr, LABELS[abbr])
         review["sideBranches"].append({"edgeId": side, "label": abbr, "subtreeMm": round(totals[side], 1)})
 
-    # Principal bronchi: each continues along its largest subtree; the branches off that
-    # stem are numbered from the carina outward and each label covers its whole subtree.
+    if tracheal_bronchus is None:
+        raise ValueError("No right tracheal bronchus off the trachea")
+    review["trachealBronchusDivisions"] = name_tracheal_bronchus_divisions(
+        tracheal_bronchus, nodes, edges, totals, subtree, edge_labels
+    )
+
+    # Main bronchi: each continues along its largest subtree; the branches off that stem are
+    # numbered from the carina outward, as in the guide, and each label covers its subtree.
     for stem_start in carina["childEdgeIds"]:
         side = "L" if mean_x(stem_start) > carina["lps"][0] else "R"
-        stem_abbr = f"{side}PB"
+        stem_abbr = f"{side}MB"
         stem = [stem_start]
         while nodes[edges[stem[-1]]["endNodeId"]]["childEdgeIds"]:
             stem.append(main_child(edges[stem[-1]]["endNodeId"]))
-        number = 0
+        branches, travelled = [], 0.0
         for edge_id in stem:
             edge_labels[edge_id] = (stem_abbr, LABELS[stem_abbr])
+            travelled += edges[edge_id]["lengthMm"]
+            stem_points = np.asarray(edges[edge_id]["pointsLps"])
+            along = stem_points[-1] - stem_points[max(0, len(stem_points) - 8)]
             for branch in nodes[edges[edge_id]["endNodeId"]]["childEdgeIds"]:
-                if branch in stem:
-                    continue
-                number += 1
-                lung = "Left" if side == "L" else "Right"
-                label = (f"{side}{number}", f"{lung} principal bronchus, branch {number}")
-                for sub_edge in subtree(branch):
-                    edge_labels[sub_edge] = label
-        review[f"{stem_abbr}Branches"] = number
+                if branch not in stem:
+                    points = np.asarray(edges[branch]["pointsLps"])
+                    heading = points[min(10, len(points) - 1)] - points[0]
+                    # LPS +x is the animal's left; lateral is away from the midline.
+                    lateral = heading[0] > 0 if side == "L" else heading[0] < 0
+                    branches.append((branch, travelled, lateral, branch_direction(along, heading, side)))
+        numbers = GUIDE_BRANCH_NUMBERS[side]
+        if len(numbers) != len(branches):
+            raise ValueError(f"{stem_abbr}: {len(branches)} branches, guide map has {len(numbers)}")
+        for k in range(len(branches) - 1):
+            if numbers[k] > numbers[k + 1]:
+                # A pair numbered out of CT order must arise together, lateral one first.
+                (_, near_mm, _, _), (_, far_mm, far_lateral, _) = branches[k], branches[k + 1]
+                if far_mm - near_mm > 10 or not far_lateral or branches[k][2]:
+                    raise ValueError(f"{stem_abbr}: CT branches {k + 1}/{k + 2} no longer match the guide")
+        # The guide gives these branches numbers only; the descriptor is the direction each
+        # leaves its main bronchus in this CT, short enough for the in-view tag.
+        for (branch, travelled, _, direction), number in zip(branches, numbers):
+            label = (f"{side}B{number}", f"{direction} branch")
+            for sub_edge in subtree(branch):
+                edge_labels[sub_edge] = label
+        review[f"{stem_abbr}Branches"] = [
+            {"label": f"{side}B{n}", "edgeId": b, "fromCarinaMm": round(d, 1), "direction": direction}
+            for (b, d, _, direction), n in zip(branches, numbers)
+        ]
 
     missing = [e for e in edges if e not in edge_labels]
     if missing:
@@ -612,6 +665,52 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     review["carinaNodeId"] = carina["id"]
     review["trachealBronchusEdgeId"] = tracheal_bronchus
     return labels, review
+
+
+def branch_direction(along: np.ndarray, heading: np.ndarray, side: str) -> str:
+    """Dorsal, dorsolateral, lateral ... medial: where a branch leaves its parent, seen down the
+    parent's lumen. `side` is the lung ("R" or "L"), which sets which way is lateral."""
+    along = unit_vector(along)
+    across = heading - along * float(heading @ along)
+    dorsal = unit_vector(np.array([0.0, 1.0, 0.0]) - along * along[1])
+    # LPS +x is the animal's left, so lateral is -x in the right lung and +x in the left.
+    outward = np.array([-1.0 if side == "R" else 1.0, 0.0, 0.0])
+    lateral = unit_vector(outward - along * float(outward @ along) - dorsal * float(outward @ dorsal))
+    angle = np.degrees(np.arctan2(float(across @ lateral), float(across @ dorsal)))
+    sectors = ["Dorsal", "Dorsolateral", "Lateral", "Ventrolateral", "Ventral", "Ventromedial", "Medial", "Dorsomedial"]
+    return sectors[int(np.round(angle / 45.0)) % 8]
+
+
+def name_tracheal_bronchus_divisions(
+    trunk: int,
+    nodes: dict[int, dict[str, Any]],
+    edges: dict[int, dict[str, Any]],
+    totals: dict[int, float],
+    subtree: Any,
+    edge_labels: dict[int, tuple[str, str]],
+) -> dict[str, int]:
+    """RT1-RT3 as in the guide, whose tree is drawn with the trachea at the bottom (caudal up):
+    RT1 is the cranial division; the caudal division carries the bronchus on, gives off RT2 and
+    ends as RT3, the larger continuation."""
+
+    def end_height(edge_id: int) -> float:
+        ends = [
+            edges[e]["pointsLps"][-1][2] for e in subtree(edge_id) if not nodes[edges[e]["endNodeId"]]["childEdgeIds"]
+        ]
+        return float(np.mean(ends))
+
+    fork = nodes[edges[trunk]["endNodeId"]]
+    if len(fork["childEdgeIds"]) != 2:
+        raise ValueError("Expected the right tracheal bronchus to divide in two")
+    cranial, caudal = sorted(fork["childEdgeIds"], key=end_height, reverse=True)
+    second = nodes[edges[caudal]["endNodeId"]]
+    if len(second["childEdgeIds"]) != 2:
+        raise ValueError("Expected the caudal division of the right tracheal bronchus to divide in two")
+    rt3, rt2 = sorted(second["childEdgeIds"], key=lambda e: totals[e], reverse=True)
+    for number, division, name in ((1, cranial, "Cranial division"), (2, rt2, "Caudal division, side branch"), (3, rt3, "Caudal division")):
+        for edge_id in subtree(division):
+            edge_labels[edge_id] = (f"RT{number}", name)
+    return {"RT1": cranial, "RT2": rt2, "RT3": rt3}
 
 
 def label_polylines(graph: dict[str, Any], edge_labels: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1027,23 +1126,23 @@ def build_ct_preview(
 
 def orientation_landmarks(graph: dict[str, Any], labels: dict[str, Any]) -> list[dict[str, Any]]:
     """Roll the flexible view through the spout so the trachea reads as it does with the animal
-    in sternal recumbency: dorsal at the top of the screen and the right principal bronchus on
+    in sternal recumbency: dorsal at the top of the screen and the right main bronchus on
     the screen left (Tsang et al., J Wildl Dis 2002, Fig. 3). Parallel transport alone carries
     the twist of the curved nasal and laryngeal path."""
     abbr = {int(k): v["abbreviatedLabel"] for k, v in labels["edgeLabels"].items()}
     spout = next(e for e in graph["edges"] if abbr[e["id"]] == "LS")
     carina = next(n for n in graph["nodes"] if n["id"] == graph["carinaNodeId"])
-    principal = {abbr[e]: e for e in carina["childEdgeIds"]}
+    main = {abbr[e]: e for e in carina["childEdgeIds"]}
     return [
         {
             "id": "trachea",
             "label": "Trachea",
             "edgeId": spout["id"],
             "distanceMm": round(spout["lengthMm"] - 1, 1),
-            "targetEdgeId": principal["RPB"],
-            "oppositeEdgeId": principal["LPB"],
+            "targetEdgeId": main["RMB"],
+            "oppositeEdgeId": main["LMB"],
             "screenDirection": "left",
-            "expectation": "Dorsal wall at the top; the right tracheal bronchus and right principal bronchus to the left",
+            "expectation": "Dorsal wall at the top; the right tracheal bronchus and right main bronchus to the left",
         }
     ]
 

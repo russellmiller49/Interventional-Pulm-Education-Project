@@ -8,13 +8,13 @@
     "note": "Derived from the Local-Data Dolphin_bronch export; raw source files remain untracked."
   },
   "rootNodeId": 0,
-  "carinaNodeId": 6,
+  "carinaNodeId": 7,
   "carinaLpsMm": [-7.1913, -86.4593, -528.25],
   "terminalNodeIds": [
-    3, 16, 26, 30, 31, 32, 37, 39, 40, 42, 43, 47, 48, 49, 50, 51, 53, 54, 55, 56, 58, 59, 63, 66,
-    67, 68, 69, 70, 71, 72, 75, 77, 80, 83, 84, 85, 86, 87, 88, 90, 91, 92, 94, 97, 98, 99, 102,
-    103, 104, 108, 109, 112, 113, 115, 116, 118, 119, 120, 123, 124, 126, 129, 130, 132, 134, 135,
-    136, 137, 138, 139
+    3, 17, 27, 31, 32, 33, 38, 40, 41, 43, 44, 48, 49, 50, 51, 52, 54, 55, 56, 57, 59, 60, 64, 67,
+    68, 69, 70, 71, 72, 73, 76, 78, 81, 84, 85, 86, 87, 88, 89, 91, 92, 93, 95, 98, 99, 100, 103,
+    104, 105, 109, 110, 113, 114, 116, 117, 119, 120, 121, 124, 125, 127, 130, 131, 133, 135, 136,
+    137, 138, 139, 140
   ],
   "nodes": [
     {
@@ -45,7 +45,7 @@
       "rootDistanceMm": 153.104,
       "parentNodeId": 1,
       "parentEdgeId": 1,
-      "childEdgeIds": [3, 137, 138]
+      "childEdgeIds": [3, 138, 139]
     },
     {
       "id": 3,
@@ -69,1352 +69,1362 @@
     },
     {
       "id": 5,
-      "lps": [-4.6523, -102.9632, -475.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 386.424,
+      "lps": [8.043, -142.3187, -410.75],
+      "kind": "internal",
+      "degree": 2,
+      "rootDistanceMm": 307.475,
       "parentNodeId": 4,
       "parentEdgeId": 4,
-      "childEdgeIds": [5, 6]
+      "childEdgeIds": [5]
     },
     {
       "id": 6,
-      "lps": [-7.1913, -86.4593, -528.25],
-      "kind": "carina",
+      "lps": [-4.6523, -102.9632, -475.75],
+      "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 443.014,
+      "rootDistanceMm": 386.643,
       "parentNodeId": 5,
       "parentEdgeId": 5,
-      "childEdgeIds": [7, 8]
+      "childEdgeIds": [6, 7]
     },
     {
       "id": 7,
-      "lps": [-42.7382, -68.6859, -529.5],
-      "kind": "bifurcation",
+      "lps": [-7.1913, -86.4593, -528.25],
+      "kind": "carina",
       "degree": 3,
-      "rootDistanceMm": 468.507,
-      "parentNodeId": 5,
+      "rootDistanceMm": 443.233,
+      "parentNodeId": 6,
       "parentEdgeId": 6,
-      "childEdgeIds": [9, 10]
+      "childEdgeIds": [8, 9]
     },
     {
       "id": 8,
-      "lps": [10.5821, -72.4945, -577.0],
+      "lps": [-42.7382, -68.6859, -529.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 498.183,
+      "rootDistanceMm": 468.726,
       "parentNodeId": 6,
       "parentEdgeId": 7,
-      "childEdgeIds": [11, 12]
+      "childEdgeIds": [10, 11]
     },
     {
       "id": 9,
-      "lps": [-50.3554, -62.3382, -623.25],
+      "lps": [10.5821, -72.4945, -577.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 553.577,
-      "parentNodeId": 6,
+      "rootDistanceMm": 498.402,
+      "parentNodeId": 7,
       "parentEdgeId": 8,
-      "childEdgeIds": [13, 14]
+      "childEdgeIds": [12, 13]
     },
     {
       "id": 10,
-      "lps": [-61.7812, -62.3382, -552.0],
+      "lps": [-50.3554, -62.3382, -623.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 500.118,
+      "rootDistanceMm": 553.796,
       "parentNodeId": 7,
       "parentEdgeId": 9,
-      "childEdgeIds": [15, 16]
+      "childEdgeIds": [14, 15]
     },
     {
       "id": 11,
-      "lps": [-63.0507, -63.6077, -524.5],
+      "lps": [-61.7812, -62.3382, -552.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 490.892,
-      "parentNodeId": 7,
+      "rootDistanceMm": 500.337,
+      "parentNodeId": 8,
       "parentEdgeId": 10,
-      "childEdgeIds": [17, 18]
+      "childEdgeIds": [16, 17]
     },
     {
       "id": 12,
-      "lps": [42.3204, -48.3734, -582.0],
+      "lps": [-63.0507, -63.6077, -524.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 541.618,
+      "rootDistanceMm": 491.111,
       "parentNodeId": 8,
       "parentEdgeId": 11,
-      "childEdgeIds": [19, 20]
+      "childEdgeIds": [18, 19]
     },
     {
       "id": 13,
-      "lps": [33.4336, -54.721, -630.75],
+      "lps": [42.3204, -48.3734, -582.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 561.628,
-      "parentNodeId": 8,
+      "rootDistanceMm": 541.837,
+      "parentNodeId": 9,
       "parentEdgeId": 12,
-      "childEdgeIds": [21, 22]
+      "childEdgeIds": [20, 21]
     },
     {
       "id": 14,
-      "lps": [-60.5116, -63.6077, -657.0],
+      "lps": [33.4336, -54.721, -630.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 590.547,
+      "rootDistanceMm": 561.847,
       "parentNodeId": 9,
       "parentEdgeId": 13,
-      "childEdgeIds": [23, 24]
+      "childEdgeIds": [22, 23]
     },
     {
       "id": 15,
-      "lps": [-68.1288, -48.3734, -624.5],
+      "lps": [-60.5116, -63.6077, -657.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 577.356,
-      "parentNodeId": 9,
+      "rootDistanceMm": 590.766,
+      "parentNodeId": 10,
       "parentEdgeId": 14,
-      "childEdgeIds": [25, 26]
+      "childEdgeIds": [24, 25]
     },
     {
       "id": 16,
-      "lps": [-84.6327, -36.9476, -569.5],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 539.572,
+      "lps": [-68.1288, -48.3734, -624.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 577.575,
       "parentNodeId": 10,
       "parentEdgeId": 15,
-      "childEdgeIds": []
+      "childEdgeIds": [26, 27]
     },
     {
       "id": 17,
-      "lps": [-77.0155, -67.4163, -564.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 520.957,
-      "parentNodeId": 10,
+      "lps": [-84.6327, -36.9476, -569.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 539.791,
+      "parentNodeId": 11,
       "parentEdgeId": 16,
-      "childEdgeIds": [27, 28]
+      "childEdgeIds": []
     },
     {
       "id": 18,
-      "lps": [-82.0937, -53.4515, -515.75],
+      "lps": [-77.0155, -67.4163, -564.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 515.319,
+      "rootDistanceMm": 521.176,
       "parentNodeId": 11,
       "parentEdgeId": 17,
-      "childEdgeIds": [29, 30]
+      "childEdgeIds": [28, 29]
     },
     {
       "id": 19,
-      "lps": [-68.1288, -71.2249, -522.0],
+      "lps": [-82.0937, -53.4515, -515.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 500.778,
-      "parentNodeId": 11,
+      "rootDistanceMm": 515.538,
+      "parentNodeId": 12,
       "parentEdgeId": 18,
-      "childEdgeIds": [31, 32]
+      "childEdgeIds": [30, 31]
     },
     {
       "id": 20,
-      "lps": [55.0157, -40.7562, -572.0],
+      "lps": [-68.1288, -71.2249, -522.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 559.875,
+      "rootDistanceMm": 500.997,
       "parentNodeId": 12,
       "parentEdgeId": 19,
-      "childEdgeIds": [33, 34]
+      "childEdgeIds": [32, 33]
     },
     {
       "id": 21,
-      "lps": [42.3204, -29.3304, -587.0],
+      "lps": [55.0157, -40.7562, -572.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 562.272,
-      "parentNodeId": 12,
+      "rootDistanceMm": 560.094,
+      "parentNodeId": 13,
       "parentEdgeId": 20,
-      "childEdgeIds": [35, 36]
+      "childEdgeIds": [34, 35]
     },
     {
       "id": 22,
-      "lps": [38.5118, -31.8695, -640.75],
+      "lps": [42.3204, -29.3304, -587.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 588.249,
+      "rootDistanceMm": 562.491,
       "parentNodeId": 13,
       "parentEdgeId": 21,
-      "childEdgeIds": [37, 38]
+      "childEdgeIds": [36, 37]
     },
     {
       "id": 23,
-      "lps": [52.4766, -50.9124, -664.5],
+      "lps": [38.5118, -31.8695, -640.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 602.326,
-      "parentNodeId": 13,
+      "rootDistanceMm": 588.468,
+      "parentNodeId": 14,
       "parentEdgeId": 22,
-      "childEdgeIds": [39, 40]
+      "childEdgeIds": [38, 39]
     },
     {
       "id": 24,
-      "lps": [-74.4765, -38.2171, -677.0],
+      "lps": [52.4766, -50.9124, -664.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 630.618,
+      "rootDistanceMm": 602.545,
       "parentNodeId": 14,
       "parentEdgeId": 23,
-      "childEdgeIds": [41, 42]
+      "childEdgeIds": [40, 41]
     },
     {
       "id": 25,
-      "lps": [-65.5898, -66.1468, -663.25],
+      "lps": [-74.4765, -38.2171, -677.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 599.223,
-      "parentNodeId": 14,
+      "rootDistanceMm": 630.837,
+      "parentNodeId": 15,
       "parentEdgeId": 24,
-      "childEdgeIds": [43, 44]
+      "childEdgeIds": [42, 43]
     },
     {
       "id": 26,
-      "lps": [-70.6679, -44.5648, -613.25],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 590.847,
+      "lps": [-65.5898, -66.1468, -663.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 599.442,
       "parentNodeId": 15,
       "parentEdgeId": 25,
-      "childEdgeIds": []
+      "childEdgeIds": [44, 45]
     },
     {
       "id": 27,
-      "lps": [-96.0585, -35.6781, -639.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 612.094,
-      "parentNodeId": 15,
-      "parentEdgeId": 26,
-      "childEdgeIds": [45, 46]
-    },
-    {
-      "id": 28,
-      "lps": [-84.6327, -72.4945, -578.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 537.974,
-      "parentNodeId": 17,
-      "parentEdgeId": 27,
-      "childEdgeIds": [47, 48]
-    },
-    {
-      "id": 29,
-      "lps": [-90.9804, -58.5296, -564.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 537.94,
-      "parentNodeId": 17,
-      "parentEdgeId": 28,
-      "childEdgeIds": [49, 50]
-    },
-    {
-      "id": 30,
-      "lps": [-85.9023, -53.4515, -505.75],
+      "lps": [-70.6679, -44.5648, -613.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 526.875,
-      "parentNodeId": 18,
-      "parentEdgeId": 29,
+      "rootDistanceMm": 591.066,
+      "parentNodeId": 16,
+      "parentEdgeId": 26,
       "childEdgeIds": []
     },
     {
+      "id": 28,
+      "lps": [-96.0585, -35.6781, -639.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 612.313,
+      "parentNodeId": 16,
+      "parentEdgeId": 27,
+      "childEdgeIds": [46, 47]
+    },
+    {
+      "id": 29,
+      "lps": [-84.6327, -72.4945, -578.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 538.193,
+      "parentNodeId": 18,
+      "parentEdgeId": 28,
+      "childEdgeIds": [48, 49]
+    },
+    {
+      "id": 30,
+      "lps": [-90.9804, -58.5296, -564.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 538.159,
+      "parentNodeId": 18,
+      "parentEdgeId": 29,
+      "childEdgeIds": [50, 51]
+    },
+    {
       "id": 31,
-      "lps": [-115.1015, -38.2171, -518.25],
+      "lps": [-85.9023, -53.4515, -505.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 553.525,
-      "parentNodeId": 18,
+      "rootDistanceMm": 527.094,
+      "parentNodeId": 19,
       "parentEdgeId": 30,
       "childEdgeIds": []
     },
     {
       "id": 32,
-      "lps": [-68.1288, -76.3031, -509.5],
+      "lps": [-115.1015, -38.2171, -518.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 515.558,
+      "rootDistanceMm": 553.744,
       "parentNodeId": 19,
       "parentEdgeId": 31,
       "childEdgeIds": []
     },
     {
       "id": 33,
-      "lps": [-70.6679, -77.5726, -523.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 508.372,
-      "parentNodeId": 19,
+      "lps": [-68.1288, -76.3031, -509.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 515.777,
+      "parentNodeId": 20,
       "parentEdgeId": 32,
-      "childEdgeIds": [51, 52]
+      "childEdgeIds": []
     },
     {
       "id": 34,
-      "lps": [75.3282, -31.8695, -583.25],
+      "lps": [-70.6679, -77.5726, -523.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 585.444,
+      "rootDistanceMm": 508.591,
       "parentNodeId": 20,
       "parentEdgeId": 33,
-      "childEdgeIds": [53, 54]
+      "childEdgeIds": [52, 53]
     },
     {
       "id": 35,
-      "lps": [58.8243, -36.9476, -559.5],
+      "lps": [75.3282, -31.8695, -583.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 574.008,
-      "parentNodeId": 20,
+      "rootDistanceMm": 585.663,
+      "parentNodeId": 21,
       "parentEdgeId": 34,
-      "childEdgeIds": [55, 56]
+      "childEdgeIds": [54, 55]
     },
     {
       "id": 36,
-      "lps": [46.129, -6.4788, -585.75],
+      "lps": [58.8243, -36.9476, -559.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 586.746,
+      "rootDistanceMm": 574.227,
       "parentNodeId": 21,
       "parentEdgeId": 35,
-      "childEdgeIds": [57, 58]
+      "childEdgeIds": [56, 57]
     },
     {
       "id": 37,
-      "lps": [42.3204, -25.5218, -593.25],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 570.23,
-      "parentNodeId": 21,
+      "lps": [46.129, -6.4788, -585.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 586.965,
+      "parentNodeId": 22,
       "parentEdgeId": 36,
-      "childEdgeIds": []
+      "childEdgeIds": [58, 59]
     },
     {
       "id": 38,
-      "lps": [41.0508, -25.5218, -644.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 596.329,
-      "parentNodeId": 22,
-      "parentEdgeId": 37,
-      "childEdgeIds": [59, 60]
-    },
-    {
-      "id": 39,
-      "lps": [24.5469, -3.9398, -642.0],
+      "lps": [42.3204, -25.5218, -593.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 620.637,
+      "rootDistanceMm": 570.449,
       "parentNodeId": 22,
-      "parentEdgeId": 38,
+      "parentEdgeId": 37,
       "childEdgeIds": []
     },
     {
+      "id": 39,
+      "lps": [41.0508, -25.5218, -644.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 596.548,
+      "parentNodeId": 23,
+      "parentEdgeId": 38,
+      "childEdgeIds": [60, 61]
+    },
+    {
       "id": 40,
-      "lps": [94.3711, -39.4867, -664.5],
+      "lps": [24.5469, -3.9398, -642.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 649.624,
+      "rootDistanceMm": 620.856,
       "parentNodeId": 23,
       "parentEdgeId": 39,
       "childEdgeIds": []
     },
     {
       "id": 41,
-      "lps": [56.2852, -43.2952, -685.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 626.488,
-      "parentNodeId": 23,
-      "parentEdgeId": 40,
-      "childEdgeIds": [61, 62]
-    },
-    {
-      "id": 42,
-      "lps": [-71.9374, -34.4085, -685.75],
+      "lps": [94.3711, -39.4867, -664.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 640.796,
+      "rootDistanceMm": 649.843,
       "parentNodeId": 24,
-      "parentEdgeId": 41,
+      "parentEdgeId": 40,
       "childEdgeIds": []
     },
     {
+      "id": 42,
+      "lps": [56.2852, -43.2952, -685.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 626.707,
+      "parentNodeId": 24,
+      "parentEdgeId": 41,
+      "childEdgeIds": [62, 63]
+    },
+    {
       "id": 43,
-      "lps": [-89.7109, -22.9827, -690.75],
+      "lps": [-71.9374, -34.4085, -685.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 656.21,
-      "parentNodeId": 24,
+      "rootDistanceMm": 641.015,
+      "parentNodeId": 25,
       "parentEdgeId": 42,
       "childEdgeIds": []
     },
     {
       "id": 44,
-      "lps": [-74.4765, -62.3382, -687.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 626.099,
-      "parentNodeId": 25,
-      "parentEdgeId": 43,
-      "childEdgeIds": [63, 64]
-    },
-    {
-      "id": 45,
-      "lps": [-79.5546, -78.8421, -667.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 621.24,
-      "parentNodeId": 25,
-      "parentEdgeId": 44,
-      "childEdgeIds": [65, 66]
-    },
-    {
-      "id": 46,
-      "lps": [-107.4843, -21.7132, -654.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 635.951,
-      "parentNodeId": 27,
-      "parentEdgeId": 45,
-      "childEdgeIds": [67, 68]
-    },
-    {
-      "id": 47,
-      "lps": [-112.5624, -35.6781, -638.25],
+      "lps": [-89.7109, -22.9827, -690.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 629.992,
-      "parentNodeId": 27,
-      "parentEdgeId": 46,
+      "rootDistanceMm": 656.429,
+      "parentNodeId": 25,
+      "parentEdgeId": 43,
       "childEdgeIds": []
     },
     {
+      "id": 45,
+      "lps": [-74.4765, -62.3382, -687.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 626.318,
+      "parentNodeId": 26,
+      "parentEdgeId": 44,
+      "childEdgeIds": [64, 65]
+    },
+    {
+      "id": 46,
+      "lps": [-79.5546, -78.8421, -667.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 621.459,
+      "parentNodeId": 26,
+      "parentEdgeId": 45,
+      "childEdgeIds": [66, 67]
+    },
+    {
+      "id": 47,
+      "lps": [-107.4843, -21.7132, -654.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 636.17,
+      "parentNodeId": 28,
+      "parentEdgeId": 46,
+      "childEdgeIds": [68, 69]
+    },
+    {
       "id": 48,
-      "lps": [-90.9804, -86.4593, -603.25],
+      "lps": [-112.5624, -35.6781, -638.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 568.28,
+      "rootDistanceMm": 630.211,
       "parentNodeId": 28,
       "parentEdgeId": 47,
       "childEdgeIds": []
     },
     {
       "id": 49,
-      "lps": [-94.789, -68.6859, -585.75],
+      "lps": [-90.9804, -86.4593, -603.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 551.866,
-      "parentNodeId": 28,
+      "rootDistanceMm": 568.499,
+      "parentNodeId": 29,
       "parentEdgeId": 48,
       "childEdgeIds": []
     },
     {
       "id": 50,
-      "lps": [-99.8671, -54.721, -569.5],
+      "lps": [-94.789, -68.6859, -585.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 549.131,
+      "rootDistanceMm": 552.085,
       "parentNodeId": 29,
       "parentEdgeId": 49,
       "childEdgeIds": []
     },
     {
       "id": 51,
-      "lps": [-101.1366, -54.721, -558.25],
+      "lps": [-99.8671, -54.721, -569.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 550.834,
-      "parentNodeId": 29,
+      "rootDistanceMm": 549.35,
+      "parentNodeId": 30,
       "parentEdgeId": 50,
       "childEdgeIds": []
     },
     {
       "id": 52,
-      "lps": [-70.6679, -86.4593, -520.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 518.68,
-      "parentNodeId": 33,
-      "parentEdgeId": 51,
-      "childEdgeIds": [69, 70]
-    },
-    {
-      "id": 53,
-      "lps": [-84.6327, -75.0335, -522.0],
+      "lps": [-101.1366, -54.721, -558.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 522.971,
-      "parentNodeId": 33,
-      "parentEdgeId": 52,
+      "rootDistanceMm": 551.053,
+      "parentNodeId": 30,
+      "parentEdgeId": 51,
       "childEdgeIds": []
     },
     {
+      "id": 53,
+      "lps": [-70.6679, -86.4593, -520.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 518.899,
+      "parentNodeId": 34,
+      "parentEdgeId": 52,
+      "childEdgeIds": [70, 71]
+    },
+    {
       "id": 54,
-      "lps": [88.0235, -14.096, -587.0],
+      "lps": [-84.6327, -75.0335, -522.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 608.231,
+      "rootDistanceMm": 523.19,
       "parentNodeId": 34,
       "parentEdgeId": 53,
       "childEdgeIds": []
     },
     {
       "id": 55,
-      "lps": [101.9883, -45.8343, -607.0],
+      "lps": [88.0235, -14.096, -587.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 624.595,
-      "parentNodeId": 34,
+      "rootDistanceMm": 608.45,
+      "parentNodeId": 35,
       "parentEdgeId": 54,
       "childEdgeIds": []
     },
     {
       "id": 56,
-      "lps": [53.7461, -20.4437, -544.5],
+      "lps": [101.9883, -45.8343, -607.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 597.827,
+      "rootDistanceMm": 624.814,
       "parentNodeId": 35,
       "parentEdgeId": 55,
       "childEdgeIds": []
     },
     {
       "id": 57,
-      "lps": [66.4415, -54.721, -525.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 614.724,
-      "parentNodeId": 35,
-      "parentEdgeId": 56,
-      "childEdgeIds": [71, 72]
-    },
-    {
-      "id": 58,
-      "lps": [57.5547, 3.6774, -584.5],
+      "lps": [53.7461, -20.4437, -544.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 603.349,
+      "rootDistanceMm": 598.046,
       "parentNodeId": 36,
-      "parentEdgeId": 57,
+      "parentEdgeId": 56,
       "childEdgeIds": []
     },
     {
+      "id": 58,
+      "lps": [66.4415, -54.721, -525.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 614.943,
+      "parentNodeId": 36,
+      "parentEdgeId": 57,
+      "childEdgeIds": [72, 73]
+    },
+    {
       "id": 59,
-      "lps": [43.5899, 1.1383, -589.5],
+      "lps": [57.5547, 3.6774, -584.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 595.964,
-      "parentNodeId": 36,
+      "rootDistanceMm": 603.568,
+      "parentNodeId": 37,
       "parentEdgeId": 58,
       "childEdgeIds": []
     },
     {
       "id": 60,
-      "lps": [53.7461, -9.0179, -642.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 617.853,
-      "parentNodeId": 38,
+      "lps": [43.5899, 1.1383, -589.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 596.183,
+      "parentNodeId": 37,
       "parentEdgeId": 59,
-      "childEdgeIds": [73, 74]
+      "childEdgeIds": []
     },
     {
       "id": 61,
-      "lps": [39.7813, -15.3656, -654.5],
+      "lps": [53.7461, -9.0179, -642.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 610.756,
-      "parentNodeId": 38,
+      "rootDistanceMm": 618.072,
+      "parentNodeId": 39,
       "parentEdgeId": 60,
-      "childEdgeIds": [75, 76]
+      "childEdgeIds": [74, 75]
     },
     {
       "id": 62,
-      "lps": [60.0938, -43.2952, -688.25],
+      "lps": [39.7813, -15.3656, -654.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 631.221,
-      "parentNodeId": 41,
+      "rootDistanceMm": 610.975,
+      "parentNodeId": 39,
       "parentEdgeId": 61,
-      "childEdgeIds": [77, 78]
+      "childEdgeIds": [76, 77]
     },
     {
       "id": 63,
-      "lps": [47.3985, -28.0609, -699.5],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 650.542,
-      "parentNodeId": 41,
+      "lps": [60.0938, -43.2952, -688.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 631.44,
+      "parentNodeId": 42,
       "parentEdgeId": 62,
-      "childEdgeIds": []
+      "childEdgeIds": [78, 79]
     },
     {
       "id": 64,
-      "lps": [-77.0155, -48.3734, -703.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 651.687,
-      "parentNodeId": 44,
-      "parentEdgeId": 63,
-      "childEdgeIds": [79, 80]
-    },
-    {
-      "id": 65,
-      "lps": [-78.2851, -63.6077, -690.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 631.844,
-      "parentNodeId": 44,
-      "parentEdgeId": 64,
-      "childEdgeIds": [81, 82]
-    },
-    {
-      "id": 66,
-      "lps": [-78.3641, -97.2829, -681.0877],
+      "lps": [47.3985, -28.0609, -699.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.895,
-      "parentNodeId": 45,
-      "parentEdgeId": 65,
+      "rootDistanceMm": 650.761,
+      "parentNodeId": 42,
+      "parentEdgeId": 63,
       "childEdgeIds": []
     },
     {
+      "id": 65,
+      "lps": [-77.0155, -48.3734, -703.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 651.906,
+      "parentNodeId": 45,
+      "parentEdgeId": 64,
+      "childEdgeIds": [80, 81]
+    },
+    {
+      "id": 66,
+      "lps": [-78.2851, -63.6077, -690.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 632.063,
+      "parentNodeId": 45,
+      "parentEdgeId": 65,
+      "childEdgeIds": [82, 83]
+    },
+    {
       "id": 67,
-      "lps": [-93.5195, -76.3031, -663.25],
+      "lps": [-78.3641, -97.2829, -681.0877],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 636.716,
-      "parentNodeId": 45,
+      "rootDistanceMm": 646.114,
+      "parentNodeId": 46,
       "parentEdgeId": 66,
       "childEdgeIds": []
     },
     {
       "id": 68,
-      "lps": [-107.4843, -16.6351, -657.0],
+      "lps": [-93.5195, -76.3031, -663.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 642.456,
+      "rootDistanceMm": 636.935,
       "parentNodeId": 46,
       "parentEdgeId": 67,
       "childEdgeIds": []
     },
     {
       "id": 69,
-      "lps": [-115.1015, -20.4437, -658.25],
+      "lps": [-107.4843, -16.6351, -657.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.358,
-      "parentNodeId": 46,
+      "rootDistanceMm": 642.675,
+      "parentNodeId": 47,
       "parentEdgeId": 68,
       "childEdgeIds": []
     },
     {
       "id": 70,
-      "lps": [-63.0507, -102.9632, -529.5],
+      "lps": [-115.1015, -20.4437, -658.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 539.424,
-      "parentNodeId": 52,
+      "rootDistanceMm": 645.577,
+      "parentNodeId": 47,
       "parentEdgeId": 69,
       "childEdgeIds": []
     },
     {
       "id": 71,
-      "lps": [-69.3984, -95.346, -503.25],
+      "lps": [-63.0507, -102.9632, -529.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 539.25,
-      "parentNodeId": 52,
+      "rootDistanceMm": 539.643,
+      "parentNodeId": 53,
       "parentEdgeId": 70,
       "childEdgeIds": []
     },
     {
       "id": 72,
-      "lps": [75.3282, -91.5374, -540.75],
+      "lps": [-69.3984, -95.346, -503.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 656.015,
-      "parentNodeId": 57,
+      "rootDistanceMm": 539.469,
+      "parentNodeId": 53,
       "parentEdgeId": 71,
       "childEdgeIds": []
     },
     {
       "id": 73,
-      "lps": [62.6329, -66.1468, -505.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 638.607,
-      "parentNodeId": 57,
+      "lps": [75.3282, -91.5374, -540.75],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 656.234,
+      "parentNodeId": 58,
       "parentEdgeId": 72,
-      "childEdgeIds": [83, 84]
+      "childEdgeIds": []
     },
     {
       "id": 74,
-      "lps": [68.9805, 4.9469, -640.75],
+      "lps": [62.6329, -66.1468, -505.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 638.811,
-      "parentNodeId": 60,
+      "rootDistanceMm": 638.826,
+      "parentNodeId": 58,
       "parentEdgeId": 73,
-      "childEdgeIds": [85, 86]
+      "childEdgeIds": [84, 85]
     },
     {
       "id": 75,
-      "lps": [52.4766, 1.1383, -639.5],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 629.277,
-      "parentNodeId": 60,
+      "lps": [68.9805, 4.9469, -640.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 639.03,
+      "parentNodeId": 61,
       "parentEdgeId": 74,
-      "childEdgeIds": []
+      "childEdgeIds": [86, 87]
     },
     {
       "id": 76,
-      "lps": [39.7813, -3.9398, -660.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 623.994,
+      "lps": [52.4766, 1.1383, -639.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 629.496,
       "parentNodeId": 61,
       "parentEdgeId": 75,
-      "childEdgeIds": [87, 88]
+      "childEdgeIds": []
     },
     {
       "id": 77,
-      "lps": [37.2422, -17.9046, -664.5],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 621.876,
-      "parentNodeId": 61,
+      "lps": [39.7813, -3.9398, -660.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 624.213,
+      "parentNodeId": 62,
       "parentEdgeId": 76,
-      "childEdgeIds": []
+      "childEdgeIds": [88, 89]
     },
     {
       "id": 78,
-      "lps": [79.1368, -19.1742, -688.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 662.354,
+      "lps": [37.2422, -17.9046, -664.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 622.095,
       "parentNodeId": 62,
       "parentEdgeId": 77,
-      "childEdgeIds": [89, 90]
+      "childEdgeIds": []
     },
     {
       "id": 79,
-      "lps": [66.4415, -40.7562, -712.0],
+      "lps": [79.1368, -19.1742, -688.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 656.614,
-      "parentNodeId": 62,
+      "rootDistanceMm": 662.573,
+      "parentNodeId": 63,
       "parentEdgeId": 78,
-      "childEdgeIds": [91, 92]
+      "childEdgeIds": [90, 91]
     },
     {
       "id": 80,
-      "lps": [-68.1288, -49.6429, -714.5],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 666.302,
-      "parentNodeId": 64,
+      "lps": [66.4415, -40.7562, -712.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 656.833,
+      "parentNodeId": 63,
       "parentEdgeId": 79,
-      "childEdgeIds": []
+      "childEdgeIds": [92, 93]
     },
     {
       "id": 81,
-      "lps": [-85.9023, -38.2171, -714.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 669.422,
-      "parentNodeId": 64,
-      "parentEdgeId": 80,
-      "childEdgeIds": [93, 94]
-    },
-    {
-      "id": 82,
-      "lps": [-89.7109, -63.6077, -718.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 662.67,
-      "parentNodeId": 65,
-      "parentEdgeId": 81,
-      "childEdgeIds": [95, 96]
-    },
-    {
-      "id": 83,
-      "lps": [-134.1444, -42.0257, -690.75],
+      "lps": [-68.1288, -49.6429, -714.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 696.601,
+      "rootDistanceMm": 666.521,
       "parentNodeId": 65,
-      "parentEdgeId": 82,
+      "parentEdgeId": 80,
       "childEdgeIds": []
     },
     {
+      "id": 82,
+      "lps": [-85.9023, -38.2171, -714.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 669.641,
+      "parentNodeId": 65,
+      "parentEdgeId": 81,
+      "childEdgeIds": [94, 95]
+    },
+    {
+      "id": 83,
+      "lps": [-89.7109, -63.6077, -718.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 662.889,
+      "parentNodeId": 66,
+      "parentEdgeId": 82,
+      "childEdgeIds": [96, 97]
+    },
+    {
       "id": 84,
-      "lps": [61.3633, -66.1468, -498.25],
+      "lps": [-134.1444, -42.0257, -690.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 646.274,
-      "parentNodeId": 73,
+      "rootDistanceMm": 696.82,
+      "parentNodeId": 66,
       "parentEdgeId": 83,
       "childEdgeIds": []
     },
     {
       "id": 85,
-      "lps": [63.9024, -92.807, -503.25],
+      "lps": [61.3633, -66.1468, -498.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 666.036,
-      "parentNodeId": 73,
+      "rootDistanceMm": 646.493,
+      "parentNodeId": 74,
       "parentEdgeId": 84,
       "childEdgeIds": []
     },
     {
       "id": 86,
-      "lps": [94.3711, 11.2946, -642.0],
+      "lps": [63.9024, -92.807, -503.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 665.816,
+      "rootDistanceMm": 666.255,
       "parentNodeId": 74,
       "parentEdgeId": 85,
       "childEdgeIds": []
     },
     {
       "id": 87,
-      "lps": [70.25, 13.8336, -639.5],
+      "lps": [94.3711, 11.2946, -642.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 648.359,
-      "parentNodeId": 74,
+      "rootDistanceMm": 666.035,
+      "parentNodeId": 75,
       "parentEdgeId": 86,
       "childEdgeIds": []
     },
     {
       "id": 88,
-      "lps": [51.2071, 12.5641, -664.5],
+      "lps": [70.25, 13.8336, -639.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.266,
-      "parentNodeId": 76,
+      "rootDistanceMm": 648.578,
+      "parentNodeId": 75,
       "parentEdgeId": 87,
       "childEdgeIds": []
     },
     {
       "id": 89,
-      "lps": [34.7032, 3.6774, -668.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 636.019,
-      "parentNodeId": 76,
-      "parentEdgeId": 88,
-      "childEdgeIds": [97, 98]
-    },
-    {
-      "id": 90,
-      "lps": [107.0664, -14.096, -685.75],
+      "lps": [51.2071, 12.5641, -664.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 692.021,
-      "parentNodeId": 78,
-      "parentEdgeId": 89,
+      "rootDistanceMm": 645.485,
+      "parentNodeId": 77,
+      "parentEdgeId": 88,
       "childEdgeIds": []
     },
     {
+      "id": 90,
+      "lps": [34.7032, 3.6774, -668.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 636.238,
+      "parentNodeId": 77,
+      "parentEdgeId": 89,
+      "childEdgeIds": [98, 99]
+    },
+    {
       "id": 91,
-      "lps": [82.0679, -5.0789, -689.4338],
+      "lps": [107.0664, -14.096, -685.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 677.186,
-      "parentNodeId": 78,
+      "rootDistanceMm": 692.24,
+      "parentNodeId": 79,
       "parentEdgeId": 90,
       "childEdgeIds": []
     },
     {
       "id": 92,
-      "lps": [115.9532, -55.9906, -727.0],
+      "lps": [82.0679, -5.0789, -689.4338],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 714.157,
+      "rootDistanceMm": 677.405,
       "parentNodeId": 79,
       "parentEdgeId": 91,
       "childEdgeIds": []
     },
     {
       "id": 93,
-      "lps": [66.4415, -34.4085, -732.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 678.228,
-      "parentNodeId": 79,
+      "lps": [115.9532, -55.9906, -727.0],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 714.376,
+      "parentNodeId": 80,
       "parentEdgeId": 92,
-      "childEdgeIds": [99, 100]
+      "childEdgeIds": []
     },
     {
       "id": 94,
-      "lps": [-83.3632, -35.6781, -722.0],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 678.425,
-      "parentNodeId": 81,
+      "lps": [66.4415, -34.4085, -732.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 678.447,
+      "parentNodeId": 80,
       "parentEdgeId": 93,
-      "childEdgeIds": []
+      "childEdgeIds": [100, 101]
     },
     {
       "id": 95,
-      "lps": [-90.9804, -34.4085, -719.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 677.645,
-      "parentNodeId": 81,
-      "parentEdgeId": 94,
-      "childEdgeIds": [101, 102]
-    },
-    {
-      "id": 96,
-      "lps": [-93.5195, -63.6077, -735.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 681.602,
-      "parentNodeId": 82,
-      "parentEdgeId": 95,
-      "childEdgeIds": [103, 104]
-    },
-    {
-      "id": 97,
-      "lps": [-112.5624, -62.3382, -728.25],
+      "lps": [-83.3632, -35.6781, -722.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 689.295,
+      "rootDistanceMm": 678.644,
       "parentNodeId": 82,
-      "parentEdgeId": 96,
+      "parentEdgeId": 94,
       "childEdgeIds": []
     },
     {
+      "id": 96,
+      "lps": [-90.9804, -34.4085, -719.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 677.864,
+      "parentNodeId": 82,
+      "parentEdgeId": 95,
+      "childEdgeIds": [102, 103]
+    },
+    {
+      "id": 97,
+      "lps": [-93.5195, -63.6077, -735.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 681.821,
+      "parentNodeId": 83,
+      "parentEdgeId": 96,
+      "childEdgeIds": [104, 105]
+    },
+    {
       "id": 98,
-      "lps": [32.1641, 7.486, -674.5],
+      "lps": [-112.5624, -62.3382, -728.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.092,
-      "parentNodeId": 89,
+      "rootDistanceMm": 689.514,
+      "parentNodeId": 83,
       "parentEdgeId": 97,
       "childEdgeIds": []
     },
     {
       "id": 99,
-      "lps": [27.086, 3.6774, -667.0],
+      "lps": [32.1641, 7.486, -674.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 644.413,
-      "parentNodeId": 89,
+      "rootDistanceMm": 645.311,
+      "parentNodeId": 90,
       "parentEdgeId": 98,
       "childEdgeIds": []
     },
     {
       "id": 100,
-      "lps": [72.7891, -31.8695, -747.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 695.135,
-      "parentNodeId": 93,
-      "parentEdgeId": 99,
-      "childEdgeIds": [105, 106]
-    },
-    {
-      "id": 101,
-      "lps": [56.2852, -29.3304, -739.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 692.366,
-      "parentNodeId": 93,
-      "parentEdgeId": 100,
-      "childEdgeIds": [107, 108]
-    },
-    {
-      "id": 102,
-      "lps": [-98.5976, -29.3304, -727.0],
+      "lps": [27.086, 3.6774, -667.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 690.139,
-      "parentNodeId": 95,
-      "parentEdgeId": 101,
+      "rootDistanceMm": 644.632,
+      "parentNodeId": 90,
+      "parentEdgeId": 99,
       "childEdgeIds": []
     },
     {
+      "id": 101,
+      "lps": [72.7891, -31.8695, -747.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 695.354,
+      "parentNodeId": 94,
+      "parentEdgeId": 100,
+      "childEdgeIds": [106, 107]
+    },
+    {
+      "id": 102,
+      "lps": [56.2852, -29.3304, -739.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 692.585,
+      "parentNodeId": 94,
+      "parentEdgeId": 101,
+      "childEdgeIds": [108, 109]
+    },
+    {
       "id": 103,
-      "lps": [-97.328, -30.5999, -718.25],
+      "lps": [-98.5976, -29.3304, -727.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 685.436,
-      "parentNodeId": 95,
+      "rootDistanceMm": 690.358,
+      "parentNodeId": 96,
       "parentEdgeId": 102,
       "childEdgeIds": []
     },
     {
       "id": 104,
-      "lps": [-68.1288, -48.3734, -779.5],
+      "lps": [-97.328, -30.5999, -718.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 735.938,
+      "rootDistanceMm": 685.655,
       "parentNodeId": 96,
       "parentEdgeId": 103,
       "childEdgeIds": []
     },
     {
       "id": 105,
-      "lps": [-103.6757, -61.0687, -753.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 702.42,
-      "parentNodeId": 96,
-      "parentEdgeId": 104,
-      "childEdgeIds": [109, 110]
-    },
-    {
-      "id": 106,
-      "lps": [85.4844, -24.2523, -753.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 711.771,
-      "parentNodeId": 100,
-      "parentEdgeId": 105,
-      "childEdgeIds": [111, 112]
-    },
-    {
-      "id": 107,
-      "lps": [71.5196, -26.7913, -769.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 718.612,
-      "parentNodeId": 100,
-      "parentEdgeId": 106,
-      "childEdgeIds": [113, 114]
-    },
-    {
-      "id": 108,
-      "lps": [49.7967, -23.1111, -746.6149],
+      "lps": [-68.1288, -48.3734, -779.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 703.929,
-      "parentNodeId": 101,
-      "parentEdgeId": 107,
+      "rootDistanceMm": 736.157,
+      "parentNodeId": 97,
+      "parentEdgeId": 104,
       "childEdgeIds": []
     },
     {
+      "id": 106,
+      "lps": [-103.6757, -61.0687, -753.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 702.639,
+      "parentNodeId": 97,
+      "parentEdgeId": 105,
+      "childEdgeIds": [110, 111]
+    },
+    {
+      "id": 107,
+      "lps": [85.4844, -24.2523, -753.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 711.99,
+      "parentNodeId": 101,
+      "parentEdgeId": 106,
+      "childEdgeIds": [112, 113]
+    },
+    {
+      "id": 108,
+      "lps": [71.5196, -26.7913, -769.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 718.831,
+      "parentNodeId": 101,
+      "parentEdgeId": 107,
+      "childEdgeIds": [114, 115]
+    },
+    {
       "id": 109,
-      "lps": [53.7461, -42.0257, -750.75],
+      "lps": [49.7967, -23.1111, -746.6149],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 710.11,
-      "parentNodeId": 101,
+      "rootDistanceMm": 704.148,
+      "parentNodeId": 102,
       "parentEdgeId": 108,
       "childEdgeIds": []
     },
     {
       "id": 110,
-      "lps": [-110.0234, -59.7991, -775.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 726.168,
-      "parentNodeId": 105,
-      "parentEdgeId": 109,
-      "childEdgeIds": [115, 116]
-    },
-    {
-      "id": 111,
-      "lps": [-118.9101, -62.3382, -759.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 720.505,
-      "parentNodeId": 105,
-      "parentEdgeId": 110,
-      "childEdgeIds": [117, 118]
-    },
-    {
-      "id": 112,
-      "lps": [109.6055, -31.8695, -779.5],
+      "lps": [53.7461, -42.0257, -750.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 749.058,
-      "parentNodeId": 106,
-      "parentEdgeId": 111,
+      "rootDistanceMm": 710.329,
+      "parentNodeId": 102,
+      "parentEdgeId": 109,
       "childEdgeIds": []
     },
     {
+      "id": 111,
+      "lps": [-110.0234, -59.7991, -775.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 726.387,
+      "parentNodeId": 106,
+      "parentEdgeId": 110,
+      "childEdgeIds": [116, 117]
+    },
+    {
+      "id": 112,
+      "lps": [-118.9101, -62.3382, -759.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 720.724,
+      "parentNodeId": 106,
+      "parentEdgeId": 111,
+      "childEdgeIds": [118, 119]
+    },
+    {
       "id": 113,
-      "lps": [86.754, -11.557, -752.0],
+      "lps": [109.6055, -31.8695, -779.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 724.943,
-      "parentNodeId": 106,
+      "rootDistanceMm": 749.277,
+      "parentNodeId": 107,
       "parentEdgeId": 112,
       "childEdgeIds": []
     },
     {
       "id": 114,
-      "lps": [74.0586, -24.2523, -785.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 735.612,
-      "parentNodeId": 107,
-      "parentEdgeId": 113,
-      "childEdgeIds": [119, 120]
-    },
-    {
-      "id": 115,
-      "lps": [47.3985, -7.7484, -782.0],
+      "lps": [86.754, -11.557, -752.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 752.505,
+      "rootDistanceMm": 725.162,
       "parentNodeId": 107,
-      "parentEdgeId": 114,
+      "parentEdgeId": 113,
       "childEdgeIds": []
     },
     {
+      "id": 115,
+      "lps": [74.0586, -24.2523, -785.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 735.831,
+      "parentNodeId": 108,
+      "parentEdgeId": 114,
+      "childEdgeIds": [120, 121]
+    },
+    {
       "id": 116,
-      "lps": [-104.9452, -62.3382, -780.75],
+      "lps": [47.3985, -7.7484, -782.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 734.503,
-      "parentNodeId": 110,
+      "rootDistanceMm": 752.724,
+      "parentNodeId": 108,
       "parentEdgeId": 115,
       "childEdgeIds": []
     },
     {
       "id": 117,
-      "lps": [-113.8319, -58.5296, -782.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 733.883,
-      "parentNodeId": 110,
-      "parentEdgeId": 116,
-      "childEdgeIds": [121, 122]
-    },
-    {
-      "id": 118,
-      "lps": [-134.1444, -52.182, -763.25],
+      "lps": [-104.9452, -62.3382, -780.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 739.565,
+      "rootDistanceMm": 734.722,
       "parentNodeId": 111,
-      "parentEdgeId": 117,
+      "parentEdgeId": 116,
       "childEdgeIds": []
     },
     {
+      "id": 118,
+      "lps": [-113.8319, -58.5296, -782.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 734.102,
+      "parentNodeId": 111,
+      "parentEdgeId": 117,
+      "childEdgeIds": [122, 123]
+    },
+    {
       "id": 119,
-      "lps": [-131.6054, -82.6507, -794.5],
+      "lps": [-134.1444, -52.182, -763.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 763.692,
-      "parentNodeId": 111,
+      "rootDistanceMm": 739.784,
+      "parentNodeId": 112,
       "parentEdgeId": 118,
       "childEdgeIds": []
     },
     {
       "id": 120,
-      "lps": [99.4493, -22.9827, -818.25],
+      "lps": [-131.6054, -82.6507, -794.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 779.195,
-      "parentNodeId": 114,
+      "rootDistanceMm": 763.911,
+      "parentNodeId": 112,
       "parentEdgeId": 119,
       "childEdgeIds": []
     },
     {
       "id": 121,
-      "lps": [71.5196, -19.1742, -810.75],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 762.081,
-      "parentNodeId": 114,
-      "parentEdgeId": 120,
-      "childEdgeIds": [123, 124]
-    },
-    {
-      "id": 122,
-      "lps": [-113.8319, -55.9906, -788.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 740.823,
-      "parentNodeId": 117,
-      "parentEdgeId": 121,
-      "childEdgeIds": [125, 126]
-    },
-    {
-      "id": 123,
-      "lps": [-127.7968, -58.5296, -789.5],
+      "lps": [99.4493, -22.9827, -818.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 750.802,
-      "parentNodeId": 117,
-      "parentEdgeId": 122,
+      "rootDistanceMm": 779.414,
+      "parentNodeId": 115,
+      "parentEdgeId": 120,
       "childEdgeIds": []
     },
     {
+      "id": 122,
+      "lps": [71.5196, -19.1742, -810.75],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 762.3,
+      "parentNodeId": 115,
+      "parentEdgeId": 121,
+      "childEdgeIds": [124, 125]
+    },
+    {
+      "id": 123,
+      "lps": [-113.8319, -55.9906, -788.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 741.042,
+      "parentNodeId": 118,
+      "parentEdgeId": 122,
+      "childEdgeIds": [126, 127]
+    },
+    {
       "id": 124,
-      "lps": [82.9454, -14.096, -834.5],
+      "lps": [-127.7968, -58.5296, -789.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 789.875,
-      "parentNodeId": 121,
+      "rootDistanceMm": 751.021,
+      "parentNodeId": 118,
       "parentEdgeId": 123,
       "childEdgeIds": []
     },
     {
       "id": 125,
-      "lps": [62.6329, -14.096, -827.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 781.674,
-      "parentNodeId": 121,
+      "lps": [82.9454, -14.096, -834.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 790.094,
+      "parentNodeId": 122,
       "parentEdgeId": 124,
-      "childEdgeIds": [127, 128]
+      "childEdgeIds": []
     },
     {
       "id": 126,
-      "lps": [-82.0937, -30.5999, -805.75],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 790.82,
+      "lps": [62.6329, -14.096, -827.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 781.893,
       "parentNodeId": 122,
       "parentEdgeId": 125,
-      "childEdgeIds": []
+      "childEdgeIds": [128, 129]
     },
     {
       "id": 127,
-      "lps": [-118.9101, -55.9906, -804.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 758.315,
-      "parentNodeId": 122,
-      "parentEdgeId": 126,
-      "childEdgeIds": [129, 130]
-    },
-    {
-      "id": 128,
-      "lps": [60.0938, -12.8265, -842.0],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 797.553,
-      "parentNodeId": 125,
-      "parentEdgeId": 127,
-      "childEdgeIds": [131, 132]
-    },
-    {
-      "id": 129,
-      "lps": [52.4766, -9.0179, -825.75],
+      "lps": [-82.0937, -30.5999, -805.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 793.789,
-      "parentNodeId": 125,
-      "parentEdgeId": 128,
+      "rootDistanceMm": 791.039,
+      "parentNodeId": 123,
+      "parentEdgeId": 126,
       "childEdgeIds": []
     },
     {
+      "id": 128,
+      "lps": [-118.9101, -55.9906, -804.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 758.534,
+      "parentNodeId": 123,
+      "parentEdgeId": 127,
+      "childEdgeIds": [130, 131]
+    },
+    {
+      "id": 129,
+      "lps": [60.0938, -12.8265, -842.0],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 797.772,
+      "parentNodeId": 126,
+      "parentEdgeId": 128,
+      "childEdgeIds": [132, 133]
+    },
+    {
       "id": 130,
-      "lps": [-110.0234, -54.721, -813.25],
+      "lps": [52.4766, -9.0179, -825.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 770.964,
-      "parentNodeId": 127,
+      "rootDistanceMm": 794.008,
+      "parentNodeId": 126,
       "parentEdgeId": 129,
       "childEdgeIds": []
     },
     {
       "id": 131,
-      "lps": [-123.9882, -55.9906, -814.5],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 770.068,
-      "parentNodeId": 127,
+      "lps": [-110.0234, -54.721, -813.25],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 771.183,
+      "parentNodeId": 128,
       "parentEdgeId": 130,
-      "childEdgeIds": [133, 134]
+      "childEdgeIds": []
     },
     {
       "id": 132,
-      "lps": [71.5196, -9.0179, -867.0],
-      "kind": "terminal",
-      "degree": 1,
-      "rootDistanceMm": 825.972,
+      "lps": [-123.9882, -55.9906, -814.5],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 770.287,
       "parentNodeId": 128,
       "parentEdgeId": 131,
-      "childEdgeIds": []
+      "childEdgeIds": [134, 135]
     },
     {
       "id": 133,
-      "lps": [49.9376, -12.8265, -858.25],
-      "kind": "bifurcation",
-      "degree": 3,
-      "rootDistanceMm": 817.004,
-      "parentNodeId": 128,
-      "parentEdgeId": 132,
-      "childEdgeIds": [135, 136]
-    },
-    {
-      "id": 134,
-      "lps": [-125.2577, -39.4867, -829.5],
+      "lps": [71.5196, -9.0179, -867.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 798.56,
-      "parentNodeId": 131,
-      "parentEdgeId": 133,
+      "rootDistanceMm": 826.191,
+      "parentNodeId": 129,
+      "parentEdgeId": 132,
       "childEdgeIds": []
     },
     {
+      "id": 134,
+      "lps": [49.9376, -12.8265, -858.25],
+      "kind": "bifurcation",
+      "degree": 3,
+      "rootDistanceMm": 817.223,
+      "parentNodeId": 129,
+      "parentEdgeId": 133,
+      "childEdgeIds": [136, 137]
+    },
+    {
       "id": 135,
-      "lps": [-135.414, -57.2601, -824.5],
+      "lps": [-125.2577, -39.4867, -829.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 785.825,
-      "parentNodeId": 131,
+      "rootDistanceMm": 798.779,
+      "parentNodeId": 132,
       "parentEdgeId": 134,
       "childEdgeIds": []
     },
     {
       "id": 136,
-      "lps": [52.4766, -12.8265, -868.25],
+      "lps": [-135.414, -57.2601, -824.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 827.531,
-      "parentNodeId": 133,
+      "rootDistanceMm": 786.044,
+      "parentNodeId": 132,
       "parentEdgeId": 135,
       "childEdgeIds": []
     },
     {
       "id": 137,
-      "lps": [43.5899, -12.8265, -862.0],
+      "lps": [52.4766, -12.8265, -868.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 824.548,
-      "parentNodeId": 133,
+      "rootDistanceMm": 827.75,
+      "parentNodeId": 134,
       "parentEdgeId": 136,
       "childEdgeIds": []
     },
     {
       "id": 138,
-      "lps": [20.7383, -151.2054, -309.5],
+      "lps": [43.5899, -12.8265, -862.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 226.193,
-      "parentNodeId": 2,
+      "rootDistanceMm": 824.767,
+      "parentNodeId": 134,
       "parentEdgeId": 137,
       "childEdgeIds": []
     },
     {
       "id": 139,
+      "lps": [20.7383, -151.2054, -309.5],
+      "kind": "terminal",
+      "degree": 1,
+      "rootDistanceMm": 226.193,
+      "parentNodeId": 2,
+      "parentEdgeId": 138,
+      "childEdgeIds": []
+    },
+    {
+      "id": 140,
       "lps": [-17.3476, -146.1273, -320.75],
       "kind": "terminal",
       "degree": 1,
       "rootDistanceMm": 231.31,
       "parentNodeId": 2,
-      "parentEdgeId": 138,
+      "parentEdgeId": 139,
       "childEdgeIds": []
     }
   ],
@@ -1982,180 +1992,74 @@
       "sourceCellId": 4,
       "startNodeId": 4,
       "endNodeId": 5,
-      "lengthMm": 126.72,
-      "radiusMm": 14.194,
+      "lengthMm": 47.771,
+      "radiusMm": 12.235,
       "pointsLps": [
         [9.3126, -153.7444, -365.75],
-        [9.3126, -153.6979, -366.4947],
-        [9.3126, -153.6183, -367.2336],
-        [9.3126, -153.4107, -367.9502],
-        [9.3126, -153.102, -368.621],
-        [9.3126, -152.6993, -369.249],
-        [9.3131, -152.3745, -369.9167],
-        [9.3138, -152.1062, -370.6128],
-        [9.3185, -151.9692, -371.3431],
-        [9.3264, -151.8799, -372.0826],
-        [9.3529, -151.9099, -372.8276],
-        [9.4011, -151.9366, -373.5713],
-        [9.4778, -151.9589, -374.3131],
-        [9.5957, -151.9297, -375.0483],
-        [9.7268, -151.881, -375.781],
-        [9.8437, -151.7833, -376.5114],
-        [9.9235, -151.6725, -377.2428],
-        [9.9284, -151.5352, -377.9762],
-        [9.8712, -151.383, -378.7027],
-        [9.7771, -151.222, -379.4251],
-        [9.6984, -151.0599, -380.1491],
-        [9.634, -150.9011, -380.8747],
-        [9.6305, -150.7585, -381.607],
-        [9.6251, -150.6242, -382.3409],
-        [9.6174, -150.4997, -383.0765],
-        [9.5404, -150.3779, -383.8076],
-        [9.4394, -150.2579, -384.5369],
-        [9.2918, -150.155, -385.261],
-        [9.1697, -150.0656, -385.9904],
-        [9.101, -150.004, -386.7307],
-        [9.1363, -149.9639, -387.4706],
-        [9.2312, -149.936, -388.2101],
-        [9.4254, -149.9051, -388.9294],
-        [9.6188, -149.8638, -389.6485],
-        [9.7868, -149.7829, -390.3709],
-        [9.885, -149.6654, -391.0964],
-        [9.9059, -149.5076, -391.8254],
-        [9.8284, -149.3229, -392.5418],
-        [9.7198, -149.1299, -393.2542],
-        [9.5923, -148.9692, -393.9716],
-        [9.4799, -148.8222, -394.6936],
-        [9.4097, -148.7137, -395.4284],
-        [9.3794, -148.6045, -396.165],
-        [9.3801, -148.4948, -396.903],
-        [9.4445, -148.3348, -397.6282],
-        [9.5285, -148.1605, -398.3481],
-        [9.6737, -147.9452, -399.0476],
-        [9.8246, -147.7257, -399.7444],
-        [9.9861, -147.4984, -400.4365],
-        [10.0994, -147.2663, -401.1351],
-        [10.1728, -147.0304, -401.8391],
-        [10.1284, -146.7901, -402.5411],
-        [10.0492, -146.5485, -403.2426],
-        [9.8656, -146.3134, -403.9264],
-        [9.6762, -146.076, -404.6078],
-        [9.4622, -145.8264, -405.2775],
-        [9.2486, -145.5629, -405.9417],
-        [9.0362, -145.2665, -406.5926],
-        [8.8311, -144.9494, -407.2354],
-        [8.6383, -144.5976, -407.8645],
-        [8.4667, -144.2297, -408.4895],
-        [8.3287, -143.8361, -409.1082],
-        [8.2172, -143.4397, -409.7294],
-        [8.1513, -143.0382, -410.3548],
-        [8.1081, -142.6451, -410.9867],
-        [8.1037, -142.2665, -411.6295],
-        [8.1219, -141.8989, -412.2779],
-        [8.1708, -141.5464, -412.9336],
-        [8.2422, -141.2009, -413.5907],
-        [8.3348, -140.8621, -414.249],
-        [8.4367, -140.5255, -414.9069],
-        [8.5444, -140.1902, -415.5647],
-        [8.6473, -139.8523, -416.2219],
-        [8.7482, -139.5135, -416.8789],
-        [8.8309, -139.1612, -417.5314],
-        [8.9095, -138.806, -418.1827],
-        [8.9143, -138.414, -418.8169],
-        [8.9106, -138.0178, -419.4492],
-        [8.779, -137.5779, -420.0357],
-        [8.6362, -137.1341, -420.6183],
-        [8.4181, -136.6688, -421.157],
-        [8.178, -136.1972, -421.683],
-        [7.9371, -135.7171, -422.2005],
-        [7.6949, -135.2239, -422.7053],
-        [7.4527, -134.7307, -423.2101],
-        [7.2786, -134.2183, -423.7233],
-        [7.1103, -133.7043, -424.2373],
-        [6.9841, -133.1881, -424.7592],
-        [6.9018, -132.6697, -425.2894],
-        [6.8244, -132.1537, -425.8225],
-        [6.7797, -131.6544, -426.3751],
-        [6.7351, -131.1551, -426.9278],
-        [6.6686, -130.6891, -427.5063],
-        [6.5988, -130.2281, -428.0888],
-        [6.4852, -129.7935, -428.6836],
-        [6.3548, -129.369, -429.2832],
-        [6.2038, -128.954, -429.8844],
-        [6.0411, -128.5443, -430.4863],
-        [5.8947, -128.1397, -431.0956],
-        [5.761, -127.7389, -431.7106],
-        [5.6581, -127.3486, -432.3372],
-        [5.5825, -126.9677, -432.9743],
-        [5.5234, -126.5922, -433.6162],
-        [5.4768, -126.2209, -434.2617],
-        [5.4152, -125.8334, -434.896],
-        [5.3448, -125.4364, -435.5238],
-        [5.2484, -125.009, -436.1267],
-        [5.1374, -124.5645, -436.7155],
-        [5.0268, -124.1009, -437.2891],
-        [4.9168, -123.6197, -437.8486],
-        [4.8189, -123.137, -438.4087],
-        [4.7522, -122.6505, -438.9704],
-        [4.6862, -122.1657, -439.5336],
-        [4.6312, -121.7066, -440.1192],
-        [4.5763, -121.2476, -440.7049],
-        [4.4604, -120.8197, -441.3046],
-        [4.3393, -120.3943, -441.9055],
-        [4.1556, -119.9838, -442.5002],
-        [3.9601, -119.576, -443.0936],
-        [3.7572, -119.1713, -443.6867],
-        [3.5517, -118.7678, -444.2797],
-        [3.3793, -118.3621, -444.8811],
-        [3.2265, -117.955, -445.4874],
-        [3.1089, -117.5444, -446.0983],
-        [3.0182, -117.131, -446.7128],
-        [2.9357, -116.7224, -447.3315],
-        [2.8605, -116.318, -447.954],
-        [2.7722, -115.9287, -448.584],
-        [2.6721, -115.553, -449.2208],
-        [2.5545, -115.1929, -449.8633],
-        [2.4235, -114.8451, -450.5102],
-        [2.2635, -114.5074, -451.1556],
-        [2.0865, -114.1757, -451.8001],
-        [1.8631, -113.8519, -452.4332],
-        [1.6188, -113.5317, -453.0613],
-        [1.3517, -113.2134, -453.6808],
-        [1.0748, -112.8959, -454.2966],
-        [0.8111, -112.5668, -454.9119],
-        [0.5538, -112.2319, -455.527],
-        [0.3068, -111.8737, -456.1328],
-        [0.0658, -111.5021, -456.7332],
-        [-0.186, -111.1091, -457.3147],
-        [-0.4465, -110.6991, -457.8809],
-        [-0.7189, -110.2852, -458.4384],
-        [-1.0135, -109.8644, -458.9795],
-        [-1.3087, -109.4444, -459.5209],
-        [-1.6175, -109.0464, -460.0713],
-        [-1.9263, -108.6484, -460.6217],
-        [-2.1853, -108.2737, -461.2114],
-        [-2.4292, -107.906, -461.8131],
-        [-2.5461, -107.5597, -462.4572],
-        [-2.6057, -107.223, -463.1203],
-        [-2.5101, -106.9361, -463.7976],
-        [-2.3768, -106.6614, -464.4784],
-        [-2.1871, -106.4608, -465.1713],
-        [-2.0096, -106.2704, -465.8695],
-        [-1.9024, -106.1194, -466.5923],
-        [-1.8593, -105.9653, -467.3174],
-        [-1.8994, -105.8074, -468.0455],
-        [-2.0166, -105.6163, -468.7551],
-        [-2.1639, -105.4122, -469.4575],
-        [-2.359, -105.1435, -470.1252],
-        [-2.5583, -104.8669, -470.7887],
-        [-2.7727, -104.5368, -471.4225],
-        [-2.986, -104.1983, -472.0518],
-        [-3.1891, -103.7913, -472.6432],
-        [-3.386, -103.3944, -473.2407],
-        [-3.4667, -103.1838, -473.9519],
-        [-3.6886, -103.0348, -474.613],
-        [-4.1704, -102.999, -475.1815],
-        [-4.6523, -102.9632, -475.75]
+        [9.3126, -153.6978, -366.4959],
+        [9.3126, -153.6177, -367.2359],
+        [9.3126, -153.4097, -367.9538],
+        [9.3126, -153.0994, -368.6251],
+        [9.3126, -152.6959, -369.2542],
+        [9.3131, -152.3719, -369.9235],
+        [9.3138, -152.1031, -370.6208],
+        [9.3186, -151.9679, -371.3528],
+        [9.3268, -151.8803, -372.0936],
+        [9.3533, -151.9104, -372.8399],
+        [9.4025, -151.937, -373.5847],
+        [9.4793, -151.9594, -374.3277],
+        [9.5985, -151.9288, -375.0639],
+        [9.7295, -151.8788, -375.7978],
+        [9.8466, -151.7809, -376.5294],
+        [9.9236, -151.6689, -377.2621],
+        [9.9285, -151.5314, -377.9966],
+        [9.8684, -151.3783, -378.724],
+        [9.7741, -151.2169, -379.4476],
+        [9.6959, -151.0546, -380.1729],
+        [9.6339, -150.8962, -380.8999],
+        [9.6304, -150.7533, -381.6335],
+        [9.6248, -150.6195, -382.3687],
+        [9.6171, -150.4948, -383.1055],
+        [9.5363, -150.373, -383.8375],
+        [9.4331, -150.2535, -384.5678],
+        [9.2852, -150.1505, -385.2931],
+        [9.1666, -150.0628, -386.0244],
+        [9.0977, -150.001, -386.766],
+        [9.141, -149.9625, -387.507],
+        [9.2361, -149.9346, -388.2477],
+        [9.4359, -149.9035, -388.9672],
+        [9.6279, -149.8594, -389.6876],
+        [9.7962, -149.7783, -390.4112],
+        [9.8862, -149.6563, -391.1383],
+        [9.9072, -149.4983, -391.8684],
+        [9.8218, -149.3112, -392.585],
+        [9.7118, -149.1199, -393.299],
+        [9.5841, -148.9589, -394.0175],
+        [9.4753, -148.8151, -394.7418],
+        [9.405, -148.7064, -395.4778],
+        [9.3794, -148.597, -396.2159],
+        [9.3801, -148.4871, -396.9551],
+        [9.4498, -148.3227, -397.6804],
+        [9.5392, -148.1446, -398.3998],
+        [9.6846, -147.929, -399.1004],
+        [9.8371, -147.7081, -399.7978],
+        [9.9988, -147.4804, -400.491],
+        [10.1053, -147.2473, -401.1917],
+        [10.1788, -147.011, -401.8969],
+        [10.1218, -146.7699, -402.5998],
+        [10.0345, -146.5284, -403.3011],
+        [9.8495, -146.2929, -403.9859],
+        [9.6572, -146.0538, -404.6671],
+        [9.4426, -145.8036, -405.3378],
+        [9.2281, -145.5347, -406.0008],
+        [9.0138, -145.2364, -406.6517],
+        [8.7667, -144.9478, -407.2942],
+        [8.4844, -144.6696, -407.9277],
+        [8.2926, -144.2929, -408.5322],
+        [8.1711, -143.8399, -409.114],
+        [8.0959, -143.3552, -409.6745],
+        [8.0694, -142.8369, -410.2122],
+        [8.043, -142.3187, -410.75]
       ]
     },
     {
@@ -2164,6 +2068,124 @@
       "sourceCellId": 5,
       "startNodeId": 5,
       "endNodeId": 6,
+      "lengthMm": 79.168,
+      "radiusMm": 15.851,
+      "pointsLps": [
+        [8.043, -142.3187, -410.75],
+        [8.0517, -142.2218, -411.4914],
+        [8.0669, -142.0549, -412.2037],
+        [8.1082, -141.602, -412.7973],
+        [8.1634, -141.1768, -413.405],
+        [8.2905, -140.8961, -414.0863],
+        [8.4109, -140.5955, -414.7597],
+        [8.5199, -140.2617, -415.4199],
+        [8.6252, -139.9253, -416.0793],
+        [8.7265, -139.586, -416.738],
+        [8.8143, -139.2366, -417.3931],
+        [8.893, -138.8806, -418.0459],
+        [8.9151, -138.4963, -418.6855],
+        [8.9114, -138.0993, -419.3192],
+        [8.8081, -137.6681, -419.9172],
+        [8.665, -137.2234, -420.5011],
+        [8.4659, -136.7627, -421.0524],
+        [8.2253, -136.29, -421.5795],
+        [7.9842, -135.813, -422.1023],
+        [7.7415, -135.3187, -422.6082],
+        [7.4988, -134.8245, -423.1141],
+        [7.3102, -134.3149, -423.6267],
+        [7.1416, -133.7998, -424.1418],
+        [6.9992, -133.2833, -424.6619],
+        [6.9167, -132.7637, -425.1932],
+        [6.8342, -132.244, -425.7246],
+        [6.7876, -131.7427, -426.2774],
+        [6.7429, -131.2423, -426.8312],
+        [6.6806, -130.7686, -427.4059],
+        [6.6107, -130.3066, -427.9896],
+        [6.5071, -129.8648, -428.5829],
+        [6.3764, -129.4394, -429.1838],
+        [6.2304, -129.021, -429.7859],
+        [6.0673, -128.6105, -430.3892],
+        [5.916, -128.2035, -430.9977],
+        [5.782, -127.8018, -431.614],
+        [5.6698, -127.4075, -432.2386],
+        [5.594, -127.0258, -432.8771],
+        [5.5304, -126.648, -433.5191],
+        [5.4837, -126.2759, -434.166],
+        [5.4255, -125.8913, -434.8044],
+        [5.3549, -125.4935, -435.4336],
+        [5.2641, -125.0719, -436.0433],
+        [5.1528, -124.6264, -436.6335],
+        [5.0419, -124.1669, -437.2124],
+        [4.9316, -123.6846, -437.7731],
+        [4.8278, -123.2015, -438.3342],
+        [4.7609, -122.714, -438.8972],
+        [4.694, -122.2265, -439.4602],
+        [4.6382, -121.7645, -440.0454],
+        [4.5831, -121.3044, -440.6324],
+        [4.4751, -120.8714, -441.2315],
+        [4.3538, -120.4451, -441.8338],
+        [4.1785, -120.0316, -442.4306],
+        [3.9826, -119.6229, -443.0254],
+        [3.7804, -119.2168, -443.6199],
+        [3.5744, -118.8124, -444.2141],
+        [3.3959, -118.4062, -444.8154],
+        [3.2427, -117.9982, -445.4231],
+        [3.1183, -117.5874, -446.0345],
+        [3.0274, -117.1731, -446.6503],
+        [2.9432, -116.7627, -447.2696],
+        [2.8678, -116.3574, -447.8935],
+        [2.7818, -115.9644, -448.5235],
+        [2.6814, -115.5879, -449.1617],
+        [2.5664, -115.2244, -449.8046],
+        [2.4351, -114.8758, -450.453],
+        [2.2788, -114.536, -451.1],
+        [2.1014, -114.2036, -451.7459],
+        [1.8831, -113.8781, -452.3818],
+        [1.6382, -113.5572, -453.0113],
+        [1.3731, -113.238, -453.6331],
+        [1.0956, -112.9198, -454.2503],
+        [0.8298, -112.5912, -454.867],
+        [0.572, -112.2556, -455.4835],
+        [0.3234, -111.8991, -456.0916],
+        [0.0818, -111.5267, -456.6934],
+        [-0.1693, -111.1354, -457.2783],
+        [-0.4304, -110.7245, -457.8459],
+        [-0.7013, -110.3104, -458.4061],
+        [-0.9966, -109.8886, -458.9484],
+        [-1.2918, -109.4668, -459.4907],
+        [-1.6011, -109.0675, -460.0421],
+        [-1.9106, -108.6687, -460.5937],
+        [-2.1735, -108.2916, -461.1822],
+        [-2.4179, -107.9231, -461.7852],
+        [-2.5434, -107.5746, -462.4278],
+        [-2.6032, -107.2371, -463.0924],
+        [-2.5154, -106.9471, -463.7705],
+        [-2.3818, -106.6718, -464.4528],
+        [-2.1939, -106.4678, -465.1468],
+        [-2.0132, -106.2754, -465.8456],
+        [-1.9057, -106.124, -466.5699],
+        [-1.8582, -105.9699, -467.2965],
+        [-1.8984, -105.8115, -468.0262],
+        [-2.013, -105.6212, -468.738],
+        [-2.1607, -105.4167, -469.442],
+        [-2.3551, -105.1489, -470.112],
+        [-2.5545, -104.8727, -470.7775],
+        [-2.7694, -104.5419, -471.4127],
+        [-2.9833, -104.2037, -472.0439],
+        [-3.1868, -103.7958, -472.6366],
+        [-3.3853, -103.3962, -473.2344],
+        [-3.4662, -103.1852, -473.9472],
+        [-3.6864, -103.0349, -474.6105],
+        [-4.1694, -102.9991, -475.1802],
+        [-4.6523, -102.9632, -475.75]
+      ]
+    },
+    {
+      "id": 6,
+      "sourceCurve": "dolphin-airway-skeleton",
+      "sourceCellId": 6,
+      "startNodeId": 6,
+      "endNodeId": 7,
       "lengthMm": 56.59,
       "radiusMm": 13.725,
       "pointsLps": [
@@ -2247,11 +2269,11 @@
       ]
     },
     {
-      "id": 6,
+      "id": 7,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 6,
-      "startNodeId": 5,
-      "endNodeId": 7,
+      "sourceCellId": 7,
+      "startNodeId": 6,
+      "endNodeId": 8,
       "lengthMm": 82.083,
       "radiusMm": 7.604,
       "pointsLps": [
@@ -2369,11 +2391,11 @@
       ]
     },
     {
-      "id": 7,
+      "id": 8,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 7,
-      "startNodeId": 6,
-      "endNodeId": 8,
+      "sourceCellId": 8,
+      "startNodeId": 7,
+      "endNodeId": 9,
       "lengthMm": 55.169,
       "radiusMm": 12.191,
       "pointsLps": [
@@ -2455,11 +2477,11 @@
       ]
     },
     {
-      "id": 8,
+      "id": 9,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 8,
-      "startNodeId": 6,
-      "endNodeId": 9,
+      "sourceCellId": 9,
+      "startNodeId": 7,
+      "endNodeId": 10,
       "lengthMm": 110.563,
       "radiusMm": 9.915,
       "pointsLps": [
@@ -2615,11 +2637,11 @@
       ]
     },
     {
-      "id": 9,
+      "id": 10,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 9,
-      "startNodeId": 7,
-      "endNodeId": 10,
+      "sourceCellId": 10,
+      "startNodeId": 8,
+      "endNodeId": 11,
       "lengthMm": 31.611,
       "radiusMm": 6.348,
       "pointsLps": [
@@ -2670,11 +2692,11 @@
       ]
     },
     {
-      "id": 10,
+      "id": 11,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 10,
-      "startNodeId": 7,
-      "endNodeId": 11,
+      "sourceCellId": 11,
+      "startNodeId": 8,
+      "endNodeId": 12,
       "lengthMm": 22.385,
       "radiusMm": 4.375,
       "pointsLps": [
@@ -2712,11 +2734,11 @@
       ]
     },
     {
-      "id": 11,
+      "id": 12,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 11,
-      "startNodeId": 8,
-      "endNodeId": 12,
+      "sourceCellId": 12,
+      "startNodeId": 9,
+      "endNodeId": 13,
       "lengthMm": 43.435,
       "radiusMm": 5.192,
       "pointsLps": [
@@ -2783,11 +2805,11 @@
       ]
     },
     {
-      "id": 12,
+      "id": 13,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 12,
-      "startNodeId": 8,
-      "endNodeId": 13,
+      "sourceCellId": 13,
+      "startNodeId": 9,
+      "endNodeId": 14,
       "lengthMm": 63.445,
       "radiusMm": 9.232,
       "pointsLps": [
@@ -2880,11 +2902,11 @@
       ]
     },
     {
-      "id": 13,
+      "id": 14,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 13,
-      "startNodeId": 9,
-      "endNodeId": 14,
+      "sourceCellId": 14,
+      "startNodeId": 10,
+      "endNodeId": 15,
       "lengthMm": 36.97,
       "radiusMm": 9.24,
       "pointsLps": [
@@ -2942,11 +2964,11 @@
       ]
     },
     {
-      "id": 14,
+      "id": 15,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 14,
-      "startNodeId": 9,
-      "endNodeId": 15,
+      "sourceCellId": 15,
+      "startNodeId": 10,
+      "endNodeId": 16,
       "lengthMm": 23.779,
       "radiusMm": 5.211,
       "pointsLps": [
@@ -2986,11 +3008,11 @@
       ]
     },
     {
-      "id": 15,
+      "id": 16,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 15,
-      "startNodeId": 10,
-      "endNodeId": 16,
+      "sourceCellId": 16,
+      "startNodeId": 11,
+      "endNodeId": 17,
       "lengthMm": 39.454,
       "radiusMm": 2.839,
       "pointsLps": [
@@ -3051,11 +3073,11 @@
       ]
     },
     {
-      "id": 16,
+      "id": 17,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 16,
-      "startNodeId": 10,
-      "endNodeId": 17,
+      "sourceCellId": 17,
+      "startNodeId": 11,
+      "endNodeId": 18,
       "lengthMm": 20.839,
       "radiusMm": 4.375,
       "pointsLps": [
@@ -3091,11 +3113,11 @@
       ]
     },
     {
-      "id": 17,
+      "id": 18,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 17,
-      "startNodeId": 11,
-      "endNodeId": 18,
+      "sourceCellId": 18,
+      "startNodeId": 12,
+      "endNodeId": 19,
       "lengthMm": 24.427,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -3136,11 +3158,11 @@
       ]
     },
     {
-      "id": 18,
+      "id": 19,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 18,
-      "startNodeId": 11,
-      "endNodeId": 19,
+      "sourceCellId": 19,
+      "startNodeId": 12,
+      "endNodeId": 20,
       "lengthMm": 9.886,
       "radiusMm": 3.591,
       "pointsLps": [
@@ -3162,11 +3184,11 @@
       ]
     },
     {
-      "id": 19,
+      "id": 20,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 19,
-      "startNodeId": 12,
-      "endNodeId": 20,
+      "sourceCellId": 20,
+      "startNodeId": 13,
+      "endNodeId": 21,
       "lengthMm": 18.257,
       "radiusMm": 6.204,
       "pointsLps": [
@@ -3199,11 +3221,11 @@
       ]
     },
     {
-      "id": 20,
+      "id": 21,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 20,
-      "startNodeId": 12,
-      "endNodeId": 21,
+      "sourceCellId": 21,
+      "startNodeId": 13,
+      "endNodeId": 22,
       "lengthMm": 20.654,
       "radiusMm": 3.783,
       "pointsLps": [
@@ -3239,11 +3261,11 @@
       ]
     },
     {
-      "id": 21,
+      "id": 22,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 21,
-      "startNodeId": 13,
-      "endNodeId": 22,
+      "sourceCellId": 22,
+      "startNodeId": 14,
+      "endNodeId": 23,
       "lengthMm": 26.621,
       "radiusMm": 5.192,
       "pointsLps": [
@@ -3287,11 +3309,11 @@
       ]
     },
     {
-      "id": 22,
+      "id": 23,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 22,
-      "startNodeId": 13,
-      "endNodeId": 23,
+      "sourceCellId": 23,
+      "startNodeId": 14,
+      "endNodeId": 24,
       "lengthMm": 40.698,
       "radiusMm": 8.505,
       "pointsLps": [
@@ -3354,11 +3376,11 @@
       ]
     },
     {
-      "id": 23,
+      "id": 24,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 23,
-      "startNodeId": 14,
-      "endNodeId": 24,
+      "sourceCellId": 24,
+      "startNodeId": 15,
+      "endNodeId": 25,
       "lengthMm": 40.071,
       "radiusMm": 3.563,
       "pointsLps": [
@@ -3420,11 +3442,11 @@
       ]
     },
     {
-      "id": 24,
+      "id": 25,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 24,
-      "startNodeId": 14,
-      "endNodeId": 25,
+      "sourceCellId": 25,
+      "startNodeId": 15,
+      "endNodeId": 26,
       "lengthMm": 8.676,
       "radiusMm": 9.031,
       "pointsLps": [
@@ -3444,11 +3466,11 @@
       ]
     },
     {
-      "id": 25,
+      "id": 26,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 25,
-      "startNodeId": 15,
-      "endNodeId": 26,
+      "sourceCellId": 26,
+      "startNodeId": 16,
+      "endNodeId": 27,
       "lengthMm": 13.491,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -3475,11 +3497,11 @@
       ]
     },
     {
-      "id": 26,
+      "id": 27,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 26,
-      "startNodeId": 15,
-      "endNodeId": 27,
+      "sourceCellId": 27,
+      "startNodeId": 16,
+      "endNodeId": 28,
       "lengthMm": 34.738,
       "radiusMm": 3.783,
       "pointsLps": [
@@ -3534,11 +3556,11 @@
       ]
     },
     {
-      "id": 27,
+      "id": 28,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 27,
-      "startNodeId": 17,
-      "endNodeId": 28,
+      "sourceCellId": 28,
+      "startNodeId": 18,
+      "endNodeId": 29,
       "lengthMm": 17.017,
       "radiusMm": 3.783,
       "pointsLps": [
@@ -3569,11 +3591,11 @@
       ]
     },
     {
-      "id": 28,
+      "id": 29,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 28,
-      "startNodeId": 17,
-      "endNodeId": 29,
+      "sourceCellId": 29,
+      "startNodeId": 18,
+      "endNodeId": 30,
       "lengthMm": 16.983,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -3604,11 +3626,11 @@
       ]
     },
     {
-      "id": 29,
+      "id": 30,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 29,
-      "startNodeId": 18,
-      "endNodeId": 30,
+      "sourceCellId": 30,
+      "startNodeId": 19,
+      "endNodeId": 31,
       "lengthMm": 11.556,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -3632,11 +3654,11 @@
       ]
     },
     {
-      "id": 30,
+      "id": 31,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 30,
-      "startNodeId": 18,
-      "endNodeId": 31,
+      "sourceCellId": 31,
+      "startNodeId": 19,
+      "endNodeId": 32,
       "lengthMm": 38.206,
       "radiusMm": 3.078,
       "pointsLps": [
@@ -3696,11 +3718,11 @@
       ]
     },
     {
-      "id": 31,
+      "id": 32,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 31,
-      "startNodeId": 19,
-      "endNodeId": 32,
+      "sourceCellId": 32,
+      "startNodeId": 20,
+      "endNodeId": 33,
       "lengthMm": 14.78,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -3728,11 +3750,11 @@
       ]
     },
     {
-      "id": 32,
+      "id": 33,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 32,
-      "startNodeId": 19,
-      "endNodeId": 33,
+      "sourceCellId": 33,
+      "startNodeId": 20,
+      "endNodeId": 34,
       "lengthMm": 7.594,
       "radiusMm": 3.201,
       "pointsLps": [
@@ -3751,11 +3773,11 @@
       ]
     },
     {
-      "id": 33,
+      "id": 34,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 33,
-      "startNodeId": 20,
-      "endNodeId": 34,
+      "sourceCellId": 34,
+      "startNodeId": 21,
+      "endNodeId": 35,
       "lengthMm": 25.569,
       "radiusMm": 3.563,
       "pointsLps": [
@@ -3798,11 +3820,11 @@
       ]
     },
     {
-      "id": 34,
+      "id": 35,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 34,
-      "startNodeId": 20,
-      "endNodeId": 35,
+      "sourceCellId": 35,
+      "startNodeId": 21,
+      "endNodeId": 36,
       "lengthMm": 14.133,
       "radiusMm": 4.745,
       "pointsLps": [
@@ -3830,11 +3852,11 @@
       ]
     },
     {
-      "id": 35,
+      "id": 36,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 35,
-      "startNodeId": 21,
-      "endNodeId": 36,
+      "sourceCellId": 36,
+      "startNodeId": 22,
+      "endNodeId": 37,
       "lengthMm": 24.474,
       "radiusMm": 3.078,
       "pointsLps": [
@@ -3875,11 +3897,11 @@
       ]
     },
     {
-      "id": 36,
+      "id": 37,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 36,
-      "startNodeId": 21,
-      "endNodeId": 37,
+      "sourceCellId": 37,
+      "startNodeId": 22,
+      "endNodeId": 38,
       "lengthMm": 7.958,
       "radiusMm": 2.671,
       "pointsLps": [
@@ -3898,11 +3920,11 @@
       ]
     },
     {
-      "id": 37,
+      "id": 38,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 37,
-      "startNodeId": 22,
-      "endNodeId": 38,
+      "sourceCellId": 38,
+      "startNodeId": 23,
+      "endNodeId": 39,
       "lengthMm": 8.08,
       "radiusMm": 4.529,
       "pointsLps": [
@@ -3921,11 +3943,11 @@
       ]
     },
     {
-      "id": 38,
+      "id": 39,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 38,
-      "startNodeId": 22,
-      "endNodeId": 39,
+      "sourceCellId": 39,
+      "startNodeId": 23,
+      "endNodeId": 40,
       "lengthMm": 32.388,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -3977,11 +3999,11 @@
       ]
     },
     {
-      "id": 39,
+      "id": 40,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 39,
-      "startNodeId": 23,
-      "endNodeId": 40,
+      "sourceCellId": 40,
+      "startNodeId": 24,
+      "endNodeId": 41,
       "lengthMm": 47.298,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -4053,11 +4075,11 @@
       ]
     },
     {
-      "id": 40,
+      "id": 41,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 40,
-      "startNodeId": 23,
-      "endNodeId": 41,
+      "sourceCellId": 41,
+      "startNodeId": 24,
+      "endNodeId": 42,
       "lengthMm": 24.162,
       "radiusMm": 7.721,
       "pointsLps": [
@@ -4098,11 +4120,11 @@
       ]
     },
     {
-      "id": 41,
+      "id": 42,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 41,
-      "startNodeId": 24,
-      "endNodeId": 42,
+      "sourceCellId": 42,
+      "startNodeId": 25,
+      "endNodeId": 43,
       "lengthMm": 10.178,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -4124,11 +4146,11 @@
       ]
     },
     {
-      "id": 42,
+      "id": 43,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 42,
-      "startNodeId": 24,
-      "endNodeId": 43,
+      "sourceCellId": 43,
+      "startNodeId": 25,
+      "endNodeId": 44,
       "lengthMm": 25.592,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -4171,11 +4193,11 @@
       ]
     },
     {
-      "id": 43,
+      "id": 44,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 43,
-      "startNodeId": 25,
-      "endNodeId": 44,
+      "sourceCellId": 44,
+      "startNodeId": 26,
+      "endNodeId": 45,
       "lengthMm": 26.876,
       "radiusMm": 8.121,
       "pointsLps": [
@@ -4219,11 +4241,11 @@
       ]
     },
     {
-      "id": 44,
+      "id": 45,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 44,
-      "startNodeId": 25,
-      "endNodeId": 45,
+      "sourceCellId": 45,
+      "startNodeId": 26,
+      "endNodeId": 46,
       "lengthMm": 22.017,
       "radiusMm": 3.563,
       "pointsLps": [
@@ -4261,11 +4283,11 @@
       ]
     },
     {
-      "id": 45,
+      "id": 46,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 45,
-      "startNodeId": 27,
-      "endNodeId": 46,
+      "sourceCellId": 46,
+      "startNodeId": 28,
+      "endNodeId": 47,
       "lengthMm": 23.857,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -4305,11 +4327,11 @@
       ]
     },
     {
-      "id": 46,
+      "id": 47,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 46,
-      "startNodeId": 27,
-      "endNodeId": 47,
+      "sourceCellId": 47,
+      "startNodeId": 28,
+      "endNodeId": 48,
       "lengthMm": 17.898,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -4341,11 +4363,11 @@
       ]
     },
     {
-      "id": 47,
+      "id": 48,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 47,
-      "startNodeId": 28,
-      "endNodeId": 48,
+      "sourceCellId": 48,
+      "startNodeId": 29,
+      "endNodeId": 49,
       "lengthMm": 30.306,
       "radiusMm": 3.078,
       "pointsLps": [
@@ -4394,11 +4416,11 @@
       ]
     },
     {
-      "id": 48,
+      "id": 49,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 48,
-      "startNodeId": 28,
-      "endNodeId": 49,
+      "sourceCellId": 49,
+      "startNodeId": 29,
+      "endNodeId": 50,
       "lengthMm": 13.892,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -4425,11 +4447,11 @@
       ]
     },
     {
-      "id": 49,
+      "id": 50,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 49,
-      "startNodeId": 29,
-      "endNodeId": 50,
+      "sourceCellId": 50,
+      "startNodeId": 30,
+      "endNodeId": 51,
       "lengthMm": 11.191,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -4452,11 +4474,11 @@
       ]
     },
     {
-      "id": 50,
+      "id": 51,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 50,
-      "startNodeId": 29,
-      "endNodeId": 51,
+      "sourceCellId": 51,
+      "startNodeId": 30,
+      "endNodeId": 52,
       "lengthMm": 12.894,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -4482,11 +4504,11 @@
       ]
     },
     {
-      "id": 51,
+      "id": 52,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 51,
-      "startNodeId": 33,
-      "endNodeId": 52,
+      "sourceCellId": 52,
+      "startNodeId": 34,
+      "endNodeId": 53,
       "lengthMm": 10.308,
       "radiusMm": 3.333,
       "pointsLps": [
@@ -4508,11 +4530,11 @@
       ]
     },
     {
-      "id": 52,
+      "id": 53,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 52,
-      "startNodeId": 33,
-      "endNodeId": 53,
+      "sourceCellId": 53,
+      "startNodeId": 34,
+      "endNodeId": 54,
       "lengthMm": 14.599,
       "radiusMm": 1.985,
       "pointsLps": [
@@ -4540,11 +4562,11 @@
       ]
     },
     {
-      "id": 53,
+      "id": 54,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 53,
-      "startNodeId": 34,
-      "endNodeId": 54,
+      "sourceCellId": 54,
+      "startNodeId": 35,
+      "endNodeId": 55,
       "lengthMm": 22.787,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -4583,11 +4605,11 @@
       ]
     },
     {
-      "id": 54,
+      "id": 55,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 54,
-      "startNodeId": 34,
-      "endNodeId": 55,
+      "sourceCellId": 55,
+      "startNodeId": 35,
+      "endNodeId": 56,
       "lengthMm": 39.151,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -4647,11 +4669,11 @@
       ]
     },
     {
-      "id": 55,
+      "id": 56,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 55,
-      "startNodeId": 35,
-      "endNodeId": 56,
+      "sourceCellId": 56,
+      "startNodeId": 36,
+      "endNodeId": 57,
       "lengthMm": 23.819,
       "radiusMm": 2.954,
       "pointsLps": [
@@ -4691,11 +4713,11 @@
       ]
     },
     {
-      "id": 56,
+      "id": 57,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 56,
-      "startNodeId": 35,
-      "endNodeId": 57,
+      "sourceCellId": 57,
+      "startNodeId": 36,
+      "endNodeId": 58,
       "lengthMm": 40.716,
       "radiusMm": 4.205,
       "pointsLps": [
@@ -4758,11 +4780,11 @@
       ]
     },
     {
-      "id": 57,
+      "id": 58,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 57,
-      "startNodeId": 36,
-      "endNodeId": 58,
+      "sourceCellId": 58,
+      "startNodeId": 37,
+      "endNodeId": 59,
       "lengthMm": 16.603,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -4793,11 +4815,11 @@
       ]
     },
     {
-      "id": 58,
+      "id": 59,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 58,
-      "startNodeId": 36,
-      "endNodeId": 59,
+      "sourceCellId": 59,
+      "startNodeId": 37,
+      "endNodeId": 60,
       "lengthMm": 9.218,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -4818,11 +4840,11 @@
       ]
     },
     {
-      "id": 59,
+      "id": 60,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 59,
-      "startNodeId": 38,
-      "endNodeId": 60,
+      "sourceCellId": 60,
+      "startNodeId": 39,
+      "endNodeId": 61,
       "lengthMm": 21.524,
       "radiusMm": 3.321,
       "pointsLps": [
@@ -4859,11 +4881,11 @@
       ]
     },
     {
-      "id": 60,
+      "id": 61,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 60,
-      "startNodeId": 38,
-      "endNodeId": 61,
+      "sourceCellId": 61,
+      "startNodeId": 39,
+      "endNodeId": 62,
       "lengthMm": 14.427,
       "radiusMm": 3.591,
       "pointsLps": [
@@ -4891,11 +4913,11 @@
       ]
     },
     {
-      "id": 61,
+      "id": 62,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 61,
-      "startNodeId": 41,
-      "endNodeId": 62,
+      "sourceCellId": 62,
+      "startNodeId": 42,
+      "endNodeId": 63,
       "lengthMm": 4.733,
       "radiusMm": 7.523,
       "pointsLps": [
@@ -4910,11 +4932,11 @@
       ]
     },
     {
-      "id": 62,
+      "id": 63,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 62,
-      "startNodeId": 41,
-      "endNodeId": 63,
+      "sourceCellId": 63,
+      "startNodeId": 42,
+      "endNodeId": 64,
       "lengthMm": 24.054,
       "radiusMm": 3.687,
       "pointsLps": [
@@ -4955,11 +4977,11 @@
       ]
     },
     {
-      "id": 63,
+      "id": 64,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 63,
-      "startNodeId": 44,
-      "endNodeId": 64,
+      "sourceCellId": 64,
+      "startNodeId": 45,
+      "endNodeId": 65,
       "lengthMm": 25.588,
       "radiusMm": 3.591,
       "pointsLps": [
@@ -5002,11 +5024,11 @@
       ]
     },
     {
-      "id": 64,
+      "id": 65,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 64,
-      "startNodeId": 44,
-      "endNodeId": 65,
+      "sourceCellId": 65,
+      "startNodeId": 45,
+      "endNodeId": 66,
       "lengthMm": 5.745,
       "radiusMm": 8.08,
       "pointsLps": [
@@ -5022,11 +5044,11 @@
       ]
     },
     {
-      "id": 65,
+      "id": 66,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 65,
-      "startNodeId": 45,
-      "endNodeId": 66,
+      "sourceCellId": 66,
+      "startNodeId": 46,
+      "endNodeId": 67,
       "lengthMm": 24.655,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -5068,11 +5090,11 @@
       ]
     },
     {
-      "id": 66,
+      "id": 67,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 66,
-      "startNodeId": 45,
-      "endNodeId": 67,
+      "sourceCellId": 67,
+      "startNodeId": 46,
+      "endNodeId": 68,
       "lengthMm": 15.476,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5101,11 +5123,11 @@
       ]
     },
     {
-      "id": 67,
+      "id": 68,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 67,
-      "startNodeId": 46,
-      "endNodeId": 68,
+      "sourceCellId": 68,
+      "startNodeId": 47,
+      "endNodeId": 69,
       "lengthMm": 6.505,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5122,11 +5144,11 @@
       ]
     },
     {
-      "id": 68,
+      "id": 69,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 68,
-      "startNodeId": 46,
-      "endNodeId": 69,
+      "sourceCellId": 69,
+      "startNodeId": 47,
+      "endNodeId": 70,
       "lengthMm": 9.407,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -5147,11 +5169,11 @@
       ]
     },
     {
-      "id": 69,
+      "id": 70,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 69,
-      "startNodeId": 52,
-      "endNodeId": 70,
+      "sourceCellId": 70,
+      "startNodeId": 53,
+      "endNodeId": 71,
       "lengthMm": 20.744,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -5187,11 +5209,11 @@
       ]
     },
     {
-      "id": 70,
+      "id": 71,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 70,
-      "startNodeId": 52,
-      "endNodeId": 71,
+      "sourceCellId": 71,
+      "startNodeId": 53,
+      "endNodeId": 72,
       "lengthMm": 20.57,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -5227,11 +5249,11 @@
       ]
     },
     {
-      "id": 71,
+      "id": 72,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 71,
-      "startNodeId": 57,
-      "endNodeId": 72,
+      "sourceCellId": 72,
+      "startNodeId": 58,
+      "endNodeId": 73,
       "lengthMm": 41.291,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5295,11 +5317,11 @@
       ]
     },
     {
-      "id": 72,
+      "id": 73,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 72,
-      "startNodeId": 57,
-      "endNodeId": 73,
+      "sourceCellId": 73,
+      "startNodeId": 58,
+      "endNodeId": 74,
       "lengthMm": 23.883,
       "radiusMm": 3.102,
       "pointsLps": [
@@ -5339,11 +5361,11 @@
       ]
     },
     {
-      "id": 73,
+      "id": 74,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 73,
-      "startNodeId": 60,
-      "endNodeId": 74,
+      "sourceCellId": 74,
+      "startNodeId": 61,
+      "endNodeId": 75,
       "lengthMm": 20.958,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -5379,11 +5401,11 @@
       ]
     },
     {
-      "id": 74,
+      "id": 75,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 74,
-      "startNodeId": 60,
-      "endNodeId": 75,
+      "sourceCellId": 75,
+      "startNodeId": 61,
+      "endNodeId": 76,
       "lengthMm": 11.424,
       "radiusMm": 2.5,
       "pointsLps": [
@@ -5407,11 +5429,11 @@
       ]
     },
     {
-      "id": 75,
+      "id": 76,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 75,
-      "startNodeId": 61,
-      "endNodeId": 76,
+      "sourceCellId": 76,
+      "startNodeId": 62,
+      "endNodeId": 77,
       "lengthMm": 13.238,
       "radiusMm": 3.563,
       "pointsLps": [
@@ -5437,11 +5459,11 @@
       ]
     },
     {
-      "id": 76,
+      "id": 77,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 76,
-      "startNodeId": 61,
-      "endNodeId": 77,
+      "sourceCellId": 77,
+      "startNodeId": 62,
+      "endNodeId": 78,
       "lengthMm": 11.12,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -5464,11 +5486,11 @@
       ]
     },
     {
-      "id": 77,
+      "id": 78,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 77,
-      "startNodeId": 62,
-      "endNodeId": 78,
+      "sourceCellId": 78,
+      "startNodeId": 63,
+      "endNodeId": 79,
       "lengthMm": 31.133,
       "radiusMm": 3.078,
       "pointsLps": [
@@ -5518,11 +5540,11 @@
       ]
     },
     {
-      "id": 78,
+      "id": 79,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 78,
-      "startNodeId": 62,
-      "endNodeId": 79,
+      "sourceCellId": 79,
+      "startNodeId": 63,
+      "endNodeId": 80,
       "lengthMm": 25.393,
       "radiusMm": 7.279,
       "pointsLps": [
@@ -5564,11 +5586,11 @@
       ]
     },
     {
-      "id": 79,
+      "id": 80,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 79,
-      "startNodeId": 64,
-      "endNodeId": 80,
+      "sourceCellId": 80,
+      "startNodeId": 65,
+      "endNodeId": 81,
       "lengthMm": 14.615,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5596,11 +5618,11 @@
       ]
     },
     {
-      "id": 80,
+      "id": 81,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 80,
-      "startNodeId": 64,
-      "endNodeId": 81,
+      "sourceCellId": 81,
+      "startNodeId": 65,
+      "endNodeId": 82,
       "lengthMm": 17.735,
       "radiusMm": 2.83,
       "pointsLps": [
@@ -5632,11 +5654,11 @@
       ]
     },
     {
-      "id": 81,
+      "id": 82,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 81,
-      "startNodeId": 65,
-      "endNodeId": 82,
+      "sourceCellId": 82,
+      "startNodeId": 66,
+      "endNodeId": 83,
       "lengthMm": 30.826,
       "radiusMm": 6.822,
       "pointsLps": [
@@ -5686,11 +5708,11 @@
       ]
     },
     {
-      "id": 82,
+      "id": 83,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 82,
-      "startNodeId": 65,
-      "endNodeId": 83,
+      "sourceCellId": 83,
+      "startNodeId": 66,
+      "endNodeId": 84,
       "lengthMm": 64.757,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5785,11 +5807,11 @@
       ]
     },
     {
-      "id": 83,
+      "id": 84,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 83,
-      "startNodeId": 73,
-      "endNodeId": 84,
+      "sourceCellId": 84,
+      "startNodeId": 74,
+      "endNodeId": 85,
       "lengthMm": 7.667,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -5808,11 +5830,11 @@
       ]
     },
     {
-      "id": 84,
+      "id": 85,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 84,
-      "startNodeId": 73,
-      "endNodeId": 85,
+      "sourceCellId": 85,
+      "startNodeId": 74,
+      "endNodeId": 86,
       "lengthMm": 27.429,
       "radiusMm": 2.5,
       "pointsLps": [
@@ -5857,11 +5879,11 @@
       ]
     },
     {
-      "id": 85,
+      "id": 86,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 85,
-      "startNodeId": 74,
-      "endNodeId": 86,
+      "sourceCellId": 86,
+      "startNodeId": 75,
+      "endNodeId": 87,
       "lengthMm": 27.005,
       "radiusMm": 2.5,
       "pointsLps": [
@@ -5906,11 +5928,11 @@
       ]
     },
     {
-      "id": 86,
+      "id": 87,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 86,
-      "startNodeId": 74,
-      "endNodeId": 87,
+      "sourceCellId": 87,
+      "startNodeId": 75,
+      "endNodeId": 88,
       "lengthMm": 9.548,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -5931,11 +5953,11 @@
       ]
     },
     {
-      "id": 87,
+      "id": 88,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 87,
-      "startNodeId": 76,
-      "endNodeId": 88,
+      "sourceCellId": 88,
+      "startNodeId": 77,
+      "endNodeId": 89,
       "lengthMm": 21.272,
       "radiusMm": 2.363,
       "pointsLps": [
@@ -5971,11 +5993,11 @@
       ]
     },
     {
-      "id": 88,
+      "id": 89,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 88,
-      "startNodeId": 76,
-      "endNodeId": 89,
+      "sourceCellId": 89,
+      "startNodeId": 77,
+      "endNodeId": 90,
       "lengthMm": 12.025,
       "radiusMm": 3.321,
       "pointsLps": [
@@ -6000,11 +6022,11 @@
       ]
     },
     {
-      "id": 89,
+      "id": 90,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 89,
-      "startNodeId": 78,
-      "endNodeId": 90,
+      "sourceCellId": 90,
+      "startNodeId": 79,
+      "endNodeId": 91,
       "lengthMm": 29.667,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -6052,11 +6074,11 @@
       ]
     },
     {
-      "id": 90,
+      "id": 91,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 90,
-      "startNodeId": 78,
-      "endNodeId": 91,
+      "sourceCellId": 91,
+      "startNodeId": 79,
+      "endNodeId": 92,
       "lengthMm": 14.832,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -6084,11 +6106,11 @@
       ]
     },
     {
-      "id": 91,
+      "id": 92,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 91,
-      "startNodeId": 79,
-      "endNodeId": 92,
+      "sourceCellId": 92,
+      "startNodeId": 80,
+      "endNodeId": 93,
       "lengthMm": 57.543,
       "radiusMm": 3.078,
       "pointsLps": [
@@ -6173,11 +6195,11 @@
       ]
     },
     {
-      "id": 92,
+      "id": 93,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 92,
-      "startNodeId": 79,
-      "endNodeId": 93,
+      "sourceCellId": 93,
+      "startNodeId": 80,
+      "endNodeId": 94,
       "lengthMm": 21.614,
       "radiusMm": 6.47,
       "pointsLps": [
@@ -6214,11 +6236,11 @@
       ]
     },
     {
-      "id": 93,
+      "id": 94,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 93,
-      "startNodeId": 81,
-      "endNodeId": 94,
+      "sourceCellId": 94,
+      "startNodeId": 82,
+      "endNodeId": 95,
       "lengthMm": 9.003,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -6239,11 +6261,11 @@
       ]
     },
     {
-      "id": 94,
+      "id": 95,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 94,
-      "startNodeId": 81,
-      "endNodeId": 95,
+      "sourceCellId": 95,
+      "startNodeId": 82,
+      "endNodeId": 96,
       "lengthMm": 8.223,
       "radiusMm": 2.83,
       "pointsLps": [
@@ -6262,11 +6284,11 @@
       ]
     },
     {
-      "id": 95,
+      "id": 96,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 95,
-      "startNodeId": 82,
-      "endNodeId": 96,
+      "sourceCellId": 96,
+      "startNodeId": 83,
+      "endNodeId": 97,
       "lengthMm": 18.932,
       "radiusMm": 6.47,
       "pointsLps": [
@@ -6300,11 +6322,11 @@
       ]
     },
     {
-      "id": 96,
+      "id": 97,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 96,
-      "startNodeId": 82,
-      "endNodeId": 97,
+      "sourceCellId": 97,
+      "startNodeId": 83,
+      "endNodeId": 98,
       "lengthMm": 26.625,
       "radiusMm": 2.83,
       "pointsLps": [
@@ -6348,11 +6370,11 @@
       ]
     },
     {
-      "id": 97,
+      "id": 98,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 97,
-      "startNodeId": 89,
-      "endNodeId": 98,
+      "sourceCellId": 98,
+      "startNodeId": 90,
+      "endNodeId": 99,
       "lengthMm": 9.073,
       "radiusMm": 2.363,
       "pointsLps": [
@@ -6373,11 +6395,11 @@
       ]
     },
     {
-      "id": 98,
+      "id": 99,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 98,
-      "startNodeId": 89,
-      "endNodeId": 99,
+      "sourceCellId": 99,
+      "startNodeId": 90,
+      "endNodeId": 100,
       "lengthMm": 8.394,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -6397,11 +6419,11 @@
       ]
     },
     {
-      "id": 99,
+      "id": 100,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 99,
-      "startNodeId": 93,
-      "endNodeId": 100,
+      "sourceCellId": 100,
+      "startNodeId": 94,
+      "endNodeId": 101,
       "lengthMm": 16.907,
       "radiusMm": 5.678,
       "pointsLps": [
@@ -6432,11 +6454,11 @@
       ]
     },
     {
-      "id": 100,
+      "id": 101,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 100,
-      "startNodeId": 93,
-      "endNodeId": 101,
+      "sourceCellId": 101,
+      "startNodeId": 94,
+      "endNodeId": 102,
       "lengthMm": 14.138,
       "radiusMm": 3.333,
       "pointsLps": [
@@ -6463,11 +6485,11 @@
       ]
     },
     {
-      "id": 101,
+      "id": 102,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 101,
-      "startNodeId": 95,
-      "endNodeId": 102,
+      "sourceCellId": 102,
+      "startNodeId": 96,
+      "endNodeId": 103,
       "lengthMm": 12.494,
       "radiusMm": 2.671,
       "pointsLps": [
@@ -6492,11 +6514,11 @@
       ]
     },
     {
-      "id": 102,
+      "id": 103,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 102,
-      "startNodeId": 95,
-      "endNodeId": 103,
+      "sourceCellId": 103,
+      "startNodeId": 96,
+      "endNodeId": 104,
       "lengthMm": 7.791,
       "radiusMm": 1.789,
       "pointsLps": [
@@ -6515,11 +6537,11 @@
       ]
     },
     {
-      "id": 103,
+      "id": 104,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 103,
-      "startNodeId": 96,
-      "endNodeId": 104,
+      "sourceCellId": 104,
+      "startNodeId": 97,
+      "endNodeId": 105,
       "lengthMm": 54.336,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -6600,11 +6622,11 @@
       ]
     },
     {
-      "id": 104,
+      "id": 105,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 104,
-      "startNodeId": 96,
-      "endNodeId": 105,
+      "sourceCellId": 105,
+      "startNodeId": 97,
+      "endNodeId": 106,
       "lengthMm": 20.818,
       "radiusMm": 5.678,
       "pointsLps": [
@@ -6640,11 +6662,11 @@
       ]
     },
     {
-      "id": 105,
+      "id": 106,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 105,
-      "startNodeId": 100,
-      "endNodeId": 106,
+      "sourceCellId": 106,
+      "startNodeId": 101,
+      "endNodeId": 107,
       "lengthMm": 16.636,
       "radiusMm": 3.102,
       "pointsLps": [
@@ -6675,11 +6697,11 @@
       ]
     },
     {
-      "id": 106,
+      "id": 107,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 106,
-      "startNodeId": 100,
-      "endNodeId": 107,
+      "sourceCellId": 107,
+      "startNodeId": 101,
+      "endNodeId": 108,
       "lengthMm": 23.477,
       "radiusMm": 5.23,
       "pointsLps": [
@@ -6719,11 +6741,11 @@
       ]
     },
     {
-      "id": 107,
+      "id": 108,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 107,
-      "startNodeId": 101,
-      "endNodeId": 108,
+      "sourceCellId": 108,
+      "startNodeId": 102,
+      "endNodeId": 109,
       "lengthMm": 11.563,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -6747,11 +6769,11 @@
       ]
     },
     {
-      "id": 108,
+      "id": 109,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 108,
-      "startNodeId": 101,
-      "endNodeId": 109,
+      "sourceCellId": 109,
+      "startNodeId": 102,
+      "endNodeId": 110,
       "lengthMm": 17.744,
       "radiusMm": 1.789,
       "pointsLps": [
@@ -6783,11 +6805,11 @@
       ]
     },
     {
-      "id": 109,
+      "id": 110,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 109,
-      "startNodeId": 105,
-      "endNodeId": 110,
+      "sourceCellId": 110,
+      "startNodeId": 106,
+      "endNodeId": 111,
       "lengthMm": 23.748,
       "radiusMm": 5.216,
       "pointsLps": [
@@ -6827,11 +6849,11 @@
       ]
     },
     {
-      "id": 110,
+      "id": 111,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 110,
-      "startNodeId": 105,
-      "endNodeId": 111,
+      "sourceCellId": 111,
+      "startNodeId": 106,
+      "endNodeId": 112,
       "lengthMm": 18.085,
       "radiusMm": 3.102,
       "pointsLps": [
@@ -6864,11 +6886,11 @@
       ]
     },
     {
-      "id": 111,
+      "id": 112,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 111,
-      "startNodeId": 106,
-      "endNodeId": 112,
+      "sourceCellId": 112,
+      "startNodeId": 107,
+      "endNodeId": 113,
       "lengthMm": 37.287,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -6926,11 +6948,11 @@
       ]
     },
     {
-      "id": 112,
+      "id": 113,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 112,
-      "startNodeId": 106,
-      "endNodeId": 113,
+      "sourceCellId": 113,
+      "startNodeId": 107,
+      "endNodeId": 114,
       "lengthMm": 13.172,
       "radiusMm": 2.5,
       "pointsLps": [
@@ -6956,11 +6978,11 @@
       ]
     },
     {
-      "id": 113,
+      "id": 114,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 113,
-      "startNodeId": 107,
-      "endNodeId": 114,
+      "sourceCellId": 114,
+      "startNodeId": 108,
+      "endNodeId": 115,
       "lengthMm": 17.0,
       "radiusMm": 5.223,
       "pointsLps": [
@@ -6991,11 +7013,11 @@
       ]
     },
     {
-      "id": 114,
+      "id": 115,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 114,
-      "startNodeId": 107,
-      "endNodeId": 115,
+      "sourceCellId": 115,
+      "startNodeId": 108,
+      "endNodeId": 116,
       "lengthMm": 33.893,
       "radiusMm": 2.804,
       "pointsLps": [
@@ -7049,11 +7071,11 @@
       ]
     },
     {
-      "id": 115,
+      "id": 116,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 115,
-      "startNodeId": 110,
-      "endNodeId": 116,
+      "sourceCellId": 116,
+      "startNodeId": 111,
+      "endNodeId": 117,
       "lengthMm": 8.335,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7073,11 +7095,11 @@
       ]
     },
     {
-      "id": 116,
+      "id": 117,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 116,
-      "startNodeId": 110,
-      "endNodeId": 117,
+      "sourceCellId": 117,
+      "startNodeId": 111,
+      "endNodeId": 118,
       "lengthMm": 7.715,
       "radiusMm": 4.745,
       "pointsLps": [
@@ -7096,11 +7118,11 @@
       ]
     },
     {
-      "id": 117,
+      "id": 118,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 117,
-      "startNodeId": 111,
-      "endNodeId": 118,
+      "sourceCellId": 118,
+      "startNodeId": 112,
+      "endNodeId": 119,
       "lengthMm": 19.06,
       "radiusMm": 1.782,
       "pointsLps": [
@@ -7134,11 +7156,11 @@
       ]
     },
     {
-      "id": 118,
+      "id": 119,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 118,
-      "startNodeId": 111,
-      "endNodeId": 119,
+      "sourceCellId": 119,
+      "startNodeId": 112,
+      "endNodeId": 120,
       "lengthMm": 43.187,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -7204,11 +7226,11 @@
       ]
     },
     {
-      "id": 119,
+      "id": 120,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 119,
-      "startNodeId": 114,
-      "endNodeId": 120,
+      "sourceCellId": 120,
+      "startNodeId": 115,
+      "endNodeId": 121,
       "lengthMm": 43.583,
       "radiusMm": 2.363,
       "pointsLps": [
@@ -7275,11 +7297,11 @@
       ]
     },
     {
-      "id": 120,
+      "id": 121,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 120,
-      "startNodeId": 114,
-      "endNodeId": 121,
+      "sourceCellId": 121,
+      "startNodeId": 115,
+      "endNodeId": 122,
       "lengthMm": 26.469,
       "radiusMm": 4.205,
       "pointsLps": [
@@ -7323,11 +7345,11 @@
       ]
     },
     {
-      "id": 121,
+      "id": 122,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 121,
-      "startNodeId": 117,
-      "endNodeId": 122,
+      "sourceCellId": 122,
+      "startNodeId": 118,
+      "endNodeId": 123,
       "lengthMm": 6.94,
       "radiusMm": 4.912,
       "pointsLps": [
@@ -7345,11 +7367,11 @@
       ]
     },
     {
-      "id": 122,
+      "id": 123,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 122,
-      "startNodeId": 117,
-      "endNodeId": 123,
+      "sourceCellId": 123,
+      "startNodeId": 118,
+      "endNodeId": 124,
       "lengthMm": 16.919,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -7380,11 +7402,11 @@
       ]
     },
     {
-      "id": 123,
+      "id": 124,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 123,
-      "startNodeId": 121,
-      "endNodeId": 124,
+      "sourceCellId": 124,
+      "startNodeId": 122,
+      "endNodeId": 125,
       "lengthMm": 27.794,
       "radiusMm": 2.539,
       "pointsLps": [
@@ -7430,11 +7452,11 @@
       ]
     },
     {
-      "id": 124,
+      "id": 125,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 124,
-      "startNodeId": 121,
-      "endNodeId": 125,
+      "sourceCellId": 125,
+      "startNodeId": 122,
+      "endNodeId": 126,
       "lengthMm": 19.593,
       "radiusMm": 3.591,
       "pointsLps": [
@@ -7469,11 +7491,11 @@
       ]
     },
     {
-      "id": 125,
+      "id": 126,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 125,
-      "startNodeId": 122,
-      "endNodeId": 126,
+      "sourceCellId": 126,
+      "startNodeId": 123,
+      "endNodeId": 127,
       "lengthMm": 49.997,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7548,11 +7570,11 @@
       ]
     },
     {
-      "id": 126,
+      "id": 127,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 126,
-      "startNodeId": 122,
-      "endNodeId": 127,
+      "sourceCellId": 127,
+      "startNodeId": 123,
+      "endNodeId": 128,
       "lengthMm": 17.492,
       "radiusMm": 4.008,
       "pointsLps": [
@@ -7584,11 +7606,11 @@
       ]
     },
     {
-      "id": 127,
+      "id": 128,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 127,
-      "startNodeId": 125,
-      "endNodeId": 128,
+      "sourceCellId": 128,
+      "startNodeId": 126,
+      "endNodeId": 129,
       "lengthMm": 15.879,
       "radiusMm": 3.102,
       "pointsLps": [
@@ -7618,11 +7640,11 @@
       ]
     },
     {
-      "id": 128,
+      "id": 129,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 128,
-      "startNodeId": 125,
-      "endNodeId": 129,
+      "sourceCellId": 129,
+      "startNodeId": 126,
+      "endNodeId": 130,
       "lengthMm": 12.115,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7647,11 +7669,11 @@
       ]
     },
     {
-      "id": 129,
+      "id": 130,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 129,
-      "startNodeId": 127,
-      "endNodeId": 130,
+      "sourceCellId": 130,
+      "startNodeId": 128,
+      "endNodeId": 131,
       "lengthMm": 12.649,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7676,11 +7698,11 @@
       ]
     },
     {
-      "id": 130,
+      "id": 131,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 130,
-      "startNodeId": 127,
-      "endNodeId": 131,
+      "sourceCellId": 131,
+      "startNodeId": 128,
+      "endNodeId": 132,
       "lengthMm": 11.753,
       "radiusMm": 3.802,
       "pointsLps": [
@@ -7704,11 +7726,11 @@
       ]
     },
     {
-      "id": 131,
+      "id": 132,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 131,
-      "startNodeId": 128,
-      "endNodeId": 132,
+      "sourceCellId": 132,
+      "startNodeId": 129,
+      "endNodeId": 133,
       "lengthMm": 28.419,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -7754,11 +7776,11 @@
       ]
     },
     {
-      "id": 132,
+      "id": 133,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 132,
-      "startNodeId": 128,
-      "endNodeId": 133,
+      "sourceCellId": 133,
+      "startNodeId": 129,
+      "endNodeId": 134,
       "lengthMm": 19.451,
       "radiusMm": 2.363,
       "pointsLps": [
@@ -7792,11 +7814,11 @@
       ]
     },
     {
-      "id": 133,
+      "id": 134,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 133,
-      "startNodeId": 131,
-      "endNodeId": 134,
+      "sourceCellId": 134,
+      "startNodeId": 132,
+      "endNodeId": 135,
       "lengthMm": 28.492,
       "radiusMm": 2.685,
       "pointsLps": [
@@ -7843,11 +7865,11 @@
       ]
     },
     {
-      "id": 134,
+      "id": 135,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 134,
-      "startNodeId": 131,
-      "endNodeId": 135,
+      "sourceCellId": 135,
+      "startNodeId": 132,
+      "endNodeId": 136,
       "lengthMm": 15.757,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7877,11 +7899,11 @@
       ]
     },
     {
-      "id": 135,
+      "id": 136,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 135,
-      "startNodeId": 133,
-      "endNodeId": 136,
+      "sourceCellId": 136,
+      "startNodeId": 134,
+      "endNodeId": 137,
       "lengthMm": 10.527,
       "radiusMm": 1.795,
       "pointsLps": [
@@ -7904,11 +7926,11 @@
       ]
     },
     {
-      "id": 136,
+      "id": 137,
       "sourceCurve": "dolphin-airway-skeleton",
-      "sourceCellId": 136,
-      "startNodeId": 133,
-      "endNodeId": 137,
+      "sourceCellId": 137,
+      "startNodeId": 134,
+      "endNodeId": 138,
       "lengthMm": 7.544,
       "radiusMm": 2.188,
       "pointsLps": [
@@ -7927,11 +7949,11 @@
       ]
     },
     {
-      "id": 137,
+      "id": 138,
       "sourceCurve": "dolphin-fornix-medial-axis",
-      "sourceCellId": 137,
+      "sourceCellId": 138,
       "startNodeId": 2,
-      "endNodeId": 138,
+      "endNodeId": 139,
       "lengthMm": 73.089,
       "radiusMm": 6.412,
       "pointsLps": [
@@ -8037,11 +8059,11 @@
       ]
     },
     {
-      "id": 138,
+      "id": 139,
       "sourceCurve": "dolphin-fornix-medial-axis",
-      "sourceCellId": 138,
+      "sourceCellId": 139,
       "startNodeId": 2,
-      "endNodeId": 139,
+      "endNodeId": 140,
       "lengthMm": 78.206,
       "radiusMm": 7.617,
       "pointsLps": [
