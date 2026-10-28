@@ -707,7 +707,7 @@ export const section: BronchSectionDefinition = {
         stem: 'What do you do?',
         choices: choices(
           [
-            'No more lidocaine, and get help now: this is toxicity',
+            'No more lidocaine, oxygen on, and send for the toxicity kit',
             'Pause, and settle him with midazolam',
             'Give flumazenil for the confusion',
             'Carry on: his breathing and saturation are normal',
@@ -736,7 +736,7 @@ export const section: BronchSectionDefinition = {
       item: {
         id: 'mc-sedation-depth',
         itemType: 'mechanism-interpretation',
-        stem: 'What does the team do next?',
+        stem: 'What do you do next?',
         choices: choices(
           [
             'Give no more sedation, open her airway and watch her breathing',
