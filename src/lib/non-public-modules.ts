@@ -139,7 +139,7 @@ export const nonPublicModules: NonPublicModule[] = [
     title: 'Dolphin Airway — Synchronized Bronchoscopy',
     group: 'Bronchoscopy',
     summary:
-      'Virtual bronchoscopy of a dolphin from the bony nasal passages through the goosebeak larynx to the principal bronchi, with synchronized 3D and CT views.',
+      'Virtual bronchoscopy of a dolphin from the bony nasal passages through the laryngeal spout to the principal bronchi, with synchronized 3D and CT views.',
   },
   {
     path: '/learn/anatomy/branch-tracing',

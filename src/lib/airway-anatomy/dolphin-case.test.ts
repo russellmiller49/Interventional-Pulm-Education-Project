@@ -64,13 +64,26 @@ describe('dolphin airway case', () => {
     let edgeId = root.childEdgeIds[0]
     while (nodes.get(edges.get(edgeId)!.endNodeId)!.id !== graph.carinaNodeId) {
       route.push(abbr(edgeId)!)
-      const next = childrenOf(edgeId).find((id) => !['RNP', 'TB'].includes(abbr(id)!))
+      const next = childrenOf(edgeId).find((id) => !['RNP', 'NPF', 'TB'].includes(abbr(id)!))
       edgeId = next!
     }
     route.push(abbr(edgeId)!)
-    expect([...new Set(route)]).toEqual(['LNP', 'NPX', 'LX', 'TR'])
+    expect([...new Set(route)]).toEqual(['LNP', 'NPX', 'LS', 'TR'])
     expect(childrenOf(firstEdge('LNP').id).map(abbr).sort()).toEqual(['NPX', 'RNP'])
     expect(nodes.get(graph.carinaNodeId)!.childEdgeIds.map(abbr).sort()).toEqual(['LPB', 'RPB'])
+  })
+
+  it('offers the glottis between the left and right nasopharyngeal fornix', () => {
+    const pharynx = firstEdge('NPX')
+    const choices = childrenOf(pharynx.id)
+    expect(choices.map(abbr).sort()).toEqual(['LS', 'NPF', 'NPF'])
+    const glottisX = edges.get(firstEdge('LS').id)!.pointsLps[0][0]
+    const sides = choices.filter((id) => abbr(id) === 'NPF').map((id) => meanX(id) - glottisX)
+    expect(Math.min(...sides)).toBeLessThan(0)
+    expect(Math.max(...sides)).toBeGreaterThan(0)
+    // Arriving at the fork, the glottis is in the field of view.
+    const arrival = frames.at(pharynx.id, pharynx.lengthMm)
+    expect(projectOptical(anchor(firstEdge('LS').id), arrival, 4 / 3)!.visible).toBe(true)
   })
 
   it('puts the tracheal bronchus and the principal bronchi on their own sides', () => {
@@ -84,21 +97,21 @@ describe('dolphin airway case', () => {
     expect(trachea.some((edge) => childrenOf(edge.id).map(abbr).includes('TB'))).toBe(true)
   })
 
-  it('starts rostral-up and reads the trachea ventral-up with the right bronchus on the right', () => {
-    expect(frames.at(0, manifest.interaction.initialDistanceMm ?? 0).up[2]).toBeGreaterThan(0.9)
-    // The trachea runs obliquely, so compare with ventral seen across the lumen.
+  it('reads as for an animal in sternal recumbency: dorsal up, right bronchus on the left', () => {
+    expect(frames.at(0, manifest.interaction.initialDistanceMm ?? 0).up[2]).toBeLessThan(-0.9)
+    // The trachea runs obliquely, so compare with dorsal seen across the lumen.
     const trachea = firstEdge('TR')
     const view = frames.at(trachea.id, trachea.lengthMm / 2)
-    const ventral: Vec3 = [0, -1, 0]
-    const across = unit(minus(ventral, times(view.forward, scalar(ventral, view.forward))))
+    const dorsal: Vec3 = [0, 1, 0]
+    const across = unit(minus(dorsal, times(view.forward, scalar(dorsal, view.forward))))
     expect(scalar(view.up, across)).toBeGreaterThan(0.9)
     const carinaView = frames.at(nodes.get(graph.carinaNodeId)!.parentEdgeId!, 0)
     const right = projectOptical(anchor(firstEdge('RPB').id), carinaView, 4 / 3)!
     const left = projectOptical(anchor(firstEdge('LPB').id), carinaView, 4 / 3)!
-    expect(right.x).toBeGreaterThan(left.x)
+    expect(right.x).toBeLessThan(left.x)
   })
 
-  it('drives from the nasal passage through the goosebeak into the right principal bronchus', () => {
+  it('drives from the nasal passage through the laryngeal spout into the right principal bronchus', () => {
     const collider = createLumenCollider(lumenGeometry())
     let state = createInitialScopeState(
       graph,
@@ -106,7 +119,7 @@ describe('dolphin airway case', () => {
       manifest.interaction.initialDistanceMm,
     )
     const visited = new Set<string>()
-    const preferred = ['NPX', 'LX', 'TR', 'RPB']
+    const preferred = ['NPX', 'LS', 'TR', 'RPB']
     for (let step = 0; step < 900 && abbr(state.edgeId) !== 'RPB'; step++) {
       const pose = poseWithTransport(
         buildScopePoseSnapshot({ state, graph, labels, lookAheadMm: 14 }),
@@ -133,6 +146,6 @@ describe('dolphin airway case', () => {
       state = next
     }
     expect(abbr(state.edgeId)).toBe('RPB')
-    expect([...visited]).toEqual(['LNP', 'NPX', 'LX', 'TR', 'RPB'])
+    expect([...visited]).toEqual(['LNP', 'NPX', 'LS', 'TR', 'RPB'])
   })
 })
