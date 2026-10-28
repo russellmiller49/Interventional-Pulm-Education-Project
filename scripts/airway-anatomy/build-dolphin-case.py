@@ -12,11 +12,11 @@ off the right side of the trachea, as expected in delphinids).
 
 The segmentation stops at the cranial trachea. The upper airway is grown here from the
 CT (air below -400 HU that connects to the segmentation) in two parts that meet only at
-the laryngeal aditus, the tip of the arytenoepiglottic tube (goosebeak):
-  - the laryngeal lumen through the goosebeak, from the unsmoothed CT. The larynx is
+the glottis at the tip of the laryngeal spout (arytenoepiglottic tube):
+  - the laryngeal lumen through the laryngeal spout, from the unsmoothed CT. The larynx is
     closed in this scan, so the lumen is a 1-2 voxel slit; it is widened by one voxel
     (about 1.3 mm a side) so the scope can follow it, never closer than 2.5 voxels to the
-    nasopharynx around the goosebeak, so its wall stays intact;
+    nasopharynx around the spout, so its wall stays intact;
   - the nasopharynx and both bony nasal passages, from a lightly smoothed CT, so noise in
     the thin bony walls does not punch holes through them.
 The paired pterygoid sinuses stay separate at this threshold. The soft nasal passage
@@ -25,9 +25,15 @@ closed), so the scope starts at the dorsal end of the left bony nasal passage.
 
 Centerlines are shortest paths on the skeleton of the airway mask, rooted at that
 start point. Bronchial end points are kept when their branch reaches clearly beyond
-the parent lumen; in the upper airway only the right bony nasal passage is a branch,
-so the blind spaces beside the goosebeak and the pouch at the top of the trachea are
-in the lumen surface but not in the navigation graph.
+the parent lumen. The nasopharynx is then re-traced down its middle to the one point
+that sees straight into the glottis, so the laryngeal spout comes into view with the
+nasopharyngeal fornix on either side; the fornix on each side is a short blind branch
+there, and the route enters the glottis in a straight line (route_through_spout).
+The pouch at the top of the trachea is in the lumen surface but not in the graph.
+
+The view is oriented for an animal in sternal recumbency (Tsang et al., J Wildl Dis
+2002;38:224-7): caudal up in the bony nasal passage, which becomes dorsal up in the
+trachea, with the right principal bronchus on the screen left.
 
 Usage: python3 scripts/airway-anatomy/build-dolphin-case.py [--skip-ct]
 """
@@ -69,7 +75,7 @@ CT_PREVIEW_NAME = "dolphin_ct_preview_i16.raw"
 AIR_THRESHOLD_HU = -400
 UPPER_AIRWAY_MIN_Z = 470
 NASAL_SMOOTHING_SIGMA_VOXELS = 1.0
-# The nasal side is taken from the nasopharynx at the goosebeak up. Above NASAL_CROP_MIN_Z
+# The nasal side is taken from the nasopharynx at the spout up. Above NASAL_CROP_MIN_Z
 # it is kept to the two bony nasal passages; small lateral pockets there are not airway.
 NASAL_MIN_Z = 505
 NASAL_CROP_MIN_Z = 590
@@ -79,9 +85,9 @@ NASAL_CROP_I = (232, 297)
 ROOT_SEED_IJK = (251, 258, 611)
 # The matching point in the right bony nasal passage.
 RIGHT_NARIS_SEED_IJK = (281, 258, 606)
-# Tip of the goosebeak: the laryngeal opening (aditus) into the nasopharynx.
+# Tip of the laryngeal spout: the glottis, opening into the nasopharynx.
 ADITUS_SEED_IJK = (249, 338, 549)
-# Inside the laryngeal slit, and inside the nasopharynx just above the goosebeak.
+# Inside the laryngeal slit, and inside the nasopharynx just above the spout.
 LARYNGEAL_SLIT_SEED_IJK = (249, 339, 540)
 NASOPHARYNX_SEED_IJK = (253, 331, 567)
 ADITUS_RADIUS_VOXELS = 10
@@ -97,7 +103,8 @@ LABELS = {
     "LNP": "Left bony nasal passage",
     "RNP": "Right bony nasal passage",
     "NPX": "Nasopharynx",
-    "LX": "Larynx (goosebeak)",
+    "LS": "Laryngeal spout",
+    "NPF": "Nasopharyngeal fornix",
     "TR": "Trachea",
     "TB": "Right tracheal bronchus",
     "RPB": "Right principal bronchus",
@@ -126,10 +133,10 @@ def main() -> None:
 
     mask = build_airway_mask(ct, seg > 0)
     graph, labels, review = build_centerline_graph(mask, geometry)
+    review["spout"] = route_through_spout(graph, labels, mask, geometry)
     mesh, mesh_review = build_lumen_mesh(mask, geometry)
     repairs = validate_centerlines(graph, mesh)
-    for polyline in labels["polylines"]:
-        polyline["anchorLps"] = polyline["pointsLps"][len(polyline["pointsLps"]) // 2]
+    labels["polylines"] = label_polylines(graph, labels["edgeLabels"])
     review.update(mesh_review)
     review["centerlineRepairs"] = repairs
 
@@ -189,7 +196,7 @@ def build_airway_mask(ct: np.ndarray, segmentation: np.ndarray) -> np.ndarray:
     grown = np.zeros(ct.shape, dtype=bool)
     grown[:, :, z0:] = np.isin(components, seeds)
 
-    # Below the aditus the laryngeal lumen and the nasopharynx around the goosebeak are
+    # Below the aditus the laryngeal lumen and the nasopharynx around the spout are
     # separate air spaces; the laryngeal one continues into the segmented trachea.
     below_aditus = grown.copy()
     below_aditus[:, :, ADITUS_SEED_IJK[2] - 2 :] = False
@@ -208,7 +215,7 @@ def build_airway_mask(ct: np.ndarray, segmentation: np.ndarray) -> np.ndarray:
     nasal[lateral, :, NASAL_CROP_MIN_Z:] = False
 
     # The aditus: the unsmoothed air channel that climbs from the end of the slit, over the
-    # goosebeak tip, into the smoothed nasopharynx.
+    # spout tip, into the smoothed nasopharynx.
     tip = np.argwhere(larynx)
     tip = tip[tip[:, 2] == tip[:, 2].max()]
     center = tip.mean(0)
@@ -241,8 +248,8 @@ def build_airway_mask(ct: np.ndarray, segmentation: np.ndarray) -> np.ndarray:
     mask = ndi.binary_fill_holes(components == sizes.argmax())
     if not nasal[mask].any():
         raise ValueError("The nasal airway is not connected to the larynx")
-    # The goosebeak wall must stay closed: below the aditus, the laryngeal lumen and the
-    # nasopharynx around the goosebeak may not touch.
+    # The spout wall must stay closed: below the aditus, the laryngeal lumen and the
+    # nasopharynx around the spout may not touch.
     below = mask.copy()
     below[:, :, ADITUS_SEED_IJK[2] - 3 :] = False
     components, _ = ndi.label(below, structure=face)
@@ -544,7 +551,7 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
         elif position <= aditus_index:
             edge_labels[edge_id] = ("NPX", LABELS["NPX"])
         elif position <= larynx_end_index:
-            edge_labels[edge_id] = ("LX", LABELS["LX"])
+            edge_labels[edge_id] = ("LS", LABELS["LS"])
         else:
             edge_labels[edge_id] = ("TR", LABELS["TR"])
     right_passage = next(e for e in first_fork["childEdgeIds"] if e != central[1])
@@ -601,24 +608,253 @@ def label_graph(graph: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
             str(edge_id): {"abbreviatedLabel": abbr, "fullLabel": full, "sourceCellIds": [edge_id]}
             for edge_id, (abbr, full) in sorted(edge_labels.items())
         },
-        "polylines": [
-            {
-                "id": f"centerline-{edge_id}",
-                "sourceCellId": edge_id,
-                "sourceCurve": "dolphin-airway-skeleton",
-                "abbreviatedLabel": abbr,
-                "fullLabel": full,
-                "pointsLps": edges[edge_id]["pointsLps"],
-                "anchorLps": edges[edge_id]["pointsLps"][len(edges[edge_id]["pointsLps"]) // 2],
-                "matchedEdgeId": edge_id,
-                "matchedDistanceMm": 0,
-            }
-            for edge_id, (abbr, full) in sorted(edge_labels.items())
-        ],
     }
     review["carinaNodeId"] = carina["id"]
     review["trachealBronchusEdgeId"] = tracheal_bronchus
     return labels, review
+
+
+def label_polylines(graph: dict[str, Any], edge_labels: dict[str, Any]) -> list[dict[str, Any]]:
+    polylines = []
+    for edge in graph["edges"]:
+        info = edge_labels[str(edge["id"])]
+        points = edge["pointsLps"]
+        polylines.append(
+            {
+                "id": f"centerline-{edge['id']}",
+                "sourceCellId": edge["id"],
+                "sourceCurve": edge["sourceCurve"],
+                "abbreviatedLabel": info["abbreviatedLabel"],
+                "fullLabel": info["fullLabel"],
+                "pointsLps": points,
+                "anchorLps": points[len(points) // 2],
+                "matchedEdgeId": edge["id"],
+                "matchedDistanceMm": 0,
+            }
+        )
+    return polylines
+
+
+def route_through_spout(
+    graph: dict[str, Any], labels: dict[str, Any], mask: np.ndarray, geometry: VolumeGeometry
+) -> dict[str, Any]:
+    """Bring the scope down the middle of the nasopharynx to a point above the laryngeal spout,
+    where the spout is seen with the nasopharyngeal fornix on either side, then into the glottis
+    along the spout's own axis. The skeleton path instead hugs the dorsal wall and drops into the
+    glottis side-on. Each side of the fornix becomes a short blind branch, so the glottis has to
+    be chosen between them, as at bronchoscopy."""
+    nodes = {n["id"]: n for n in graph["nodes"]}
+    edges = {e["id"]: e for e in graph["edges"]}
+    abbr = {int(k): v["abbreviatedLabel"] for k, v in labels["edgeLabels"].items()}
+    pharynx = next(e for e in graph["edges"] if abbr[e["id"]] == "NPX")
+    spout_node = nodes[pharynx["endNodeId"]]
+    (spout_id,) = spout_node["childEdgeIds"]
+    spout = edges[spout_id]
+    glottis = np.asarray(spout["pointsLps"][0])
+
+    def to_ijk(point: Any) -> np.ndarray:
+        return np.round((np.asarray(point) - geometry.origin) / geometry.steps).astype(int)
+
+    corners = np.array([to_ijk(p) for p in pharynx["pointsLps"] + spout["pointsLps"][:80]])
+    lo = np.maximum(corners.min(0) - 30, 0)
+    hi = np.minimum(corners.max(0) + 31, mask.shape)
+    region = mask[lo[0] : hi[0], lo[1] : hi[1], lo[2] : hi[2]]
+    clearance = ndi.distance_transform_edt(region, sampling=geometry.spacing)
+    g = to_ijk(glottis) - lo
+    # The laryngeal lumen inside the spout, below the glottis: the fornix paths stay out of it.
+    tube = np.zeros(region.shape, dtype=bool)
+    for point in spout["pointsLps"]:
+        q = to_ijk(point) - lo
+        if (q >= 0).all() and (q < region.shape).all():
+            tube[tuple(q)] = True
+    tube = ndi.binary_dilation(tube, iterations=3) & region
+    tube[:, :, g[2] :] = False
+    open_air = region & ~tube
+
+    voxels = np.argwhere(open_air)
+    reach = np.linalg.norm((voxels - g) * geometry.spacing, axis=1)
+    approach = glottis_vantage(open_air, clearance, voxels, reach, g, spout, glottis, geometry, lo)
+    fork = to_ijk(pharynx["pointsLps"][0]) - lo
+    medial = centered_path(open_air, clearance, fork, approach, geometry.spacing)
+    medial_lps = geometry.lps(medial + lo)
+    medial_lps[0] = pharynx["pointsLps"][0]
+    medial_lps = smooth_and_resample(medial_lps)
+    medial_lps = arrive_facing(medial_lps, glottis, open_air, clearance, geometry, lo)
+    pharynx["pointsLps"] = np.round(medial_lps, 4).tolist()
+    pharynx["sourceCurve"] = "dolphin-nasopharynx-medial-axis"
+    pharynx["radiusMm"] = round(float(np.median(clearance[tuple(medial.T)])), 3)
+    approach_lps = np.asarray(pharynx["pointsLps"][-1])
+
+    # Into the glottis in a straight line: the vantage point sees it.
+    span = float(np.linalg.norm(glottis - approach_lps))
+    curve = approach_lps + np.linspace(0, 1, max(3, int(span / CENTERLINE_SPACING_MM) + 1))[:, None] * (
+        glottis - approach_lps
+    )
+    spout["pointsLps"] = np.round(smooth_and_resample(curve), 4).tolist() + spout["pointsLps"][1:]
+    spout["sourceCurve"] = "dolphin-glottis-entry+skeleton"
+    spout_node["lps"] = spout["pointsLps"][0]
+    spout_node["kind"] = "bifurcation"
+
+    # The fornix on each side: the deepest point of the open air beside the spout.
+    components, _ = ndi.label(open_air, structure=ndi.generate_binary_structure(3, 1))
+    connected = components == components[tuple(approach)]
+    fornix_ids = []
+    for side, on_side in (("left", voxels[:, 0] < g[0]), ("right", voxels[:, 0] > g[0])):
+        candidates = voxels[on_side & (voxels[:, 2] < g[2] - 3) & (reach < 45)]
+        candidates = candidates[connected[tuple(candidates.T)] & (clearance[tuple(candidates.T)] >= 1.5)]
+        if not len(candidates):
+            raise ValueError(f"No {side} nasopharyngeal fornix beside the spout")
+        end = candidates[np.argmin(candidates[:, 2])]
+        path = centered_path(open_air, clearance, approach, end, geometry.spacing)
+        points = geometry.lps(path + lo)
+        points[0] = approach_lps
+        points = smooth_and_resample(points)
+        edge_id, node_id = len(graph["edges"]), len(graph["nodes"])
+        graph["edges"].append(
+            {
+                "id": edge_id,
+                "sourceCurve": "dolphin-fornix-medial-axis",
+                "sourceCellId": edge_id,
+                "startNodeId": spout_node["id"],
+                "endNodeId": node_id,
+                "lengthMm": round(float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()), 3),
+                "radiusMm": round(float(np.median(clearance[tuple(path.T)])), 3),
+                "pointsLps": np.round(points, 4).tolist(),
+            }
+        )
+        graph["nodes"].append(
+            {
+                "id": node_id,
+                "lps": graph["edges"][-1]["pointsLps"][-1],
+                "kind": "terminal",
+                "degree": 1,
+                "rootDistanceMm": 0.0,
+                "parentNodeId": spout_node["id"],
+                "parentEdgeId": edge_id,
+                "childEdgeIds": [],
+            }
+        )
+        labels["edgeLabels"][str(edge_id)] = {
+            "abbreviatedLabel": "NPF",
+            "fullLabel": LABELS["NPF"],
+            "sourceCellIds": [edge_id],
+        }
+        fornix_ids.append(edge_id)
+    spout_node["childEdgeIds"] = [spout_id, *fornix_ids]
+    spout_node["degree"] = 1 + len(spout_node["childEdgeIds"])
+    graph["terminalNodeIds"] = [n["id"] for n in graph["nodes"] if n["kind"] == "terminal"]
+    return {
+        "approachLps": approach_lps.round(2).tolist(),
+        "glottisLps": glottis.round(2).tolist(),
+        "approachToGlottisMm": round(span, 1),
+        "fornixEdgeIds": fornix_ids,
+    }
+
+
+def arrive_facing(
+    path: np.ndarray,
+    target: np.ndarray,
+    open_air: np.ndarray,
+    clearance: np.ndarray,
+    geometry: VolumeGeometry,
+    lo: np.ndarray,
+) -> np.ndarray:
+    """Bend the last stretch of a path so it ends heading at `target`: arriving at the vantage
+    point, the scope already looks into the glottis. Kept only if it stays clear of the wall."""
+    lengths = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(path, axis=0), axis=1))])
+    end = path[-1]
+    for stretch in (14.0, 10.0, 7.0):
+        if lengths[-1] < stretch * 1.5:
+            continue
+        k = int(np.searchsorted(lengths, lengths[-1] - stretch))
+        start = path[k]
+        leave = unit_vector(path[min(k + 3, len(path) - 1)] - path[max(k - 3, 0)])
+        arrive = unit_vector(target - end)
+        span = float(np.linalg.norm(end - start))
+        t = np.linspace(0, 1, 40)[:, None]
+        curve = (
+            (2 * t**3 - 3 * t**2 + 1) * start
+            + (t**3 - 2 * t**2 + t) * span * leave
+            + (-2 * t**3 + 3 * t**2) * end
+            + (t**3 - t**2) * span * arrive
+        )
+        voxels = np.round((curve - geometry.origin) / geometry.steps).astype(int) - lo
+        if open_air[tuple(voxels.T)].all() and (clearance[tuple(voxels.T)] >= 1.5).all():
+            return smooth_and_resample(np.concatenate([path[:k], curve]))
+    return path
+
+
+def glottis_vantage(
+    open_air: np.ndarray,
+    clearance: np.ndarray,
+    voxels: np.ndarray,
+    reach: np.ndarray,
+    g: np.ndarray,
+    spout: dict[str, Any],
+    glottis: np.ndarray,
+    geometry: VolumeGeometry,
+    lo: np.ndarray,
+) -> np.ndarray:
+    """The roomiest point 8-28 mm from the glottis that sees straight into it, preferring points
+    on the spout's own axis, from which the glottis sits in the middle of the spout tip. In this
+    scan the glottis faces the dorsal wall, so most of the open nasopharynx cannot see it."""
+    inward = unit_vector(np.asarray(spout["pointsLps"][min(20, len(spout["pointsLps"]) - 1)]) - glottis)
+    room = clearance[tuple(voxels.T)]
+    pool = np.nonzero((reach > 8) & (reach < 28) & (room >= 2.0))[0]
+    outward = (voxels[pool] - g) * geometry.steps
+    alignment = np.clip(-(outward / np.linalg.norm(outward, axis=1, keepdims=True)) @ inward, 0, 1)
+    for k in pool[np.argsort(-(room[pool] * (0.4 + 0.6 * alignment)))]:
+        start = voxels[k]
+        samples = np.round(start + np.linspace(0, 1, 40)[:, None] * (g - start)).astype(int)
+        inside = open_air[tuple(samples.T)]
+        roomy = clearance[tuple(samples[:-4].T)] >= 1.0
+        if inside.all() and roomy.all():
+            return start
+    raise ValueError("No point in the nasopharynx sees into the glottis")
+
+
+def centered_path(
+    allowed: np.ndarray, clearance: np.ndarray, start: np.ndarray, end: np.ndarray, spacing: np.ndarray
+) -> np.ndarray:
+    """Shortest path through `allowed` voxels, weighted to keep to the middle of the lumen."""
+    voxels = np.argwhere(allowed)
+    index = -np.ones(allowed.shape, dtype=np.int64)
+    index[tuple(voxels.T)] = np.arange(len(voxels))
+    cost = 1.0 / (clearance + 0.05) ** 4
+    rows, cols, weights = [], [], []
+    for offset in np.array(list(np.ndindex(3, 3, 3))) - 1:
+        if tuple(offset) <= (0, 0, 0):
+            continue
+        target = voxels + offset
+        inside = (target >= 0).all(1) & (target < allowed.shape).all(1)
+        source_ids = np.nonzero(inside)[0]
+        target_ids = index[tuple(target[inside].T)]
+        linked = target_ids >= 0
+        a, b = source_ids[linked], target_ids[linked]
+        length = np.linalg.norm(offset * spacing)
+        rows.append(a)
+        cols.append(b)
+        weights.append(length * 0.5 * (cost[tuple(voxels[a].T)] + cost[tuple(voxels[b].T)]))
+    adjacency = sparse.csr_matrix(
+        (np.concatenate(weights), (np.concatenate(rows), np.concatenate(cols))), shape=(len(voxels),) * 2
+    )
+    adjacency = adjacency + adjacency.T
+
+    def nearest(point: np.ndarray) -> int:
+        return int(np.argmin(np.linalg.norm((voxels - point) * spacing, axis=1)))
+
+    source, target = nearest(start), nearest(end)
+    _, predecessors = csgraph.dijkstra(adjacency, directed=False, indices=source, return_predecessors=True)
+    path = [target]
+    while path[-1] != source:
+        if predecessors[path[-1]] < 0:
+            raise ValueError("No open path between the two points")
+        path.append(int(predecessors[path[-1]]))
+    return voxels[path[::-1]]
+
+
+def unit_vector(vector: np.ndarray) -> np.ndarray:
+    return vector / max(float(np.linalg.norm(vector)), 1e-9)
 
 
 def build_lumen_mesh(mask: np.ndarray, geometry: VolumeGeometry) -> tuple[trimesh.Trimesh, dict[str, Any]]:
@@ -790,23 +1026,24 @@ def build_ct_preview(
 
 
 def orientation_landmarks(graph: dict[str, Any], labels: dict[str, Any]) -> list[dict[str, Any]]:
-    """Roll the flexible view through the larynx so the trachea reads like the human module:
-    ventral at the top of the screen and the right principal bronchus on the screen right.
-    Parallel transport alone carries the twist of the curved nasal and laryngeal path."""
+    """Roll the flexible view through the spout so the trachea reads as it does with the animal
+    in sternal recumbency: dorsal at the top of the screen and the right principal bronchus on
+    the screen left (Tsang et al., J Wildl Dis 2002, Fig. 3). Parallel transport alone carries
+    the twist of the curved nasal and laryngeal path."""
     abbr = {int(k): v["abbreviatedLabel"] for k, v in labels["edgeLabels"].items()}
-    larynx = next(e for e in graph["edges"] if abbr[e["id"]] == "LX")
+    spout = next(e for e in graph["edges"] if abbr[e["id"]] == "LS")
     carina = next(n for n in graph["nodes"] if n["id"] == graph["carinaNodeId"])
     principal = {abbr[e]: e for e in carina["childEdgeIds"]}
     return [
         {
             "id": "trachea",
             "label": "Trachea",
-            "edgeId": larynx["id"],
-            "distanceMm": round(larynx["lengthMm"] - 1, 1),
-            "targetEdgeId": principal["LPB"],
-            "oppositeEdgeId": principal["RPB"],
+            "edgeId": spout["id"],
+            "distanceMm": round(spout["lengthMm"] - 1, 1),
+            "targetEdgeId": principal["RPB"],
+            "oppositeEdgeId": principal["LPB"],
             "screenDirection": "left",
-            "expectation": "Ventral wall at the top; the right tracheal bronchus and right principal bronchus to the right",
+            "expectation": "Dorsal wall at the top; the right tracheal bronchus and right principal bronchus to the left",
         }
     ]
 
@@ -860,9 +1097,9 @@ def build_manifest(
             "stepMm": 3,
             "lookAheadMm": 14,
             "trailMaxPoints": 240,
-            # The scope enters the left bony nasal passage heading ventrally; rostral is screen-up
-            # there, which carries over to ventral-up in the trachea.
-            "rootUpLps": [0, 0, 1],
+            # Sternal recumbency, scope through the blowhole: caudal is screen-up in the bony nasal
+            # passage, which carries over to dorsal-up in the trachea.
+            "rootUpLps": [0, 0, -1],
         },
     }
 
