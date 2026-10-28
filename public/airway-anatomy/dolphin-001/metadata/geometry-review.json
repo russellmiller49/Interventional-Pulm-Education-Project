@@ -12,6 +12,12 @@
   "RPBBranches": 13,
   "carinaNodeId": 6,
   "trachealBronchusEdgeId": 6,
+  "spout": {
+    "approachLps": [-11.0, -128.35, -269.5],
+    "glottisLps": [-3.38, -133.43, -282.0],
+    "approachToGlottisMm": 15.5,
+    "fornixEdgeIds": [137, 138]
+  },
   "topology": {
     "boundary": 0,
     "nonmanifold": 0,
@@ -22,6 +28,14 @@
   "genus": 12,
   "volumeMl": 546.04,
   "centerlineRepairs": [
+    {
+      "edgeIds": [3],
+      "fromDepthMm": 0.343
+    },
+    {
+      "edgeIds": [3],
+      "fromDepthMm": 0.318
+    },
     {
       "edgeIds": [50],
       "fromDepthMm": 0.316

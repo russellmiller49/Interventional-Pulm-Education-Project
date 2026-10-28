@@ -80,11 +80,11 @@
       "id": "trachea",
       "label": "Trachea",
       "edgeId": 3,
-      "distanceMm": 90.1,
-      "targetEdgeId": 7,
-      "oppositeEdgeId": 8,
+      "distanceMm": 105.6,
+      "targetEdgeId": 8,
+      "oppositeEdgeId": 7,
       "screenDirection": "left",
-      "expectation": "Ventral wall at the top; the right tracheal bronchus and right principal bronchus to the right"
+      "expectation": "Dorsal wall at the top; the right tracheal bronchus and right principal bronchus to the left"
     }
   ],
   "ostialLandmarks": [],
@@ -96,6 +96,6 @@
     "stepMm": 3,
     "lookAheadMm": 14,
     "trailMaxPoints": 240,
-    "rootUpLps": [0, 0, 1]
+    "rootUpLps": [0, 0, -1]
   }
 }
