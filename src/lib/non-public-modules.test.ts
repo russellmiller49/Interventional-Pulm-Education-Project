@@ -60,8 +60,12 @@ describe('beta direct-link access', () => {
     expect(isPublicUnlistedPath(path)).toBe(true)
   })
 
-  it('opens both synchronized airway cases by direct link', () => {
-    for (const path of ['/learn/anatomy/airway', '/learn/anatomy/dolphin-airway']) {
+  it('opens both synchronized airway cases and the dolphin anatomy model by direct link', () => {
+    for (const path of [
+      '/learn/anatomy/airway',
+      '/learn/anatomy/dolphin-airway',
+      '/learn/anatomy/dolphin',
+    ]) {
       expect(moduleAccessMode(path)).toBe('direct-link')
       expect(isDraftModulePath(path)).toBe(false)
       expect(nonPublicModules.some((entry) => entry.path === path)).toBe(true)

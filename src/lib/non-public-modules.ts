@@ -142,6 +142,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'Virtual bronchoscopy of a dolphin from the bony nasal passages through the laryngeal spout to the principal bronchi, with synchronized 3D and CT views.',
   },
   {
+    path: '/learn/anatomy/dolphin',
+    title: 'Dolphin Anatomy in 3D',
+    group: 'Bronchoscopy',
+    summary:
+      'A 3D model of a bottlenose dolphin from CT: skeleton, airway and lungs, heart and aorta, brain, sinuses and body wall.',
+  },
+  {
     path: '/learn/anatomy/branch-tracing',
     title: 'Bronchial Branch Tracing',
     group: 'Bronchoscopy',
