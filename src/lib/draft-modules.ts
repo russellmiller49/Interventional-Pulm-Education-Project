@@ -82,6 +82,7 @@ const unlistedModulePathPrefixes = [
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
+  '/learn/anatomy/dolphin-airway',
   ...baxterCrrtUnlistedPathPrefixes,
   ...icuHemodynamicsUnlistedPathPrefixes,
   ...icuSimulationUnlistedPathPrefixes,

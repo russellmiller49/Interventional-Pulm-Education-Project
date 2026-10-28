@@ -135,7 +135,7 @@ export const nonPublicModules: NonPublicModule[] = [
     summary: 'Virtual bronchoscopy with synchronized 3D airway and CT views.',
   },
   {
-    path: '/learn/anatomy/airway/dolphin',
+    path: '/learn/anatomy/dolphin-airway',
     title: 'Dolphin Airway — Synchronized Bronchoscopy',
     group: 'Bronchoscopy',
     summary:

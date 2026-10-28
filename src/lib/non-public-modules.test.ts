@@ -5,6 +5,7 @@ import {
   nonPublicModules,
 } from './non-public-modules'
 import { isPublicPath, isPublicUnlistedPath, getRequiredEntitlement } from './site-auth/access'
+import { isDraftModulePath } from './draft-modules'
 
 describe('non-public module index', () => {
   it('never lists a module as non-public that is publicly indexable', () => {
@@ -55,6 +56,16 @@ describe('beta direct-link access', () => {
     // Public alone is not enough — it must also be unlisted, which is what applies
     // noindex/nofollow/noarchive in the proxy.
     expect(isPublicUnlistedPath(path)).toBe(true)
+  })
+
+  it('opens the dolphin airway case by direct link, outside the draft-only airway route', () => {
+    // `/learn/anatomy/airway` keeps a layout that hides drafts from non-admins in production,
+    // so the dolphin case lives beside it rather than under it.
+    const path = '/learn/anatomy/dolphin-airway'
+    expect(moduleAccessMode(path)).toBe('direct-link')
+    expect(isDraftModulePath(path)).toBe(false)
+    expect(isDraftModulePath('/learn/anatomy/airway')).toBe(true)
+    expect(nonPublicModules.some((entry) => entry.path === path)).toBe(true)
   })
 
   it('extends the preference-card bypass to its subroutes', () => {
