@@ -27,8 +27,8 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
-  // The dolphin synchronized bronchoscopy case is in development and reachable by direct link.
-  // It sits outside `/learn/anatomy/airway`, whose layout still hides drafts from non-admins.
+  // The dolphin synchronized bronchoscopy case, beside the human one: in development, reachable
+  // by direct link.
   '/learn/anatomy/dolphin-airway',
   '/baxter-crrt',
   '/cardiohelp-ecmo',

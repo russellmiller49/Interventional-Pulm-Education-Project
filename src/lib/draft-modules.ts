@@ -63,7 +63,6 @@ const draftModulePathPrefixes = [
   ...icuSimulationDraftPathPrefixes,
   '/education/chest-drainage',
   '/intro-bronchoscopy',
-  '/learn/anatomy/airway',
   '/literature',
   '/pleural-procedures',
   '/rapid-onsite-cytology',

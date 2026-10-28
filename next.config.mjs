@@ -455,7 +455,7 @@ const nextConfig = {
         permanent: true,
       },
       {
-        // The dolphin case moved out from under the draft-only airway route so it opens by link.
+        // The dolphin case's first address, before it had its own route.
         source: '/:locale(en|es|zh-CN)/learn/anatomy/airway/dolphin',
         destination: '/:locale/learn/anatomy/dolphin-airway',
         permanent: true,
