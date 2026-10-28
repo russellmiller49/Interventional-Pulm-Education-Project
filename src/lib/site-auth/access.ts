@@ -27,9 +27,10 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
-  // The dolphin synchronized bronchoscopy case, beside the human one: in development, reachable
-  // by direct link.
+  // The dolphin synchronized bronchoscopy case, beside the human one, and the whole-dolphin 3D
+  // anatomy model: in development, reachable by direct link.
   '/learn/anatomy/dolphin-airway',
+  '/learn/anatomy/dolphin',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
   // Phase D1 device-intelligence routes (decision D-03 as modified, 2026-08-08): every new

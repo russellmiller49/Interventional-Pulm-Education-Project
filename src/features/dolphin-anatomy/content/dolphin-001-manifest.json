@@ -1,0 +1,209 @@
+{
+  "caseId": "dolphin-001",
+  "modelUrl": "/dolphin-anatomy/dolphin-001/organs.glb",
+  "frame": "Patient LPS millimetres of series 8. The animal lay head-first prone: superior = rostral, posterior = dorsal, anterior = ventral; left and right are the animal's own.",
+  "ct": {
+    "series": 8,
+    "description": "DOLPHIN ST 1.25MM",
+    "size": [512, 512, 1120],
+    "spacingMm": [1.269531, 1.269531, 1.25],
+    "originLps": [314.0, 294.4, -1568.25],
+    "coverage": "Bony nares to just behind the dorsal fin; the rostrum, melon and flukes are outside the scan."
+  },
+  "structures": [
+    {
+      "id": "body-surface",
+      "name": "Body surface",
+      "system": "body-wall",
+      "color": [0.85, 0.78, 0.7],
+      "volumeMl": 174664.8
+    },
+    {
+      "id": "skin-blubber",
+      "name": "Skin and blubber",
+      "system": "body-wall",
+      "color": [0.93, 0.8, 0.55],
+      "volumeMl": 52416.8
+    },
+    {
+      "id": "abdominal-cavity",
+      "name": "Abdominal cavity",
+      "system": "digestive",
+      "color": [0.85, 0.55, 0.45],
+      "volumeMl": 19924.8
+    },
+    {
+      "id": "gi-gas",
+      "name": "Gas in stomach and intestines",
+      "system": "digestive",
+      "color": [0.4, 0.8, 0.4],
+      "volumeMl": 299.4
+    },
+    {
+      "id": "esophagus",
+      "name": "Esophagus",
+      "system": "digestive",
+      "color": [0.95, 0.75, 0.3],
+      "volumeMl": 123.0
+    },
+    {
+      "id": "heart",
+      "name": "Heart",
+      "system": "cardiovascular",
+      "color": [0.8, 0.1, 0.12],
+      "volumeMl": 1246.7
+    },
+    {
+      "id": "aorta",
+      "name": "Aorta",
+      "system": "cardiovascular",
+      "color": [0.95, 0.3, 0.45],
+      "volumeMl": 455.6
+    },
+    {
+      "id": "brain",
+      "name": "Brain",
+      "system": "nervous",
+      "color": [0.95, 0.8, 0.8],
+      "volumeMl": 1374.1
+    },
+    {
+      "id": "spinal-cord",
+      "name": "Spinal cord",
+      "system": "nervous",
+      "color": [1.0, 0.95, 0.6],
+      "volumeMl": 263.9
+    },
+    {
+      "id": "nasal-passages",
+      "name": "Nasal passages and nasopharynx",
+      "system": "respiratory",
+      "color": [0.3, 0.85, 0.95],
+      "volumeMl": 149.7
+    },
+    {
+      "id": "pterygoid-sinus-left",
+      "name": "Left pterygoid sinus",
+      "system": "respiratory",
+      "color": [0.55, 0.65, 1.0],
+      "volumeMl": 46.7
+    },
+    {
+      "id": "pterygoid-sinus-right",
+      "name": "Right pterygoid sinus",
+      "system": "respiratory",
+      "color": [0.55, 0.65, 1.0],
+      "volumeMl": 46.1
+    },
+    {
+      "id": "airway",
+      "name": "Larynx, trachea and bronchi",
+      "system": "respiratory",
+      "color": [0.2, 0.55, 0.95],
+      "volumeMl": 502.4
+    },
+    {
+      "id": "lung-left",
+      "name": "Left lung",
+      "system": "respiratory",
+      "color": [0.95, 0.65, 0.7],
+      "volumeMl": 6328.9
+    },
+    {
+      "id": "lung-right",
+      "name": "Right lung",
+      "system": "respiratory",
+      "color": [0.85, 0.6, 0.75],
+      "volumeMl": 5789.6
+    },
+    {
+      "id": "skull",
+      "name": "Skull",
+      "system": "skeleton",
+      "color": [0.95, 0.93, 0.85],
+      "volumeMl": 1074.1
+    },
+    {
+      "id": "mandible",
+      "name": "Mandible",
+      "system": "skeleton",
+      "color": [0.95, 0.72, 0.45],
+      "volumeMl": 132.1
+    },
+    {
+      "id": "hyoid",
+      "name": "Hyoid apparatus",
+      "system": "skeleton",
+      "color": [0.7, 0.88, 0.86],
+      "volumeMl": 85.2
+    },
+    {
+      "id": "tympanoperiotic-left",
+      "name": "Left tympanoperiotic bone",
+      "system": "skeleton",
+      "color": [1.0, 0.85, 0.45],
+      "volumeMl": 13.9
+    },
+    {
+      "id": "tympanoperiotic-right",
+      "name": "Right tympanoperiotic bone",
+      "system": "skeleton",
+      "color": [1.0, 0.85, 0.45],
+      "volumeMl": 12.3
+    },
+    {
+      "id": "vertebral-column",
+      "name": "Vertebral column",
+      "system": "skeleton",
+      "color": [0.98, 0.96, 0.88],
+      "volumeMl": 3286.8
+    },
+    {
+      "id": "ribs",
+      "name": "Ribs",
+      "system": "skeleton",
+      "color": [0.86, 0.9, 0.78],
+      "volumeMl": 1067.9
+    },
+    {
+      "id": "sternum",
+      "name": "Sternum",
+      "system": "skeleton",
+      "color": [0.95, 0.6, 0.55],
+      "volumeMl": 109.3
+    },
+    {
+      "id": "scapula-left",
+      "name": "Left scapula",
+      "system": "skeleton",
+      "color": [0.78, 0.8, 0.95],
+      "volumeMl": 135.9
+    },
+    {
+      "id": "scapula-right",
+      "name": "Right scapula",
+      "system": "skeleton",
+      "color": [0.78, 0.8, 0.95],
+      "volumeMl": 116.3
+    },
+    {
+      "id": "flipper-left",
+      "name": "Left flipper skeleton",
+      "system": "skeleton",
+      "color": [0.98, 0.88, 0.6],
+      "volumeMl": 178.7
+    },
+    {
+      "id": "flipper-right",
+      "name": "Right flipper skeleton",
+      "system": "skeleton",
+      "color": [0.98, 0.88, 0.6],
+      "volumeMl": 178.2
+    }
+  ],
+  "source": {
+    "script": "scripts/dolphin-anatomy/build-dolphin-organs.py",
+    "labelmapSha256": "75ee24ed2a80eeb904301681143d6602dcbef9283a0a1a854325de08aea25019",
+    "note": "Derived from the Local-Data Dolphin_bronch CT; the raw study and the Slicer segmentation stay untracked."
+  }
+}
