@@ -23,7 +23,7 @@ interface EmailMessage {
 }
 
 const defaultCourseUrl = 'https://interventionalpulm.org/socal-ebus-course'
-const defaultFromAddress = 'SoCal EBUS Course <no-reply@interventionalpulm.org>'
+const defaultFromAddress = 'SoCal EBUS Course <courses@interventionalpulm.com>'
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -279,18 +279,10 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: true, status: 'already_sent' })
   }
 
-  const startedAt = new Date().toISOString()
+  // The only way to claim an event (migration 20261030000000): it succeeds only while delivery is activated, for a pending
+  // event created at or after the activation cutoff. Older events, failed ones included, are never sent or retried.
   const { data: claimedEvent, error: claimError } = await supabase
-    .from('socal_ebus_email_events')
-    .update({
-      attempt_count: (event.attempt_count ?? 0) + 1,
-      error_message: null,
-      last_attempt_at: startedAt,
-      status: 'processing',
-    })
-    .eq('id', event.id)
-    .in('status', ['pending', 'failed'])
-    .select('*')
+    .rpc('claim_socal_ebus_email_event', { target_event_id: event.id, presented_token: token })
     .maybeSingle<EmailEventRow>()
 
   if (claimError) {
@@ -298,7 +290,7 @@ Deno.serve(async (req) => {
   }
 
   if (!claimedEvent) {
-    return jsonResponse({ ok: true, status: event.status })
+    return jsonResponse({ ok: true, status: event.status, delivered: false })
   }
 
   try {
