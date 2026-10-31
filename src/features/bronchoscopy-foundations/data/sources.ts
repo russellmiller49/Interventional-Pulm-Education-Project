@@ -308,7 +308,7 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     doi: null,
     url: null,
     reviewedScope:
-      'Hypotension from intrinsic PEEP and its release by disconnection; airway pressures and needle decompression when a ventilated patient has a pneumothorax',
+      'Hypotension from intrinsic PEEP and its release by disconnection; airway pressures and needle decompression when a ventilated patient has a pneumothorax; low exhaled tidal volume alarms',
     accessedDate: '2026-10-11',
     transcript: null,
   },
