@@ -802,7 +802,7 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
   {
     id: 'smaller-breaths',
     sectionId: 'ventilated-patient',
-    title: 'Smaller breaths, no alarm',
+    title: 'Smaller breaths with the limit raised',
     situation:
       'A 59-year-old man on volume control has the diagnostic scope in an 8.0 mm tube. The pressure limit was raised and no breath is cut short. Delivered volume is 330 of a set 450 mL. Plateau pressure is unchanged and SpO₂ is 97%.',
     key: [
