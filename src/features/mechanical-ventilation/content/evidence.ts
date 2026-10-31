@@ -174,6 +174,7 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'https://www.aarc.org/wp-content/uploads/2024/10/patient-ventilator-assessment-aarc-cpg.pdf',
     supports: [
       'Assessment of delivered tidal volume using predicted body weight, plateau pressure, PEEP, and auto-PEEP',
+      'Driving pressure defined as plateau pressure minus total PEEP, assessed with a target of 15 cmH₂O or less (conditional recommendation, low certainty)',
       'Direct bedside patient–ventilator assessment',
     ],
     limitations:
@@ -257,10 +258,55 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Amato MBP, Meade MO, Slutsky AS, et al. Driving pressure and survival in the acute respiratory distress syndrome. N Engl J Med. 2015;372:747–755. doi:10.1056/NEJMsa1410639. PMID 25693014.',
     sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/25693014/',
     supports: [
-      'Driving pressure (plateau pressure minus PEEP) was the ventilation variable most strongly associated with survival in pooled trial data',
+      'Driving pressure (tidal volume divided by respiratory-system compliance) was the ventilation variable most strongly associated with survival in pooled trial data',
+      'Each rise of about 7 cmH₂O carried a relative risk of death of 1.41, and 1.36 among patients already on protective plateau pressures and tidal volumes',
     ],
     limitations:
-      'An analysis of nine earlier trials in patients who were not breathing actively. It shows an association; no trial has tested a driving-pressure target.',
+      'A mediation analysis of nine earlier trials in patients who were not breathing actively. It shows an association and does not set a threshold in its abstract.',
+  },
+  {
+    id: 'aoyama-driving-pressure-2018',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-31',
+    title: 'Driving pressure and mortality in ARDS: meta-analysis (Aoyama 2018)',
+    citation:
+      'Aoyama H, Pettenuzzo T, Aoyama K, et al. Association of driving pressure with mortality among ventilated patients with acute respiratory distress syndrome: a systematic review and meta-analysis. Crit Care Med. 2018;46:300–306. doi:10.1097/CCM.0000000000002838. PMID 29135500.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/29135500/',
+    supports: [
+      'Higher driving pressure was associated with higher mortality (pooled risk ratio 1.44, 95% CI 1.11–1.88; 1.28, 95% CI 1.14–1.43, in the three studies with cutoffs of 13–15 cmH₂O)',
+    ],
+    limitations:
+      'Five secondary analyses of trials and two observational studies. The cutoffs compare groups of patients; they do not show that lowering driving pressure to a value improves survival.',
+  },
+  {
+    id: 'bugedo-driving-pressure-2017',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-31',
+    title: 'Driving pressure: marker, safety limit or goal? (Bugedo 2017)',
+    citation:
+      'Bugedo G, Retamal J, Bruhn A. Driving pressure: a marker of severity, a safety limit, or a goal for mechanical ventilation? Crit Care. 2017;21:199. doi:10.1186/s13054-017-1779-x. PMID 28774316.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28774316/',
+    supports: [
+      'Suggested driving-pressure cutoffs vary from 14 to 18 cmH₂O, and safe limits have not been identified',
+      'Proposes 15 cmH₂O as a safety limit alongside a tidal volume goal, rather than as a target in itself',
+    ],
+    limitations: 'An expert viewpoint, written before the randomized trials reported.',
+  },
+  {
+    id: 'agrafiotis-driving-pressure-rcts-2026',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-31',
+    title:
+      'Driving pressure-limiting strategies in ARDS: meta-analysis of trials (Agrafiotis 2026)',
+    citation:
+      'Agrafiotis M, Georgopoulos M, Akoumianaki E, Siempos II. Effect of driving pressure-limiting strategies on outcomes of patients with ARDS: a meta-analysis of randomized controlled trials. Crit Care. 2026;30. doi:10.1186/s13054-026-05876-3. PMID 41787551.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/41787551/',
+    supports: [
+      'Four randomized trials (431 patients), with targets of ≤14 or ≤10 cmH₂O, showed no significant difference in mortality (relative risk 0.63, 95% CI 0.20–1.94) or ventilator-free days',
+      'Added to lung-protective ventilation, the strategies separated the groups by only about 2 cmH₂O',
+    ],
+    limitations:
+      'Small, heterogeneous trials; two were at high risk of bias, and the largest, STAMINA, stopped early. A shorter ICU stay was driven largely by one trial. A benefit is not excluded.',
   },
   {
     id: 'tobin-3e-severe-asthma',

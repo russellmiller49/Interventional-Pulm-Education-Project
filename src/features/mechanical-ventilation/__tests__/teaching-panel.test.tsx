@@ -153,6 +153,40 @@ describe('mechanical-ventilation teaching panels', () => {
       expect(baseline + elastic + resistive).toBeCloseTo(peak, 1)
     })
 
+    /*
+     * Driving pressure is the Elastic band only because the baseline is total PEEP. Trapped gas
+     * raises the baseline, so a band built on set PEEP would read high by the intrinsic PEEP.
+     */
+    it('builds the elastic band, the driving pressure, on total PEEP rather than set PEEP', () => {
+      const elasticWith = (intrinsicPeepCmH2O: number) => {
+        const held = acquiredPassiveState('lung-protection')
+        const { container, unmount } = render(
+          <MechanicalVentilationTeachingPanel
+            lessonId="mechanics-load-and-pressure"
+            state={{ ...held, measurements: { ...held.measurements, intrinsicPeepCmH2O } }}
+          />,
+        )
+        const label = container.querySelector('[role="img"]')?.getAttribute('aria-label') ?? ''
+        expect(label).toMatch(/measured as plateau minus baseline, which is the driving pressure/)
+        const elastic = Number(label.match(/an elastic component of (\d+(?:\.\d+)?)/)![1])
+        unmount()
+        return elastic
+      }
+
+      expect(elasticWith(0) - elasticWith(2)).toBeCloseTo(2, 1)
+    })
+
+    it('tells the learner to subtract total PEEP and keeps the plateau as the limit', () => {
+      render(
+        <MechanicalVentilationTeachingPanel
+          lessonId="mechanics-load-and-pressure"
+          state={acquiredPassiveState('lung-protection')}
+        />,
+      )
+      expect(screen.getByText(/plateau minus total PEEP, not set PEEP/i)).toBeInTheDocument()
+      expect(screen.getByText(/does not clear a high plateau/i)).toBeInTheDocument()
+    })
+
     /**
      * The defect this replaced: the figure drew an Elastic band of 3 cmH₂O and a Resistive band of
      * 33.5 against a relaxed elastic pressure of 18, and the validity note directly underneath said

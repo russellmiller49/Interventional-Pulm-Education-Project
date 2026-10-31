@@ -55,7 +55,7 @@ const componentCopy: Readonly<
   },
   elastic: {
     label: 'Elastic',
-    body: 'The pressure required to distend the respiratory system by this breath’s volume. It is what remains at end-inspiration when flow has stopped, which is why an inspiratory hold isolates it. It scales with delivered volume and with how stiff the system is.',
+    body: 'The pressure required to distend the respiratory system by this breath’s volume. It is what remains at end-inspiration when flow has stopped, which is why an inspiratory hold isolates it. It scales with delivered volume and with how stiff the system is. On a valid hold this band is the driving pressure: plateau minus total PEEP.',
   },
   resistive: {
     label: 'Resistive',
@@ -123,7 +123,7 @@ export function VentilationPressureDecomposition({
     ? `The patient is breathing against this measurement, reaching ${round(validity.recentEffortCmH2O, 1)} centimeters of water of inspiratory effort across the recent trace, so a plateau here reports alveolar pressure minus that effort and the split is withheld rather than drawn.`
     : `${acquisition.detail} Until a valid hold is acquired on these settings, the plateau on screen is an estimate from the trace and the split is withheld rather than drawn.`
   const summary = separable
-    ? `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. The plateau was acquired during an inspiratory hold with the patient quiet across it, so this split reports respiratory-system mechanics.`
+    ? `Peak airway pressure ${round(peak, 1)} centimeters of water decomposes into a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — an elastic component of ${round(elastic, 1)} measured as plateau minus baseline, which is the driving pressure, and a resistive component of ${round(resistive, 1)} measured as peak minus plateau. The plateau was acquired during an inspiratory hold with the patient quiet across it, so this split reports respiratory-system mechanics.`
     : `Peak airway pressure ${round(peak, 1)} centimeters of water sits above a baseline of ${round(totalBaseline, 1)} — set PEEP ${round(setPeep, 1)} plus ${round(intrinsic, 1)} of trapped pressure — leaving ${round(unattributed, 1)} that is not separated into elastic and resistive components here. ${withheldReason}`
 
   return (
@@ -375,11 +375,13 @@ export function VentilationPressureDecomposition({
       <TextEquivalent>{summary}</TextEquivalent>
       <ReferenceValues
         title="In ARDS, hold these readings against"
-        ids={['pplat-limit', 'driving-pressure-limit', 'pplat-pause']}
+        ids={['pplat-limit', 'driving-pressure-reference', 'pplat-pause']}
       >
         <p>
-          Driving pressure is plateau minus total PEEP. Both readings need a relaxed patient: an
-          effort during the pause makes the plateau read wrong.
+          Driving pressure is plateau minus total PEEP, not set PEEP: on these bars, the Elastic
+          band. Both readings need a relaxed patient: an effort during the pause makes the plateau
+          read wrong. The plateau is a limit; driving pressure is a reference, on low-certainty
+          evidence, and a value under it does not clear a high plateau.
         </p>
       </ReferenceValues>
     </section>

@@ -872,6 +872,9 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
       'ats-ards-2024',
       'amato-driving-pressure-2015',
       'aarc-assessment-2024',
+      'aoyama-driving-pressure-2018',
+      'bugedo-driving-pressure-2017',
+      'agrafiotis-driving-pressure-rcts-2026',
     ])
   })
 

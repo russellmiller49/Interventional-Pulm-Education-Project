@@ -14,7 +14,7 @@ export function VentilationProtectionReference() {
   return (
     <aside className={styles.breath} aria-label="Adult ARDS guideline reference">
       <span className={styles.badge}>
-        Adult ARDS · ARDS Network 2000; ATS/ESICM/SCCM 2017, kept in the ATS 2024 update
+        Adult ARDS · ARDS Network 2000; ATS/ESICM/SCCM 2017, kept in the ATS 2024 update; AARC 2024
       </span>
       <h2 style={{ marginTop: 18 }}>Three numbers, together</h2>
       <p className={styles.number}>{VENTILATION_NUMBERS.value('vt-ards-goal')}</p>
@@ -26,9 +26,14 @@ export function VentilationProtectionReference() {
       </p>
       <p className={styles.muted}>Plateau pressure, on a relaxed patient</p>
       <p className={styles.number} style={{ marginTop: 20 }}>
-        {VENTILATION_NUMBERS.value('driving-pressure-limit')}
+        {VENTILATION_NUMBERS.value('driving-pressure-reference')}
       </p>
-      <p className={styles.muted}>Driving pressure: plateau minus PEEP (Amato 2015)</p>
+      <p className={styles.muted}>
+        Driving pressure: plateau minus total PEEP, on holds in a relaxed patient. A reference, not
+        a limit like the plateau: AARC 2024 lists{' '}
+        {VENTILATION_NUMBERS.value('driving-pressure-aarc-target')} on a low-certainty suggestion,
+        and trials of limiting it have not shown lower mortality.
+      </p>
       <p className={styles.muted} style={{ marginTop: 20 }}>
         PBW, male: {VENTILATION_NUMBERS.value('pbw-male')}. Female:{' '}
         {VENTILATION_NUMBERS.value('pbw-female')}.
