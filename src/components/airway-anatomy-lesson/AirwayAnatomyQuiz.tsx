@@ -116,7 +116,7 @@ const QUESTIONS: QuizQuestion[] = [
   {
     id: 'rul-origin',
     prompt:
-      'Which lobar bronchus arises directly from a main bronchus rather than from the bronchus intermedius?',
+      'Which of these bronchi arises directly from the right main bronchus rather than from the bronchus intermedius?',
     options: [
       'The right middle lobe',
       'The right upper lobe',
@@ -125,7 +125,7 @@ const QUESTIONS: QuizQuestion[] = [
     ],
     correctIndex: 1,
     explanation:
-      'The right upper lobe is the only lobar bronchus that comes off the main bronchus itself, on the lateral wall, before the airway continues as the bronchus intermedius.',
+      'The right upper lobe is the only right lobar bronchus that comes directly off the right main bronchus, on the lateral wall, before the airway continues as the bronchus intermedius. The middle and lower lobes arise from the bronchus intermedius; on the left, both lobar bronchi come off the left main bronchus.',
     relatedNodeId: 'rmb',
   },
 ]
