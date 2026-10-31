@@ -133,4 +133,23 @@ describe('airway-anatomy graph', () => {
       expect(AIRWAY_BY_ID[step.nodeId]).toBeDefined()
     }
   })
+
+  it('keeps each lobar origin true to the tree and the RUL distinction right-sided', () => {
+    expect(AIRWAY_BY_ID.rul.parentId).toBe('rmb')
+    expect(AIRWAY_BY_ID.rml.parentId).toBe('bronchus-intermedius')
+    expect(AIRWAY_BY_ID.rll.parentId).toBe('bronchus-intermedius')
+    expect(AIRWAY_BY_ID.lul.parentId).toBe('lmb')
+    expect(AIRWAY_BY_ID.lll.parentId).toBe('lmb')
+
+    const rmbSurveyStep = SURVEY_STEPS.find((step) => step.nodeId === 'rmb')
+    const rmbCopy = [...AIRWAY_BY_ID.rmb.whatYouSee, ...rmbSurveyStep!.narration]
+    const takeoffCopy = rmbCopy.filter((line) => /only .*lobar bronchus/i.test(line))
+
+    expect(takeoffCopy).toHaveLength(2)
+    for (const line of takeoffCopy) {
+      expect(line).toMatch(/only right lobar bronchus/i)
+      expect(line).toMatch(/right main bronchus/i)
+    }
+    expect(rmbCopy.join(' ')).toMatch(/bronchus intermedius.*middle and lower lobes/i)
+  })
 })

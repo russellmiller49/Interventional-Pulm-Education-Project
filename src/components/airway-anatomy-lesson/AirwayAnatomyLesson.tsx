@@ -35,7 +35,7 @@ const ASYMMETRY: { feature: string; right: string; left: string }[] = [
   { feature: 'Lobes', right: 'Upper, middle, lower (3)', left: 'Upper, lower (2) + lingula' },
   {
     feature: 'Upper-lobe takeoff',
-    right: 'Off the main bronchus',
+    right: 'Off the RMB, before the bronchus intermedius',
     left: 'Off the LMB, then upper division + lingula',
   },
   { feature: 'Basal segments', right: 'Four (RB7–RB10)', left: 'Three (LB7+8 fused, LB9, LB10)' },

@@ -83,8 +83,8 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'Shorter, wider, and more vertical than the left — the path aspirated material tends to take.',
     whatYouSee: [
       'A short (~1.5–2 cm) wide bronchus that dives steeply, nearly in line with the trachea.',
-      'The right upper lobe orifice appears on the lateral wall almost immediately — the only lobar bronchus arising from the main bronchus itself.',
-      'Beyond the RUL takeoff the lumen continues as the bronchus intermedius.',
+      'The right upper lobe orifice appears on the lateral wall almost immediately — the only right lobar bronchus arising directly from the right main bronchus.',
+      'Beyond the RUL takeoff the lumen continues as the bronchus intermedius, which gives rise to the middle and lower lobes.',
     ],
     pearls: [
       'Its vertical, in-line course is why aspirated foreign bodies and mainstem intubations preferentially go right.',
@@ -723,7 +723,7 @@ export const SURVEY_STEPS: SurveyStep[] = [
     title: 'Right main bronchus & RUL takeoff',
     narration: [
       'Enter the shorter, more vertical right main bronchus. Almost immediately, look to the lateral wall for the right upper lobe orifice.',
-      'The RUL is the only lobar bronchus that comes off the main bronchus itself — everything else branches beyond the bronchus intermedius.',
+      'The RUL is the only right lobar bronchus that comes directly off the right main bronchus — the middle and lower lobes arise from the bronchus intermedius. On the left, both lobar bronchi come off the left main bronchus.',
     ],
   },
   {
