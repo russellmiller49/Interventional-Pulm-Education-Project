@@ -39,6 +39,10 @@ const TRAPPED_GAS: readonly SourceRef[] = [
     location: { kind: 'section', label: 'Chapter 31, intrinsic and external PEEP' },
   },
 ]
+const ALARMS: SourceRef = {
+  sourceId: 'U22',
+  location: { kind: 'section', label: 'Chapter 53, low exhaled tidal volume alarms' },
+}
 const LECTURE_CASE: readonly SourceRef[] = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
   { sourceId: 'T15', location: { kind: 'time-span', start: '00:18:49', end: '00:22:00' } },
@@ -84,7 +88,7 @@ export const section: BronchSectionDefinition = {
   authoringContract: 2,
   title: 'The ventilated patient',
   shortTitle: 'Ventilated patient',
-  minutes: 11,
+  minutes: 12,
   activityMinutes: 4,
   moduleIds: ['M16'],
   objectives: [
@@ -190,7 +194,7 @@ export const section: BronchSectionDefinition = {
       points: [
         `Oxygen: FiO₂ ${num('vent-fio2')}, starting ${num('vent-fio2-lead-time')} before.`,
         'Mode: a volume-targeted mode pushes each breath past the scope.',
-        `Tidal volume: raise it by ${num('vent-tidal-volume-increase')} during the procedure.`,
+        `Tidal volume: may be raised by ${num('vent-tidal-volume-increase')} if delivery falls.`,
         'Pressure limit: raise it, so the alarm does not cut each breath short.',
         'PEEP: the scope traps gas and adds its own. Decide whether to lower it.',
       ],
@@ -204,17 +208,32 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Read the ventilator with the scope in',
-      body: 'Peak pressure is what it takes to drive gas down the tube. Plateau pressure, measured with a pause at the end of inspiration, is the lung alone.',
+      body: 'Peak pressure drives gas down the tube. Plateau pressure, measured with an inspiratory pause, is the lung alone.',
       pointsLabel: 'What each pattern means',
       points: [
         'Peak up, plateau unchanged: the scope’s resistance. Expected.',
         'Peak and plateau both up: more than the scope. Think trapped gas, pneumothorax, a plugged lobe, or a tube in one bronchus.',
-        'Pressure control: the pressure reads the same and the delivered volume falls, with no alarm.',
-        'Auto-PEEP: the breath out does not finish before the next breath in. Gas stacks up, the plateau rises and the blood pressure falls. A longer breath out, or a moment off the circuit, releases it.',
+        'Pressure control: the pressure holds and the delivered volume falls. The high-pressure alarm does not warn you. Low-volume and low minute-ventilation alarms can, if set near baseline.',
+        'Auto-PEEP: the breath out does not finish before the next breath. Gas stacks up, the plateau rises and the blood pressure falls. A longer breath out, or a moment off the circuit, releases it.',
       ],
       claimClass: 'synthesis',
-      sourceRefs: [...MODES, ...TRAPPED_GAS],
+      sourceRefs: [...MODES, ...TRAPPED_GAS, ALARMS],
       reviewItemIds: ['R29'],
+    },
+    {
+      id: 'raising-tidal-volume',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Raising the tidal volume',
+      body: `The scope can cost delivered volume. When the exhaled volume is below baseline and the plateau has not moved, raising the set volume by ${num('vent-tidal-volume-increase')} may win it back. Aim for the baseline breath, not a bigger one.`,
+      pointsLabel: 'Do not raise it further when',
+      points: [
+        'The plateau climbs. The extra gas is reaching the lung, so turn the volume back. This matters most on lung-protective settings.',
+        'The breath out does not finish. A bigger breath stacks more gas. A smaller breath protects against hyperinflation, at the cost of a rising carbon dioxide, so take the scope out.',
+      ],
+      claimClass: 'synthesis',
+      sourceRefs: [VENTILATOR[1], ...TRAPPED_GAS],
+      localPolicyIds: ['icu_bronchoscopy_policy'],
     },
     {
       id: 'ventilation-falls',
@@ -459,12 +478,12 @@ export const section: BronchSectionDefinition = {
             },
             {
               id: 'c',
-              label: 'Have the respiratory rate raised to clear carbon dioxide',
+              label: 'Have the tidal volume raised to bring his breaths back',
               rationale:
-                'A faster rate leaves even less time to breathe out. More gas is trapped and the blood pressure falls further.',
+                'His breath out has not finished. A bigger breath, like a faster rate, stacks more gas on what is trapped, and the blood pressure falls further.',
               plausibility: 'incorrect-mechanism',
               consequence: {
-                situation: 'At the higher rate the auto-PEEP climbs to 14 cmH₂O.',
+                situation: 'At the larger volume the auto-PEEP climbs to 14 cmH₂O.',
                 readings: ventilator(
                   ['50', 'rising'],
                   ['230', 'falling'],
@@ -680,14 +699,14 @@ export const section: BronchSectionDefinition = {
     id: 'ventilated-patient-transfer',
     itemType: 'management-decision',
     situation:
-      'A woman with a tracheostomy is on pressure control. You pass the thin scope through the adapter. The peak pressure reads 22 cmH₂O, as before, and no alarm sounds. Her delivered volume has gone from 420 to 250 mL.',
+      'A woman with a tracheostomy is on pressure control. You pass the thin scope through the adapter. Her peak pressure stays at 22 cmH₂O and the high-pressure alarm is silent. So is the low-volume alarm, set well below her baseline. Her delivered volume has gone from 420 to 250 mL.',
     stem: 'The pressure has not moved. What is your next step?',
     choices: [
       {
         id: 'a',
         label: 'Take the scope out and plan shorter passes with a higher set pressure',
         rationale:
-          'In pressure control the pressure is fixed and the volume is what gives. A fall like this is the scope, and no alarm will tell you.',
+          'In pressure control the pressure is fixed and the volume is what gives. The high-pressure alarm will not tell you, and a low-volume alarm will only if set near her baseline.',
         plausibility: 'best',
       },
       {
@@ -712,11 +731,11 @@ export const section: BronchSectionDefinition = {
       },
     ],
     explanation:
-      'A pressure-control breath is held at the set pressure for the set time, so the scope shows up as lost volume. Watch the delivered volume on every pass, and come out when it falls.',
+      'A pressure-control breath is held at the set pressure for the set time, so the scope shows up as lost volume, not as a high-pressure alarm. A low-volume or low minute-ventilation alarm sounds only when its limit is crossed, so have it set near baseline. Watch the delivered volume on every pass, and come out when it falls.',
     objectiveIds: ['M16-O5'],
     outcomeIds: ['read-the-ventilator'],
     claimClass: 'update',
-    sourceRefs: MODES,
+    sourceRefs: [...MODES, ALARMS],
     reviewItemIds: ['R29'],
     retrievesFrom: 'deterioration',
     transferVariant:

@@ -758,6 +758,12 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'peak-and-plateau',
     ]),
     screen(
+      'tidal-volume',
+      'Raising the tidal volume',
+      'Read when a bigger breath helps and when it harms.',
+      ['raising-tidal-volume'],
+    ),
+    screen(
       'falling',
       'When ventilation falls',
       'Learn the card, then read what suction does to the lung.',

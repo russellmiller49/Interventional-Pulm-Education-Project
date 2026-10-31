@@ -477,12 +477,22 @@ const ROWS = {
   },
   'vent-tidal-volume-increase': {
     row: 17,
-    label: 'Tidal volume increase during the procedure',
+    label: 'Tidal volume may be raised during the procedure by',
     value: '100–150 mL',
     class: 'guideline',
     status: 'verified',
-    sources: [U2('good practice')],
+    sources: [
+      {
+        sourceId: 'U2',
+        grade: 'good practice',
+        locator:
+          'Ventilator settings during flexible bronchoscopy in mechanically ventilated patients',
+      },
+    ],
     ...PLAN,
+    checkedOn: '2026-10-31',
+    checkedBy: 'Claude, from the guideline full text (PMC6681731)',
+    note: 'Printed as "may be increased", a usual practice point without research evidence. The same passage records a second strategy: limit the pressure and accept a smaller tidal volume to avoid dynamic hyperinflation, at the risk of hypercarbia.',
   },
   // 18 · Bleeding grades (Nashville)
   'nashville-grade-1': {
