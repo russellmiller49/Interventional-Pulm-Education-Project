@@ -18,6 +18,18 @@ const CHECK = {
   signedOn: null,
 } as const
 
+/** The hyperkalemia and liver-failure rows behind CRRT-03, read from each source's full text. */
+const CHECK_CRRT_03 = {
+  checkedOn: '2026-10-31',
+  checkedBy: 'Claude, against the source text',
+  signedBy: null,
+  signedOn: null,
+} as const
+
+const UKKA = 'GUID-UKKA-HYPERKALEMIA-2023'
+const KDIGO_ACUTE_K = 'CONSENSUS-KDIGO-ACUTE-HYPERKALEMIA-2020'
+const EASL = 'GUID-EASL-ALF-2017'
+
 const manual = (sourceId: string, locator: string): TeachingNumberCitation => ({
   sourceId,
   year: 2019,
@@ -264,6 +276,169 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     ],
     note: 'The limit itself is set per patient at setup. Reaching it suspends treatment permanently.',
     ...CHECK,
+  },
+  'hyperkalemia-severe': {
+    label: 'Severe hyperkalemia',
+    value: '≥6.5 mmol/L',
+    class: 'guideline',
+    sources: [
+      { sourceId: UKKA, year: 2023, grade: '1C', locator: 'Guideline 14.2' },
+      { sourceId: UKKA, year: 2023, grade: '1B', locator: 'Guideline 16.3.1' },
+    ],
+    note: 'The KDIGO conference paper says no universal severity grading exists and uses an opinion-based risk figure.',
+    ...CHECK_CRRT_03,
+  },
+  'calcium-dose': {
+    label: 'IV calcium for ECG changes of hyperkalemia',
+    value:
+      '30 mL of 10% calcium gluconate over 10 minutes (or 10 mL of 10% calcium chloride over 5)',
+    appliesTo: 'Equivalent 6.8 mmol doses. UKKA keeps calcium chloride for arrest or peri-arrest.',
+    class: 'guideline',
+    sources: [
+      { sourceId: UKKA, year: 2023, grade: '1C', locator: 'Guidelines 16.2a and 16.2b' },
+      { sourceId: KDIGO_ACUTE_K, year: 2020, grade: null, locator: 'Figure 3 footnote' },
+    ],
+    note: 'UKKA does not recommend calcium with a normal ECG (rationale, p. 77). The KDIGO paper quotes the European Resuscitation Council: chloride over 2–5 minutes.',
+    ...CHECK_CRRT_03,
+  },
+  'calcium-without-ecg': {
+    label: 'Potassium at which KDIGO gives calcium when no ECG is available',
+    value: 'above 6.5 mmol/L',
+    class: 'consensus',
+    sources: [
+      {
+        sourceId: KDIGO_ACUTE_K,
+        year: 2020,
+        grade: null,
+        locator: 'Treatment of hyperkalemia, Cellular membrane stabilization',
+      },
+    ],
+    note: 'UKKA gives calcium only for ECG changes. Both are shown in CRRT-03.',
+    ...CHECK_CRRT_03,
+  },
+  'insulin-glucose': {
+    label: 'Insulin-glucose for severe hyperkalemia',
+    value: '10 units of soluble insulin with 25 g glucose',
+    class: 'guideline',
+    sources: [{ sourceId: UKKA, year: 2023, grade: '1B', locator: 'Guideline 16.3.1' }],
+    note: 'UKKA states further study is needed before 5 units can be recommended (p. 92). KDIGO’s algorithm uses 5 units: see insulin-low-dose.',
+    ...CHECK_CRRT_03,
+  },
+  'insulin-low-dose': {
+    label: 'Insulin dose in the KDIGO hyperkalemia algorithm',
+    value: '5 units with 25 g glucose',
+    class: 'consensus',
+    sources: [{ sourceId: KDIGO_ACUTE_K, year: 2020, grade: null, locator: 'Figure 3 footnote' }],
+    note: 'The figure’s thresholds and doses are stated to be opinion based. The same paper’s text also discusses 10 units.',
+    ...CHECK_CRRT_03,
+  },
+  'insulin-peak': {
+    label: 'Peak potassium fall after insulin-glucose',
+    value: '30–60 minutes',
+    class: 'guideline',
+    sources: [
+      { sourceId: UKKA, year: 2023, grade: null, locator: 'Rationale 16.3, p. 82' },
+      { sourceId: KDIGO_ACUTE_K, year: 2020, grade: null, locator: 'Reassessment' },
+    ],
+    ...CHECK_CRRT_03,
+  },
+  'rebound-window': {
+    label: 'When potassium rebounds after shifting drugs',
+    value: 'at 2–3 hours',
+    class: 'consensus',
+    sources: [{ sourceId: KDIGO_ACUTE_K, year: 2020, grade: null, locator: 'Reassessment' }],
+    note: 'UKKA: the fall may hold for up to 2 hours, then a gradual rebound (p. 82). Applies when potassium has not been removed from the body.',
+    ...CHECK_CRRT_03,
+  },
+  'insulin-repeat': {
+    label: 'Potassium at which UKKA considers a further insulin-glucose dose',
+    value: 'still 6.0 mmol/L or higher 2 hours after the infusion',
+    class: 'guideline',
+    sources: [{ sourceId: UKKA, year: 2023, grade: null, locator: 'Rationale 16.3, p. 92' }],
+    ...CHECK_CRRT_03,
+  },
+  'post-insulin-glucose-trigger': {
+    label: 'Pre-treatment glucose that calls for a follow-on infusion',
+    value: 'below 7.0 mmol/L (126 mg/dL)',
+    class: 'guideline',
+    sources: [{ sourceId: UKKA, year: 2023, grade: '2B', locator: 'Guideline 16.3.3' }],
+    note: 'mg/dL is converted from the printed mmol/L.',
+    ...CHECK_CRRT_03,
+  },
+  'post-insulin-glucose': {
+    label: 'Follow-on glucose after insulin',
+    value: '10% glucose at 50 mL/h for 5 hours',
+    class: 'guideline',
+    sources: [{ sourceId: UKKA, year: 2023, grade: '2B', locator: 'Guideline 16.3.3' }],
+    ...CHECK_CRRT_03,
+  },
+  'salbutamol-dose': {
+    label: 'Nebulized salbutamol for severe hyperkalemia',
+    value: '10–20 mg of nebulized salbutamol',
+    class: 'guideline',
+    sources: [
+      { sourceId: UKKA, year: 2023, grade: '1B', locator: 'Guideline 16.4.1' },
+      { sourceId: UKKA, year: 2023, grade: '1A', locator: 'Guideline 16.4.3' },
+    ],
+    note: 'Adjuvant only, never monotherapy. UKKA advises a lower dose and cardiac monitoring in cardiac disease (p. 96).',
+    ...CHECK_CRRT_03,
+  },
+  'glucose-checks': {
+    label: 'Blood glucose checks after insulin-glucose',
+    value: 'at 0, 30, 60, 90, 120, 180, 240, 300 and 360 minutes',
+    class: 'guideline',
+    sources: [{ sourceId: UKKA, year: 2023, grade: '1C', locator: 'Guideline 17.2' }],
+    note: 'EASL separately asks for glucose checks every 2 hours in hyperacute liver failure, with or without insulin.',
+    ...CHECK_CRRT_03,
+  },
+  'potassium-recheck': {
+    label: 'Potassium checks after treatment',
+    value: 'at 1, 2, 4, 6 and 24 hours',
+    class: 'guideline',
+    sources: [
+      { sourceId: UKKA, year: 2023, grade: '2C', locator: 'Guideline 17.1.2' },
+      { sourceId: KDIGO_ACUTE_K, year: 2020, grade: null, locator: 'Reassessment' },
+    ],
+    note: 'KDIGO gives the first recheck at 60 minutes; UKKA gives the full series as a minimum.',
+    ...CHECK_CRRT_03,
+  },
+  'alf-sodium-recommendation': {
+    label: 'Serum sodium in acute liver failure: EASL recommendation',
+    value: '140–150 mmol/L',
+    class: 'guideline',
+    sources: [
+      {
+        sourceId: EASL,
+        year: 2017,
+        grade: 'Evidence II-2, recommendation 1',
+        locator: 'Metabolic management, recommendations, p. 1062',
+      },
+    ],
+    note: 'The same guideline gives 140–145 mmol/L in its text and 135–145 mmol/L in Table 9.',
+    ...CHECK_CRRT_03,
+  },
+  'alf-sodium-icp': {
+    label: 'Serum sodium in raised intracranial pressure: EASL general measures',
+    value: '140–145 mmol/L',
+    class: 'guideline',
+    sources: [
+      {
+        sourceId: EASL,
+        year: 2017,
+        grade: null,
+        locator: 'Therapeutic options for raised intracranial pressure',
+      },
+    ],
+    ...CHECK_CRRT_03,
+  },
+  'alf-sodium-rate': {
+    label: 'Fastest sodium change in acute liver failure',
+    value: '10 mmol/L per 24 hours',
+    class: 'guideline',
+    sources: [
+      { sourceId: EASL, year: 2017, grade: null, locator: 'Metabolic management, p. 1061' },
+    ],
+    ...CHECK_CRRT_03,
   },
   'blood-leak-normalization-floor': {
     label: 'PrisMax blood leak detector: lowest signal that can be normalized',

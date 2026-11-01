@@ -111,7 +111,7 @@ const candidateClinicalSources = [
     sourceType: 'guideline' as const,
     documentVersion: 'Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416',
     pageOrSection:
-      'Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6',
+      'Recommendations 2.1, 2.4, 3.2, 3.3, 3.5, 3.6, 5.1, and 5.3 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6',
     implementationLocation:
       'content/phase7ReviewCases.ts · CRRT-01, CRRT-02, CRRT-05, CRRT-06, CRRT-07, CRRT-11, and CRRT-15',
     reviewer: null,
@@ -128,6 +128,55 @@ const candidateClinicalSources = [
     documentVersion: 'N Engl J Med. 2020;383:240–251 · PMID 32668114',
     pageOrSection: 'DOI 10.1056/NEJMoa2000741 · https://pubmed.ncbi.nlm.nih.gov/32668114/',
     implementationLocation: 'content/phase7ReviewCases.ts · CRRT-01 and CRRT-02 debrief',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'GUID-UKKA-HYPERKALEMIA-2023',
+    claim:
+      'The guideline sets a five-step hospital treatment of hyperkalemia: protect the heart, shift potassium into cells, remove it, monitor potassium and glucose, and prevent recurrence.',
+    value:
+      'Doses and schedules are recorded in the CRRT numbers register. The guideline does not address acute liver failure, cerebral edema or a patient already on CRRT.',
+    sourceTitle: 'Clinical Practice Guidelines: Treatment of Acute Hyperkalaemia in Adults',
+    sourceType: 'guideline' as const,
+    documentVersion: 'UK Kidney Association. Final version October 2023; review date October 2026',
+    pageOrSection:
+      'Guidelines 14.1–14.2, 16.1–16.5, 17.1–17.2, 18.2, 19.6 · https://ukkidney.org/sites/renal.org/files/FINAL%20VERSION%20-%20UKKA%20CLINICAL%20PRACTICE%20GUIDELINE%20-%20MANAGEMENT%20OF%20HYPERKALAEMIA%20IN%20ADULTS%20-%20191223.pdf',
+    implementationLocation: 'content/completeCases.ts · CRRT-03',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'CONSENSUS-KDIGO-ACUTE-HYPERKALEMIA-2020',
+    claim:
+      'The KDIGO conference summary advises ECG monitoring, calcium for ECG changes, shifting agents, removal, and early reassessment for rebound, and warns that a normal ECG is not reassuring.',
+    value:
+      'Consensus suggestions written for the emergency department; its treatment thresholds are stated to be opinion based.',
+    sourceTitle:
+      'Acute hyperkalemia in the emergency department: a summary from a Kidney Disease: Improving Global Outcomes conference',
+    sourceType: 'peer-reviewed' as const,
+    documentVersion:
+      'Lindner G, Burdmann EA, Clase CM, et al. Eur J Emerg Med. 2020;27:329–337 · PMID 32852924 · PMCID PMC7448835',
+    pageOrSection:
+      'Monitoring, Treatment, Reassessment and Figure 3 · DOI 10.1097/MEJ.0000000000000691',
+    implementationLocation: 'content/completeCases.ts · CRRT-03',
+    reviewer: null,
+    reviewStatus: PENDING,
+  },
+  {
+    id: 'GUID-EASL-ALF-2017',
+    claim:
+      'The guideline says continuous RRT should always be used over intermittent hemodialysis in the critically ill patient with acute liver failure, and describes hypoglycemia, sodium control and the risk of raised intracranial pressure in grade 3–4 encephalopathy.',
+    value:
+      'It gives no CRRT dose and does not address hyperkalemia treatment. Its sodium values differ between sections, and the register shows them.',
+    sourceTitle:
+      'EASL Clinical Practical Guidelines on the management of acute (fulminant) liver failure',
+    sourceType: 'guideline' as const,
+    documentVersion:
+      'European Association for the Study of the Liver. J Hepatol. 2017;66:1047–1081',
+    pageOrSection:
+      'Metabolic management; Acute kidney injury and renal replacement therapy; Intracranial hypertension · DOI 10.1016/j.jhep.2016.12.003',
+    implementationLocation: 'content/completeCases.ts · CRRT-03',
     reviewer: null,
     reviewStatus: PENDING,
   },

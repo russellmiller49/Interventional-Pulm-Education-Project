@@ -155,7 +155,7 @@ describe.each(['CRRT-03', 'CRRT-04'] as const)(
   },
 )
 
-describe('F06-R01 · CRRT-03 states its values, keys on the dose and shows no solute series', () => {
+describe('F06-R01 · CRRT-03 states its values, keys on the first moves and shows no solute series', () => {
   const definition = getBaxterCrrtCase('CRRT-03')
   const coordinate = intervention(definition, 'action-safe-candidate')
 
