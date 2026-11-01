@@ -10,6 +10,7 @@ import {
  * 2026-10-08 against the ARDS Network protocol summary card (text extracted from the PDF), the
  * PubMed records of the 2017 guideline and the 2015 driving-pressure analysis, and the supplied
  * copy of Tobin's 3rd edition. None is signed yet: `npm run numbers:signoff -- mechanical-ventilation`.
+ * The driving-pressure row was rechecked on 2026-10-31 against the AARC 2024 full text.
  */
 const CHECK = {
   checkedOn: '2026-10-08',
@@ -84,22 +85,66 @@ export const VENTILATION_NUMBERS = defineTeachingNumbers('mechanical-ventilation
     sources: [card('Plateau pressure goal')],
     ...CHECK,
   },
-  'driving-pressure-limit': {
-    label: 'Driving pressure (plateau − PEEP)',
-    value: '≤15 cmH₂O',
-    class: 'consensus',
+  'driving-pressure-reference': {
+    label: 'Driving pressure reference (plateau − total PEEP)',
+    value: 'about 15 cmH₂O',
+    appliesTo: 'A passive patient, with plateau and total PEEP each read on a hold',
+    class: 'guideline',
     sources: [
+      {
+        sourceId: 'aarc-assessment-2024',
+        year: 2024,
+        grade: 'conditional recommendation, low certainty',
+        locator:
+          'Recommendation 5; Table 2 prints the target of ≤15 cmH₂O; PICO 1 gives the total-PEEP definition',
+      },
+      {
+        sourceId: 'aoyama-driving-pressure-2018',
+        year: 2018,
+        grade: null,
+        locator: 'Abstract: cutoffs of 13–15 cmH₂O',
+      },
+      {
+        sourceId: 'bugedo-driving-pressure-2017',
+        year: 2017,
+        grade: null,
+        locator: 'Section "Clinical use of driving pressure"',
+      },
       {
         sourceId: 'amato-driving-pressure-2015',
         year: 2015,
         grade: 'observational',
-        locator: 'Abstract; survival curves by driving-pressure stratum',
+        locator: 'Abstract',
+      },
+      {
+        sourceId: 'agrafiotis-driving-pressure-rcts-2026',
+        year: 2026,
+        grade: null,
+        locator: 'Abstract; Results; Table 1',
       },
     ],
-    note: 'The analysis shows mortality rising with driving pressure. 15 cmH₂O is the ceiling most units teach from it; no trial has tested it as a target.',
+    note: 'AARC 2024 prints a target of ≤15 cmH₂O under a conditional, low-certainty suggestion to assess driving pressure. Bugedo 2017 reports suggested cutoffs of 14 to 18 and proposes 15 as a safety limit rather than a target. Trials aimed at ≤14 or ≤10; pooled, they have not shown lower mortality.',
     ...CHECK,
+    checkedOn: '2026-10-31',
     checkedBy:
-      'Claude, against the PubMed abstract only. The 15 cmH₂O figure was not read from the article; owner to confirm.',
+      'Claude, against the AARC 2024, Bugedo 2017 and Agrafiotis 2026 full text and the Amato 2015 and Aoyama 2018 abstracts. The Amato article itself was not available, so its figures and its handling of intrinsic PEEP were not read.',
+  },
+  'driving-pressure-aarc-target': {
+    label: 'Driving pressure target printed by AARC',
+    value: '≤15 cmH₂O',
+    class: 'guideline',
+    sources: [
+      {
+        sourceId: 'aarc-assessment-2024',
+        year: 2024,
+        grade: 'conditional recommendation, low certainty',
+        locator: 'Recommendation 5; Table 2',
+      },
+    ],
+    note: 'The grade belongs to the suggestion to assess driving pressure. Table 2 prints the target beside it, with no separate grade.',
+    ...CHECK,
+    checkedOn: '2026-10-31',
+    checkedBy: 'Claude, against the AARC 2024 full text.',
   },
   'oxygenation-pao2': {
     label: 'Oxygenation goal, PaO₂',

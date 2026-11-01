@@ -349,8 +349,9 @@ export function VentilationConsoleSurface({
           <p className={styles.note}>
             Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
             {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
-            {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure{' '}
-            {VENTILATION_NUMBERS.value('driving-pressure-limit')}.
+            {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure (plateau minus total
+            PEEP) held against the reference of{' '}
+            {VENTILATION_NUMBERS.value('driving-pressure-reference')}.
           </p>
         </section>
       ) : null}

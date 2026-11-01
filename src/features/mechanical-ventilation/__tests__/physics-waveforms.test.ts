@@ -919,6 +919,23 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
         )
       })
 
+      /*
+       * The plateau carries the trapped pressure, so plateau minus total PEEP is the tidal elastic
+       * pressure the copy calls driving pressure. Subtracting set PEEP would read high by the
+       * intrinsic PEEP.
+       */
+      it('keeps plateau minus total PEEP equal to tidal volume over compliance with gas trapped', () => {
+        const state = advanceSimulation(createInitialSimulationState('MV-06', 'learn'), 30)
+        const { measurements } = state
+        const { settings } = state.ventilator
+        if (settings.mode !== 'volume-ac') throw new Error('MV-06 starts on volume control')
+        expect(measurements.intrinsicPeepCmH2O).toBeGreaterThan(1)
+
+        const totalPeep = settings.peepCmH2O + measurements.intrinsicPeepCmH2O
+        const drivingPressure = measurements.relaxedPlateauPressureCmH2O - totalPeep
+        expect(drivingPressure).toBeCloseTo(settings.vtMl / measurements.staticComplianceMlCmH2O, 0)
+      })
+
       it('keeps the running lung volume across an intervention', () => {
         const state = advanceSimulation(createInitialSimulationState('MV-10', 'learn'), 30)
         const before = state.patient.mechanics.endExpiratoryVolumeL

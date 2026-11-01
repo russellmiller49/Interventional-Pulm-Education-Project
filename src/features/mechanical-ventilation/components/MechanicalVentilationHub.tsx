@@ -155,11 +155,11 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             </li>
             <li>
               <strong>The numbers, with their source</strong>
-              The limits a fellow is expected to know sit beside the live readings:{' '}
+              The numbers a fellow is expected to know sit beside the live readings:{' '}
               {VENTILATION_NUMBERS.value('vt-ards-goal')}, plateau{' '}
-              {VENTILATION_NUMBERS.value('pplat-limit')}, driving pressure{' '}
-              {VENTILATION_NUMBERS.value('driving-pressure-limit')}. Each names where it comes from.
-              Your unit may set some of them differently.
+              {VENTILATION_NUMBERS.value('pplat-limit')}, and a driving-pressure reference of{' '}
+              {VENTILATION_NUMBERS.value('driving-pressure-reference')}. Each names where it comes
+              from. Your unit may set some of them differently.
             </li>
           </ul>
         </section>

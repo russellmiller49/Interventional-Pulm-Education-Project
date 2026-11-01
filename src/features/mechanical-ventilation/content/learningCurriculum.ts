@@ -316,12 +316,13 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     spine: 'delivery',
     analogy:
       'Choose a container’s fill by its capacity, not by the weight of everything around it.',
-    explanation: `Size the breath to the lung, and lung size follows height and sex, not weight. Predicted body weight (PBW) for a man is ${N('pbw-male')}; for a woman, ${N('pbw-female')}. In ARDS the goal is ${N('vt-ards-goal')}, within ${N('vt-ards-range')}, with plateau pressure ${N('pplat-limit')} and driving pressure (plateau minus PEEP) ${N('driving-pressure-limit')}. If the plateau is over the limit, step the tidal volume down by 1 mL/kg, to a minimum of 4 mL/kg.`,
+    explanation: `Size the breath to the lung, and lung size follows height and sex, not weight. Predicted body weight (PBW) for a man is ${N('pbw-male')}; for a woman, ${N('pbw-female')}. In ARDS the goal is ${N('vt-ards-goal')}, within ${N('vt-ards-range')}, with plateau pressure ${N('pplat-limit')}. If the plateau is over the limit, step the tidal volume down by 1 mL/kg, to a minimum of 4 mL/kg. Driving pressure is plateau minus total PEEP: set PEEP plus any intrinsic PEEP. It needs a passive patient, with the plateau read on an inspiratory pause and total PEEP on an end-expiratory hold. The commonly taught reference is ${N('driving-pressure-reference')}. Higher values track with higher mortality in observational data, and AARC 2024 lists ${N('driving-pressure-aarc-target')} as a target on a conditional, low-certainty suggestion. Trials of limiting it have not shown lower mortality. Use it to question the breath; it does not replace the tidal volume and plateau goals, and a value under the reference does not clear a high plateau.`,
     checklist: [
       'Calculate PBW from height and sex.',
       'Express the delivered tidal volume in mL/kg PBW.',
       `Read a plateau on a relaxed patient with a ${N('pplat-pause')} pause.`,
-      'Subtract PEEP for the driving pressure.',
+      'Read total PEEP with an end-expiratory hold on the same relaxed patient.',
+      'Subtract total PEEP, not set PEEP, from the plateau for the driving pressure.',
     ],
     example: {
       situation:
@@ -329,7 +330,8 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       reasoning: [
         'PBW is 50 + 2.3 × (70 − 60) = 73 kg. The scale weight does not enter.',
         '550 mL ÷ 73 kg is 7.5 mL/kg. The goal of 6 mL/kg is 440 mL.',
-        'If the plateau is 32 cmH₂O on PEEP 10, the driving pressure is 22 cmH₂O. Both are over their limits.',
+        `The plateau reads 32 cmH₂O. An end-expiratory hold reads 10 on set PEEP 10, so there is no intrinsic PEEP, and the driving pressure is 32 − 10 = 22 cmH₂O. The plateau is over its limit and the driving pressure is well above the reference of ${N('driving-pressure-reference')}.`,
+        'Had the hold read 14, total PEEP would be 14 and the driving pressure 32 − 14 = 18 cmH₂O. Subtracting set PEEP would have overstated it by the 4 cmH₂O of intrinsic PEEP. The plateau would still be over its limit.',
       ],
       conclusion:
         'Step the tidal volume down toward 440 mL and repeat the plateau after each change.',
@@ -340,6 +342,9 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       'ats-ards-2024',
       'amato-driving-pressure-2015',
       'aarc-assessment-2024',
+      'aoyama-driving-pressure-2018',
+      'bugedo-driving-pressure-2017',
+      'agrafiotis-driving-pressure-rcts-2026',
     ],
     caseIds: ['MV-01', 'MV-03'],
     visual: 'protection',

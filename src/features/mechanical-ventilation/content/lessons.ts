@@ -890,8 +890,8 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
           'Hold maneuvers assume a relaxed patient. Reported values from an actively breathing patient are not interpretable as mechanics.',
       },
       {
-        title: 'The limits in ARDS',
-        summary: `Tidal volume ${VENTILATION_NUMBERS.value('vt-ards-goal')}, plateau pressure ${VENTILATION_NUMBERS.value('pplat-limit')}, driving pressure ${VENTILATION_NUMBERS.value('driving-pressure-limit')}.`,
+        title: 'The numbers in ARDS',
+        summary: `Tidal volume ${VENTILATION_NUMBERS.value('vt-ards-goal')} and plateau pressure ${VENTILATION_NUMBERS.value('pplat-limit')}. Driving pressure, plateau minus total PEEP, is held against a reference of ${VENTILATION_NUMBERS.value('driving-pressure-reference')}.`,
       },
     ],
   }),
