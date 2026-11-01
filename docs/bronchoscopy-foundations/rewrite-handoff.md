@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-12 (after the integrated cases). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-12 (after the practice clean-up). Start the next session from this file.
 
 ## Why this work exists
 
@@ -13,33 +13,28 @@ supervisor" answers.
 
 ## Where things stand
 
-All fifteen sections are on `main`: #349 to #375 were merged on 2026-10-10 with #351 and #376,
-#377 (section 13) and #378 (section 15, with capstone C09) the next day, and #381 (four
-teaching gaps in sections 13 and 15, from the review of those two) after that. #348 is closed.
+On `main`: all fifteen sections (#349 to #378, with #351 and #376), the four teaching-gap fixes
+to sections 13 and 15 (#381), and #391, merged on 2026-10-12, which holds the hub, the closing
+screen, the image bank, the vignettes, the mixed sets and the integrated cases. #391 replaced
+five stacked drafts (#380, #382, #385, #388, #389), now closed. #348 is closed.
 
-One PR is open, and it holds everything since:
+One PR is open:
 
-| PR   | Branch                       | State                                                                                                     |
-| ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
-| #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
-
-It replaces five stacked drafts, which carried the same commits one step at a time: #380 (hub and
-closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
-cases). All five were closed on 2026-10-12, each with a note pointing here; their branches
-still exist. `main` was merged into the combined branch on 2026-10-12
-with no conflict.
+| PR   | Branch                       | State                                                                                          |
+| ---- | ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| #394 | `claude/bf-practice-cleanup` | Draft, targets `main`. The plan's clean-up of the older practice questions: eight small fixes. |
 
 The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
-`claude/bf-integrated-cases`, the last of the stacked branches. Its unstaged
-`.claude/launch.json` blocks a merge of `main` there, so the combined branch was made in a
-temporary checkout. Branch the next change from `origin/main` once #391 is merged.
+`claude/bf-practice-cleanup`. Its unstaged `.claude/launch.json` holds the `claude-bf` dev-server
+entry and blocks a switch or a merge that touches that file: copy it aside, restore the file,
+switch, and copy it back. Branch the next change from `origin/main` once #394 is merged.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
 2. The fifteen sections, the hub, the closing screen, the image bank, the vignettes, the mixed
-   sets and the integrated cases are written. Left in the plan's practice and assessment (item
-   7 under "What is left"): cleaning the older practice items, and replacing the 108 objectives
+   sets, the integrated cases and the practice clean-up are written. One thing is left in the
+   plan's practice and assessment (item 7 under "What is left"): replacing the 108 objectives
    with about 25. Self-check mode is still Russell's decision.
 3. Things to know before that change:
    - With the image bank and the vignettes the course shows an image in 79 of 187 questions,
@@ -101,7 +96,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #391 reviewed and merged.** Everything before it is on `main`.
+1. **Get #394 reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
@@ -524,11 +519,27 @@ sections no longer wait for sessions with the pilot.
    - For Russell to confirm: all eight keys and reasons, written from general knowledge. Most
      in need of a look: C04 (theatre, anesthesia and rigid bronchoscopy before any scope); C16
      (an unwedged 40 mL sample read as a washing); C10's report line; the new pairings.
-   - Still open: the plan's clean-up of the older practice items (findings F-01 to F-07 and
-     F-09 are in sections since rewritten, so check which still apply; the mismatches C08d
-     and `mc-handle-turns-view-static`; the three stems that give the key away); and about 25
-     objectives replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15).
-     Self-check mode is plan decision 5, not yet made.
+   - The practice clean-up is done (2026-10-12). All 69 section questions were scanned for
+     the plan's patterns (a key that only pauses or hands off, a stem that carries the key's
+     own words, a key a test-wise reader finds, more than one `unsafe` choice), and each item
+     the plan names was read.
+   - Already resolved by the section rewrites, with nothing to change: findings F-01, F-05,
+     F-07, F-08 and F-09; the mismatches C05c, C08d, the lavage transfer item and
+     `mc-handle-turns-view-static`; and `mc-narrated-ninety-seconds`, which no longer exists.
+   - Changed, eight questions: `mc-lavage-site-selection` (the stem no longer names the
+     segment; the choices are RB1, RB2, RB3 and RB6); `mc-unreleased-scope` (the stem no
+     longer uses the key's word); `mc-toxicity-recognition` (F-03: the key is the first moves,
+     not the diagnosis); `view-loss-transfer` (F-04: the key sees the brush sheathed);
+     `mc-dark-field` (F-02: a second option that holds still, so the key is not the only
+     cautious one); `mc-sedation-depth` (F-06: second person); `mc-time-out-side-discrepancy`
+     (the key no longer opens with "Stop"); `mc-role-swap` (second person, no "simulation
+     station").
+   - Left as they are, on purpose: `mc-role-swap`'s key is a question to the operator, which
+     is the taught act; two antithrombotic keys open with "Stop" because the drug is stopped;
+     `mc-low-return-after-checks` has two `unsafe` choices and both are the section's reflex.
+   - The section questions' test-wise score is 19 in 100 (it was 21).
+   - Still open: about 25 objectives replacing the 108. The four evolving cases exist
+     (sections 3, 13, 14 and 15). Self-check mode is plan decision 5, not yet made.
 8. **Abnormal images** for sections 8, 10, 12 and 14. Bleeding has no image questions until these
    exist. Rights and de-identification are still pending on all 100 registered files.
 9. **Re-decide the review-register refusal rows** (R25, R26 and others) row by row with Russell.
