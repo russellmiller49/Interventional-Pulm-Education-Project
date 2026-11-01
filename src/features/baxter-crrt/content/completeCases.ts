@@ -32,6 +32,8 @@ interface CaseNarrative {
   /** Response when the accepted alternative records a different plan from the safe action. */
   readonly acceptedAlternativeResponse?: string
   readonly unsafeAction: string
+  /** A second tempting plan, for a case whose template carries one unsafe action. */
+  readonly secondUnsafe?: { readonly action: string; readonly why: string }
   readonly expectedResponse: string
   /**
    * The correct prediction's label. Defaults to "Expect a linked response, then verify it", which
@@ -1334,6 +1336,62 @@ function applyLearnerActionCopy(definition: MutableRuntimeCrrtCase): MutableRunt
   return definition
 }
 
+/**
+ * A plan the template has no slot for. It sits beside the template's unsafe action as a fourth
+ * control option and its own action card, so the debrief explains it the same way.
+ */
+function addSecondUnsafeAction(
+  definition: MutableRuntimeCrrtCase,
+  { action, why }: NonNullable<CaseNarrative['secondUnsafe']>,
+  syntheticId: string,
+): void {
+  const compact = definition.id.toLowerCase().replace('-', '')
+  const [unsafe] = definition.unsafeActions
+  const criticalError = definition.criticalErrors.find(({ id }) => id === unsafe.criticalErrorId)
+  const intervention = definition.interventions.find(({ id }) => id === unsafe.actionId)
+  const control = definition.controlOptions.find(({ id }) => id.endsWith('control-unsafe'))
+  if (!criticalError || !intervention || !control) {
+    throw new Error(`${definition.id} has no unsafe action to sit beside.`)
+  }
+  const actionId = `${compact}-action-unsafe-second`
+  const criticalErrorId = `${compact}-critical-unsafe-second`
+  definition.controlOptions = [
+    ...definition.controlOptions,
+    { ...control, id: `${compact}-control-unsafe-second`, label: action, description: why },
+  ]
+  definition.interventions = [
+    ...definition.interventions,
+    {
+      ...intervention,
+      id: actionId,
+      label: action,
+      category: 'prescription',
+      response: `Recorded; the machine beside the case does not change. ${why}`,
+      sourceIds: [syntheticId],
+    },
+  ]
+  definition.unsafeActions = [
+    ...definition.unsafeActions,
+    {
+      ...unsafe,
+      id: `${compact}-unsafe-second`,
+      actionId,
+      explanation: why,
+      criticalErrorId,
+    },
+  ]
+  definition.criticalErrors = [
+    ...definition.criticalErrors,
+    {
+      ...criticalError,
+      id: criticalErrorId,
+      label: action,
+      explanation: why,
+      actionIds: [actionId],
+    },
+  ]
+}
+
 function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   const template = sourceCaseById.get(narrative.templateId)
   if (!template) throw new Error(`Missing CRRT case template ${narrative.templateId}.`)
@@ -1517,6 +1575,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
     criticalError.explanation = narrative.unsafeWhy
     criticalError.sourceIds = [syntheticId]
   }
+  if (narrative.secondUnsafe) addSecondUnsafeAction(cloned, narrative.secondUnsafe, syntheticId)
 
   if (cloned.timedEvents[0]) {
     cloned.timedEvents[0].label = `Timed response: ${narrative.expectedResponse}`
@@ -1863,42 +1922,56 @@ const authoredNarratives: readonly CaseNarrative[] = [
     stationId: 'define-goal',
     difficulty: 'advanced',
     patientDescription:
-      'A 74 kg adult with acute liver failure and grade 3 encephalopathy develops oliguric AKI. Potassium is 6.9 mmol/L, pH 7.08, bicarbonate 10 mmol/L, and urea (the small-solute marker on the monitor) 38 mmol/L. CRRT is running as CVVHD with dialysate at 1,000 mL/h and no net fluid removal. The night team asks whether to switch to intermittent hemodialysis "to fix the numbers faster".',
+      'A 74 kg adult with acute liver failure and grade 3 encephalopathy develops oliguric AKI. Potassium is 6.9 mmol/L, pH 7.08, bicarbonate 10 mmol/L, sodium 136 mmol/L, glucose 104 mg/dL, and urea (the small-solute marker on the monitor) 38 mmol/L. No ECG has been recorded since these results came back. CRRT is running as CVVHD with dialysate at 1,000 mL/h and no net fluid removal. The night team asks whether to switch to intermittent hemodialysis "to fix the numbers faster".',
     learningObjectives: [
-      'Explain why a fast fall in urea is dangerous when the brain is already swollen.',
+      'Treat severe hyperkalemia in order: ECG and monitor, calcium for ECG changes, then insulin with glucose and salbutamol.',
+      'Set the glucose and potassium checks that insulin needs in a patient with liver failure and AKI.',
       'Work out the delivered dose in mL/kg/h and compare it with the target.',
+      'Explain why a fast fall in urea is dangerous when the brain is already swollen.',
       'Choose continuous therapy at an adequate dose over a faster intermittent treatment.',
     ],
-    goal: 'Correct the potassium and acidosis steadily, without a rapid fall in urea',
+    goal: 'Protect the heart and shift the potassium now, then clear it steadily on CRRT without a rapid fall in urea',
     goalDistractor: 'Bring the urea and potassium down as fast as the machine allows',
     mechanism:
-      'Urea leaves blood faster than it leaves brain. A fast fall in blood urea pulls water into the brain; a swollen brain has no room for it',
+      'Calcium and insulin work within minutes and CRRT over hours, so the drugs buy the time clearance needs. Clearance stays steady because urea leaves blood faster than it leaves brain: a fast fall in blood urea pulls water into a brain that has no room for it',
     mechanismDistractor:
       'Urea is itself the toxin, so the encephalopathy improves in step with how fast urea falls',
-    safeAction: `Stay on CRRT and raise the dialysate so the dose reaches ${N('dose-delivered')}, then recheck potassium, pH and sodium`,
+    safeAction: `12-lead ECG and monitor now, calcium for any ECG change, insulin with glucose plus nebulized salbutamol with scheduled glucose checks, stay on CRRT and bring the dose to ${N('dose-delivered')}, then recheck potassium at 1 hour`,
     acceptedAlternative:
-      'Stay on CRRT at the present dose, treat the potassium medically now, and recheck before changing the dose',
-    alternativeWhy:
-      'Also reasonable. Continuous therapy is kept, the potassium is treated at once with calcium, insulin and glucose, and the dose question is settled by the next set of results. The dose still needs to come up: 1,000 mL/h in a 74 kg patient is about 13.5 mL/kg/h.',
-    unsafeAction: 'Switch to intermittent hemodialysis to correct the numbers faster',
+      'Give calcium now without waiting for the 12-lead, then the same insulin, salbutamol, glucose checks, CRRT dose and 1-hour recheck',
+    alternativeWhy: `Reasonable when a 12-lead cannot be done at once. KDIGO suggests calcium for a potassium ${N('calcium-without-ecg')} when an ECG or monitor is not immediately possible; UKKA gives calcium only for ECG changes. Get the ECG as soon as you can: it decides whether more calcium is needed.`,
+    unsafeAction: 'Switch to intermittent hemodialysis to fix the numbers faster',
     unsafeWhy:
-      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. KDIGO suggests continuous therapy for patients with acute brain injury or raised intracranial pressure for this reason.',
-    expectedResponse:
-      'Your plan is recorded. At 74 kg, 1,000 mL/h is about 13.5 mL/kg/h; the target range needs roughly 1,500 to 1,850 mL/h. The machine beside the case keeps its settings, and its laboratory values are the case-start set.',
-    responseOptionLabel: 'Potassium and pH improve over hours, and urea falls slowly',
-    trendReview: `Check the arithmetic first: effluent ÷ weight. Here 1,000 ÷ 74 is about 13.5 mL/kg/h, below the ${N('dose-delivered')} that KDIGO recommends as delivered dose, so the answer to slow correction is more dialysate, and the answer is never a faster modality. Then follow potassium, pH, sodium and urea every few hours. What you want to see is a steady fall, with the neurological examination unchanged or better.`,
-    reassessment:
-      'Recheck potassium, pH, sodium and urea in a few hours, with a neurological examination each time',
+      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. KDIGO suggests continuous therapy for patients with acute brain injury or raised intracranial pressure for this reason, and EASL says continuous RRT should always be used in the critically ill patient with acute liver failure.',
+    secondUnsafe: {
+      action: `Raise the dialysate so the dose reaches ${N('dose-delivered')}, then recheck potassium, pH and sodium in a few hours`,
+      why: `The dose does need to come up, but CRRT removes potassium over hours and does nothing for the heart in the next few minutes. At this potassium the patient needs an ECG, calcium for any ECG change, and insulin with glucose now. UKKA gives calcium to dialysis patients with toxic ECG changes even when dialysis is immediately available, so a running machine is no reason to wait.`,
+    },
+    expectedResponse: `Your plan is recorded. The drugs act first: the fall in potassium after insulin peaks at ${N('insulin-peak')}. At 74 kg, 1,000 mL/h is about 13.5 mL/kg/h; delivering the target range takes roughly 1,500 to 1,850 mL/h. The machine beside the case keeps its settings, and its laboratory values are the case-start set.`,
+    responseOptionLabel:
+      'Potassium falls within the hour on the drugs, then CRRT holds it down over hours while urea falls slowly',
+    trendReview: `Check the arithmetic: effluent ÷ weight. Here 1,000 ÷ 74 is about 13.5 mL/kg/h, below the ${N('dose-delivered')} that KDIGO recommends as delivered dose, so raise the dialysate and confirm on the History screen that the dose is being delivered. Read the potassium on the dialysate bag too, because removal depends on the gradient as well as the flow. Recheck potassium ${N('potassium-recheck')} after treatment, with an ECG and a neurological examination at each check, and follow sodium and urea with them. If potassium is ${N('insulin-repeat')}, UKKA considers a further insulin-glucose dose. Sodium bicarbonate is not a routine potassium drug: UKKA suggests against routine use, and KDIGO keeps it for metabolic acidemia in a patient who can take the sodium load. Stay continuous unless the heart forces the question. IHD removes potassium faster, and the 2026 multidisciplinary guideline ties disequilibrium to the rate of osmotic shift, not to the modality alone. So if the ECG stays toxic or the potassium stays uncontrolled, take the modality decision to the ICU attending and nephrologist at once, with the brain in that decision.`,
+    reassessment: `Recheck potassium and the ECG ${N('potassium-recheck')}, glucose ${N('glucose-checks')} after insulin, and sodium, urea and a neurological examination with each potassium`,
     openingFinding:
-      'Potassium 6.9 mmol/L, pH 7.08, urea 38 mmol/L, and a brain that cannot tolerate swelling. Dose now: about 13.5 mL/kg/h.',
+      'Potassium 6.9 mmol/L, pH 7.08, glucose 104 mg/dL, no ECG yet, and a brain that cannot tolerate swelling. Dose now: about 13.5 mL/kg/h.',
     causalChain: [
-      'Hyperkalemia and acidosis need correcting now, and CRRT at an adequate dose corrects both over hours.',
-      'The brain is the limit on speed: a fast fall in blood urea leaves the brain relatively hyperosmolar, and water follows.',
+      `Potassium ${N('hyperkalemia-severe')} is severe hyperkalemia, and the heart is the first danger: 12-lead ECG and monitor now, because the ECG can be normal even at this level. Any ECG change gets ${N('calcium-dose')}. UKKA does not give calcium for a normal ECG.`,
+      `Then shift potassium into cells: ${N('insulin-glucose')}, with ${N('salbutamol-dose')} added, never alone. The KDIGO algorithm uses ${N('insulin-low-dose')}; UKKA keeps 10 units until the evidence for fewer is stronger.`,
+      `Liver failure with AKI makes hypoglycemia likely, and it can pass for worsening encephalopathy. Check glucose before insulin and ${N('glucose-checks')} after it. This patient starts ${N('post-insulin-glucose-trigger')}, so add ${N('post-insulin-glucose')}. EASL warns against rapid boluses of concentrated glucose because of the osmotic shift, so choose a dilute infusion for the 25 g.`,
+      `Those drugs remove nothing. The fall peaks at ${N('insulin-peak')} and rebound comes ${N('rebound-window')}, so CRRT has to do the removing, and it treats the acidosis too, over hours.`,
+      `The brain is the limit on speed: a fast fall in blood urea leaves the brain relatively hyperosmolar, and water follows. Sodium matters for the same reason. EASL recommends ${N('alf-sodium-recommendation')} and its raised-ICP section holds ${N('alf-sodium-icp')}, moving no faster than ${N('alf-sodium-rate')}, so 136 mmol/L is already low and should come up slowly.`,
       `So keep the treatment continuous and make the dose adequate: ${N('dose-delivered')} delivered, which means prescribing ${N('dose-prescribed')}.`,
     ],
     transferQuestion:
       'The same patient has a sodium of 124 mmol/L. How does that change the fluids you hang and how often you check?',
-    clinicalSourceIds: ['GUID-KDIGO-AKI-2012', 'GUID-RRT-ICU-2026'],
+    clinicalSourceIds: [
+      'GUID-UKKA-HYPERKALEMIA-2023',
+      'CONSENSUS-KDIGO-ACUTE-HYPERKALEMIA-2020',
+      'GUID-EASL-ALF-2017',
+      'GUID-KDIGO-AKI-2012',
+      'GUID-RRT-ICU-2026',
+    ],
+    patient: { solutes: { glucoseMgPerDl: 104 } },
   },
   {
     id: 'CRRT-08',
