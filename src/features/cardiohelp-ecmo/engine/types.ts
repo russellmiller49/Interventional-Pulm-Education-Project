@@ -681,6 +681,11 @@ export interface ScenarioRuntime {
    * second and one started early after the full delay.
    */
   sweepStoppedAt?: number | null
+  /**
+   * Whether an inotrope is running for a loading left ventricle. Absent until one is started, so
+   * every other case keeps its exact state shape. See `LV_UNLOADING_RESPONSE`.
+   */
+  inotropeRunning?: boolean
   reassessment: ReassessmentSubmission | null
   credit: ScenarioCredit
   penalties: number
@@ -929,6 +934,8 @@ export type SimulationAction =
   | { type: 'CORRECT_FAULT'; fault: FaultId }
   | { type: 'PERFORM_CHECK'; checkId: string }
   | { type: 'APPLY_CLINICAL_INTERVENTION'; interventionId: string }
+  /** A medical move with a modeled response, and only on a loading left ventricle. */
+  | { type: 'START_INOTROPE' }
   | { type: 'START_ECMO' }
   | {
       type: 'COMMIT_PREDICTION'

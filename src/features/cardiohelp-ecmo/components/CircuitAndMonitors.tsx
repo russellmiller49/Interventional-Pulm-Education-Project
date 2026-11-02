@@ -1712,6 +1712,18 @@ export function PatientMonitor({
               <span>Pulmonary congestion</span>
               <strong>{state.patient.pulmonaryCongestion}</strong>
             </div>
+            {state.scenario.inotropeRunning ? (
+              <div data-lv-treatment="inotrope">
+                <span>Inotrope</span>
+                <strong>Running</strong>
+              </div>
+            ) : null}
+            {state.scenario.correctedFaults.includes('lv-loading') ? (
+              <div data-lv-treatment="planned">
+                <span>Volume removal and vent</span>
+                <strong>Planned, not carried out</strong>
+              </div>
+            ) : null}
             {state.scenario.clinical ? (
               <div data-alert={state.patient.distalLimbPerfusion !== 'normal'}>
                 <span>Cannulated-limb perfusion</span>

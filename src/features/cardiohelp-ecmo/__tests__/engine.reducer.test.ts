@@ -121,8 +121,8 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       { type: 'CORRECT_FAULT', fault: 'lv-loading' },
       { type: 'STEP' },
     ])
-    // B6-006 (R4 I6): recognising a loading ventricle earns the case but does not unload it. The
-    // valve stays shut and the pulse stays flat until a treatment this module does not simulate.
+    // B6-006 (R4 I6): recording the plan earns the case but does not unload the ventricle. The
+    // valve stays shut and the pulse stays flat until flow comes down and an inotrope is started.
     expect(state.scenario.credit.cause).toBe(true)
     expect(state.patient.aorticValveOpening).toBe(false)
     expect(state.patient.pulmonaryCongestion).toBe('marked')
