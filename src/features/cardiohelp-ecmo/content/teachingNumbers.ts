@@ -270,7 +270,7 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
       cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
       cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, Left Ventricular Venting, p. 85'),
     ],
-    note: 'Clarizia and Soltesz: reached with inotropic therapy, afterload reduction, AV synchrony and more PEEP. A wider pulse does not by itself show that the ventricle has recovered (Taha, Ch. 9, p. 140).',
+    note: 'Clarizia and Soltesz: reached with inotropic therapy, afterload reduction, AV synchrony and more PEEP. A wider pulse does not by itself show that the ventricle has recovered (Taha, Ch. 9, p. 139).',
     ...CHECK_LV_UNLOADING,
   },
   'va-map-goal': {
