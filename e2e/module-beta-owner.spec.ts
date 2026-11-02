@@ -2,7 +2,7 @@ import { test, expect, chromium, type Page } from '@playwright/test'
 import JSZip from 'jszip'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
-import { betaModules } from '../src/features/module-beta/catalog'
+import { betaModuleReviewPath, betaModules } from '../src/features/module-beta/catalog'
 
 const piPath = '/en/peripheral-imaging/learn?section=imaging-questions&phase=recognize'
 const ebusPath = '/en/ebus-guided/learn?section=acoustic-contact'
@@ -982,7 +982,7 @@ test('every module in the current beta catalog opens in the review shell without
             }),
           { timeout: 90000 },
         )
-        .toContain(entry.path)
+        .toContain(betaModuleReviewPath(entry))
       await page.mouse.move(viewport.width / 2, 20)
       await page.mouse.wheel(0, 600)
       await page.getByRole('link', { name: 'All beta modules' }).focus()

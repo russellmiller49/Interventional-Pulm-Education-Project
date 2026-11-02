@@ -1,5 +1,5 @@
 import { test, expect, chromium } from '@playwright/test'
-import { betaModules } from '../src/features/module-beta/catalog'
+import { betaModuleReviewPath, betaModules } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
 test('all preview modules remain under Still in development with sign-in, noindex and feedback API gates', async ({
@@ -42,7 +42,7 @@ test('all preview modules remain under Still in development with sign-in, noinde
     ).toHaveAttribute('href', `/en/development-beta/${entry.id}`)
     await expect(card.getByRole('link', { name: 'Standard module', exact: true })).toHaveAttribute(
       'href',
-      `/en${entry.path}`,
+      `/en${betaModuleReviewPath(entry)}`,
     )
   }
   await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
@@ -348,9 +348,11 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/mechanical-circulatory-support',
     '/en/learn/anatomy/airway',
     '/en/learn/anatomy/branch-tracing',
-    '/en/intro-bronchoscopy/airway-anatomy',
+    '/en/development-beta/live-anatomy/lesson',
   ]) {
-    const response = await request.get(path)
+    const response = await request.get(path, {
+      headers: { cookie: `ip_local_dev_auth=${process.env.MODULE_BETA_TEST_TOKEN}` },
+    })
     expect(response.status()).toBe(200)
     expect(response.headers()['x-robots-tag']).toContain('noindex')
     expect(response.headers()['x-frame-options']).toBe('SAMEORIGIN')

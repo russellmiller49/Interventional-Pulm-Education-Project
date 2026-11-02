@@ -29,7 +29,13 @@ import {
 } from './ownerDraftStore'
 import { isMeaningfulDraft } from './draftContent'
 import { submissionFingerprint } from './submissionFingerprint'
-import { betaModuleById, betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
+import {
+  betaModuleById,
+  betaModuleForPath,
+  betaModuleReviewPath,
+  feedbackPagePath,
+  type BetaModule,
+} from './catalog'
 import {
   ScreenshotEditor,
   createScreenshotDraft,
@@ -95,7 +101,7 @@ export function BetaTestingFrame({
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [selectedText, setSelectedText] = useState('')
-  const [pagePath, setPagePath] = useState(`/${locale}${moduleEntry.path}`)
+  const [pagePath, setPagePath] = useState(`/${locale}${betaModuleReviewPath(moduleEntry)}`)
   const [reportModule, setReportModule] = useState<BetaModule>(moduleEntry)
   const [reportId, setReportId] = useState('')
   const [hasImage, setHasImage] = useState(false)
@@ -748,7 +754,7 @@ export function BetaTestingFrame({
       <iframe
         ref={frame}
         title={moduleEntry.title}
-        src={`/${locale}${moduleEntry.path}`}
+        src={`/${locale}${betaModuleReviewPath(moduleEntry)}`}
         className="min-h-0 w-full flex-1 border-0"
         allow="fullscreen; clipboard-write"
       />

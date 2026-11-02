@@ -1,5 +1,11 @@
 /** @jest-environment node */
-import { betaModules, betaModuleById, betaModuleForPath, feedbackPagePath } from './catalog'
+import {
+  betaModules,
+  betaModuleById,
+  betaModuleForPath,
+  betaModuleReviewPath,
+  feedbackPagePath,
+} from './catalog'
 import { nonPublicModules } from '@/lib/non-public-modules'
 import { feedbackSchema, isPngScreenshot } from './schema'
 import { isPublicPath, isPublicUnlistedPath, getRequiredEntitlement } from '@/lib/site-auth/access'
@@ -38,6 +44,25 @@ describe('beta module boundaries', () => {
     expect(betaModuleForPath('/branch-tracing/case-001')?.id).toBe('branch-tracing')
     expect(betaModuleForPath('/admin/users')).toBeUndefined()
     expect(betaModuleForPath('/devices-extra')).toBeUndefined()
+  })
+  it('keeps every report on the live anatomy lesson under one module, at either address', () => {
+    const entry = betaModuleById('live-anatomy')!
+    const reviewPath = betaModuleReviewPath(entry)
+    expect(reviewPath).toBe('/development-beta/live-anatomy/lesson')
+    for (const pagePath of [`/en${reviewPath}`, `/en${entry.path}`]) {
+      expect(betaModuleForPath(pagePath)?.id).toBe('live-anatomy')
+      expect(
+        feedbackSchema.safeParse({ ...report, moduleId: 'live-anatomy', pagePath }).success,
+      ).toBe(true)
+    }
+    expect(betaModuleForPath('/development-beta/live-anatomy/lessons')).toBeUndefined()
+    expect(betaModuleForPath('/development-beta/live-anatomy')).toBeUndefined()
+    expect(betaModuleForPath('/intro-bronchoscopy')).toBeUndefined()
+  })
+  it('opens every other module at its own address', () => {
+    for (const entry of betaModules.filter(({ id }) => id !== 'live-anatomy')) {
+      expect(betaModuleReviewPath(entry)).toBe(entry.path)
+    }
   })
   it('lists the Literature Atlas preview but never the site-admin Literature Explorer', () => {
     expect(betaModuleForPath('/en/literature-atlas')?.id).toBe('literature-atlas')

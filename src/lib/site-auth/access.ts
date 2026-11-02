@@ -399,6 +399,11 @@ export function resolveSiteModuleId(pathname: string) {
     return null
   }
 
+  // The beta review address of the live anatomy lesson counts as the lesson itself.
+  if (normalizedPathname === '/development-beta/live-anatomy/lesson') {
+    return 'intro-bronchoscopy:airway-anatomy'
+  }
+
   if (first === 'board-prep') {
     return segments[1] ? `board-prep:${segments[1]}` : 'board-prep'
   }

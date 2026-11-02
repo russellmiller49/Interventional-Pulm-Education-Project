@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { ArrowUpRight } from 'lucide-react'
-import type { BetaModule } from './catalog'
+import { betaModuleReviewPath, type BetaModule } from './catalog'
 import type { BetaRollout } from './rollout'
 
 const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
@@ -17,7 +17,7 @@ function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
       </Link>
       <Link
         className="text-sm underline underline-offset-4"
-        href={`/${locale}${entry.path}` as Route}
+        href={`/${locale}${betaModuleReviewPath(entry)}` as Route}
       >
         Standard module
       </Link>

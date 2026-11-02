@@ -60,8 +60,17 @@ the keyboard goes from the skip link straight to the toolbar. Activating the ski
 that covered page to the link's target (about one site-header height); the fixed shell still
 covers the whole viewport, so nothing underneath becomes visible. The site header inside the
 frame is kept by owner decision. The usual module URLs
-have no feedback UI and open without an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
+have no feedback UI and open without an account, with one exception below. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
 and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
+
+Live Bronchoscopy Anatomy is the exception. Its standard address,
+`/en/intro-bronchoscopy/airway-anatomy`, sits under the intro course layout, which answers 404
+in production to everyone without a course entitlement or `site_admin`, signed in or not. A
+development server enables draft modules and hides that. Reviewers therefore open the same lesson
+at `/en/development-beta/live-anatomy/lesson`, which is what the wrapper frames and what the card's
+**Standard module** link opens. The proxy requires a verified, registered account there, as for
+the rest of the hub, and the page sits outside `/intro-bronchoscopy`, so it grants no course
+access. It needs no database row: the feedback module id `live-anatomy` is unchanged.
 
 ## Tester feedback
 

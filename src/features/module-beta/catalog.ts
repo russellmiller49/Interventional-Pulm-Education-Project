@@ -24,6 +24,8 @@ export const betaModules = [
     id: 'live-anatomy',
     title: 'Live Bronchoscopy Anatomy',
     path: '/intro-bronchoscopy/airway-anatomy',
+    // `path` stays behind the intro course gate, so reviewers open the lesson here instead.
+    reviewPath: '/development-beta/live-anatomy/lesson',
     group: 'Bronchoscopy',
   },
   {
@@ -105,10 +107,17 @@ export function betaModuleById(id: string) {
   return betaModules.find((entry) => entry.id === id)
 }
 
+// Where a reviewer opens a module: its own address, unless that needs more than a site account.
+export function betaModuleReviewPath(entry: BetaModule): string {
+  return 'reviewPath' in entry ? entry.reviewPath : entry.path
+}
+
 export function betaModuleForPath(path: string) {
   const pathname = unlocalizedPathname(path)
-  const match = betaModules.find(
-    (entry) => pathname === entry.path || pathname.startsWith(`${entry.path}/`),
+  const match = betaModules.find((entry) =>
+    [entry.path, betaModuleReviewPath(entry)].some(
+      (modulePath) => pathname === modulePath || pathname.startsWith(`${modulePath}/`),
+    ),
   )
   if (match) return match
   if (pathname.startsWith('/branch-tracing/')) return betaModuleById('branch-tracing')

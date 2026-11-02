@@ -1,5 +1,5 @@
 import { unlocalizedPathname } from '@/i18n/path'
-import { betaModuleById } from './catalog'
+import { betaModuleById, betaModuleReviewPath } from './catalog'
 
 export type FeedbackMode = 'owner-local' | 'server'
 
@@ -15,6 +15,7 @@ export function isOwnerLocalFeedbackPage(path: string) {
   if (feedbackMode() !== 'owner-local') return false
   const pathname = unlocalizedPathname(path)
   if (pathname === '/development-beta' || pathname === '/admin/module-feedback') return true
-  const match = /^\/development-beta\/([^/]+)$/.exec(pathname)
-  return Boolean(match && betaModuleById(match[1]))
+  const match = /^\/development-beta\/([^/]+)/.exec(pathname)
+  const entry = match && betaModuleById(match[1])
+  return Boolean(entry && (pathname === match[0] || pathname === betaModuleReviewPath(entry)))
 }
