@@ -181,6 +181,11 @@ export interface StoredWedgeRecord {
    */
   readonly physiologicalEpisode: number
   readonly sessionId: string
+  /**
+   * What was wrong with the wedge signal when this value was stored. The number keeps its error
+   * after the line is repaired, so the fault stays with it. Absent on a constructed state.
+   */
+  readonly signalFaults?: readonly DerivedSignalFault[]
 }
 
 /**
@@ -341,6 +346,17 @@ export interface InterpretationValue {
   status: 'interpretable' | 'not-interpretable'
   reason?: string
   interpretation?: string
+}
+
+/** A fault in the pressure signal and the measurements it makes unreliable. */
+export interface DerivedSignalFault {
+  readonly id: string
+  /** Short enough to sit in brackets after a measurement: "transducer not zeroed". */
+  readonly label: string
+  /** The full explanation a learner reads. */
+  readonly reason: string
+  /** The `derivedInputDefinitions` ids this fault reaches. */
+  readonly inputIds: readonly string[]
 }
 
 export interface DerivedHemodynamics {
@@ -530,7 +546,8 @@ export interface DerivedHemodynamicsInput {
   measurements: Partial<HemodynamicMeasurements>
   bodySurfaceAreaM2?: number | null
   ppvContext?: FluidResponsivenessContext
-  inputsStale?: boolean
+  /** A result is withheld when any of these reaches a measurement it needs, and only then. */
+  signalFaults?: readonly DerivedSignalFault[]
 }
 
 export interface ThermodilutionGenerationInput {

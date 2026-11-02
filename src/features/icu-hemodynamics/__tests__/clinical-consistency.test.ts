@@ -10,10 +10,7 @@ import { calculateDerivedHemodynamics } from '../engine'
 
 describe('hemodynamics content-engine consistency', () => {
   it('pairs every displayed derived value with interpretation, evidence, and concepts', () => {
-    const calculated = calculateDerivedHemodynamics({
-      measurements: {},
-      inputsStale: true,
-    })
+    const calculated = calculateDerivedHemodynamics({ measurements: {} })
 
     expect(Object.keys(hemodynamicDerivedValueGuides).sort()).toEqual(
       [...hemodynamicDerivedValueIds].sort(),
