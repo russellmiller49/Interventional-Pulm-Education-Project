@@ -5,7 +5,11 @@ import type {
 } from '../engine'
 import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from './clinicalThresholds'
-import { HEMODYNAMICS_NUMBERS, type HEMODYNAMICS_SHOCK_PROFILES } from './teachingNumbers'
+import {
+  HEMODYNAMICS_NUMBERS,
+  type HEMODYNAMICS_OBSTRUCTIVE_PATTERNS,
+  type HEMODYNAMICS_SHOCK_PROFILES,
+} from './teachingNumbers'
 
 const mapLowThresholdMmHg = SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.lowMmHg
 const pulmonaryHypertensionThresholds = HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension
@@ -64,15 +68,17 @@ function intervention(
   return definition
 }
 
-/* This monitor has no continuous flow channel: a leg raise is read from a thermodilution series. */
+/*
+ * A leg raise is read on a real-time flow measure, and this monitor has none. The learner follows
+ * it on the labelled model-only flow; a thermodilution series is too slow for it at the bedside.
+ */
 const plr = intervention({
   id: 'passive-leg-raise',
   label: 'Passive leg raise (a reversible preload challenge)',
   shortLabel: 'PLR',
   category: 'assessment',
-  description: 'Transiently recruits venous blood, to see whether flow rises.',
-  response:
-    'The leg raise begins. This monitor has no continuous cardiac-output channel: shoot a thermodilution series while it lasts to see the change in flow.',
+  description: `Transiently recruits venous blood, to see whether flow rises. Read flow at baseline, tilt the bed ${HEMODYNAMICS_NUMBERS.value('plr-position')}, read it during the raise, then return and read it again.`,
+  response: `The leg raise begins. At the bedside, read it on a real-time flow measure such as arterial pulse contour, LVOT VTI or esophageal Doppler, because ${HEMODYNAMICS_NUMBERS.value('plr-timing')}. A thermodilution series is too slow for that. This monitor has no real-time flow channel, so follow the model-only flow under Compare the response.`,
   onsetSeconds: 5,
   recoverySeconds: 35,
   parameterDeltas: { circulatingVolumeFraction: 0.08 },
@@ -337,7 +343,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     presentation:
       'An adult remains tachycardic with cool extremities after acute volume loss. The arterial trace is narrow; filling pressures are low.',
     learningObjectives: [
-      'Use a reversible dynamic perturbation before fluid.',
+      'Read a passive leg raise as baseline, raise and return on a real-time flow measure before fluid.',
       'Reassess stroke volume and congestion after each 250 mL bolus.',
     ],
     initialParameters: {
@@ -369,6 +375,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'First prove that transient preload recruitment raises flow; a low RAP or PAWP alone is not the fluid decision.',
     debrief: [
       'Dynamic change in flow is more informative than an isolated filling pressure.',
+      `A positive leg raise is ${HEMODYNAMICS_NUMBERS.value('plr-response')}, on a real-time flow measure, returning to baseline when the bed goes back.`,
       'Repeat 250 mL boluses only while flow keeps rising and congestion does not.',
     ],
     sourceIds: sharedSources,
@@ -759,6 +766,14 @@ export const hemodynamicCaseShockProfile: Readonly<
   'HD-06': 'cardiogenic',
   'HD-07': 'obstructive',
   'HD-08': null,
+}
+
+/** Which obstructive pattern a Practice case shows, for the two cases on that row. */
+export const hemodynamicCaseObstructiveCause: Readonly<
+  Record<string, (typeof HEMODYNAMICS_OBSTRUCTIVE_PATTERNS)[number]['id']>
+> = {
+  'HD-04': 'pulmonary-embolism',
+  'HD-07': 'tamponade',
 }
 
 export const hemodynamicCaseById = new Map(
