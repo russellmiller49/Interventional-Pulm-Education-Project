@@ -2709,6 +2709,21 @@
   background: var(--teal-soft);
 }
 
+.formulaFaults {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 1rem 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #6d4c12;
+  background: #fff0cc;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.formulaFaults p {
+  margin: 0;
+}
+
 .formulaGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2751,8 +2766,8 @@
 .formulaGrid article > p {
   grid-column: 1 / -1;
   margin: 0;
-  color: #866022;
-  font-size: 0.63rem;
+  color: #6d4c12;
+  font-size: 0.72rem;
   line-height: 1.35;
 }
 .notInterpretable {

@@ -1,4 +1,4 @@
-import { clamp, measurementMeetsCriterion, roundTo } from './calculations'
+import { clamp, measurementMeetsCriterion, roundTo, wedgeReadingFaults } from './calculations'
 import {
   assistedWedgeCursorTime,
   currentThermodilutionSeriesIdentity,
@@ -613,6 +613,7 @@ function reduceHemodynamicAction(
             cursor,
             physiologicalEpisode: acquiredIn,
             sessionId: cursor.acquisition.sessionId,
+            signalFaults: wedgeReadingFaults(state.measurementSystem),
           },
         },
         signalValidationChecks: [...new Set([...state.signalValidationChecks, 'wedge-stored'])],
