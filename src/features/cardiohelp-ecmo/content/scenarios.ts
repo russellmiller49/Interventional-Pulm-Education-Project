@@ -1,5 +1,6 @@
 import {
   ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD,
   ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
   ECMO_EMERGENCY_DRIVE_SENTENCE,
   ECMO_LV_DISTENSION_MOVES,
@@ -843,6 +844,8 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         pulsePressure: 22,
         aorticValveOpening: true,
         nativeCardiacOutputLpm: 2.8,
+        // Where the model takes a VA chest on the first tick. Opening at none read as PEEP doing harm.
+        pulmonaryCongestion: 'mild',
       },
       activeFaults: ['differential-hypoxemia'],
     },
@@ -864,12 +867,18 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Verify the pattern with right-arm saturation or arterial blood gas and compare it with post-oxygenator and lower-body data.',
         'Assess native cardiac ejection, lung oxygenation, circuit performance, and the likely mixing region.',
         ...ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves,
+        ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD,
       ],
       safetyNotes: [
         'A femoral arterial sample or a left-hand oximeter can read normal while the brain and the coronaries are hypoxemic. Monitor the right arm.',
       ],
     },
-    evidenceIds: ['elso-adult-va-2021', 'elso-neuro-monitoring-2024', 'bounded-educational-model'],
+    evidenceIds: [
+      'elso-adult-va-2021',
+      'elso-neuro-monitoring-2024',
+      'elso-dual-circulation-2024',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'va-lv-loading',

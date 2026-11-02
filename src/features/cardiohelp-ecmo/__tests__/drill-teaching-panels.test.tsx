@@ -400,8 +400,9 @@ describe('B4: the panels read the live circuit rather than static prose', () => 
       .join(' ')
 
     // Still a statement about this monitor, with what the bedside does said beside it.
-    expect(boundaries).toMatch(/does not respond to pump speed or to ventilator settings/i)
+    expect(boundaries).toMatch(/does not respond to pump speed/i)
     expect(boundaries).toMatch(/at the bedside, more retrograde flow moves the mixing point/i)
+    expect(boundaries).toMatch(/the ventilator does lift the right arm/i)
     expect(container.textContent).toMatch(/femoral|post-membrane/i)
     expect(container.textContent).toMatch(/pArt/)
   })

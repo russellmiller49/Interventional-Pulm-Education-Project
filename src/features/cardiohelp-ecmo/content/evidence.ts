@@ -129,7 +129,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Recognition of LV loading, native ejection, differential oxygenation, and the need for independent patient assessment',
     ],
     limitations:
-      'This module teaches recognition, escalation and the first medical moves for a loading ventricle. It does not encode cannulation, unloading-device selection, guideline treatment targets, or a VA weaning protocol.',
+      'This module teaches recognition, escalation and the first medical moves for a loading ventricle and a low right arm. It does not encode cannulation, unloading-device selection, guideline treatment targets, or a VA weaning protocol.',
   },
   {
     /**
@@ -153,7 +153,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Regional oxygenation is not established by one arterial sampling site, including where arterial return is central or in the upper body',
     ],
     limitations:
-      'A physiology and nomenclature position paper. It is used here for mechanism and terminology only. No cannulation technique, no flow target, no timing threshold, and no order of escalation is encoded from it.',
+      'A physiology and nomenclature position paper. It is used here for mechanism, terminology, the right-arm pulse-pressure estimate of the mixing point, and the order of ventilator first and V-AV after. No cannulation technique, no flow target and no timing threshold is encoded from it.',
   },
   {
     id: 'elso-maastricht-nomenclature-2019',

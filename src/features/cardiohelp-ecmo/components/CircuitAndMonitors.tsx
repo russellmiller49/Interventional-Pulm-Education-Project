@@ -1562,6 +1562,7 @@ export function PatientMonitor({
   const limbStoryDriven =
     state.scenario.activeFaults.includes('distal-limb-ischemia') ||
     state.scenario.correctedFaults.includes('distal-limb-ischemia')
+  const { differentialResponse } = state.scenario
   return (
     <section
       id="cardiohelp-patient-monitor"
@@ -1721,6 +1722,28 @@ export function PatientMonitor({
             {state.scenario.correctedFaults.includes('lv-loading') ? (
               <div data-lv-treatment="planned">
                 <span>Volume removal and vent</span>
+                <strong>Planned, not carried out</strong>
+              </div>
+            ) : null}
+            {differentialResponse?.rightRadialGas ? (
+              <div data-differential-response="right-radial-gas">
+                <span>Right radial gas</span>
+                <strong>
+                  SaO₂ {differentialResponse.rightRadialGas.saturation.toFixed(1)}% at{' '}
+                  {differentialResponse.rightRadialGas.drawnAt} s
+                </strong>
+              </div>
+            ) : null}
+            {differentialResponse?.ventilatorRaised ? (
+              <div data-differential-response="ventilator">
+                <span>Ventilator FiO₂ and PEEP</span>
+                <strong>Raised</strong>
+              </div>
+            ) : null}
+            {differentialResponse &&
+            state.scenario.correctedFaults.includes('differential-hypoxemia') ? (
+              <div data-differential-response="planned">
+                <span>Lung cause, V-AV or VV</span>
                 <strong>Planned, not carried out</strong>
               </div>
             ) : null}

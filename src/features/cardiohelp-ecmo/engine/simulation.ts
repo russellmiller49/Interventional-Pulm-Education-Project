@@ -1452,9 +1452,13 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
   if (hasFault(state, 'oxygenator-resistance')) spo2 -= 8
 
   const va = state.supportMode === 'va'
+  const differential = va && hasFault(state, 'differential-hypoxemia')
+  const ventilator = differential ? state.scenario.differentialResponse?.ventilatorRaised : undefined
   const rightRadialSpo2 = va
-    ? hasFault(state, 'differential-hypoxemia')
-      ? 82
+    ? differential
+      ? ventilator
+        ? DIFFERENTIAL_VENTILATOR_RESPONSE.rightArmSpo2
+        : 82
       : gasAvailable
         ? 96
         : 80
@@ -1465,8 +1469,8 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
     spo2: va ? rightRadialSpo2 : spo2,
     rightRadialSpo2,
     femoralArterialSpo2,
-    nativeCardiacOutputLpm: va ? 2.4 : 4.5,
-    pulsePressure: va ? 18 : 35,
+    nativeCardiacOutputLpm: ventilator?.nativeCardiacOutputLpm ?? (va ? 2.4 : 4.5),
+    pulsePressure: ventilator?.pulsePressure ?? (va ? 18 : 35),
     meanArterialPressure: va
       ? clamp(55 + flow * 4, 60, 80)
       : // VV has no generic MAP relationship: MAP stays where it is unless a story target moves it.
@@ -1474,10 +1478,34 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
     centralVenousPressure: 8,
     lactate: 1.8,
     urineOutputMlHr: 50,
-    airwayPressure: 24,
+    airwayPressure: ventilator ? DIFFERENTIAL_VENTILATOR_RESPONSE.airwayPressure : 24,
     distalLimbNirs: 68,
   }
 }
+
+/**
+ * How a differential-hypoxemia patient answers more ventilator support.
+ *
+ * The right arm reads blood that came through the native lungs, so raising ventilator FiO₂ and PEEP
+ * lifts the right arm and leaves the femoral and post-oxygenator saturations alone. The higher PEEP
+ * shows on the airway pressure. The direction is sourced; the sizes are not, and they are registered
+ * as `differential-ventilator-right-arm` and `differential-ventilator-airway-pressure`. The right
+ * arm stops short of normal so that it stays low and the case's own ventilator card lands on the
+ * same 86%.
+ *
+ * The native stream holds while the ventilator is up, because this model does not couple the
+ * ventilator to native output, and its drift toward the generic VA values would read as a PEEP
+ * effect. The mixing point does not move either.
+ *
+ * Treating the lung cause, V-AV and VV are not moves here. They are a recorded plan, so the fault
+ * stays active.
+ *
+ * Evidence boundary: bounded-educational-model. These are teaching quantities and not thresholds.
+ */
+export const DIFFERENTIAL_VENTILATOR_RESPONSE = Object.freeze({
+  rightArmSpo2: 86,
+  airwayPressure: 28,
+})
 
 /**
  * How a loading left ventricle answers the two medical moves this module carries out.
