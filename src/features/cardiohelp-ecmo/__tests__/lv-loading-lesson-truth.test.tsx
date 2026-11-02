@@ -9,6 +9,7 @@ import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import {
   CARDIOHELP_PROGRESS_VERSION,
   createDefaultProgress,
+  parseLearningProgress,
   parseProgress,
   recordLearnLessonCompleted,
 } from '../engine/progress'
@@ -360,6 +361,23 @@ describe('saved course progress', () => {
     expect(parsed?.completedLearnLessonIds).toEqual([SCENARIO_ID])
     expect(parsed?.lastLessonScenarioIdByMode.va).toBe(SCENARIO_ID)
     expect(parsed?.lastVisited?.scenarioId).toBe(SCENARIO_ID)
+  })
+
+  it('reads the self-paced record the Learn stage writes', () => {
+    const parsed = parseLearningProgress(
+      JSON.stringify({
+        selfPaced: {
+          visitedTopicIds: [`learn:va:${SCENARIO_ID}`],
+          lastVisited: { section: 'learn', scenarioId: SCENARIO_ID, supportMode: 'va' },
+          lastLessonScenarioIdByMode: { va: SCENARIO_ID },
+          lastCaseScenarioIdByMode: {},
+        },
+      }),
+    )
+
+    expect(parsed.visitedTopicIds).toEqual([`learn:va:${SCENARIO_ID}`])
+    expect(parsed.lastLessonScenarioIdByMode.va).toBe(SCENARIO_ID)
+    expect(parsed.lastVisited?.scenarioId).toBe(SCENARIO_ID)
   })
 
   it('still earns the same credit for the committed plan', () => {
