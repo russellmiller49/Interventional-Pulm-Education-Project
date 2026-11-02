@@ -73,7 +73,8 @@ const metadata: Readonly<Record<string, HemodynamicsSourceReviewMetadata>> = {
     checks: [],
   },
   'esicm-shock-2025': {
-    identity: 'Cecconi M, et al., European Society of Intensive Care Medicine, as registered.',
+    identity:
+      'Monnet X, Messina A, Greco M, et al., European Society of Intensive Care Medicine, as registered.',
     published: '2025',
     publishedBasis: REGISTERED_ONLY,
     revision: null,

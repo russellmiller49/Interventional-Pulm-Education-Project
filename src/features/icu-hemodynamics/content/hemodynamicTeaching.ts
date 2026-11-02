@@ -4,6 +4,7 @@ import type {
 } from '@/features/learning-module/scenarioFeedback'
 
 import type { HemodynamicCaseDefinition, HemodynamicInterventionDefinition } from '../engine'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export interface HemodynamicTeachingArtifact {
   readonly caseId: string
@@ -33,8 +34,8 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
       traceStep(
         'hd01-perturb',
         'Perturb',
-        'Flow rises during passive leg raise without a new congestion signal.',
-        'The directional change supports preload responsiveness more strongly than the baseline RAP or PAWP.',
+        `On a real-time flow measure, ${HEMODYNAMICS_NUMBERS.value('plr-response')}, back to baseline when the bed returns, with no new congestion signal.`,
+        'The rise and the return together support preload responsiveness more strongly than the baseline RAP or PAWP. A rise that does not return may be the patient changing, not the test.',
         'Give one 250 mL bolus, then stop and reassess.',
       ),
       traceStep(
@@ -278,15 +279,14 @@ export const hemodynamicTeachingArtifactByCaseId = new Map(
 const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   'passive-leg-raise': {
     whatHappened:
-      'The leg raise began. This monitor has no continuous flow channel, so the response shows only in a thermodilution series shot while it lasts.',
+      'The leg raise began. This monitor has no real-time flow channel, so the response here shows only as the model-only flow under Compare the response. At the bedside it is read on a beat-to-beat flow measure.',
     whyItHappened:
-      'Passive leg raise transiently recruits venous blood. The directional change in stroke volume or output tests the current circulation rather than relying on one filling pressure.',
+      'Passive leg raise transiently recruits venous blood from the legs and the splanchnic bed. The change in stroke volume or output tests the current circulation rather than relying on one filling pressure.',
     likelyFrame:
       'If you were using low RAP or PAWP as proof that fluid would help, that is understandable because those values describe filling pressure—but not responsiveness.',
-    theCue:
-      'The change in flow during the perturbation is the cue. Here it is seen only in a thermodilution series acquired while the leg raise lasts; a series from before it cannot show it.',
+    theCue: `Flow is the cue, read three times: at baseline, during the raise and back at baseline. A positive test is ${HEMODYNAMICS_NUMBERS.value('plr-response')}, and ${HEMODYNAMICS_NUMBERS.value('plr-timing')}. Thermodilution, bolus or continuous, is too slow to catch that, and blood pressure alone misses many responders.`,
     conceptIds: ['cc.measurement.trends-and-perturbations', 'cc.flow.venous-return'],
-    evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
+    evidenceIds: ['esicm-shock-2025', 'pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'],
   },
   'fluid-250': {
     whatHappened:

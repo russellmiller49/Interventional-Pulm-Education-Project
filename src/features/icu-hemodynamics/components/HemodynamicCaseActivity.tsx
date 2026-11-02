@@ -58,8 +58,12 @@ import {
   latentPhysiologicalEstimates,
 } from '../engine/simulation'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
-import { hemodynamicCaseShockProfile } from '../content/cases'
-import { HEMODYNAMICS_SHOCK_PROFILES } from '../content/teachingNumbers'
+import { hemodynamicCaseObstructiveCause, hemodynamicCaseShockProfile } from '../content/cases'
+import {
+  HEMODYNAMICS_NUMBERS,
+  HEMODYNAMICS_SHOCK_PROFILES,
+  PLR_POSITIVE_RISE_PERCENT,
+} from '../content/teachingNumbers'
 import { HemodynamicsShockProfiles } from './HemodynamicsReferenceValues'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
@@ -1078,7 +1082,10 @@ export function HemodynamicCaseActivity({
                     </strong>{' '}
                     Hold its numbers against the row.
                   </p>
-                  <HemodynamicsShockProfiles highlight={shockProfileId} />
+                  <HemodynamicsShockProfiles
+                    highlight={shockProfileId}
+                    highlightCause={hemodynamicCaseObstructiveCause[definition.id] ?? null}
+                  />
                 </div>
               ) : null}
               <CaseRunSummary
@@ -1300,13 +1307,18 @@ function BeforeAndCurrent({
   )
 }
 
+const signedPercent = (value: number) => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(1)}%`
+
+/** How long after a leg raise the model has let its effect fade. A model-time choice. */
+const LEG_RAISE_RETURN_MODEL_SECONDS = 150
+
 /**
  * The leg raise's flow response, as the model has it (report P-04).
  *
- * The monitor has no continuous flow channel, so a learner who performed a leg raise saw no flow
- * response unless they acquired a thermodilution series while it lasted. The model's own flow does
- * respond, and this shows it — as a model-only teaching value, labelled so, never recorded in the
- * decision trace, and never called a cardiac output, stroke volume or VTI measurement.
+ * The monitor has no real-time flow channel, and a thermodilution series is too slow for a leg raise
+ * at the bedside. The model's own flow does respond, and this shows it — as a model-only teaching
+ * value, labelled so, never recorded in the decision trace, and never called a cardiac output,
+ * stroke volume or VTI measurement.
  */
 function LegRaiseModelOnly({
   record,
@@ -1318,19 +1330,20 @@ function LegRaiseModelOnly({
   const atStart = latentPhysiologicalEstimates(record.before).cardiacOutputLMin
   const now = latentPhysiologicalEstimates(state).cardiacOutputLMin
   const elapsed = state.timeSeconds - record.atSeconds
+  const change = ((now - atStart) / atStart) * 100
   return (
     <details className="rounded-xl border p-3 text-sm leading-6" data-model-only-flow>
       <summary>Model-only flow during the leg raise — not a measurement</summary>
       <p>
         The simulation’s internal cardiac output, which no channel on this monitor displays:{' '}
-        {atStart.toFixed(2)} L/min when the leg raise began, {now.toFixed(2)} L/min now,{' '}
-        {elapsed.toFixed(0)} model seconds later.
+        {atStart.toFixed(2)} L/min when the leg raise began, {now.toFixed(2)} L/min now (
+        {signedPercent(change)}), {elapsed.toFixed(0)} model seconds later.
       </p>
       <p>
         This is the model’s own value, shown for teaching. It is not a cardiac-output, stroke-volume
-        or VTI measurement, and it is not recorded in your decision trace. A measured response needs
-        a thermodilution series acquired while the leg raise lasts; a series from before it cannot
-        show one.
+        or VTI measurement, and it is not recorded in your decision trace. At the bedside a
+        real-time flow measure gives this reading, at baseline, during the raise and back at
+        baseline. A positive test is {HEMODYNAMICS_NUMBERS.value('plr-response')}.
       </p>
     </details>
   )
@@ -1439,8 +1452,9 @@ function flowSentence(state: HemodynamicSimulationState): string {
 }
 
 /**
- * What this run measured around a leg raise (report P-04). The authored expert path reads "flow
- * rises during passive leg raise"; this says whether this run acquired anything that could show it.
+ * What this run measured around a leg raise (report P-04), and the baseline, raise and return the
+ * bedside test reads, on the model's own flow. A series the model fits inside the effect is named
+ * for what it is: possible here because model seconds are compressed, not a bedside method.
  */
 function LegRaiseSummary({
   definition,
@@ -1465,8 +1479,19 @@ function LegRaiseSummary({
         : null,
     [record],
   )
+  const returned = useMemo(
+    () =>
+      record
+        ? modelOnlyMatchedComparison(
+            record.before,
+            record.intervention,
+            LEG_RAISE_RETURN_MODEL_SECONDS,
+          )
+        : null,
+    [record],
+  )
   if (!definition.interventions.some((item) => item.id === 'passive-leg-raise')) return null
-  if (!record || !comparison) {
+  if (!record || !comparison || !returned) {
     return (
       <p data-leg-raise-summary="not-performed">
         Leg raise: not performed in this run, so there is no leg-raise response to read.
@@ -1481,19 +1506,34 @@ function LegRaiseSummary({
     episodeBefore: record.before.physiologicalEpisode.index,
   })
   const noMeasuredResponse =
-    'The monitor has no continuous flow channel, so this run holds no measured flow response to the leg raise. The expert path below describes one; this run did not measure it.'
+    'This monitor has no real-time flow channel, so this run holds no measured flow response to the leg raise. A thermodilution series is too slow to catch one at the bedside. The expert path below describes what a real-time measure shows.'
+  const baselineFlow = comparison.atAction.cardiacOutputLMin
+  const raisedFlow = comparison.withAction.cardiacOutputLMin
+  const rise = ((raisedFlow - baselineFlow) / baselineFlow) * 100
   return (
     <div className="grid gap-2" data-leg-raise-summary="performed">
       <p>
         <strong>Leg raise at {record.atSeconds.toFixed(0)} model seconds.</strong>{' '}
         {around.kind === 'under-its-conditions'
-          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. That is the measured response in this run.`
+          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. Model seconds are compressed, which lets a series land inside the effect. At the bedside a series is too slow for it; use a real-time flow measure.`
           : around.kind === 'no-modeled-change'
             ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no response to measure.'
             : around.kind === 'only-after-a-later-change'
               ? `No series was acquired while its modeled effect was building. The first series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it is not the leg-raise response. ${noMeasuredResponse}`
-              : `No thermodilution series was acquired while it lasted. ${noMeasuredResponse}`}
+              : noMeasuredResponse}
       </p>
+      {around.kind === 'no-modeled-change' ? null : (
+        <p data-leg-raise-sequence>
+          <strong>Baseline, raise, return, on the model’s own flow:</strong>{' '}
+          {baselineFlow.toFixed(2)} L/min at baseline, {raisedFlow.toFixed(2)} L/min during the
+          raise ({signedPercent(rise)}), {returned.withAction.cardiacOutputLMin.toFixed(2)} L/min{' '}
+          {LEG_RAISE_RETURN_MODEL_SECONDS} model seconds later. A positive test is{' '}
+          {HEMODYNAMICS_NUMBERS.value('plr-response')}, so this one{' '}
+          {rise >= PLR_POSITIVE_RISE_PERCENT ? 'meets that' : 'falls short of it'}. The model lets
+          the effect fade on its own; at the bedside you return the bed and confirm that flow is
+          back at baseline.
+        </p>
+      )}
       <ModelOnlyTable comparison={comparison} label="the leg raise" />
     </div>
   )

@@ -53,7 +53,7 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     version: '2025.1',
     title: 'ESICM circulatory shock and hemodynamic monitoring guideline',
     citation:
-      'Cecconi M, et al. ESICM guideline on circulatory shock and hemodynamic monitoring. Intensive Care Med. 2025.',
+      'Monnet X, Messina A, Greco M, et al. ESICM guidelines on circulatory shock and hemodynamic monitoring 2025. Intensive Care Med. 2025;51(11):1971–2012. doi:10.1007/s00134-025-08137-z.',
     year: 2025,
     sourceType: 'guideline',
     url: 'https://www.esicm.org/esicm-guideline-circulatory-shock-haemodynamic-monitoring/',
