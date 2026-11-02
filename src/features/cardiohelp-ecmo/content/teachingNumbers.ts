@@ -378,21 +378,6 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
     note: 'The sources give the direction, not a size or a rate. The value is set to improve and stay low, so the plan still has a reason, and it matches the ventilator card in the Practice case. A real shunt may not respond.',
     ...CHECK_DIFFERENTIAL_HYPOXEMIA,
   },
-  'differential-ventilator-airway-pressure': {
-    label: 'Simulated airway pressure with the ventilator raised',
-    value: '28 cmH₂O',
-    appliesTo: 'The lesson patient, from 24 cmH₂O',
-    class: 'teaching-convention',
-    sources: [
-      cite(
-        ECMO_BOOK_RETROGRADE,
-        2023,
-        'Ch. 14 Physiology of Retrograde Flow, mitigation of upper-body hypoxia, p. 158',
-      ),
-    ],
-    note: 'No source gives this rise. A round figure so that more PEEP shows on the monitor, which is the cost the ECMO Book warns about.',
-    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
-  },
   'air-entrainment-rate': {
     label: 'Air entering the circuit',
     value: 'about 4% of patients',

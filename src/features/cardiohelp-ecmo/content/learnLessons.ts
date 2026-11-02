@@ -1582,7 +1582,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'raise-ventilator',
         target: 'patient-monitor',
         title: 'Treat the native lungs: raise the ventilator',
-        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Raise ventilator FiO₂ and PEEP. ELSO’s ECPR guidance considers PEEP ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
+        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Raise ventilator FiO₂ and PEEP. ELSO’s ECPR guidance says to consider a PEEP of ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
         rationale:
           'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the ventilator is the first lever: FiO₂, PEEP and recruitment. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
         actionLabel: 'Raise ventilator FiO₂ and PEEP and advance 6 seconds',
@@ -1590,7 +1590,6 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         expectedResponse: [
           `Right-arm SpO₂ rises to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} and stays flagged low`,
           'Femoral and post-oxygenator saturations stay high, because the ventilator acts on the native lungs and not on the circuit',
-          `Airway pressure rises to ${ECMO_NUMBERS.value('differential-ventilator-airway-pressure')} with the higher PEEP`,
           'Pulse pressure, native output and circuit flow hold',
         ],
       },

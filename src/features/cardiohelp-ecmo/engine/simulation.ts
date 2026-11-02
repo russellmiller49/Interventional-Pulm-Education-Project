@@ -1432,8 +1432,9 @@ type PatientTargetMap = Record<RateLimitedPatientField, number>
  *
  * Includes the relationships a circuit fault acts through (recirculation and a resisted membrane
  * reduce the circuit's oxygen contribution; the hypercapnia drills change how PaCO₂ follows sweep;
- * differential hypoxemia sets the right-arm level the VA model reads). Excludes the story targets in
- * `faultPatientTargets`. Numbers are the engine's existing ones, unchanged.
+ * differential hypoxemia sets the right-arm level the VA model reads, and raised ventilator support
+ * sets the level in `DIFFERENTIAL_VENTILATOR_RESPONSE`). Excludes the story targets in
+ * `faultPatientTargets`. The other numbers are the engine's existing ones, unchanged.
  */
 export function genericPatientTargets(state: EcmoSimulationState, flow: number): PatientTargetMap {
   const gasAvailable = state.gas.sourceConnected && state.gas.sweepLpm > 0
@@ -1453,7 +1454,9 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
 
   const va = state.supportMode === 'va'
   const differential = va && hasFault(state, 'differential-hypoxemia')
-  const ventilator = differential ? state.scenario.differentialResponse?.ventilatorRaised : undefined
+  const ventilator = differential
+    ? state.scenario.differentialResponse?.ventilatorRaised
+    : undefined
   const rightRadialSpo2 = va
     ? differential
       ? ventilator
@@ -1478,7 +1481,7 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
     centralVenousPressure: 8,
     lactate: 1.8,
     urineOutputMlHr: 50,
-    airwayPressure: ventilator ? DIFFERENTIAL_VENTILATOR_RESPONSE.airwayPressure : 24,
+    airwayPressure: 24,
     distalLimbNirs: 68,
   }
 }
@@ -1487,11 +1490,10 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
  * How a differential-hypoxemia patient answers more ventilator support.
  *
  * The right arm reads blood that came through the native lungs, so raising ventilator FiO₂ and PEEP
- * lifts the right arm and leaves the femoral and post-oxygenator saturations alone. The higher PEEP
- * shows on the airway pressure. The direction is sourced; the sizes are not, and they are registered
- * as `differential-ventilator-right-arm` and `differential-ventilator-airway-pressure`. The right
- * arm stops short of normal so that it stays low and the case's own ventilator card lands on the
- * same 86%.
+ * lifts the right arm and leaves the femoral and post-oxygenator saturations alone. The direction
+ * is sourced; the size is not, and it is registered as `differential-ventilator-right-arm`. The
+ * right arm stops short of normal so that it stays low, and the case's own ventilator card lands on
+ * the same 86%.
  *
  * The native stream holds while the ventilator is up, because this model does not couple the
  * ventilator to native output, and its drift toward the generic VA values would read as a PEEP
@@ -1500,11 +1502,10 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
  * Treating the lung cause, V-AV and VV are not moves here. They are a recorded plan, so the fault
  * stays active.
  *
- * Evidence boundary: bounded-educational-model. These are teaching quantities and not thresholds.
+ * Evidence boundary: bounded-educational-model. This is a teaching quantity and not a threshold.
  */
 export const DIFFERENTIAL_VENTILATOR_RESPONSE = Object.freeze({
   rightArmSpo2: 86,
-  airwayPressure: 28,
 })
 
 /**

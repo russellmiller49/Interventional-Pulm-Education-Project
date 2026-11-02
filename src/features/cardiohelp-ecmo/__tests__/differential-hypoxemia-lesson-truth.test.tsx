@@ -190,7 +190,8 @@ describe('each action the lesson offers', () => {
     expect(after.patient.spo2).toBe(DIFFERENTIAL_VENTILATOR_RESPONSE.rightArmSpo2)
     expect(after.patient.femoralArterialSpo2).toBeGreaterThanOrEqual(98)
     expect(after.circuit.postOxygenatorSaturation).toBe(before.circuit.postOxygenatorSaturation)
-    expect(after.patient.airwayPressure).toBe(DIFFERENTIAL_VENTILATOR_RESPONSE.airwayPressure)
+    // This lesson's monitor has no airway-pressure row, so the model gives it no response.
+    expect(after.patient.airwayPressure).toBe(before.patient.airwayPressure)
 
     expect(after.patient.pulsePressure).toBe(before.patient.pulsePressure)
     expect(after.patient.nativeCardiacOutputLpm).toBe(before.patient.nativeCardiacOutputLpm)
@@ -385,21 +386,13 @@ describe('the copy and the register agree with the model', () => {
     expect(ECMO_NUMBERS.value('differential-ventilator-right-arm')).toBe(
       `${DIFFERENTIAL_VENTILATOR_RESPONSE.rightArmSpo2}%`,
     )
-    expect(ECMO_NUMBERS.value('differential-ventilator-airway-pressure')).toBe(
-      `${DIFFERENTIAL_VENTILATOR_RESPONSE.airwayPressure} cmH₂O`,
-    )
   })
 
-  it('files the simulated sizes as teaching conventions, and says what they are', () => {
-    for (const id of [
-      'differential-ventilator-right-arm',
-      'differential-ventilator-airway-pressure',
-    ] as const) {
-      const row = ECMO_NUMBERS.get(id)
-      expect(row.class).toBe('teaching-convention')
-      expect(row.note).toBeTruthy()
-      expect(row.signedBy).toBeNull()
-    }
+  it('files the simulated size as a teaching convention, and says what it is', () => {
+    const row = ECMO_NUMBERS.get('differential-ventilator-right-arm')
+    expect(row.class).toBe('teaching-convention')
+    expect(row.note).toBeTruthy()
+    expect(row.signedBy).toBeNull()
   })
 
   it('gives every published line its class, source and locator', () => {
@@ -623,6 +616,28 @@ describe('on the patient monitor', () => {
     expect(monitorValue('Right-arm SpO₂')).toBe('82.0%')
     expect(monitorValue('Right radial gas')).toBe('SaO₂ 82.0% at 0 s')
     expect(monitorValue('Ventilator FiO₂ and PEEP')).toBeNull()
+  })
+
+  it('renders every patient reading the steps promise', () => {
+    render(<PatientMonitor state={walkTo()} />)
+    const promised = lessonSteps()
+      .filter((step) => step.phase === 'respond' || step.phase === 'reassess')
+      .flatMap((step) => step.expectedResponse)
+      .join(' ')
+
+    for (const [phrase, label] of [
+      [/right-arm SpO₂/i, 'Right-arm SpO₂'],
+      [/femoral/i, 'Femoral arterial SpO₂'],
+      [/pulse pressure/i, 'Pulse pressure'],
+      [/native output/i, 'Native cardiac output'],
+      [/right radial gas/i, 'Right radial gas'],
+      [/lung cause/i, 'Lung cause, V-AV or VV'],
+    ] as const) {
+      expect(promised).toMatch(phrase)
+      expect(monitorValue(label)).not.toBeNull()
+    }
+    expect(monitorValue('Airway pressure')).toBeNull()
+    expect(promised).not.toMatch(/airway pressure/i)
   })
 
   it('keeps what was done apart from what was only planned', () => {
