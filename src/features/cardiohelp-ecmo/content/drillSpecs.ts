@@ -466,7 +466,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting, and raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading by itself: bring flow down to the least that perfuses, add an inotrope so the valve opens, and vent a ventricle that still does not eject.',
+        'Pump speed — not this setting alone. Raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against, and lowering it helps without opening the valve by itself. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading by itself: bring flow down to the least that perfuses, add an inotrope so the valve opens, and vent a ventricle that still does not eject.',
     },
     transferPrinciple:
       'An acceptable flow and mean pressure do not establish ejection; pulsatility, the valve and the lungs do.',

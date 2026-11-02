@@ -909,6 +909,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Recognize that console flow and MAP do not establish adequate LV ejection.',
         'Assess pulse pressure, aortic-valve opening, LV size/stasis, lung findings, and systemic perfusion.',
         ...ECMO_LV_DISTENSION_MOVES.moves,
+        `In this lesson lower flow and the inotrope are carried out and the monitor shows their effect: ${ECMO_NUMBERS.value('lv-unloading-response')}. Volume removal and the vent are a recorded plan, so the congestion on the monitor is the patient before them.`,
       ],
       safetyNotes: [
         'A ventricle that does not eject stagnates: thrombus can form in the ventricle and the aortic root. Do not wait on a flow and a mean pressure that look acceptable.',

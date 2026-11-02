@@ -104,6 +104,14 @@ function lessonObjectives(scenarioId: string): readonly string[] {
   return [ecmoSectionSpec(scenarioId).objective]
 }
 
+/** Pump speed that brings the LV-loading patient to the `lv-unloading-flow` row. */
+const LV_UNLOADING_SPEED_RPM = 2400
+
+/** Long enough for each move's response in `LV_UNLOADING_RESPONSE` to show on the monitor. */
+const LV_UNLOADING_SETTLE_ACTIONS: readonly SimulationAction[] = Array.from({ length: 3 }, () => ({
+  type: 'STEP' as const,
+}))
+
 function step(
   definition: Omit<GuidedWalkthroughStep, 'actions' | 'expectedResponse'> &
     Partial<Pick<GuidedWalkthroughStep, 'actions' | 'expectedResponse'>>,
@@ -1591,25 +1599,75 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
+        id: 'lower-flow',
+        target: 'console',
+        title: 'Turn circuit flow down',
+        instruction: `Confirm on echo that the ventricle is not ejecting, then bring the pump down to ${LV_UNLOADING_SPEED_RPM} rpm. Flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')}. MAP is the check on how far it can go: keep it ${ECMO_NUMBERS.value('va-map-goal')}.`,
+        rationale:
+          'More VA flow is more afterload for a ventricle that is not ejecting. Flow comes down to the lowest that still perfuses, so the pressure the valve has to open against falls.',
+        actionLabel: `Lower pump speed to ${LV_UNLOADING_SPEED_RPM} rpm`,
+        actions: [{ type: 'SET_RPM', rpm: LV_UNLOADING_SPEED_RPM }],
+        expectedResponse: [
+          `Speed setpoint reads ${LV_UNLOADING_SPEED_RPM} rpm`,
+          `Console flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')}`,
+        ],
+      },
+      {
+        id: 'read-flow-response',
+        target: 'patient-monitor',
+        title: 'Read what lower flow did by itself',
+        instruction:
+          'Let three seconds run, then read pulse pressure, aortic-valve opening, native output and MAP on the patient monitor.',
+        rationale: `Less afterload widens the pulse, but a ventricle this weak may still not open the valve. A pulse pressure still ${ECMO_NUMBERS.value('lv-vent-pulsatility')} says lower flow has not been enough.`,
+        actionLabel: 'Advance 3 seconds and read the ventricle',
+        actions: LV_UNLOADING_SETTLE_ACTIONS,
+        expectedResponse: [
+          `Pulse pressure wider, still ${ECMO_NUMBERS.value('lv-vent-pulsatility')}`,
+          'Aortic valve still not observed to open',
+          `MAP still ${ECMO_NUMBERS.value('va-map-goal')}`,
+        ],
+      },
+      {
+        id: 'start-inotrope',
+        target: 'patient-monitor',
+        title: 'Add an inotrope so the ventricle ejects',
+        instruction:
+          'Hold flow where it is and start an inotrope, then let three seconds run and read the same signals.',
+        rationale:
+          'An inotrope raises contractility, so a ventricle that could not open the valve can now eject against the lower pressure. Some texts call this a chemical vent.',
+        actionLabel: 'Start an inotrope and advance 3 seconds',
+        actions: [{ type: 'START_INOTROPE' }, ...LV_UNLOADING_SETTLE_ACTIONS],
+        expectedResponse: [
+          'Inotrope shows as running on the patient monitor',
+          `Pulse pressure ${ECMO_NUMBERS.value('lv-ejection-pulsatility')}`,
+          'Aortic valve observed to open, and native output higher',
+          'Pulmonary congestion still marked',
+        ],
+      },
+      {
         id: 'escalate-lv-loading',
         target: 'patient-monitor',
-        title: 'Unload the left ventricle',
-        instruction: `Confirm with echo, then in order: ${ECMO_LV_DISTENSION_MOVES.moves.join(' ')}`,
+        title: 'Plan volume removal and the vent',
+        instruction: `The valve is opening and the chest has not changed. Commit to the next two moves: ${ECMO_LV_DISTENSION_MOVES.moves.slice(2).join(' ')} Neither is carried out in this lesson, so this step records the plan and changes no reading.`,
         rationale:
-          'More VA flow is more afterload for a ventricle that is not ejecting. Lowering flow and giving an inotrope let the valve open; if pulsatility does not return, the ventricle is vented mechanically before it distends, the lungs flood and thrombus forms.',
-        actionLabel: 'Lower flow, add an inotrope, call for a vent',
+          'Ejection does not clear the lungs by itself, so volume comes off next. The vent is named now so that a ventricle that loses its pulse is vented before it distends, the lungs flood and thrombus forms.',
+        actionLabel: 'Record the plan for volume removal and the vent',
         actions: [{ type: 'CORRECT_FAULT', fault: 'lv-loading' }],
         expectedResponse: [
-          'Flow titrated down and inotrope started',
-          `A vent is placed if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}`,
+          'Volume removal and the vent show as planned, not carried out, on the patient monitor',
+          'Pulse pressure, the valve and the chest read as they did before this step',
         ],
       },
     ],
     reassessment: {
       target: 'patient-monitor',
-      instruction:
-        'Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow.',
-      expectedResponse: ['Pulsatility begins to improve', 'The aortic valve opens again'],
+      instruction: `Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow. The size and speed of this response belong to this simulation. A ventricle that stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')} is vented; do not wait for it to answer.`,
+      expectedResponse: [
+        `Pulse pressure stays ${ECMO_NUMBERS.value('lv-ejection-pulsatility')}`,
+        'The aortic valve is observed to open',
+        'Pulmonary congestion is still marked, because volume removal and the vent have not been carried out',
+        `Circuit flow holds at ${ECMO_NUMBERS.value('lv-unloading-flow')}`,
+      ],
     },
   }),
   standardLesson({

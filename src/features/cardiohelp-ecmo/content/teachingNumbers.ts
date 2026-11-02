@@ -37,7 +37,19 @@ export const ECMO_NUMBER_ONLY_SOURCES = [
     title:
       'Taha AR, Caridi-Scheible M, Leiendecker ER, Miller CF, eds. ECMO: A Practical Guide to Management. Springer Nature Switzerland; 2024.',
   },
+  {
+    id: 'TEXT-CLARIZIA-ATLAS-CARDIAC-2024',
+    title:
+      'Clarizia NA, Soltesz E. Approaches and Techniques for Extracorporeal Membrane Oxygenation. In: Atlas of Cardiac Surgical Techniques. 3rd ed. Elsevier; 2024:329-341.',
+  },
+  {
+    id: 'ecmo-book-ch14',
+    title: 'The ECMO Book - Physiology of Retrograde Flow. Chapter 14.',
+  },
 ] as const
+
+/** Rows added with the left-ventricular unloading response. */
+const CHECK_LV_UNLOADING = { ...CHECK, checkedOn: '2026-11-01' } as const
 
 const cite = (
   sourceId: string,
@@ -51,6 +63,7 @@ const IFU_LIMITS = '§14.10.2 Warning Limits, Alarm Limits and Interventions, pp
 const HEI = 'TEXT-HEI-ELS-2023'
 const SCHMIDT = 'TEXT-SCHMIDT-ECMO-ADULTS-2022'
 const TAHA = 'TEXT-TAHA-ECMO-PRACTICAL-2024'
+const CLARIZIA = 'TEXT-CLARIZIA-ATLAS-CARDIAC-2024'
 
 export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
   'pven-factory-limits': {
@@ -248,6 +261,48 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
       cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, Left Ventricular Venting, p. 85'),
     ],
     ...CHECK,
+  },
+  'lv-ejection-pulsatility': {
+    label: 'Arterial pulse pressure taken as adequate for left-ventricular ejection on VA ECMO',
+    value: 'above 10 mmHg',
+    class: 'expert-reference',
+    sources: [
+      cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, Left Ventricular Venting, p. 85'),
+    ],
+    note: 'Clarizia and Soltesz: reached with inotropic therapy, afterload reduction, AV synchrony and more PEEP. A wider pulse does not by itself show that the ventricle has recovered (Taha, Ch. 9, p. 140).',
+    ...CHECK_LV_UNLOADING,
+  },
+  'va-map-goal': {
+    label: 'Mean arterial pressure goal on VA ECMO',
+    value: 'above 65 mmHg',
+    class: 'expert-reference',
+    sources: [cite(TAHA, 2024, 'Ch. 9 Patient Care while on ECMO, Table 9.1, p. 140')],
+    note: 'The same table gives a pulse-pressure goal above 25 mmHg for daily monitoring. The 10 mmHg line on p. 85 is the venting decision, which is what this module teaches.',
+    ...CHECK_LV_UNLOADING,
+  },
+  'lv-unloading-flow': {
+    label: 'Circuit flow in the left-ventricular loading lesson after it is turned down',
+    value: 'about 3.0 L/min',
+    appliesTo: 'The lesson patient at 2,400 rpm, down from about 4.0 L/min at 3,200 rpm',
+    class: 'teaching-convention',
+    sources: [cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, pp. 84–85')],
+    note: 'A round figure chosen for this patient. The source gives the rule, the lowest acceptable flow, and no number.',
+    ...CHECK_LV_UNLOADING,
+  },
+  'lv-unloading-response': {
+    label: 'Simulated response of a loading left ventricle',
+    value:
+      'pulse pressure 8 mmHg with one move and 12 mmHg with both; native output 1.2 and 1.6 L/min',
+    appliesTo: 'The lesson patient, from a pulse pressure of 5 mmHg and native output of 0.8 L/min',
+    class: 'teaching-convention',
+    sources: [
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, pp. 84–85'),
+      cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
+      cite('ecmo-book-ch14', 2023, 'Ch. 14 Physiology of Retrograde Flow, venting options, p. 153'),
+    ],
+    note: 'The sources give the direction and the 10 mmHg line, not a size or a rate. The values are set so that either move alone stays under the line and the two together cross it. A real ventricle may not respond.',
+    ...CHECK_LV_UNLOADING,
   },
   'air-entrainment-rate': {
     label: 'Air entering the circuit',

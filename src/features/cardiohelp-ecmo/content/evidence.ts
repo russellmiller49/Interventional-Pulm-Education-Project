@@ -129,7 +129,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Recognition of LV loading, native ejection, differential oxygenation, and the need for independent patient assessment',
     ],
     limitations:
-      'This module teaches recognition and escalation only. It does not encode cannulation, unloading-device selection, numeric treatment targets, or a VA weaning protocol.',
+      'This module teaches recognition, escalation and the first medical moves for a loading ventricle. It does not encode cannulation, unloading-device selection, guideline treatment targets, or a VA weaning protocol.',
   },
   {
     /**
