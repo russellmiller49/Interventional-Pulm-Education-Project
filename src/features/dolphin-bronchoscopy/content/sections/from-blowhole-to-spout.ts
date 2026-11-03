@@ -25,7 +25,7 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
     ],
   },
   recognizeInstruction:
-    'The scope sits in the left bony nasal passage. Look at the Simulator panel: the view, the steering ring and the Advance and Withdraw buttons.',
+    'The scope sits in the left bony nasal passage. Look at the Simulator panel: the view, with the steering arrows at its lower left and Advance and Withdraw at its lower right.',
   blocks: [
     {
       id: 'the-nasal-stage',
@@ -41,7 +41,7 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
       kind: 'signals',
       role: 'framing',
       heading: 'Driving the scope',
-      body: 'Steer with the ring or the arrow keys, then advance. The scope enters the opening you point at. Drag on the view to look around. Labels name the openings ahead.',
+      body: 'Steer with the arrows on the view or the arrow keys, then advance. The scope enters the opening you point at. Drag on the view to look around. Labels name the openings ahead.',
       sourceIds: ['dolphin-001-ct'],
     },
     {
@@ -49,7 +49,7 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
       kind: 'after-commitment',
       role: 'normal-reference',
       heading: 'The glottis at the spout tip',
-      body: 'The glottis opens at the tip of the laryngeal spout, in the midline of the nasopharynx. On each side of the spout is a nasopharyngeal fornix: a blind pouch that can look like an open lumen from above.\n\nThe spout and the glottis move with each breath. The wall of a fornix does not open that way.',
+      body: 'The glottis opens at the tip of the laryngeal spout, in the midline of the nasopharynx: a triangular opening through the pale, rounded tip, its apex dorsal. On each side of the spout is a nasopharyngeal fornix: a blind pouch that can look like an open lumen from above.\n\nThe spout and the glottis move with each breath. The wall of a fornix does not open that way.',
       sourceIds: ['tsang-2002', 'nmmp-bronchoscopy-guide', 'dolphin-001-ct'],
     },
     {

@@ -43,7 +43,13 @@ export function DolphinScopePane({
   }, [])
   const embed = useMemo<AirwayAnatomyEmbedOptions>(
     () => ({
-      start: { edgeId: start.edgeId, distanceMm: start.distanceMm, key: startKey },
+      start: {
+        edgeId: start.edgeId,
+        distanceMm: start.distanceMm,
+        yawDeg: start.yawDeg,
+        pitchDeg: start.pitchDeg,
+        key: startKey,
+      },
       branchLabels: workspace.labels,
       showLocation: workspace.showLocation,
       chrome: {

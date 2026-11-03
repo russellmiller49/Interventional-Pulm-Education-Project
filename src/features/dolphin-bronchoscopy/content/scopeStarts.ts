@@ -14,6 +14,9 @@ export interface ScopeStart {
   readonly distanceMm: number
   /** The centerline label the start must sit on. */
   readonly abbr: string
+  /** A look offset from the centerline at the start, so the first view frames its subject. */
+  readonly yawDeg?: number
+  readonly pitchDeg?: number
   /** What the learner sees first, in one line. */
   readonly description: string
 }
@@ -36,8 +39,9 @@ export const DOLPHIN_SCOPE_STARTS: Readonly<Record<ScopeStartId, ScopeStart>> = 
   'spout-approach': {
     id: 'spout-approach',
     edgeId: 1,
-    distanceMm: 39,
+    distanceMm: 41.5,
     abbr: 'NPX',
+    pitchDeg: -20,
     description: 'At the foot of the nasopharynx, facing the tip of the laryngeal spout.',
   },
   larynx: {

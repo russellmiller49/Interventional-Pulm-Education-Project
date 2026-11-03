@@ -99,9 +99,14 @@ const types: Record<string, string> = {
 }
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', 'http://localhost')
-  const file = url.pathname.startsWith('/airway-anatomy/')
-    ? path.join(root, 'public', url.pathname)
-    : path.join(work, url.pathname === '/' ? 'index.html' : url.pathname)
+  // DOLPHIN_CASE_DIR serves a case built elsewhere (a scratch build) in place of public/.
+  const caseDir = process.env.DOLPHIN_CASE_DIR
+  const file =
+    caseDir && url.pathname.startsWith('/airway-anatomy/dolphin-001/')
+      ? path.join(caseDir, url.pathname.slice('/airway-anatomy/dolphin-001/'.length))
+      : url.pathname.startsWith('/airway-anatomy/')
+        ? path.join(root, 'public', url.pathname)
+        : path.join(work, url.pathname === '/' ? 'index.html' : url.pathname)
   try {
     await stat(file)
     response.writeHead(200, {
@@ -141,6 +146,8 @@ for (const frame of frames) {
       const text = element.textContent?.trim()
       if (text === 'Virtual bronchoscopy' || text === 'drag to look') element.remove()
     }
+    // The on-view steering and drive buttons are controls, not anatomy.
+    for (const element of document.querySelectorAll('[data-scope-overlay]')) element.remove()
   })
   const view = page.locator('[data-airway-optical-view]')
   const box = await view.boundingBox()

@@ -45,7 +45,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       kind: 'signals',
       role: 'signals',
       heading: 'What you see at the spout',
-      body: 'The nasopharynx is 4–5 cm across and often holds copious, tenacious mucus. The laryngeal spout rises pale pink in its center. The glottis at its tip is rosette-shaped, with no epiglottis over it. Shut, it shows no lumen; open, it shows a dark lumen for an instant.',
+      body: 'The nasopharynx is 4–5 cm across and often holds copious, tenacious mucus. The laryngeal spout rises pale pink in its center and ends in a rounded tip. The glottis there has no epiglottis over it. Tsang describes it as rosette-shaped; face on, it is a triangular opening with its apex dorsal, at the top of the screen. Shut, it shows no lumen; open, it shows a dark lumen for an instant.',
       numberIds: ['nasopharynx-width'],
       sourceIds: ['tsang-2002'],
     },
@@ -54,7 +54,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       kind: 'signals',
       role: 'framing',
       heading: 'The breathing cue',
-      body: 'The cue above the view changes from breath-hold to breath. Watch the glottis in the view as it changes. Steer with the ring, then use Advance and Withdraw.',
+      body: 'The cue above the view changes from breath-hold to breath. Watch the glottis in the view as it changes. Steer with the arrows at the lower left of the view, then use Advance and Withdraw at its lower right.',
       sourceIds: ['dolphin-001-ct'],
     },
     {

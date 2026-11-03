@@ -75,10 +75,10 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     location: 'NPX',
     orientation: 'sternal',
     preCommitAlt:
-      'A smooth wall with a round opening right of center and a slit-like recess to its left.',
+      'A pale, rounded mound fills the view; at its center a triangular opening, apex up, leads into a narrower tube.',
     postCommitAlt:
-      'The foot of the nasopharynx: the round opening is the glottis at the tip of the laryngeal spout; the recess to its left leads into a nasopharyngeal fornix.',
-    rights: { ...RENDER, pose: { edgeId: 1, distanceMm: 41.5 } },
+      'The foot of the nasopharynx, facing the tip of the laryngeal spout: the triangular opening, apex dorsal, is the glottis.',
+    rights: { ...RENDER, pose: { edgeId: 1, distanceMm: 41.5, pitchDeg: -20 } },
   },
   {
     id: 'spout-from-above',
@@ -87,7 +87,7 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     location: 'NPX',
     orientation: 'sternal',
     preCommitAlt:
-      'A rounded projection rises into the chamber, with a small tip, and spaces open beyond and beside it.',
+      'A rounded projection rises into the chamber with an opening at its tip, and spaces open beyond and beside it.',
     postCommitAlt:
       'The laryngeal spout rising into the nasopharynx, seen from above: the glottis is at its tip, the fornices beside and beyond it.',
     rights: { ...RENDER, pose: { edgeId: 1, distanceMm: 20 } },

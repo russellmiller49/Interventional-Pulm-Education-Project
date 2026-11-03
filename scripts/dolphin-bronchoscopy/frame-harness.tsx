@@ -50,6 +50,8 @@ if (!frame || frame.rights.kind !== 'simulator-render') {
       ? {
           edgeId: DOLPHIN_SCOPE_STARTS[pose.start].edgeId,
           distanceMm: DOLPHIN_SCOPE_STARTS[pose.start].distanceMm,
+          yawDeg: DOLPHIN_SCOPE_STARTS[pose.start].yawDeg,
+          pitchDeg: DOLPHIN_SCOPE_STARTS[pose.start].pitchDeg,
         }
       : pose
   root.render(

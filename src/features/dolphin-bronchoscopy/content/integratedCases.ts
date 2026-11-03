@@ -492,7 +492,7 @@ export const DOLPHIN_INTEGRATED_CASES: readonly DolphinIntegratedCase[] = [
         troubleRowId: 'fornix',
         situation:
           'Three openings lie ahead. You steer toward the largest, on the left. It ends in a smooth blind pouch, and nothing moves with the next breath.',
-        media: { frameId: 'spout-approach' },
+        media: { frameId: 'spout-from-above' },
         prompt: 'What now?',
         choices: [
           {

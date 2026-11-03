@@ -101,3 +101,9 @@ must be applied from the primary checkout before the first beta-hub feedback pos
     temperature in 20–60 mL aliquots. The module teaches Tsang's warm saline; pick one or teach both.
 14. Flumazenil: the only dose found is Ivančić's, given after CT; the practice case says so.
 15. Asset weight: about 5 MB per scope section, 36 MB where the CT is loaded (sections that read it).
+16. The spout tip as displayed is modelled on the owner's bronchoscopy photographs of entering the
+    goosebeak (2026-11-03): a pale rounded tip with a triangular glottis, apex dorsal. The CT slit is
+    about 8 × 3 mm and its tip bevelled, so the build shapes the tip and the first 20 mm of the
+    lumen (`shape_spout_field`). Confirm the apex is dorsal, not ventral; name the dark, glossy
+    rounded structure at the lower left of the aperture in those photographs; and say whether the
+    photographs may be added as stills (they would enter the rights ledger above).
