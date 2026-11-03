@@ -22,6 +22,44 @@ describe('hub module sections', () => {
     }
   })
 
+  it('shows each reviewer note on its card and leaves cards without one as they were', () => {
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+    // Nothing is marked ready yet, so every card, with or without a note, is still in development.
+    expect(screen.queryByRole('heading', { name: 'Ready for review' })).not.toBeInTheDocument()
+    const preview = screen.getByRole('region', { name: 'Still in development' })
+
+    for (const entry of betaModules) {
+      const card = within(preview)
+        .getByRole('heading', { name: entry.title })
+        .closest('article') as HTMLElement
+      const { note } = betaRollout[entry.id]
+      if (note) {
+        expect(within(card).getByText(note.summary)).toBeVisible()
+        expect(within(card).getByText(note.audience)).toBeVisible()
+        for (const item of [...note.lookFor, ...note.knownLimits]) {
+          expect(within(card).getByText(item)).toBeVisible()
+        }
+        if (note.estimate) {
+          const basis = `from ${note.estimate.basis}`
+          expect(
+            within(card).getByText(
+              (_, element) =>
+                element?.tagName === 'DD' && element.textContent?.endsWith(basis) === true,
+            ),
+          ).toBeVisible()
+        } else {
+          expect(within(card).queryByText('Estimated time:')).not.toBeInTheDocument()
+        }
+      } else {
+        // The card a module had before notes existed: its title and the two links, nothing else.
+        expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
+        expect(card.textContent).toBe(`${entry.title}Test with feedback Standard module`)
+      }
+    }
+    expect(betaModules.some((entry) => betaRollout[entry.id].note)).toBe(true)
+    expect(betaModules.some((entry) => !betaRollout[entry.id].note)).toBe(true)
+  })
+
   it('has no ready section while nothing is ready', () => {
     render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     expect(screen.queryByRole('heading', { name: 'Ready for review' })).not.toBeInTheDocument()
@@ -34,8 +72,9 @@ describe('hub module sections', () => {
       devices: {
         stage: 'ready',
         note: {
+          audience: 'Interventional pulmonology fellows',
           summary: 'A reference atlas of bronchoscopy devices.',
-          minutes: 20,
+          estimate: { minutes: 20, basis: 'three search tasks' },
           lookFor: ['Whether a device is easy to find by type'],
           knownLimits: ['Market status is unverified for some products'],
         },
@@ -45,7 +84,7 @@ describe('hub module sections', () => {
 
     const ready = screen.getByRole('region', { name: 'Ready for review' })
     expect(within(ready).getByRole('heading', { name: /Device Atlas/ })).toBeInTheDocument()
-    expect(within(ready).getByText(/about 20 minutes/)).toBeInTheDocument()
+    expect(within(ready).getByText(/about 20 minutes, from three search tasks/)).toBeVisible()
     expect(within(ready).getByText('A reference atlas of bronchoscopy devices.')).toBeVisible()
     expect(within(ready).getByText('Whether a device is easy to find by type')).toBeVisible()
     expect(within(ready).getByText('Market status is unverified for some products')).toBeVisible()
