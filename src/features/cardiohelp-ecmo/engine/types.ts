@@ -686,6 +686,11 @@ export interface ScenarioRuntime {
    * every other case keeps its exact state shape. See `LV_UNLOADING_RESPONSE`.
    */
   inotropeRunning?: boolean
+  /**
+   * What has been done for a differential-hypoxemia patient. Absent until an action sets it, so
+   * every other case keeps its exact state shape. See `DIFFERENTIAL_VENTILATOR_RESPONSE`.
+   */
+  differentialResponse?: DifferentialResponseState
   reassessment: ReassessmentSubmission | null
   credit: ScenarioCredit
   penalties: number
@@ -696,6 +701,16 @@ export interface ScenarioRuntime {
   attempts: number
   causeCorrectedAt: number | null
   clinical: ClinicalRuntime | null
+}
+
+export interface DifferentialResponseState {
+  /** The latest right radial gas. A sample: it reads what it read until the next one is drawn. */
+  readonly rightRadialGas?: { readonly saturation: number; readonly drawnAt: number }
+  /** Ventilator FiO₂ and PEEP are up. The native stream is held where it stood when they went up. */
+  readonly ventilatorRaised?: {
+    readonly nativeCardiacOutputLpm: number
+    readonly pulsePressure: number
+  }
 }
 
 export interface HistoryEntry {
@@ -936,6 +951,10 @@ export type SimulationAction =
   | { type: 'APPLY_CLINICAL_INTERVENTION'; interventionId: string }
   /** A medical move with a modeled response, and only on a loading left ventricle. */
   | { type: 'START_INOTROPE' }
+  /** A measurement on a differential-hypoxemia patient. It records a sample and treats nothing. */
+  | { type: 'DRAW_RIGHT_RADIAL_GAS' }
+  /** A treatment with a modeled response, and only on a differential-hypoxemia patient. */
+  | { type: 'RAISE_VENTILATOR_SUPPORT' }
   | { type: 'START_ECMO' }
   | {
       type: 'COMMIT_PREDICTION'

@@ -455,7 +455,12 @@ const authored: readonly EcmoDrillSpec[] = [
     transferPrinciple:
       'The sampling site is part of the measurement: each arterial site reports its own territory, and one reassuring number describes one place.',
     precommitDenyPatterns: DENY.differential,
-    sourceIds: ['elso-adult-va-2021', 'elso-neuro-monitoring-2024', MODEL],
+    sourceIds: [
+      'elso-adult-va-2021',
+      'elso-neuro-monitoring-2024',
+      'elso-dual-circulation-2024',
+      MODEL,
+    ],
   }),
   spec({
     scenarioId: 'va-lv-loading',

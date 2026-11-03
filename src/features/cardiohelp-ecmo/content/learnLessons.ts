@@ -3,6 +3,7 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import {
   ECMO_AIR_RESUME,
   ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES,
   ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
   ECMO_EMERGENCY_DRIVE_SENTENCE,
   ECMO_LV_DISTENSION_MOVES,
@@ -111,6 +112,12 @@ const LV_UNLOADING_SPEED_RPM = 2400
 const LV_UNLOADING_SETTLE_ACTIONS: readonly SimulationAction[] = Array.from({ length: 3 }, () => ({
   type: 'STEP' as const,
 }))
+
+/** Long enough for the right arm to reach `DIFFERENTIAL_VENTILATOR_RESPONSE` on the monitor. */
+const DIFFERENTIAL_VENTILATOR_SETTLE_ACTIONS: readonly SimulationAction[] = Array.from(
+  { length: 6 },
+  () => ({ type: 'STEP' as const }),
+)
 
 function step(
   definition: Omit<GuidedWalkthroughStep, 'actions' | 'expectedResponse'> &
@@ -1558,27 +1565,71 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
-        id: 'verify-and-escalate-mixing',
+        id: 'confirm-right-arm',
         target: 'patient-monitor',
-        title: 'Confirm at the right arm, then treat the native lungs first',
-        instruction: `${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize} Then, in order: ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.join(' ')}`,
+        title: 'Confirm at the right arm',
+        instruction: `${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize} Draw a right radial gas and read it beside the oximeter, the femoral saturation and the post-oxygenator saturation. This step measures. It treats nothing.`,
+        rationale: `The innominate artery leaves the arch just after the coronaries, so the right arm is the first place you can sample what the native lungs are sending to the heart and the brain. A femoral sample or a left-hand oximeter can read circuit blood and reassure you falsely. A right-arm pulse pressure ${ECMO_NUMBERS.value('mixing-point-pulse-pressure')} often puts the mixing point beyond the innominate, and this patient reads 22 mmHg.`,
+        actionLabel: 'Draw a right radial gas',
+        actions: [{ type: 'DRAW_RIGHT_RADIAL_GAS' }],
+        expectedResponse: [
+          'Right radial gas reads SaO₂ 82%, matching the oximeter',
+          'Right-arm, femoral and post-oxygenator saturations do not move',
+          'The right-arm alarm stays on',
+        ],
+      },
+      {
+        id: 'raise-ventilator',
+        target: 'patient-monitor',
+        title: 'Treat the native lungs: raise the ventilator',
+        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Raise ventilator FiO₂ and PEEP. ELSO’s ECPR guidance says to consider a PEEP of ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
         rationale:
           'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the ventilator is the first lever: FiO₂, PEEP and recruitment. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
-        actionLabel: 'Confirm at the right arm and raise ventilator support',
+        actionLabel: 'Raise ventilator FiO₂ and PEEP and advance 6 seconds',
+        actions: [{ type: 'RAISE_VENTILATOR_SUPPORT' }, ...DIFFERENTIAL_VENTILATOR_SETTLE_ACTIONS],
+        expectedResponse: [
+          `Right-arm SpO₂ rises to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} and stays flagged low`,
+          'Femoral and post-oxygenator saturations stay high, because the ventilator acts on the native lungs and not on the circuit',
+          'Pulse pressure, native output and circuit flow hold',
+        ],
+      },
+      {
+        id: 'recheck-right-arm',
+        target: 'patient-monitor',
+        title: 'Recheck at the same arm',
+        instruction: `Repeat the right radial gas. Read the SaO₂ against two published lines: Taha 2024 gives a minimum on ECMO of ${ECMO_NUMBERS.value('ecmo-minimum-oxygenation')}, and ELSO 2021 targets ${ECMO_NUMBERS.value('ecpr-saturation-target')} after ECPR.`,
+        rationale:
+          'Titrate the ventilator on the right-arm gas and the membrane on the post-oxygenator gas. The femoral saturation cannot show what the ventilator did, because that blood came through the membrane.',
+        actionLabel: 'Repeat the right radial gas',
+        actions: [{ type: 'DRAW_RIGHT_RADIAL_GAS' }],
+        expectedResponse: [
+          `Right radial gas reads SaO₂ ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}, matching the oximeter`,
+          'That sits between the two published lines: better, and still low',
+        ],
+      },
+      {
+        id: 'verify-and-escalate-mixing',
+        target: 'patient-monitor',
+        title: 'Plan for what the ventilator does not treat',
+        instruction: `The ventilator raises what the lungs can deliver. It does not treat why they are failing. Commit to the next moves: ${ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES.moves.join(' ')} If the right arm stays low, change the configuration. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.slice(2).join(' ')} None of these is carried out in this lesson, so this step records the plan and changes no reading.`,
+        rationale: `Confirming named the problem and the ventilator bought oxygen. Neither treated the cause. Ventilator support has a ceiling too: pushed far enough it injures the lungs it is meant to help. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[1]}`,
+        actionLabel: 'Record the plan for the lung cause and V-AV or VV',
         actions: [{ type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' }],
         expectedResponse: [
-          'Right radial gas confirms the oximeter',
-          'Ventilator FiO₂ and PEEP raised; V-AV or conversion to VV planned if the right arm stays low',
+          'The lung cause and V-AV or VV show as planned, not carried out, on the patient monitor',
+          'Right-arm, femoral and post-oxygenator saturations read as they did before this step',
         ],
       },
     ],
     reassessment: {
       target: 'patient-monitor',
       instruction:
-        'Recheck right-radial and lower-body oxygenation, native ejection, lung status, circuit gas transfer, and perfusion.',
+        'Recheck right-radial and lower-body oxygenation, native ejection, lung status, circuit gas transfer, and perfusion. The size and speed of this response belong to this simulation. A right arm that stays low goes to the plan you recorded, not to ever higher ventilator settings.',
       expectedResponse: [
-        'Right-radial oxygenation begins to improve',
-        'The two circulations remain explicitly compared',
+        `Right-arm SpO₂ holds at ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}, better and still flagged low`,
+        'Femoral saturation stays high, so the two sites still read apart',
+        `Pulse pressure stays ${ECMO_NUMBERS.value('mixing-point-pulse-pressure')}, so the heart is still ejecting native blood`,
+        'The pattern stays active, because the lung cause and V-AV or VV have not been carried out',
       ],
     },
   }),
