@@ -256,6 +256,13 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/api/literature-atlas/map')).toBeNull()
   })
 
+  it('keeps the live anatomy lesson on one analytics id at its beta review address', () => {
+    expect(resolveSiteModuleId('/en/development-beta/live-anatomy/lesson')).toBe(
+      resolveSiteModuleId('/en/intro-bronchoscopy/airway-anatomy'),
+    )
+    expect(resolveSiteModuleId('/en/development-beta/live-anatomy')).toBeNull()
+  })
+
   it('tracks the protected SOCRATES builder separately from the public demo', () => {
     expect(isPublicPath('/socrates-builder')).toBe(false)
     expect(isPublicUnlistedPath('/socrates-builder')).toBe(false)
