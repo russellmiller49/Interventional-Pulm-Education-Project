@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import {
   ArrowDown,
@@ -1579,6 +1579,7 @@ function VirtualBronchoscopyViewport({
                   mode="bronch"
                 />
                 <ScopeCamera pose={pose} />
+                <SettleFrames poseKey={`${pose.edgeId}:${pose.distanceMm}`} />
               </Suspense>
             </Canvas>
           </div>
@@ -1626,6 +1627,28 @@ function VirtualBronchoscopyViewport({
       }
     </HandoffContent>
   )
+}
+
+/**
+ * Keeps an on-demand canvas drawing for a short while after its surface mounts and after the pose
+ * jumps. The camera follows the pose inside `useFrame`, which an on-demand canvas only runs when a
+ * frame is requested; a lesson that starts the scope away from the case's default (or moves it to a
+ * new start) could otherwise show a black view until the first drag.
+ */
+function SettleFrames({ poseKey, frames = 20 }: { poseKey: string; frames?: number }) {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    let count = 0
+    let handle = 0
+    const tick = () => {
+      invalidate()
+      count += 1
+      if (count < frames) handle = requestAnimationFrame(tick)
+    }
+    handle = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(handle)
+  }, [invalidate, frames, poseKey])
+  return null
 }
 
 function AirwayTreeViewport({
