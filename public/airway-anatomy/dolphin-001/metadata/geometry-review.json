@@ -185,26 +185,20 @@
     "approachLps": [-11.0, -128.35, -269.5],
     "glottisLps": [-3.38, -133.43, -282.0],
     "approachToGlottisMm": 15.5,
-    "fornixEdgeIds": [138, 139]
+    "fornixEdgeIds": [138, 139],
+    "tipAboveGlottisMm": 10.3,
+    "dorsalAxisLps": [-0.3375, 0.8785, -0.3381]
   },
   "topology": {
     "boundary": 0,
     "nonmanifold": 0,
     "components": 1
   },
-  "vertices": 130196,
-  "triangles": 260436,
+  "vertices": 129306,
+  "triangles": 258656,
   "genus": 12,
-  "volumeMl": 546.04,
+  "volumeMl": 542.47,
   "centerlineRepairs": [
-    {
-      "edgeIds": [3],
-      "fromDepthMm": 0.343
-    },
-    {
-      "edgeIds": [3],
-      "fromDepthMm": 0.318
-    },
     {
       "edgeIds": [51],
       "fromDepthMm": 0.316

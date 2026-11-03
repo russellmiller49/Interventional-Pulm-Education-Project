@@ -91,6 +91,7 @@ const betaFramePaths = [
   '/development-beta/live-anatomy/lesson/:path*',
   '/peripheral-imaging/:path*',
   '/bronchoscopy-foundations/:path*',
+  '/dolphin-bronchoscopy/:path*',
   '/devices/:path*',
   '/clinical-roles/:path*',
   '/procedures/:path*',

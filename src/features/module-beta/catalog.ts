@@ -41,6 +41,12 @@ export const betaModules = [
     group: 'Bronchoscopy',
   },
   {
+    id: 'dolphin-bronchoscopy',
+    title: 'Dolphin Bronchoscopy',
+    path: '/dolphin-bronchoscopy',
+    group: 'Bronchoscopy',
+  },
+  {
     id: 'devices',
     title: 'Device Atlas — Device Intelligence beta',
     path: '/devices',

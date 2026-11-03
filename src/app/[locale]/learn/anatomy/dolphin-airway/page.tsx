@@ -4,6 +4,7 @@ import { DolphinAirwayModuleDynamic } from '@/components/airway-anatomy/AirwayAn
 import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { HandoffContent } from '@/i18n/handoff'
+import { Link } from '@/i18n/navigation'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
@@ -41,6 +42,13 @@ export default function DolphinAirwayPage() {
                 <h1 className={simulatorPage.title}>Dolphin Airway Synchronized Bronchoscopy</h1>
               </div>
               <div className={simulatorPage.actions}>
+                <Link
+                  href="/dolphin-bronchoscopy"
+                  className={simulatorPage.aboutLink}
+                  data-dolphin-module-banner
+                >
+                  Part of the Dolphin Bronchoscopy module
+                </Link>
                 <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
                   Learning objectives
                 </a>

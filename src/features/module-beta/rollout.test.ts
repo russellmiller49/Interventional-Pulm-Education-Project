@@ -35,6 +35,7 @@ describe('hub readiness record', () => {
       'live-anatomy': 'preview',
       'peripheral-imaging': 'preview',
       'bronchoscopy-foundations': 'preview',
+      'dolphin-bronchoscopy': 'preview',
       devices: 'preview',
       'literature-atlas': 'preview',
       'cardiohelp-ecmo': 'preview',

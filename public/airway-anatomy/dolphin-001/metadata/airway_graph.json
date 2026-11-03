@@ -62,7 +62,7 @@
       "lps": [9.3126, -153.7444, -365.75],
       "kind": "internal",
       "degree": 2,
-      "rootDistanceMm": 259.704,
+      "rootDistanceMm": 259.702,
       "parentNodeId": 2,
       "parentEdgeId": 3,
       "childEdgeIds": [4]
@@ -72,7 +72,7 @@
       "lps": [8.043, -142.3187, -410.75],
       "kind": "internal",
       "degree": 2,
-      "rootDistanceMm": 307.475,
+      "rootDistanceMm": 307.473,
       "parentNodeId": 4,
       "parentEdgeId": 4,
       "childEdgeIds": [5]
@@ -82,7 +82,7 @@
       "lps": [-4.6523, -102.9632, -475.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 386.643,
+      "rootDistanceMm": 386.641,
       "parentNodeId": 5,
       "parentEdgeId": 5,
       "childEdgeIds": [6, 7]
@@ -92,7 +92,7 @@
       "lps": [-7.1913, -86.4593, -528.25],
       "kind": "carina",
       "degree": 3,
-      "rootDistanceMm": 443.233,
+      "rootDistanceMm": 443.231,
       "parentNodeId": 6,
       "parentEdgeId": 6,
       "childEdgeIds": [8, 9]
@@ -102,7 +102,7 @@
       "lps": [-42.7382, -68.6859, -529.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 468.726,
+      "rootDistanceMm": 468.724,
       "parentNodeId": 6,
       "parentEdgeId": 7,
       "childEdgeIds": [10, 11]
@@ -112,7 +112,7 @@
       "lps": [10.5821, -72.4945, -577.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 498.402,
+      "rootDistanceMm": 498.4,
       "parentNodeId": 7,
       "parentEdgeId": 8,
       "childEdgeIds": [12, 13]
@@ -122,7 +122,7 @@
       "lps": [-50.3554, -62.3382, -623.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 553.796,
+      "rootDistanceMm": 553.794,
       "parentNodeId": 7,
       "parentEdgeId": 9,
       "childEdgeIds": [14, 15]
@@ -132,7 +132,7 @@
       "lps": [-61.7812, -62.3382, -552.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 500.337,
+      "rootDistanceMm": 500.335,
       "parentNodeId": 8,
       "parentEdgeId": 10,
       "childEdgeIds": [16, 17]
@@ -142,7 +142,7 @@
       "lps": [-63.0507, -63.6077, -524.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 491.111,
+      "rootDistanceMm": 491.109,
       "parentNodeId": 8,
       "parentEdgeId": 11,
       "childEdgeIds": [18, 19]
@@ -152,7 +152,7 @@
       "lps": [42.3204, -48.3734, -582.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 541.837,
+      "rootDistanceMm": 541.835,
       "parentNodeId": 9,
       "parentEdgeId": 12,
       "childEdgeIds": [20, 21]
@@ -162,7 +162,7 @@
       "lps": [33.4336, -54.721, -630.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 561.847,
+      "rootDistanceMm": 561.845,
       "parentNodeId": 9,
       "parentEdgeId": 13,
       "childEdgeIds": [22, 23]
@@ -172,7 +172,7 @@
       "lps": [-60.5116, -63.6077, -657.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 590.766,
+      "rootDistanceMm": 590.764,
       "parentNodeId": 10,
       "parentEdgeId": 14,
       "childEdgeIds": [24, 25]
@@ -182,7 +182,7 @@
       "lps": [-68.1288, -48.3734, -624.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 577.575,
+      "rootDistanceMm": 577.573,
       "parentNodeId": 10,
       "parentEdgeId": 15,
       "childEdgeIds": [26, 27]
@@ -192,7 +192,7 @@
       "lps": [-84.6327, -36.9476, -569.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 539.791,
+      "rootDistanceMm": 539.789,
       "parentNodeId": 11,
       "parentEdgeId": 16,
       "childEdgeIds": []
@@ -202,7 +202,7 @@
       "lps": [-77.0155, -67.4163, -564.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 521.176,
+      "rootDistanceMm": 521.174,
       "parentNodeId": 11,
       "parentEdgeId": 17,
       "childEdgeIds": [28, 29]
@@ -212,7 +212,7 @@
       "lps": [-82.0937, -53.4515, -515.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 515.538,
+      "rootDistanceMm": 515.536,
       "parentNodeId": 12,
       "parentEdgeId": 18,
       "childEdgeIds": [30, 31]
@@ -222,7 +222,7 @@
       "lps": [-68.1288, -71.2249, -522.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 500.997,
+      "rootDistanceMm": 500.995,
       "parentNodeId": 12,
       "parentEdgeId": 19,
       "childEdgeIds": [32, 33]
@@ -232,7 +232,7 @@
       "lps": [55.0157, -40.7562, -572.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 560.094,
+      "rootDistanceMm": 560.092,
       "parentNodeId": 13,
       "parentEdgeId": 20,
       "childEdgeIds": [34, 35]
@@ -242,7 +242,7 @@
       "lps": [42.3204, -29.3304, -587.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 562.491,
+      "rootDistanceMm": 562.489,
       "parentNodeId": 13,
       "parentEdgeId": 21,
       "childEdgeIds": [36, 37]
@@ -252,7 +252,7 @@
       "lps": [38.5118, -31.8695, -640.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 588.468,
+      "rootDistanceMm": 588.466,
       "parentNodeId": 14,
       "parentEdgeId": 22,
       "childEdgeIds": [38, 39]
@@ -262,7 +262,7 @@
       "lps": [52.4766, -50.9124, -664.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 602.545,
+      "rootDistanceMm": 602.543,
       "parentNodeId": 14,
       "parentEdgeId": 23,
       "childEdgeIds": [40, 41]
@@ -272,7 +272,7 @@
       "lps": [-74.4765, -38.2171, -677.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 630.837,
+      "rootDistanceMm": 630.835,
       "parentNodeId": 15,
       "parentEdgeId": 24,
       "childEdgeIds": [42, 43]
@@ -282,7 +282,7 @@
       "lps": [-65.5898, -66.1468, -663.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 599.442,
+      "rootDistanceMm": 599.44,
       "parentNodeId": 15,
       "parentEdgeId": 25,
       "childEdgeIds": [44, 45]
@@ -292,7 +292,7 @@
       "lps": [-70.6679, -44.5648, -613.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 591.066,
+      "rootDistanceMm": 591.064,
       "parentNodeId": 16,
       "parentEdgeId": 26,
       "childEdgeIds": []
@@ -302,7 +302,7 @@
       "lps": [-96.0585, -35.6781, -639.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 612.313,
+      "rootDistanceMm": 612.311,
       "parentNodeId": 16,
       "parentEdgeId": 27,
       "childEdgeIds": [46, 47]
@@ -312,7 +312,7 @@
       "lps": [-84.6327, -72.4945, -578.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 538.193,
+      "rootDistanceMm": 538.191,
       "parentNodeId": 18,
       "parentEdgeId": 28,
       "childEdgeIds": [48, 49]
@@ -322,7 +322,7 @@
       "lps": [-90.9804, -58.5296, -564.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 538.159,
+      "rootDistanceMm": 538.157,
       "parentNodeId": 18,
       "parentEdgeId": 29,
       "childEdgeIds": [50, 51]
@@ -332,7 +332,7 @@
       "lps": [-85.9023, -53.4515, -505.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 527.094,
+      "rootDistanceMm": 527.092,
       "parentNodeId": 19,
       "parentEdgeId": 30,
       "childEdgeIds": []
@@ -342,7 +342,7 @@
       "lps": [-115.1015, -38.2171, -518.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 553.744,
+      "rootDistanceMm": 553.742,
       "parentNodeId": 19,
       "parentEdgeId": 31,
       "childEdgeIds": []
@@ -352,7 +352,7 @@
       "lps": [-68.1288, -76.3031, -509.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 515.777,
+      "rootDistanceMm": 515.775,
       "parentNodeId": 20,
       "parentEdgeId": 32,
       "childEdgeIds": []
@@ -362,7 +362,7 @@
       "lps": [-70.6679, -77.5726, -523.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 508.591,
+      "rootDistanceMm": 508.589,
       "parentNodeId": 20,
       "parentEdgeId": 33,
       "childEdgeIds": [52, 53]
@@ -372,7 +372,7 @@
       "lps": [75.3282, -31.8695, -583.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 585.663,
+      "rootDistanceMm": 585.661,
       "parentNodeId": 21,
       "parentEdgeId": 34,
       "childEdgeIds": [54, 55]
@@ -382,7 +382,7 @@
       "lps": [58.8243, -36.9476, -559.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 574.227,
+      "rootDistanceMm": 574.225,
       "parentNodeId": 21,
       "parentEdgeId": 35,
       "childEdgeIds": [56, 57]
@@ -392,7 +392,7 @@
       "lps": [46.129, -6.4788, -585.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 586.965,
+      "rootDistanceMm": 586.963,
       "parentNodeId": 22,
       "parentEdgeId": 36,
       "childEdgeIds": [58, 59]
@@ -402,7 +402,7 @@
       "lps": [42.3204, -25.5218, -593.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 570.449,
+      "rootDistanceMm": 570.447,
       "parentNodeId": 22,
       "parentEdgeId": 37,
       "childEdgeIds": []
@@ -412,7 +412,7 @@
       "lps": [41.0508, -25.5218, -644.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 596.548,
+      "rootDistanceMm": 596.546,
       "parentNodeId": 23,
       "parentEdgeId": 38,
       "childEdgeIds": [60, 61]
@@ -422,7 +422,7 @@
       "lps": [24.5469, -3.9398, -642.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 620.856,
+      "rootDistanceMm": 620.854,
       "parentNodeId": 23,
       "parentEdgeId": 39,
       "childEdgeIds": []
@@ -432,7 +432,7 @@
       "lps": [94.3711, -39.4867, -664.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 649.843,
+      "rootDistanceMm": 649.841,
       "parentNodeId": 24,
       "parentEdgeId": 40,
       "childEdgeIds": []
@@ -442,7 +442,7 @@
       "lps": [56.2852, -43.2952, -685.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 626.707,
+      "rootDistanceMm": 626.705,
       "parentNodeId": 24,
       "parentEdgeId": 41,
       "childEdgeIds": [62, 63]
@@ -452,7 +452,7 @@
       "lps": [-71.9374, -34.4085, -685.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 641.015,
+      "rootDistanceMm": 641.013,
       "parentNodeId": 25,
       "parentEdgeId": 42,
       "childEdgeIds": []
@@ -462,7 +462,7 @@
       "lps": [-89.7109, -22.9827, -690.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 656.429,
+      "rootDistanceMm": 656.427,
       "parentNodeId": 25,
       "parentEdgeId": 43,
       "childEdgeIds": []
@@ -472,7 +472,7 @@
       "lps": [-74.4765, -62.3382, -687.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 626.318,
+      "rootDistanceMm": 626.316,
       "parentNodeId": 26,
       "parentEdgeId": 44,
       "childEdgeIds": [64, 65]
@@ -482,7 +482,7 @@
       "lps": [-79.5546, -78.8421, -667.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 621.459,
+      "rootDistanceMm": 621.457,
       "parentNodeId": 26,
       "parentEdgeId": 45,
       "childEdgeIds": [66, 67]
@@ -492,7 +492,7 @@
       "lps": [-107.4843, -21.7132, -654.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 636.17,
+      "rootDistanceMm": 636.168,
       "parentNodeId": 28,
       "parentEdgeId": 46,
       "childEdgeIds": [68, 69]
@@ -502,7 +502,7 @@
       "lps": [-112.5624, -35.6781, -638.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 630.211,
+      "rootDistanceMm": 630.209,
       "parentNodeId": 28,
       "parentEdgeId": 47,
       "childEdgeIds": []
@@ -512,7 +512,7 @@
       "lps": [-90.9804, -86.4593, -603.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 568.499,
+      "rootDistanceMm": 568.497,
       "parentNodeId": 29,
       "parentEdgeId": 48,
       "childEdgeIds": []
@@ -522,7 +522,7 @@
       "lps": [-94.789, -68.6859, -585.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 552.085,
+      "rootDistanceMm": 552.083,
       "parentNodeId": 29,
       "parentEdgeId": 49,
       "childEdgeIds": []
@@ -532,7 +532,7 @@
       "lps": [-99.8671, -54.721, -569.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 549.35,
+      "rootDistanceMm": 549.348,
       "parentNodeId": 30,
       "parentEdgeId": 50,
       "childEdgeIds": []
@@ -542,7 +542,7 @@
       "lps": [-101.1366, -54.721, -558.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 551.053,
+      "rootDistanceMm": 551.051,
       "parentNodeId": 30,
       "parentEdgeId": 51,
       "childEdgeIds": []
@@ -552,7 +552,7 @@
       "lps": [-70.6679, -86.4593, -520.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 518.899,
+      "rootDistanceMm": 518.897,
       "parentNodeId": 34,
       "parentEdgeId": 52,
       "childEdgeIds": [70, 71]
@@ -562,7 +562,7 @@
       "lps": [-84.6327, -75.0335, -522.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 523.19,
+      "rootDistanceMm": 523.188,
       "parentNodeId": 34,
       "parentEdgeId": 53,
       "childEdgeIds": []
@@ -572,7 +572,7 @@
       "lps": [88.0235, -14.096, -587.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 608.45,
+      "rootDistanceMm": 608.448,
       "parentNodeId": 35,
       "parentEdgeId": 54,
       "childEdgeIds": []
@@ -582,7 +582,7 @@
       "lps": [101.9883, -45.8343, -607.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 624.814,
+      "rootDistanceMm": 624.812,
       "parentNodeId": 35,
       "parentEdgeId": 55,
       "childEdgeIds": []
@@ -592,7 +592,7 @@
       "lps": [53.7461, -20.4437, -544.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 598.046,
+      "rootDistanceMm": 598.044,
       "parentNodeId": 36,
       "parentEdgeId": 56,
       "childEdgeIds": []
@@ -602,7 +602,7 @@
       "lps": [66.4415, -54.721, -525.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 614.943,
+      "rootDistanceMm": 614.941,
       "parentNodeId": 36,
       "parentEdgeId": 57,
       "childEdgeIds": [72, 73]
@@ -612,7 +612,7 @@
       "lps": [57.5547, 3.6774, -584.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 603.568,
+      "rootDistanceMm": 603.566,
       "parentNodeId": 37,
       "parentEdgeId": 58,
       "childEdgeIds": []
@@ -622,7 +622,7 @@
       "lps": [43.5899, 1.1383, -589.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 596.183,
+      "rootDistanceMm": 596.181,
       "parentNodeId": 37,
       "parentEdgeId": 59,
       "childEdgeIds": []
@@ -632,7 +632,7 @@
       "lps": [53.7461, -9.0179, -642.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 618.072,
+      "rootDistanceMm": 618.07,
       "parentNodeId": 39,
       "parentEdgeId": 60,
       "childEdgeIds": [74, 75]
@@ -642,7 +642,7 @@
       "lps": [39.7813, -15.3656, -654.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 610.975,
+      "rootDistanceMm": 610.973,
       "parentNodeId": 39,
       "parentEdgeId": 61,
       "childEdgeIds": [76, 77]
@@ -652,7 +652,7 @@
       "lps": [60.0938, -43.2952, -688.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 631.44,
+      "rootDistanceMm": 631.438,
       "parentNodeId": 42,
       "parentEdgeId": 62,
       "childEdgeIds": [78, 79]
@@ -662,7 +662,7 @@
       "lps": [47.3985, -28.0609, -699.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 650.761,
+      "rootDistanceMm": 650.759,
       "parentNodeId": 42,
       "parentEdgeId": 63,
       "childEdgeIds": []
@@ -672,7 +672,7 @@
       "lps": [-77.0155, -48.3734, -703.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 651.906,
+      "rootDistanceMm": 651.904,
       "parentNodeId": 45,
       "parentEdgeId": 64,
       "childEdgeIds": [80, 81]
@@ -682,7 +682,7 @@
       "lps": [-78.2851, -63.6077, -690.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 632.063,
+      "rootDistanceMm": 632.061,
       "parentNodeId": 45,
       "parentEdgeId": 65,
       "childEdgeIds": [82, 83]
@@ -692,7 +692,7 @@
       "lps": [-78.3641, -97.2829, -681.0877],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 646.114,
+      "rootDistanceMm": 646.112,
       "parentNodeId": 46,
       "parentEdgeId": 66,
       "childEdgeIds": []
@@ -702,7 +702,7 @@
       "lps": [-93.5195, -76.3031, -663.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 636.935,
+      "rootDistanceMm": 636.933,
       "parentNodeId": 46,
       "parentEdgeId": 67,
       "childEdgeIds": []
@@ -712,7 +712,7 @@
       "lps": [-107.4843, -16.6351, -657.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 642.675,
+      "rootDistanceMm": 642.673,
       "parentNodeId": 47,
       "parentEdgeId": 68,
       "childEdgeIds": []
@@ -722,7 +722,7 @@
       "lps": [-115.1015, -20.4437, -658.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.577,
+      "rootDistanceMm": 645.575,
       "parentNodeId": 47,
       "parentEdgeId": 69,
       "childEdgeIds": []
@@ -732,7 +732,7 @@
       "lps": [-63.0507, -102.9632, -529.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 539.643,
+      "rootDistanceMm": 539.641,
       "parentNodeId": 53,
       "parentEdgeId": 70,
       "childEdgeIds": []
@@ -742,7 +742,7 @@
       "lps": [-69.3984, -95.346, -503.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 539.469,
+      "rootDistanceMm": 539.467,
       "parentNodeId": 53,
       "parentEdgeId": 71,
       "childEdgeIds": []
@@ -752,7 +752,7 @@
       "lps": [75.3282, -91.5374, -540.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 656.234,
+      "rootDistanceMm": 656.232,
       "parentNodeId": 58,
       "parentEdgeId": 72,
       "childEdgeIds": []
@@ -762,7 +762,7 @@
       "lps": [62.6329, -66.1468, -505.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 638.826,
+      "rootDistanceMm": 638.824,
       "parentNodeId": 58,
       "parentEdgeId": 73,
       "childEdgeIds": [84, 85]
@@ -772,7 +772,7 @@
       "lps": [68.9805, 4.9469, -640.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 639.03,
+      "rootDistanceMm": 639.028,
       "parentNodeId": 61,
       "parentEdgeId": 74,
       "childEdgeIds": [86, 87]
@@ -782,7 +782,7 @@
       "lps": [52.4766, 1.1383, -639.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 629.496,
+      "rootDistanceMm": 629.494,
       "parentNodeId": 61,
       "parentEdgeId": 75,
       "childEdgeIds": []
@@ -792,7 +792,7 @@
       "lps": [39.7813, -3.9398, -660.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 624.213,
+      "rootDistanceMm": 624.211,
       "parentNodeId": 62,
       "parentEdgeId": 76,
       "childEdgeIds": [88, 89]
@@ -802,7 +802,7 @@
       "lps": [37.2422, -17.9046, -664.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 622.095,
+      "rootDistanceMm": 622.093,
       "parentNodeId": 62,
       "parentEdgeId": 77,
       "childEdgeIds": []
@@ -812,7 +812,7 @@
       "lps": [79.1368, -19.1742, -688.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 662.573,
+      "rootDistanceMm": 662.571,
       "parentNodeId": 63,
       "parentEdgeId": 78,
       "childEdgeIds": [90, 91]
@@ -822,7 +822,7 @@
       "lps": [66.4415, -40.7562, -712.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 656.833,
+      "rootDistanceMm": 656.831,
       "parentNodeId": 63,
       "parentEdgeId": 79,
       "childEdgeIds": [92, 93]
@@ -832,7 +832,7 @@
       "lps": [-68.1288, -49.6429, -714.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 666.521,
+      "rootDistanceMm": 666.519,
       "parentNodeId": 65,
       "parentEdgeId": 80,
       "childEdgeIds": []
@@ -842,7 +842,7 @@
       "lps": [-85.9023, -38.2171, -714.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 669.641,
+      "rootDistanceMm": 669.639,
       "parentNodeId": 65,
       "parentEdgeId": 81,
       "childEdgeIds": [94, 95]
@@ -852,7 +852,7 @@
       "lps": [-89.7109, -63.6077, -718.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 662.889,
+      "rootDistanceMm": 662.887,
       "parentNodeId": 66,
       "parentEdgeId": 82,
       "childEdgeIds": [96, 97]
@@ -862,7 +862,7 @@
       "lps": [-134.1444, -42.0257, -690.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 696.82,
+      "rootDistanceMm": 696.818,
       "parentNodeId": 66,
       "parentEdgeId": 83,
       "childEdgeIds": []
@@ -872,7 +872,7 @@
       "lps": [61.3633, -66.1468, -498.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 646.493,
+      "rootDistanceMm": 646.491,
       "parentNodeId": 74,
       "parentEdgeId": 84,
       "childEdgeIds": []
@@ -882,7 +882,7 @@
       "lps": [63.9024, -92.807, -503.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 666.255,
+      "rootDistanceMm": 666.253,
       "parentNodeId": 74,
       "parentEdgeId": 85,
       "childEdgeIds": []
@@ -892,7 +892,7 @@
       "lps": [94.3711, 11.2946, -642.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 666.035,
+      "rootDistanceMm": 666.033,
       "parentNodeId": 75,
       "parentEdgeId": 86,
       "childEdgeIds": []
@@ -902,7 +902,7 @@
       "lps": [70.25, 13.8336, -639.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 648.578,
+      "rootDistanceMm": 648.576,
       "parentNodeId": 75,
       "parentEdgeId": 87,
       "childEdgeIds": []
@@ -912,7 +912,7 @@
       "lps": [51.2071, 12.5641, -664.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.485,
+      "rootDistanceMm": 645.483,
       "parentNodeId": 77,
       "parentEdgeId": 88,
       "childEdgeIds": []
@@ -922,7 +922,7 @@
       "lps": [34.7032, 3.6774, -668.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 636.238,
+      "rootDistanceMm": 636.236,
       "parentNodeId": 77,
       "parentEdgeId": 89,
       "childEdgeIds": [98, 99]
@@ -932,7 +932,7 @@
       "lps": [107.0664, -14.096, -685.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 692.24,
+      "rootDistanceMm": 692.238,
       "parentNodeId": 79,
       "parentEdgeId": 90,
       "childEdgeIds": []
@@ -942,7 +942,7 @@
       "lps": [82.0679, -5.0789, -689.4338],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 677.405,
+      "rootDistanceMm": 677.403,
       "parentNodeId": 79,
       "parentEdgeId": 91,
       "childEdgeIds": []
@@ -952,7 +952,7 @@
       "lps": [115.9532, -55.9906, -727.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 714.376,
+      "rootDistanceMm": 714.374,
       "parentNodeId": 80,
       "parentEdgeId": 92,
       "childEdgeIds": []
@@ -962,7 +962,7 @@
       "lps": [66.4415, -34.4085, -732.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 678.447,
+      "rootDistanceMm": 678.445,
       "parentNodeId": 80,
       "parentEdgeId": 93,
       "childEdgeIds": [100, 101]
@@ -972,7 +972,7 @@
       "lps": [-83.3632, -35.6781, -722.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 678.644,
+      "rootDistanceMm": 678.642,
       "parentNodeId": 82,
       "parentEdgeId": 94,
       "childEdgeIds": []
@@ -982,7 +982,7 @@
       "lps": [-90.9804, -34.4085, -719.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 677.864,
+      "rootDistanceMm": 677.862,
       "parentNodeId": 82,
       "parentEdgeId": 95,
       "childEdgeIds": [102, 103]
@@ -992,7 +992,7 @@
       "lps": [-93.5195, -63.6077, -735.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 681.821,
+      "rootDistanceMm": 681.819,
       "parentNodeId": 83,
       "parentEdgeId": 96,
       "childEdgeIds": [104, 105]
@@ -1002,7 +1002,7 @@
       "lps": [-112.5624, -62.3382, -728.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 689.514,
+      "rootDistanceMm": 689.512,
       "parentNodeId": 83,
       "parentEdgeId": 97,
       "childEdgeIds": []
@@ -1012,7 +1012,7 @@
       "lps": [32.1641, 7.486, -674.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 645.311,
+      "rootDistanceMm": 645.309,
       "parentNodeId": 90,
       "parentEdgeId": 98,
       "childEdgeIds": []
@@ -1022,7 +1022,7 @@
       "lps": [27.086, 3.6774, -667.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 644.632,
+      "rootDistanceMm": 644.63,
       "parentNodeId": 90,
       "parentEdgeId": 99,
       "childEdgeIds": []
@@ -1032,7 +1032,7 @@
       "lps": [72.7891, -31.8695, -747.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 695.354,
+      "rootDistanceMm": 695.352,
       "parentNodeId": 94,
       "parentEdgeId": 100,
       "childEdgeIds": [106, 107]
@@ -1042,7 +1042,7 @@
       "lps": [56.2852, -29.3304, -739.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 692.585,
+      "rootDistanceMm": 692.583,
       "parentNodeId": 94,
       "parentEdgeId": 101,
       "childEdgeIds": [108, 109]
@@ -1052,7 +1052,7 @@
       "lps": [-98.5976, -29.3304, -727.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 690.358,
+      "rootDistanceMm": 690.356,
       "parentNodeId": 96,
       "parentEdgeId": 102,
       "childEdgeIds": []
@@ -1062,7 +1062,7 @@
       "lps": [-97.328, -30.5999, -718.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 685.655,
+      "rootDistanceMm": 685.653,
       "parentNodeId": 96,
       "parentEdgeId": 103,
       "childEdgeIds": []
@@ -1072,7 +1072,7 @@
       "lps": [-68.1288, -48.3734, -779.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 736.157,
+      "rootDistanceMm": 736.155,
       "parentNodeId": 97,
       "parentEdgeId": 104,
       "childEdgeIds": []
@@ -1082,7 +1082,7 @@
       "lps": [-103.6757, -61.0687, -753.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 702.639,
+      "rootDistanceMm": 702.637,
       "parentNodeId": 97,
       "parentEdgeId": 105,
       "childEdgeIds": [110, 111]
@@ -1092,7 +1092,7 @@
       "lps": [85.4844, -24.2523, -753.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 711.99,
+      "rootDistanceMm": 711.988,
       "parentNodeId": 101,
       "parentEdgeId": 106,
       "childEdgeIds": [112, 113]
@@ -1102,7 +1102,7 @@
       "lps": [71.5196, -26.7913, -769.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 718.831,
+      "rootDistanceMm": 718.829,
       "parentNodeId": 101,
       "parentEdgeId": 107,
       "childEdgeIds": [114, 115]
@@ -1112,7 +1112,7 @@
       "lps": [49.7967, -23.1111, -746.6149],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 704.148,
+      "rootDistanceMm": 704.146,
       "parentNodeId": 102,
       "parentEdgeId": 108,
       "childEdgeIds": []
@@ -1122,7 +1122,7 @@
       "lps": [53.7461, -42.0257, -750.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 710.329,
+      "rootDistanceMm": 710.327,
       "parentNodeId": 102,
       "parentEdgeId": 109,
       "childEdgeIds": []
@@ -1132,7 +1132,7 @@
       "lps": [-110.0234, -59.7991, -775.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 726.387,
+      "rootDistanceMm": 726.385,
       "parentNodeId": 106,
       "parentEdgeId": 110,
       "childEdgeIds": [116, 117]
@@ -1142,7 +1142,7 @@
       "lps": [-118.9101, -62.3382, -759.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 720.724,
+      "rootDistanceMm": 720.722,
       "parentNodeId": 106,
       "parentEdgeId": 111,
       "childEdgeIds": [118, 119]
@@ -1152,7 +1152,7 @@
       "lps": [109.6055, -31.8695, -779.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 749.277,
+      "rootDistanceMm": 749.275,
       "parentNodeId": 107,
       "parentEdgeId": 112,
       "childEdgeIds": []
@@ -1162,7 +1162,7 @@
       "lps": [86.754, -11.557, -752.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 725.162,
+      "rootDistanceMm": 725.16,
       "parentNodeId": 107,
       "parentEdgeId": 113,
       "childEdgeIds": []
@@ -1172,7 +1172,7 @@
       "lps": [74.0586, -24.2523, -785.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 735.831,
+      "rootDistanceMm": 735.829,
       "parentNodeId": 108,
       "parentEdgeId": 114,
       "childEdgeIds": [120, 121]
@@ -1182,7 +1182,7 @@
       "lps": [47.3985, -7.7484, -782.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 752.724,
+      "rootDistanceMm": 752.722,
       "parentNodeId": 108,
       "parentEdgeId": 115,
       "childEdgeIds": []
@@ -1192,7 +1192,7 @@
       "lps": [-104.9452, -62.3382, -780.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 734.722,
+      "rootDistanceMm": 734.72,
       "parentNodeId": 111,
       "parentEdgeId": 116,
       "childEdgeIds": []
@@ -1202,7 +1202,7 @@
       "lps": [-113.8319, -58.5296, -782.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 734.102,
+      "rootDistanceMm": 734.1,
       "parentNodeId": 111,
       "parentEdgeId": 117,
       "childEdgeIds": [122, 123]
@@ -1212,7 +1212,7 @@
       "lps": [-134.1444, -52.182, -763.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 739.784,
+      "rootDistanceMm": 739.782,
       "parentNodeId": 112,
       "parentEdgeId": 118,
       "childEdgeIds": []
@@ -1222,7 +1222,7 @@
       "lps": [-131.6054, -82.6507, -794.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 763.911,
+      "rootDistanceMm": 763.909,
       "parentNodeId": 112,
       "parentEdgeId": 119,
       "childEdgeIds": []
@@ -1232,7 +1232,7 @@
       "lps": [99.4493, -22.9827, -818.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 779.414,
+      "rootDistanceMm": 779.412,
       "parentNodeId": 115,
       "parentEdgeId": 120,
       "childEdgeIds": []
@@ -1242,7 +1242,7 @@
       "lps": [71.5196, -19.1742, -810.75],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 762.3,
+      "rootDistanceMm": 762.298,
       "parentNodeId": 115,
       "parentEdgeId": 121,
       "childEdgeIds": [124, 125]
@@ -1252,7 +1252,7 @@
       "lps": [-113.8319, -55.9906, -788.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 741.042,
+      "rootDistanceMm": 741.04,
       "parentNodeId": 118,
       "parentEdgeId": 122,
       "childEdgeIds": [126, 127]
@@ -1262,7 +1262,7 @@
       "lps": [-127.7968, -58.5296, -789.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 751.021,
+      "rootDistanceMm": 751.019,
       "parentNodeId": 118,
       "parentEdgeId": 123,
       "childEdgeIds": []
@@ -1272,7 +1272,7 @@
       "lps": [82.9454, -14.096, -834.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 790.094,
+      "rootDistanceMm": 790.092,
       "parentNodeId": 122,
       "parentEdgeId": 124,
       "childEdgeIds": []
@@ -1282,7 +1282,7 @@
       "lps": [62.6329, -14.096, -827.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 781.893,
+      "rootDistanceMm": 781.891,
       "parentNodeId": 122,
       "parentEdgeId": 125,
       "childEdgeIds": [128, 129]
@@ -1292,7 +1292,7 @@
       "lps": [-82.0937, -30.5999, -805.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 791.039,
+      "rootDistanceMm": 791.037,
       "parentNodeId": 123,
       "parentEdgeId": 126,
       "childEdgeIds": []
@@ -1302,7 +1302,7 @@
       "lps": [-118.9101, -55.9906, -804.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 758.534,
+      "rootDistanceMm": 758.532,
       "parentNodeId": 123,
       "parentEdgeId": 127,
       "childEdgeIds": [130, 131]
@@ -1312,7 +1312,7 @@
       "lps": [60.0938, -12.8265, -842.0],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 797.772,
+      "rootDistanceMm": 797.77,
       "parentNodeId": 126,
       "parentEdgeId": 128,
       "childEdgeIds": [132, 133]
@@ -1322,7 +1322,7 @@
       "lps": [52.4766, -9.0179, -825.75],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 794.008,
+      "rootDistanceMm": 794.006,
       "parentNodeId": 126,
       "parentEdgeId": 129,
       "childEdgeIds": []
@@ -1332,7 +1332,7 @@
       "lps": [-110.0234, -54.721, -813.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 771.183,
+      "rootDistanceMm": 771.181,
       "parentNodeId": 128,
       "parentEdgeId": 130,
       "childEdgeIds": []
@@ -1342,7 +1342,7 @@
       "lps": [-123.9882, -55.9906, -814.5],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 770.287,
+      "rootDistanceMm": 770.285,
       "parentNodeId": 128,
       "parentEdgeId": 131,
       "childEdgeIds": [134, 135]
@@ -1352,7 +1352,7 @@
       "lps": [71.5196, -9.0179, -867.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 826.191,
+      "rootDistanceMm": 826.189,
       "parentNodeId": 129,
       "parentEdgeId": 132,
       "childEdgeIds": []
@@ -1362,7 +1362,7 @@
       "lps": [49.9376, -12.8265, -858.25],
       "kind": "bifurcation",
       "degree": 3,
-      "rootDistanceMm": 817.223,
+      "rootDistanceMm": 817.221,
       "parentNodeId": 129,
       "parentEdgeId": 133,
       "childEdgeIds": [136, 137]
@@ -1372,7 +1372,7 @@
       "lps": [-125.2577, -39.4867, -829.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 798.779,
+      "rootDistanceMm": 798.777,
       "parentNodeId": 132,
       "parentEdgeId": 134,
       "childEdgeIds": []
@@ -1382,7 +1382,7 @@
       "lps": [-135.414, -57.2601, -824.5],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 786.044,
+      "rootDistanceMm": 786.042,
       "parentNodeId": 132,
       "parentEdgeId": 135,
       "childEdgeIds": []
@@ -1392,7 +1392,7 @@
       "lps": [52.4766, -12.8265, -868.25],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 827.75,
+      "rootDistanceMm": 827.748,
       "parentNodeId": 134,
       "parentEdgeId": 136,
       "childEdgeIds": []
@@ -1402,7 +1402,7 @@
       "lps": [43.5899, -12.8265, -862.0],
       "kind": "terminal",
       "degree": 1,
-      "rootDistanceMm": 824.767,
+      "rootDistanceMm": 824.765,
       "parentNodeId": 134,
       "parentEdgeId": 137,
       "childEdgeIds": []
@@ -1837,7 +1837,7 @@
       "sourceCellId": 3,
       "startNodeId": 2,
       "endNodeId": 4,
-      "lengthMm": 106.6,
+      "lengthMm": 106.598,
       "radiusMm": 2.539,
       "pointsLps": [
         [-10.9999, -128.3538, -269.5],
@@ -1854,8 +1854,8 @@
         [-7.0099, -131.0138, -276.0476],
         [-6.6472, -131.2556, -276.6429],
         [-6.2845, -131.4974, -277.2381],
-        [-5.9173, -131.7346, -277.8322],
-        [-5.5374, -131.9586, -278.4232],
+        [-5.9218, -131.7392, -277.8333],
+        [-5.559, -131.981, -278.4286],
         [-5.1963, -132.2228, -279.0238],
         [-4.8336, -132.4646, -279.619],
         [-4.4709, -132.7065, -280.2143],

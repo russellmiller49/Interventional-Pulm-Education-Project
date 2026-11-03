@@ -39,7 +39,7 @@ const bundledAssetPrefixes = [
   'airway-anatomy/case-001/lumen-v2.glb',
   'airway-anatomy/dolphin-001/case_manifest.json',
   'airway-anatomy/dolphin-001/metadata',
-  'airway-anatomy/dolphin-001/lumen.glb',
+  'airway-anatomy/dolphin-001/lumen-v2.glb',
 ]
 
 const remoteAssetPrefixes = [

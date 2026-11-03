@@ -9,8 +9,8 @@
   "sourcePolicy": "Raw CT and segmentation remain in Local-Data/Dolphin_bronch. The app loads assets derived by scripts/airway-anatomy/build-dolphin-case.py.",
   "assetBaseUrl": "/airway-anatomy/dolphin-001",
   "assets": {
-    "airwayGlb": "/airway-anatomy/dolphin-001/lumen.glb",
-    "reviewedLumenGlb": "/airway-anatomy/dolphin-001/lumen.glb",
+    "airwayGlb": "/airway-anatomy/dolphin-001/lumen-v2.glb",
+    "reviewedLumenGlb": "/airway-anatomy/dolphin-001/lumen-v2.glb",
     "airwayGraphJson": "/airway-anatomy/dolphin-001/metadata/airway_graph.json",
     "centerlineLabelsJson": "/airway-anatomy/dolphin-001/metadata/centerline_labels.json",
     "ctPreviewRaw": "/airway-anatomy/dolphin-001/ct/dolphin_ct_preview_i16.raw"
@@ -19,13 +19,13 @@
     "sceneScale": 1,
     "rotationDeg": [0, 0, 0],
     "positionOffsetMm": [0, 0, 0],
-    "note": "lumen.glb is written in patient LPS millimeters."
+    "note": "lumen-v2.glb is written in patient LPS millimeters."
   },
   "airwaySurfaceTransform": {
     "sceneScale": 1,
     "rotationDeg": [0, 0, 0],
     "positionOffsetMm": [0, 0, 0],
-    "note": "lumen.glb is aligned with the CT and centerlines."
+    "note": "lumen-v2.glb is aligned with the CT and centerlines."
   },
   "ct": {
     "sourceNrrd": "3 DOLPHIN LUNG 1.25MM.nrrd",
@@ -66,7 +66,7 @@
     "schema": "lumen-validation/v1",
     "closed": true,
     "sourceSha256": "af768138ea89dd653364dbfe02060a7f63b645cf2f7642166fcc89031e97455f",
-    "displaySha256": "5b53da43054d1718ebb4905611e6f4f48df08dad156c3d52eab3e53db6c0a6ec",
+    "displaySha256": "b67911ce627e3d17830a7d9b3b51fa3d1f4dea0ea56f05608cbfe520a4375f2d",
     "coordinateSystem": "LPS",
     "units": "mm",
     "topology": {
@@ -76,6 +76,16 @@
     }
   },
   "orientationLandmarks": [
+    {
+      "id": "spout",
+      "label": "Laryngeal spout",
+      "edgeId": 1,
+      "distanceMm": 41.5,
+      "targetEdgeId": 3,
+      "screenDirection": "up",
+      "upLps": [-0.3375, 0.8785, -0.3381],
+      "expectation": "Dorsal at the top; the glottis a triangle at the spout tip, apex up, with the fornix on each side"
+    },
     {
       "id": "trachea",
       "label": "Trachea",
@@ -88,6 +98,12 @@
     }
   ],
   "ostialLandmarks": [],
+  "appearance": {
+    "mucosaTint": {
+      "low": [0.56, 0.36, 0.33],
+      "high": [0.76, 0.56, 0.51]
+    }
+  },
   "interaction": {
     "rootNodeId": 0,
     "carinaNodeId": 7,

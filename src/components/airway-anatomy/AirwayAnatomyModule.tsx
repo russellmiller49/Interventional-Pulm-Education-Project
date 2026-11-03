@@ -1,17 +1,21 @@
 'use client'
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Compass,
+  Crosshair,
   Eye,
   EyeOff,
   Gamepad2,
   Headset,
   RotateCcw,
+  RotateCw,
   Save,
   SlidersHorizontal,
 } from 'lucide-react'
@@ -29,7 +33,13 @@ import {
   useAirwayGame,
   type AirwayGameController,
 } from '@/components/airway-anatomy/AirwayGameLayer'
-import { edgePathToNode, LOBE_COLORS, type GameTarget } from '@/lib/airway-anatomy/airway-game'
+import {
+  buildGameTargets,
+  edgePathToNode,
+  LOBE_COLORS,
+  type GameTarget,
+} from '@/lib/airway-anatomy/airway-game'
+import { deriveScopeLocation, type AirwayScopeLocation } from '@/lib/airway-anatomy/scope-location'
 import {
   buildUpcomingOstia,
   shortAnatomicalLabel,
@@ -136,6 +146,49 @@ export const DOLPHIN_AIRWAY_CASE: AirwayAnatomyCaseSource = {
   challenge: false,
 }
 
+export type { AirwayScopeLocation }
+
+/** A lesson's start: an edge and distance, optionally looking off the centerline (frame renders). */
+export interface AirwayEmbedStart {
+  edgeId: number
+  distanceMm?: number
+  yawDeg?: number
+  pitchDeg?: number
+  key?: string
+}
+
+function embedStartState(graph: AirwayGraph, start: AirwayEmbedStart): ScopeState {
+  const state = createInitialScopeState(graph, start.edgeId, start.distanceMm ?? 0)
+  return start.yawDeg || start.pitchDeg
+    ? updateLookOffset(state, { yawDeg: start.yawDeg ?? 0, pitchDeg: start.pitchDeg ?? 0 })
+    : state
+}
+
+/**
+ * How a lesson embeds the module. Every field is optional and the defaults reproduce the
+ * standalone page exactly, so the human case and both direct-link pages render as they always have.
+ */
+export interface AirwayAnatomyEmbedOptions {
+  /**
+   * Where the scope starts. Applied when the case loads, re-applied whenever `key` changes, and
+   * used by Reset in place of the manifest's default edge.
+   */
+  start?: AirwayEmbedStart
+  /** `learner` keeps the checkbox the standalone page has; the other two fix the labels. */
+  branchLabels?: 'shown' | 'hidden' | 'learner'
+  /** False hides the location pill and the panel's current-position line, for identification drills. */
+  showLocation?: boolean
+  /** Which parts of the standalone chrome render. `ct: false` also skips the CT download. */
+  chrome?: { header?: boolean; modeStrip?: boolean; ct?: boolean; tree?: boolean }
+  onCaseLoaded?: (loaded: { graph: AirwayGraph; labels: CenterlineLabels }) => void
+  /** Called on every change of edge. */
+  onLocationChange?: (location: AirwayScopeLocation) => void
+  /** Called at most once per animation frame. */
+  onPoseChange?: (pose: ScopePoseSnapshot) => void
+  /** A labelled destination: its edges lit in the 3D tree, with the beacon when asked. No scoring. */
+  target?: { abbr: string; showBeacon: boolean } | null
+}
+
 const ORIENTATION_WRITE_ENDPOINT = '/api/airway-anatomy/scope-orientation'
 const AIRWAY_CALIBRATION_QUERY_PARAM = 'airwayCalibration'
 const SCOPE_ORIENTATION_PROFILE_QUERY_PARAM = 'scopeProfile'
@@ -148,7 +201,8 @@ interface LoadedCase {
   manifest: AirwayAnatomyCaseManifest
   graph: AirwayGraph
   labels: CenterlineLabels
-  ctVolume: Int16Array
+  /** Null when an embedding lesson asked for no CT (`chrome.ct: false`); nothing was downloaded. */
+  ctVolume: Int16Array | null
 }
 
 interface AirwayTarget {
@@ -167,9 +221,26 @@ interface CurrentLocation {
 
 export function AirwayAnatomyModule({
   source = HUMAN_AIRWAY_CASE,
+  embed,
 }: {
   source?: AirwayAnatomyCaseSource
+  embed?: AirwayAnatomyEmbedOptions
 }) {
+  const showHeader = embed?.chrome?.header ?? true
+  const showModeStrip = embed?.chrome?.modeStrip ?? true
+  const wantsCt = embed?.chrome?.ct ?? true
+  const showTree = embed?.chrome?.tree ?? true
+  const showLocation = embed?.showLocation ?? true
+  const branchLabelMode = embed?.branchLabels ?? 'learner'
+  const embedStartEdgeId = embed?.start?.edgeId
+  const embedStartDistanceMm = embed?.start?.distanceMm
+  const embedStartYawDeg = embed?.start?.yawDeg
+  const embedStartPitchDeg = embed?.start?.pitchDeg
+  const embedStartKey = embed?.start?.key
+  const embedCallbacks = useRef(embed)
+  embedCallbacks.current = embed
+  /** The last place reported to an embedding lesson, as `edgeId:freeDrive`. */
+  const reportedLocation = useRef<string | null>(null)
   const [loadedCase, setLoadedCase] = useState<LoadedCase | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [scopeState, setScopeState] = useState<ScopeState | null>(null)
@@ -253,19 +324,20 @@ export function AirwayAnatomyModule({
         const [graphResponse, labelsResponse, ctResponse] = await Promise.all([
           fetch(resolveAdminAirwayAssetPath(manifest.assets.airwayGraphJson)),
           fetch(resolveAdminAirwayAssetPath(manifest.assets.centerlineLabelsJson)),
-          fetch(resolveAdminAirwayAssetPath(manifest.assets.ctPreviewRaw)),
+          wantsCt ? fetch(resolveAdminAirwayAssetPath(manifest.assets.ctPreviewRaw)) : null,
         ])
 
         if (!graphResponse.ok)
           throw new Error(`Unable to load airway graph (${graphResponse.status}).`)
         if (!labelsResponse.ok)
           throw new Error(`Unable to load airway labels (${labelsResponse.status}).`)
-        if (!ctResponse.ok) throw new Error(`Unable to load CT preview (${ctResponse.status}).`)
+        if (ctResponse && !ctResponse.ok)
+          throw new Error(`Unable to load CT preview (${ctResponse.status}).`)
 
         const [graph, labels, ctBuffer, orientationCalibration] = await Promise.all([
           graphResponse.json() as Promise<AirwayGraph>,
           labelsResponse.json() as Promise<CenterlineLabels>,
-          ctResponse.arrayBuffer(),
+          ctResponse ? ctResponse.arrayBuffer() : null,
           fetchScopeOrientationCalibration(manifest.id, source.orientationCalibrationUrl),
         ])
 
@@ -278,17 +350,21 @@ export function AirwayAnatomyModule({
           manifest,
           graph,
           labels,
-          ctVolume: new Int16Array(ctBuffer),
+          ctVolume: ctBuffer ? new Int16Array(ctBuffer) : null,
         })
         setScopeOrientationCalibration(orientationCalibration)
         setScopeOrientationProfile(requestedProfile ?? orientationCalibration.defaultProfile)
+        const start = embedCallbacks.current?.start
         setScopeState(
-          createInitialScopeState(
-            graph,
-            manifest.interaction.defaultEdgeId,
-            manifest.interaction.initialDistanceMm,
-          ),
+          start
+            ? embedStartState(graph, start)
+            : createInitialScopeState(
+                graph,
+                manifest.interaction.defaultEdgeId,
+                manifest.interaction.initialDistanceMm,
+              ),
         )
+        embedCallbacks.current?.onCaseLoaded?.({ graph, labels })
       } catch (error) {
         if (!cancelled) {
           setLoadError(
@@ -303,7 +379,34 @@ export function AirwayAnatomyModule({
     return () => {
       cancelled = true
     }
-  }, [source.manifestUrl, source.orientationCalibrationUrl])
+  }, [source.manifestUrl, source.orientationCalibrationUrl, wantsCt])
+
+  // A lesson moves the scope to a new start by changing the start's key (a new step, a new drill
+  // target); the first application is the load above.
+  const appliedStartKey = useRef(embedStartKey)
+  useEffect(() => {
+    if (appliedStartKey.current === embedStartKey) return
+    appliedStartKey.current = embedStartKey
+    if (!loadedCase || embedStartEdgeId === undefined) return
+    driveQueue.current = 0
+    // A new start is a new run: report the place again even if the edge is the same.
+    reportedLocation.current = null
+    setScopeState(
+      embedStartState(loadedCase.graph, {
+        edgeId: embedStartEdgeId,
+        distanceMm: embedStartDistanceMm,
+        yawDeg: embedStartYawDeg,
+        pitchDeg: embedStartPitchDeg,
+      }),
+    )
+  }, [
+    embedStartKey,
+    embedStartEdgeId,
+    embedStartDistanceMm,
+    embedStartYawDeg,
+    embedStartPitchDeg,
+    loadedCase,
+  ])
 
   const graphIndex = useMemo(
     () => (loadedCase ? createGraphIndex(loadedCase.graph) : null),
@@ -351,6 +454,32 @@ export function AirwayAnatomyModule({
       name: shortAnatomicalLabel(info.fullLabel, info.abbreviatedLabel),
     }
   }, [loadedCase, snapshot])
+
+  // Reported once per edge (and per change of navigation mode); the distance within an edge is in
+  // the pose stream.
+  const freeDrive = Boolean(scopeState?.freeFrame)
+  useEffect(() => {
+    if (!loadedCase || !snapshot) return
+    const key = `${snapshot.edgeId}:${freeDrive}`
+    if (reportedLocation.current === key) return
+    reportedLocation.current = key
+    embedCallbacks.current?.onLocationChange?.(
+      deriveScopeLocation(loadedCase.graph, loadedCase.labels, snapshot, freeDrive),
+    )
+  }, [loadedCase, snapshot, freeDrive])
+  useEffect(() => {
+    if (!snapshot || !embedCallbacks.current?.onPoseChange) return
+    const handle = requestAnimationFrame(() => embedCallbacks.current?.onPoseChange?.(snapshot))
+    return () => cancelAnimationFrame(handle)
+  }, [snapshot])
+
+  const embedTarget = useMemo<GameTarget | null>(() => {
+    const abbr = embed?.target?.abbr
+    if (!loadedCase || !abbr || !embed?.target?.showBeacon) return null
+    return (
+      buildGameTargets(loadedCase.graph, loadedCase.labels).find((t) => t.abbr === abbr) ?? null
+    )
+  }, [loadedCase, embed?.target?.abbr, embed?.target?.showBeacon])
 
   const upcomingOstia = useMemo<OstiumLabel[]>(() => {
     if (!loadedCase || !graphIndex || !snapshot) return []
@@ -500,13 +629,20 @@ export function AirwayAnatomyModule({
     driveQueue.current = 0
     if (!loadedCase) return
     setScopeState(
-      createInitialScopeState(
-        loadedCase.graph,
-        loadedCase.manifest.interaction.defaultEdgeId,
-        loadedCase.manifest.interaction.initialDistanceMm,
-      ),
+      embedStartEdgeId !== undefined
+        ? embedStartState(loadedCase.graph, {
+            edgeId: embedStartEdgeId,
+            distanceMm: embedStartDistanceMm,
+            yawDeg: embedStartYawDeg,
+            pitchDeg: embedStartPitchDeg,
+          })
+        : createInitialScopeState(
+            loadedCase.graph,
+            loadedCase.manifest.interaction.defaultEdgeId,
+            loadedCase.manifest.interaction.initialDistanceMm,
+          ),
     )
-  }, [loadedCase])
+  }, [loadedCase, embedStartEdgeId, embedStartDistanceMm, embedStartYawDeg, embedStartPitchDeg])
 
   const game = useAirwayGame({
     enabled: mode === 'challenge',
@@ -519,7 +655,12 @@ export function AirwayAnatomyModule({
 
   // In challenge mode the named ostia labels double as an optional hint; the
   // free-drive toggle governs them everywhere else.
-  const effectiveShowBranchLabels = mode === 'challenge' ? game.view.hintsOn : showBranchLabels
+  const effectiveShowBranchLabels =
+    mode === 'challenge'
+      ? game.view.hintsOn
+      : branchLabelMode === 'learner'
+        ? showBranchLabels
+        : branchLabelMode === 'shown'
 
   const handleRollChange = (rollDeg: number) => {
     setScopeState((state) =>
@@ -614,7 +755,7 @@ export function AirwayAnatomyModule({
   const opticalFrame = useMemo(() => (snapshot ? scopeOpticalFrame(snapshot) : null), [snapshot])
   const linkedCt = useLinkedCt(
     loadedCase?.manifest.ct,
-    loadedCase?.ctVolume,
+    loadedCase?.ctVolume ?? undefined,
     opticalFrame,
     currentWindow?.low ?? -1000,
     currentWindow?.high ?? -300,
@@ -702,6 +843,90 @@ export function AirwayAnatomyModule({
   const activeProfileLabel =
     scopeOrientationCalibration.profiles[scopeOrientationProfile]?.label ?? scopeOrientationProfile
 
+  const opticalPanel = (
+    <VirtualBronchoscopyViewport
+      manifest={loadedCase.manifest}
+      pose={snapshot}
+      ostia={upcomingOstia}
+      showBranchLabels={effectiveShowBranchLabels}
+      location={showLocation ? currentLocation : null}
+      onLookDrag={handleLookDrag}
+      onAlignBranch={handleAlignBranch}
+      game={mode === 'challenge' ? game : null}
+      fovDeg={BRONCH_FOV_DEG}
+      collider={collider}
+      controls={
+        embed
+          ? {
+              onSteer: handleSteer,
+              onRecenter: handleRecenter,
+              onMove: handleMove,
+              onRoll: (deltaDeg: number) =>
+                handleRollChange((renderedState.current?.rollDeg ?? 0) + deltaDeg),
+              stepMm,
+            }
+          : null
+      }
+    />
+  )
+  const treePanel = (
+    <AirwayTreeViewport
+      manifest={loadedCase.manifest}
+      graph={loadedCase.graph}
+      targets={airwayTargets}
+      pose={snapshot}
+      showAnatomyPins={showAnatomyPins}
+      ctImage={linkedCt.result?.images.find((i) => i.plane.axis === linkedCt.axis)}
+      ctVolume={loadedCase.ctVolume}
+      windowLow={currentWindow.low}
+      windowHigh={currentWindow.high}
+      ctPlaneOpacity={ctPlaneOpacity}
+      gameTarget={mode === 'challenge' ? game.view.currentTarget : embedTarget}
+      hitPulse={game.hitPulse}
+      hitAnchor={game.hitAnchor}
+    />
+  )
+  const controlPanel = (
+    <ControlPanel
+      pose={snapshot}
+      location={showLocation ? currentLocation : null}
+      stepMm={stepMm}
+      onSteer={handleSteer}
+      onRecenter={handleRecenter}
+      onMove={handleMove}
+      ctAxis={ctAxis}
+      onCtAxisChange={setCtAxis}
+      windowPresetId={windowPresetId}
+      windowPresets={loadedCase.manifest.ct.windowPresets}
+      onWindowPresetChange={setWindowPresetId}
+      ctPlaneOpacity={ctPlaneOpacity}
+      onCtPlaneOpacityChange={setCtPlaneOpacity}
+      onRollChange={handleRollChange}
+      liveRollDeg={liveRollDeg}
+      totalRollDeg={snapshot.rollDeg}
+      showBranchLabels={showBranchLabels}
+      branchLabelToggle={branchLabelMode === 'learner'}
+      ctControls={Boolean(loadedCase.ctVolume)}
+      onShowBranchLabelsChange={setShowBranchLabels}
+      calibrationMode={calibrationMode}
+      orientationProfile={scopeOrientationProfile}
+      orientationProfileLabel={activeProfileLabel}
+      flexibleRollDeg={flexibleRollDeg}
+      orientationSaveStatus={orientationSaveStatus}
+      onSaveFlexibleOrientation={saveCurrentFlexibleOrientation}
+      onResetFlexibleOrientation={resetCurrentFlexibleOrientation}
+    />
+  )
+  const ctPanel = (
+    <LinkedCtWorkspace
+      controller={linkedCt}
+      frame={opticalFrame!}
+      low={currentWindow.low}
+      high={currentWindow.high}
+      wideRow={!enlarged}
+    />
+  )
+
   return (
     <HandoffContent>
       {
@@ -709,203 +934,213 @@ export function AirwayAnatomyModule({
           className="relative overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
           tabIndex={0}
           onKeyDown={handleKeyDown}
+          data-airway-location={currentLocation.abbr}
+          data-airway-embedded={embed ? true : undefined}
         >
-          <div className="border-b border-slate-800 bg-slate-950/95 px-4 py-4 md:px-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold">
-                    Simulation
-                  </Badge>
-                  <span className="text-xs font-medium text-slate-400">
-                    {loadedCase.manifest.ct.sourceNrrd}
-                  </span>
-                </div>
-                <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-                  {source.title}
-                </h2>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div
-                  className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5"
-                  aria-label="Scope orientation profile"
-                >
-                  {SCOPE_ORIENTATION_PROFILE_IDS.map((profileId) => (
-                    <button
-                      key={profileId}
-                      type="button"
-                      onClick={() => handleScopeOrientationProfileChange(profileId)}
-                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                        scopeOrientationProfile === profileId
-                          ? profileId === 'flexible'
-                            ? 'bg-cyan-500 text-slate-950'
-                            : 'bg-slate-700 text-white'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      aria-pressed={scopeOrientationProfile === profileId}
-                    >
-                      {scopeOrientationCalibration.profiles[profileId].label}
-                    </button>
-                  ))}
-                </div>
-                {source.challenge ? (
-                  <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode('explore')
-                        game.actions.stop()
-                      }}
-                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                        mode === 'explore'
-                          ? 'bg-slate-700 text-white'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      aria-pressed={mode === 'explore'}
-                    >
-                      <Compass className="h-4 w-4" />
-                      Explore
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMode('challenge')}
-                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                        mode === 'challenge'
-                          ? 'bg-cyan-500 text-slate-950'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      aria-pressed={mode === 'challenge'}
-                    >
-                      <Gamepad2 className="h-4 w-4" />
-                      Challenge
-                    </button>
+          {showHeader ? (
+            <div className="border-b border-slate-800 bg-slate-950/95 px-4 py-4 md:px-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold">
+                      Simulation
+                    </Badge>
+                    <span className="text-xs font-medium text-slate-400">
+                      {loadedCase.manifest.ct.sourceNrrd}
+                    </span>
                   </div>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowAnatomyPins((value) => !value)}
-                >
-                  {showAnatomyPins ? (
-                    <EyeOff className="mr-2 h-4 w-4" />
-                  ) : (
-                    <Eye className="mr-2 h-4 w-4" />
-                  )}
-                  {showAnatomyPins ? 'Hide 3D pins' : 'Show 3D pins'}
-                </Button>
-                <Button
-                  type="button"
-                  variant={showXr ? 'default' : 'secondary'}
-                  size="sm"
-                  onClick={() => setShowXr((value) => !value)}
-                >
-                  <Headset className="mr-2 h-4 w-4" />
-                  {showXr ? 'Hide VR view' : 'VR view'}
-                </Button>
-                <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset
-                </Button>
+                  <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+                    {source.title}
+                  </h2>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div
+                    className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5"
+                    aria-label="Scope orientation profile"
+                  >
+                    {SCOPE_ORIENTATION_PROFILE_IDS.map((profileId) => (
+                      <button
+                        key={profileId}
+                        type="button"
+                        onClick={() => handleScopeOrientationProfileChange(profileId)}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                          scopeOrientationProfile === profileId
+                            ? profileId === 'flexible'
+                              ? 'bg-cyan-500 text-slate-950'
+                              : 'bg-slate-700 text-white'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                        aria-pressed={scopeOrientationProfile === profileId}
+                      >
+                        {scopeOrientationCalibration.profiles[profileId].label}
+                      </button>
+                    ))}
+                  </div>
+                  {source.challenge ? (
+                    <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode('explore')
+                          game.actions.stop()
+                        }}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                          mode === 'explore'
+                            ? 'bg-slate-700 text-white'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                        aria-pressed={mode === 'explore'}
+                      >
+                        <Compass className="h-4 w-4" />
+                        Explore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMode('challenge')}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                          mode === 'challenge'
+                            ? 'bg-cyan-500 text-slate-950'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                        aria-pressed={mode === 'challenge'}
+                      >
+                        <Gamepad2 className="h-4 w-4" />
+                        Challenge
+                      </button>
+                    </div>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowAnatomyPins((value) => !value)}
+                  >
+                    {showAnatomyPins ? (
+                      <EyeOff className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Eye className="mr-2 h-4 w-4" />
+                    )}
+                    {showAnatomyPins ? 'Hide 3D pins' : 'Show 3D pins'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={showXr ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setShowXr((value) => !value)}
+                  >
+                    <Headset className="mr-2 h-4 w-4" />
+                    {showXr ? 'Hide VR view' : 'VR view'}
+                  </Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset
+                  </Button>
+                </div>
               </div>
+              <p className="mt-3 max-w-4xl text-sm text-slate-300">
+                {mode === 'challenge'
+                  ? 'Challenge mode: we name a target segment and start the clock — steer to its ostium and drive in. The 3D beacon and proximity meter guide you; clean, fast runs stack a combo bonus. '
+                  : 'Drive the scope freely: steer toward an ostium and advance — the scope follows the branch you are pointing at, and the 3D model and CT track the tip in real time. '}
+                {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
+              </p>
             </div>
-            <p className="mt-3 max-w-4xl text-sm text-slate-300">
-              {mode === 'challenge'
-                ? 'Challenge mode: we name a target segment and start the clock — steer to its ostium and drive in. The 3D beacon and proximity meter guide you; clean, fast runs stack a combo bonus. '
-                : 'Drive the scope freely: steer toward an ostium and advance — the scope follows the branch you are pointing at, and the 3D model and CT track the tip in real time. '}
-              {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
-            </p>
-          </div>
+          ) : null}
 
-          <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 px-4 py-3 text-xs">
-            <div className="flex rounded-md bg-slate-800 p-1" aria-label="Navigation mode">
-              <button
-                className={`rounded px-3 py-2 ${!scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
-                onClick={() => {
-                  driveQueue.current = 0
-                  setScopeState((s) =>
-                    s
-                      ? {
-                          ...s,
-                          freeFrame: undefined,
-                          freePath: undefined,
-                          yawDeg: 0,
-                          pitchDeg: 0,
-                          rollDeg: 0,
-                        }
-                      : s,
-                  )
-                }}
-              >
-                Guided anatomy
-              </button>
-              <button
-                disabled={!collider}
-                title={!collider ? 'Preparing validated collision geometry' : undefined}
-                className={`rounded px-3 py-2 disabled:opacity-40 ${scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
-                onClick={() => {
-                  driveQueue.current = 0
-                  setScopeState((s) =>
-                    s && opticalFrame
-                      ? collider!.clearance(opticalFrame.position) < FLEXIBLE_TIP_RADIUS_MM
-                        ? {
-                            ...s,
-                            movementMessage:
-                              'This airway is too narrow for the 3.8 mm scope. Withdraw before entering realistic mode.',
-                          }
-                        : enterFreeDrive(s, opticalFrame, loadedCase.graph)
-                      : s,
-                  )
-                }}
-              >
-                Realistic navigation
-              </button>
-            </div>
-            <button className="text-cyan-200" onClick={() => setEnlarged(!enlarged)}>
-              {enlarged ? 'Balanced layout' : 'Enlarge bronchoscopy'}
-            </button>
-            <label className="flex items-center gap-2 text-slate-300">
-              <input
-                type="checkbox"
-                checked={trackerEnabled}
-                onChange={(e) => setTrackerEnabled(e.target.checked)}
-              />
-              Scope Tracker {trackerEnabled ? (trackerConnected ? 'connected' : 'waiting') : ''}
-            </label>
-            {!scopeState?.freeFrame &&
-              mode === 'explore' &&
-              loadedCase.manifest.orientationLandmarks?.map((reference) => (
+          {showModeStrip ? (
+            <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 px-4 py-3 text-xs">
+              <div className="flex rounded-md bg-slate-800 p-1" aria-label="Navigation mode">
                 <button
-                  key={reference.id}
-                  type="button"
-                  className="rounded border border-slate-700 px-2 py-1 text-cyan-200"
-                  title={reference.expectation}
+                  className={`rounded px-3 py-2 ${!scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
                   onClick={() => {
                     driveQueue.current = 0
-                    setScopeOrientationProfile('flexible')
-                    setScopeState(
-                      createInitialScopeState(
-                        loadedCase.graph,
-                        reference.edgeId,
-                        reference.distanceMm,
-                      ),
+                    setScopeState((s) =>
+                      s
+                        ? {
+                            ...s,
+                            freeFrame: undefined,
+                            freePath: undefined,
+                            yawDeg: 0,
+                            pitchDeg: 0,
+                            rollDeg: 0,
+                          }
+                        : s,
                     )
                   }}
                 >
-                  {reference.id.toUpperCase()} reference
+                  Guided anatomy
                 </button>
-              ))}
-            <span className="text-slate-400">
-              {scopeState?.freeFrame
-                ? 'Steer · W/S insert and withdraw · Q/E rotate'
-                : 'Aim into an opening, then advance · R recenters'}
-            </span>
-            {(scopeState?.movementMessage || geometryError) && (
-              <p role="status" className="w-full text-amber-200">
-                {geometryError ?? scopeState?.movementMessage}
-              </p>
-            )}
-          </div>
+                <button
+                  disabled={!collider}
+                  title={!collider ? 'Preparing validated collision geometry' : undefined}
+                  className={`rounded px-3 py-2 disabled:opacity-40 ${scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
+                  onClick={() => {
+                    driveQueue.current = 0
+                    setScopeState((s) =>
+                      s && opticalFrame
+                        ? collider!.clearance(opticalFrame.position) < FLEXIBLE_TIP_RADIUS_MM
+                          ? {
+                              ...s,
+                              movementMessage:
+                                'This airway is too narrow for the 3.8 mm scope. Withdraw before entering realistic mode.',
+                            }
+                          : enterFreeDrive(s, opticalFrame, loadedCase.graph)
+                        : s,
+                    )
+                  }}
+                >
+                  Realistic navigation
+                </button>
+              </div>
+              <button className="text-cyan-200" onClick={() => setEnlarged(!enlarged)}>
+                {enlarged ? 'Balanced layout' : 'Enlarge bronchoscopy'}
+              </button>
+              <label className="flex items-center gap-2 text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={trackerEnabled}
+                  onChange={(e) => setTrackerEnabled(e.target.checked)}
+                />
+                Scope Tracker {trackerEnabled ? (trackerConnected ? 'connected' : 'waiting') : ''}
+              </label>
+              {!scopeState?.freeFrame &&
+                mode === 'explore' &&
+                loadedCase.manifest.orientationLandmarks?.map((reference) => (
+                  <button
+                    key={reference.id}
+                    type="button"
+                    className="rounded border border-slate-700 px-2 py-1 text-cyan-200"
+                    title={reference.expectation}
+                    onClick={() => {
+                      driveQueue.current = 0
+                      setScopeOrientationProfile('flexible')
+                      setScopeState(
+                        createInitialScopeState(
+                          loadedCase.graph,
+                          reference.edgeId,
+                          reference.distanceMm,
+                        ),
+                      )
+                    }}
+                  >
+                    {reference.id.toUpperCase()} reference
+                  </button>
+                ))}
+              <span className="text-slate-400">
+                {scopeState?.freeFrame
+                  ? 'Steer · W/S insert and withdraw · Q/E rotate'
+                  : 'Aim into an opening, then advance · R recenters'}
+              </span>
+              {(scopeState?.movementMessage || geometryError) && (
+                <p role="status" className="w-full text-amber-200">
+                  {geometryError ?? scopeState?.movementMessage}
+                </p>
+              )}
+            </div>
+          ) : scopeState?.movementMessage || geometryError ? (
+            <p role="status" className="border-b border-slate-800 px-4 py-2 text-xs text-amber-200">
+              {geometryError ?? scopeState?.movementMessage}
+            </p>
+          ) : null}
           {/*
             The balanced layout on a wide window: the bronchoscope view, the 3D tree and the steering
             controls share the first row, and the linked CT views run in one row beneath the two
@@ -913,82 +1148,43 @@ export function AirwayAnatomyModule({
             steering changed two of the three synchronized views off screen. The two column wrappers
             become `contents` there so their four panels are placed by the one grid.
           */}
-          <div
-            className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)] min-[1600px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(340px,0.72fr)]'}`}
-          >
-            <div
-              className={`grid gap-3 lg:grid-cols-2 xl:grid-cols-1 ${enlarged ? '' : 'min-[1600px]:contents'}`}
-            >
-              <VirtualBronchoscopyViewport
-                manifest={loadedCase.manifest}
+          {embed ? (
+            /* An embedding lesson owns the page layout: one column, the bronchoscope view first. */
+            <div className="grid gap-3 p-3" data-airway-embed-layout>
+              {opticalPanel}
+              <EmbedScopeStatus
                 pose={snapshot}
-                ostia={upcomingOstia}
-                showBranchLabels={effectiveShowBranchLabels}
-                location={currentLocation}
-                onLookDrag={handleLookDrag}
-                onAlignBranch={handleAlignBranch}
-                game={mode === 'challenge' ? game : null}
-                fovDeg={BRONCH_FOV_DEG}
-                collider={collider}
-              />
-              <AirwayTreeViewport
-                manifest={loadedCase.manifest}
-                graph={loadedCase.graph}
-                targets={airwayTargets}
-                pose={snapshot}
-                showAnatomyPins={showAnatomyPins}
-                ctImage={linkedCt.result?.images.find((i) => i.plane.axis === linkedCt.axis)}
-                ctVolume={loadedCase.ctVolume}
-                windowLow={currentWindow.low}
-                windowHigh={currentWindow.high}
-                ctPlaneOpacity={ctPlaneOpacity}
-                gameTarget={mode === 'challenge' ? game.view.currentTarget : null}
-                hitPulse={game.hitPulse}
-                hitAnchor={game.hitAnchor}
-              />
-            </div>
-
-            <div
-              className={`grid gap-3 ${enlarged ? '' : 'min-[1600px]:contents min-[1600px]:[&>*:first-child]:row-span-2 min-[1600px]:[&>*:last-child]:col-span-2'}`}
-            >
-              <ControlPanel
-                pose={snapshot}
-                location={currentLocation}
-                stepMm={stepMm}
-                onSteer={handleSteer}
-                onRecenter={handleRecenter}
-                onMove={handleMove}
-                ctAxis={ctAxis}
-                onCtAxisChange={setCtAxis}
-                windowPresetId={windowPresetId}
-                windowPresets={loadedCase.manifest.ct.windowPresets}
-                onWindowPresetChange={setWindowPresetId}
-                ctPlaneOpacity={ctPlaneOpacity}
-                onCtPlaneOpacityChange={setCtPlaneOpacity}
-                onRollChange={handleRollChange}
+                location={showLocation ? currentLocation : null}
                 liveRollDeg={liveRollDeg}
-                totalRollDeg={snapshot.rollDeg}
+                onRollChange={handleRollChange}
                 showBranchLabels={showBranchLabels}
+                branchLabelToggle={branchLabelMode === 'learner'}
                 onShowBranchLabelsChange={setShowBranchLabels}
-                calibrationMode={calibrationMode}
-                orientationProfile={scopeOrientationProfile}
-                orientationProfileLabel={activeProfileLabel}
-                flexibleRollDeg={flexibleRollDeg}
-                orientationSaveStatus={orientationSaveStatus}
-                onSaveFlexibleOrientation={saveCurrentFlexibleOrientation}
-                onResetFlexibleOrientation={resetCurrentFlexibleOrientation}
               />
-              <LinkedCtWorkspace
-                controller={linkedCt}
-                frame={opticalFrame!}
-                low={currentWindow.low}
-                high={currentWindow.high}
-                wideRow={!enlarged}
-              />
+              {showTree ? treePanel : null}
+              {loadedCase.ctVolume ? ctPanel : null}
             </div>
-          </div>
+          ) : (
+            <div
+              className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)] min-[1600px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(340px,0.72fr)]'}`}
+            >
+              <div
+                className={`grid gap-3 lg:grid-cols-2 xl:grid-cols-1 ${enlarged ? '' : 'min-[1600px]:contents'}`}
+              >
+                {opticalPanel}
+                {showTree ? treePanel : null}
+              </div>
 
-          {showXr ? (
+              <div
+                className={`grid gap-3 ${enlarged ? '' : 'min-[1600px]:contents min-[1600px]:[&>*:first-child]:row-span-2 min-[1600px]:[&>*:last-child]:col-span-2'}`}
+              >
+                {controlPanel}
+                {loadedCase.ctVolume ? ctPanel : null}
+              </div>
+            </div>
+          )}
+
+          {showXr && loadedCase.ctVolume ? (
             <div className="border-t border-slate-800 p-3">
               <AirwayXRSceneDynamic
                 manifest={loadedCase.manifest}
@@ -1036,6 +1232,8 @@ function ControlPanel({
   liveRollDeg,
   totalRollDeg,
   showBranchLabels,
+  branchLabelToggle = true,
+  ctControls = true,
   onShowBranchLabelsChange,
   calibrationMode,
   orientationProfile,
@@ -1046,7 +1244,8 @@ function ControlPanel({
   onResetFlexibleOrientation,
 }: {
   pose: ScopePoseSnapshot
-  location: CurrentLocation
+  /** Null in an identification drill: the panel then names no location. */
+  location: CurrentLocation | null
   stepMm: number
   onSteer: (dxUnit: number, dyUpUnit: number) => void
   onRecenter: () => void
@@ -1062,6 +1261,10 @@ function ControlPanel({
   liveRollDeg: number
   totalRollDeg: number
   showBranchLabels: boolean
+  /** False when an embedding lesson fixes the labels: the checkbox would do nothing. */
+  branchLabelToggle?: boolean
+  /** False when no CT was loaded: its plane, window and overlay controls would do nothing. */
+  ctControls?: boolean
   onShowBranchLabelsChange: (value: boolean) => void
   calibrationMode: boolean
   orientationProfile: ScopeOrientationProfileId
@@ -1083,10 +1286,14 @@ function ControlPanel({
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Current position
               </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-lg font-bold text-cyan-200">{location.abbr}</span>
-                <span className="truncate text-sm text-slate-300">{location.name}</span>
-              </div>
+              {location ? (
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="text-lg font-bold text-cyan-200">{location.abbr}</span>
+                  <span className="truncate text-sm text-slate-300">{location.name}</span>
+                </div>
+              ) : (
+                <div className="mt-1 text-sm text-slate-300">Name it from the view</div>
+              )}
             </div>
             <div className="shrink-0 rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
               yaw {Math.round(pose.yawDeg)}° · pitch {Math.round(pose.pitchDeg)}° · roll{' '}
@@ -1135,51 +1342,55 @@ function ControlPanel({
           </div>
 
           <div className="mt-4 grid gap-3 border-t border-slate-800 pt-4">
-            <label className="grid gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                CT plane
-              </span>
-              <select
-                value={ctAxis}
-                onChange={(event) => onCtAxisChange(event.target.value as CtAxis)}
-                className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
-              >
-                <option value="axial">Axial</option>
-                <option value="coronal">Coronal</option>
-                <option value="sagittal">Sagittal</option>
-              </select>
-            </label>
-            <label className="grid gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                CT window
-              </span>
-              <select
-                value={windowPresetId}
-                onChange={(event) => onWindowPresetChange(event.target.value)}
-                className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
-              >
-                {windowPresets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2">
-              <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-                <span>3D CT overlay</span>
-                <span>{Math.round(ctPlaneOpacity * 100)}%</span>
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={0.65}
-                step={0.01}
-                value={ctPlaneOpacity}
-                onChange={(event) => onCtPlaneOpacityChange(Number(event.target.value))}
-                className="w-full accent-cyan-300"
-              />
-            </label>
+            {ctControls ? (
+              <>
+                <label className="grid gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    CT plane
+                  </span>
+                  <select
+                    value={ctAxis}
+                    onChange={(event) => onCtAxisChange(event.target.value as CtAxis)}
+                    className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
+                  >
+                    <option value="axial">Axial</option>
+                    <option value="coronal">Coronal</option>
+                    <option value="sagittal">Sagittal</option>
+                  </select>
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    CT window
+                  </span>
+                  <select
+                    value={windowPresetId}
+                    onChange={(event) => onWindowPresetChange(event.target.value)}
+                    className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
+                  >
+                    {windowPresets.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2">
+                  <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <span>3D CT overlay</span>
+                    <span>{Math.round(ctPlaneOpacity * 100)}%</span>
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0.65}
+                    step={0.01}
+                    value={ctPlaneOpacity}
+                    onChange={(event) => onCtPlaneOpacityChange(Number(event.target.value))}
+                    className="w-full accent-cyan-300"
+                  />
+                </label>
+              </>
+            ) : null}
             <label className="grid gap-2">
               <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
                 <span>Scope roll trim</span>
@@ -1242,15 +1453,17 @@ function ControlPanel({
                 ) : null}
               </div>
             ) : null}
-            <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-              <span>Branch labels in view</span>
-              <input
-                type="checkbox"
-                checked={showBranchLabels}
-                onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
-                className="h-4 w-4 accent-cyan-300"
-              />
-            </label>
+            {branchLabelToggle ? (
+              <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <span>Branch labels in view</span>
+                <input
+                  type="checkbox"
+                  checked={showBranchLabels}
+                  onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
+                  className="h-4 w-4 accent-cyan-300"
+                />
+              </label>
+            ) : null}
           </div>
         </div>
       }
@@ -1320,13 +1533,17 @@ function VirtualBronchoscopyViewport({
   game,
   fovDeg,
   collider,
+  controls = null,
 }: {
   collider: LumenCollider | null
+  /** Steering and drive drawn on the view itself, for a lesson that embeds the module. */
+  controls?: ViewControls | null
   manifest: AirwayAnatomyCaseManifest
   pose: ScopePoseSnapshot
   ostia: OstiumLabel[]
   showBranchLabels: boolean
-  location: CurrentLocation
+  /** Null in an identification drill: no pill names the location. */
+  location: CurrentLocation | null
   onLookDrag: (dxPx: number, dyPx: number) => void
   onAlignBranch: (edgeId: number) => void
   game: AirwayGameController | null
@@ -1342,6 +1559,7 @@ function VirtualBronchoscopyViewport({
         <div
           ref={containerRef}
           className="relative aspect-[4/3] touch-none select-none overflow-hidden rounded-lg border border-slate-700 bg-black"
+          data-airway-optical-view
           onPointerDown={(event) => {
             pointerRef.current = { x: event.clientX, y: event.clientY }
             event.currentTarget.setPointerCapture(event.pointerId)
@@ -1387,8 +1605,10 @@ function VirtualBronchoscopyViewport({
                   }
                   transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
                   mode="bronch"
+                  mucosaTint={manifest.appearance?.mucosaTint}
                 />
                 <ScopeCamera pose={pose} />
+                <SettleFrames poseKey={`${pose.edgeId}:${pose.distanceMm}`} />
               </Suspense>
             </Canvas>
           </div>
@@ -1413,14 +1633,22 @@ function VirtualBronchoscopyViewport({
               Virtual bronchoscopy
             </div>
           )}
-          <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs">
-            <span className="font-bold text-cyan-200">{location.abbr}</span>
-            <span className="text-slate-300">{location.name}</span>
-            <span className="text-slate-500">· {Math.round(pose.distanceMm)} mm</span>
-          </div>
-          <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
-            drag to look
-          </div>
+          {location ? (
+            <div
+              className={`pointer-events-none absolute left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs ${controls ? 'top-3' : 'bottom-3'}`}
+            >
+              <span className="font-bold text-cyan-200">{location.abbr}</span>
+              <span className="text-slate-300">{location.name}</span>
+              <span className="text-slate-500">· {Math.round(pose.distanceMm)} mm</span>
+            </div>
+          ) : null}
+          {controls ? (
+            <ViewOverlayControls controls={controls} />
+          ) : (
+            <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
+              drag to look
+            </div>
+          )}
           {game ? (
             <GameHudOverlay
               view={game.view}
@@ -1433,6 +1661,228 @@ function VirtualBronchoscopyViewport({
         </div>
       }
     </HandoffContent>
+  )
+}
+
+/**
+ * Keeps an on-demand canvas drawing for a short while after its surface mounts and after the pose
+ * jumps. The camera follows the pose inside `useFrame`, which an on-demand canvas only runs when a
+ * frame is requested; a lesson that starts the scope away from the case's default (or moves it to a
+ * new start) could otherwise show a black view until the first drag.
+ */
+function SettleFrames({ poseKey, frames = 20 }: { poseKey: string; frames?: number }) {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    let count = 0
+    let handle = 0
+    const tick = () => {
+      invalidate()
+      count += 1
+      if (count < frames) handle = requestAnimationFrame(tick)
+    }
+    handle = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(handle)
+  }, [invalidate, frames, poseKey])
+  return null
+}
+
+interface ViewControls {
+  onSteer: (dxUnit: number, dyUpUnit: number) => void
+  onRecenter: () => void
+  onMove: (deltaMm: number) => void
+  onRoll: (deltaDeg: number) => void
+  stepMm: number
+}
+
+const OVERLAY_BUTTON =
+  'flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-slate-950/70 text-slate-100 backdrop-blur-sm transition hover:border-cyan-300 hover:text-cyan-100 active:bg-cyan-400/30'
+
+/**
+ * The scope's controls on the view itself, so a learner steers while watching the airway: a
+ * steering pad with rotate and recenter on the left, Advance and Withdraw on the right. Every
+ * button repeats while held. Pointer events stop here, so pressing a control never starts the
+ * view's drag-to-look.
+ */
+function ViewOverlayControls({ controls }: { controls: ViewControls }) {
+  const stop = (event: React.PointerEvent) => event.stopPropagation()
+  return (
+    <>
+      <div
+        className="absolute bottom-3 left-3 z-30 grid grid-cols-3 gap-1"
+        role="group"
+        aria-label="Steer the tip"
+        onPointerDown={stop}
+        data-scope-overlay="steer"
+      >
+        <HoldButton
+          ariaLabel="Rotate the scope counterclockwise"
+          onTrigger={() => controls.onRoll(-5)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Steer up"
+          onTrigger={() => controls.onSteer(0, 1)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowUp className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Rotate the scope clockwise"
+          onTrigger={() => controls.onRoll(5)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <RotateCw className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Steer left"
+          onTrigger={() => controls.onSteer(-1, 0)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </HoldButton>
+        <button
+          type="button"
+          aria-label="Recenter the view"
+          title="Recenter (R)"
+          onClick={controls.onRecenter}
+          className={OVERLAY_BUTTON}
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+        <HoldButton
+          ariaLabel="Steer right"
+          onTrigger={() => controls.onSteer(1, 0)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowRight className="h-4 w-4" />
+        </HoldButton>
+        <span aria-hidden="true" />
+        <HoldButton
+          ariaLabel="Steer down"
+          onTrigger={() => controls.onSteer(0, -1)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowDown className="h-4 w-4" />
+        </HoldButton>
+        <span aria-hidden="true" />
+      </div>
+      <div
+        className="absolute bottom-3 right-3 z-30 grid gap-1.5"
+        role="group"
+        aria-label="Drive the scope"
+        onPointerDown={stop}
+        data-scope-overlay="drive"
+      >
+        <HoldButton
+          ariaLabel="Advance scope"
+          onTrigger={() => controls.onMove(controls.stepMm)}
+          intervalMs={110}
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-cyan-300/60 bg-cyan-500/30 px-3 text-sm font-semibold text-cyan-50 backdrop-blur-sm transition hover:bg-cyan-400/40 active:bg-cyan-400/50"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Advance
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Withdraw scope"
+          onTrigger={() => controls.onMove(-controls.stepMm)}
+          intervalMs={110}
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-white/25 bg-slate-950/70 px-3 text-sm font-semibold text-slate-100 backdrop-blur-sm transition hover:border-slate-300 active:bg-slate-700/80"
+        >
+          <ArrowDown className="h-4 w-4" />
+          Withdraw
+        </HoldButton>
+      </div>
+    </>
+  )
+}
+
+/**
+ * Under the view in a lesson: where the tip is (unless the lesson hides it), how far into the
+ * branch, the keys, and the settings a learner rarely needs folded away.
+ */
+function EmbedScopeStatus({
+  pose,
+  location,
+  liveRollDeg,
+  onRollChange,
+  showBranchLabels,
+  branchLabelToggle,
+  onShowBranchLabelsChange,
+}: {
+  pose: ScopePoseSnapshot
+  location: CurrentLocation | null
+  liveRollDeg: number
+  onRollChange: (rollDeg: number) => void
+  showBranchLabels: boolean
+  branchLabelToggle: boolean
+  onShowBranchLabelsChange: (value: boolean) => void
+}) {
+  const progress = pose.edgeLengthMm > 0 ? clamp(pose.distanceMm / pose.edgeLengthMm, 0, 1) : 0
+  return (
+    <div
+      className="rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-300"
+      data-scope-status
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span>
+          {location ? (
+            <>
+              <span className="font-bold text-cyan-200">{location.abbr}</span> {location.name}{' '}
+              ·{' '}
+            </>
+          ) : null}
+          {Math.round(pose.distanceMm)} / {Math.round(pose.edgeLengthMm)} mm into branch
+        </span>
+        <span className="text-slate-400">
+          Drag the view to look · arrows steer · W/S drive · Q/E rotate · R recenter
+        </span>
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-800">
+        <div
+          className="h-full rounded-full bg-cyan-400/80"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+      <details className="mt-2">
+        <summary className="cursor-pointer text-slate-400">More controls</summary>
+        <div className="mt-2 grid gap-2">
+          <label className="grid gap-1">
+            <span className="flex items-center justify-between">
+              <span>Scope roll trim</span>
+              <span>{Math.round(liveRollDeg)} deg</span>
+            </span>
+            <input
+              type="range"
+              min={-90}
+              max={90}
+              step={1}
+              value={liveRollDeg}
+              onChange={(event) => onRollChange(Number(event.target.value))}
+              className="w-full accent-cyan-300"
+            />
+          </label>
+          {branchLabelToggle ? (
+            <label className="flex items-center justify-between">
+              <span>Branch labels in view</span>
+              <input
+                type="checkbox"
+                checked={showBranchLabels}
+                onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
+                className="h-4 w-4 accent-cyan-300"
+              />
+            </label>
+          ) : null}
+        </div>
+      </details>
+    </div>
   )
 }
 
@@ -1454,7 +1904,7 @@ function AirwayTreeViewport({
   targets: AirwayTarget[]
   pose: ScopePoseSnapshot
   showAnatomyPins: boolean
-  ctVolume: Int16Array
+  ctVolume: Int16Array | null
   windowLow: number
   windowHigh: number
   ctPlaneOpacity: number

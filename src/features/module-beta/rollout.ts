@@ -122,6 +122,7 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
+  'dolphin-bronchoscopy': { stage: 'preview' },
   devices: { stage: 'preview' },
   'literature-atlas': { stage: 'preview' },
   'cardiohelp-ecmo': { stage: 'preview' },

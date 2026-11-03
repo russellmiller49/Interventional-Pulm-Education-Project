@@ -7,6 +7,7 @@ import { HandoffContent } from '@/i18n/handoff'
 import {
   createBronchoscopyMaterial,
   loadAirwayStlGeometry,
+  type MucosaTint,
 } from '@/lib/airway-anatomy/airway-render'
 import type { AirwayAnatomyCaseManifest, Vec3 } from '@/lib/airway-anatomy/types'
 
@@ -20,11 +21,14 @@ export function AirwaySurface({
   transform,
   mode,
   dracoDecoderPath,
+  mucosaTint,
 }: {
   stlUrl: string | null
   transform: AirwayAnatomyCaseManifest['airwayTransform']
   mode: 'bronch' | 'tree'
   dracoDecoderPath?: string
+  /** A case's own mucosa tones (the dolphin case); omitted, the shared tones. */
+  mucosaTint?: MucosaTint
 }) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
 
@@ -50,7 +54,7 @@ export function AirwaySurface({
   const material = useMemo(
     () =>
       mode === 'bronch'
-        ? createBronchoscopyMaterial()
+        ? createBronchoscopyMaterial(mucosaTint)
         : new THREE.MeshStandardMaterial({
             color: '#7dd3fc',
             roughness: 0.55,
@@ -60,7 +64,7 @@ export function AirwaySurface({
             opacity: 0.22,
             depthWrite: false,
           }),
-    [mode],
+    [mode, mucosaTint],
   )
 
   useEffect(() => {

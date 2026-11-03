@@ -27,8 +27,8 @@ test('all preview modules remain under Still in development with sign-in, noinde
   await expect(page.getByRole('heading', { name: 'Ready for review', exact: true })).toHaveCount(0)
   const preview = page.getByRole('region', { name: 'Still in development', exact: true })
   await expect(preview).toBeVisible()
-  await expect(preview.getByRole('article')).toHaveCount(14)
-  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(14)
+  await expect(preview.getByRole('article')).toHaveCount(15)
+  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(15)
   for (const group of ['Bronchoscopy', 'Devices', 'Literature', 'Critical care']) {
     await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
   }
@@ -423,6 +423,7 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/ebus-guided/learn?section=acoustic-contact',
     '/en/eus-b-simulator',
     '/en/bronchoscopy-foundations',
+    '/en/dolphin-bronchoscopy',
     '/en/literature-atlas',
     '/en/cardiohelp-ecmo',
     '/en/baxter-crrt',

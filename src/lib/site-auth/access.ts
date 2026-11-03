@@ -33,6 +33,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // anatomy model: in development, reachable by direct link.
   '/learn/anatomy/dolphin-airway',
   '/learn/anatomy/dolphin',
+  // The Dolphin Bronchoscopy module for veterinarians, built on the two dolphin pages above: in
+  // development, reachable by direct link, noindex.
+  '/dolphin-bronchoscopy',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
   // Phase D1 device-intelligence routes (decision D-03 as modified, 2026-08-08): every new
@@ -98,6 +101,8 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // The bronchoscopy foundations course (hub, Learn, Practice, Assess, Reference) is in development
   // and reachable by direct link, noindex. `/intro-bronchoscopy` is a separate module.
   '/bronchoscopy-foundations',
+  // The Dolphin Bronchoscopy module (hub, Learn, Practice, Integrated cases, Reference).
+  '/dolphin-bronchoscopy',
   '/ebus-guided',
   '/literature-atlas',
   // Beta testers reach the card builder and catalog by direct link without an account.
@@ -491,6 +496,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'peripheral-imaging') {
     return 'peripheral-imaging'
   }
+
+  if (first === 'dolphin-bronchoscopy') return 'dolphin-bronchoscopy'
 
   if (first === 'ebus-guided') return 'ebus-guided'
 
