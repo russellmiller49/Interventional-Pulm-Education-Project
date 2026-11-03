@@ -648,6 +648,7 @@ export function AirwayAnatomyModule({
     enabled: mode === 'challenge',
     graph: loadedCase?.graph ?? null,
     labels: loadedCase?.labels ?? null,
+    ostialLandmarks: loadedCase?.manifest.ostialLandmarks,
     snapshot,
     onResetScope: handleReset,
   })

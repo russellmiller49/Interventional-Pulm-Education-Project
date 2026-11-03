@@ -223,6 +223,7 @@ export async function Footer() {
                   </Link>
                 </div>
               </div>
+              <p className="mt-3 max-w-4xl leading-5">{footer('independenceNotice')}</p>
             </div>
           </div>
         </footer>

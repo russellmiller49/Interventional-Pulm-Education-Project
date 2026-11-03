@@ -15,6 +15,13 @@ which this work does not touch.
 - The website version does not show source availability, the source-use basis or the extraction
   model. The Atlas's public database and its `serve-public` profile enforce this, not the website.
 
+## Public wording (2026-11-02)
+
+Machine provenance stays explicit. Labels are "Unreviewed Machine Brief" and "Physician Reviewed", and
+copy must not imply a review process that does not exist. `/terms` carries the fair-use notice and the
+rights-holder contact; its no-full-text statement is scoped to the Literature Atlas, which is what was
+audited.
+
 ## How it fits together
 
 ```

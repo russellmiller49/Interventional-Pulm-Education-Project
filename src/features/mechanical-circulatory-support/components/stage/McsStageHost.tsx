@@ -36,6 +36,7 @@ import { mcsExplainReflection } from '../../content/explainReflections'
 
 import { mcsStepHint } from '../../content/stepHints'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
+import { MCS_LVAD_PERFUSION_SECTION_ID } from '../../content/lvadPerfusionCase'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
 import { mcsPathway } from '../../content/pathwayResolver'
 import { mcsSpineStop, MCS_SUPPORT_SPINE, type McsSpineStopId } from '../../content/supportSpine'
@@ -59,6 +60,7 @@ import type {
   CirculationMapEmphasis,
 } from '../circulation-map/CirculationMap'
 import { McsModuleFrame } from '../McsModuleFrame'
+import { McsLvadPerfusionCase } from './McsLvadPerfusionCase'
 import { McsSimulatorPane } from './McsSimulatorPane'
 import { McsSectionRecap } from './McsSectionRecap'
 import { McsSourceList } from './McsSourceList'
@@ -1810,6 +1812,7 @@ function McsStageSession({
         </ol>
       </details>
       {isLastStep ? <McsSectionRecap lesson={lesson} onRevisit={goToStep} /> : null}
+      {isLastStep && sectionId === MCS_LVAD_PERFUSION_SECTION_ID ? <McsLvadPerfusionCase /> : null}
       {isLastStep && lesson.practicePairing ? (
         <section className={stageStyles.completion} data-stage-completion>
           <h3>Take it to a patient case</h3>

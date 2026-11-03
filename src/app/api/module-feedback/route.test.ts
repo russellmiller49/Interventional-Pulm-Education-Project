@@ -79,6 +79,22 @@ it('saves account identity and server-owned new status, ignoring forged fields',
   )
   expect(insert.insert).toHaveBeenCalledWith(expect.not.objectContaining({ status: 'resolved' }))
 })
+it('stores the live anatomy tab with the page, and only the audited parameters', async () => {
+  const insert = query({ error: null })
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(insert as never)
+  const pagePath = '/en/development-beta/live-anatomy/lesson?tab=survey'
+  expect((await POST(request({ moduleId: 'live-anatomy', pagePath }))).status).toBe(201)
+  expect(insert.insert).toHaveBeenCalledWith(
+    expect.objectContaining({ module_id: 'live-anatomy', page_path: pagePath }),
+  )
+  expect(
+    (await POST(request({ moduleId: 'live-anatomy', pagePath: `${pagePath}&token=secret` })))
+      .status,
+  ).toBe(400)
+})
 it('returns an existing own report on retry without a duplicate upload', async () => {
   from.mockReturnValueOnce(query({ data: { id, user_id: 'tester' } }) as never)
   expect((await POST(request())).status).toBe(200)

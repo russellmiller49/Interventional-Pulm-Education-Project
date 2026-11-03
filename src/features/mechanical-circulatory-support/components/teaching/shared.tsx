@@ -140,6 +140,10 @@ const MCS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
   'TEXT-CASE-BASED-LVAD-INPATIENT-2021': 'Steiner & Tran',
   'TEXT-CASE-BASED-LVAD-OUTPATIENT-2021': 'Yousefzai & Urey',
   'TEXT-CASE-BASED-LVAD-COMPLICATIONS-2021': 'Perna & Wettersten',
+  'bsg-lvad-emergencies-2024': 'British societies LVAD emergency guideline',
+  'erc-2025-special-circumstances': 'ERC guidelines',
+  'aha-cpr-mcs-statement-2017': 'AHA scientific statement',
+  'aha-2025-special-circumstances': 'AHA guidelines',
 }
 
 /**
@@ -151,10 +155,13 @@ const MCS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
 export function ReferenceValues({
   title,
   ids,
+  grades = false,
   children,
 }: {
   readonly title: string
   readonly ids: readonly McsNumberId[]
+  /** Print each source's own grade after its year, where it prints one: for rows whose sources differ. */
+  readonly grades?: boolean
   readonly children?: ReactNode
 }) {
   return (
@@ -173,7 +180,9 @@ export function ReferenceValues({
                   {row.sources
                     .map(
                       (source) =>
-                        `${MCS_NUMBER_SOURCE_NAMES[source.sourceId] ?? source.sourceId} ${source.year}`,
+                        `${MCS_NUMBER_SOURCE_NAMES[source.sourceId] ?? source.sourceId} ${source.year}${
+                          grades && source.grade ? `, ${source.grade}` : ''
+                        }`,
                     )
                     .join('; ')}
                   )
