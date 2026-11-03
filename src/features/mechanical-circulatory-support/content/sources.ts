@@ -143,11 +143,11 @@ export const mcsSources: readonly McsSource[] = [
     id: 'impella-cp-ifu-rev-v-supplied',
     title: 'Impella CP with SmartAssist Instructions for Use (supplied revision V)',
     citation:
-      'Abiomed, Inc. Impella CP with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0048-9007 rV, February 2026; cover shows V11.1. Supplied PDF; printed pages 4.11, 5.25, 7.17, 7.18–7.19 and 8.5 read.',
+      'Abiomed, Inc. Impella CP with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0048-9007 rV, February 2026; cover shows V11.1. Supplied PDF; printed pages 4.11, 5.16, 5.25, 7.3–7.19 and 8.5 read.',
     sourceType: 'manufacturer',
     year: 2026,
     intendedUse:
-      'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; and high afterload pressure as a named check for a low-flow alarm.',
+      'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; high afterload pressure as a named check for a low-flow alarm; and the echocardiographic position: the long-axis views, the inlet depth below the aortic valve annulus, the too-deep and inlet-in-aorta findings, the color Doppler pattern, and P-2 while the position is corrected.',
     limitation:
       'Revision V, United States, February 2026. Check the revision against the device on your unit.',
   },
@@ -155,11 +155,11 @@ export const mcsSources: readonly McsSource[] = [
     id: 'impella-55-ifu-rev-l-supplied',
     title: 'Impella 5.5 with SmartAssist Instructions for Use (supplied revision L)',
     citation:
-      'Abiomed, Inc. Impella 5.5 with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 10003049 rL, February 2026. Supplied PDF; printed page 5.26 read.',
+      'Abiomed, Inc. Impella 5.5 with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 10003049 rL, February 2026. Supplied PDF; printed pages 5.3, 5.26 and 7.4–7.16 read.',
     sourceType: 'manufacturer',
     year: 2026,
     intendedUse:
-      'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump.',
+      'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump. Also the echocardiographic position: the long-axis views, the cannula bend at the aortic valve annulus with the inlet about 5 cm into the ventricle, the too-deep and inlet-in-aorta findings, that the pump has no pigtail, and P-2 while the position is corrected.',
     limitation:
       'One revision for the United States. Check the revision against the device on your unit. The table gives flow ranges, not an equivalence between the two pumps.',
   },
@@ -383,6 +383,74 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Flags power-path interpretation and affected-lot reconciliation before publication.',
     limitation: 'A recall notice. Check the current notice for the equipment on your unit.',
+  },
+  {
+    id: 'bsg-lvad-emergencies-2024',
+    title:
+      'British societies guideline on emergencies in implantable LVAD recipients in transplant centres',
+    citation:
+      'Akhtar W, Baston VR, Berman M, et al. British societies guideline on the management of emergencies in implantable left ventricular assist device recipients in transplant centres. Intensive Care Med. 2024;50(4):493–501. doi:10.1007/s00134-024-07382-y. Full text and recommendation tables read in PubMed Central (PMC11018667), 2026-11-03.',
+    sourceType: 'guideline',
+    year: 2024,
+    url: 'https://doi.org/10.1007/s00134-024-07382-y',
+    intendedUse:
+      'Telling an adequate circulation from arrest in an adult with a continuous-flow LVAD without relying on the pulse: responsiveness, central cyanosis, capillary refill, MAP, end-tidal CO₂ in an intubated patient, the controller display and flow, and the pump hum. Also the first moves when the circulation is inadequate: the arrest call, restoring device function first (a blank HeartMate 3 screen, power, the whole driveline including the HeartMate 3 modular connector, a controller change), CPR deferred for at most 2 minutes, and CPR, which it judges safe in LVAD recipients with an inadequate circulation.',
+    limitation:
+      'Written for UK advanced heart failure centres, with recommendations classed on the European Society of Cardiology scheme; every one is Level C, observational data and expert consensus.',
+  },
+  {
+    id: 'erc-2025-special-circumstances',
+    title: 'European Resuscitation Council Guidelines 2025: Special Circumstances in Resuscitation',
+    citation:
+      'Lott C, Karageorgos V, Abelairas-Gomez C, et al. European Resuscitation Council Guidelines 2025 special circumstances in resuscitation. Resuscitation. 2025;215 Suppl 1:110753. doi:10.1016/j.resuscitation.2025.110753. Supplied PDF; the LVAD summary (p. 13), Fig. 18 (p. 40) and the section text (p. 41) read.',
+    sourceType: 'guideline',
+    year: 2025,
+    url: 'https://doi.org/10.1016/j.resuscitation.2025.110753',
+    intendedUse:
+      'The unconscious LVAD patient: activate the specialised team; with several rescuers, start CPR while the device is restored at the same time; a single rescuer may delay CPR for up to 2 minutes; the device checks by controller display (a blank controller, power, the whole driveline, battery, low flow); and the signs of circulatory failure in its algorithm: unconscious, cyanosed, capillary refill over 3 seconds, Doppler MAP below 60 mm Hg, no hum, a controller alarm, flow below 3.0 L/min, and end-tidal CO₂ below 15 mm Hg (2 kPa) if intubated.',
+    limitation:
+      'Built on the ILCOR 2025 consensus on science and the British societies guideline. It prints no strength for these LVAD statements.',
+  },
+  {
+    id: 'aha-2025-special-circumstances',
+    title:
+      '2025 AHA Guidelines for CPR and Emergency Cardiovascular Care, Part 10: Special Circumstances',
+    citation:
+      'Cao D, Arens AM, Chow SL, et al. Part 10: Adult and pediatric special circumstances of resuscitation: 2025 American Heart Association Guidelines for Cardiopulmonary Resuscitation and Emergency Cardiovascular Care. Circulation. 2025;152(16 suppl 2):S578–S672. doi:10.1161/CIR.0000000000001380. Supplied PDF; the “Left Ventricular Assist Devices” section (pp. S618–S620) and Figure 4 read.',
+    sourceType: 'guideline',
+    year: 2025,
+    url: 'https://doi.org/10.1161/CIR.0000000000001380',
+    intendedUse:
+      'Unresponsive adults with a durable LVAD and impaired perfusion: chest compressions should be performed (COR 1, LOE C-EO); it may be reasonable to start them immediately while assessing for device-related causes at the same time (COR 2b, LOE C-EO), and to use an algorithm that assesses and responds concurrently (COR 2b, LOE C-EO). Perfusion is adequate if any one sign is present: normal skin colour and temperature, normal capillary refill, MAP above 50 mm Hg, or end-tidal CO₂ above 20 mm Hg. Also the device checks in Figure 4 and the supportive text: alarms, the hum over the left chest and left upper abdomen, the driveline, the power source and the controller.',
+    limitation:
+      'Applies beyond the index implant admission; arrest in the peri-implantation period sits in the guideline’s cardiac surgery section.',
+  },
+  {
+    id: 'aha-cpr-mcs-statement-2017',
+    title:
+      'AHA scientific statement: CPR in adults and children with mechanical circulatory support',
+    citation:
+      'Peberdy MA, Gluck JA, Ornato JP, et al. Cardiopulmonary resuscitation in adults and children with mechanical circulatory support: a scientific statement from the American Heart Association. Circulation. 2017;135(24):e1115–e1134. doi:10.1161/CIR.0000000000000504. Supplied PDF; pp. e1121–e1124 and Figure 6 read.',
+    sourceType: 'guideline',
+    year: 2017,
+    url: 'https://doi.org/10.1161/CIR.0000000000000504',
+    intendedUse:
+      'Perfusion in a pulseless LVAD patient: skin colour, temperature and capillary refill; Doppler MAP with a manual cuff; end-tidal CO₂ in a correctly intubated patient, below 20 mm Hg suggesting poor systemic perfusion; and the Figure 6 algorithm: assess perfusion, then LVAD function (alarms, hum), attempt a restart (driveline, power, controller), and compress if the pump does not restart or the MAP is not above 50 mm Hg and the end-tidal CO₂ not above 20 mm Hg.',
+    limitation:
+      'Expert consensus with no class or level printed. Its algorithm attempts a restart before compressions; the 2025 AHA guidelines, which cite it, start compressions at once with the device worked alongside.',
+  },
+  {
+    id: 'hfsa-saem-ishlt-vad-emergency-2019',
+    title: 'HFSA/SAEM/ISHLT consensus on the emergency management of patients with VADs',
+    citation:
+      'Givertz MM, DeFilippis EM, Colvin M, et al. HFSA/SAEM/ISHLT clinical expert consensus document on the emergency management of patients with ventricular assist devices. J Heart Lung Transplant. 2019;38(7):677–698. doi:10.1016/j.healun.2019.05.004. Supplied PDF; pp. 680–683 read.',
+    sourceType: 'guideline',
+    year: 2019,
+    url: 'https://doi.org/10.1016/j.healun.2019.05.004',
+    intendedUse:
+      'The bedside device checks: follow the driveline to the controller and inspect its whole length under binders and dressings; the controller runs on two power sources; check the connections between controller, batteries and patient first, then the alarms, then replace batteries or the controller, the controller only when its alarm calls for it and under trained guidance; the Doppler opening pressure as a surrogate for the MAP; controller flow calculated, not measured; and, in an unconscious patient, no hum and no Doppler signal as diagnostic of cardiac arrest.',
+    limitation:
+      'Clinical expert consensus for emergency and pre-hospital clinicians, with no recommendation strengths printed.',
   },
   {
     id: 'mcs-educational-model-v1',

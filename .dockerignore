@@ -77,3 +77,8 @@ EBUS-course/Codex_handoff_items
 EBUS-course/tools/ebus-simulator/3D_slicer_files
 **/node_modules
 **/.venv
+
+# Publisher full text never enters an image.
+**/*.jats
+**/*.dtd
+**/*fulltext*

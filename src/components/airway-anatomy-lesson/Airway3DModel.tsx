@@ -36,8 +36,6 @@ const TARGET_SIZE = 2.2
 interface Airway3DModelProps {
   selectedId: string | null
   onSelect: (id: string) => void
-  /** Hide the name overlay (used in the quiz so the 3D view doesn't reveal the answer). */
-  hideLabel?: boolean
   /** Opacity of non-selected meshes when a structure is highlighted (default 0.1).
    *  The quiz raises this so the whole tree stays visible around the highlight. */
   dimOpacity?: number
@@ -209,17 +207,11 @@ function AirwaySegments({
   )
 }
 
-export function Airway3DModel({
-  selectedId,
-  onSelect,
-  hideLabel,
-  dimOpacity,
-  className,
-}: Airway3DModelProps) {
+export function Airway3DModel({ selectedId, onSelect, dimOpacity, className }: Airway3DModelProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const showLarynx = selectedId === LARYNX_NODE_ID
   const labelId = hoveredId ?? selectedId
-  const labelNode = !hideLabel && labelId ? getNode(labelId) : undefined
+  const labelNode = labelId ? getNode(labelId) : undefined
 
   return (
     <div

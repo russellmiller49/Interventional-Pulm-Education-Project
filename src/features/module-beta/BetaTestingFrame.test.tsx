@@ -18,6 +18,17 @@ import {
 } from './ownerDraftStore'
 import { createOwnerFeedback, ownerFeedbackContent } from './ownerFeedbackStore'
 
+// A plain anchor, so a click shows only what the wrapper decided. The real Link also skips its
+// navigation when the click's default was prevented.
+jest.mock('next/link', () => {
+  const React = jest.requireActual<typeof import('react')>('react')
+  return React.forwardRef(function Link(
+    props: React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    ref: React.Ref<HTMLAnchorElement>,
+  ) {
+    return React.createElement('a', { ...props, ref })
+  })
+})
 jest.mock('./config', () => ({ feedbackMode: jest.fn() }))
 jest.mock('./ownerDraftStore', () => ({
   saveOwnerDraft: jest.fn(),
@@ -895,6 +906,160 @@ describe('server mode', () => {
       reportContent,
     ])
       expect(call).not.toHaveBeenCalled()
+  })
+  it('sends the live anatomy tab the reviewer was on as part of the page', async () => {
+    const lesson = '/en/development-beta/live-anatomy/lesson'
+    location = `https://site.test${lesson}?tab=explore&access_token=secret`
+    const fetchMock = jest.fn(async () => ({ ok: true, json: async () => ({ id: first }) }))
+    const original = globalThis.fetch
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+    try {
+      const user = userEvent.setup()
+      render(<BetaTestingFrame moduleEntry={betaModuleById('live-anatomy')!} locale="en" />)
+      await waitFor(() => expect(feedbackButton()).toBeEnabled())
+      expect(document.querySelector('iframe')).toHaveAttribute('src', lesson)
+      await user.click(feedbackButton())
+      expect(screen.getByText(`Page: ${lesson}?tab=explore`)).toBeInTheDocument()
+      await user.type(commentBox(), 'The RB6 label overlaps the carina')
+      await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+      expect(await screen.findByRole('status')).toHaveTextContent('Feedback saved. Reference')
+    } finally {
+      globalThis.fetch = original
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    const body = init.body as FormData
+    expect(body.get('moduleId')).toBe('live-anatomy')
+    expect(body.get('pagePath')).toBe(`${lesson}?tab=explore`)
+  })
+})
+
+describe('leaving with an unsent server-mode draft', () => {
+  // A cancelled beforeunload is the browser's own "Leave page?" prompt.
+  const reloadPrompts = () => !window.dispatchEvent(new Event('beforeunload', { cancelable: true }))
+  const allModules = () => screen.getByRole('link', { name: 'All beta modules' })
+  // Whether the wrapper let a plain click on All modules go ahead. The click is then stopped
+  // here, since the test page cannot navigate.
+  const leaves = (init: MouseEventInit = {}) => {
+    let allowed = false
+    const record = (event: MouseEvent) => {
+      allowed = !event.defaultPrevented
+      event.preventDefault()
+    }
+    document.addEventListener('click', record)
+    fireEvent.click(allModules(), init)
+    document.removeEventListener('click', record)
+    return allowed
+  }
+  let confirmLeave: jest.SpyInstance<boolean, [message?: string]>
+  let fetchMock: jest.Mock
+  const original = globalThis.fetch
+  beforeEach(() => {
+    mode.mockReturnValue('server')
+    confirmLeave = jest.spyOn(window, 'confirm').mockReturnValue(false)
+    fetchMock = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ id: first }),
+    }))
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+  })
+  afterEach(() => {
+    confirmLeave.mockRestore()
+    globalThis.fetch = original
+  })
+
+  it('warns only while the draft holds content, and stops once it is sent', async () => {
+    const user = userEvent.setup()
+    await mount()
+    expect(reloadPrompts()).toBe(false)
+    await user.click(feedbackButton())
+    expect(
+      screen.getByText(
+        'Not sent yet. Reloading the page or leaving this module discards this report.',
+      ),
+    ).toBeInTheDocument()
+    // An open, empty dialog is not unsent work.
+    expect(reloadPrompts()).toBe(false)
+    await user.type(commentBox(), 'Labels overlap')
+    expect(reloadPrompts()).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'Continue testing' }))
+    await closed()
+    expect(reloadPrompts()).toBe(true)
+    // A failed save keeps the draft, and the warning with it.
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Feedback could not be saved.' }),
+    })
+    await user.click(feedbackButton())
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Feedback could not be saved.')
+    expect(reloadPrompts()).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Feedback saved. Reference')
+    expect(reloadPrompts()).toBe(false)
+    expect(leaves()).toBe(true)
+    expect(confirmLeave).not.toHaveBeenCalled()
+  })
+
+  it('stops warning when the draft is cleared or discarded', async () => {
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'Short-lived')
+    expect(reloadPrompts()).toBe(true)
+    await user.clear(commentBox())
+    expect(reloadPrompts()).toBe(false)
+    // A screenshot alone is unsent work too.
+    await user.click(screen.getByRole('button', { name: 'attach annotated image' }))
+    expect(reloadPrompts()).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'remove image' }))
+    expect(reloadPrompts()).toBe(false)
+    await user.type(commentBox(), 'Thrown away')
+    await user.click(screen.getByRole('button', { name: 'Discard draft' }))
+    await closed()
+    expect(feedbackButton()).toHaveTextContent('Give feedback')
+    expect(reloadPrompts()).toBe(false)
+    expect(leaves()).toBe(true)
+    expect(confirmLeave).not.toHaveBeenCalled()
+  })
+
+  it('asks before All modules leaves a draft, and stays when the tester cancels', async () => {
+    const user = userEvent.setup()
+    await mount()
+    // Nothing unsent: the link leaves without a question.
+    expect(leaves()).toBe(true)
+    expect(confirmLeave).not.toHaveBeenCalled()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'Keep this')
+    await user.click(screen.getByRole('button', { name: 'Continue testing' }))
+    await closed()
+    expect(leaves()).toBe(false)
+    expect(confirmLeave).toHaveBeenCalledWith(
+      'Your feedback has not been sent. Leave this module and discard it?',
+    )
+    expect(feedbackButton()).toHaveTextContent('Continue feedback')
+    confirmLeave.mockReturnValueOnce(true)
+    expect(leaves()).toBe(true)
+    expect(confirmLeave).toHaveBeenCalledTimes(2)
+    // A new tab or window leaves this page, and its draft, in place.
+    expect(leaves({ metaKey: true })).toBe(true)
+    expect(leaves({ ctrlKey: true })).toBe(true)
+    expect(confirmLeave).toHaveBeenCalledTimes(2)
+  })
+
+  it('never warns in owner-local mode, where drafts are kept on the browser', async () => {
+    mode.mockReturnValue('owner-local')
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'Kept on this browser')
+    expect(screen.queryByText(/Not sent yet/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Continue testing' }))
+    await closed()
+    expect(feedbackButton()).toHaveTextContent('Continue feedback')
+    expect(reloadPrompts()).toBe(false)
+    expect(leaves()).toBe(true)
+    expect(confirmLeave).not.toHaveBeenCalled()
   })
 })
 

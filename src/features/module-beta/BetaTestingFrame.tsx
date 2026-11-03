@@ -60,6 +60,7 @@ const keptApart: Record<OwnerDraftSupersededBy, string> = {
     'This draft was also changed in another tab. The version here was kept as a separate unsent draft.',
 }
 const saveAgain = 'Save again to add it as a new report.'
+const leaveUnsent = 'Your feedback has not been sent. Leave this module and discard it?'
 const notStored =
   'Not saved: this feedback could not first be stored on this browser, so nothing was submitted. Your draft is still open here. Try saving again.'
 // What one stored revision of a draft holds, for telling whether a later state is the same.
@@ -138,10 +139,25 @@ export function BetaTestingFrame({
   const queue = useRef<Promise<unknown>>(Promise.resolve())
   // "Continue feedback" is a claim that unsent work exists; a reserved report ID is not that.
   const pendingDraft = isMeaningfulDraft({ comment, selectedText, hasImage })
+  // A server-mode draft exists only in this page, so leaving the page loses it. Owner-local
+  // drafts are kept on the browser and offered again, so leaving never needs a warning there.
+  const guardDraft = !local && pendingDraft
 
   useEffect(() => {
     latest.current = { reportId, comment, selectedText, pagePath, moduleId: reportModule.id }
   })
+
+  // The browser's own prompt for a reload or a closed tab, registered only while unsent work
+  // would be lost: with nothing unsent there is no prompt.
+  useEffect(() => {
+    if (!guardDraft) return
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [guardDraft])
 
   // One storage operation at a time, so a late draft write can never follow its own removal.
   const enqueue = useCallback(<T,>(task: () => Promise<T>) => {
@@ -683,6 +699,14 @@ export function BetaTestingFrame({
       }
     }
   }
+  // The wrapper's own link leaves by client-side navigation, which no unload prompt covers.
+  function confirmLeave(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (!guardDraft) return
+    // Opening the link in a new tab or window leaves this page, and its draft, where they are.
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return
+    if (!window.confirm(leaveUnsent)) event.preventDefault()
+  }
   async function removeUnreadableDrafts() {
     try {
       await enqueue(() => deleteUnreadableOwnerDrafts(unreadableDrafts))
@@ -697,6 +721,7 @@ export function BetaTestingFrame({
         <Link
           aria-label="All beta modules"
           href={`/${locale}/development-beta` as Route}
+          onClick={confirmLeave}
           className="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1 text-sm underline underline-offset-4 sm:justify-start"
         >
           <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
@@ -832,10 +857,14 @@ export function BetaTestingFrame({
                 }}
               />
             </fieldset>
-            {local && (
+            {local ? (
               <p className="text-xs leading-5 text-muted-foreground">
                 Not saved yet. What you add here is kept on this browser until you save or discard
                 it, and is offered again after a reload.
+              </p>
+            ) : (
+              <p className="text-xs leading-5 text-muted-foreground">
+                Not sent yet. Reloading the page or leaving this module discards this report.
               </p>
             )}
             {draftNotice && (
