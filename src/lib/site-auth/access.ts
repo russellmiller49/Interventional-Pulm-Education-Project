@@ -18,7 +18,9 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/api/scope-calibration',
   '/login',
   '/pocus',
+  '/privacy',
   '/signup',
+  '/terms',
   '/verify-email',
   '/auth/update-password',
 ])

@@ -308,3 +308,8 @@ Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 # Embedded apps are built automatically from the in-repository sources.
 /public/bronch-navigation-trainer/app/
 /public/socal-ebus-course/app/
+
+# Publisher full text never belongs in this repository. PDFs and XML are not blanket-ignored: the site has its own.
+*.jats
+*.dtd
+*fulltext*
