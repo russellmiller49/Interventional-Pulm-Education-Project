@@ -103,6 +103,7 @@ const RECORDS: Readonly<Record<string, McsSourceClassRecord>> = {
   'fda-heartmate3-pma-current': registered('primary-clinical-device'),
   'fda-heartmate-mpu-2025-recall': registered('primary-clinical-device'),
   'fda-heartmate-power-cord-2025-recall': registered('primary-clinical-device'),
+  'bsg-lvad-emergencies-2024': read('primary-clinical-device', 'the LVAD perfusion case'),
   'mcs-educational-model-v1': read('model-provenance', 'the module itself'),
 }
 

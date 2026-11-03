@@ -385,6 +385,20 @@ export const mcsSources: readonly McsSource[] = [
     limitation: 'A recall notice. Check the current notice for the equipment on your unit.',
   },
   {
+    id: 'bsg-lvad-emergencies-2024',
+    title:
+      'British societies guideline on emergencies in implantable LVAD recipients in transplant centres',
+    citation:
+      'Akhtar W, Baston VR, Berman M, et al. British societies guideline on the management of emergencies in implantable left ventricular assist device recipients in transplant centres. Intensive Care Med. 2024;50(4):493–501. doi:10.1007/s00134-024-07382-y. Full text and recommendation tables read in PubMed Central (PMC11018667), 2026-11-03.',
+    sourceType: 'guideline',
+    year: 2024,
+    url: 'https://doi.org/10.1007/s00134-024-07382-y',
+    intendedUse:
+      'Telling an adequate circulation from arrest in an adult with a continuous-flow LVAD without relying on the pulse: responsiveness, central cyanosis, capillary refill, MAP, end-tidal CO₂ in an intubated patient, the controller display and flow, and the pump hum. Also the first moves when the circulation is inadequate: the arrest call, restoring device function first (a blank HeartMate 3 screen, power, the whole driveline including the HeartMate 3 modular connector, a controller change), CPR deferred for at most 2 minutes, and CPR, which it judges safe in LVAD recipients with an inadequate circulation.',
+    limitation:
+      'Written for UK advanced heart failure centres, with recommendations classed on the European Society of Cardiology scheme; every one is Level C, observational data and expert consensus.',
+  },
+  {
     id: 'mcs-educational-model-v1',
     title: 'MCS ICU Lab deterministic educational model',
     citation: 'Original 50 Hz compartment and device-effect model for this module.',

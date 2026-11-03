@@ -10,7 +10,10 @@ import {
  * The Impella rows were read from the two instructions for use on 2026-10-08, and the simulator's
  * flow at each P-level is built from the same tables (`IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN` in
  * `engine/model.ts`). The four echo-position rows were read from chapters 5 and 7 of the same two
- * manuals on 2026-11-03; neither manual names an apical view, so none is taught. The durable-pump
+ * manuals on 2026-11-03; neither manual names an apical view, so none is taught. The five rows for
+ * telling an adequate circulation from arrest on an LVAD were read on 2026-11-03 from the 2024
+ * British societies guideline, full text and recommendation tables in PubMed Central; the 2017 AHA
+ * scientific statement could not be opened, so none of its figures is registered. The durable-pump
  * rows come from three chapters of one textbook, which the
  * module's source registry holds only for a different chapter; they are listed in
  * `MCS_NUMBER_ONLY_SOURCES`. No HeartMate 3 instructions for use or Abbott parameter card was
@@ -64,6 +67,21 @@ const text = (
   sourceId: (typeof MCS_NUMBER_ONLY_SOURCES)[number]['id'],
   locator: string,
 ): TeachingNumberCitation => ({ sourceId, year: 2021, grade: null, locator })
+
+const PERFUSION_CHECK = { ...CHECK, checkedOn: '2026-11-03' } as const
+
+const lvadEmergencyGuideline = (locator: string, grade: string): TeachingNumberCitation => ({
+  sourceId: 'bsg-lvad-emergencies-2024',
+  year: 2024,
+  grade,
+  locator,
+})
+
+/** The four signs of an adequate circulation sit in one paragraph, under one recommendation. */
+const adequacyParagraph = lvadEmergencyGuideline(
+  '“Determination of adequacy of circulation”; its recommendation in the closing table: adequacy is judged on several physiological parameters, not pulse alone',
+  'Class I, Level C',
+)
 
 export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support', {
   'impella-cp-flow-by-level': {
@@ -198,6 +216,56 @@ export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support
     sources: [text('TEXT-CASE-BASED-LVAD-COMPLICATIONS-2021', 'p. 113')],
     note: 'The lower the index, the more of the output the pump is providing.',
     ...CHECK,
+  },
+  'lvad-adequate-capillary-refill': {
+    label: 'Capillary refill in an adequate circulation',
+    value: 'under 3 seconds',
+    appliesTo:
+      'An adult with a continuous-flow LVAD, read with the other signs of an adequate circulation',
+    class: 'guideline',
+    sources: [adequacyParagraph],
+    ...PERFUSION_CHECK,
+  },
+  'lvad-adequate-map': {
+    label: 'Mean arterial pressure in an adequate circulation',
+    value: 'above 60 mm Hg',
+    appliesTo: 'Doppler or arterial-line MAP in an adult with a continuous-flow LVAD',
+    class: 'guideline',
+    sources: [adequacyParagraph],
+    note: 'The guideline’s line for an adequate circulation, not a treatment goal. Its low-flow section keeps MAP in the 60–80 mm Hg range; the goal row in this register, 70–80 mm Hg, comes from a textbook chapter.',
+    ...PERFUSION_CHECK,
+  },
+  'lvad-adequate-etco2': {
+    label: 'End-tidal CO₂ in an adequate circulation',
+    value: 'above 2 kPa (15 mm Hg), intubated',
+    appliesTo: 'An intubated adult with a continuous-flow LVAD',
+    class: 'guideline',
+    sources: [adequacyParagraph],
+    note: 'The guideline gives 2 kPa, defined in line with other published CPR guidelines; 15 mm Hg is the unit conversion. It warns that end-tidal CO₂ may not be failsafe, for example through a loose-fitting facemask or a laryngeal mask airway.',
+    ...PERFUSION_CHECK,
+  },
+  'lvad-adequate-controller-flow': {
+    label: 'Controller flow in an adequate circulation',
+    value: 'typically above 3 L/min in an adult',
+    appliesTo: 'A normal controller display with no active audible or visual alarm',
+    class: 'guideline',
+    sources: [adequacyParagraph],
+    note: 'The controller estimates flow from power and hematocrit; it does not measure it. The guideline reads it with the display and the alarms.',
+    ...PERFUSION_CHECK,
+  },
+  'lvad-cpr-deferral-limit': {
+    label: 'CPR deferred while device function is restored',
+    value: 'at most 2 minutes',
+    appliesTo: 'An LVAD recipient in arrest with device malfunction',
+    class: 'guideline',
+    sources: [
+      lvadEmergencyGuideline(
+        '“Initial response”, and its recommendation that CPR may be deferred for a maximum of 2 min while immediate interventions restore device function',
+        'Class IIa, Level C',
+      ),
+    ],
+    note: 'After the deferral, CPR starts if the circulation is still inadequate. The same guideline recommends, Class IIa, Level C, that CPR can be performed safely in LVAD recipients with an inadequate circulation.',
+    ...PERFUSION_CHECK,
   },
 })
 
