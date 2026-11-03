@@ -58,6 +58,7 @@ const ACT_TITLES: Readonly<Record<DolphinActKind, string>> = {
   sequence: 'Put the steps in order',
   calculate: 'Work the ledger',
   report: 'Write the record',
+  'instrument-drill': 'Work the instruments',
   scenario: 'Work the case',
   read: 'Read the worked example',
 }
@@ -88,6 +89,12 @@ const ACT_LANDMARKS: Readonly<Record<DolphinActKind, StageStepLocation>> = {
   report: { pane: 'steps', landmark: 'Bronchoscopy record' },
   scenario: { pane: 'steps', landmark: 'The case, frame by frame' },
   read: { pane: 'teaching', landmark: 'Worked example' },
+  'instrument-drill': {
+    pane: 'simulator',
+    landmark: 'Instrument lab',
+    alsoPane: 'steps',
+    alsoLandmark: 'Instruments',
+  },
 }
 
 export function dolphinActTitle(act: DolphinAct): string {

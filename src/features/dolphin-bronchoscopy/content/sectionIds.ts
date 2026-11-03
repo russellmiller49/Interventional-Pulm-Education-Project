@@ -19,6 +19,7 @@ export const dolphinSectionIds = [
   'entering-the-blowhole',
   'the-survey-and-the-record',
   'lavage',
+  'tools-through-the-channel',
   'brush-and-biopsy',
   'trouble-during-the-procedure',
   'recovery-and-return',

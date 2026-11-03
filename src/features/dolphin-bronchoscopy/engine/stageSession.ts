@@ -87,6 +87,8 @@ export function actWorkDone(lesson: DolphinStageLesson, session: DolphinStageSes
       return act.prompts.every((prompt) => work.picks?.[prompt.id] !== undefined)
     case 'scenario':
       return work.done === true
+    case 'instrument-drill':
+      return act.instruments.every((instrument) => work.picks?.[instrument] !== undefined)
     default:
       return work.done === true
   }

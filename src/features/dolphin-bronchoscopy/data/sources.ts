@@ -2,7 +2,7 @@
  * Every source the Dolphin Bronchoscopy module cites, by id.
  *
  * Teaching blocks, items and numbers cite these ids; a validator refuses an id that is not here.
- * The workshop material and the airway-mapping work are the owner's and his collaborators' (U.S.
+ * The workshop material and the airway-mapping work are the owner's and their collaborators' (U.S.
  * Navy Marine Mammal Program and National Marine Mammal Foundation). They are read in place from
  * the owner's Drive and never copied into the repository; `docs/dolphin-bronchoscopy/README.md`
  * maps each id to the file it came from.
@@ -22,6 +22,8 @@ export type DolphinSourceKind =
   | 'photographs'
   /** A reference text. */
   | 'book'
+  /** Real devices worked on the bench and filmed for teaching. */
+  | 'demonstration'
 
 export interface DolphinSource {
   readonly id: string
@@ -80,6 +82,94 @@ export const DOLPHIN_SOURCES = [
       'Tsang KW, Kinoshita R, Rouke N, Yuen Q, Hu W, Lam WK. Bronchoscopy of cetaceans. Journal of Wildlife Diseases. 2002;38(1):224–227. doi:10.7589/0090-3558-38.1.224',
     year: 2002,
     kind: 'paper',
+  },
+  {
+    id: 'nmmp-annual-training',
+    shortName: 'NMMP annual training deck',
+    citation:
+      'Meegan J, et al. Dolphin Bronchoscopy Workshop — NMMP version, annual training. U.S. Navy Marine Mammal Program; slide deck, revised February 2025.',
+    year: 2025,
+    kind: 'workshop',
+  },
+  {
+    id: 'van-bonn-2018',
+    shortName: 'Van Bonn and Dover, CRC Handbook 2018',
+    citation:
+      'Van Bonn W, Dover S. Applied flexible and rigid endoscopy. In: Gulland FMD, Dierauf LA, Whitman KL, eds. CRC Handbook of Marine Mammal Medicine. 3rd ed. Boca Raton: CRC Press; 2018:553–566.',
+    year: 2018,
+    kind: 'book',
+  },
+  {
+    id: 'haulena-2018',
+    shortName: 'Haulena and Schmitt, CRC Handbook 2018',
+    citation:
+      'Haulena M, Schmitt T. Anesthesia. In: Gulland FMD, Dierauf LA, Whitman KL, eds. CRC Handbook of Marine Mammal Medicine. 3rd ed. Boca Raton: CRC Press; 2018:567–606.',
+    year: 2018,
+    kind: 'book',
+  },
+  {
+    id: 'nollens-2018',
+    shortName: 'Nollens et al., CRC Handbook 2018',
+    citation:
+      'Nollens HH, Venn-Watson S, Gili C, McBain JF. Cetacean medicine. In: Gulland FMD, Dierauf LA, Whitman KL, eds. CRC Handbook of Marine Mammal Medicine. 3rd ed. Boca Raton: CRC Press; 2018:887–907.',
+    year: 2018,
+    kind: 'book',
+  },
+  {
+    id: 'reidarson-2018',
+    shortName: 'Reidarson et al., CRC Handbook 2018',
+    citation:
+      'Reidarson TH, García-Párraga D, Wiederhold NP. Marine mammal mycoses. In: Gulland FMD, Dierauf LA, Whitman KL, eds. CRC Handbook of Marine Mammal Medicine. 3rd ed. Boca Raton: CRC Press; 2018: chapter 19.',
+    year: 2018,
+    kind: 'book',
+  },
+  {
+    id: 'dover-2001',
+    shortName: 'Dover and Van Bonn, CRC Handbook 2001',
+    citation:
+      'Dover SR, Van Bonn W. Flexible and rigid endoscopy in marine mammals. In: Dierauf LA, Gulland FMD, eds. CRC Handbook of Marine Mammal Medicine. 2nd ed. Boca Raton: CRC Press; 2001: chapter 27.',
+    year: 2001,
+    kind: 'book',
+  },
+  {
+    id: 'haulena-heath-2001',
+    shortName: 'Haulena and Heath, CRC Handbook 2001',
+    citation:
+      'Haulena M, Heath RB. Marine mammal anesthesia. In: Dierauf LA, Gulland FMD, eds. CRC Handbook of Marine Mammal Medicine. 2nd ed. Boca Raton: CRC Press; 2001: chapter 29.',
+    year: 2001,
+    kind: 'book',
+  },
+  {
+    id: 'bossart-2001',
+    shortName: 'Bossart et al., CRC Handbook 2001',
+    citation:
+      'Bossart GD, Reidarson TH, Dierauf LA, Duffield DA. Clinical pathology. In: Dierauf LA, Gulland FMD, eds. CRC Handbook of Marine Mammal Medicine. 2nd ed. Boca Raton: CRC Press; 2001: chapter 19.',
+    year: 2001,
+    kind: 'book',
+  },
+  {
+    id: 'smith-2012',
+    shortName: 'Smith et al., Dis Aquat Org 2012',
+    citation:
+      'Smith CR, Solano M, Lutmerding BA, Johnson SP, Meegan JM, Le-Bert CR, Emory-Gomez F, Cassle S, Carlin K, Jensen ED. Pulmonary ultrasound findings in a bottlenose dolphin Tursiops truncatus population. Diseases of Aquatic Organisms. 2012;101:243–255. doi:10.3354/dao02537',
+    year: 2012,
+    kind: 'paper',
+  },
+  {
+    id: 'judge-2014',
+    shortName: 'Judge et al., Am J Respir Cell Mol Biol 2014',
+    citation:
+      'Judge EP, Hughes JML, Egan JJ, Maguire M, Molloy EL, O’Dea S. Anatomy and bronchoscopy of the porcine lung: a model for translational respiratory medicine. American Journal of Respiratory Cell and Molecular Biology. 2014;51(3):334–343. doi:10.1165/rcmb.2013-0453TR',
+    year: 2014,
+    kind: 'paper',
+  },
+  {
+    id: 'owner-bench-clips',
+    shortName: 'Bench clips of the forceps, brush and needle',
+    citation:
+      'Biopsy forceps, sheathed cytology brush and aspiration needle worked at the handle and filmed at the tip on the bench. Russell Miller, 2026; supplied for teaching.',
+    year: 2026,
+    kind: 'demonstration',
   },
   {
     id: 'smith-1999',

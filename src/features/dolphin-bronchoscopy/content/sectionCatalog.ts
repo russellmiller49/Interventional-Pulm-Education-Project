@@ -175,6 +175,17 @@ export const DOLPHIN_SECTION_META: Readonly<Record<DolphinSectionId, DolphinSect
     prerequisites: ['the-survey-and-the-record'],
     summary: 'Wedge, instil by weight in aliquots, expect a modest return, keep the sample cool.',
   },
+  'tools-through-the-channel': {
+    title: 'The tools through the channel',
+    shortTitle: 'The tools',
+    minutes: 10,
+    activityMinutes: 6,
+    stage: 'application',
+    objectiveIds: ['O4'],
+    prerequisites: ['lavage'],
+    summary:
+      'How the forceps and the brush travel the working channel, what the hand does at each handle, and which brush a culture needs.',
+  },
   'brush-and-biopsy': {
     title: 'Brush, biopsy, and when to stop',
     shortTitle: 'Brush and biopsy',
@@ -182,7 +193,7 @@ export const DOLPHIN_SECTION_META: Readonly<Record<DolphinSectionId, DolphinSect
     activityMinutes: 4,
     stage: 'application',
     objectiveIds: ['O4'],
-    prerequisites: ['lavage'],
+    prerequisites: ['tools-through-the-channel'],
     summary:
       'Each step up in sampling is a step up in a bleeding risk this species has not measured.',
   },

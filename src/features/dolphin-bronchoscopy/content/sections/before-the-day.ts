@@ -61,6 +61,30 @@ export const beforeTheDay: DolphinSectionDefinition = {
       sourceIds: ['nmmp-workshop-2024', 'tsang-2002'],
     },
     {
+      id: 'what-ultrasound-misses',
+      kind: 'after-commitment',
+      role: 'mechanism',
+      heading: 'What a clean lung ultrasound leaves open',
+      body: 'Lung ultrasound sees only the peripheral lung. Lesions deep in aerated lung or behind the ribs are missed, even a few centimeters below the pleura. Smith and colleagues put it plainly: a normal lung ultrasound does not rule out pulmonary disease. Radiographs and CT find the deep lesion.',
+      sourceIds: ['smith-2012'],
+    },
+    {
+      id: 'when-to-go-carefully',
+      kind: 'after-commitment',
+      role: 'policy',
+      heading: 'When to go carefully',
+      body: 'Bronchoscopy carries risk to the animal. Van Bonn and Dover advise caution in any dolphin with an obvious or suspected thoracic effusion, a pulmonary mass, a cardiovascular concern or doubtful ventilation. Name any of these in the plan, and weigh with the attending veterinarian whether the question is worth that risk.\n\nTime on land is part of the risk. In Smith’s NMMP series, animals with respiratory compromise sometimes turned tachypneic or dyspneic out of the water, most often with significant lung disease. Plan the time out of the water short, and the way back in ready.',
+      sourceIds: ['van-bonn-2018', 'smith-2012'],
+    },
+    {
+      id: 'scope-before-and-after',
+      kind: 'after-commitment',
+      role: 'policy',
+      heading: 'The scope, before and after',
+      body: 'Van Bonn and Dover clean and disinfect the endoscope before and after every use. If it will go through the glottis, they sterilize it and work aseptically. The NMMP annual training prepares the scope in two steps: the standard cleaning protocol, then gas or liquid sterilization. Sterilize the scope and its accessories: the buttons, the suction tubing and the water bottle.\n\nA lavage culture is only as clean as the channel it came through.',
+      sourceIds: ['van-bonn-2018', 'nmmp-annual-training'],
+    },
+    {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
@@ -68,11 +92,12 @@ export const beforeTheDay: DolphinSectionDefinition = {
       body: 'Each of these sends the scope in before the question is clear.',
       points: [
         'Booking the scope before imaging has located the disease.',
+        'Reading a normal lung ultrasound as a clear lung.',
         'Planning to look first, then sample wherever something shows.',
         'Reaching for general anesthesia when sedation and topical lidocaine will do.',
         'Feeding on the morning of the procedure.',
       ],
-      sourceIds: ['nmmp-workshop-2024', 'tsang-2002'],
+      sourceIds: ['nmmp-workshop-2024', 'tsang-2002', 'smith-2012'],
     },
   ],
   workspace: {
@@ -409,5 +434,12 @@ export const beforeTheDay: DolphinSectionDefinition = {
     /\bwrite (down )?the question\b/i,
     /\bthe question:/i,
   ],
-  sourceIds: ['nmmp-workshop-2024', 'tsang-2002', 'venn-watson-2012'],
+  sourceIds: [
+    'nmmp-workshop-2024',
+    'nmmp-annual-training',
+    'tsang-2002',
+    'venn-watson-2012',
+    'van-bonn-2018',
+    'smith-2012',
+  ],
 }

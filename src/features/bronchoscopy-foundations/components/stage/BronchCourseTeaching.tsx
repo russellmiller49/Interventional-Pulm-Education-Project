@@ -1,6 +1,9 @@
 'use client'
 
 import { useId, useState } from 'react'
+import { InstrumentLab } from '@/components/bronchoscopy-instruments/InstrumentLab'
+import { INSTRUMENT_CLIPS } from '@/components/bronchoscopy-instruments/clips'
+import type { InstrumentId } from '@/components/bronchoscopy-instruments/instrument-model'
 import { TEACHING_TREE, airwayDisplayName, type TeachingTreeNode } from '../../content/airwayTree'
 import { MonitorPanel } from './MonitorPanel'
 import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
@@ -112,6 +115,8 @@ export function BronchCourseTeaching({
           />
         ))
       )}
+      {/* The lab follows its card: the order is read first, then worked with the hands. */}
+      {chunk.visual === 'instrument-lab' ? <ChannelInstrumentLab /> : null}
       {chunk.visual === 'baseline' && section.workspace.kind === 'monitor' ? (
         <section>
           <h3>Read the channels together</h3>
@@ -373,6 +378,33 @@ export function NormalAirwayTour({
         )}
       </div>
     </section>
+  )
+}
+
+/** What each tool works on in the lab: a lesion in the airway, or a node past its wall. */
+const LAB_TARGETS: Readonly<Record<InstrumentId, string>> = {
+  forceps: 'Endobronchial lesion',
+  brush: 'Endobronchial lesion',
+  needle: 'Lymph node beyond the wall',
+}
+
+/**
+ * Forceps, brush and needle, each taken through the channel from the handle: the shared instrument
+ * lab, with the owner's bench clips of the real devices. Teaching only; nothing is recorded.
+ *
+ * The lab is drawn with the site's theme tokens. The wrapper (`.instrumentLab`) points those tokens
+ * at this course's dark palette, so the lab reads as part of the page in either site theme.
+ */
+function ChannelInstrumentLab() {
+  return (
+    <div className={styles.instrumentLab} data-instrument-lab-figure>
+      <InstrumentLab
+        instruments={['forceps', 'brush', 'needle']}
+        targetLabels={LAB_TARGETS}
+        clips={INSTRUMENT_CLIPS}
+        caption="The tip and the handle are drawn to show the order of the moves. Not to scale."
+      />
+    </div>
   )
 }
 

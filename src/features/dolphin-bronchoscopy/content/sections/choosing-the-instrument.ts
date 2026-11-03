@@ -31,16 +31,16 @@ export const choosingTheInstrument: DolphinSectionDefinition = {
     ],
   },
   recognizeInstruction:
-    'Look at the passage map in the Simulator panel: the lit stops are the stretch the scope must fit and the far end it must reach. Then read the two signals in the Teaching panel. Nothing is asked yet.',
+    'Look at the two scopes in the Simulator panel and choose each feature to light it on both. Then read the two signals in the Teaching panel. Nothing is asked yet.',
   blocks: [
     {
       id: 'two-scopes',
       kind: 'question',
       role: 'framing',
       heading: 'Two scopes on the shelf',
-      body: 'The NMMP workshop sets two flexible scopes side by side. The bronchoscope has a working length of 600 mm and one thumb lever that bends the tip up or down. It has a suction button and no air button. The gastrointestinal endoscope has a working length of 1030 mm, two knobs that steer the tip in four directions, and an air and water button.',
-      numberIds: ['scope-working-length'],
-      sourceIds: ['nmmp-workshop-2024'],
+      body: 'The NMMP training sets two flexible scopes side by side. The bronchoscope has one thumb lever that bends the tip up or down, a suction button and no air button. The gastrointestinal endoscope has two knobs that steer the tip in four directions, and an air and water button.\n\nOn the annual-training slide the bronchoscope has a working length of 60 cm and is 5.8 mm across; the gastrointestinal endoscope is 110 cm long and 9.9 mm across. Both have a 2.8 mm working channel. The earlier workshop slide gives the two lengths as 600 mm and 1030 mm. Neither names a model, so check the scope you have.',
+      numberIds: ['scope-working-length', 'scope-sizes-annual'],
+      sourceIds: ['nmmp-workshop-2024', 'nmmp-annual-training'],
     },
     {
       id: 'length-before-branches',
@@ -83,10 +83,9 @@ export const choosingTheInstrument: DolphinSectionDefinition = {
     },
   ],
   workspace: {
-    kind: 'passage',
-    lit: ['nasal-passage', 'main-bronchi'],
+    kind: 'scope-compare',
     caption:
-      'The passage from the blowhole to the numbered branches. Lit: the stretch the scope must fit and the far end it must reach.',
+      'The bronchoscope and the gastrointestinal endoscope side by side. Choose a feature to light it on both scopes.',
   },
   act: {
     kind: 'sort',
@@ -439,5 +438,11 @@ export const choosingTheInstrument: DolphinSectionDefinition = {
     /\btoo short\b/i,
     /\bleave the air\b/i,
   ],
-  sourceIds: ['nmmp-workshop-2024', 'tsang-2002', 'harper-2001', 'ivancic-2014'],
+  sourceIds: [
+    'nmmp-workshop-2024',
+    'nmmp-annual-training',
+    'tsang-2002',
+    'harper-2001',
+    'ivancic-2014',
+  ],
 }

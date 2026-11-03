@@ -1,3 +1,4 @@
+import type { InstrumentId } from '@/components/bronchoscopy-instruments/instrument-model'
 import type { CriticalCareCurriculumStage } from '@/features/learning-module/activity/types'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type { StageBlockKind } from '@/features/learning-module/stage/StageTeachingScope'
@@ -188,6 +189,14 @@ export type DolphinWorkspace =
   | DolphinScopeWorkspace
   | { readonly kind: 'anatomy'; readonly preset: AnatomyPresetId; readonly caption: string }
   | { readonly kind: 'frame'; readonly frameId: string; readonly caption: string }
+  /** The instrument lab: an accessory through the working channel, its handle beside the tip. */
+  | {
+      readonly kind: 'instruments'
+      readonly instruments: readonly InstrumentId[]
+      readonly caption: string
+    }
+  /** The bronchoscope and the gastrointestinal endoscope side by side. */
+  | { readonly kind: 'scope-compare'; readonly caption: string }
   /** The passage drawn as its stops, with the section's stops lit. Never a blank panel. */
   | { readonly kind: 'passage'; readonly lit: readonly SpineStopId[]; readonly caption: string }
 
@@ -323,6 +332,12 @@ export type DolphinAct =
     }
   | { readonly kind: 'scenario'; readonly scenario: DolphinScenario }
   | { readonly kind: 'read'; readonly prompt: string }
+  /** Work each instrument's sequence in the instrument lab. Done when each one is complete. */
+  | {
+      readonly kind: 'instrument-drill'
+      readonly prompt: string
+      readonly instruments: readonly InstrumentId[]
+    }
 
 export type DolphinActKind = DolphinAct['kind']
 
