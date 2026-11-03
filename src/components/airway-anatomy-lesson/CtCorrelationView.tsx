@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
+import { getNode } from '@/lib/airway-anatomy-lesson/airway-graph'
 import {
   loadCtCorrelation,
   type CtCorrelationData,
@@ -89,7 +90,7 @@ export function CtCorrelationView({ focusNodeId, className }: CtCorrelationViewP
           <img
             key={`${focusNodeId}-${plane}`}
             src={plane === 'axial' ? structure.axial : structure.coronal}
-            alt={`${plane === 'axial' ? 'Axial' : 'Coronal'} CT slice at the ${focusNodeId} with the airway marked`}
+            alt={`${plane === 'axial' ? 'Axial' : 'Coronal'} CT slice with the crosshair on the ${getNode(focusNodeId)?.fullName ?? focusNodeId}`}
             className="absolute inset-0 h-full w-full object-contain"
             loading="lazy"
             draggable={false}
