@@ -143,11 +143,11 @@ export const mcsSources: readonly McsSource[] = [
     id: 'impella-cp-ifu-rev-v-supplied',
     title: 'Impella CP with SmartAssist Instructions for Use (supplied revision V)',
     citation:
-      'Abiomed, Inc. Impella CP with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0048-9007 rV, February 2026; cover shows V11.1. Supplied PDF; printed pages 4.11, 5.25, 7.17, 7.18–7.19 and 8.5 read.',
+      'Abiomed, Inc. Impella CP with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0048-9007 rV, February 2026; cover shows V11.1. Supplied PDF; printed pages 4.11, 5.16, 5.25, 7.3–7.19 and 8.5 read.',
     sourceType: 'manufacturer',
     year: 2026,
     intendedUse:
-      'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; and high afterload pressure as a named check for a low-flow alarm.',
+      'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; high afterload pressure as a named check for a low-flow alarm; and the echocardiographic position: the long-axis views, the inlet depth below the aortic valve annulus, the too-deep and inlet-in-aorta findings, the color Doppler pattern, and P-2 while the position is corrected.',
     limitation:
       'Revision V, United States, February 2026. Check the revision against the device on your unit.',
   },
@@ -155,11 +155,11 @@ export const mcsSources: readonly McsSource[] = [
     id: 'impella-55-ifu-rev-l-supplied',
     title: 'Impella 5.5 with SmartAssist Instructions for Use (supplied revision L)',
     citation:
-      'Abiomed, Inc. Impella 5.5 with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 10003049 rL, February 2026. Supplied PDF; printed page 5.26 read.',
+      'Abiomed, Inc. Impella 5.5 with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 10003049 rL, February 2026. Supplied PDF; printed pages 5.3, 5.26 and 7.4–7.16 read.',
     sourceType: 'manufacturer',
     year: 2026,
     intendedUse:
-      'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump.',
+      'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump. Also the echocardiographic position: the long-axis views, the cannula bend at the aortic valve annulus with the inlet about 5 cm into the ventricle, the too-deep and inlet-in-aorta findings, that the pump has no pigtail, and P-2 while the position is corrected.',
     limitation:
       'One revision for the United States. Check the revision against the device on your unit. The table gives flow ranges, not an equivalence between the two pumps.',
   },

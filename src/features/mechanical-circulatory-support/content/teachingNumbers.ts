@@ -9,7 +9,9 @@ import {
  *
  * The Impella rows were read from the two instructions for use on 2026-10-08, and the simulator's
  * flow at each P-level is built from the same tables (`IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN` in
- * `engine/model.ts`). The durable-pump rows come from three chapters of one textbook, which the
+ * `engine/model.ts`). The four echo-position rows were read from chapters 5 and 7 of the same two
+ * manuals on 2026-11-03; neither manual names an apical view, so none is taught. The durable-pump
+ * rows come from three chapters of one textbook, which the
  * module's source registry holds only for a different chapter; they are listed in
  * `MCS_NUMBER_ONLY_SOURCES`. No HeartMate 3 instructions for use or Abbott parameter card was
  * available locally, so no typical flow, power or pulsatility-index range is registered.
@@ -42,8 +44,17 @@ export const MCS_NUMBER_ONLY_SOURCES = [
   },
 ] as const
 
+const ECHO_CHECK = { ...CHECK, checkedOn: '2026-11-03' } as const
+
 const cpManual = (locator: string): TeachingNumberCitation => ({
   sourceId: 'impella-cp-ifu-rev-v-supplied',
+  year: 2026,
+  grade: null,
+  locator,
+})
+
+const manual55 = (locator: string): TeachingNumberCitation => ({
+  sourceId: 'impella-55-ifu-rev-l-supplied',
   year: 2026,
   grade: null,
   locator,
@@ -75,16 +86,62 @@ export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support
     label: 'Impella 5.5 mean flow by P-level',
     value: 'P-2 0–1.9 · P-4 1.9–3.3 · P-6 3.4–4.1 · P-8 4.3–4.9 · P-9 5.0–5.5 L/min',
     class: 'device',
-    sources: [
-      {
-        sourceId: 'impella-55-ifu-rev-l-supplied',
-        year: 2026,
-        grade: null,
-        locator: 'Table 5.3, p. 5.26',
-      },
-    ],
+    sources: [manual55('Table 5.3, p. 5.26')],
     note: 'The table gives mean flow at a 30–60 mm Hg pressure difference across the pump.',
     ...CHECK,
+  },
+  'impella-cp-inlet-depth': {
+    label: 'Impella CP, aligned',
+    value: 'inlet 3.5 cm below the aortic valve annulus; 3 cm in a small ventricle',
+    appliesTo: 'A long-axis echo view: parasternal long axis on TTE, long axis on TEE',
+    class: 'device',
+    sources: [
+      cpManual(
+        'p. 7.5, “Correct Impella Catheter Position”; p. 7.10, post-insertion positioning checklist, step 3; p. 5.16, “Positioning in Small Hearts”',
+      ),
+    ],
+    note: 'Both values are the manual’s own: 3.5 cm is the target, and the insertion chapter allows 3 cm rather than 3.5 cm when the ventricular cavity is small.',
+    ...ECHO_CHECK,
+  },
+  'impella-cp-inlet-too-deep': {
+    label: 'Impella CP, too deep',
+    value: 'inlet more than 4 cm below the aortic valve',
+    appliesTo: 'A long-axis echo view, with the outlet across or near the aortic valve',
+    class: 'device',
+    sources: [
+      cpManual(
+        'p. 7.5, “Impella Catheter Too Far into the Left Ventricle”; Figures 7.2b and 7.3b, pp. 7.7–7.8',
+      ),
+    ],
+    ...ECHO_CHECK,
+  },
+  'impella-55-inlet-depth': {
+    label: 'Impella 5.5, aligned',
+    value: 'cannula bend at the aortic valve annulus, inlet about 5 cm into the ventricle',
+    appliesTo: 'A long-axis echo view: parasternal long axis on TTE, long axis on TEE',
+    class: 'device',
+    sources: [
+      manual55(
+        'p. 7.6, “Correct Impella Catheter Position”; p. 7.11, post-insertion positioning checklist, step 3',
+      ),
+    ],
+    note: 'The echo section says approximately 5 cm; the checklist says 5.0 cm below the aortic valve. The manual gives no centimetre figure for too deep: it reads too deep as a cannula bend past the annulus.',
+    ...ECHO_CHECK,
+  },
+  'impella-reposition-p-level': {
+    label: 'Performance level while the position is corrected',
+    value: 'P-2',
+    class: 'device',
+    sources: [
+      cpManual(
+        'p. 7.12, catheter fully in ventricle, action 1; p. 7.13, repositioning guide, step 1; p. 7.16, catheter in aorta, action 1; Table 7.1, p. 7.19, hemolysis with the pump out of position',
+      ),
+      manual55(
+        'p. 7.13, catheter fully in ventricle, action 1, and repositioning guide, step 1; p. 7.16, catheter in aorta, action 1',
+      ),
+    ],
+    note: 'Both manuals bring the level to P-2 before the catheter is moved, move it under imaging, and return to the working level afterwards. The CP hemolysis table gives P-2 while repositioning is delayed.',
+    ...ECHO_CHECK,
   },
   'heartmate3-speed-typical': {
     label: 'HeartMate 3 speed in use',
