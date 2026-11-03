@@ -20,6 +20,7 @@ import {
   type AirwayQuizQuestion,
   type QuizFramesData,
 } from '@/lib/airway-anatomy-lesson/airway-quiz'
+import type { AirwayNode } from '@/lib/airway-anatomy-lesson/types'
 import {
   buildFindFrameCandidates,
   buildIndex,
@@ -74,6 +75,11 @@ export function AirwayIdentifyQuiz({ onOpenStructure, className }: AirwayIdentif
           <p className="text-sm text-muted-foreground">
             Practice both directions: name a marked airway, then find a named airway on a paused
             bronchoscopy frame.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Here you work from the bronchoscopic image alone: no labels, and the CT and 3D model
+            stay closed until you answer. To study an airway with its labels first, use the atlas
+            with labels on, the guided survey or the tree explorer.
           </p>
         </div>
         <div className="flex rounded-lg border border-border/70 bg-card/70 p-0.5">
@@ -189,8 +195,8 @@ function NameTheAirwayQuiz({ onOpenStructure }: { onOpenStructure?: (id: string)
             <HelpCircle className="h-4 w-4 text-primary" aria-hidden /> Name the airway
           </h4>
           <p className="text-sm text-muted-foreground">
-            The cyan outline marks the tested airway. Choose the name, then reveal the matched CT,
-            3D highlight, and explanation.
+            The cyan outline marks the airway, or the scope is already inside it. Name it from this
+            image.
           </p>
         </div>
         <ScorePill score={score} streak={streak} />
@@ -208,7 +214,11 @@ function NameTheAirwayQuiz({ onOpenStructure }: { onOpenStructure?: (id: string)
                 <img
                   key={struct.img}
                   src={struct.img}
-                  alt="Endoscopic view with one airway outlined"
+                  alt={
+                    struct.isOrifice
+                      ? 'Bronchoscopic view with one airway opening outlined'
+                      : 'Bronchoscopic view from inside the airway in question'
+                  }
                   className="absolute inset-0 h-full w-full object-cover"
                   draggable={false}
                 />
@@ -245,20 +255,36 @@ function NameTheAirwayQuiz({ onOpenStructure }: { onOpenStructure?: (id: string)
           </div>
         </div>
 
-        {question && <CtCorrelationView focusNodeId={question.target} />}
-
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            3D model
-          </p>
-          <Airway3DModel
-            selectedId={question?.target ?? null}
-            onSelect={() => {}}
-            hideLabel={!revealed}
-            dimOpacity={0.5}
-            className="h-[260px]"
-          />
-        </div>
+        {/* The CT crosshair, the 3D highlight and their labels all point at the target, so
+            neither view is given it until the learner has answered. */}
+        {revealed && question ? (
+          <>
+            <CtCorrelationView focusNodeId={question.target} />
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                3D model
+              </p>
+              <Airway3DModel
+                selectedId={question.target}
+                onSelect={() => {}}
+                dimOpacity={0.5}
+                className="h-[260px]"
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col gap-1.5 lg:col-span-2">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              CT and 3D correlation
+            </p>
+            <div className="flex min-h-[160px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/60 px-6 text-center">
+              <p className="max-w-sm text-sm leading-6 text-muted-foreground">
+                Commit to a name first. The CT crosshair, the 3D highlight and the explanation for
+                this airway open with the answer.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -551,7 +577,7 @@ function FindTheAirwayQuiz({ onOpenStructure }: { onOpenStructure?: (id: string)
                     You clicked {displayName(pickedNodeId)}.
                   </p>
                 )}
-                <p className="text-sm leading-6 text-muted-foreground">{targetNode.summary}</p>
+                <TargetExplanation node={targetNode} />
                 <div className="flex flex-wrap gap-3 pt-1">
                   <button
                     type="button"
@@ -612,6 +638,22 @@ function ScorePill({
   )
 }
 
+/** Once the airway is named: what it is, and how it looks through the scope. */
+function TargetExplanation({ node }: { node: AirwayNode }) {
+  const scopeCue = node.whatYouSee[0]
+  return (
+    <>
+      <p className="text-sm leading-6 text-muted-foreground">{node.summary}</p>
+      {scopeCue && (
+        <p className="text-sm leading-6 text-muted-foreground">
+          <span className="font-semibold text-foreground">Through the scope: </span>
+          {scopeCue}
+        </p>
+      )}
+    </>
+  )
+}
+
 function RevealPanel({
   correct,
   targetId,
@@ -640,7 +682,7 @@ function RevealPanel({
           {LOBE_LABELS[targetNode.lobe]}
         </span>
       </p>
-      <p className="text-sm leading-6 text-muted-foreground">{targetNode.summary}</p>
+      <TargetExplanation node={targetNode} />
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="button"
