@@ -51,6 +51,14 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       sourceIds: ['tsang-2002', 'owner-spout-photographs'],
     },
     {
+      id: 'laryngeal-gland',
+      kind: 'signals',
+      role: 'signals',
+      heading: 'The dark swelling through the opening',
+      body: 'Through the lower, ventral part of the opening you may see a dark, glossy rounded swelling. It is the laryngeal gland: a lymphoepithelial gland in the rostroventral mucosa of the larynx, over the cricoid cartilage, and a constant feature of the bottlenose dolphin larynx. It is normal anatomy, not a mass or a plug of mucus.',
+      sourceIds: ['smith-1999', 'cozzi-2017', 'owner-spout-photographs'],
+    },
+    {
       id: 'the-cue',
       kind: 'signals',
       role: 'framing',
@@ -449,5 +457,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
     'venn-watson-2012',
     'dolphin-001-ct',
     'owner-spout-photographs',
+    'smith-1999',
+    'cozzi-2017',
   ],
 }

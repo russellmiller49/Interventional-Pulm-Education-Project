@@ -20,6 +20,8 @@ export type DolphinSourceKind =
   | 'case-data'
   /** Photographs from a real bronchoscopy, used with permission. */
   | 'photographs'
+  /** A reference text. */
+  | 'book'
 
 export interface DolphinSource {
   readonly id: string
@@ -78,6 +80,22 @@ export const DOLPHIN_SOURCES = [
       'Tsang KW, Kinoshita R, Rouke N, Yuen Q, Hu W, Lam WK. Bronchoscopy of cetaceans. Journal of Wildlife Diseases. 2002;38(1):224–227. doi:10.7589/0090-3558-38.1.224',
     year: 2002,
     kind: 'paper',
+  },
+  {
+    id: 'smith-1999',
+    shortName: 'Smith et al., Anat Rec 1999',
+    citation:
+      'Smith TL, Turnbull BS, Cowan DF. Morphology of the complex laryngeal gland in the Atlantic bottlenose dolphin, Tursiops truncatus. The Anatomical Record. 1999;254(1):98–106. doi:10.1002/(SICI)1097-0185(19990101)254:1<98::AID-AR13>3.0.CO;2-J',
+    year: 1999,
+    kind: 'paper',
+  },
+  {
+    id: 'cozzi-2017',
+    shortName: 'Cozzi et al., Anatomy of Dolphins 2017',
+    citation:
+      'Cozzi B, Huggenberger S, Oelschläger H. Anatomy of Dolphins: Insights into Body Structure and Function. London: Academic Press (Elsevier); 2017. Chapter 4 (the respiratory system) and chapter 5 (the larynx).',
+    year: 2017,
+    kind: 'book',
   },
   {
     id: 'ivancic-2014',

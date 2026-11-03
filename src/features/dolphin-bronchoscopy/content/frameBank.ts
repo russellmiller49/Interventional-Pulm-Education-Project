@@ -107,7 +107,7 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     preCommitAlt:
       'Bronchoscopy photograph: pale tissue around a triangular opening, apex up; inside, two rounded folds either side of a midline cleft, and a dark, glossy rounded surface at the lower left.',
     postCommitAlt:
-      'Bronchoscopy photograph from the foot of the nasopharynx: the glottis at the tip of the laryngeal spout, a triangular opening with its apex dorsal.',
+      'Bronchoscopy photograph from the foot of the nasopharynx: the glottis at the tip of the laryngeal spout, a triangular opening with its apex dorsal. The dark, glossy swelling in the lower part of the opening is the laryngeal gland.',
     rights: {
       ...OWNER_PHOTO,
       reference: 'Bronchoscopy photographs of entering the spout, 1 of 11',
@@ -123,7 +123,7 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     preCommitAlt:
       'Bronchoscopy photograph, close: a tall triangular opening, apex up, between pale walls, with a fold and a dark, glossy rounded surface in its lower half.',
     postCommitAlt:
-      'Bronchoscopy photograph close to the tip of the laryngeal spout: the triangular glottis, apex dorsal, just before the scope enters.',
+      'Bronchoscopy photograph close to the tip of the laryngeal spout: the triangular glottis, apex dorsal, just before the scope enters, with the laryngeal gland filling the lower part of the opening.',
     rights: {
       ...OWNER_PHOTO,
       reference: 'Bronchoscopy photographs of entering the spout, 7 of 11',

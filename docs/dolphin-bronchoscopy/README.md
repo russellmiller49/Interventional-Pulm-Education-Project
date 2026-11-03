@@ -15,7 +15,7 @@ It wraps two pages that stay where they are and link to it:
 
 ## Sources (read in place, never copied)
 
-Everything below lives in the owner's Google Drive or in published journals. Nothing from the
+Everything below lives in the owner's Google Drive or in published journals and books. Nothing from the
 Drive is in the repository. Source ids are those of `src/features/dolphin-bronchoscopy/data/sources.ts`.
 
 | Source id                 | Drive title or citation                                                                                                                                                                                          |
@@ -26,6 +26,8 @@ Drive is in the repository. Source ids are those of `src/features/dolphin-bronch
 | `nmmp-bronchoscopy-guide` | Bottlenose Dolphin Bronchoscopy Guide (NMMP/NMMF), the airway names                                                                                                                                              |
 | `nmmp-form-2019`          | "NMMP Dolphin Bronchoscopy Form", created by Carli Smith, 2019                                                                                                                                                   |
 | `tsang-2002`              | Tsang KW et al. J Wildl Dis 2002;38(1):224–227                                                                                                                                                                   |
+| `smith-1999`              | Smith TL, Turnbull BS, Cowan DF. Anat Rec 1999;254(1):98–106 (the laryngeal gland; PMID 9892423)                                                                                                                 |
+| `cozzi-2017`              | Cozzi B, Huggenberger S, Oelschläger H. Anatomy of Dolphins. Academic Press, 2017; chapters 4 and 5 (larynx, laryngeal gland). Read in place from a PDF copy, never copied                                       |
 | `ivancic-2014`            | Ivančić M, Solano M, Smith CR. Anat Rec 2014;297(5):901–915                                                                                                                                                      |
 | `venn-watson-2012`        | Venn-Watson S, Daniels R, Smith C. Dis Aquat Org 2012;99:237–242                                                                                                                                                 |
 | `harper-2001`             | Harper CMG et al. J Zoo Wildl Med 2001;32(2):190–195                                                                                                                                                             |
@@ -108,7 +110,8 @@ must be applied from the primary checkout before the first beta-hub feedback pos
     the owner 2026-11-03). The CT slit is about 8 × 3 mm and its tip bevelled, so the build shapes
     the tip and the first 20 mm of the lumen (`shape_spout_field`). The owner granted the
     photographs as stills the same day; photographs 1 and 7 are in sections 13 and 03 and the
-    "Where is the tip?" drill. Still open: the dark, glossy rounded structure at the lower left of
-    the aperture (the stills' alt text calls it only "a dark, glossy rounded surface"); and if the
-    photographs belong to the Navy Marine Mammal Program rather than the owner, the holder in
-    `frameBank.ts` should say so.
+    "Where is the tip?" drill. The owner identified the dark, glossy rounded structure in the lower
+    part of the opening as the laryngeal gland (2026-11-03), which matches Smith 1999 (a constant
+    lymphoepithelial gland in the rostroventral larynx over the cricoid) and Cozzi 2017; section 13
+    and the stills' revealed descriptions now name it. Still open: if the photographs belong to the
+    Navy Marine Mammal Program rather than the owner, the holder in `frameBank.ts` should say so.
