@@ -167,6 +167,7 @@ Thumbs.db
 !public/socal-ebus-course/app/**/*.mp4
 !public/module-assets/v1/pleural-ultrasound/video/*.mp4
 !public/airway-lesson/airway-survey-cropped.mp4
+!public/bronchoscopy-instruments/clips/*.mp4
 *.avi
 *.mov
 *.wmv

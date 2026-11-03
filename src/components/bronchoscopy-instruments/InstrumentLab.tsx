@@ -115,7 +115,11 @@ export function InstrumentLab({
         </div>
       ) : null}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      {/* Columns follow the lab's own width, not the window's: it often sits in a narrow panel. */}
+      <div
+        className="grid items-start gap-3"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 22rem), 1fr))' }}
+      >
         <figure className="m-0 overflow-hidden rounded-lg border border-border/60 bg-white">
           <InstrumentTipView state={state} targetLabel={targetLabel} />
           <figcaption className="border-t border-border/40 px-3 py-1.5 text-xs text-slate-600">
@@ -138,7 +142,10 @@ export function InstrumentLab({
 
       <CatheterControls state={state} dispatch={dispatch} />
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div
+        className="grid items-start gap-3"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 18rem), 1fr))' }}
+      >
         <ol className="grid gap-1.5" aria-label={`${INSTRUMENT_NAMES[state.instrument]}: steps`}>
           {steps.map((step, index) => {
             const done = state.memory.done.includes(step.id)

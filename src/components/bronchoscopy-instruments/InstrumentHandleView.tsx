@@ -19,7 +19,7 @@ interface Track {
 
 const TRACKS: Readonly<Record<InstrumentId, Track>> = {
   forceps: { from: 252, to: 138 },
-  brush: { from: 336, to: 282 },
+  brush: { from: 340, to: 298 },
   needle: { from: 268, to: 212 },
 }
 
@@ -98,7 +98,7 @@ export function InstrumentHandleView({
   return (
     <svg
       ref={svg}
-      viewBox="0 0 360 200"
+      viewBox="0 0 360 172"
       className="block h-auto w-full touch-none select-none"
       aria-label="The handle in your hand"
     >
@@ -112,7 +112,7 @@ export function InstrumentHandleView({
           <stop offset="1" stopColor="#4ea3ae" />
         </linearGradient>
       </defs>
-      <rect x="0" y="0" width="360" height="200" rx="10" fill="#f5f7f8" />
+      <rect x="0" y="0" width="360" height="172" rx="10" fill="#f5f7f8" />
       <text x="14" y="22" fontSize="11" fill="#5b6870">
         To the scope
       </text>
@@ -132,7 +132,7 @@ export function InstrumentHandleView({
           />
           <circle cx="318" cy="100" r="25" fill="none" stroke="url(#bi-ivory)" strokeWidth="13" />
           <circle cx="318" cy="100" r="25" fill="none" stroke="#bdb5a3" strokeWidth="0.8" />
-          <text x="300" y="150" fontSize="11" fill="#5b6870">
+          <text x="352" y="140" fontSize="11" fill="#5b6870" textAnchor="end">
             Thumb ring
           </text>
         </g>
@@ -151,7 +151,7 @@ export function InstrumentHandleView({
           <circle cx="258" cy="100" r="22" fill="none" stroke="url(#bi-ivory)" strokeWidth="12" />
           <circle cx="258" cy="100" r="22" fill="none" stroke="#bdb5a3" strokeWidth="0.8" />
           <line x1="240" y1="100" x2={at} y2="100" stroke="#8d969d" strokeWidth="2.4" />
-          <text x="232" y="146" fontSize="11" fill="#5b6870">
+          <text x="282" y="138" fontSize="11" fill="#5b6870" textAnchor="end">
             Thumb ring
           </text>
         </g>
@@ -178,7 +178,7 @@ export function InstrumentHandleView({
           </g>
           <line x1="208" y1="100" x2="330" y2="100" stroke="#9aa4ac" strokeWidth="1.6" />
           <rect x="324" y="88" width="22" height="24" rx="6" fill="#efe9dc" stroke="#bdb5a3" />
-          <text x="300" y="140" fontSize="11" fill="#5b6870">
+          <text x="352" y="134" fontSize="11" fill="#5b6870" textAnchor="end">
             Stylet cap
           </text>
         </g>
@@ -205,7 +205,7 @@ export function InstrumentHandleView({
           x={at - 30}
           y="58"
           width="60"
-          height="84"
+          height="76"
           rx="10"
           fill="none"
           stroke="#1f7aa8"
@@ -228,16 +228,16 @@ export function InstrumentHandleView({
             <rect x="-6" y="-17" width="8" height="34" rx="3" fill="#2f6f78" />
           </g>
         )}
-        <text x={at} y="176" fontSize="11" fill="#1f5f80" textAnchor="middle" fontWeight="600">
+        <text x={at} y="152" fontSize="11" fill="#1f5f80" textAnchor="middle" fontWeight="600">
           {label.state(control)}
         </text>
         <path
-          d={`M${Math.min(track.from, track.to) - 4} 188 H${Math.max(track.from, track.to) + 4}`}
+          d={`M${Math.min(track.from, track.to) - 4} 163 H${Math.max(track.from, track.to) + 4}`}
           stroke="#c9d3d9"
           strokeWidth="3"
           strokeLinecap="round"
         />
-        <circle cx={at} cy="188" r="4.5" fill="#1f7aa8" />
+        <circle cx={at} cy="163" r="4.5" fill="#1f7aa8" />
       </g>
     </svg>
   )

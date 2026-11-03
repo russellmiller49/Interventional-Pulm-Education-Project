@@ -103,25 +103,33 @@ export function InstrumentTipView({
         </g>
       ) : (
         <g clipPath={`url(#${id('lumen-clip')})`}>
+          {/* A division ahead: two branches either side of a carina, the plaque on its crest. */}
+          <rect x={TARGET_X + 10} y="40" width={640 - TARGET_X} height="220" fill="#ecd3c9" />
           <path
-            d={`M640 40 L${TARGET_X + 70} 40 Q${TARGET_X + 40} 70 ${TARGET_X + 22} 100 Q${TARGET_X - 4} 128 ${TARGET_X} ${AXIS_Y} Q${TARGET_X - 4} 172 ${TARGET_X + 22} 200 Q${TARGET_X + 40} 230 ${TARGET_X + 70} 260 L640 260 Z`}
+            d={`M640 92 Q${TARGET_X + 90} 104 ${TARGET_X + 26} ${AXIS_Y - 20} Q${TARGET_X + 14} ${AXIS_Y} ${TARGET_X + 26} ${AXIS_Y + 20} Q${TARGET_X + 90} 196 640 208 Z`}
+            fill="#f6d6cf"
+            stroke="#e39a92"
+            strokeWidth="5"
+          />
+          <path
+            d={`M${TARGET_X + 32} ${AXIS_Y - 30} Q${TARGET_X - 6} ${AXIS_Y - 26} ${TARGET_X} ${AXIS_Y} Q${TARGET_X - 6} ${AXIS_Y + 26} ${TARGET_X + 32} ${AXIS_Y + 30} Q${TARGET_X + 46} ${AXIS_Y} ${TARGET_X + 32} ${AXIS_Y - 30} Z`}
             fill={`url(#${id('lesion')})`}
             stroke="#9c3f38"
-            strokeWidth="1.2"
+            strokeWidth="1"
           />
-          {[118, 136, 166, 183].map((cy, index) => (
+          {[-16, -5, 7, 17].map((dy, index) => (
             <circle
-              key={cy}
-              cx={TARGET_X + 18 + (index % 2) * 9}
-              cy={cy}
-              r="2.4"
+              key={dy}
+              cx={TARGET_X + 12 + (index % 2) * 7}
+              cy={AXIS_Y + dy}
+              r="2"
               fill="#f0b0a8"
-              opacity="0.8"
+              opacity="0.85"
             />
           ))}
           {state.instrument === 'forceps' && (state.memory.specimen || state.memory.lost) ? (
             <path
-              d={`M${TARGET_X - 1} ${AXIS_Y - 9} Q${TARGET_X + 12} ${AXIS_Y} ${TARGET_X - 1} ${AXIS_Y + 9}`}
+              d={`M${TARGET_X - 1} ${AXIS_Y - 8} Q${TARGET_X + 11} ${AXIS_Y} ${TARGET_X - 1} ${AXIS_Y + 8}`}
               fill="#f6d2cc"
               stroke="#b8544c"
               strokeWidth="1"
@@ -129,7 +137,7 @@ export function InstrumentTipView({
           ) : null}
           {state.instrument === 'brush' && state.memory.passes > 0 ? (
             <path
-              d={`M${TARGET_X + 2} ${AXIS_Y - 22} Q${TARGET_X - 3} ${AXIS_Y} ${TARGET_X + 2} ${AXIS_Y + 22}`}
+              d={`M${TARGET_X + 4} ${AXIS_Y - 20} Q${TARGET_X - 2} ${AXIS_Y} ${TARGET_X + 4} ${AXIS_Y + 20}`}
               fill="none"
               stroke="#f7c9c2"
               strokeWidth="4"
@@ -185,7 +193,7 @@ export function InstrumentTipView({
         <text x="16" y="185" fill="#cfd8de">
           Working channel
         </text>
-        <text x={needleTarget ? TARGET_X + 70 : TARGET_X + 36} y={needleTarget ? 92 : 62}>
+        <text x={needleTarget ? TARGET_X + 70 : TARGET_X + 40} y={needleTarget ? 92 : AXIS_Y - 40}>
           {targetLabel}
         </text>
         {needleTarget ? (
@@ -270,25 +278,20 @@ function Brush({
   const end = tipX + S * REACH_MM.brush * control
   const zoneStart = end - S * 8
   const bristles = []
-  for (let bx = zoneStart; bx <= end - 4; bx += 3.2) {
-    const long = Math.round((bx - zoneStart) / 3.2) % 2 === 0
+  // Twisted-wire brush: tufts set at alternating angles, wide in the middle, tapering at each end.
+  for (let bx = zoneStart; bx <= end - 5; bx += 2.6) {
+    const f = (bx - zoneStart) / Math.max(1, end - zoneStart)
+    const reach = 13 + 7 * Math.sin(Math.PI * Math.min(1, Math.max(0, f)))
+    const tilt = Math.round((bx - zoneStart) / 2.6) % 2 === 0 ? 2.5 : -2.5
     bristles.push(
-      <line
-        key={bx}
-        x1={bx}
-        y1={AXIS_Y - (long ? 19 : 15)}
-        x2={bx + 2}
-        y2={AXIS_Y + (long ? 19 : 15)}
-        stroke="#f8f7f0"
-        strokeWidth="1.4"
-      />,
+      <line key={bx} x1={bx - tilt} y1={AXIS_Y - reach} x2={bx + tilt} y2={AXIS_Y + reach} />,
     )
   }
   return (
     <g>
       <g clipPath={`url(#${id('beyond-sheath')})`}>
         <line x1={tipX - 10} y1={AXIS_Y} x2={end} y2={AXIS_Y} stroke="#9aa4ac" strokeWidth="3" />
-        <g stroke="#c9c8bc" strokeWidth="0.5">
+        <g stroke="#a59f8b" strokeWidth="1.5" strokeLinecap="round">
           {bristles}
         </g>
         <path
