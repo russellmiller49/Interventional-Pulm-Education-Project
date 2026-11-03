@@ -6,9 +6,12 @@ import type { AirwayNode, SurveyStep } from '@/lib/airway-anatomy-lesson/types'
  * `airway-graph.ts`, so this file only sets `parentId`.
  *
  * Content is standard teaching anatomy for a normal airway survey. Clock
- * positions in `endoscopicView` are schematic teaching approximations for the
- * neutral scope orientation (anterior at 12 o'clock, patient's right toward the
- * left of the video image); real positions shift as the scope is rotated.
+ * positions in `endoscopicView` hold for that view's `reference` (the way the
+ * scope is held) and are checked against each opening's `toward` direction in
+ * `view-orientation.test.ts`. Looking down an airway from the head of the bed,
+ * anterior is at 12 o'clock and the patient's right at 3 o'clock, on the right
+ * of the image, as in the lesson's recording; turning the scope turns every
+ * position together.
  */
 export const AIRWAY_NODES: AirwayNode[] = [
   {
@@ -23,7 +26,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
     summary: 'The entry checkpoint: inspect cord mobility and pass midline through the glottis.',
     whatYouSee: [
       'A triangular glottic opening bordered by the pearly-white true vocal cords, with the pink false cords just above.',
-      "In this schematic orientation, the anterior commissure is at 12 o'clock and the posterior commissure with the arytenoid cartilages is at 6 o'clock. Their screen positions rotate with the scope.",
+      "Viewed from the head of the bed, the anterior commissure is at 12 o'clock and the posterior commissure with the arytenoid cartilages at 6 o'clock. Their screen positions turn with the scope.",
       'The cords abduct (open) with inspiration and adduct (close) with phonation — confirm symmetric movement before passing.',
     ],
     pearls: [
@@ -45,26 +48,27 @@ export const AIRWAY_NODES: AirwayNode[] = [
     summary:
       'A ~10–12 cm tube of C-shaped cartilage rings anteriorly and a flat membranous wall posteriorly.',
     whatYouSee: [
-      "Horizontal cartilage rings bulge along the anterior and lateral walls (shown at 12 and 3/9 o'clock in this schematic).",
-      "The flat, vertically-striped membranous wall (trachealis muscle) marks posterior, shown at 6 o'clock in this schematic.",
+      "Horizontal cartilage rings bulge along the anterior and lateral walls (12, 3 and 9 o'clock viewed from the head of the bed).",
+      "The flat, vertically-striped membranous wall (trachealis muscle) marks posterior: 6 o'clock viewed from the head of the bed.",
       'The pulsating aortic arch may indent the left anterolateral wall in the distal third.',
       'The trachea narrows toward the sharp, sagittal main carina at its base.',
     ],
     pearls: [
       'The membranous wall billows inward with cough and expiration — excessive collapse (>50%) suggests tracheomalacia.',
-      "Find the flat membranous wall to identify posterior. Its position in the image changes with scope rotation; 6 o'clock is this diagram's reference orientation.",
+      "Find the flat membranous wall to identify posterior. Its place in the image turns with the scope; from the head of the bed it is at 6 o'clock, and the patient's right is a quarter turn clockwise from anterior.",
       'Measure lesions from the vocal cords and from the carina — both reference points guide stent and surgical planning.',
     ],
     endoscopicView: {
+      reference: { looking: 'inferior', top: 'anterior' },
       orientation:
-        "In this schematic reference view, anterior cartilage is at 12 o'clock and the membranous wall at 6 o'clock; the patient's right appears on the image's left. These screen positions change with scope rotation.",
+        "Find the membranous wall first: it is posterior. From the head of the bed it sits at 6 o'clock with the cartilage rings anterior at 12, and the patient's right is on the right of the image. The scope turns during this recording, so name each side from the membranous wall, not from the edge of the picture.",
       openings: [
-        { childId: 'rmb', clock: 9, size: 0.95, label: 'RMB' },
-        { childId: 'lmb', clock: 3, size: 0.72, label: 'LMB' },
+        { childId: 'rmb', clock: 3, toward: 'right', size: 0.95, label: 'RMB' },
+        { childId: 'lmb', clock: 9, toward: 'left', size: 0.72, label: 'LMB' },
       ],
       wallFeatures: [
-        { clock: 12, label: 'Anterior (cartilage)' },
-        { clock: 6, label: 'Membranous wall' },
+        { clock: 12, toward: 'anterior', label: 'Anterior (cartilage)' },
+        { clock: 6, toward: 'posterior', label: 'Membranous wall' },
       ],
     },
   },
@@ -91,11 +95,18 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'The RUL takeoff is easy to overshoot — retroflex/angle laterally right after entering the RMB to inspect it.',
     ],
     endoscopicView: {
+      reference: { looking: 'inferior', top: 'anterior' },
       orientation:
-        'Looking down the RMB. The lateral wall (RUL takeoff) is toward the left of the image.',
+        "Looking down the right main bronchus with anterior at 12 o'clock, the right upper lobe opens from the lateral wall at 3 o'clock and the bronchus intermedius continues ahead. In this recording the scope is turned a quarter turn to bring the upper lobe opening to the top before entering it.",
       openings: [
-        { childId: 'rul', clock: 9, size: 0.6, label: 'RUL (lateral)' },
-        { childId: 'bronchus-intermedius', clock: 6, size: 0.95, label: 'Bronchus intermedius' },
+        { childId: 'rul', clock: 3, toward: 'right', size: 0.6, label: 'RUL (lateral)' },
+        {
+          childId: 'bronchus-intermedius',
+          clock: 6,
+          toward: 'inferior',
+          size: 0.95,
+          label: 'Bronchus intermedius',
+        },
       ],
     },
   },
@@ -120,11 +131,13 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'Not everyone has a clean trifurcation — a separate apical (RB1) takeoff or a shared anterior/posterior stem is a normal variant.',
     ],
     endoscopicView: {
-      orientation: 'The RUL trifurcation. Apical points up, anterior toward you, posterior away.',
+      reference: { looking: 'right', top: 'superior' },
+      orientation:
+        'Looking out into the right upper lobe with the apical segment (RB1) at the top, the anterior segment (RB3) is on the left of the image and the posterior segment (RB2) on the right, as in this recording.',
       openings: [
-        { childId: 'rb1', clock: 12, size: 0.6, label: 'RB1' },
-        { childId: 'rb2', clock: 8, size: 0.6, label: 'RB2' },
-        { childId: 'rb3', clock: 4, size: 0.6, label: 'RB3' },
+        { childId: 'rb1', clock: 12, toward: 'superior', size: 0.6, label: 'RB1' },
+        { childId: 'rb2', clock: 4, toward: 'posterior', size: 0.6, label: 'RB2' },
+        { childId: 'rb3', clock: 8, toward: 'anterior', size: 0.6, label: 'RB3' },
       ],
     },
   },
@@ -141,7 +154,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
     glbMatch: 'RB1',
     summary: 'The most cranial segment of the right lung, pointing straight up toward the apex.',
     whatYouSee: [
-      "Ascends vertically toward the lung apex; the orifice is shown at 12 o'clock in this schematic of the trifurcation; the screen position changes with scope rotation.",
+      "Ascends vertically toward the lung apex. Looking out into the upper lobe with the head at the top, its orifice is at 12 o'clock; the screen position turns with the scope.",
     ],
     pearls: [
       'Apical-segment disease (e.g., post-primary TB, apical scarring) lives here and in RB2.',
@@ -205,11 +218,12 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'Subcarinal (station 7) lymph nodes lie just behind its medial wall — a routine EBUS-TBNA target.',
     ],
     endoscopicView: {
+      reference: { looking: 'inferior', top: 'anterior' },
       orientation:
-        'Distal end of the bronchus intermedius. Middle lobe anterior, superior segment (RB6) posterior.',
+        "At the end of the bronchus intermedius the middle lobe opens anteriorly and the superior segment of the lower lobe (RB6) posteriorly, on opposite walls. With anterior at 12 o'clock the middle lobe is at the top; in this recording it sits near 10 o'clock because the scope is still turned.",
       openings: [
-        { childId: 'rml', clock: 12, size: 0.6, label: 'RML (anterior)' },
-        { childId: 'rll', clock: 6, size: 0.85, label: 'RLL basal trunk' },
+        { childId: 'rml', clock: 12, toward: 'anterior', size: 0.6, label: 'RML (anterior)' },
+        { childId: 'rll', clock: 6, toward: 'posterior', size: 0.85, label: 'RLL basal trunk' },
       ],
     },
   },
@@ -232,10 +246,12 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'A common site to wedge for lavage because the caliber grips the scope.',
     ],
     endoscopicView: {
-      orientation: 'The right middle lobe divides into lateral (RB4) and medial (RB5) segments.',
+      reference: { looking: 'anterior', top: 'superior' },
+      orientation:
+        'Looking into the middle lobe with the head at the top, the lateral segment (RB4) is on the right of the image and the medial segment (RB5) on the left, as in this recording.',
       openings: [
-        { childId: 'rb4', clock: 9, size: 0.55, label: 'RB4' },
-        { childId: 'rb5', clock: 3, size: 0.55, label: 'RB5' },
+        { childId: 'rb4', clock: 3, toward: 'right', size: 0.55, label: 'RB4' },
+        { childId: 'rb5', clock: 9, toward: 'left', size: 0.55, label: 'RB5' },
       ],
     },
   },
@@ -292,13 +308,15 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'The four basal segments are the highest-yield territory for gravity-dependent disease and lower-lobe nodules.',
     ],
     endoscopicView: {
-      orientation: 'RB6 opens posteriorly; the basal segments fan out below.',
+      reference: { looking: 'inferior', top: 'anterior' },
+      orientation:
+        "The superior segment (RB6) opens posteriorly, opposite the middle lobe. Looking down the lower lobe with anterior at 12 o'clock, the basal segments run from medial (RB7) at 9 o'clock through anterior (RB8) at 12 to lateral (RB9) and posterior (RB10) on the right. In this recording the middle lobe, and so anterior, sits near 10 o'clock: turn the whole pattern with it.",
       openings: [
-        { childId: 'rb6', clock: 12, size: 0.6, label: 'RB6' },
-        { childId: 'rb7', clock: 2, size: 0.5, label: 'RB7' },
-        { childId: 'rb8', clock: 5, size: 0.5, label: 'RB8' },
-        { childId: 'rb9', clock: 7, size: 0.5, label: 'RB9' },
-        { childId: 'rb10', clock: 10, size: 0.5, label: 'RB10' },
+        { childId: 'rb6', clock: 6, toward: 'posterior', size: 0.55, label: 'RB6' },
+        { childId: 'rb7', clock: 9, toward: 'left', size: 0.5, label: 'RB7' },
+        { childId: 'rb8', clock: 12, toward: 'anterior', size: 0.5, label: 'RB8' },
+        { childId: 'rb9', clock: 2, toward: 'right', size: 0.5, label: 'RB9' },
+        { childId: 'rb10', clock: 4, toward: ['posterior', 'right'], size: 0.5, label: 'RB10' },
       ],
     },
   },
@@ -407,11 +425,12 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'The more horizontal angle makes left mainstem intubation and left-sided foreign bodies less common than right.',
     ],
     endoscopicView: {
+      reference: { looking: 'inferior', top: 'anterior' },
       orientation:
-        'The secondary (left) carina divides the upper lobe (anterior) from the lower lobe (posterior).',
+        "At the main carina, with anterior at 12 o'clock, the left main bronchus is the opening on the left of the image. At its far end the secondary (left) carina divides the upper lobe (anterior) from the lower lobe (posterior).",
       openings: [
-        { childId: 'lul', clock: 12, size: 0.75, label: 'LUL (anterior)' },
-        { childId: 'lll', clock: 6, size: 0.8, label: 'LLL (posterior)' },
+        { childId: 'lul', clock: 12, toward: 'anterior', size: 0.75, label: 'LUL (anterior)' },
+        { childId: 'lll', clock: 6, toward: 'posterior', size: 0.8, label: 'LLL (posterior)' },
       ],
     },
   },
@@ -435,10 +454,18 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'The bifurcation angle between upper division and lingula is a landmark for the left secondary carina on staging.',
     ],
     endoscopicView: {
-      orientation: 'The LUL divides into the upper division (superior) and the lingula (inferior).',
+      reference: { looking: 'left', top: 'superior' },
+      orientation:
+        'Looking out into the left upper lobe with the head at the top, the upper division is above and the lingula below.',
       openings: [
-        { childId: 'lul-upper', clock: 12, size: 0.7, label: 'Upper division' },
-        { childId: 'lingula', clock: 6, size: 0.6, label: 'Lingula' },
+        {
+          childId: 'lul-upper',
+          clock: 12,
+          toward: 'superior',
+          size: 0.7,
+          label: 'Upper division',
+        },
+        { childId: 'lingula', clock: 6, toward: 'inferior', size: 0.6, label: 'Lingula' },
       ],
     },
   },
@@ -460,10 +487,18 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'On the left, the apical and posterior segments share a common apicoposterior stem (LB1+2) — a fusion mirroring RB7+8 in the lower lobe.',
     ],
     endoscopicView: {
-      orientation: 'Upper division: apicoposterior (LB1+2) superior, anterior (LB3) inferior.',
+      reference: { looking: 'left', top: 'superior' },
+      orientation:
+        'Looking out into the upper division with the head at the top, the apicoposterior segment (LB1+2) is above and toward the back, the anterior segment (LB3) below and toward the front.',
       openings: [
-        { childId: 'lb1-2', clock: 12, size: 0.6, label: 'LB1+2' },
-        { childId: 'lb3', clock: 6, size: 0.6, label: 'LB3' },
+        {
+          childId: 'lb1-2',
+          clock: 11,
+          toward: ['superior', 'posterior'],
+          size: 0.6,
+          label: 'LB1+2',
+        },
+        { childId: 'lb3', clock: 4, toward: ['anterior', 'inferior'], size: 0.6, label: 'LB3' },
       ],
     },
   },
@@ -486,10 +521,12 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'LB1+2 is the left counterpart of RB1 and RB2 combined — the classic left-sided segmental fusion.',
     ],
     endoscopicView: {
-      orientation: 'The apicoposterior segment branches into apical (LB1) and posterior (LB2).',
+      reference: { looking: 'left', top: 'superior' },
+      orientation:
+        'The apicoposterior segment branches into apical (LB1), toward the head, and posterior (LB2), toward the back.',
       openings: [
-        { childId: 'lb1', clock: 12, size: 0.5, label: 'LB1' },
-        { childId: 'lb2', clock: 6, size: 0.5, label: 'LB2' },
+        { childId: 'lb1', clock: 12, toward: 'superior', size: 0.5, label: 'LB1' },
+        { childId: 'lb2', clock: 9, toward: 'posterior', size: 0.5, label: 'LB2' },
       ],
     },
   },
@@ -558,10 +595,12 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'Lingula-sparing or lingula-directed sampling is often paired with RML on the right for "middle lobe/lingula" bronchoalveolar lavage.',
     ],
     endoscopicView: {
-      orientation: 'The lingula divides into superior (LB4) and inferior (LB5) segments.',
+      reference: { looking: 'anterior', top: 'superior' },
+      orientation:
+        'The lingula divides into superior (LB4) and inferior (LB5) segments, one above the other, as in this recording.',
       openings: [
-        { childId: 'lb4', clock: 12, size: 0.55, label: 'LB4' },
-        { childId: 'lb5', clock: 6, size: 0.55, label: 'LB5' },
+        { childId: 'lb4', clock: 12, toward: 'superior', size: 0.55, label: 'LB4' },
+        { childId: 'lb5', clock: 6, toward: 'inferior', size: 0.55, label: 'LB5' },
       ],
     },
   },
@@ -617,12 +656,14 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'LB6, like RB6, is the dependent segment for aspiration in the supine patient.',
     ],
     endoscopicView: {
-      orientation: 'LB6 opens posteriorly; three basal segments fan out below.',
+      reference: { looking: 'inferior', top: 'anterior' },
+      orientation:
+        "LB6 opens posteriorly; three basal segments fan out below. Looking down the lower lobe with anterior at 12 o'clock, the anteromedial basal (LB7+8) is toward the right of the image and the lateral basal (LB9) on the left: the mirror image of the right lower lobe.",
       openings: [
-        { childId: 'lb6', clock: 12, size: 0.6, label: 'LB6' },
-        { childId: 'lb7-8', clock: 4, size: 0.55, label: 'LB7+8' },
-        { childId: 'lb9', clock: 7, size: 0.55, label: 'LB9' },
-        { childId: 'lb10', clock: 10, size: 0.55, label: 'LB10' },
+        { childId: 'lb6', clock: 6, toward: 'posterior', size: 0.55, label: 'LB6' },
+        { childId: 'lb7-8', clock: 1, toward: ['anterior', 'right'], size: 0.55, label: 'LB7+8' },
+        { childId: 'lb9', clock: 10, toward: 'left', size: 0.55, label: 'LB9' },
+        { childId: 'lb10', clock: 8, toward: ['posterior', 'left'], size: 0.55, label: 'LB10' },
       ],
     },
   },
@@ -704,7 +745,7 @@ export const SURVEY_STEPS: SurveyStep[] = [
     title: 'Vocal cords',
     narration: [
       'Every bronchoscopy begins here. Confirm the cords move symmetrically before you pass — this is your only clean look at cord function.',
-      "Use the commissures to orient the image; anterior is at 12 o'clock only in this schematic reference view. Passing through the posterior glottis is gentler and provokes less cough.",
+      "Use the commissures to orient the image. Viewed from the head of the bed, as here, the anterior commissure is at 12 o'clock and the arytenoids at 6. Passing through the posterior glottis is gentler and provokes less cough.",
     ],
   },
   {
@@ -714,7 +755,7 @@ export const SURVEY_STEPS: SurveyStep[] = [
     narration: [
       'As you advance down the trachea, identify posterior from the flat membranous wall, wherever it appears in the rotated image. Cartilage rings ridge the anterior and lateral walls.',
       'The trachea ends at the sharp, sagittal main carina. A widened, splayed carina suggests subcarinal (station 7) nodal disease.',
-      "From here, the patient's right main bronchus opens toward the left of your image, the left main bronchus toward the right.",
+      "At the carina, with anterior at 12 o'clock, the right main bronchus opens on the right of the image and the left main bronchus on the left. The CT beside the video is seen from the feet (axial) or from the front (coronal), so it shows the patient's right on the left.",
     ],
   },
   {

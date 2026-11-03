@@ -21,8 +21,13 @@ export type AirwayKind = 'central' | 'lobar' | 'division' | 'segmental'
 export interface EndoscopicOpening {
   /** id of the child AirwayNode this opening leads into. */
   childId: string
-  /** Clock position 1–12 (12 at top of the image). Schematic teaching value. */
+  /** Clock position 1–12 (12 at top of the image) under the view's `reference`. */
   clock: number
+  /**
+   * The patient direction the opening lies toward from the parent's lumen. `clock` must agree
+   * with it under the view's reference; an opening straight ahead has no side and no clock check.
+   */
+  toward?: PatientDirection | readonly PatientDirection[]
   /** Relative opening size, 0.4–1 (bigger = more in-line / larger caliber). */
   size?: number
   /** Optional short caption drawn next to the opening. */
@@ -33,6 +38,16 @@ export interface EndoscopicOpening {
 export interface EndoscopicWallFeature {
   clock: number
   label: string
+  /** The patient direction this wall faces, checked against `clock` and the view's reference. */
+  toward?: PatientDirection | readonly PatientDirection[]
+}
+
+export type PatientDirection = 'right' | 'left' | 'anterior' | 'posterior' | 'superior' | 'inferior'
+
+/** How a view is held: the patient direction it looks toward and the one at 12 o'clock. */
+export interface ViewReference {
+  looking: PatientDirection
+  top: PatientDirection
 }
 
 /**
@@ -40,7 +55,9 @@ export interface EndoscopicWallFeature {
  * "endoscopic view" and the animated survey narration.
  */
 export interface EndoscopicView {
-  /** One-line orientation cue (which way is anterior / where the spur sits). */
+  /** The way the scope is held for the clock positions below (never mirrored). */
+  reference: ViewReference
+  /** One-line orientation cue shown under the survey video for this stop. */
   orientation: string
   /** Child openings arranged on the clock face. */
   openings: EndoscopicOpening[]

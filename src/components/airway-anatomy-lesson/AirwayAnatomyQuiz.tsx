@@ -92,11 +92,11 @@ const QUESTIONS: QuizQuestion[] = [
   {
     id: 'orientation',
     prompt:
-      "With the scope in neutral orientation (anterior at 12 o'clock), the patient's right main bronchus opens toward which side of the video image?",
+      "Looking down the trachea from the head of the bed, with the cartilage rings at 12 o'clock and the membranous wall at 6 o'clock, on which side of the image does the right main bronchus open?",
     options: ['The left', 'The right', "The top (12 o'clock)", "The bottom (6 o'clock)"],
-    correctIndex: 0,
+    correctIndex: 1,
     explanation:
-      "Looking down the trachea from the head of the bed, the patient's right is toward the left of the image — so the right main bronchus opens to your left and the left main bronchus to your right.",
+      "Looking down the airway, the patient's right is a quarter turn clockwise from anterior: with anterior at 12 o'clock it is at 3 o'clock, so the right main bronchus opens on the right of the image and the left main bronchus on the left, as in this lesson's recording. An axial CT is seen from the feet, so it shows the patient's right on the left.",
     relatedNodeId: 'trachea',
   },
   {

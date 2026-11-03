@@ -153,9 +153,9 @@ export function AirwayAnatomyLesson() {
                   aria-hidden
                 />
                 <span>
-                  Keep <strong>anterior at 12 o&apos;clock</strong> and the flat{' '}
-                  <strong>membranous wall at 6 o&apos;clock</strong> — it is your reliable posterior
-                  landmark when you lose your bearings.
+                  Find the flat <strong>membranous wall</strong> first: it is posterior. Viewed from
+                  the head of the bed it sits at 6 o&apos;clock, with the cartilage rings{' '}
+                  <strong>anterior at 12 o&apos;clock</strong>.
                 </span>
               </li>
               <li className="flex gap-2">
@@ -164,9 +164,22 @@ export function AirwayAnatomyLesson() {
                   aria-hidden
                 />
                 <span>
-                  In this neutral orientation the{' '}
-                  <strong>patient&apos;s right is toward the left</strong> of your video image, so
-                  the right main bronchus opens to your left.
+                  Looking down the airway, the{' '}
+                  <strong>patient&apos;s right is a quarter turn clockwise from anterior</strong>.
+                  With anterior at 12 o&apos;clock the right main bronchus opens on the right of the
+                  image, as in this lesson&apos;s recording.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span
+                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70"
+                  aria-hidden
+                />
+                <span>
+                  The scope turns freely, so name each side from the membranous wall, not from the
+                  edge of the picture. Facing the patient turns the picture half a turn (membranous
+                  wall at 12, right main bronchus on the left). An axial CT is seen from the feet,
+                  so it shows the patient&apos;s right on the left.
                 </span>
               </li>
               <li className="flex gap-2">

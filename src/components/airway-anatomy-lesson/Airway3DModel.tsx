@@ -13,6 +13,7 @@ import {
   lobeColor,
   resolveHighlightIds,
 } from '@/lib/airway-anatomy-lesson/airway-graph'
+import { MODEL_CAMERA_POSITION, MODEL_ROTATION } from '@/lib/airway-anatomy-lesson/view-orientation'
 import { cn } from '@/lib/cn'
 
 import { CanvasErrorBoundary } from './CanvasErrorBoundary'
@@ -24,11 +25,9 @@ const DRACO_PATH = '/fluoroview/draco/'
 // selecting "Larynx" used to just show the lower airway.
 const LARYNX_URL = '/airway-lesson/models/larynx.glb'
 const LARYNX_NODE_ID = 'larynx'
-// The GLB is authored in LPS millimetres (superior along +Z). Rotate so the
-// trachea points up and the tree faces the camera anteriorly.
-const MODEL_ROTATION: [number, number, number] = [-Math.PI / 2, 0, 0]
-// The larynx GLB is a Blender/glTF export (already Y-up), so it needs no axis
-// swap — just a small tilt-back so the epiglottis faces the camera.
+// Both GLBs are stored Y-up (x to the patient's left, y superior, z anterior), so
+// they open seen from the front with the head up: MODEL_ROTATION is identity.
+// The larynx GLB uses the same frame.
 const LARYNX_ROTATION: [number, number, number] = [0, 0, 0]
 // Longest model dimension is normalized to this many world units so a static
 // camera frames it regardless of the source millimetre scale.
@@ -239,7 +238,7 @@ export function Airway3DModel({
       >
         <Canvas
           dpr={[1, 2]}
-          camera={{ position: [0, 0.4, 3.4], fov: 35, near: 0.01, far: 100 }}
+          camera={{ position: MODEL_CAMERA_POSITION, fov: 35, near: 0.01, far: 100 }}
           gl={{ antialias: true }}
         >
           <color attach="background" args={[0x070b12]} />
@@ -265,7 +264,7 @@ export function Airway3DModel({
 
       {/* Hover / selection label */}
       {labelNode && (
-        <div className="pointer-events-none absolute left-3 top-3 max-w-[70%] rounded-lg bg-black/70 px-3 py-1.5">
+        <div className="pointer-events-none absolute left-3 top-3 max-w-[calc(60%-2rem)] rounded-lg bg-black/70 px-3 py-1.5">
           <div className="flex items-center gap-2">
             <span
               className="inline-flex h-2.5 w-2.5 rounded-full"
@@ -293,9 +292,14 @@ export function Airway3DModel({
         </div>
       )}
 
-      <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
-        Drag to rotate · scroll to zoom
-      </span>
+      <div className="pointer-events-none absolute right-3 top-3 flex max-w-[40%] flex-col items-end gap-1 text-right">
+        <span className="rounded bg-black/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+          Drag to rotate · scroll to zoom
+        </span>
+        <span className="rounded bg-black/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+          Opens seen from the front: patient&apos;s right on the left
+        </span>
+      </div>
     </div>
   )
 }
