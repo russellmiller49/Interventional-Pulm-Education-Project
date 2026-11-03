@@ -57,9 +57,18 @@ export const recoveryAndReturn: DolphinSectionDefinition = {
       kind: 'after-commitment',
       role: 'mechanism',
       heading: 'Reversal, only when needed',
-      body: 'Flumazenil reverses midazolam. Ivančić gave 0.003–0.012 mg/kg IV or IM after CT in the live dolphin. The NMMP workshop names flumazenil for reversal without a dose.\n\nGive it when sedation is excessive: breaths further apart and a poor response. A drowsy animal that is breathing regularly needs time, not reversal. Reversal does not shorten the watch in shallow water.',
-      numberIds: ['flumazenil'],
-      sourceIds: ['ivancic-2014', 'nmmp-workshop-2024'],
+      body: 'Flumazenil reverses midazolam, and the sources differ on its dose. The NMMP drug sheet gives 0.010 mg/kg IM. Ivančić gave 0.003–0.012 mg/kg IV or IM after CT in the live dolphin. Haulena and Schmitt list 0.04 mg/kg.\n\nGive it when sedation is excessive: breaths further apart and a poor response. A drowsy animal that is breathing regularly needs time, not reversal. Reversal does not shorten the watch in shallow water.',
+      numberIds: ['flumazenil', 'flumazenil-nmmp', 'flumazenil-haulena'],
+      sourceIds: ['nmmp-annual-training', 'ivancic-2014', 'haulena-2018'],
+    },
+    {
+      id: 'the-day-after',
+      kind: 'after-commitment',
+      role: 'normal-reference',
+      heading: 'The day after',
+      body: 'The NMMP annual training calls a mild fever in the first 24 h after bronchoscopy normal. A fever beyond the first day, or one with a change in breathing, falls outside that: tell the attending veterinarian.\n\nThe same slide lists the risks of a standard bronchoscopy: tolerance of sedation, minimal bleeding, hypoxia and laryngeal spasm. It adds injury to the airway or larynx, complications of the invasive tools, and fire.',
+      numberIds: ['post-procedure-fever'],
+      sourceIds: ['nmmp-annual-training'],
     },
     {
       id: 'common-errors',
@@ -118,9 +127,10 @@ export const recoveryAndReturn: DolphinSectionDefinition = {
         },
         {
           id: 'reverse-if',
-          label: 'Give flumazenil, 0.003–0.012 mg/kg IV or IM, only if sedation is excessive.',
+          label:
+            'Give flumazenil, 0.010 mg/kg IM on the NMMP sheet, only if sedation is excessive.',
           detail:
-            'Ivančić’s dose, given after CT; the NMMP workshop names flumazenil without a dose. A regular breather needs time, not reversal.',
+            'Sources differ: Ivančić gave 0.003–0.012 mg/kg IV or IM after CT; Haulena and Schmitt list 0.04 mg/kg. A regular breather needs time, not reversal.',
         },
         {
           id: 'shallow',
@@ -137,8 +147,14 @@ export const recoveryAndReturn: DolphinSectionDefinition = {
       rationale:
         'The scope comes out first, then the breathing is judged. Reversal is a decision made on the platform, not a routine. Deep water comes last, after a watched recovery with regular breathing.',
       criticalStepIds: ['shallow', 'deep'],
-      numberIds: ['flumazenil', 'shallow-water-recovery'],
-      sourceIds: ['tsang-2002', 'ivancic-2014', 'nmmp-workshop-2024'],
+      numberIds: ['flumazenil', 'flumazenil-nmmp', 'flumazenil-haulena', 'shallow-water-recovery'],
+      sourceIds: [
+        'tsang-2002',
+        'ivancic-2014',
+        'nmmp-workshop-2024',
+        'nmmp-annual-training',
+        'haulena-2018',
+      ],
     },
   },
   prediction: {
@@ -242,38 +258,38 @@ export const recoveryAndReturn: DolphinSectionDefinition = {
         choices: [
           {
             id: 'a',
-            label: '0.003–0.012 mg/kg IV or IM, from Ivančić’s work in the live dolphin.',
+            label: '0.010 mg/kg IM from the NMMP drug sheet, inside Ivančić’s published range.',
             rationale:
-              'That is the published dolphin dose, given after CT. The NMMP workshop names flumazenil without a dose.',
+              'The NMMP sheet gives 0.010 mg/kg IM. Ivančić gave 0.003–0.012 mg/kg IV or IM after CT in the live dolphin.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label: '0.01 mg/kg IV or IM, as on the workshop’s sedation slide.',
+            label: '0.04 mg/kg, from Haulena and Schmitt’s anesthesia table.',
             rationale:
-              'That figure is the workshop’s midazolam top-up. The slide gives flumazenil no dose.',
-            plausibility: 'incorrect-mechanism',
+              'A published figure, but it sits above Ivančić’s range and the NMMP dose. Sources differ; know which gives which.',
+            plausibility: 'reasonable-but-incomplete',
           },
           {
             id: 'c',
             label: '0.06–0.08 mg/kg IM, matched to the first midazolam dose.',
             rationale:
-              'That is the midazolam dose. Flumazenil is a different drug with its own, much smaller range.',
+              'That is the midazolam dose. Flumazenil is a different drug with its own, much smaller dose.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
             label: 'Whatever the facility protocol gives; no dolphin dose is published.',
             rationale:
-              'Follow your protocol, but a dolphin dose is in print: Ivančić’s 0.003–0.012 mg/kg. Know it.',
-            plausibility: 'reasonable-but-incomplete',
+              'Follow your protocol, but three figures are in print, and the NMMP sheet gives one. Know them.',
+            plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'Ivančić gave flumazenil 0.003–0.012 mg/kg IV or IM after CT in the live dolphin; the NMMP workshop names it without a dose. The 0.01 mg/kg on the workshop slide is the midazolam top-up.',
+          'Sources differ. The NMMP drug sheet gives flumazenil 0.010 mg/kg IM. Ivančić gave 0.003–0.012 mg/kg IV or IM after CT in the live dolphin. Haulena and Schmitt list 0.04 mg/kg. The midazolam doses belong to a different drug.',
         objectiveIds: ['O5'],
-        numberIds: ['flumazenil', 'midazolam-topup', 'midazolam-im-first'],
-        sourceIds: ['ivancic-2014', 'nmmp-workshop-2024'],
+        numberIds: ['flumazenil', 'flumazenil-nmmp', 'flumazenil-haulena', 'midazolam-im-first'],
+        sourceIds: ['nmmp-annual-training', 'ivancic-2014', 'haulena-2018', 'nmmp-workshop-2024'],
       },
     },
     {
@@ -421,5 +437,11 @@ export const recoveryAndReturn: DolphinSectionDefinition = {
     /\bneeds time, not reversal\b/i,
     /\bbreathing (is|stays) regular\b/i,
   ],
-  sourceIds: ['tsang-2002', 'ivancic-2014', 'nmmp-workshop-2024'],
+  sourceIds: [
+    'tsang-2002',
+    'ivancic-2014',
+    'nmmp-workshop-2024',
+    'nmmp-annual-training',
+    'haulena-2018',
+  ],
 }

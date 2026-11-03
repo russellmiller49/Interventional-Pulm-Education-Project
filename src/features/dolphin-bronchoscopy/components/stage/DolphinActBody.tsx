@@ -2,6 +2,8 @@
 
 import type { Dispatch } from 'react'
 
+import { INSTRUMENT_NAMES } from '@/components/bronchoscopy-instruments/InstrumentLab'
+
 import type { DolphinStageLesson } from '../../content/stageLessons'
 import { dolphinLedgerById } from '../../content/ledgers'
 import type { DrillAction, DrillState } from '../../engine/branchDrill'
@@ -140,6 +142,20 @@ export function DolphinActBody({
         <section className={styles.question}>
           <p className={styles.stem}>{act.prompt}</p>
           <BranchDrillOverlay state={drill.state} dispatch={drill.dispatch} />
+        </section>
+      )
+    case 'instrument-drill':
+      return (
+        <section className={styles.question} data-act-instrument-drill data-landmark="Instruments">
+          <p className={styles.stem}>{act.prompt}</p>
+          <ul className={styles.goals}>
+            {act.instruments.map((instrument) => (
+              <li key={instrument} data-met={work.picks?.[instrument] !== undefined}>
+                {INSTRUMENT_NAMES[instrument]}
+                {work.picks?.[instrument] !== undefined ? ': sequence complete' : ': to do'}
+              </li>
+            ))}
+          </ul>
         </section>
       )
     case 'read':

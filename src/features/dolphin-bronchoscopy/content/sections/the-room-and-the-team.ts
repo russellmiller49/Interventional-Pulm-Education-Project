@@ -52,6 +52,15 @@ export const theRoomAndTheTeam: DolphinSectionDefinition = {
       sourceIds: ['nmmp-workshop-2024', 'tsang-2002'],
     },
     {
+      id: 'procedure-record',
+      kind: 'after-commitment',
+      role: 'normal-reference',
+      heading: 'The procedure record',
+      body: 'The NMMP procedure record holds the drugs and the monitoring. Each drug gets a line: its dosage in mg/kg, the dose in mg, the way it was given, the time given and the time of effect. Every 5 min the sheet takes the respiratory rate, the heart rate and the rectal temperature. It closes with the time out of the water, the time back in and the total.\n\nThe heart rate is written three ways: tachy, mean and brady. Haulena and Schmitt describe why it varies. The dolphin heart slows in the dive and speeds with each breath, a marked sinus arrhythmia seen under sedation as a split rate.',
+      numberIds: ['procedure-record'],
+      sourceIds: ['nmmp-annual-training', 'haulena-2018'],
+    },
+    {
       id: 'protection-at-the-head',
       kind: 'after-commitment',
       role: 'policy',
@@ -64,8 +73,8 @@ export const theRoomAndTheTeam: DolphinSectionDefinition = {
       kind: 'after-commitment',
       role: 'first-moves',
       heading: 'Ready before the scope goes in',
-      body: 'Set out the emergency drugs, furosemide and albuterol, with oxygen, per the NMMP protocol. Albuterol opens the airways; furosemide treats pulmonary edema. Place an IV catheter, or a needle with a line, so a drug can go in at once. Lay out the large syringes for lavage, the smaller ones for lidocaine, an ice saline bath and the specimen containers.',
-      sourceIds: ['nmmp-workshop-2024'],
+      body: 'Set out the emergency drugs, furosemide and albuterol, with oxygen, per the NMMP protocol. Albuterol opens the airways; furosemide treats pulmonary edema. Place an IV catheter, or a needle with a line, so a drug can go in at once. Lay out the large syringes for lavage, the smaller ones for lidocaine, an ice saline bath and the specimen containers.\n\nPlug the light source and the video equipment only into power with a ground-fault interrupter. Mains equipment near salt water, or in wet weather, carries a risk of electrocution.',
+      sourceIds: ['nmmp-workshop-2024', 'dover-2001'],
     },
     {
       id: 'common-errors',
@@ -78,8 +87,9 @@ export const theRoomAndTheTeam: DolphinSectionDefinition = {
         'Trainers at the head without masks or goggles.',
         'Letting the skin dry while the team sets up.',
         'Fetching the emergency drugs after the breathing changes.',
+        'Running the light source from an outlet with no ground-fault interrupter.',
       ],
-      sourceIds: ['nmmp-workshop-2024', 'tsang-2002'],
+      sourceIds: ['nmmp-workshop-2024', 'tsang-2002', 'dover-2001'],
     },
   ],
   workspace: {
@@ -446,5 +456,11 @@ export const theRoomAndTheTeam: DolphinSectionDefinition = {
     },
   ],
   precommitDenyPatterns: [/\bnothing else\b/i, /\btaken off holding\b/i, /\bits own watcher\b/i],
-  sourceIds: ['nmmp-workshop-2024', 'tsang-2002'],
+  sourceIds: [
+    'nmmp-workshop-2024',
+    'nmmp-annual-training',
+    'tsang-2002',
+    'haulena-2018',
+    'dover-2001',
+  ],
 }

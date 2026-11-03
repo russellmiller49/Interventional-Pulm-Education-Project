@@ -115,11 +115,13 @@ export const DOLPHIN_PHASES: readonly DolphinPhase[] = Object.freeze([
   {
     id: 'procedure',
     title: 'The procedure',
-    description: 'Passing the spout, the survey and its record, lavage, brush and biopsy.',
+    description:
+      'Passing the spout, the survey and its record, lavage, the tools through the channel, brush and biopsy.',
     sectionIds: [
       'entering-the-blowhole',
       'the-survey-and-the-record',
       'lavage',
+      'tools-through-the-channel',
       'brush-and-biopsy',
     ],
   },

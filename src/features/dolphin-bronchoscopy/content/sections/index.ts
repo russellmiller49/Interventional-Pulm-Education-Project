@@ -17,6 +17,7 @@ import { sedationAndNumbing } from './sedation-and-numbing'
 import { theNumberedMap } from './the-numbered-map'
 import { theRoomAndTheTeam } from './the-room-and-the-team'
 import { theSurveyAndTheRecord } from './the-survey-and-the-record'
+import { toolsThroughTheChannel } from './tools-through-the-channel'
 import { troubleDuringTheProcedure } from './trouble-during-the-procedure'
 import { whatThisModuleCanSay } from './what-this-module-can-say'
 import { whyScopeADolphin } from './why-scope-a-dolphin'
@@ -41,6 +42,7 @@ export const DOLPHIN_SECTIONS: readonly DolphinSectionDefinition[] = [
   enteringTheBlowhole,
   theSurveyAndTheRecord,
   lavage,
+  toolsThroughTheChannel,
   brushAndBiopsy,
   troubleDuringTheProcedure,
   recoveryAndReturn,

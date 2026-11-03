@@ -52,6 +52,14 @@ export const whyScopeADolphin: DolphinSectionDefinition = {
       sourceIds: ['nmmp-workshop-2024', 'venn-watson-2012'],
     },
     {
+      id: 'culture-and-sensitivity',
+      kind: 'after-commitment',
+      role: 'mechanism',
+      heading: 'Where culture and sensitivity come from',
+      body: 'Nollens and colleagues expect a blow or blowhole sample to help with disease of the upper respiratory passages. They do not expect it to give accurate information about the lower airway. Bronchoscopy and lavage are their procedures for finding the cause of lower-airway disease.\n\nFor culture and in vitro sensitivities, lavage is the sample to send, or an aspirate of a pleural effusion if there is one. Cultures of blow swabs and exhalates, and cultures that grow mixed bacteria, they call overwhelmingly unreliable.',
+      sourceIds: ['nollens-2018'],
+    },
+    {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
@@ -165,9 +173,9 @@ export const whyScopeADolphin: DolphinSectionDefinition = {
       },
     ],
     explanation:
-      'A blow sample is the last thing the breath touched, not the first. It can screen and it can trend. To know what is in the lower airway you need a sample from a named bronchus.',
+      'A blow sample is the last thing the breath touched, not the first. It can screen and it can trend. Nollens and colleagues call blow cultures, and mixed growth, overwhelmingly unreliable. To know what is in the lower airway you need a sample from a named bronchus.',
     objectiveIds: ['O6'],
-    sourceIds: ['nmmp-workshop-2024', 'venn-watson-2012'],
+    sourceIds: ['nmmp-workshop-2024', 'venn-watson-2012', 'nollens-2018'],
   },
   transfer: {
     id: 'why-transfer',
@@ -211,5 +219,5 @@ export const whyScopeADolphin: DolphinSectionDefinition = {
   },
   practice: [],
   precommitDenyPatterns: [/\bcannot (say|stand|speak)/i, /\bon the way out\b/i, /\bpassage out\b/i],
-  sourceIds: ['venn-watson-2012', 'nmmp-workshop-2024'],
+  sourceIds: ['venn-watson-2012', 'nmmp-workshop-2024', 'nollens-2018'],
 }

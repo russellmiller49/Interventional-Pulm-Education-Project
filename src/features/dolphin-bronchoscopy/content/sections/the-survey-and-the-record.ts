@@ -41,8 +41,8 @@ export const theSurveyAndTheRecord: DolphinSectionDefinition = {
       kind: 'signals',
       role: 'normal-reference',
       heading: 'The record',
-      body: 'The NMMP bronchoscopy form lists the trachea, the right tracheal bronchus, the right and left main bronchi, and RB1–RB9 and LB1–LB9. For each site you record whether it was reached, how it looked, its secretions and any sample. A separate lavage section records the fluid volume returned.',
-      sourceIds: ['nmmp-form-2019'],
+      body: 'The NMMP bronchoscopy form is a drawing of the airway, after Harper’s harbor porpoise, labeled from the trachea to RB1–RB9 and LB1–LB9. Around it run free-text lines under six headings: the trachea, the right tracheal bronchus, the right and left main bronchi, and the right and left lung. Three blanks take the lavage fluid volume yield. The form has no field for drugs; they go on the procedure record.',
+      sourceIds: ['nmmp-form-2019', 'nmmp-annual-training'],
     },
     {
       id: 'the-order',
@@ -65,8 +65,8 @@ export const theSurveyAndTheRecord: DolphinSectionDefinition = {
       id: 'lavage-on-the-form',
       kind: 'after-commitment',
       role: 'normal-reference',
-      heading: 'Lavage on the form',
-      body: 'The form’s lavage section records the fluid volume yield, the volume returned, in three entries. It has no field for the volume instilled. Write the instilled volume and the branch beside each return, so the yield can be read against what went in.',
+      heading: 'Free text, and the lavage blanks',
+      body: 'The site lines are free text, with no boxes to prompt you. Write on each line whether the scope reached the site, how it looked, its secretions and any sample.\n\nThe three yield blanks sit under the right tracheal bronchus, the right lung and the left lung. Each takes the volume returned; the form has no field for the volume instilled. On that region’s lines, write the instilled volume and the branch, so the yield can be read against what went in.',
       sourceIds: ['nmmp-form-2019'],
     },
     {
@@ -347,39 +347,40 @@ export const theSurveyAndTheRecord: DolphinSectionDefinition = {
       item: {
         id: 'survey-p-lavage-record',
         itemType: 'management-decision',
-        stem: 'What goes in the lavage section of the NMMP form?',
+        stem: 'What goes on the NMMP form for this lavage?',
         choices: [
           {
             id: 'a',
             label:
-              'The volume returned, with the volume instilled and the branch written beside it.',
+              'The return in the right-lung yield blank, with the instilled volume and the branch on those lines.',
             rationale:
-              'The form’s field is the return. The instilled volume and the branch give it meaning.',
+              'The right lung’s blank holds the return. The instilled volume and the branch give it meaning.',
             plausibility: 'best',
           },
           {
             id: 'b',
             label: 'The volume instilled; the form asks what went in.',
             rationale:
-              'The form’s field is the fluid volume yield: what came back. It has no field for what went in.',
+              'The blanks are for the fluid volume yield: what came back. The form has no field for what went in.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label: 'Only the volume returned, as the form asks.',
+            label: 'Only the volume returned, in the right-lung blank, as the form asks.',
             rationale:
-              'That fills the field, but a return means little without what was instilled. Write both.',
+              'That fills the blank, but a return means little without what was instilled. Write both.',
             plausibility: 'reasonable-but-incomplete',
           },
           {
             id: 'd',
             label: 'Nothing; the lavage belongs on the laboratory request, not the record.',
-            rationale: 'The form has a lavage section with three entries for the yield.',
+            rationale:
+              'The form has three yield blanks: under the right tracheal bronchus and under each lung.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'The NMMP form records the lavage fluid volume yield, the volume returned. Write the instilled volume and the branch beside it, so whoever reads the record can judge the return.',
+          'The NMMP form has three lavage yield blanks, under the right tracheal bronchus, the right lung and the left lung. A branch of the right main bronchus goes under the right lung. Write the instilled volume and the branch beside the return, so whoever reads the record can judge it.',
         objectiveIds: ['O3', 'O4'],
         sourceIds: ['nmmp-form-2019'],
       },
@@ -389,6 +390,7 @@ export const theSurveyAndTheRecord: DolphinSectionDefinition = {
   sourceIds: [
     'nmmp-form-2019',
     'nmmp-workshop-2024',
+    'nmmp-annual-training',
     'nmmp-bronchoscopy-guide',
     'nmmp-mapping-2026',
     'tsang-2002',

@@ -33,9 +33,22 @@ Drive is in the repository. Source ids are those of `src/features/dolphin-bronch
 | `harper-2001`             | Harper CMG et al. J Zoo Wildl Med 2001;32(2):190–195                                                                                                                                                             |
 | `dolphin-001-ct`          | The module's own CT case (`public/airway-anatomy/dolphin-001/`)                                                                                                                                                  |
 | `nmmp-spout-photographs`  | Eleven NMMP bronchoscopy photographs of entering the goosebeak, supplied by the owner in the authoring session (2026-11-03); two are in the repository as stills (rights ledger below)                           |
+| `nmmp-annual-training`    | "Dolphin Bronchoscopy Workshop - NMMP version annual training.pptx" (Meegan et al., revised February 2025), owner's local References folder; slide numbers are presentation order                                |
+| `van-bonn-2018`           | Van Bonn W, Dover S. Applied flexible and rigid endoscopy. CRC Handbook of Marine Mammal Medicine, 3rd ed., 2018, ch. 25, pp. 553–566                                                                            |
+| `haulena-2018`            | Haulena M, Schmitt T. Anesthesia. CRC Handbook of Marine Mammal Medicine, 3rd ed., 2018, ch. 26, pp. 567–606                                                                                                     |
+| `nollens-2018`            | Nollens HH, Venn-Watson S, Gili C, McBain JF. Cetacean medicine. CRC Handbook of Marine Mammal Medicine, 3rd ed., 2018, ch. 40, pp. 887–907                                                                      |
+| `reidarson-2018`          | Reidarson TH, García-Párraga D, Wiederhold NP. Marine mammal mycoses. CRC Handbook of Marine Mammal Medicine, 3rd ed., 2018, ch. 19 (Table 19.1, p. 391; p. 415)                                                 |
+| `dover-2001`              | Dover SR, Van Bonn W. Flexible and rigid endoscopy in marine mammals. CRC Handbook of Marine Mammal Medicine, 2nd ed., 2001, ch. 27                                                                              |
+| `haulena-heath-2001`      | Haulena M, Heath RB. Marine mammal anesthesia. CRC Handbook of Marine Mammal Medicine, 2nd ed., 2001, ch. 29 (Table 1, pp. 658–659)                                                                              |
+| `bossart-2001`            | Bossart GD, Reidarson TH, Dierauf LA, Duffield DA. Clinical pathology. CRC Handbook of Marine Mammal Medicine, 2nd ed., 2001, ch. 19 (hemostatic parameters, p. 421)                                             |
+| `smith-2012`              | Smith CR et al. Dis Aquat Org 2012;101:243–255 (pulmonary ultrasound in the NMMP dolphins)                                                                                                                       |
+| `judge-2014`              | Judge EP et al. Am J Respir Cell Mol Biol 2014;51(3):334–343 (brushes and forceps, p. 340)                                                                                                                       |
+| `owner-bench-clips`       | The owner's bench clips of the forceps, brush and needle, at the tip and in the hand (2026-11-03)                                                                                                                |
 
 Not used: "Dolphin article update 4_28_24.docx" (it describes lobes; the dolphin lung has none).
-The 169 MB "NMMP version annual training" deck could not be read through Drive export.
+The 169 MB "NMMP version annual training" deck could not be read through Drive export; it is read in
+place from the owner's local copy in their References folder (outside Git), as are the CRC Handbooks
+(2nd and 3rd editions), Smith 2012 and the 2019 form.
 
 Every number the module teaches is in `content/teachingNumbers.ts` with its class, source, year,
 locator and check date. The file header lists the corrections the 2026-11-03 source check made to
@@ -43,11 +56,12 @@ the build plan. `npm run numbers:signoff -- dolphin-bronchoscopy` prints the uns
 
 ## Media and rights ledger
 
-| Media                                                                | Rights                                                                               | Status                                                                                                                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/dolphin-bronchoscopy/frames/*.png`                           | Renders of the module's own simulator (`simulator-render` in `content/frameBank.ts`) | Shown                                                                                                                                             |
-| `public/dolphin-bronchoscopy/frames/spout-*-photo.jpg`               | Holder: U.S. Navy Marine Mammal Program; photographs 1 and 7 of 11 (`nmmp-still`)    | Shown. Supplied by the owner, who granted their use 2026-11-03; cropped square, no overlays or metadata                                           |
-| Other NMMP video stills and photographs (workshop "Pics and videos") | Holder: U.S. Navy Marine Mammal Program                                              | Not used. A still enters `frameBank.ts` as `nmmp-still` with `permission: 'pending'` and is never shown until `granted` is recorded with its date |
+| Media                                                                | Rights                                                                                            | Status                                                                                                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/dolphin-bronchoscopy/frames/*.png`                           | Renders of the module's own simulator (`simulator-render` in `content/frameBank.ts`)              | Shown                                                                                                                                             |
+| `public/dolphin-bronchoscopy/frames/spout-*-photo.jpg`               | Holder: U.S. Navy Marine Mammal Program; photographs 1 and 7 of 11 (`nmmp-still`)                 | Shown. Supplied by the owner, who granted their use 2026-11-03; cropped square, no overlays or metadata                                           |
+| `public/bronchoscopy-instruments/clips/*`                            | The owner's bench clips of forceps, brush and needle, supplied for teaching (`owner-bench-clips`) | Shown in the instrument lab (dolphin section 16, Bronchoscopy Foundations). Muted, re-encoded                                                     |
+| Other NMMP video stills and photographs (workshop "Pics and videos") | Holder: U.S. Navy Marine Mammal Program                                                           | Not used. A still enters `frameBank.ts` as `nmmp-still` with `permission: 'pending'` and is never shown until `granted` is recorded with its date |
 
 ## Regenerating the frames
 
@@ -77,17 +91,27 @@ must be applied from the primary checkout before the first beta-hub feedback pos
 
 1. Rights for NMMP video stills and photographs. Frames stay simulator renders until a grant is recorded.
 2. The Tursiops record. The module ships the 2019 NMMP form as the record and an extended form as a
-   proposal; the real design comes from the NMMP.
+   proposal; the real design comes from the NMMP. The paper form has free-text lines per site and
+   no drug fields; the report act splits each line into reached, appearance, secretions and sample,
+   and its status line says so. Its three lavage inputs follow the form's three yield blanks in order
+   (right tracheal bronchus, right lung, left lung), named in the status line; labeling each input by
+   region needs a small change in `ReportControl`.
 3. RB14 is in the ten-animal series but not traced on this CT (13 branches on the right). A second
    case from the series would show it.
 4. The variation teaching rests on ten animals in work not yet published, taught as counts. Confirm
    it may be summarized before publication, and how to cite it. The data sheet notes its CTs were
    flipped horizontally before reading: confirm the sides.
-5. Numbers no source gives: oral diazepam and tramadol premedication, furosemide and albuterol doses,
-   the lidocaine jelly volume, the expected lavage return. The module says "per the NMMP protocol".
+5. Numbers no source gives. Partly answered 2026-11-03. Oral diazepam now has sourced values, taught
+   side by side: the NMMP drug sheet (annual training, slide 33) lists 0.1 mg/kg PO or IM; Haulena and
+   Heath 2001 (p. 659, Table 1) list 0.2 mg/kg PO an hour before bronchoscopy (Reidarson 1998); Tsang
+   gave 0.16–0.17 mg/kg PO. The expected lavage return: Van Bonn and Dover 2018 (p. 556) know of no
+   controlled studies, standardized methods or expected values for lavage in marine mammals, so no
+   source gives one, and the lavage section says so. Still unsourced: tramadol, albuterol, the
+   lidocaine jelly volume; furosemide has a dose only on the held emergency table (question 17). The
+   module says "per the NMMP protocol" for these.
 6. The scope models behind the 600 mm and 1030 mm working lengths, so the device row can cite an IFU.
-7. The workshop checklist line "Max lidocaine: Dose 2 mL/kg" reads as the lavage volume; the module
-   teaches 4 mg/kg for lidocaine and 2 mL/kg for lavage.
+7. Resolved 2026-11-03. The annual-training checklist (slide 44) prints "Max lidocaine: Dose 4mg/kg"
+   and "Max saline: Dose 2 mL/kg" on separate lines; `bal-volume-nmmp` and `lidocaine-max` cite it.
 8. Localization: English content now, chrome in Spanish and Simplified Chinese.
 9. Cooling the lavage sample: in the build plan, and the workshop's supply list has an ice saline
    bath and cryovials, but no slide says to cool the sample. The lavage section teaches it; confirm.
@@ -103,7 +127,10 @@ must be applied from the primary checkout before the first beta-hub feedback pos
     end-inspiratory breath-hold behind a shut glottis), turning the whole scope to aim sideways.
 13. Lavage saline temperature: Tsang used warm saline; the deck's (human) technique slide says room
     temperature in 20–60 mL aliquots. The module teaches Tsang's warm saline; pick one or teach both.
-14. Flumazenil: the only dose found is Ivančić's, given after CT; the practice case says so.
+14. Flumazenil: three values, taught as differing. The NMMP drug sheet (annual training, slide 33)
+    gives 0.010 mg/kg IM; Ivančić gave 0.003–0.012 mg/kg IV or IM after CT; Haulena and Schmitt 2018
+    (Table 26.1, p. 572) list 0.04 mg/kg with no route. The recovery practice case keys the NMMP
+    value, inside Ivančić's range; confirm.
 15. Asset weight: about 5 MB per scope section, 36 MB where the CT is loaded (sections that read it).
 16. The spout tip as displayed is modelled on NMMP bronchoscopy photographs of entering the
     goosebeak (2026-11-03): a pale rounded tip with a triangular glottis, apex dorsal (confirmed by
@@ -114,3 +141,20 @@ must be applied from the primary checkout before the first beta-hub feedback pos
     part of the opening as the laryngeal gland (2026-11-03), which matches Smith 1999 (a constant
     lymphoepithelial gland in the rostroventral larynx over the cricoid) and Cozzi 2017; section 13
     and the stills' revealed descriptions now name it. Resolved.
+17. The NMMP emergency drug table (annual training slide 33, "Dolphin Procedure Drug Doses", worked
+    for a 181 kg dolphin) is not taught until the owner checks it; only its diazepam and flumazenil
+    lines are. Its epinephrine line, 0.1 mg/kg IV, IT or IC (18.1 mg at 181 kg), looks high.
+18. Annual training slide 21 labels the dark rounded structure in the spout photograph "Epiglottis";
+    the owner identified it as the laryngeal gland (question 16), and the module teaches the gland.
+    Confirm which, and whether the slide changes.
+19. Does IV lidocaine on the emergency table (2 mg/kg, IV slowly) count toward the 4 mg/kg maximum?
+    The module counts the topical routes only (atomizer, catheter injection, jelly, bronchial syringes).
+20. Is the sheathed cytology brush on the NMMP tray (annual training slide 47) acceptable for culture,
+    where Tsang used double-sheath sterile brushes?
+21. The gastrointestinal scope's working length is 110 cm on the annual slide (slide 11) and 1030 mm
+    on the 2024 Module 1 slide. Name the scope (question 6), so one row can cite its IFU.
+22. The annual deck's anatomy notes (slide 23) say the marginal lymph nodes drain "each lung lobe";
+    the module teaches that the dolphin lung has no lobes (the same slide's body says "No lobation";
+    Cozzi 2017, p. 100).
+23. The checklist's "ice saline bath" (slide 47; laid out in The room and the team): for bleeding, or
+    for cooling the sample? See question 9.

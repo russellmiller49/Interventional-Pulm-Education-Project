@@ -54,8 +54,16 @@ export const beyondTheSurvey: DolphinSectionDefinition = {
       kind: 'after-commitment',
       role: 'mechanism',
       heading: 'Why each needs its own training',
-      body: 'Each one changes the airway, or adds a second view to run beside the scope. Electrocautery and dilation alter the wall. Contrast, fluoroscopy and 3D imaging guide a tool past what the scope can see. General anesthesia brings an endotracheal tube and an anesthesia team.\n\nEach needs training, equipment and a team of its own. Recognize the finding, record it, and refer it.',
-      sourceIds: ['nmmp-workshop-2024'],
+      body: 'Each one changes the airway, or adds a second view to run beside the scope. Electrocautery and dilation alter the wall. Contrast, fluoroscopy and 3D imaging guide a tool past what the scope can see. General anesthesia brings an endotracheal tube and an anesthesia team. The NMMP annual training lists complications of invasive tools, such as forceps, needles and balloons, and fire among the risks of bronchoscopy.\n\nEach needs training, equipment and a team of its own. Recognize the finding, record it, and refer it.',
+      sourceIds: ['nmmp-workshop-2024', 'nmmp-annual-training'],
+    },
+    {
+      id: 'dolphin-cases',
+      kind: 'after-commitment',
+      role: 'worked-example',
+      heading: 'Dolphin cases in print',
+      body: 'Van Bonn and Dover review three such cases. Needle aspiration through the channel, into nodules in the trachea, showed Aspergillus. A human pulmonology team dilated a stenosed right tracheal bronchus and right main bronchus with high-pressure balloons through a gastroscope. A Rhizopus mass from the distal trachea into the left bronchus was removed in part over three procedures, with a cryoprobe and argon plasma.\n\nReidarson’s case table adds two dolphins with tracheal Aspergillus fumigatus. One was diagnosed by transbronchial needle aspirate and PCR, the other by bronchoscopic biopsy with histopathology and culture.',
+      sourceIds: ['van-bonn-2018', 'reidarson-2018'],
     },
     {
       id: 'what-the-survey-covers',
@@ -259,5 +267,12 @@ export const beyondTheSurvey: DolphinSectionDefinition = {
   },
   practice: [],
   precommitDenyPatterns: [/\brefer\b/i, /\bteam trained in\b/i, /\bas planned\b/i],
-  sourceIds: ['nmmp-workshop-2024', 'tsang-2002', 'dolphin-001-ct'],
+  sourceIds: [
+    'nmmp-workshop-2024',
+    'nmmp-annual-training',
+    'tsang-2002',
+    'dolphin-001-ct',
+    'van-bonn-2018',
+    'reidarson-2018',
+  ],
 }

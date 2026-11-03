@@ -3,9 +3,15 @@ import type { DolphinSourceId } from '../data/sources'
 /**
  * The bronchoscopy record.
  *
- * `nmmp-2019` is the form in use (Smith 2019): the trachea, the tracheal bronchus, both main
- * bronchi, branches 1 to 9 on each side, and the lavage fluid volume returned. `tursiops-draft` is
- * a proposal that adds the tracheal bronchus divisions and branches 10 to 14 from the ten-animal
+ * `nmmp-2019` is the form in use (Smith 2019): an airway drawing after Harper 2001 labeled from the
+ * trachea to RB1–RB9 and LB1–LB9, with free-text lines under six headings (trachea, right tracheal
+ * bronchus, right and left main bronchus, right and left lung). The paper form has no per-site
+ * reached, appearance, secretions or sample fields and no drug or lidocaine fields; this template
+ * splits each site's free-text line into those four fields, and its `status` says so. The form's
+ * three "BAL fluid volume yield (ml)" blanks sit under the right tracheal bronchus, the right lung
+ * and the left lung; the report act numbers its three return entries in that order, and `status`
+ * names the order (the inputs are labeled by position in `ReportControl`). `tursiops-draft` is a
+ * proposal that adds the tracheal bronchus divisions and branches 10 to 14 from the ten-animal
  * mapping, with instilled as well as returned volume; the NMMP form is the one that counts.
  *
  * The report act pre-fills "reached" from the survey the section's scope lab recorded and refuses
@@ -48,7 +54,8 @@ export const DOLPHIN_REPORT_TEMPLATES: Readonly<Record<ReportTemplateId, ReportT
   'nmmp-2019': {
     id: 'nmmp-2019',
     title: 'NMMP Dolphin Bronchoscopy Form',
-    status: 'The form in use (Smith 2019).',
+    status:
+      'The form in use (Smith 2019). On paper each site has free-text lines; here each line is split into reached, appearance, secretions and sample. Its three lavage yield blanks, in order: under the right tracheal bronchus, the right lung (RB1–RB9) and the left lung (LB1–LB9).',
     sites: [...CENTRAL, ...numbered('R', 1, 9), ...numbered('L', 1, 9)],
     balReturnEntries: 3,
     recordsInstilled: false,
