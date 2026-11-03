@@ -30,6 +30,7 @@ Drive is in the repository. Source ids are those of `src/features/dolphin-bronch
 | `venn-watson-2012`        | Venn-Watson S, Daniels R, Smith C. Dis Aquat Org 2012;99:237–242                                                                                                                                                 |
 | `harper-2001`             | Harper CMG et al. J Zoo Wildl Med 2001;32(2):190–195                                                                                                                                                             |
 | `dolphin-001-ct`          | The module's own CT case (`public/airway-anatomy/dolphin-001/`)                                                                                                                                                  |
+| `owner-spout-photographs` | Eleven bronchoscopy photographs of entering the goosebeak, supplied by the owner in the authoring session (2026-11-03); two are in the repository as stills (rights ledger below)                                |
 
 Not used: "Dolphin article update 4_28_24.docx" (it describes lobes; the dolphin lung has none).
 The 169 MB "NMMP version annual training" deck could not be read through Drive export.
@@ -43,6 +44,7 @@ the build plan. `npm run numbers:signoff -- dolphin-bronchoscopy` prints the uns
 | Media                                                          | Rights                                                                               | Status                                                                                                                                            |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `public/dolphin-bronchoscopy/frames/*.png`                     | Renders of the module's own simulator (`simulator-render` in `content/frameBank.ts`) | Shown                                                                                                                                             |
+| `public/dolphin-bronchoscopy/frames/spout-*-photo.jpg`         | The owner's bronchoscopy photographs 1 and 7 of 11 (`owner-photo` in `frameBank.ts`) | Shown. Permission granted by the owner 2026-11-03; cropped square, no overlays or metadata                                                        |
 | NMMP video stills and photographs (workshop "Pics and videos") | Holder: U.S. Navy Marine Mammal Program                                              | Not used. A still enters `frameBank.ts` as `nmmp-still` with `permission: 'pending'` and is never shown until `granted` is recorded with its date |
 
 ## Regenerating the frames
@@ -102,8 +104,11 @@ must be applied from the primary checkout before the first beta-hub feedback pos
 14. Flumazenil: the only dose found is Ivančić's, given after CT; the practice case says so.
 15. Asset weight: about 5 MB per scope section, 36 MB where the CT is loaded (sections that read it).
 16. The spout tip as displayed is modelled on the owner's bronchoscopy photographs of entering the
-    goosebeak (2026-11-03): a pale rounded tip with a triangular glottis, apex dorsal. The CT slit is
-    about 8 × 3 mm and its tip bevelled, so the build shapes the tip and the first 20 mm of the
-    lumen (`shape_spout_field`). Confirm the apex is dorsal, not ventral; name the dark, glossy
-    rounded structure at the lower left of the aperture in those photographs; and say whether the
-    photographs may be added as stills (they would enter the rights ledger above).
+    goosebeak (2026-11-03): a pale rounded tip with a triangular glottis, apex dorsal (confirmed by
+    the owner 2026-11-03). The CT slit is about 8 × 3 mm and its tip bevelled, so the build shapes
+    the tip and the first 20 mm of the lumen (`shape_spout_field`). The owner granted the
+    photographs as stills the same day; photographs 1 and 7 are in sections 13 and 03 and the
+    "Where is the tip?" drill. Still open: the dark, glossy rounded structure at the lower left of
+    the aperture (the stills' alt text calls it only "a dark, glossy rounded surface"); and if the
+    photographs belong to the Navy Marine Mammal Program rather than the owner, the holder in
+    `frameBank.ts` should say so.

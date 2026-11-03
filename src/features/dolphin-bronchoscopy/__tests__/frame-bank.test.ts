@@ -16,10 +16,21 @@ const labels = JSON.parse(
   ),
 ) as CenterlineLabels
 
-/** The PNG header's declared width and height. */
-function pngSize(file: string): { width: number; height: number } {
+/** The declared width and height: the PNG header, or a JPEG's start-of-frame segment. */
+function imageSize(file: string): { width: number; height: number } {
   const buffer = fs.readFileSync(file)
-  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) }
+  if (buffer.readUInt32BE(0) === 0x89504e47) {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) }
+  }
+  let offset = 2
+  while (offset < buffer.length) {
+    const marker = buffer.readUInt16BE(offset)
+    if (marker >= 0xffc0 && marker <= 0xffc2) {
+      return { width: buffer.readUInt16BE(offset + 7), height: buffer.readUInt16BE(offset + 5) }
+    }
+    offset += 2 + buffer.readUInt16BE(offset + 2)
+  }
+  throw new Error(`No image size in ${file}`)
 }
 
 describe('the frame bank', () => {
@@ -27,7 +38,7 @@ describe('the frame bank', () => {
     for (const frame of learnerVisibleFrames()) {
       const file = path.join(process.cwd(), 'public', frame.src)
       expect(fs.existsSync(file)).toBe(true)
-      expect(pngSize(file)).toEqual({ width: frame.width, height: frame.height })
+      expect(imageSize(file)).toEqual({ width: frame.width, height: frame.height })
     }
   })
 

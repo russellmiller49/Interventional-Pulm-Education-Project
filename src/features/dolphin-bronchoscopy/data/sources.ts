@@ -18,6 +18,8 @@ export type DolphinSourceKind =
   | 'form'
   /** This module's own CT case, measured by its build script. */
   | 'case-data'
+  /** Photographs from a real bronchoscopy, used with permission. */
+  | 'photographs'
 
 export interface DolphinSource {
   readonly id: string
@@ -108,6 +110,14 @@ export const DOLPHIN_SOURCES = [
       'Bottlenose dolphin, male, 19 years, 213 kg; thoracic and head CT, 1.25 mm series. Airway segmented and measured by the module’s case build (scripts/airway-anatomy/build-dolphin-case.py, geometry-review.json).',
     year: 2026,
     kind: 'case-data',
+  },
+  {
+    id: 'owner-spout-photographs',
+    shortName: 'Bronchoscopy photographs, entering the spout',
+    citation:
+      'Bronchoscopy photographs of a bottlenose dolphin, entering the laryngeal spout from the nasopharynx. Russell Miller, 2026; used with permission.',
+    year: 2026,
+    kind: 'photographs',
   },
 ] as const satisfies readonly DolphinSource[]
 

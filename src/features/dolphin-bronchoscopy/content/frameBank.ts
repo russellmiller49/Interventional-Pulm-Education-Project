@@ -3,9 +3,9 @@ import type { ScopeStartId } from './types'
 /**
  * Stills of the bronchoscope view, for identification items and the frame drills.
  *
- * Every learner-visible frame today is a render of the module's own simulator at an authored pose
- * (`scripts/dolphin-bronchoscopy/render-frames.mts`). Program video stills have a rights slot:
- * an entry stays `pending` — and is never shown — until a grant is recorded here.
+ * Most frames are renders of the module's own simulator at an authored pose
+ * (`scripts/dolphin-bronchoscopy/render-frames.mts`). Photographs from real bronchoscopy have a
+ * rights slot: an entry stays `pending` — and is never shown — until a grant is recorded here.
  */
 export type FrameRights =
   | {
@@ -24,7 +24,16 @@ export type FrameRights =
       readonly script: 'scripts/dolphin-bronchoscopy/render-frames.mts'
     }
   | {
+      /** A still from program video (U.S. Navy Marine Mammal Program). */
       readonly kind: 'nmmp-still'
+      readonly holder: string
+      readonly permission: 'pending' | 'granted'
+      readonly grantedOn?: string
+      readonly reference: string
+    }
+  | {
+      /** A photograph the module owner supplied. */
+      readonly kind: 'owner-photo'
       readonly holder: string
       readonly permission: 'pending' | 'granted'
       readonly grantedOn?: string
@@ -56,6 +65,14 @@ const RENDER = {
 
 const SIZE = { width: 960, height: 720 } as const
 
+/** The owner's photographs of entering the goosebeak, cropped square from the video frame. */
+const OWNER_PHOTO = {
+  kind: 'owner-photo',
+  holder: 'Russell Miller',
+  permission: 'granted',
+  grantedOn: '2026-11-03',
+} as const
+
 /** Every frame, rendered or pending. Learner surfaces read `learnerVisibleFrames()`. */
 export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
   {
@@ -79,6 +96,38 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     postCommitAlt:
       'The foot of the nasopharynx, facing the tip of the laryngeal spout: the triangular opening, apex dorsal, is the glottis.',
     rights: { ...RENDER, pose: { edgeId: 1, distanceMm: 41.5, pitchDeg: -20 } },
+  },
+  {
+    id: 'spout-tip-photo',
+    src: '/dolphin-bronchoscopy/frames/spout-tip-photo.jpg',
+    width: 960,
+    height: 960,
+    location: 'NPX',
+    orientation: 'sternal',
+    preCommitAlt:
+      'Bronchoscopy photograph: pale tissue around a triangular opening, apex up; inside, two rounded folds either side of a midline cleft, and a dark, glossy rounded surface at the lower left.',
+    postCommitAlt:
+      'Bronchoscopy photograph from the foot of the nasopharynx: the glottis at the tip of the laryngeal spout, a triangular opening with its apex dorsal.',
+    rights: {
+      ...OWNER_PHOTO,
+      reference: 'Bronchoscopy photographs of entering the spout, 1 of 11',
+    },
+  },
+  {
+    id: 'spout-close-photo',
+    src: '/dolphin-bronchoscopy/frames/spout-close-photo.jpg',
+    width: 960,
+    height: 960,
+    location: 'NPX',
+    orientation: 'sternal',
+    preCommitAlt:
+      'Bronchoscopy photograph, close: a tall triangular opening, apex up, between pale walls, with a fold and a dark, glossy rounded surface in its lower half.',
+    postCommitAlt:
+      'Bronchoscopy photograph close to the tip of the laryngeal spout: the triangular glottis, apex dorsal, just before the scope enters.',
+    rights: {
+      ...OWNER_PHOTO,
+      reference: 'Bronchoscopy photographs of entering the spout, 7 of 11',
+    },
   },
   {
     id: 'spout-from-above',
@@ -180,7 +229,7 @@ export function isLearnerVisible(frame: DolphinFrame): boolean {
   return frame.rights.kind === 'simulator-render' || frame.rights.permission === 'granted'
 }
 
-/** Frames a learner may see: every render, and any program still whose grant is recorded. */
+/** Frames a learner may see: every render, and any photograph whose grant is recorded. */
 export function learnerVisibleFrames(): readonly DolphinFrame[] {
   return DOLPHIN_FRAMES.filter(isLearnerVisible)
 }

@@ -50,7 +50,13 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
       role: 'normal-reference',
       heading: 'The glottis at the spout tip',
       body: 'The glottis opens at the tip of the laryngeal spout, in the midline of the nasopharynx: a triangular opening through the pale, rounded tip, its apex dorsal. On each side of the spout is a nasopharyngeal fornix: a blind pouch that can look like an open lumen from above.\n\nThe spout and the glottis move with each breath. The wall of a fornix does not open that way.',
-      sourceIds: ['tsang-2002', 'nmmp-bronchoscopy-guide', 'dolphin-001-ct'],
+      media: { frameId: 'spout-close-photo' },
+      sourceIds: [
+        'tsang-2002',
+        'nmmp-bronchoscopy-guide',
+        'dolphin-001-ct',
+        'owner-spout-photographs',
+      ],
     },
     {
       id: 'common-errors',
@@ -177,5 +183,11 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
     /\bmidline (one|opening) (leads|is)\b/i,
     /\bblind pouch\b/i,
   ],
-  sourceIds: ['tsang-2002', 'nmmp-bronchoscopy-guide', 'nmmp-workshop-2024', 'dolphin-001-ct'],
+  sourceIds: [
+    'tsang-2002',
+    'nmmp-bronchoscopy-guide',
+    'nmmp-workshop-2024',
+    'dolphin-001-ct',
+    'owner-spout-photographs',
+  ],
 }

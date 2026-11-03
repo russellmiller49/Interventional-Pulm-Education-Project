@@ -46,8 +46,9 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       role: 'signals',
       heading: 'What you see at the spout',
       body: 'The nasopharynx is 4–5 cm across and often holds copious, tenacious mucus. The laryngeal spout rises pale pink in its center and ends in a rounded tip. The glottis there has no epiglottis over it. Tsang describes it as rosette-shaped; face on, it is a triangular opening with its apex dorsal, at the top of the screen. Shut, it shows no lumen; open, it shows a dark lumen for an instant.',
+      media: { frameId: 'spout-tip-photo' },
       numberIds: ['nasopharynx-width'],
-      sourceIds: ['tsang-2002'],
+      sourceIds: ['tsang-2002', 'owner-spout-photographs'],
     },
     {
       id: 'the-cue',
@@ -447,5 +448,6 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
     'nmmp-workshop-2024',
     'venn-watson-2012',
     'dolphin-001-ct',
+    'owner-spout-photographs',
   ],
 }
