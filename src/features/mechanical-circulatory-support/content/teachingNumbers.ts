@@ -11,9 +11,10 @@ import {
  * flow at each P-level is built from the same tables (`IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN` in
  * `engine/model.ts`). The four echo-position rows were read from chapters 5 and 7 of the same two
  * manuals on 2026-11-03; neither manual names an apical view, so none is taught. The five rows for
- * telling an adequate circulation from arrest on an LVAD were read on 2026-11-03 from the 2024
- * British societies guideline, full text and recommendation tables in PubMed Central; the 2017 AHA
- * scientific statement could not be opened, so none of its figures is registered. The durable-pump
+ * telling an adequate circulation from arrest on an LVAD were read on 2026-11-03 from four sources:
+ * the 2024 British societies guideline (full text and recommendation tables in PubMed Central), and
+ * the supplied ERC 2025, AHA 2025 and AHA 2017 PDFs. Where they differ the row prints both values,
+ * each with its own citation and grade. The durable-pump
  * rows come from three chapters of one textbook, which the
  * module's source registry holds only for a different chapter; they are listed in
  * `MCS_NUMBER_ONLY_SOURCES`. No HeartMate 3 instructions for use or Abbott parameter card was
@@ -82,6 +83,38 @@ const adequacyParagraph = lvadEmergencyGuideline(
   '“Determination of adequacy of circulation”; its recommendation in the closing table: adequacy is judged on several physiological parameters, not pulse alone',
   'Class I, Level C',
 )
+
+/** ERC 2025 prints no strength for its LVAD statements; the supplied PDF's printed pages. */
+const ercLvad = (locator: string): TeachingNumberCitation => ({
+  sourceId: 'erc-2025-special-circumstances',
+  year: 2025,
+  grade: null,
+  locator,
+})
+const ercFigure18 = ercLvad(
+  'Fig. 18, Left ventricular assist device ALS algorithm, p. 40: the signs of circulatory failure',
+)
+
+/** AHA 2025 Part 10, “Left Ventricular Assist Devices”: its synopsis and Figure 4. */
+const aha2025Lvad = (locator: string, grade: string): TeachingNumberCitation => ({
+  sourceId: 'aha-2025-special-circumstances',
+  year: 2025,
+  grade,
+  locator,
+})
+const aha2025Adequacy = aha2025Lvad(
+  'Synopsis, p. S618, perfusion adequate if any one sign is present; Figure 4, p. S619, the algorithm of recommendation 3',
+  'COR 2b, LOE C-EO',
+)
+
+/** The 2017 AHA scientific statement prints consensus guidance without a class or level. */
+const aha2017Algorithm: TeachingNumberCitation = {
+  sourceId: 'aha-cpr-mcs-statement-2017',
+  year: 2017,
+  grade: null,
+  locator:
+    'Consensus-derived guidance for EMS, pp. e1123–e1124, and Figure 6, p. e1124; end-tidal CO₂ as a perfusion marker, p. e1122',
+}
 
 export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support', {
   'impella-cp-flow-by-level': {
@@ -223,25 +256,33 @@ export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support
     appliesTo:
       'An adult with a continuous-flow LVAD, read with the other signs of an adequate circulation',
     class: 'guideline',
-    sources: [adequacyParagraph],
+    sources: [adequacyParagraph, ercFigure18],
+    note: 'ERC 2025 lists a capillary refill over 3 seconds among the signs of circulatory failure. AHA 2017 and AHA 2025 ask for a normal capillary refill and give no figure.',
     ...PERFUSION_CHECK,
   },
   'lvad-adequate-map': {
     label: 'Mean arterial pressure in an adequate circulation',
-    value: 'above 60 mm Hg',
+    value: 'above 60 mm Hg (British, ERC) · above 50 mm Hg (AHA)',
     appliesTo: 'Doppler or arterial-line MAP in an adult with a continuous-flow LVAD',
     class: 'guideline',
-    sources: [adequacyParagraph],
-    note: 'The guideline’s line for an adequate circulation, not a treatment goal. Its low-flow section keeps MAP in the 60–80 mm Hg range; the goal row in this register, 70–80 mm Hg, comes from a textbook chapter.',
+    sources: [
+      adequacyParagraph,
+      ercLvad(
+        'Circulatory support devices: Left ventricular assist devices, p. 41; Fig. 18, p. 40: a Doppler MAP below 60 mm Hg among the signs of circulatory failure',
+      ),
+      aha2017Algorithm,
+      aha2025Adequacy,
+    ],
+    note: 'The sources differ. The British guideline and ERC 2025 use above 60 mm Hg; AHA 2017 and AHA 2025 use above 50 mm Hg. These are lines for an adequate circulation, not treatment goals: the British low-flow section keeps MAP in the 60–80 mm Hg range, and the goal row in this register, 70–80 mm Hg, comes from a textbook chapter.',
     ...PERFUSION_CHECK,
   },
   'lvad-adequate-etco2': {
     label: 'End-tidal CO₂ in an adequate circulation',
-    value: 'above 2 kPa (15 mm Hg), intubated',
+    value: 'above 2 kPa (15 mm Hg), intubated (British, ERC) · above 20 mm Hg (AHA)',
     appliesTo: 'An intubated adult with a continuous-flow LVAD',
     class: 'guideline',
-    sources: [adequacyParagraph],
-    note: 'The guideline gives 2 kPa, defined in line with other published CPR guidelines; 15 mm Hg is the unit conversion. It warns that end-tidal CO₂ may not be failsafe, for example through a loose-fitting facemask or a laryngeal mask airway.',
+    sources: [adequacyParagraph, ercFigure18, aha2017Algorithm, aha2025Adequacy],
+    note: 'The sources differ. The British guideline gives 2 kPa; ERC 2025 prints 15 mm Hg (2 kPa). AHA 2025 uses above 20 mm Hg. AHA 2017 uses 20 mm Hg (≥20 in its text, >20 in Figure 6), only through an endotracheal tube or tracheostomy, because a supraglottic airway gives a falsely elevated reading. The British guideline warns that end-tidal CO₂ may not be failsafe through a loose-fitting facemask or a laryngeal mask airway.',
     ...PERFUSION_CHECK,
   },
   'lvad-adequate-controller-flow': {
@@ -249,22 +290,30 @@ export const MCS_NUMBERS = defineTeachingNumbers('mechanical-circulatory-support
     value: 'typically above 3 L/min in an adult',
     appliesTo: 'A normal controller display with no active audible or visual alarm',
     class: 'guideline',
-    sources: [adequacyParagraph],
-    note: 'The controller estimates flow from power and hematocrit; it does not measure it. The guideline reads it with the display and the alarms.',
+    sources: [adequacyParagraph, ercFigure18],
+    note: 'ERC 2025 lists a flow below 3.0 L/min among the signs of circulatory failure. The controller calculates flow from speed and power; it does not measure it. Both guidelines read it with the display and the alarms.',
     ...PERFUSION_CHECK,
   },
   'lvad-cpr-deferral-limit': {
-    label: 'CPR deferred while device function is restored',
-    value: 'at most 2 minutes',
-    appliesTo: 'An LVAD recipient in arrest with device malfunction',
+    label: 'Delay to compressions while the pump is restored',
+    value:
+      'at most 2 minutes (British; ERC, a lone rescuer) · none, the device worked alongside (AHA 2025; ERC, two or more rescuers)',
+    appliesTo: 'An unresponsive LVAD recipient with an inadequate circulation',
     class: 'guideline',
     sources: [
       lvadEmergencyGuideline(
         '“Initial response”, and its recommendation that CPR may be deferred for a maximum of 2 min while immediate interventions restore device function',
         'Class IIa, Level C',
       ),
+      ercLvad(
+        'Summary, “Left ventricular assist device (LVAD) patients”, p. 13; section text, p. 41; Fig. 18, p. 40: CPR at once with a team, a delay of at most 2 minutes for a single rescuer',
+      ),
+      aha2025Lvad(
+        '“Left Ventricular Assist Devices”, recommendation 2, p. S618: start compressions immediately while assessing for device-related causes; supportive text, p. S620, which names the British 2-minute delay and runs the device work in parallel',
+        'COR 2b, LOE C-EO',
+      ),
     ],
-    note: 'After the deferral, CPR starts if the circulation is still inadequate. The same guideline recommends, Class IIa, Level C, that CPR can be performed safely in LVAD recipients with an inadequate circulation.',
+    note: 'The sources differ. The British guideline allows the delay whoever is present; ERC 2025 keeps it for a single rescuer; AHA 2025 has none, and recommends compressions in unresponsive patients with impaired perfusion (recommendation 1, COR 1, LOE C-EO). The 2017 AHA algorithm attempts a restart before compressions and sets no time. The British guideline also recommends, Class IIa, Level C, that CPR can be performed safely in LVAD recipients with an inadequate circulation.',
     ...PERFUSION_CHECK,
   },
 })
