@@ -1,4 +1,3 @@
-import { fireEvent, screen } from '@testing-library/react'
 import { availableSurveySnapshot, readBronchSelfPacedRecord } from '../engine/selfPacedProgress'
 import { inspectionReport } from '../engine/inspectionReport'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
@@ -38,8 +37,6 @@ export async function completeCourseStep(lesson: BronchStageLesson, authored: Br
         },
       }
     : authored
-  if (step.course?.demonstration)
-    fireEvent.click(screen.getByRole('button', { name: 'Try with guidance' }))
   switch (step.interaction.kind) {
     case 'prediction':
       commitById(keyedChoiceId(step))

@@ -83,7 +83,7 @@ const KEY_WORDS: readonly (readonly [ScopeControlKey, string])[] = [
   ['suction', 'Space turns suction on or off'],
   ['recenter', 'R recenters'],
   ['teleportStart', 'Home goes back to the start'],
-  ['branchLabels', 'L turns the in-view labels on or off'],
+  ['branchLabels', 'L shows or hides the opening names'],
   ['capture', 'C captures an image'],
   ['acknowledge', 'K acknowledges the assistant'],
 ]
@@ -110,4 +110,21 @@ export function scopeKeyboardHint(controls: readonly ScopeControlKey[]): string 
       ? ' With a mouse or finger, press and hold Advance or Withdraw.'
       : ''
   return `Keyboard, once the scope view is selected (click it or Tab to it): ${parts.join('; ')}.${held}${pressAndHold}`
+}
+
+/**
+ * The dock's keys in the order they are drawn: the movement and one-press controls first, then the
+ * tool in the channel (with its check) on a row of its own. A naming record's question is added
+ * after these by the caller.
+ */
+export function dockKeyOrder(
+  controls: readonly ScopeControlKey[],
+  extra: readonly ScopeControlKey[] = [],
+): ScopeControlKey[] {
+  const accessory = controls.includes('accessory')
+  const keys = [...controls, ...extra.filter((key) => !controls.includes(key))].filter(
+    (key) => key !== 'declare' && key !== 'accessory' && !(accessory && key === 'verifyAccessory'),
+  )
+  if (accessory) keys.push('accessory')
+  return keys
 }

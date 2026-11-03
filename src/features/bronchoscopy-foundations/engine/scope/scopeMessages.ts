@@ -3,17 +3,18 @@ import type { AirwayLabel } from '../../components/scope/types'
 /**
  * What the engine says on the scene when it refuses, redirects or confirms a command, and what a
  * scripted speaker says. Learner-facing copy: every string passes the course's copy gate
- * (checked in `__tests__/scope-engine.test.ts`), and every scripted line says it is scripted.
+ * (checked in `__tests__/scope-engine.test.ts`). A scripted line names its speaker; the view's one
+ * line under the scene says the assistant's replies are part of the exercise (owner feedback,
+ * 2026-11-03: "scripted" on screen is a builder's word).
  */
 export const SCOPE_MESSAGES = {
   aimRefused: 'More than one opening is ahead. Bend the tip toward the one you want, then advance.',
   forkAhead:
     'A fork. Advance again to enter the opening at the centre of the view, or bend toward another first.',
   tipStraightened: 'Through the opening. The tip is straight again, in line with this airway.',
-  lumenEnd:
-    'The teaching model ends here, one generation inside this segment. Withdraw to continue.',
+  lumenEnd: 'The model airway ends here, one generation inside this segment. Withdraw to continue.',
   entryRefused: (label: AirwayLabel) =>
-    `A scripted narrowing: the scope cannot be advanced safely into ${label}. Record what the view allows.`,
+    `A narrowing: the scope cannot be advanced safely into ${label}. Record what the view allows.`,
   wallFromBend: 'The bent tip is against the wall. Reduce the bend or withdraw before advancing.',
   wallContact: 'Wall contact. Withdraw or redirect the tip.',
   advancedInRedOut:
@@ -32,38 +33,38 @@ export const SCOPE_MESSAGES = {
   historyLimit: 'The recorded insertion path is full. Withdraw to continue.',
   captured: 'Image captured.',
   exposeInChannel:
-    'Expose it only beyond the tip, where it can be seen; exposed inside the channel it can damage the scope.',
+    'Not done: open or expose a tool only beyond the tip, where you can see it. Inside the channel it can damage the scope.',
   retrieveExposed:
-    'It is still exposed: drawing it into the channel now can damage the scope. Check the image first.',
-  loadExposed: 'Load it protected: an exposed accessory can damage the channel on the way in.',
-  noAccessory: 'No accessory is loaded.',
-  wrongAccessory: (kind: string) => `The loaded accessory is a ${kind}.`,
+    'Not done: it is still exposed, and drawing it into the channel can damage the scope. Cover it and check it on the scope view first.',
+  loadExposed: 'Not done: load it covered. An exposed tool can damage the channel on the way in.',
+  noAccessory: 'No tool is loaded.',
+  wrongAccessory: (kind: string) => `The tool loaded is the ${kind}.`,
   cannotSeeAccessory:
-    'Inside the channel the accessory cannot be seen. Check it where the image shows it.',
-  accessoryChecked: (words: string) => `Checked against the image: ${words}.`,
+    'Inside the channel the tool cannot be seen. Move it to the tip or beyond, then check it.',
+  accessoryChecked: (words: string) => `Checked on the scope view: ${words}.`,
   reportDisagrees: (words: string) =>
-    `The image shows ${words}. The assistant’s report and the image disagree.`,
+    `The scope view shows ${words}. Your assistant’s report and the scope view disagree.`,
   named: (name: string) => `Yes. This is ${name}.`,
   misnamed:
     'Not this segment. Look at which lobe you are in and where the opening sat, then choose again.',
   nothingToName: 'Drive into a segment you have not named yet, then choose its name.',
   assistNotOffered: 'That help is not offered on this step.',
   noSuchOpening: 'That opening is not ahead of the tip.',
-  labelsNotOffered: 'In-view labels are not offered on this step.',
+  labelsNotOffered: 'Opening names are not offered on this step.',
   controlNotOffered: 'That control is not offered on this step.',
-  labelsWithheld: 'In-view labels stay off until the view is identified again from a landmark.',
+  labelsWithheld: 'Opening names stay off until you identify the view again from a landmark.',
 } as const
 
-/** Scripted speech, shown on the scene and always marked as scripted (§23.4). */
+/** Scripted speech, shown beside the controls and always attributed to its speaker. */
 export const SCRIPT_REPORTS = {
   holdForImage:
-    'Assistant (scripted): “Can you hold there? An image of the carina is needed for the report.”',
-  holdThanks: 'Assistant (scripted): “Thank you — hold steady until the image is done.”',
-  holdDone: 'Assistant (scripted): “That’s the image. Thank you.”',
-  misreportSheathed: 'Assistant (scripted): “The brush is back in its sheath.”',
-  sheathedNow: 'Assistant (scripted): “Sheathed now.”',
-  misreportProtected: 'Assistant (scripted): “It is protected.”',
-  protectedNow: 'Assistant (scripted): “Protected now.”',
+    'Your assistant: “Can you hold there? An image of the carina is needed for the report.”',
+  holdThanks: 'Your assistant: “Thank you — hold steady until the image is done.”',
+  holdDone: 'Your assistant: “That’s the image. Thank you.”',
+  misreportSheathed: 'Your assistant: “The brush is back in its sheath.”',
+  sheathedNow: 'Your assistant: “Sheathed now.”',
+  misreportProtected: 'Your assistant: “It is protected.”',
+  protectedNow: 'Your assistant: “Protected now.”',
 } as const
 
 /** Whether the scene's message says the scope is waiting at a fork: a held Advance stops on it. */

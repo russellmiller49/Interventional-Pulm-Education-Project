@@ -73,6 +73,7 @@ import {
   scopeGoalStatuses,
 } from '../../engine/scope/scopeGoalEvaluation'
 import {
+  blockedGoalSentence,
   GOAL_CLAIM_TAG,
   GOAL_MODEL_LIMIT,
   goalListHeading,
@@ -250,7 +251,8 @@ function BronchStageSessionView({
   const [scopeCase, setScopeCase] = useState<ScopeCase | null>(null)
   const [caseFailed, setCaseFailed] = useState(false)
   const [caseLoadGeneration, setCaseLoadGeneration] = useState(0)
-  const [pilotAttempts, setPilotAttempts] = useState<Record<string, boolean>>({})
+  // Which steps' examples the learner has opened, so the button says Watch, then Replay.
+  const [examplesWatched, setExamplesWatched] = useState<Record<string, boolean>>({})
   const [pilotHints, setPilotHints] = useState<Record<string, boolean>>({})
   const [storageFailed, setStorageFailed] = useState(false)
   const saveRecord = useCallback(
@@ -297,7 +299,14 @@ function BronchStageSessionView({
   const demonstration = useScopeDemonstration(activeStep, scopeCase)
   const hasDemonstration = !!(activeStep.learn?.demonstration ?? activeStep.course?.demonstration)
     ?.length
-  const practicing = !hasDemonstration || pilotAttempts[activeStep.id] === true
+  /*
+   * The controls do not wait for the example (owner feedback, 2026-11-03: a learner who went
+   * straight to the controls found them dead behind "Try with guidance"). The learner's attempt is
+   * the step's own scope state, which the example never touches (`useScopeDemonstration` plays on a
+   * copy), so the first use of a control is simply the attempt's first move. "Try with guidance"
+   * after the example starts the attempt again from a fresh scope, as before. Watching is optional.
+   */
+  const exampleWatched = examplesWatched[activeStep.id] === true
 
   /* ---------------------------------------------------------------- *
    * The case and the scope states
@@ -470,8 +479,12 @@ function BronchStageSessionView({
     if (!paneView) return
     demonstration.stop()
     dispatch({ type: 'SCOPE_RESET', stepId: activeStep.id, view: paneView, scopeCase })
-    setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
     setSpotlight(null)
+  }
+
+  function watchExample() {
+    setExamplesWatched((current) => ({ ...current, [activeStep.id]: true }))
+    demonstration.start()
   }
 
   /** The nearest earlier teaching the learner has already been through, for "Review the teaching". */
@@ -789,28 +802,27 @@ function BronchStageSessionView({
       }
       case 'scope-task':
         if (activeStep.learn || hasDemonstration) {
-          if (demonstration.state || !practicing)
+          // The example plays on its own copy of the scope, step by step, with the controls held.
+          if (demonstration.state)
             return {
               ...base,
-              status: demonstration.state
-                ? 'Demonstration only. These movements are the example, not your own attempt.'
-                : 'The example is available before you try. You can also start your own attempt, or continue without it.',
-              primary: demonstration.state
-                ? demonstration.finished
-                  ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
-                  : { label: 'Next demonstration movement', onActivate: demonstration.next }
-                : { label: 'Watch the example', onActivate: demonstration.start },
+              status:
+                'Showing the example, not your attempt. Select Try with guidance to use the controls yourself.',
+              primary: demonstration.finished
+                ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
+                : { label: 'Next demonstration movement', onActivate: demonstration.next },
               secondary: demonstration.finished
-                ? { label: 'Replay the example', onActivate: demonstration.start }
+                ? { label: 'Replay the example', onActivate: watchExample }
                 : { label: 'Try with guidance', onActivate: beginPilotAttempt },
             }
+          // The controls are live from the start; the example is one button away, never a gate.
           return {
             ...base,
             status: workDone
               ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim, plainGoals))
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
-                : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
+                : undefined,
             primary: workDone
               ? isLastStep
                 ? finishAction
@@ -821,7 +833,10 @@ function BronchStageSessionView({
                   disabledReason: goalsReason,
                 },
             secondary: hasDemonstration
-              ? { label: 'Replay the example', onActivate: demonstration.start }
+              ? {
+                  label: exampleWatched ? 'Replay the example' : 'Watch the example',
+                  onActivate: watchExample,
+                }
               : { label: 'Reset this attempt', onActivate: beginPilotAttempt },
           }
         }
@@ -906,10 +921,11 @@ function BronchStageSessionView({
           </li>
         ))}
       </ul>
-      {goals.length > 0 ? (
+      {/* A rewritten section says where the tip is once, in the pane beside the view. */}
+      {goals.length > 0 && !plainGoals ? (
         <p className={styles.goalLimit} data-goal-basis={goalsClaim} data-goal-now>
           {liveLocationLine ? `${liveLocationLine} ` : ''}
-          {lesson.section.authoringContract === 2 ? null : GOAL_MODEL_LIMIT}
+          {GOAL_MODEL_LIMIT}
         </p>
       ) : null}
     </>
@@ -1239,19 +1255,28 @@ function BronchStageSessionView({
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
   // Controls belong to actual scope work. A question step has no scope controls to use.
   const scopeLive = interaction.kind === 'scope-task' || interaction.kind === 'observe'
+  // Held only while the example plays (its status line says how to take over), never before it.
   const controlsEnabled =
-    !deciding && !lookingBack && !finished && scopeLive && !demonstration.state && practicing
+    !deciding && !lookingBack && !finished && scopeLive && !demonstration.state
   const lockedReason = demonstration.state
-    ? 'Demonstration. Select Try with guidance to start with a fresh scope.'
-    : !practicing
-      ? 'Watch the example or select Try with guidance to use the controls.'
-      : finished
-        ? 'You reached the end of this section. Restart the section to practice again.'
-        : deciding
-          ? 'The scope rests while this question is open. Its controls are used on the hands-on steps.'
-          : !scopeLive && !lookingBack
-            ? 'The scope rests on this step. Its controls open on the next hands-on step.'
-            : undefined
+    ? undefined
+    : finished
+      ? 'You reached the end of this section. Restart the section to practice again.'
+      : deciding
+        ? 'The scope rests while this question is open. Its controls are used on the hands-on steps.'
+        : !scopeLive && !lookingBack
+          ? 'The scope rests on this step. Its controls open on the next hands-on step.'
+          : undefined
+  // Said unasked when this attempt can no longer meet a goal (a broken "without"), with the way
+  // out. The five-controls bench says it in its own status line instead.
+  const blockedSentence =
+    goalInteraction && activeScopeState && !activeStep.learn && !demonstration.state
+      ? (blockedGoalSentence(
+          goals,
+          activeScopeState,
+          goalInteraction.view.controls.includes('reset'),
+        ) ?? undefined)
+      : undefined
   const pausedReason =
     !deciding && lookingBack
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
@@ -1398,9 +1423,11 @@ function BronchStageSessionView({
               goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
               caption={locationCaption}
               treeAnswer={treeAnswer}
-              spotlightKey={helpNow?.control ?? undefined}
+              spotlightKey={helpNow?.control ?? (blockedSentence ? 'reset' : undefined)}
               helpTarget={helpNow?.target ?? null}
-              helpSentence={helpNow?.sentence}
+              // A ruled-out goal is explained once, by the blocked line; help would only repeat it.
+              helpSentence={blockedSentence ? undefined : helpNow?.sentence}
+              blockedSentence={blockedSentence}
               referenceLabels={
                 referenceNamesOffered
                   ? {

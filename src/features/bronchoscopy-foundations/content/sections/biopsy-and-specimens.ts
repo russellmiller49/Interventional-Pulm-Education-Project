@@ -258,12 +258,12 @@ export const section: BronchSectionDefinition = {
       assists: {},
       defaults: { accessory: 'brush-sheathed', accessoryPosition: 'none' },
       script: 'assistant-misreport',
-      boundary: 'The assistant’s reports are scripted for practice.',
+      boundary: 'Your assistant’s replies are part of the exercise.',
     },
     goals: [
       {
         id: 'load-sheathed',
-        label: 'Load the brush into the working channel in its sheath',
+        label: 'Load the brush into the channel, still in its sheath',
         test: {
           type: 'all',
           tests: [
@@ -274,7 +274,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'extend-and-expose',
-        label: 'Advance the sheath beyond the tip, then expose the brush',
+        label: 'Move the sheath beyond the tip, then have your assistant push the brush out',
         test: {
           type: 'all',
           tests: [
@@ -288,7 +288,9 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'retrieve-protected',
-        label: 'Draw the brush back into the working channel with its bristles covered',
+        // Every requirement its test checks, in order: covered, checked on the view, then drawn in.
+        label:
+          'Have your assistant sheathe the brush, check it on the scope view, then draw it into the channel',
         test: {
           type: 'all',
           tests: [

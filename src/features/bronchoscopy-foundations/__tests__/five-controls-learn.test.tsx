@@ -101,7 +101,9 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   clickPrimary()
   await settle()
   expect(screen.getByRole('heading', { name: 'Depth changes the distance' })).toBeVisible()
-  clickPrimary() // demonstration advance
+  // The controls are live before any example; the example is optional (owner, 2026-11-03).
+  expect(controlsFieldset()).not.toBeDisabled()
+  fireEvent.click(pilotButton('Watch the example')) // demonstration advance
   expect(document.querySelector('[data-readout="depthMm"] dd')).toHaveTextContent('12 mm')
   expect(controlsFieldset()).toBeDisabled()
   clickPrimary() // demonstration withdraw

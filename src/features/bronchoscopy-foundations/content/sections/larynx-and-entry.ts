@@ -375,7 +375,7 @@ export const section: BronchSectionDefinition = {
         },
         {
           id: 'enter-left',
-          label: 'Aim at the left main bronchus and enter it',
+          label: 'After the right side, aim at the left main bronchus and enter it',
           test: {
             type: 'event-sequence',
             events: ['entered:RMSB', 'returned-to-trachea', 'entered:LMSB'],

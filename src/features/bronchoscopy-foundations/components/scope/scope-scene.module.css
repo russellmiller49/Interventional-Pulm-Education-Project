@@ -401,12 +401,6 @@
   color: #b1c3d2;
   font-size: 0.78rem;
 }
-.commandNote {
-  margin: 0 0 0.35rem;
-  color: #b1c3d2;
-  font-size: 0.78rem;
-  overflow-wrap: anywhere;
-}
 .scriptClock {
   margin: 0.45rem 0 0;
   color: #b1c3d2;
@@ -430,11 +424,12 @@
 }
 .visualWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: 0.65rem;
   align-items: start;
 }
-.visualWorkspace[data-bench='true'] {
+.visualWorkspace[data-bench='true'],
+.visualWorkspace[data-map='none'] {
   grid-template-columns: minmax(0, 1fr);
 }
 .visualTabs {
@@ -443,6 +438,44 @@
 .scopeColumn,
 .mapColumn {
   min-width: 0;
+}
+/*
+ * The map beside the view, held to the view's height (owner feedback, 2026-11-03: a map taller than
+ * the view pushed the controls below the fold). Size containment keeps the map out of the row's
+ * height, so the row is as tall as the view; the map then fits that height, keeping its aspect so
+ * its pins stay on their airways.
+ */
+/*
+ * Without the map the view would take the whole width and push its controls below the fold at
+ * 1440×900. Cap its height (about 44% of the window, at most 24rem), keeping the 4:3 field. On a
+ * narrow pane the views stack as before.
+ */
+@container (min-width: 500px) {
+  .visualWorkspace[data-map='none']:not([data-bench]) .views[data-observer='true'] {
+    grid-template-columns: minmax(0, min(calc(min(44vh, 24rem) * 4 / 3), 62%)) minmax(0, 1fr);
+  }
+  .visualWorkspace[data-map='none']:not([data-bench]) .views:not([data-observer='true']) {
+    max-width: calc(min(44vh, 24rem) * 4 / 3);
+  }
+}
+.mapColumn {
+  contain: size;
+  align-self: stretch;
+  min-height: 12rem;
+}
+.mapColumn > :global([data-airway-map]) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.mapColumn :global([data-map-stage]) {
+  flex: 1 1 0;
+  min-height: 0;
+  container-type: size;
+}
+.mapColumn :global([data-map-stage]) > * {
+  max-width: min(22rem, 100cqh * 360 / 420);
 }
 .views[data-observer='true'] {
   display: grid;
@@ -482,6 +515,19 @@
   }
   .visualWorkspace[data-visual-tab='scope'] .mapColumn {
     display: none;
+  }
+  /* On its own tab the map takes its natural height again. */
+  .mapColumn {
+    contain: none;
+    align-self: auto;
+    min-height: 0;
+  }
+  .mapColumn > :global([data-airway-map]) {
+    display: block;
+    height: auto;
+  }
+  .mapColumn :global([data-map-stage]) {
+    container-type: normal;
   }
   .visualWorkspace[data-visual-tab='map'] .scopeColumn {
     display: none;

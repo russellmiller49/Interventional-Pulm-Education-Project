@@ -606,7 +606,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ...practice(
         'Run a brush exchange',
         'skill',
-        'Watch the exchange once, then run it yourself. Your assistant’s report is not always right. Check the state before the brush moves.',
+        'Load the brush, push it out beyond the tip, then bring it back covered. Your assistant’s report is not always right: check the scope view before the brush comes back. An unsafe move means starting again.',
       ),
       demonstration: [
         {

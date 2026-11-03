@@ -228,7 +228,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'superior-segment',
-        label: 'Enter the lower lobe, then LB6, its superior segment',
+        label: 'After LB5, enter the lower lobe, then LB6, its superior segment',
         test: {
           type: 'event-sequence',
           events: ['entered:LB5', 'withdrew-to:LMSB', 'entered:LLL', 'entered:LB6'],
