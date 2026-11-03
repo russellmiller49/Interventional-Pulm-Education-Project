@@ -5,13 +5,17 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Compass,
+  Crosshair,
   Eye,
   EyeOff,
   Gamepad2,
   Headset,
   RotateCcw,
+  RotateCw,
   Save,
   SlidersHorizontal,
 } from 'lucide-react'
@@ -850,6 +854,18 @@ export function AirwayAnatomyModule({
       game={mode === 'challenge' ? game : null}
       fovDeg={BRONCH_FOV_DEG}
       collider={collider}
+      controls={
+        embed
+          ? {
+              onSteer: handleSteer,
+              onRecenter: handleRecenter,
+              onMove: handleMove,
+              onRoll: (deltaDeg: number) =>
+                handleRollChange((renderedState.current?.rollDeg ?? 0) + deltaDeg),
+              stepMm,
+            }
+          : null
+      }
     />
   )
   const treePanel = (
@@ -1135,8 +1151,16 @@ export function AirwayAnatomyModule({
             /* An embedding lesson owns the page layout: one column, the bronchoscope view first. */
             <div className="grid gap-3 p-3" data-airway-embed-layout>
               {opticalPanel}
+              <EmbedScopeStatus
+                pose={snapshot}
+                location={showLocation ? currentLocation : null}
+                liveRollDeg={liveRollDeg}
+                onRollChange={handleRollChange}
+                showBranchLabels={showBranchLabels}
+                branchLabelToggle={branchLabelMode === 'learner'}
+                onShowBranchLabelsChange={setShowBranchLabels}
+              />
               {showTree ? treePanel : null}
-              {controlPanel}
               {loadedCase.ctVolume ? ctPanel : null}
             </div>
           ) : (
@@ -1508,8 +1532,11 @@ function VirtualBronchoscopyViewport({
   game,
   fovDeg,
   collider,
+  controls = null,
 }: {
   collider: LumenCollider | null
+  /** Steering and drive drawn on the view itself, for a lesson that embeds the module. */
+  controls?: ViewControls | null
   manifest: AirwayAnatomyCaseManifest
   pose: ScopePoseSnapshot
   ostia: OstiumLabel[]
@@ -1577,6 +1604,7 @@ function VirtualBronchoscopyViewport({
                   }
                   transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
                   mode="bronch"
+                  mucosaTint={manifest.appearance?.mucosaTint}
                 />
                 <ScopeCamera pose={pose} />
                 <SettleFrames poseKey={`${pose.edgeId}:${pose.distanceMm}`} />
@@ -1605,15 +1633,21 @@ function VirtualBronchoscopyViewport({
             </div>
           )}
           {location ? (
-            <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs">
+            <div
+              className={`pointer-events-none absolute left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs ${controls ? 'top-3' : 'bottom-3'}`}
+            >
               <span className="font-bold text-cyan-200">{location.abbr}</span>
               <span className="text-slate-300">{location.name}</span>
               <span className="text-slate-500">· {Math.round(pose.distanceMm)} mm</span>
             </div>
           ) : null}
-          <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
-            drag to look
-          </div>
+          {controls ? (
+            <ViewOverlayControls controls={controls} />
+          ) : (
+            <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
+              drag to look
+            </div>
+          )}
           {game ? (
             <GameHudOverlay
               view={game.view}
@@ -1649,6 +1683,206 @@ function SettleFrames({ poseKey, frames = 20 }: { poseKey: string; frames?: numb
     return () => cancelAnimationFrame(handle)
   }, [invalidate, frames, poseKey])
   return null
+}
+
+interface ViewControls {
+  onSteer: (dxUnit: number, dyUpUnit: number) => void
+  onRecenter: () => void
+  onMove: (deltaMm: number) => void
+  onRoll: (deltaDeg: number) => void
+  stepMm: number
+}
+
+const OVERLAY_BUTTON =
+  'flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-slate-950/70 text-slate-100 backdrop-blur-sm transition hover:border-cyan-300 hover:text-cyan-100 active:bg-cyan-400/30'
+
+/**
+ * The scope's controls on the view itself, so a learner steers while watching the airway: a
+ * steering pad with rotate and recenter on the left, Advance and Withdraw on the right. Every
+ * button repeats while held. Pointer events stop here, so pressing a control never starts the
+ * view's drag-to-look.
+ */
+function ViewOverlayControls({ controls }: { controls: ViewControls }) {
+  const stop = (event: React.PointerEvent) => event.stopPropagation()
+  return (
+    <>
+      <div
+        className="absolute bottom-3 left-3 z-30 grid grid-cols-3 gap-1"
+        role="group"
+        aria-label="Steer the tip"
+        onPointerDown={stop}
+        data-scope-overlay="steer"
+      >
+        <HoldButton
+          ariaLabel="Rotate the scope counterclockwise"
+          onTrigger={() => controls.onRoll(-5)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Steer up"
+          onTrigger={() => controls.onSteer(0, 1)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowUp className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Rotate the scope clockwise"
+          onTrigger={() => controls.onRoll(5)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <RotateCw className="h-4 w-4" />
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Steer left"
+          onTrigger={() => controls.onSteer(-1, 0)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </HoldButton>
+        <button
+          type="button"
+          aria-label="Recenter the view"
+          title="Recenter (R)"
+          onClick={controls.onRecenter}
+          className={OVERLAY_BUTTON}
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+        <HoldButton
+          ariaLabel="Steer right"
+          onTrigger={() => controls.onSteer(1, 0)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowRight className="h-4 w-4" />
+        </HoldButton>
+        <span aria-hidden="true" />
+        <HoldButton
+          ariaLabel="Steer down"
+          onTrigger={() => controls.onSteer(0, -1)}
+          intervalMs={80}
+          className={OVERLAY_BUTTON}
+        >
+          <ArrowDown className="h-4 w-4" />
+        </HoldButton>
+        <span aria-hidden="true" />
+      </div>
+      <div
+        className="absolute bottom-3 right-3 z-30 grid gap-1.5"
+        role="group"
+        aria-label="Drive the scope"
+        onPointerDown={stop}
+        data-scope-overlay="drive"
+      >
+        <HoldButton
+          ariaLabel="Advance scope"
+          onTrigger={() => controls.onMove(controls.stepMm)}
+          intervalMs={110}
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-cyan-300/60 bg-cyan-500/30 px-3 text-sm font-semibold text-cyan-50 backdrop-blur-sm transition hover:bg-cyan-400/40 active:bg-cyan-400/50"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Advance
+        </HoldButton>
+        <HoldButton
+          ariaLabel="Withdraw scope"
+          onTrigger={() => controls.onMove(-controls.stepMm)}
+          intervalMs={110}
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-white/25 bg-slate-950/70 px-3 text-sm font-semibold text-slate-100 backdrop-blur-sm transition hover:border-slate-300 active:bg-slate-700/80"
+        >
+          <ArrowDown className="h-4 w-4" />
+          Withdraw
+        </HoldButton>
+      </div>
+    </>
+  )
+}
+
+/**
+ * Under the view in a lesson: where the tip is (unless the lesson hides it), how far into the
+ * branch, the keys, and the settings a learner rarely needs folded away.
+ */
+function EmbedScopeStatus({
+  pose,
+  location,
+  liveRollDeg,
+  onRollChange,
+  showBranchLabels,
+  branchLabelToggle,
+  onShowBranchLabelsChange,
+}: {
+  pose: ScopePoseSnapshot
+  location: CurrentLocation | null
+  liveRollDeg: number
+  onRollChange: (rollDeg: number) => void
+  showBranchLabels: boolean
+  branchLabelToggle: boolean
+  onShowBranchLabelsChange: (value: boolean) => void
+}) {
+  const progress = pose.edgeLengthMm > 0 ? clamp(pose.distanceMm / pose.edgeLengthMm, 0, 1) : 0
+  return (
+    <div
+      className="rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-300"
+      data-scope-status
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span>
+          {location ? (
+            <>
+              <span className="font-bold text-cyan-200">{location.abbr}</span> {location.name}{' '}
+              ·{' '}
+            </>
+          ) : null}
+          {Math.round(pose.distanceMm)} / {Math.round(pose.edgeLengthMm)} mm into branch
+        </span>
+        <span className="text-slate-400">
+          Drag the view to look · arrows steer · W/S drive · Q/E rotate · R recenter
+        </span>
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-800">
+        <div
+          className="h-full rounded-full bg-cyan-400/80"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+      <details className="mt-2">
+        <summary className="cursor-pointer text-slate-400">More controls</summary>
+        <div className="mt-2 grid gap-2">
+          <label className="grid gap-1">
+            <span className="flex items-center justify-between">
+              <span>Scope roll trim</span>
+              <span>{Math.round(liveRollDeg)} deg</span>
+            </span>
+            <input
+              type="range"
+              min={-90}
+              max={90}
+              step={1}
+              value={liveRollDeg}
+              onChange={(event) => onRollChange(Number(event.target.value))}
+              className="w-full accent-cyan-300"
+            />
+          </label>
+          {branchLabelToggle ? (
+            <label className="flex items-center justify-between">
+              <span>Branch labels in view</span>
+              <input
+                type="checkbox"
+                checked={showBranchLabels}
+                onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
+                className="h-4 w-4 accent-cyan-300"
+              />
+            </label>
+          ) : null}
+        </div>
+      </details>
+    </div>
+  )
 }
 
 function AirwayTreeViewport({

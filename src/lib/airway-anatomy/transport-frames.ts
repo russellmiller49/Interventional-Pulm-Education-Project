@@ -54,7 +54,8 @@ export function buildTransportFrames(
       const children = (nodes.get(edge.endNodeId)?.childEdgeIds ?? [])
         .map((id) => edges.get(id)!)
         .filter(Boolean)
-      if (children.length > 1) {
+      // A landmark that names screen-up directly keeps the authored view direction.
+      if (children.length > 1 && !landmark.upLps) {
         const anchors = children.map(
           (child) => sampleEdgePose(child, Math.min(4, child.lengthMm * 0.5)).point,
         )
@@ -89,7 +90,7 @@ export function buildTransportFrames(
       const from = opposite
         ? sampleEdgePose(opposite, Math.min(7, opposite.lengthMm * 0.6)).point
         : reference.position
-      const offset = minus(target, from)
+      const offset = landmark.upLps ?? minus(target, from)
       const currentAngle = Math.atan2(scalar(offset, reference.up), scalar(offset, reference.right))
       const desired = landmark.screenDirection === 'up' ? Math.PI / 2 : Math.PI
       const correction =

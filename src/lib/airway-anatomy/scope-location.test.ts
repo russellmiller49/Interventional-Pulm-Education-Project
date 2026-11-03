@@ -37,7 +37,7 @@ const anchor = (edgeId: number) => {
 
 /** Same lumen reader as dolphin-case.test.ts. */
 function lumenGeometry() {
-  const buffer = fs.readFileSync(path.join(caseDir, 'lumen.glb'))
+  const buffer = fs.readFileSync(path.join(caseDir, 'lumen-v2.glb'))
   const jsonLength = buffer.readUInt32LE(12)
   const document = JSON.parse(buffer.subarray(20, 20 + jsonLength).toString())
   const binary = buffer.subarray(20 + jsonLength + 8)

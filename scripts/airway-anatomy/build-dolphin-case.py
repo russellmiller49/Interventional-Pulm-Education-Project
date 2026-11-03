@@ -31,6 +31,14 @@ nasopharyngeal fornix on either side; the fornix on each side is a short blind b
 there, and the route enters the glottis in a straight line (route_through_spout).
 The pouch at the top of the trachea is in the lumen surface but not in the graph.
 
+The displayed lumen reshapes the spout from its centerline (shape_spout_field): the CT's closed,
+voxel-wide slit renders as a boxy tube and its tip as a small round hole, where bronchoscopy shows
+a triangular glottis at the spout tip, apex dorsal, narrowing into a slit-like laryngeal lumen.
+The surface takes an analytic channel there instead: a triangular aperture through a rounded tip,
+GLOTTIS_RIM_MM deep, that narrows over GLOTTIS_FUNNEL_MM into a lens-shaped lumen along the
+slit's own dorsoventral axis, kept SPOUT_WALL_MIN_MM inside the spout wall. Only the surface changes; the graph, the labels
+and every edge id come from the CT as before.
+
 Airway names follow the bottlenose dolphin bronchoscopy guide of the U.S. Navy Marine
 Mammal Program and the National Marine Mammal Foundation (GUIDE_BRANCH_NUMBERS records
 how this CT's branches map onto its RB/LB numbers).
@@ -73,7 +81,8 @@ SEGMENTATION_SOURCE_NAME = "Airway Label.seg.nrrd"
 CASE_ID = "dolphin-001"
 ASSET_BASE_URL = f"/airway-anatomy/{CASE_ID}"
 OUTPUT_DIR = REPO_ROOT / "public" / "airway-anatomy" / CASE_ID
-LUMEN_GLB_NAME = "lumen.glb"
+# Module assets are served immutable for a year: a rebuilt surface takes a new name.
+LUMEN_GLB_NAME = "lumen-v2.glb"
 CT_PREVIEW_NAME = "dolphin_ct_preview_i16.raw"
 
 AIR_THRESHOLD_HU = -400
@@ -97,6 +106,24 @@ NASOPHARYNX_SEED_IJK = (253, 331, 567)
 ADITUS_RADIUS_VOXELS = 10
 # The spout's lumen opens into the wide laryngeal cavity here.
 SPOUT_BASE_SEED_IJK = (240, 352, 481)
+# The glottis and spout lumen as displayed (shape_spout_field). Sizes are for this 213 kg animal,
+# set to match bronchoscopic views of the spout tip; the CT slit itself is about 8 x 3 mm across.
+GLOTTIS_HEIGHT_MM = 12.0
+GLOTTIS_BASE_MM = 10.0
+# The triangle keeps its full size this deep below the tip, then narrows over GLOTTIS_FUNNEL_MM.
+GLOTTIS_RIM_MM = 12.0
+GLOTTIS_FUNNEL_MM = 8.0
+# The spout tip as the scope meets it end-on: a rounded cap this wide and this high around the
+# scope's path. In this CT the closed tip is bevelled, open dorsally; bronchoscopy shows a mound.
+TIP_DOME_RADIUS_MM = 9.5
+TIP_DOME_HEIGHT_MM = 4.0
+SPOUT_LUMEN_SEMI_AXES_MM = (3.8, 1.5)  # dorsoventral, lateral
+SPOUT_SHAPED_DEPTH_MM = 82.0
+SPOUT_BLEND_MM = 8.0
+SPOUT_WALL_MIN_MM = 1.2
+# Mucosa tint for this case's bronchoscope view (linear RGB of the shader's two base tones): the
+# dolphin's upper airway and spout read pale pink-white at bronchoscopy, paler than the human tone.
+MUCOSA_TINT = {"low": [0.56, 0.36, 0.33], "high": [0.76, 0.56, 0.51]}
 # Bronchial end points are taken only caudal to this slice.
 BRONCHIAL_ENDPOINT_MAX_Z = 455
 CT_STRIDE_XYZ = (2, 2, 2)
@@ -153,7 +180,9 @@ def main() -> None:
     mask = build_airway_mask(ct, seg > 0)
     graph, labels, review = build_centerline_graph(mask, geometry)
     review["spout"] = route_through_spout(graph, labels, mask, geometry)
-    mesh, mesh_review = build_lumen_mesh(mask, geometry)
+    mesh, mesh_review = build_lumen_mesh(
+        mask, geometry, lambda field, lo: shape_spout_field(field, lo, graph, labels, review["spout"], geometry)
+    )
     repairs = validate_centerlines(graph, mesh)
     labels["polylines"] = label_polylines(graph, labels["edgeLabels"])
     review.update(mesh_review)
@@ -956,13 +985,159 @@ def unit_vector(vector: np.ndarray) -> np.ndarray:
     return vector / max(float(np.linalg.norm(vector)), 1e-9)
 
 
-def build_lumen_mesh(mask: np.ndarray, geometry: VolumeGeometry) -> tuple[trimesh.Trimesh, dict[str, Any]]:
+def shape_spout_field(
+    field: np.ndarray,
+    lo: np.ndarray,
+    graph: dict[str, Any],
+    labels: dict[str, Any],
+    spout_review: dict[str, Any],
+    geometry: VolumeGeometry,
+) -> None:
+    """Replace the spout's voxel slit in the meshing field with an analytic channel.
+
+    Along the spout centerline, each voxel gets a local frame: t down the lumen, d the slit's
+    dorsoventral axis (the dominant direction of the CT slit's cross-section, kept dorsal), and
+    l = t x d. From the tip the cross-section is a triangle, apex dorsal and GLOTTIS_HEIGHT_MM tall
+    on a GLOTTIS_BASE_MM base, for GLOTTIS_RIM_MM; over GLOTTIS_FUNNEL_MM it narrows into an
+    ellipse with SPOUT_LUMEN_SEMI_AXES_MM, which runs to SPOUT_SHAPED_DEPTH_MM and then blends into
+    the CT lumen. The tip is a rounded mound (TIP_DOME_*) that the aperture opens through, solid
+    around the channel down to the funnel's end, which closes the CT's bevelled tip. The field is
+    a signed distance in voxels around the 0.5 level, so the surface is smooth below voxel size.
+    Below the funnel the channel stays SPOUT_WALL_MIN_MM inside the spout wall, so the laryngeal
+    lumen never opens into the nasopharynx.
+    """
+    from scipy.spatial import cKDTree
+
+    def air_at(points: np.ndarray) -> np.ndarray:
+        ijk = np.round((points - geometry.origin) / geometry.steps).astype(int) - lo
+        inside = np.all((ijk >= 0) & (ijk < field.shape), axis=-1)
+        result = np.zeros(len(points), dtype=bool)
+        result[inside] = field[tuple(ijk[inside].T)] > 0.5
+        return result
+
+    abbr = {int(k): v["abbreviatedLabel"] for k, v in labels["edgeLabels"].items()}
+    spout = next(e for e in graph["edges"] if abbr[e["id"]] == "LS")
+    points = np.asarray(spout["pointsLps"], dtype=float)
+    glottis = np.asarray(spout_review["glottisLps"], dtype=float)
+    start = int(np.argmin(np.linalg.norm(points - glottis, axis=1)))
+    # The scope's own path: the straight entry from the nasopharynx to the glottis point, then the
+    # slit. The aperture is centred where the scope crosses the tip, square to its path.
+    arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))])
+    arc -= arc[start]
+    keep = arc <= SPOUT_SHAPED_DEPTH_MM + SPOUT_BLEND_MM + 12
+    line, along = points[keep], arc[keep]
+    tangents = np.gradient(line, axis=0)
+    tangents /= np.linalg.norm(tangents, axis=1, keepdims=True)
+    entry = glottis - line[0]
+    tangents[along < 0] = entry / np.linalg.norm(entry)
+
+    spacing = geometry.spacing
+    reach = max(GLOTTIS_HEIGHT_MM, 2 * SPOUT_LUMEN_SEMI_AXES_MM[0]) + 4.0
+    box_lo = np.floor(((line.min(0) - reach) - geometry.origin) / geometry.steps).astype(int)
+    box_hi = np.ceil(((line.max(0) + reach) - geometry.origin) / geometry.steps).astype(int)
+    box_lo, box_hi = np.minimum(box_lo, box_hi), np.maximum(box_lo, box_hi)
+    a = np.maximum(box_lo - lo, 0)
+    b = np.minimum(box_hi - lo + 1, field.shape)
+    region = field[a[0] : b[0], a[1] : b[1], a[2] : b[2]]
+    ijk = np.stack(np.meshgrid(*[np.arange(a[i], b[i]) for i in range(3)], indexing="ij"), -1)
+    lps = geometry.lps(ijk + lo)
+    distance, nearest = cKDTree(line).query(lps.reshape(-1, 3))
+    distance = distance.reshape(region.shape)
+    nearest = nearest.reshape(region.shape)
+    s = along[nearest]
+    t = tangents[nearest]
+    offset = lps - line[nearest]
+
+    # The slit's dorsoventral axis, from the CT lumen 10-60 mm below the glottis.
+    deep = (region > 0.5) & (s > 10) & (s < 60) & (distance < 4.5)
+    cross = offset[deep] - (offset[deep] * t[deep]).sum(-1, keepdims=True) * t[deep]
+    values, vectors = np.linalg.eigh(cross.T @ cross)
+    dorsal = vectors[:, int(np.argmax(values))]
+    if dorsal[1] < 0:  # LPS +y is posterior: dorsal in this prone animal.
+        dorsal = -dorsal
+    d = dorsal - (t * dorsal).sum(-1, keepdims=True) * t
+    d /= np.linalg.norm(d, axis=-1, keepdims=True)
+    lateral = np.cross(t, d)
+    u = (offset * lateral).sum(-1)
+    v = (offset * d).sum(-1)
+
+    # The tip of the spout: going back up the slit axis from the glottis point, where a 5 mm disc
+    # across it is mostly nasopharyngeal air. The CT slit runs that far above the glottis point.
+    tip = float(along.min())
+    for index in np.argsort(-along[along <= 0]):  # from the glottis point back up the entry
+        across = np.linalg.svd(np.eye(3) - np.outer(tangents[index], tangents[index]))[0][:, :2]
+        ring = np.array([np.cos(a) * across[:, 0] + np.sin(a) * across[:, 1] for a in np.linspace(0, 2 * np.pi, 24, endpoint=False)])
+        if air_at(line[index] + 5.0 * ring).mean() >= 0.6:
+            tip = float(along[index])
+            break
+    spout_review["tipAboveGlottisMm"] = round(-tip, 1)
+    spout_review["dorsalAxisLps"] = np.round(dorsal, 4).tolist()
+    s = s - tip  # from here on, s is the depth below the tip surface
+
+    # Triangle, apex dorsal: inside distance to its three edges (positive inside).
+    # Centred on its circumcentre, so the three corners sit equally far inside the tip.
+    half_b = GLOTTIS_BASE_MM / 2
+    leg = np.hypot(GLOTTIS_HEIGHT_MM, half_b)
+    apex = leg**2 / (2 * GLOTTIS_HEIGHT_MM)
+    side = np.array([GLOTTIS_HEIGHT_MM, half_b]) / leg
+    triangle = np.minimum.reduce(
+        [
+            v + GLOTTIS_HEIGHT_MM - apex,  # above the base
+            (apex - v) * side[1] - np.abs(u) * side[0],  # inside both slanted sides
+        ]
+    )
+    ax, al = SPOUT_LUMEN_SEMI_AXES_MM
+    radius = np.sqrt((v / ax) ** 2 + (u / al) ** 2)
+    ellipse = (1 - radius) * min(ax, al)
+    w = np.clip((s - GLOTTIS_RIM_MM) / GLOTTIS_FUNNEL_MM, 0, 1)
+    shaped = (1 - w) * triangle + w * ellipse
+
+    # The spout wall: distance to air that is not the laryngeal lumen.
+    air = region > 0.5
+    # Below the tip the aditus and the slit are one air space, apart from the nasopharynx.
+    components, _ = ndi.label(air & (s > 2.5), structure=ndi.generate_binary_structure(3, 1))
+    probe = (s > 25) & (s < 45) & (distance < 1.5) & air
+    lumen_ids = np.setdiff1d(np.unique(components[probe]), [0])
+    lumen = np.isin(components, lumen_ids)
+    other_air = air & ~lumen & (s > 2)
+    wall = ndi.distance_transform_edt(~other_air, sampling=spacing)
+    funnel_end = GLOTTIS_RIM_MM + GLOTTIS_FUNNEL_MM
+    shaped = np.where(s > funnel_end, np.minimum(shaped, wall - SPOUT_WALL_MIN_MM), shaped)
+
+    voxel = float(spacing.mean())
+    air_level = np.clip(0.5 + shaped / voxel, 0, 1)
+    # The rounded tip: tissue under a paraboloid cap around the path, except the aperture.
+    radius_mm = np.sqrt(u**2 + v**2)
+    cap = -TIP_DOME_HEIGHT_MM * (1 - (radius_mm / TIP_DOME_RADIUS_MM) ** 2)
+    dome = np.minimum(s - cap, TIP_DOME_RADIUS_MM - radius_mm)
+    tissue_level = np.clip(0.5 - dome / voxel, 0, 1)
+
+    near = distance < reach
+    tip_zone = near & (s > -TIP_DOME_HEIGHT_MM - 2) & (s <= funnel_end + 2)
+    replace = near & (s > funnel_end + 2) & (s < SPOUT_SHAPED_DEPTH_MM) & ~other_air
+    blend = near & (s >= SPOUT_SHAPED_DEPTH_MM) & (s < SPOUT_SHAPED_DEPTH_MM + SPOUT_BLEND_MM)
+    region[tip_zone] = np.maximum(air_level[tip_zone], np.minimum(region[tip_zone], tissue_level[tip_zone]))
+    region[replace] = air_level[replace]
+    region[blend] = np.maximum(region[blend], air_level[blend])
+
+
+def build_lumen_mesh(
+    mask: np.ndarray, geometry: VolumeGeometry, shape: Any = None
+) -> tuple[trimesh.Trimesh, dict[str, Any]]:
     present = np.argwhere(mask)
     lo = present.min(0) - 2
     hi = present.max(0) + 3
     crop = np.zeros(hi - lo, dtype=np.float32)
     inner = mask[max(lo[0], 0) : hi[0], max(lo[1], 0) : hi[1], max(lo[2], 0) : hi[2]]
     crop[: inner.shape[0], : inner.shape[1], : inner.shape[2]] = inner
+    if shape is not None:
+        shape(crop, lo)
+        # Shaping can seal off a pocket of air; only the airway itself is meshed.
+        components, count = ndi.label(crop > 0.5, structure=ndi.generate_binary_structure(3, 1))
+        if count > 1:
+            sizes = np.bincount(components.ravel())
+            sizes[0] = 0
+            crop[(components != sizes.argmax()) & (components > 0)] = 0
     verts, faces, _, _ = marching_cubes(crop, level=0.5, method="lewiner")
     mesh = trimesh.Trimesh(geometry.lps(verts + lo), faces, process=True)
     trimesh.smoothing.filter_taubin(mesh, lamb=0.5, nu=-0.53, iterations=12)
@@ -1124,16 +1299,31 @@ def build_ct_preview(
     }
 
 
-def orientation_landmarks(graph: dict[str, Any], labels: dict[str, Any]) -> list[dict[str, Any]]:
+def orientation_landmarks(
+    graph: dict[str, Any], labels: dict[str, Any], spout_review: dict[str, Any]
+) -> list[dict[str, Any]]:
     """Roll the flexible view through the spout so the trachea reads as it does with the animal
     in sternal recumbency: dorsal at the top of the screen and the right main bronchus on
     the screen left (Tsang et al., J Wildl Dis 2002, Fig. 3). Parallel transport alone carries
     the twist of the curved nasal and laryngeal path."""
     abbr = {int(k): v["abbreviatedLabel"] for k, v in labels["edgeLabels"].items()}
     spout = next(e for e in graph["edges"] if abbr[e["id"]] == "LS")
+    pharynx = next(e for e in graph["edges"] if abbr[e["id"]] == "NPX")
     carina = next(n for n in graph["nodes"] if n["id"] == graph["carinaNodeId"])
     main = {abbr[e]: e for e in carina["childEdgeIds"]}
     return [
+        {
+            "id": "spout",
+            "label": "Laryngeal spout",
+            "edgeId": pharynx["id"],
+            "distanceMm": round(pharynx["lengthMm"] - 0.5, 1),
+            "targetEdgeId": spout["id"],
+            "screenDirection": "up",
+            # The slit's dorsal axis (shape_spout_field) at the top of the screen, the view still
+            # facing the glottis; the right fornix then lies to the screen left.
+            "upLps": spout_review["dorsalAxisLps"],
+            "expectation": "Dorsal at the top; the glottis a triangle at the spout tip, apex up, with the fornix on each side",
+        },
         {
             "id": "trachea",
             "label": "Trachea",
@@ -1174,8 +1364,8 @@ def build_manifest(
             "centerlineLabelsJson": f"{ASSET_BASE_URL}/metadata/centerline_labels.json",
             "ctPreviewRaw": ct_asset["previewRawUrl"],
         },
-        "airwayTransform": {**identity, "note": "lumen.glb is written in patient LPS millimeters."},
-        "airwaySurfaceTransform": {**identity, "note": "lumen.glb is aligned with the CT and centerlines."},
+        "airwayTransform": {**identity, "note": f"{LUMEN_GLB_NAME} is written in patient LPS millimeters."},
+        "airwaySurfaceTransform": {**identity, "note": f"{LUMEN_GLB_NAME} is aligned with the CT and centerlines."},
         "ct": ct_asset,
         "geometryValidation": {
             "schema": "lumen-validation/v1",
@@ -1186,8 +1376,9 @@ def build_manifest(
             "units": "mm",
             "topology": review["topology"],
         },
-        "orientationLandmarks": orientation_landmarks(graph, labels),
+        "orientationLandmarks": orientation_landmarks(graph, labels, review["spout"]),
         "ostialLandmarks": [],
+        "appearance": {"mucosaTint": MUCOSA_TINT},
         "interaction": {
             "rootNodeId": graph["rootNodeId"],
             "carinaNodeId": graph["carinaNodeId"],

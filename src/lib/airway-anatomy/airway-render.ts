@@ -74,7 +74,25 @@ export function loadAirwayStlGeometry(
  * with distance, and a wet specular sheen. Rendered on the BackSide so the camera sits inside the
  * lumen. `toneMapped: false` keeps it consistent whether the scene uses ACES tone mapping or not.
  */
-export function createBronchoscopyMaterial(): THREE.ShaderMaterial {
+export interface MucosaTint {
+  /** The shader's two base tones in linear RGB, darker and lighter; the noise mixes between them. */
+  readonly low: readonly [number, number, number]
+  readonly high: readonly [number, number, number]
+}
+
+const MUCOSA_BASE_LINE = 'vec3 base=mix(vec3(0.51,0.205,0.19),vec3(0.76,0.395,0.36),broad);'
+
+/** The mucosa shader with a case's own base tones; without a tint it is the shared shader. */
+export function tintedMucosaFragmentShader(tint?: MucosaTint): string {
+  if (!tint) return mucosaFragmentShader
+  const vec = (c: readonly number[]) => `vec3(${c.map((x) => x.toFixed(3)).join(',')})`
+  return mucosaFragmentShader.replace(
+    MUCOSA_BASE_LINE,
+    `vec3 base=mix(${vec(tint.low)},${vec(tint.high)},broad);`,
+  )
+}
+
+export function createBronchoscopyMaterial(tint?: MucosaTint): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     toneMapped: false,
@@ -84,7 +102,7 @@ export function createBronchoscopyMaterial(): THREE.ShaderMaterial {
       uHeadlightFalloff: { value: 0 },
     },
     vertexShader: mucosaVertexShader,
-    fragmentShader: mucosaFragmentShader,
+    fragmentShader: tintedMucosaFragmentShader(tint),
   })
 }
 
