@@ -140,6 +140,7 @@ const MCS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
   'TEXT-CASE-BASED-LVAD-INPATIENT-2021': 'Steiner & Tran',
   'TEXT-CASE-BASED-LVAD-OUTPATIENT-2021': 'Yousefzai & Urey',
   'TEXT-CASE-BASED-LVAD-COMPLICATIONS-2021': 'Perna & Wettersten',
+  'bsg-lvad-emergencies-2024': 'British societies LVAD emergency guideline',
 }
 
 /**
