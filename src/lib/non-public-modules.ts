@@ -139,14 +139,21 @@ export const nonPublicModules: NonPublicModule[] = [
     title: 'Dolphin Airway — Synchronized Bronchoscopy',
     group: 'Bronchoscopy',
     summary:
-      'Virtual bronchoscopy of a dolphin from the bony nasal passages through the laryngeal spout to the principal bronchi, with synchronized 3D and CT views.',
+      'Virtual bronchoscopy of a dolphin from the bony nasal passages through the laryngeal spout to the principal bronchi, with synchronized 3D and CT views. Sandbox used by the Dolphin Bronchoscopy module.',
   },
   {
     path: '/learn/anatomy/dolphin',
     title: 'Dolphin Anatomy in 3D',
     group: 'Bronchoscopy',
     summary:
-      'A 3D model of a bottlenose dolphin from CT: skeleton, airway and lungs, heart and aorta, brain, sinuses and body wall.',
+      'A 3D model of a bottlenose dolphin from CT: skeleton, airway and lungs, heart and aorta, brain, sinuses and body wall. Sandbox used by the Dolphin Bronchoscopy module.',
+  },
+  {
+    path: '/dolphin-bronchoscopy',
+    title: 'Dolphin Bronchoscopy',
+    group: 'Bronchoscopy',
+    summary:
+      'A self-paced module for veterinarians: the dolphin airway map and numbered branches, the NMMP procedure from planning and sedation to passing the laryngeal spout, the survey and record, lavage, brush and biopsy, complications and recovery, on the dolphin simulator.',
   },
   {
     path: '/learn/anatomy/branch-tracing',

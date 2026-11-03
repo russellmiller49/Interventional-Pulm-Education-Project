@@ -9537,5 +9537,71 @@
       "trayRetry": "重试设备查询",
       "navCompare": "比较"
     }
+  },
+  "dolphinBronchoscopy": {
+    "meta": {
+      "title": "海豚支气管镜检查",
+      "description": "面向兽医的自定进度模块：宽吻海豚支气管镜检查的气道图谱、术前计划、通过喉喙、全面检查与记录、取样及并发症。"
+    },
+    "frame": {
+      "eyebrow": "兽医支气管镜 · 宽吻海豚",
+      "title": "海豚支气管镜检查",
+      "subtitle": "从喷气孔到编号分支。",
+      "releaseLabel": {
+        "unlisted": "开发中 · 直接链接",
+        "published": "公开发布"
+      },
+      "englishFallback": "英文内容：本模块的西班牙语和简体中文译本尚未提供。",
+      "safetyNotice": "在这里学习图谱、计划和决策。实际操作技能需在督导下培养。"
+    },
+    "nav": {
+      "label": "海豚支气管镜检查章节",
+      "overview": {
+        "title": "概览",
+        "description": "学习路径与上次进度"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "从喷气孔到恢复的各章节"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "短病例、练习与图像"
+      },
+      "assess": {
+        "title": "综合病例",
+        "description": "综合各章节的病例"
+      },
+      "reference": {
+        "title": "参考",
+        "description": "分支图、记录、首要步骤、数值"
+      }
+    },
+    "hub": {
+      "continue": "继续",
+      "startAtFirst": "从第一节开始",
+      "practiceLink": "练习病例与练习",
+      "integratedLink": "综合病例",
+      "referenceLink": "参考",
+      "simulatorLink": "打开完整的同步支气管镜",
+      "anatomyLink": "打开三维海豚"
+    },
+    "stage": {
+      "panes": {
+        "steps": "要做什么",
+        "simulator": "气道或动物",
+        "teaching": "其含义"
+      },
+      "help": {
+        "title": "我现在该做什么？",
+        "skipNote": "任何步骤都可以跳过，任何问题都可以在作答前显示解释。答案不会保存。",
+        "deviceNote": "本设备会保存您打开的章节、您的位置，以及您标记为已复习或稍后复习的章节。"
+      }
+    },
+    "simulator": {
+      "loading": "正在加载海豚气道…",
+      "unavailable": "模拟器无法在此设备上启动。",
+      "liteAlternative": "改用静态图像"
+    }
   }
 }

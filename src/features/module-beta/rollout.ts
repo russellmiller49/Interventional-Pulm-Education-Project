@@ -35,6 +35,7 @@ export const betaRollout: BetaRollout = {
   'live-anatomy': { stage: 'preview' },
   'peripheral-imaging': { stage: 'preview' },
   'bronchoscopy-foundations': { stage: 'preview' },
+  'dolphin-bronchoscopy': { stage: 'preview' },
   devices: { stage: 'preview' },
   'literature-atlas': { stage: 'preview' },
   'cardiohelp-ecmo': { stage: 'preview' },

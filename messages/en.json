@@ -9537,5 +9537,71 @@
       "trayRetry": "Retry device lookup",
       "navCompare": "Compare"
     }
+  },
+  "dolphinBronchoscopy": {
+    "meta": {
+      "title": "Dolphin Bronchoscopy",
+      "description": "A self-paced module for veterinarians on bottlenose dolphin bronchoscopy: the airway map, the plan, passing the laryngeal spout, the survey and record, sampling and complications."
+    },
+    "frame": {
+      "eyebrow": "Veterinary bronchoscopy · Bottlenose dolphin",
+      "title": "Dolphin Bronchoscopy",
+      "subtitle": "From the blowhole to a numbered branch.",
+      "releaseLabel": {
+        "unlisted": "In development · direct link",
+        "published": "Public release"
+      },
+      "englishFallback": "English content: Spanish and Simplified Chinese translations of this module are not yet available.",
+      "safetyNotice": "Learn the map, the plan and the decisions here. Build the hands-on skill under supervision."
+    },
+    "nav": {
+      "label": "Dolphin bronchoscopy sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Pathway map and where you left off"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Sections from the blowhole to recovery"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Short cases, drills and frames"
+      },
+      "assess": {
+        "title": "Integrated cases",
+        "description": "Cases that combine the sections"
+      },
+      "reference": {
+        "title": "Reference",
+        "description": "Branch map, record, first moves, numbers"
+      }
+    },
+    "hub": {
+      "continue": "Continue",
+      "startAtFirst": "Start at section one",
+      "practiceLink": "Practice cases and drills",
+      "integratedLink": "Integrated cases",
+      "referenceLink": "Reference",
+      "simulatorLink": "Open the full synchronized bronchoscopy",
+      "anatomyLink": "Open the 3D dolphin"
+    },
+    "stage": {
+      "panes": {
+        "steps": "what to do",
+        "simulator": "the airway or the animal",
+        "teaching": "what it means"
+      },
+      "help": {
+        "title": "What do I do now?",
+        "skipNote": "Any step can be skipped, and any question can show its explanation before you answer. Answers are not saved.",
+        "deviceNote": "This device keeps the sections you open, where you were, and the sections you mark reviewed or save for later."
+      }
+    },
+    "simulator": {
+      "loading": "Loading the dolphin airway…",
+      "unavailable": "The simulator could not start on this device.",
+      "liteAlternative": "Use the still frames instead"
+    }
   }
 }

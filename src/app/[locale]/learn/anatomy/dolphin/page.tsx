@@ -49,6 +49,13 @@ export default function DolphinAnatomyPage() {
                 <h1 className={simulatorPage.title}>Dolphin Anatomy in 3D</h1>
               </div>
               <div className={simulatorPage.actions}>
+                <Link
+                  href={'/dolphin-bronchoscopy' as Route}
+                  className={simulatorPage.aboutLink}
+                  data-dolphin-module-banner
+                >
+                  Part of the Dolphin Bronchoscopy module
+                </Link>
                 <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
                   Learning objectives
                 </a>

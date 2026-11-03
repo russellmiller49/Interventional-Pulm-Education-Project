@@ -9537,5 +9537,71 @@
       "trayRetry": "Reintentar la búsqueda de dispositivos",
       "navCompare": "Comparar"
     }
+  },
+  "dolphinBronchoscopy": {
+    "meta": {
+      "title": "Broncoscopia en delfines",
+      "description": "Un módulo a su ritmo para veterinarios sobre la broncoscopia del delfín mular: el mapa de la vía aérea, la planificación, el paso por el pico laríngeo, la exploración y el registro, el muestreo y las complicaciones."
+    },
+    "frame": {
+      "eyebrow": "Broncoscopia veterinaria · Delfín mular",
+      "title": "Broncoscopia en delfines",
+      "subtitle": "Del espiráculo a una rama numerada.",
+      "releaseLabel": {
+        "unlisted": "En desarrollo · enlace directo",
+        "published": "Versión pública"
+      },
+      "englishFallback": "Contenido en inglés: las traducciones al español y al chino simplificado de este módulo aún no están disponibles.",
+      "safetyNotice": "Aprenda aquí el mapa, el plan y las decisiones. Desarrolle la destreza práctica bajo supervisión."
+    },
+    "nav": {
+      "label": "Secciones de broncoscopia en delfines",
+      "overview": {
+        "title": "Resumen",
+        "description": "Mapa del recorrido y dónde lo dejó"
+      },
+      "learn": {
+        "title": "Aprender",
+        "description": "Secciones del espiráculo a la recuperación"
+      },
+      "practice": {
+        "title": "Practicar",
+        "description": "Casos breves, ejercicios e imágenes"
+      },
+      "assess": {
+        "title": "Casos integrados",
+        "description": "Casos que combinan las secciones"
+      },
+      "reference": {
+        "title": "Referencia",
+        "description": "Mapa de ramas, registro, primeros pasos, cifras"
+      }
+    },
+    "hub": {
+      "continue": "Continuar",
+      "startAtFirst": "Empezar por la sección uno",
+      "practiceLink": "Casos y ejercicios de práctica",
+      "integratedLink": "Casos integrados",
+      "referenceLink": "Referencia",
+      "simulatorLink": "Abrir la broncoscopia sincronizada completa",
+      "anatomyLink": "Abrir el delfín en 3D"
+    },
+    "stage": {
+      "panes": {
+        "steps": "qué hacer",
+        "simulator": "la vía aérea o el animal",
+        "teaching": "qué significa"
+      },
+      "help": {
+        "title": "¿Qué hago ahora?",
+        "skipNote": "Puede omitir cualquier paso, y cualquier pregunta puede mostrar su explicación antes de responder. Las respuestas no se guardan.",
+        "deviceNote": "Este dispositivo guarda las secciones que abre, dónde estaba y las secciones que marca como revisadas o guarda para más tarde."
+      }
+    },
+    "simulator": {
+      "loading": "Cargando la vía aérea del delfín…",
+      "unavailable": "El simulador no pudo iniciarse en este dispositivo.",
+      "liteAlternative": "Usar las imágenes fijas"
+    }
   }
 }

@@ -32,16 +32,16 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 14 modules: EBUS Guided, the EUS-B Simulator, the two airway simulators, the
+The hub offers 15 modules: EBUS Guided, the EUS-B Simulator, the two airway simulators, the
 existing live anatomy lesson, Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy
-Foundations, the Literature Atlas tester preview (see
+Foundations, Dolphin Bronchoscopy (for veterinarians), the Literature Atlas tester preview (see
 [Literature Atlas preview](literature-atlas-preview.md)), and the five critical care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 `/en/learn/anatomy/airway`.
 
 The hub separates **Ready for review** from **Still in development**. Ready cards appear first
 with a tester note: a summary, estimated minutes, what to look for, and known limits or content
-still under faculty review. The ready section is omitted when empty. All 14 modules currently
+still under faculty review. The ready section is omitted when empty. All 15 modules currently
 remain `preview` under **Still in development**, grouped by Bronchoscopy, Devices, Literature and
 Critical care; empty groups are omitted. Readiness changes presentation only: every card keeps its
 **Test with feedback** wrapper link and **Standard module** link, with the same access and
@@ -131,6 +131,10 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
    Literature Atlas submissions, keeping all 14 earlier module IDs. **Not applied.** Until it is,
    feedback on the Literature Atlas card cannot be saved; applying it is one of the owner's
    go-live steps in [Literature Atlas preview](literature-atlas-preview.md).
+5. `supabase/migrations/20261103180000_add_dolphin_bronchoscopy_to_module_beta_feedback.sql`:
+   permits Dolphin Bronchoscopy submissions, keeping every earlier module ID. **Not applied.**
+   Until it is, feedback on the Dolphin Bronchoscopy card cannot be saved. Apply it from the
+   primary checkout.
 
 The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
 literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
