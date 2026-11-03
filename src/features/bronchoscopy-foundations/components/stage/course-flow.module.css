@@ -310,6 +310,22 @@
 .sharedAirway figcaption {
   color: var(--muted);
 }
+/* The shared instrument lab draws with the site's theme tokens (HSL triplets read as
+   `hsl(var(--token))`). Here they point at this course's dark palette — panel, line, ink, muted and
+   the bright cyan — so the lab matches the page whichever theme the site is in. Its two drawings
+   keep their own white panels. The module shell sets `--muted` to a hex colour for its own text,
+   which `hsl(var(--muted))` cannot read; inside the lab it is the triplet again. */
+.instrumentLab {
+  --foreground: 180 31% 94%;
+  --card: 191 46% 12%;
+  --border: 188 25% 32%;
+  --primary: 182 69% 67%;
+  --primary-foreground: 187 70% 11%;
+  --muted: 190 43% 16%;
+  --muted-foreground: 188 14% 67%;
+  min-width: 0;
+  color: var(--ink);
+}
 .storageFailure {
   padding: 1rem;
   border: 2px solid var(--amber);

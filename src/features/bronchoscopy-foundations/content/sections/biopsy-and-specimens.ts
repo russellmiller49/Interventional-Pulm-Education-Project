@@ -13,10 +13,32 @@ import type { BronchSectionDefinition } from '../types'
  * question, options and key are unchanged, and its rationales are shortened to the length caps.
  * Sources: the course textbook's chapters on sampling (S1) and the training manual's pages on
  * accessories and specimens (S2), with BTS 2013 (U14) for the two numbers.
+ *
+ * One screen puts the three tools in the learner's hands (`instrument-lab`, the shared lab in
+ * `@/components/bronchoscopy-instruments`): forceps, brush and needle each worked through the
+ * channel, with the handle on the assistant's side. The needle is taught for its handling only —
+ * retracted in the channel, suction only in the target — and TBNA itself stays in the EBUS module.
  */
 const TOOLS = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 131 } },
   { sourceId: 'S2', location: { kind: 'pdf-pages', from: 23, to: 25 } },
+] as const
+/**
+ * Working each tool from the handle. S1 PDF 127–128: the brush kept in its sheath in the channel,
+ * pushed out by the assistant, and sheathed on the operator's word before it comes back. S1 PDF
+ * 147–149: the needle retracted while the catheter is in the scope, the assistant trained to work
+ * it, suction applied once in the target and the syringe off before the needle is drawn into its
+ * catheter. U24, page 340: the brush sheath worked by the assistant on request, which keeps the
+ * cells from being lost on the way out. T13: each open, close, brush and needle move called and
+ * answered aloud.
+ */
+const HANDLING = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 127, to: 128 } },
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 147, to: 149 } },
+  { sourceId: 'U24', location: { kind: 'section', label: 'Bronchial brushing, page 340' } },
+  { sourceId: 'T13', location: { kind: 'time-span', start: '00:17:04', end: '00:18:31' } },
+  { sourceId: 'T13', location: { kind: 'time-span', start: '00:22:05', end: '00:22:40' } },
+  { sourceId: 'T13', location: { kind: 'time-span', start: '00:26:08', end: '00:27:08' } },
 ] as const
 const SPECIMENS = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 121 } },
@@ -33,8 +55,11 @@ export const section: BronchSectionDefinition = {
   authoringContract: 2,
   title: 'Biopsy, brushing and specimens',
   shortTitle: 'Biopsy and specimens',
-  minutes: 10,
-  activityMinutes: 5,
+  minutes: 12,
+  // Five for the picture questions, the brush exchange and the routing; one for the instrument lab.
+  // The lab's minute is estimated, not timed, and held there by the twelve-minute section cap: a
+  // first pass through all three tools may take longer.
+  activityMinutes: 6,
   moduleIds: ['M13', 'M14'],
   objectives: [
     {
@@ -155,7 +180,26 @@ export const section: BronchSectionDefinition = {
         'A central spike: holds on a flat wall.',
       ],
       claimClass: 'source',
-      sourceRefs: TOOLS,
+      sourceRefs: [
+        ...TOOLS,
+        { sourceId: 'U24', location: { kind: 'section', label: 'Endobronchial biopsy, page 340' } },
+      ],
+      reviewItemIds: ['R28'],
+    },
+    {
+      id: 'working-the-handle',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Working the handle',
+      body: 'Advance the tool until it is clear of the scope tip. Only then open the cups, push out the brush or drive out the needle.\n\nYour assistant works the handle on your spoken command and says each move back. Name the move, such as “Brush in,” not “Pull it back.”\n\nA needle out inside the scope punctures the channel. Apply suction only while the needle is in the target, and release it before the needle leaves.',
+      pointsLabel: 'Before it comes back into the channel',
+      points: [
+        'Forceps: cups closed on the specimen.',
+        'Brush: inside its sheath, or its cells are wiped off in the channel.',
+        'Needle: inside its catheter, with the suction already released.',
+      ],
+      claimClass: 'source',
+      sourceRefs: HANDLING,
       reviewItemIds: ['R28'],
     },
     {
@@ -167,6 +211,7 @@ export const section: BronchSectionDefinition = {
       claimClass: 'source',
       sourceRefs: [
         ...TOOLS,
+        { sourceId: 'U24', location: { kind: 'section', label: 'Bronchial brushing, page 340' } },
         { sourceId: 'U7', location: { kind: 'section', label: 'Section II recommendation' } },
       ],
       reviewItemIds: ['R25'],

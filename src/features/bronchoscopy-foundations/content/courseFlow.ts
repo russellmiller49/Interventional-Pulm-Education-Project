@@ -28,6 +28,8 @@ export type CourseVisual =
   | 'radiation-safety'
   | 'specimen-containers'
   | 'orientation-compass'
+  /** The shared instrument lab: forceps, brush and needle, each worked from the handle. */
+  | 'instrument-lab'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -592,6 +594,13 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'Read how a tool travels, then how to take a biopsy you can see.',
       ['through-the-channel', 'endobronchial-biopsy'],
       { visual: 'section' },
+    ),
+    screen(
+      'working-the-tools',
+      'Work each tool through the channel',
+      'Read the order, then take the forceps, the brush and the needle through it in the lab below.',
+      ['working-the-handle'],
+      { visual: 'instrument-lab' },
     ),
     {
       ...practice(
