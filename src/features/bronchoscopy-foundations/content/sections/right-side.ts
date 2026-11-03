@@ -247,7 +247,8 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'superior-from-lower-lobe',
-        label: 'Withdraw to the bronchus intermedius, then enter RB6 from the lower lobe',
+        label:
+          'From the middle lobe, withdraw to the bronchus intermedius, then enter RB6 from the lower lobe',
         test: {
           type: 'event-sequence',
           events: ['entered:RML', 'withdrew-to:BI', 'entered:RLL', 'entered:RB6'],

@@ -132,3 +132,23 @@ export function scopeGoalStatuses(
 export function scopeGoalsMet(goals: readonly ScopeGoal[], state: ScopeState): boolean {
   return goals.length > 0 && goals.every((goal) => scopeGoalTestMet(goal.test, state))
 }
+
+/**
+ * The event that has ruled a goal out for the rest of this attempt: a `without` clause it carries
+ * whose event has happened. Only a reset (a fresh state) can meet that goal again. Null when the
+ * goal can still be met.
+ */
+export function brokenWithout(test: ScopeGoalTest, state: ScopeState): ScopeEventId | null {
+  switch (test.type) {
+    case 'without':
+      return state.events.includes(test.event) ? test.event : null
+    case 'all':
+      for (const inner of test.tests) {
+        const broken = brokenWithout(inner, state)
+        if (broken) return broken
+      }
+      return null
+    default:
+      return null
+  }
+}

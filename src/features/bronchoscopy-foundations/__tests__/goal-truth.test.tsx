@@ -96,7 +96,19 @@ describe('a finished scope card after the tip has moved on', () => {
   })
 
   const heading = () => document.querySelector('[data-goal-group]')
-  const limit = () => document.querySelector('[data-goal-now]')?.textContent?.trim() ?? ''
+  /*
+   * Where the tip is now, said once (owner feedback, 2026-11-03): by the region strip's caption on a
+   * step that steers, by the pane's goal card on one that does not. The stage card no longer
+   * repeats it beside its list.
+   */
+  const limit = () => {
+    expect(document.querySelector('[data-goal-now]')).toBeNull()
+    const lines = [
+      ...document.querySelectorAll('[data-location-caption], [data-scope-goals-limit]'),
+    ]
+    expect(lines).toHaveLength(1)
+    return lines[0].textContent?.trim() ?? ''
+  }
   const claims = () =>
     [...document.querySelectorAll('[data-step-goals] li')].map((row) =>
       row.getAttribute('data-goal-claim'),
@@ -164,9 +176,9 @@ describe('a finished scope card after the tip has moved on', () => {
     // the tip is, apart from the record.
     expect(limit()).not.toMatch(/usable|judge/i)
 
-    // 5. Where the tip is now stays visible, and separate from the record.
-    expect(limit()).toContain(`Where the tip is now: ${pilot.state.location.fullLabel}.`)
-    expect(document.querySelector('[data-goal-now]')).not.toBe(heading())
+    // 5. Where the tip is now stays visible, once, and separate from the record.
+    expect(limit()).toContain(pilot.state.location.fullLabel)
+    expect(heading()?.textContent).not.toContain(pilot.state.location.fullLabel)
   })
 
   it('frames the pane’s own goal card the same way', async () => {
@@ -192,10 +204,12 @@ describe('a finished scope card after the tip has moved on', () => {
     expect(heading()?.textContent).toBe(PLAIN_GOALS_DONE_HEADING)
     const labelledBy = document.querySelector('[data-scope-goals]')?.getAttribute('aria-labelledby')
     expect(document.getElementById(labelledBy ?? '')?.textContent).toBe(PLAIN_GOALS_DONE_HEADING)
-    // A rewritten section's card says where the tip is and carries no sentence about the model.
-    const limit = document.querySelector('[data-scope-goals-limit]')?.textContent ?? ''
-    expect(limit).toContain('Where the tip is now')
-    expect(limit).not.toContain('does not judge the bronchoscope image')
+    // A rewritten section says where the tip is once (the region strip, on this steering step)
+    // and carries no sentence about the model.
+    expect(limit()).toBe(scopeLocationCaption(scopePilot().state))
+    expect(document.querySelector('[data-scope-goal-now]')?.textContent).not.toContain(
+      'does not judge the bronchoscope image',
+    )
     for (const pattern of APPROVING)
       expect(document.querySelector('[data-scope-goal-now]')?.textContent).not.toMatch(pattern)
   })
@@ -249,7 +263,7 @@ describe('a finished scope card after the tip has moved on', () => {
     expect(claims().every((claim) => claim === 'history')).toBe(true)
     expect(heading()?.textContent).toBe(PLAIN_GOALS_DONE_HEADING)
     expect(cardText()).not.toContain('Read from the scope right now')
-    expect(limit()).toContain('Where the tip is now: Left main bronchus.')
+    expect(limit()).toContain('Left main bronchus')
   })
 })
 
@@ -336,10 +350,16 @@ describe('the scripted hold, on the pane that still carries it', () => {
     expect(hold.met()).toEqual([true, true, true, true])
     expect(group()?.textContent).toBe(PLAIN_GOALS_DONE_HEADING)
     expect(row()?.textContent).toBe(PLAIN_DONE_LEAD)
-    // Where the tip is stays beside the card; the note on what the model judges is left out.
-    const limit = document.querySelector('[data-scope-goals-limit]')?.textContent ?? ''
-    expect(limit).toContain('Where the tip is now: Trachea.')
-    expect(limit).not.toContain('does not judge the bronchoscope image')
+    // Where the tip is stays beside the card, said once; the note on what the model judges is
+    // left out.
+    const where = [
+      ...document.querySelectorAll('[data-location-caption], [data-scope-goals-limit]'),
+    ]
+    expect(where).toHaveLength(1)
+    expect(where[0].textContent).toBe(scopeLocationCaption(hold.driver.state))
+    expect(document.querySelector('[data-scope-goal-now]')?.textContent).not.toContain(
+      'does not judge the bronchoscope image',
+    )
   })
 
   it('shows the scripted hold from the clock, and finishes it on the learner’s own actions', () => {

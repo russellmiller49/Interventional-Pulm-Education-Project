@@ -642,6 +642,11 @@ export interface ScopePaneProps {
   readonly helpTarget?: AirwayLabel | null
   readonly helpSentence?: string
   /**
+   * Said, unasked, when something done in this attempt means a goal can no longer be met in it
+   * (a `without` clause that has been broken), with the way to start again.
+   */
+  readonly blockedSentence?: string
+  /**
    * Opening names on request where a step does not offer the in-view labels control (A30). A
    * reference drawn by the pane: it sends no command, records no assist, and marks nothing seen or
    * inspected. `used` says whether it has been on during this attempt, so the pane's line about

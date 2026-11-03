@@ -39,7 +39,7 @@ export function patientDirectionTicks(state: Pick<ScopeState, 'pose' | 'place'>)
 
 /** What the ticks mean, beside the view. */
 export const PATIENT_TICK_LEGEND =
-  'Scope view: from the tip, looking along the airway. A marks the patient’s front and L the patient’s left, from the teaching model’s geometry; they move when the control section turns.'
+  'Scope view: from the tip, looking along the airway. A marks the patient’s front and L the patient’s left; they move when the control section turns.'
 
 /**
  * Where an opening's name goes in the image: a little way inside the airway, so the name sits in

@@ -210,6 +210,10 @@ button.ostium {
   background: var(--panel, #0b1620);
 }
 
+.mapStage {
+  min-width: 0;
+}
+
 .mapBox {
   position: relative;
   width: 100%;
@@ -306,6 +310,10 @@ label.mapPin {
   cursor: pointer;
 }
 
+.control[data-control='accessory'] {
+  flex-basis: 100%;
+}
+
 .control[data-spotlight='true'],
 .ledger[data-spotlight='true'] {
   outline: 2px solid var(--amber, #f6c177);
@@ -388,6 +396,23 @@ label.mapPin {
 }
 .goalNow .goalsHeading {
   margin: 0;
+}
+/* The heading and the link to the full list share one line, so the card stays short. */
+.goalNowHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.2rem 0.75rem;
+}
+/* A goal this attempt can no longer meet, and the way to start again. */
+.goalBlocked {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid #f0a35e;
+  color: #fde3c8;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 .goalNow .goals {
   padding-left: 0;

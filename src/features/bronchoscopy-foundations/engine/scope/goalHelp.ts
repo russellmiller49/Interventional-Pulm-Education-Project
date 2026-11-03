@@ -11,6 +11,8 @@ import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import type {
+  AccessoryPosition,
+  AccessoryState,
   AirwayLabel,
   ScopeControlKey,
   ScopeEventId,
@@ -20,7 +22,14 @@ import type {
 } from '../../components/scope/types'
 import { airwayDisplayName, labelAncestry, treeNodeByLabel } from '../../content/airwayTree'
 import { namingSubject } from './inspectionLedger'
-import { scopeGoalTestMet } from './scopeGoalEvaluation'
+import { accessoryKind } from './scopeAccessory'
+import { brokenWithout, scopeGoalTestMet } from './scopeGoalEvaluation'
+import {
+  ACCESSORY_CHECK_WORDS,
+  ACCESSORY_COMMAND_WORDS,
+  ACCESSORY_POSITION_BUTTON_WORDS,
+  ACCESSORY_TOOL_WORDS,
+} from './scopeMetrics'
 import type { ScopeCase } from './scopeCase'
 import { aimAt } from './scopeFrame'
 import { normalizeRotationDeg } from './scopeInputs'
@@ -309,6 +318,31 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+/**
+ * What to tell the assistant next. While the assistant's report has not been checked against the
+ * scope view, the next move is the check, not a second command: that is the misreport's lesson.
+ */
+function accessoryCommandHelp(target: AccessoryState, state: ScopeRuntimeState): GoalHelp {
+  const kind = accessoryKind(target)
+  const command = kind
+    ? ACCESSORY_COMMAND_WORDS[kind].find((entry) => entry.state === target)
+    : undefined
+  const phase = state.script?.id === 'assistant-misreport' ? state.script.phase : null
+  if (phase === 'misreported')
+    return {
+      control: 'verifyAccessory',
+      target: null,
+      sentence: `Your assistant has answered. Select ${ACCESSORY_CHECK_WORDS} before the tool moves.`,
+    }
+  return {
+    control: 'accessory',
+    target: null,
+    sentence: command
+      ? `${phase === 'revealed' ? 'The scope view disagrees with the report. ' : ''}Under Tell your assistant, choose ${command.words}.`
+      : 'Use the tool controls under the view.',
+  }
+}
+
 function eventHelp(
   event: ScopeEventId,
   state: ScopeRuntimeState,
@@ -349,13 +383,21 @@ function eventHelp(
         sentence: 'Use the highlighted control.',
       }
     case 'accessory':
-    case 'accessory-moved':
-      return { control: 'accessory', target: null, sentence: 'Use the accessory controls.' }
+      return accessoryCommandHelp(value as AccessoryState, state)
+    case 'accessory-moved': {
+      const kind = accessoryKind(state.inputs.accessory)
+      const where = kind ? ACCESSORY_TOOL_WORDS[kind].where : 'Where the tool is'
+      return {
+        control: 'accessory',
+        target: null,
+        sentence: `Under ${where}, choose ${ACCESSORY_POSITION_BUTTON_WORDS[value as AccessoryPosition]}.`,
+      }
+    }
     case 'accessory-state-verified':
       return {
         control: 'verifyAccessory',
         target: null,
-        sentence: 'Check the accessory against the image.',
+        sentence: `Select ${ACCESSORY_CHECK_WORDS}, with the tool at the tip or beyond it.`,
       }
     case 'returned-to-trachea':
       return {
@@ -406,6 +448,11 @@ export function goalHelp(
   view: ScopeViewSpec,
   scopeCase: ScopeCase | null,
 ): GoalHelp | null {
+  // A goal this attempt has ruled out moves on only with a fresh attempt.
+  if (brokenWithout(test, state))
+    return view.controls.includes('reset')
+      ? { control: 'reset', target: null, sentence: 'Reset the scope to start a fresh attempt.' }
+      : null
   const pending = pendingRequirement(test, state)
   if (!pending) return null
   switch (pending.kind) {

@@ -473,7 +473,10 @@ for (const viewport of [
             expect((await record(page)).reviewedSectionIds).toEqual([])
             expect(await earlierRecord(page)).toBeNull()
           }
-          if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
+          // The controls are live without the example (owner feedback, 2026-11-03); after
+          // watching it, Try with guidance hands them back on a fresh scope.
+          if (step.learn?.id === 'bend' || step.learn?.id === 'depth')
+            await pilotAction(page, 'Try with guidance')
 
           await ready(page)
           if (step.learn?.id === 'rotation') {
@@ -584,7 +587,6 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
     else await pilotContinue(page)
     await expect(stage(page)).not.toHaveAttribute('data-stage', current!)
   }
-  await pilotAction(page, 'Try with guidance')
   await page.getByRole('button', { name: 'Use the schematic view', exact: true }).click()
   const schematic = page.getByRole('img', { name: /^Schematic scope view/ })
   await expect(schematic).toBeVisible()
@@ -710,9 +712,9 @@ test('the survey asks which segment the tip is in, refuses a wrong name and reco
   const here = page.locator('[data-airway-pin][aria-current="location"]')
   await expect(here).toHaveText('?')
   await expect(here).toHaveAttribute('data-unnamed', 'true')
-  await expect(page.locator('[data-goal-now]')).toContainText(
-    'Where the tip is now: A segment you have not named yet.',
-  )
+  // Where the tip is is said once, by the region strip's caption (owner feedback, 2026-11-03).
+  await expect(locationCaption(page)).toContainText('A segment you have not named yet')
+  await expect(page.locator('[data-goal-now], [data-scope-goals-limit]')).toHaveCount(0)
   const help = page.locator('[data-goal-help]')
   await page.locator('[data-now-card]').getByRole('button', { name: 'Show me where' }).click()
   await expect(help).toHaveText('Choose this segment’s name from the list under the controls.')
@@ -725,7 +727,6 @@ test('the survey asks which segment the tip is in, refuses a wrong name and reco
   await expect(naming).toHaveAttribute('data-name-segment', 'waiting')
   await expect(nameList(page)).toHaveCount(0)
   await expect(locationCaption(page)).toContainText(name)
-  await expect(page.locator('[data-goal-now]')).toContainText(name)
   await expect(help).toHaveText(
     'Drive into a segment you have not named yet. Its list of names opens under the controls.',
   )
@@ -1131,8 +1132,11 @@ test('the worked accessory exchange keeps its false report and still ends protec
   await ready(page)
   const caption = page.locator('[data-demonstration-caption]')
   const message = page.locator('[data-scope-message]')
+  // The tool's buttons carry its true state on their group (owner feedback, 2026-11-03: the
+  // drop-downs are gone). The controls are live from the start; the example is optional.
   const accessory = control(page, 'accessory')
-  await primary(page).click()
+  await expect(page.locator('[data-scope-controls]')).toBeEnabled()
+  await pilotAction(page, 'Watch the example')
   await expect(caption).toContainText('protected brush enters the channel')
   const captions: string[] = []
   for (let i = 0; i < 7; i++) {
@@ -1141,32 +1145,32 @@ test('the worked accessory exchange keeps its false report and still ends protec
     // The assistant's false report is the teaching moment; it must still be here.
     if (/reports it done/.test(captions[i])) {
       await expect(message).toContainText('back in its sheath')
-      await expect(accessory).toHaveValue('brush-exposed')
+      await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-exposed')
     }
     if (/report does not hold/.test(captions[i])) {
       await expect(message).toContainText('disagree')
-      await expect(accessory).toHaveValue('brush-exposed')
+      await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-exposed')
     }
   }
   expect(captions.some((text) => /reports it done/.test(text))).toBe(true)
   expect(captions.some((text) => /report does not hold/.test(text))).toBe(true)
   // The example ends in the state its last line narrates, with no refusal on the way.
   await expect(caption).toContainText('protected brush returns into the channel')
-  await expect(accessory).toHaveValue('brush-sheathed')
-  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-sheathed')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'in-channel')
   await expect(message).toHaveCount(0)
   // Watching it is not doing it: the learner's own attempt starts from nothing.
   await page.getByRole('button', { name: 'Try with guidance' }).click()
-  await expect(accessory).toHaveValue('brush-sheathed')
-  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-sheathed')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'none')
   expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
   expect((await record(page)).reviewedSectionIds).toEqual([])
   // Replaying starts the example again from its first movement, on its own state.
   await page.getByRole('button', { name: 'Replay the example' }).click()
   await expect(caption).toContainText('protected brush enters the channel')
-  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'in-channel')
   await page.getByRole('button', { name: 'Try with guidance' }).click()
-  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'none')
   expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
@@ -1265,14 +1269,16 @@ for (const viewport of [
       await expect(carina).toHaveAttribute('data-met', 'true')
       const status = page.locator('[data-now-status]')
       const heading = page.locator('[data-goal-group]')
-      const limit = page.locator('[data-goal-now]')
+      // Where the tip is: said once, by the region strip's caption on this steering step.
+      const limit = locationCaption(page)
       // The goal card's plain wording (2026-10-13): what is done, never that the view is a good one.
       await expect(status).toHaveText(GOALS_MET_LEAD)
       await expect(heading).toHaveText('Goals met')
       await expect(page.locator('[data-goal-claim-tag]')).toHaveCount(0)
-      // A rewritten section's card says where the tip is and nothing about what it does not judge.
-      await expect(limit).toContainText('Where the tip is now')
-      await expect(limit).not.toContainText('usable')
+      // A rewritten section says where the tip is, once, and nothing about what it does not judge.
+      await expect(limit).toBeVisible()
+      await expect(page.locator('[data-goal-now], [data-scope-goals-limit]')).toHaveCount(0)
+      await expect(page.locator('[data-now-card]')).not.toContainText('usable')
       // Keep going past the target, the way the walkthrough did.
       for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
       // The events happened, so the ticks stay; the headline still reports only the goals.
@@ -1282,13 +1288,12 @@ for (const viewport of [
         'Every goal on this card is met',
       )
       // Where the tip is now stays visible, and separate from the record.
-      await expect(limit).toContainText('Where the tip is now:')
-      await expect(limit).not.toContainText('Where the tip is now: Trachea.')
+      await expect(limit).toBeVisible()
+      await expect(limit).not.toContainText(/The (trachea|main carina) \(/)
       expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
       // The pane's own green list carries the same framing, not a bare row of ticks.
       await expect(page.locator('[data-scope-goals-group]')).toHaveText('Goals met')
-      await expect(page.locator('[data-scope-goals-limit]')).toContainText('Where the tip is now')
-      await expect(page.locator('[data-scope-goals-limit]')).not.toContainText('usable')
+      await expect(page.locator('[data-scope-goal-now]')).not.toContainText('usable')
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true)
@@ -1319,7 +1324,7 @@ for (const viewport of [
         await expect(heading).toBeVisible()
         await expect(limit).toBeVisible()
         await expect(status).toHaveText(GOALS_MET_LEAD)
-        await expect(page.locator('[data-scope-goals-limit]')).toBeVisible()
+        await expect(page.locator('[data-scope-goal-now]')).toBeVisible()
         await shot(await themeOf())
       }
       expect(
@@ -1342,7 +1347,8 @@ test('a named segment stays named after the scope leaves it, and is not asked ag
   await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
   await expect(page.locator('[data-goal-group]')).toHaveText('Goals for this task')
   await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
-  await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
+  await expect(locationCaption(page)).toBeVisible()
+  await expect(page.locator('[data-goal-now]')).toHaveCount(0)
 
   const aim = await driveIntoUnnamedSegment(page)
   const { label } = await nameTheSegment(page)
@@ -2041,7 +2047,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     const dock = page.locator('[data-scope-controls]')
     if ((await page.locator('[data-three-state]').getAttribute('data-three-state')) !== 'ready')
       await expect(dock).toHaveAttribute('disabled', '')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     const compass = page.locator('[data-tip-compass]')
     for (const angle of [0, 15, 60, -60, 120, -120]) {
@@ -2065,7 +2070,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     await setRange(page, 'deflect', 0)
 
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 30)
     for (const [rotation, bendUp, words] of [
@@ -2641,7 +2645,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 0)
     await setRange(page, 'rotate', 0)
@@ -2733,7 +2736,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 0)
     await control(page, 'deflect').focus()
@@ -2755,7 +2757,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     const pane = page.locator('[data-scope-scene]')
     const overlay = page.locator('[data-bench-off-card]')
@@ -2961,7 +2962,7 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
     await expect(page.locator('[data-scope-goals-group]')).toHaveText('Goals met')
     await expect(page.locator('[data-now-status]')).toHaveText(GOALS_MET_LEAD)
     await expect(page.locator('[data-goal-claim-tag]')).toHaveCount(0)
-    await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now: Trachea.')
+    await expect(caption).toContainText(/The (trachea|main carina) \(/)
     await expect(primary(page)).toBeEnabled()
     expect((await record(page)).reviewedSectionIds).toEqual([])
   })

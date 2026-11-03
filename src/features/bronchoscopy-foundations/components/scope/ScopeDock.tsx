@@ -2,33 +2,25 @@
 
 import { useEffect, useRef, type PointerEvent } from 'react'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
-import { ACCESSORY_POSITION_WORDS, ACCESSORY_STATE_WORDS } from '../../engine/scope/scopeMetrics'
+import { ACCESSORY_CHECK_WORDS } from '../../engine/scope/scopeMetrics'
 import {
   scopeControlId,
   type ScopePaneProps,
   type ScopeCommand,
   type ScopeControlKey,
   type ScopeInputMode,
-  type AccessoryState,
-  type AccessoryPosition,
 } from './types'
 import styles from './scope-scene.module.css'
-import { accessoryKind } from '../../engine/scope/scopeAccessory'
 import { isForkWaitMessage } from '../../engine/scope/scopeMessages'
-import { HELD_INTERVAL_MS, HELD_STEP_MM, HOLD_DELAY_MS, HOLD_RELEASE_MS } from './scopeKeyMap'
+import {
+  dockKeyOrder,
+  HELD_INTERVAL_MS,
+  HELD_STEP_MM,
+  HOLD_DELAY_MS,
+  HOLD_RELEASE_MS,
+} from './scopeKeyMap'
 import { NameSegment } from './NameSegment'
-
-/**
- * Choosing a state here is a command to the assistant, not the state itself (SUP-16).
- *
- * The accessory is in the assistant's hands: the operator asks, the assistant answers, and only
- * the image settles what the accessory is actually doing — which is the whole point of the
- * misreport the section teaches. The selects therefore show the state the model is in, and this
- * note says that choosing one asks for a change rather than making it true.
- */
-const ACCESSORY_COMMAND_NOTE =
-  'Choosing here commands the assistant; the image settles what the accessory is doing.'
-const ACCESSORY_COMMAND_NOTE_ID = scopeControlId('accessory-command-note')
+import { AccessoryControls } from './AccessoryControls'
 
 /**
  * A press of Advance or Withdraw is one step. Held, it becomes a glide: ordinary advance commands
@@ -194,53 +186,12 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
         )
       case 'accessory':
         return (
-          <>
-            <p id={ACCESSORY_COMMAND_NOTE_ID} className={styles.commandNote}>
-              {ACCESSORY_COMMAND_NOTE}
-            </p>
-            <label htmlFor={id}>
-              Accessory
-              <select
-                id={id}
-                aria-label="Accessory"
-                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
-                value={state.inputs.accessory}
-                onChange={(event) =>
-                  send({ type: 'accessory', state: event.target.value as AccessoryState })
-                }
-              >
-                {Object.entries(ACCESSORY_STATE_WORDS)
-                  .filter(
-                    ([value]) =>
-                      accessoryKind(value as AccessoryState) ===
-                      accessoryKind(state.inputs.accessory),
-                  )
-                  .map(([value, text]) => (
-                    <option key={value} value={value}>
-                      {text}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label htmlFor={scopeControlId('accessory-move')}>
-              Accessory position
-              <select
-                id={scopeControlId('accessory-move')}
-                aria-label="Accessory position"
-                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
-                value={state.inputs.accessoryPosition}
-                onChange={(event) =>
-                  send({ type: 'accessory-move', to: event.target.value as AccessoryPosition })
-                }
-              >
-                {Object.entries(ACCESSORY_POSITION_WORDS).map(([value, text]) => (
-                  <option key={value} value={value}>
-                    {text}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
+          <AccessoryControls
+            state={state}
+            send={send}
+            offerCheck={view.controls.includes('verifyAccessory')}
+            spotlightKey={spotlightKey}
+          />
         )
       case 'capture':
         return button(key, 'Capture an image', { type: 'capture' })
@@ -265,13 +216,13 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
               checked={state.inputs.branchLabels}
               onChange={(event) => send({ type: 'branch-labels', on: event.target.checked })}
             />
-            In-view labels
+            Show the opening names
           </label>
         )
       case 'clearLens':
         return button(key, 'Clear the lens', { type: 'clear-lens' })
       case 'verifyAccessory':
-        return button(key, 'Check the accessory against the image', { type: 'verify-accessory' })
+        return button(key, ACCESSORY_CHECK_WORDS, { type: 'verify-accessory' })
       case 'step':
         return button(key, 'Step one second', { type: 'tick', seconds: 1 })
       case 'declare':
@@ -279,8 +230,7 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
     }
   }
   // A naming record asks its question in a row of its own, under the movement controls.
-  const keys: ScopeControlKey[] = view.controls.filter((key) => key !== 'declare')
-  if (props.needsStep && !keys.includes('step')) keys.push('step')
+  const keys = dockKeyOrder(view.controls, props.needsStep ? ['step'] : [])
   if (view.controls.includes('declare') && view.ledger?.naming) keys.push('declare')
   if (!keys.length) return null
   return (
