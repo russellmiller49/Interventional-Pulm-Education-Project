@@ -91,7 +91,11 @@ The enlarged feedback dialog gives the screenshot more room. The final annotated
 with the report, limited to 3 MB. Screenshots are optional; a comment is required. On the
 deployed beta, drafts are held in memory in the current testing page when the feedback dialog
 closes or a save fails; reloading or leaving that testing page discards the draft, and nothing
-about it is written to browser storage. The toolbar button reads **Continue feedback** only
+about it is written to browser storage. The dialog says so. While a draft is unsent, the browser
+asks before a reload or a closed tab discards it, and **All modules** asks for confirmation before
+leaving; staying keeps the draft, and with no draft nothing is asked. The browser's Back button,
+when the testing page was opened from the hub, is an in-app navigation the browser does not ask
+about and still discards the draft. The toolbar button reads **Continue feedback** only
 while the draft holds a comment, referenced text or an image; an empty dialog that is opened and
 closed leaves **Give feedback**. Local owner review keeps unsent drafts in that browser instead;
 see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmation is shown only after the
@@ -164,13 +168,16 @@ they stay in memory in one tab.
 
 - Targeted Jest coverage: catalog/access boundaries, signed-in and admin authorization,
   submission validation, account identity, retries, image rejection, cleanup after failed saves,
-  review updates, and existing development-navigation behavior.
+  review updates, the server-mode leave warnings (present only while a draft is unsent, gone
+  after a send, a discard or clearing it, never in owner-local mode), and existing
+  development-navigation behavior.
 - `npx playwright test --config playwright.module-beta.config.ts`: unlisted sign-in gate,
   real standard-route HTTP checks, normal pages without feedback controls, image upload and
   all four annotation tools, exact annotated PNG submission, selected-text/page context,
   draft preservation, failed-save retry, review edits, and mobile upload fallback; an empty dialog
   leaving no draft, and a server-mode draft leaving no IndexedDB database or storage key behind and
-  not surviving a reload. Native Chromium
+  not surviving a reload; the reload and **All modules** prompts appearing only while a server-mode
+  draft is unsent, with staying keeping it. Native Chromium
   capture verifies the module is visible without the feedback overlay and the media track stops.
   Other tabs/windows/screens and cancelled retakes preserve the previous annotated screenshot.
   Persistence responses use fixtures; real API calls confirm that preview

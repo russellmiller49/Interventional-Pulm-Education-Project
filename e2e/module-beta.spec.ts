@@ -255,7 +255,14 @@ test('server-mode drafts stay in memory: an empty dialog is no draft and nothing
   await page.mouse.wheel(0, 600)
   await page.waitForTimeout(200)
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  // The browser asks before the reload; leaving anyway discards the draft.
+  const prompts: string[] = []
+  page.on('dialog', (dialog) => {
+    prompts.push(dialog.type())
+    void dialog.accept()
+  })
   await page.reload()
+  expect(prompts).toEqual(['beforeunload'])
   await expect(
     page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
   ).toBeVisible()
@@ -265,6 +272,82 @@ test('server-mode drafts stay in memory: an empty dialog is no draft and nothing
   await page.getByRole('button', { name: 'Discard draft' }).click()
   expect(await kept()).toEqual({ databases: [], storage: [] })
   expect(posts).toBe(0)
+})
+
+test('leaving the testing page asks first only while a server-mode draft is unsent', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  await page.route('**/en/devices', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>Device Atlas</h1><p>Row label</p>' }),
+  )
+  await page.route('**/api/module-feedback', (route) =>
+    route.fulfill({ status: 201, json: { id } }),
+  )
+  const asked: string[] = []
+  const answers: Array<'accept' | 'dismiss'> = []
+  page.on('dialog', (dialog) => {
+    asked.push(`${dialog.type()}: ${dialog.message()}`)
+    void (answers.shift() === 'accept' ? dialog.accept() : dialog.dismiss())
+  })
+  const heading = page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' })
+  const button = page.getByRole('button', { name: /^(Give|Continue) feedback$/ })
+  const allModules = page.getByRole('link', { name: 'All beta modules' })
+  const leaveQuestion =
+    'confirm: Your feedback has not been sent. Leave this module and discard it?'
+  await page.goto('/en/development-beta/devices')
+  await expect(heading).toBeVisible()
+  // Nothing unsent: no prompt on reload or on All modules.
+  await button.click()
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  await page.reload()
+  await expect(heading).toBeVisible()
+  await allModules.click()
+  await expect(page).toHaveURL(/\/en\/development-beta$/)
+  expect(asked).toEqual([])
+  await page.goBack()
+  await expect(heading).toBeVisible()
+  await button.click()
+  await expect(
+    page.getByText('Not sent yet. Reloading the page or leaving this module discards this report.'),
+  ).toBeVisible()
+  await page.getByLabel('What should we know?').fill('Do not lose this')
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  // Staying keeps the draft, whether the reload or the link asked.
+  answers.push('dismiss')
+  await page.reload({ timeout: 3000 }).catch(() => undefined)
+  answers.push('dismiss')
+  await allModules.click()
+  expect(asked).toEqual(['beforeunload: ', leaveQuestion])
+  await expect(page).toHaveURL(/\/en\/development-beta\/devices$/)
+  await expect(button).toHaveText('Continue feedback')
+  await button.click()
+  await expect(page.getByLabel('What should we know?')).toHaveValue('Do not lose this')
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  // Leaving anyway goes, and the draft is gone.
+  answers.push('accept')
+  await allModules.click()
+  await expect(page).toHaveURL(/\/en\/development-beta$/)
+  expect(asked).toEqual(['beforeunload: ', leaveQuestion, leaveQuestion])
+  await page.goBack()
+  await expect(heading).toBeVisible()
+  await expect(button).toHaveText('Give feedback')
+  // Once a report is sent nothing is asked.
+  await button.click()
+  await page.getByLabel('What should we know?').fill('Sent')
+  await page.getByRole('button', { name: 'Send feedback' }).click()
+  await expect(page.getByRole('status')).toContainText('Feedback saved')
+  await page.reload()
+  await expect(heading).toBeVisible()
+  expect(asked).toHaveLength(3)
 })
 
 test('admin workspace filters reports, displays screenshots and saves a review', async ({
