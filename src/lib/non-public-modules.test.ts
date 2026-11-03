@@ -41,6 +41,8 @@ describe('non-public module index', () => {
     expect(moduleAccessMode('/critical-care')).toBe('direct-link')
     expect(moduleAccessMode('/literature-atlas')).toBe('direct-link')
     expect(moduleAccessMode('/login')).toBe('public')
+    expect(moduleAccessMode('/terms')).toBe('public')
+    expect(moduleAccessMode('/privacy')).toBe('public')
     expect(moduleAccessMode('/dashboard')).toBe('sign-in')
   })
 })
