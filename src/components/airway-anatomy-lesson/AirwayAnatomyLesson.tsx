@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Boxes, ClipboardCheck, Compass, Network, Video } from 'lucide-react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,7 +17,19 @@ import { AirwayStructureMediaPanel } from './AirwayStructureMediaPanel'
 import { CtCorrelationView } from './CtCorrelationView'
 import { SegmentDetailPanel } from './SegmentDetailPanel'
 
-type TabKey = 'video' | 'overview' | 'survey' | 'explore' | 'assess'
+const TAB_KEYS = ['video', 'overview', 'survey', 'explore', 'assess'] as const
+type TabKey = (typeof TAB_KEYS)[number]
+
+function isTabKey(value: string | null): value is TabKey {
+  return TAB_KEYS.some((key) => key === value)
+}
+
+// The open tab lives in ?tab= so a beta feedback report records which tab the reviewer was on.
+function tabFromLocation(): TabKey {
+  if (typeof window === 'undefined') return 'video'
+  const requested = new URLSearchParams(window.location.search).get('tab')
+  return isTabKey(requested) ? requested : 'video'
+}
 
 const STATS = [
   { value: '2', label: 'Lungs' },
@@ -60,8 +72,18 @@ function LobeLegend({ className }: { className?: string }) {
 }
 
 export function AirwayAnatomyLesson() {
-  const [activeTab, setActiveTab] = useState<TabKey>('video')
+  const [activeTab, setActiveTab] = useState<TabKey>(tabFromLocation)
   const [selectedId, setSelectedId] = useState<string | null>('trachea')
+
+  // Replace, not push: switching tabs does not fill the Back button. A missing or unknown value is
+  // rewritten to the tab actually shown.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('tab') === activeTab) return
+    url.searchParams.set('tab', activeTab)
+    window.history.replaceState(window.history.state, '', url)
+  }, [activeTab])
 
   const openInExplorer = useCallback((id: string) => {
     setSelectedId(id)
