@@ -32,7 +32,7 @@ Drive is in the repository. Source ids are those of `src/features/dolphin-bronch
 | `venn-watson-2012`        | Venn-Watson S, Daniels R, Smith C. Dis Aquat Org 2012;99:237–242                                                                                                                                                 |
 | `harper-2001`             | Harper CMG et al. J Zoo Wildl Med 2001;32(2):190–195                                                                                                                                                             |
 | `dolphin-001-ct`          | The module's own CT case (`public/airway-anatomy/dolphin-001/`)                                                                                                                                                  |
-| `owner-spout-photographs` | Eleven bronchoscopy photographs of entering the goosebeak, supplied by the owner in the authoring session (2026-11-03); two are in the repository as stills (rights ledger below)                                |
+| `nmmp-spout-photographs`  | Eleven NMMP bronchoscopy photographs of entering the goosebeak, supplied by the owner in the authoring session (2026-11-03); two are in the repository as stills (rights ledger below)                           |
 
 Not used: "Dolphin article update 4_28_24.docx" (it describes lobes; the dolphin lung has none).
 The 169 MB "NMMP version annual training" deck could not be read through Drive export.
@@ -43,11 +43,11 @@ the build plan. `npm run numbers:signoff -- dolphin-bronchoscopy` prints the uns
 
 ## Media and rights ledger
 
-| Media                                                          | Rights                                                                               | Status                                                                                                                                            |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/dolphin-bronchoscopy/frames/*.png`                     | Renders of the module's own simulator (`simulator-render` in `content/frameBank.ts`) | Shown                                                                                                                                             |
-| `public/dolphin-bronchoscopy/frames/spout-*-photo.jpg`         | The owner's bronchoscopy photographs 1 and 7 of 11 (`owner-photo` in `frameBank.ts`) | Shown. Permission granted by the owner 2026-11-03; cropped square, no overlays or metadata                                                        |
-| NMMP video stills and photographs (workshop "Pics and videos") | Holder: U.S. Navy Marine Mammal Program                                              | Not used. A still enters `frameBank.ts` as `nmmp-still` with `permission: 'pending'` and is never shown until `granted` is recorded with its date |
+| Media                                                                | Rights                                                                               | Status                                                                                                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/dolphin-bronchoscopy/frames/*.png`                           | Renders of the module's own simulator (`simulator-render` in `content/frameBank.ts`) | Shown                                                                                                                                             |
+| `public/dolphin-bronchoscopy/frames/spout-*-photo.jpg`               | Holder: U.S. Navy Marine Mammal Program; photographs 1 and 7 of 11 (`nmmp-still`)    | Shown. Supplied by the owner, who granted their use 2026-11-03; cropped square, no overlays or metadata                                           |
+| Other NMMP video stills and photographs (workshop "Pics and videos") | Holder: U.S. Navy Marine Mammal Program                                              | Not used. A still enters `frameBank.ts` as `nmmp-still` with `permission: 'pending'` and is never shown until `granted` is recorded with its date |
 
 ## Regenerating the frames
 
@@ -105,13 +105,12 @@ must be applied from the primary checkout before the first beta-hub feedback pos
     temperature in 20–60 mL aliquots. The module teaches Tsang's warm saline; pick one or teach both.
 14. Flumazenil: the only dose found is Ivančić's, given after CT; the practice case says so.
 15. Asset weight: about 5 MB per scope section, 36 MB where the CT is loaded (sections that read it).
-16. The spout tip as displayed is modelled on the owner's bronchoscopy photographs of entering the
+16. The spout tip as displayed is modelled on NMMP bronchoscopy photographs of entering the
     goosebeak (2026-11-03): a pale rounded tip with a triangular glottis, apex dorsal (confirmed by
     the owner 2026-11-03). The CT slit is about 8 × 3 mm and its tip bevelled, so the build shapes
-    the tip and the first 20 mm of the lumen (`shape_spout_field`). The owner granted the
-    photographs as stills the same day; photographs 1 and 7 are in sections 13 and 03 and the
-    "Where is the tip?" drill. The owner identified the dark, glossy rounded structure in the lower
+    the tip and the first 20 mm of the lumen (`shape_spout_field`). The owner supplied the
+    photographs and granted them as stills the same day, credited to the Navy Marine Mammal
+    Program; photographs 1 and 7 are in sections 13 and 03 and the "Where is the tip?" drill. The owner identified the dark, glossy rounded structure in the lower
     part of the opening as the laryngeal gland (2026-11-03), which matches Smith 1999 (a constant
     lymphoepithelial gland in the rostroventral larynx over the cricoid) and Cozzi 2017; section 13
-    and the stills' revealed descriptions now name it. Still open: if the photographs belong to the
-    Navy Marine Mammal Program rather than the owner, the holder in `frameBank.ts` should say so.
+    and the stills' revealed descriptions now name it. Resolved.

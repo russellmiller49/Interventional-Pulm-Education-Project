@@ -24,16 +24,8 @@ export type FrameRights =
       readonly script: 'scripts/dolphin-bronchoscopy/render-frames.mts'
     }
   | {
-      /** A still from program video (U.S. Navy Marine Mammal Program). */
+      /** A still or photograph from program bronchoscopy (U.S. Navy Marine Mammal Program). */
       readonly kind: 'nmmp-still'
-      readonly holder: string
-      readonly permission: 'pending' | 'granted'
-      readonly grantedOn?: string
-      readonly reference: string
-    }
-  | {
-      /** A photograph the module owner supplied. */
-      readonly kind: 'owner-photo'
       readonly holder: string
       readonly permission: 'pending' | 'granted'
       readonly grantedOn?: string
@@ -65,10 +57,13 @@ const RENDER = {
 
 const SIZE = { width: 960, height: 720 } as const
 
-/** The owner's photographs of entering the goosebeak, cropped square from the video frame. */
-const OWNER_PHOTO = {
-  kind: 'owner-photo',
-  holder: 'Russell Miller',
+/**
+ * Program photographs of entering the goosebeak, supplied by the module owner, who granted their
+ * use on 2026-11-03. Cropped square from the video frame.
+ */
+const NMMP_PHOTO = {
+  kind: 'nmmp-still',
+  holder: 'U.S. Navy Marine Mammal Program',
   permission: 'granted',
   grantedOn: '2026-11-03',
 } as const
@@ -109,7 +104,7 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     postCommitAlt:
       'Bronchoscopy photograph from the foot of the nasopharynx: the glottis at the tip of the laryngeal spout, a triangular opening with its apex dorsal. The dark, glossy swelling in the lower part of the opening is the laryngeal gland.',
     rights: {
-      ...OWNER_PHOTO,
+      ...NMMP_PHOTO,
       reference: 'Bronchoscopy photographs of entering the spout, 1 of 11',
     },
   },
@@ -125,7 +120,7 @@ export const DOLPHIN_FRAMES: readonly DolphinFrame[] = [
     postCommitAlt:
       'Bronchoscopy photograph close to the tip of the laryngeal spout: the triangular glottis, apex dorsal, just before the scope enters, with the laryngeal gland filling the lower part of the opening.',
     rights: {
-      ...OWNER_PHOTO,
+      ...NMMP_PHOTO,
       reference: 'Bronchoscopy photographs of entering the spout, 7 of 11',
     },
   },

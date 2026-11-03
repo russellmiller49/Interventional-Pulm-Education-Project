@@ -55,7 +55,7 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
         'tsang-2002',
         'nmmp-bronchoscopy-guide',
         'dolphin-001-ct',
-        'owner-spout-photographs',
+        'nmmp-spout-photographs',
       ],
     },
     {
@@ -188,6 +188,6 @@ export const fromBlowholeToSpout: DolphinSectionDefinition = {
     'nmmp-bronchoscopy-guide',
     'nmmp-workshop-2024',
     'dolphin-001-ct',
-    'owner-spout-photographs',
+    'nmmp-spout-photographs',
   ],
 }

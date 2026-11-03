@@ -130,10 +130,10 @@ export const DOLPHIN_SOURCES = [
     kind: 'case-data',
   },
   {
-    id: 'owner-spout-photographs',
-    shortName: 'Bronchoscopy photographs, entering the spout',
+    id: 'nmmp-spout-photographs',
+    shortName: 'NMMP bronchoscopy photographs, entering the spout',
     citation:
-      'Bronchoscopy photographs of a bottlenose dolphin, entering the laryngeal spout from the nasopharynx. Russell Miller, 2026; used with permission.',
+      'U.S. Navy Marine Mammal Program. Bronchoscopy photographs of a bottlenose dolphin, entering the laryngeal spout from the nasopharynx. Supplied by Russell Miller, 2026; used with permission.',
     year: 2026,
     kind: 'photographs',
   },

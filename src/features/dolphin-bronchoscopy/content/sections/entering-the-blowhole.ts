@@ -48,7 +48,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       body: 'The nasopharynx is 4–5 cm across and often holds copious, tenacious mucus. The laryngeal spout rises pale pink in its center and ends in a rounded tip. The glottis there has no epiglottis over it. Tsang describes it as rosette-shaped; face on, it is a triangular opening with its apex dorsal, at the top of the screen. Shut, it shows no lumen; open, it shows a dark lumen for an instant.',
       media: { frameId: 'spout-tip-photo' },
       numberIds: ['nasopharynx-width'],
-      sourceIds: ['tsang-2002', 'owner-spout-photographs'],
+      sourceIds: ['tsang-2002', 'nmmp-spout-photographs'],
     },
     {
       id: 'laryngeal-gland',
@@ -56,7 +56,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
       role: 'signals',
       heading: 'The dark swelling through the opening',
       body: 'Through the lower, ventral part of the opening you may see a dark, glossy rounded swelling. It is the laryngeal gland: a lymphoepithelial gland in the rostroventral mucosa of the larynx, over the cricoid cartilage, and a constant feature of the bottlenose dolphin larynx. It is normal anatomy, not a mass or a plug of mucus.',
-      sourceIds: ['smith-1999', 'cozzi-2017', 'owner-spout-photographs'],
+      sourceIds: ['smith-1999', 'cozzi-2017', 'nmmp-spout-photographs'],
     },
     {
       id: 'the-cue',
@@ -456,7 +456,7 @@ export const enteringTheBlowhole: DolphinSectionDefinition = {
     'nmmp-workshop-2024',
     'venn-watson-2012',
     'dolphin-001-ct',
-    'owner-spout-photographs',
+    'nmmp-spout-photographs',
     'smith-1999',
     'cozzi-2017',
   ],
