@@ -896,6 +896,31 @@ describe('server mode', () => {
     ])
       expect(call).not.toHaveBeenCalled()
   })
+  it('sends the live anatomy tab the reviewer was on as part of the page', async () => {
+    const lesson = '/en/development-beta/live-anatomy/lesson'
+    location = `https://site.test${lesson}?tab=explore&access_token=secret`
+    const fetchMock = jest.fn(async () => ({ ok: true, json: async () => ({ id: first }) }))
+    const original = globalThis.fetch
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+    try {
+      const user = userEvent.setup()
+      render(<BetaTestingFrame moduleEntry={betaModuleById('live-anatomy')!} locale="en" />)
+      await waitFor(() => expect(feedbackButton()).toBeEnabled())
+      expect(document.querySelector('iframe')).toHaveAttribute('src', lesson)
+      await user.click(feedbackButton())
+      expect(screen.getByText(`Page: ${lesson}?tab=explore`)).toBeInTheDocument()
+      await user.type(commentBox(), 'The RB6 label overlaps the carina')
+      await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+      expect(await screen.findByRole('status')).toHaveTextContent('Feedback saved. Reference')
+    } finally {
+      globalThis.fetch = original
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    const body = init.body as FormData
+    expect(body.get('moduleId')).toBe('live-anatomy')
+    expect(body.get('pagePath')).toBe(`${lesson}?tab=explore`)
+  })
 })
 
 it('takes the covered site page out of scrolling and the tab order, and restores it on exit', async () => {
