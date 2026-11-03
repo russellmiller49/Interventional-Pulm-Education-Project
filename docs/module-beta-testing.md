@@ -40,10 +40,14 @@ Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 `/en/learn/anatomy/airway`.
 
 The hub separates **Ready for review** from **Still in development**. Ready cards appear first
-with a tester note: a summary, estimated minutes, what to look for, and known limits or content
-still under faculty review. The ready section is omitted when empty. All 14 modules currently
-remain `preview` under **Still in development**, grouped by Bronchoscopy, Devices, Literature and
-Critical care; empty groups are omitted. Readiness changes presentation only: every card keeps its
+with a tester note: who the module is for, what it teaches, an estimated time where the module's
+own sections and cases support one, where feedback helps most, and known limits. The ready section
+is omitted when empty. All 14 modules currently remain `preview` under **Still in development**,
+grouped by Bronchoscopy, Devices, Literature and Critical care; empty groups are omitted. A
+`preview` card may carry the same note: EBUS Guided, Synchronized Bronchoscopy, Peripheral
+Imaging, Bronchoscopy Foundations and Mechanical Ventilation do, and the others show their title
+and links only (see [Beta reviewer readiness](gap-remediation/beta-reviewer-readiness-2026-11-03.md)).
+Readiness changes presentation only: every card keeps its
 **Test with feedback** wrapper link and **Standard module** link, with the same access and
 feedback behavior. A ready label does not authorize clinical use or public release. Modules
 move to `ready` with a real tester note only after the gate in
