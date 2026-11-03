@@ -111,8 +111,8 @@ export function CtCorrelationView({ focusNodeId, className }: CtCorrelationViewP
       <p className="text-[11px] leading-4 text-muted-foreground">
         The crosshair marks this airway on the patient&apos;s CT.{' '}
         {plane === 'axial'
-          ? 'Anterior is up; the patient’s right is on the left of the image.'
-          : 'Superior is up; the patient’s right is on the left of the image.'}
+          ? 'Anterior is up and the slice is seen from the feet, so the patient’s right is on the left of the image.'
+          : 'Superior is up and the slice is seen from the front, so the patient’s right is on the left of the image.'}
       </p>
     </div>
   )

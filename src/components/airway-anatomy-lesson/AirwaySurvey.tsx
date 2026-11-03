@@ -59,7 +59,7 @@ export function AirwaySurvey({ onOpenStructure, className }: AirwaySurveyProps) 
     node.endoscopicView?.orientation ??
     (node.kind === 'segmental'
       ? 'Terminal segment - withdraw and inspect the mucosa after identifying the orifice.'
-      : "Keep anterior at 12 o'clock and the flat membranous wall at 6 o'clock to stay oriented.")
+      : "Viewed from the head of the bed, anterior is at 12 o'clock and posterior at 6; the patient's right is then on the right of the image.")
 
   return (
     <div className={cn('space-y-4', className)}>

@@ -4,6 +4,7 @@ import { useId } from 'react'
 
 import { clockToOffset, getNode, lobeColor } from '@/lib/airway-anatomy-lesson/airway-graph'
 import type { AirwayNode } from '@/lib/airway-anatomy-lesson/types'
+import { rimLetters } from '@/lib/airway-anatomy-lesson/view-orientation'
 import { cn } from '@/lib/cn'
 
 interface EndoscopicViewProps {
@@ -48,14 +49,12 @@ export function EndoscopicView({
     )
   }
 
-  // Neutral scope orientation: anterior up, posterior down, and the patient's
-  // right toward the left of the image (so patient-right sits at 9 o'clock).
-  const orientationTicks = [
-    { clock: 12, label: 'A' },
-    { clock: 6, label: 'P' },
-    { clock: 9, label: 'R' },
-    { clock: 3, label: 'L' },
-  ]
+  // Rim letters follow the way this view is held: looking down from the head of
+  // the bed puts A at 12 and the patient's right (R) at 3 o'clock.
+  const orientationTicks = rimLetters(view.reference).map(({ clock, letter }) => ({
+    clock,
+    label: letter,
+  }))
 
   return (
     <svg
