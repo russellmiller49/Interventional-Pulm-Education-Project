@@ -102,13 +102,14 @@ The four runtime files the SoCal EBUS app imports at build time stay tracked in
 
 ### Private references — `private-references/`
 
-| Local-Data path                                    | Contents                                                          | Former repo path                         |
-| -------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------- |
-| `private-references/pleural-knowledge/`            | Pleural source PDFs and the pleural analysis notes                | `pleural knowlege/`                      |
-| `private-references/critical-care-full-textbooks/` | Critical-care textbooks (read-only mount in the primary checkout) | `Critical_Care_Reference/Full_textbooks` |
-| `private-references/critical-care-summaries/`      | Critical-care synthesis notes                                     | `Critical_Care_Reference/Summary files`  |
-| `private-references/preference-cards-ucsd/`        | UCSD institutional preference-card material                       | `Preference_card_module/UCSD`            |
-| `private-references/clinical-language-sources/`    | Source material for the clinical-language-refactor skill          | —                                        |
+| Local-Data path                                      | Contents                                                                                    | Former repo path                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `private-references/pleural-knowledge/`              | Pleural source PDFs and the pleural analysis notes                                          | `pleural knowlege/`                      |
+| `private-references/critical-care-full-textbooks/`   | Critical-care textbooks (read-only mount in the primary checkout)                           | `Critical_Care_Reference/Full_textbooks` |
+| `private-references/critical-care-summaries/`        | Critical-care synthesis notes                                                               | `Critical_Care_Reference/Summary files`  |
+| `private-references/preference-cards-ucsd/`          | UCSD institutional preference-card material                                                 | `Preference_card_module/UCSD`            |
+| `private-references/clinical-language-sources/`      | Source material for the clinical-language-refactor skill                                    | —                                        |
+| `private-references/mechanical-circulatory-support/` | LVAD resuscitation PDFs for the MCS Section 8 case: AHA 2017, AHA 2025, ERC 2025, HFSA 2019 | —                                        |
 
 ### Renders, marketing, prompts, scratch
 

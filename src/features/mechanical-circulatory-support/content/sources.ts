@@ -399,6 +399,60 @@ export const mcsSources: readonly McsSource[] = [
       'Written for UK advanced heart failure centres, with recommendations classed on the European Society of Cardiology scheme; every one is Level C, observational data and expert consensus.',
   },
   {
+    id: 'erc-2025-special-circumstances',
+    title: 'European Resuscitation Council Guidelines 2025: Special Circumstances in Resuscitation',
+    citation:
+      'Lott C, Karageorgos V, Abelairas-Gomez C, et al. European Resuscitation Council Guidelines 2025 special circumstances in resuscitation. Resuscitation. 2025;215 Suppl 1:110753. doi:10.1016/j.resuscitation.2025.110753. Supplied PDF; the LVAD summary (p. 13), Fig. 18 (p. 40) and the section text (p. 41) read.',
+    sourceType: 'guideline',
+    year: 2025,
+    url: 'https://doi.org/10.1016/j.resuscitation.2025.110753',
+    intendedUse:
+      'The unconscious LVAD patient: activate the specialised team; with several rescuers, start CPR while the device is restored at the same time; a single rescuer may delay CPR for up to 2 minutes; the device checks by controller display (a blank controller, power, the whole driveline, battery, low flow); and the signs of circulatory failure in its algorithm: unconscious, cyanosed, capillary refill over 3 seconds, Doppler MAP below 60 mm Hg, no hum, a controller alarm, flow below 3.0 L/min, and end-tidal CO₂ below 15 mm Hg (2 kPa) if intubated.',
+    limitation:
+      'Built on the ILCOR 2025 consensus on science and the British societies guideline. It prints no strength for these LVAD statements.',
+  },
+  {
+    id: 'aha-2025-special-circumstances',
+    title:
+      '2025 AHA Guidelines for CPR and Emergency Cardiovascular Care, Part 10: Special Circumstances',
+    citation:
+      'Cao D, Arens AM, Chow SL, et al. Part 10: Adult and pediatric special circumstances of resuscitation: 2025 American Heart Association Guidelines for Cardiopulmonary Resuscitation and Emergency Cardiovascular Care. Circulation. 2025;152(16 suppl 2):S578–S672. doi:10.1161/CIR.0000000000001380. Supplied PDF; the “Left Ventricular Assist Devices” section (pp. S618–S620) and Figure 4 read.',
+    sourceType: 'guideline',
+    year: 2025,
+    url: 'https://doi.org/10.1161/CIR.0000000000001380',
+    intendedUse:
+      'Unresponsive adults with a durable LVAD and impaired perfusion: chest compressions should be performed (COR 1, LOE C-EO); it may be reasonable to start them immediately while assessing for device-related causes at the same time (COR 2b, LOE C-EO), and to use an algorithm that assesses and responds concurrently (COR 2b, LOE C-EO). Perfusion is adequate if any one sign is present: normal skin colour and temperature, normal capillary refill, MAP above 50 mm Hg, or end-tidal CO₂ above 20 mm Hg. Also the device checks in Figure 4 and the supportive text: alarms, the hum over the left chest and left upper abdomen, the driveline, the power source and the controller.',
+    limitation:
+      'Applies beyond the index implant admission; arrest in the peri-implantation period sits in the guideline’s cardiac surgery section.',
+  },
+  {
+    id: 'aha-cpr-mcs-statement-2017',
+    title:
+      'AHA scientific statement: CPR in adults and children with mechanical circulatory support',
+    citation:
+      'Peberdy MA, Gluck JA, Ornato JP, et al. Cardiopulmonary resuscitation in adults and children with mechanical circulatory support: a scientific statement from the American Heart Association. Circulation. 2017;135(24):e1115–e1134. doi:10.1161/CIR.0000000000000504. Supplied PDF; pp. e1121–e1124 and Figure 6 read.',
+    sourceType: 'guideline',
+    year: 2017,
+    url: 'https://doi.org/10.1161/CIR.0000000000000504',
+    intendedUse:
+      'Perfusion in a pulseless LVAD patient: skin colour, temperature and capillary refill; Doppler MAP with a manual cuff; end-tidal CO₂ in a correctly intubated patient, below 20 mm Hg suggesting poor systemic perfusion; and the Figure 6 algorithm: assess perfusion, then LVAD function (alarms, hum), attempt a restart (driveline, power, controller), and compress if the pump does not restart or the MAP is not above 50 mm Hg and the end-tidal CO₂ not above 20 mm Hg.',
+    limitation:
+      'Expert consensus with no class or level printed. Its algorithm attempts a restart before compressions; the 2025 AHA guidelines, which cite it, start compressions at once with the device worked alongside.',
+  },
+  {
+    id: 'hfsa-saem-ishlt-vad-emergency-2019',
+    title: 'HFSA/SAEM/ISHLT consensus on the emergency management of patients with VADs',
+    citation:
+      'Givertz MM, DeFilippis EM, Colvin M, et al. HFSA/SAEM/ISHLT clinical expert consensus document on the emergency management of patients with ventricular assist devices. J Heart Lung Transplant. 2019;38(7):677–698. doi:10.1016/j.healun.2019.05.004. Supplied PDF; pp. 680–683 read.',
+    sourceType: 'guideline',
+    year: 2019,
+    url: 'https://doi.org/10.1016/j.healun.2019.05.004',
+    intendedUse:
+      'The bedside device checks: follow the driveline to the controller and inspect its whole length under binders and dressings; the controller runs on two power sources; check the connections between controller, batteries and patient first, then the alarms, then replace batteries or the controller, the controller only when its alarm calls for it and under trained guidance; the Doppler opening pressure as a surrogate for the MAP; controller flow calculated, not measured; and, in an unconscious patient, no hum and no Doppler signal as diagnostic of cardiac arrest.',
+    limitation:
+      'Clinical expert consensus for emergency and pre-hospital clinicians, with no recommendation strengths printed.',
+  },
+  {
     id: 'mcs-educational-model-v1',
     title: 'MCS ICU Lab deterministic educational model',
     citation: 'Original 50 Hz compartment and device-effect model for this module.',

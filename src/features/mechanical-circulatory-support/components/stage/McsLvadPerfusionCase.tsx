@@ -23,10 +23,10 @@ import styles from './mcs-stage.module.css'
  * in arrest, each keyed on the first move.
  *
  * Built from the module's existing pieces, as the Section 5 echo example is: the thresholds print
- * through `ReferenceValues`, so each carries its register row and source, and each patient uses the
- * story problems' choice list and verdict card. The sequence for an inadequate circulation and the
- * CPR deferral row open only after the arrest move is chosen, so they do not answer it. Choosing a
- * move is view-state for the mount only; nothing is recorded.
+ * through `ReferenceValues`, so each carries its register row and every source with its own grade,
+ * and each patient uses the story problems' choice list and verdict card. The sequence for an
+ * inadequate circulation and the timing row open only after the arrest move is chosen, so they do
+ * not answer it. Choosing a move is view-state for the mount only; nothing is recorded.
  */
 export function McsLvadPerfusionCase() {
   const [perfused, arrest] = MCS_LVAD_PERFUSION_DECISIONS
@@ -49,13 +49,19 @@ export function McsLvadPerfusionCase() {
       <ReferenceValues
         title={MCS_LVAD_PERFUSION.numbersTitle}
         ids={MCS_LVAD_ADEQUATE_CIRCULATION_NUMBER_IDS}
-      />
+        grades
+      >
+        <p className="mt-1 text-xs leading-5" data-lvad-perfusion-combining>
+          {MCS_LVAD_PERFUSION.combining}
+        </p>
+      </ReferenceValues>
 
       <McsLvadDecision kind={perfused.kind} title={perfused.title} item={perfused.item} />
       <McsLvadDecision kind={arrest.kind} title={arrest.title} item={arrest.item}>
         <ReferenceValues
           title={MCS_LVAD_PERFUSION.deferralTitle}
           ids={[MCS_LVAD_CPR_DEFERRAL_NUMBER_ID]}
+          grades
         />
         <section data-lvad-inadequate-sequence>
           <h5 className="font-semibold">{MCS_LVAD_PERFUSION.sequenceTitle}</h5>
