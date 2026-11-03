@@ -134,7 +134,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       title: 'An aligned LV-to-aorta pump',
       visual: 'impella',
       instruction:
-        'Find the inlet in the LV and the outlet above the aortic valve on the Circulation map. Read the device account below; optional 3D shows the same relationship.',
+        'Find the inlet in the LV and the outlet above the aortic valve on the Circulation map. Read the device account below, then how the same two ends look on echo; optional 3D shows the same relationship.',
       paragraphs: [
         'The inlet receives blood inside the left ventricle (LV); the outlet returns it toward the ascending aorta. This blood-flow direction differs from retrograde catheter insertion from the arterial side. This module does not teach catheter manipulation.',
         'Performance level is a setting. Estimated pump flow depends on configuration, filling, outlet pressure and position. CP and 5.5 use different device models; the same level is not an equivalent clinical dose. Native ejection continues through a parallel route when the aortic valve opens.',

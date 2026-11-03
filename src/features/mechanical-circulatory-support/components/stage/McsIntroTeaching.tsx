@@ -6,6 +6,7 @@ import type { McsSimulationState } from '../../engine/types'
 import { activePathways } from '../teaching/selectors'
 import { PathwayGraphic } from '../teaching/shared'
 import { McsCapturedResults } from './McsCapturedResults'
+import { McsImpellaEchoPosition } from './McsImpellaEchoPosition'
 import { McsUnloadingComparison } from './McsUnloadingComparison'
 import styles from './mcs-stage.module.css'
 
@@ -68,6 +69,7 @@ export function McsIntroTeaching({
             <PathwayGraphic key={pathway.id} pathway={pathway} />
           ))
         : null}
+      {introduction.id === 'inlet-outlet' ? <McsImpellaEchoPosition /> : null}
       {introduction.visual === 'lvad' ? (
         <div data-controller-tour>
           <div role="group" aria-label="Controller quantity tour">
