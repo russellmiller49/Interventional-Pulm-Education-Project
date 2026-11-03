@@ -23,8 +23,15 @@ export const TARGET_MM = 14
 export const CLEAR_MM = 3
 /** Within this of the target surface counts as touching it. */
 const CONTACT_MM = 1.2
-/** The brush's bristles run this far back from its tip: any of them on the target sweeps it. */
-const BRISTLES_MM = 3
+/**
+ * The brush works along the wall, not into it: its target is a plaque on the airway wall beside
+ * its path, this far beyond the scope tip. The bristles sweep its surface as the catheter moves.
+ */
+export const BRUSH_TARGET_MM = { from: 6, to: 16 } as const
+/** The bristled length of the brush, back from its tip. */
+export const BRISTLE_LENGTH_MM = 8
+/** The brush catheter's furthest reach: no wall stops it, the view does. */
+const BRUSH_OUT_MAX_MM = 10
 /** A control past this is open, out or deployed; below `CLOSED` it is shut or sheathed. */
 const OPEN = 0.8
 const CLOSED = 0.15
@@ -118,16 +125,21 @@ export function distalMm(state: Pick<LabState, 'instrument' | 'outMm' | 'control
 }
 
 export function atTarget(state: Pick<LabState, 'instrument' | 'outMm' | 'control'>): boolean {
-  const reach = state.instrument === 'brush' ? BRISTLES_MM : CONTACT_MM
-  return distalMm(state) >= TARGET_MM - reach
+  if (state.instrument === 'brush') {
+    // The exposed bristles lie alongside the plaque when their span overlaps it.
+    const tip = distalMm(state)
+    const back = Math.max(state.outMm, tip - BRISTLE_LENGTH_MM)
+    return tip > state.outMm && tip > BRUSH_TARGET_MM.from + 1 && back < BRUSH_TARGET_MM.to - 1
+  }
+  return distalMm(state) >= TARGET_MM - CONTACT_MM
 }
 
 /**
- * How far the catheter can go before something stops it: the closed cups and the catheters rest
- * on the target surface; an exposed brush presses on it a little. The needle goes through.
+ * How far the catheter can go before something stops it: the closed cups and the needle catheter
+ * rest on the target surface ahead (the needle itself goes through); the brush runs along the wall.
  */
-export function maxOutMm(instrument: InstrumentId, control: number): number {
-  return instrument === 'brush' ? TARGET_MM + 1 - REACH_MM.brush * control : TARGET_MM
+export function maxOutMm(instrument: InstrumentId): number {
+  return instrument === 'brush' ? BRUSH_OUT_MAX_MM : TARGET_MM
 }
 
 /** The catheter itself rests on the target surface. */
@@ -187,8 +199,8 @@ export const LAB_STEPS: Readonly<Record<InstrumentId, readonly LabStep[]>> = {
     },
     {
       id: 'brush-target',
-      label: 'Bring the brush onto the target and move it to and fro across it.',
-      result: 'The brush has swept the target.',
+      label: 'Bring the brush alongside the target and sweep it to and fro across the surface.',
+      result: 'The brush has swept the surface of the target.',
     },
     {
       id: 'brush-in',
@@ -428,16 +440,14 @@ export function labReducer(state: LabState, action: LabAction): LabState {
     case 'nudge':
       return labReducer(state, { type: 'move', outMm: state.outMm + action.deltaMm })
     case 'move': {
-      const outMm = clamp(action.outMm, OUT_MIN_MM, maxOutMm(state.instrument, state.control))
+      const outMm = clamp(action.outMm, OUT_MIN_MM, maxOutMm(state.instrument))
       if (outMm === state.outMm) return state
       return withProgress(state, { ...state, outMm })
     }
     case 'control': {
       const value = clamp(action.value, 0, 1)
       if (value === state.control) return state
-      // A brush pushed out against the target pushes its sheath back.
-      const outMm = Math.min(state.outMm, maxOutMm(state.instrument, value))
-      return withProgress(state, { ...state, control: value, outMm })
+      return withProgress(state, { ...state, control: value })
     }
     case 'suction':
       if (state.instrument !== 'needle' || action.on === state.suction) return state

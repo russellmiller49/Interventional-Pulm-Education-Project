@@ -1,6 +1,13 @@
 import { useId } from 'react'
 
-import { REACH_MM, TARGET_MM, needleInTarget, type LabState } from './instrument-model'
+import {
+  BRUSH_TARGET_MM,
+  REACH_MM,
+  TARGET_MM,
+  atTarget,
+  needleInTarget,
+  type LabState,
+} from './instrument-model'
 
 /**
  * The scope tip and one accessory, seen from the side in a cut-away airway. Everything is drawn in
@@ -13,6 +20,13 @@ const TIP_X = 170
 const AXIS_Y = 150
 const x = (mm: number) => TIP_X + S * mm
 const TARGET_X = x(TARGET_MM)
+/** The brush's plaque on the lower wall: its base, and its crest just below the brush's path. */
+const PLAQUE = {
+  from: x(BRUSH_TARGET_MM.from - 1),
+  to: x(BRUSH_TARGET_MM.to + 1),
+  crest: AXIS_Y + 16,
+  base: 262,
+} as const
 
 export function InstrumentTipView({
   state,
@@ -101,6 +115,36 @@ export function InstrumentTipView({
             <circle cx={x(TARGET_MM + 1)} cy={AXIS_Y} r="3" fill="#9b2f2f" opacity="0.7" />
           ) : null}
         </g>
+      ) : state.instrument === 'brush' ? (
+        <g clipPath={`url(#${id('lumen-clip')})`}>
+          {/* The airway runs on; the plaque rises from the wall beside the brush's path. */}
+          <path
+            d={`M${PLAQUE.from} ${PLAQUE.base} C${PLAQUE.from + 30} ${PLAQUE.base - 4} ${PLAQUE.from + 34} ${PLAQUE.crest + 2} ${(PLAQUE.from + PLAQUE.to) / 2} ${PLAQUE.crest} S${PLAQUE.to - 30} ${PLAQUE.base - 4} ${PLAQUE.to} ${PLAQUE.base} Z`}
+            fill={`url(#${id('lesion')})`}
+            stroke="#9c3f38"
+            strokeWidth="1"
+          />
+          {[0.3, 0.45, 0.6, 0.72].map((f, index) => (
+            <circle
+              key={f}
+              cx={PLAQUE.from + (PLAQUE.to - PLAQUE.from) * f}
+              cy={PLAQUE.crest + 14 + (index % 2) * 9}
+              r="2.2"
+              fill="#f0b0a8"
+              opacity="0.85"
+            />
+          ))}
+          {state.memory.passes > 0 ? (
+            <path
+              d={`M${PLAQUE.from + 40} ${PLAQUE.crest + 6} Q${(PLAQUE.from + PLAQUE.to) / 2} ${PLAQUE.crest - 1} ${PLAQUE.to - 40} ${PLAQUE.crest + 6}`}
+              fill="none"
+              stroke="#f7c9c2"
+              strokeWidth="4"
+              strokeLinecap="round"
+              opacity="0.9"
+            />
+          ) : null}
+        </g>
       ) : (
         <g clipPath={`url(#${id('lumen-clip')})`}>
           {/* A division ahead: two branches either side of a carina, the plaque on its crest. */}
@@ -133,16 +177,6 @@ export function InstrumentTipView({
               fill="#f6d2cc"
               stroke="#b8544c"
               strokeWidth="1"
-            />
-          ) : null}
-          {state.instrument === 'brush' && state.memory.passes > 0 ? (
-            <path
-              d={`M${TARGET_X + 4} ${AXIS_Y - 20} Q${TARGET_X - 2} ${AXIS_Y} ${TARGET_X + 4} ${AXIS_Y + 20}`}
-              fill="none"
-              stroke="#f7c9c2"
-              strokeWidth="4"
-              strokeLinecap="round"
-              opacity="0.9"
             />
           ) : null}
         </g>
@@ -193,9 +227,23 @@ export function InstrumentTipView({
         <text x="16" y="185" fill="#cfd8de">
           Working channel
         </text>
-        <text x={needleTarget ? TARGET_X + 70 : TARGET_X + 40} y={needleTarget ? 92 : AXIS_Y - 40}>
-          {targetLabel}
-        </text>
+        {state.instrument === 'brush' ? (
+          <text
+            x={(PLAQUE.from + PLAQUE.to) / 2}
+            y={PLAQUE.crest + 50}
+            textAnchor="middle"
+            fill="#6e2a24"
+          >
+            {targetLabel}
+          </text>
+        ) : (
+          <text
+            x={needleTarget ? TARGET_X + 70 : TARGET_X + 40}
+            y={needleTarget ? 92 : AXIS_Y - 40}
+          >
+            {targetLabel}
+          </text>
+        )}
         {needleTarget ? (
           <text x={TARGET_X - 4} y="276" textAnchor="middle">
             Airway wall
@@ -410,8 +458,15 @@ function describe(state: LabState, targetLabel: string): string {
   switch (state.instrument) {
     case 'forceps':
       return `Side view: forceps ${where}, cups ${state.control > 0.6 ? 'open' : state.control > 0.15 ? 'partly open' : 'closed'}${state.memory.specimen ? ', holding a specimen' : ''}.`
-    case 'brush':
-      return `Side view: brush sheath ${where}, brush ${state.control > 0.6 ? 'out' : state.control > 0.15 ? 'partly out' : 'inside its sheath'}${state.memory.passes > 0 ? ', carrying cells' : ''}.`
+    case 'brush': {
+      const brushWhere =
+        state.outMm < 0
+          ? 'still inside the working channel'
+          : atTarget(state)
+            ? `out of the scope tip, its bristles alongside the ${targetLabel.toLowerCase()}`
+            : 'out of the scope tip'
+      return `Side view: brush sheath ${brushWhere}, brush ${state.control > 0.6 ? 'out' : state.control > 0.15 ? 'partly out' : 'inside its sheath'}${state.memory.passes > 0 ? ', carrying cells' : ''}.`
+    }
     case 'needle':
       return `Side view: needle catheter ${where}, needle ${state.control > 0.6 ? 'out' : state.control > 0.15 ? 'partly out' : 'inside the catheter'}${state.suction ? ', suction on' : ''}.`
   }

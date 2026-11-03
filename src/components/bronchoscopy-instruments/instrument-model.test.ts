@@ -9,6 +9,10 @@ import {
   initialLabState,
   labComplete,
   labReducer,
+  BRUSH_TARGET_MM,
+  BRISTLE_LENGTH_MM,
+  REACH_MM,
+  atTarget,
   maxOutMm,
   type InstrumentId,
   type LabAction,
@@ -56,15 +60,14 @@ describe('the instrument lab model', () => {
     expect(state.memory.done).toEqual([])
   })
 
-  it('completes the brush sequence: out, sweep to and fro, sheathe, withdraw', () => {
-    const brushOut = maxOutMm('brush', 1)
+  it('completes the brush sequence: out, sweep along the plaque, sheathe, withdraw', () => {
     const state = run('brush', [
       move(CLEAR_MM + 1),
       control(1),
-      move(brushOut),
-      move(brushOut - 2),
-      move(brushOut),
-      move(brushOut - 2),
+      move(6),
+      move(3),
+      move(6),
+      move(3),
       control(0),
       move(-3),
     ])
@@ -76,6 +79,19 @@ describe('the instrument lab model', () => {
       'withdraw',
     ])
     expect(state.memory.faults).toEqual([])
+  })
+
+  it('sweeps the brush along the plaque beside its path, not into a wall ahead', () => {
+    // No wall stops the brush catheter; it runs on past the plaque.
+    expect(maxOutMm('brush')).toBeGreaterThan(BRUSH_TARGET_MM.to - REACH_MM.brush)
+    const out = (outMm: number) => ({ instrument: 'brush' as const, outMm, control: 1 })
+    // The bristled span overlaps the plaque across the whole to-and-fro range used above.
+    for (const outMm of [3, 6]) expect(atTarget(out(outMm))).toBe(true)
+    // Short of the plaque, or with the bristles carried past it, there is no contact.
+    expect(atTarget(out(BRUSH_TARGET_MM.from - REACH_MM.brush - 1))).toBe(false)
+    expect(atTarget(out(BRUSH_TARGET_MM.to + BRISTLE_LENGTH_MM - REACH_MM.brush + 1))).toBe(false)
+    // A sheathed brush touches nothing.
+    expect(atTarget({ instrument: 'brush', outMm: 6, control: 0 })).toBe(false)
   })
 
   it('flags a brush pushed out in the channel or pulled back unsheathed', () => {
