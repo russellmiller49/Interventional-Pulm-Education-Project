@@ -22,7 +22,7 @@ export async function performPilotStep(step: BronchStageStep) {
   if (step.interaction.kind === 'prediction') {
     commitById(keyedChoiceId(step))
   } else if (step.interaction.kind === 'scope-task') {
-    if (step.learn?.demonstration) fireEvent.click(pilotButton('Try with guidance'))
+    // The controls are live without the example (owner feedback, 2026-11-03): no button first.
     switch (step.learn?.id) {
       case 'depth':
       case 'depth-repeat':

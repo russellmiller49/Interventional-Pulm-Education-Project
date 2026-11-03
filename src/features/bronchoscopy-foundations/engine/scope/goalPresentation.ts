@@ -1,5 +1,5 @@
-import type { ScopeState } from '../../components/scope/types'
-import type { ScopeGoalClaim } from './scopeGoalEvaluation'
+import type { ScopeEventId, ScopeGoal, ScopeState } from '../../components/scope/types'
+import { brokenWithout, type ScopeGoalClaim } from './scopeGoalEvaluation'
 
 /**
  * How a finished scope card is allowed to describe itself (A4, A5).
@@ -72,4 +72,39 @@ export function scopeDoneLead(claim: ScopeGoalClaim, plain = false): string {
 /** Where the tip is at this moment, in the words the caption strip already uses. */
 export function scopeNowLine(state: Pick<ScopeState, 'location'>): string {
   return `Where the tip is now: ${state.location.fullLabel}.`
+}
+
+/** What the learner did that rules a goal out, in the words the goal card says it. */
+const BROKEN_WITHOUT_WORDS: Partial<Record<ScopeEventId, string>> = {
+  'accessory-unsafe': 'You asked for an unsafe move with the tool, and it was not done.',
+  'advanced-against-closure': 'You advanced against closed folds.',
+  'advanced-in-red-out': 'You advanced while the field was red.',
+  'suction-in-red-out': 'You used suction while the field was red.',
+  'advanced-blind': 'You advanced while the picture was smeared.',
+  'bench-advanced-off-target': 'You advanced before the target was centered.',
+}
+
+/**
+ * Said unasked when this attempt can no longer meet one of its goals (owner feedback, 2026-11-03).
+ *
+ * A goal that says "without" an unsafe move stays unmet for the rest of the attempt once that move
+ * has been made, and nothing on the card said so: the learner could go on trying. This names what
+ * happened and the way out. Null while every unmet goal can still be met.
+ */
+export function blockedGoalSentence(
+  goals: readonly ScopeGoal[],
+  state: ScopeState,
+  canReset: boolean,
+): string | null {
+  const broken = goals.flatMap((goal) => {
+    const event = brokenWithout(goal.test, state)
+    return event ? [event] : []
+  })
+  if (broken.length === 0) return null
+  const cause = BROKEN_WITHOUT_WORDS[broken[0]] ?? 'Something in this attempt rules a goal out.'
+  const which =
+    broken.length === 1
+      ? 'The goal that asks you to avoid it cannot be met in this attempt.'
+      : 'The goals that ask you to avoid it cannot be met in this attempt.'
+  return `${cause} ${which}${canReset ? ' Select Reset the scope to start again.' : ''}`
 }

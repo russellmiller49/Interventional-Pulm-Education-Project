@@ -463,7 +463,9 @@ export default function ScopeScene(props: SceneProps) {
                 aria-label={
                   detailedBench
                     ? 'Outside view: bronchoscope control head and enlarged distal bending section'
-                    : 'Outside view of the authored teaching model'
+                    : view.mode === 'tube'
+                      ? 'Tube cutaway: the scope inside the tube'
+                      : 'Outside view: the scope in the airway'
                 }
                 data-control-closeups={detailedBench ? 'true' : undefined}
               >
@@ -519,7 +521,7 @@ export default function ScopeScene(props: SceneProps) {
                       <ObserverView assets={assets} props={props} />
                     </View>
                     <span className={styles.viewHeading}>
-                      {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'} · authored model
+                      {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'}
                     </span>
                   </>
                 )}
@@ -537,12 +539,13 @@ export default function ScopeScene(props: SceneProps) {
                 </button>
               </>
             ) : (
-              'Loading the teaching model…'
+              'Loading the 3D view…'
             )}
           </div>
         ) : null}
       </div>
-      {state.message ? (
+      {/* A step with a tool prints the reply under the tool's own controls instead. */}
+      {state.message && !view.controls.includes('accessory') ? (
         <p className={styles.message} role="status" data-scope-message>
           {state.message}
         </p>

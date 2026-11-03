@@ -119,7 +119,7 @@ for (const id of Object.keys(routes) as (keyof typeof routes)[]) {
         await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
       if (id === 'bf') {
         await page.locator('[data-now-primary]').click()
-        await page.getByRole('button', { name: 'Try with guidance', exact: true }).click()
+        // The bench's controls are live without the example (BF owner feedback, 2026-11-03).
         await expect(page.locator('[data-three-state]')).toHaveAttribute(
           'data-three-state',
           'ready',

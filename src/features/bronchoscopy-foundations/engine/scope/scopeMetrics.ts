@@ -1,5 +1,6 @@
 import {
   UNAIDED_DISQUALIFYING_ASSISTS,
+  type AccessoryKind,
   type AccessoryPosition,
   type AccessoryState,
   type CordsState,
@@ -80,6 +81,55 @@ export const ACCESSORY_POSITION_WORDS: Readonly<Record<AccessoryPosition, string
   'in-channel': 'in the working channel',
   'at-tip': 'at the tip',
   extended: 'beyond the tip',
+}
+
+/**
+ * The words on the accessory controls (owner feedback, 2026-11-03: two drop-downs named
+ * "Accessory" and "Accessory position" hid how to load the brush). Where the tool is belongs to the
+ * operator's hands and is shown as it is; opening, closing, exposing and covering belong to the
+ * assistant and are things the operator says, so those buttons hold no state of their own.
+ */
+export const ACCESSORY_TOOL_WORDS: Readonly<
+  Record<AccessoryKind, { readonly name: string; readonly where: string }>
+> = {
+  forceps: { name: 'forceps', where: 'Where the forceps are' },
+  brush: { name: 'brush', where: 'Where the brush is' },
+  needle: { name: 'needle', where: 'Where the needle is' },
+}
+
+/** The buttons that move the tool in the channel, in the order it travels. */
+export const ACCESSORY_POSITION_BUTTON_WORDS: Readonly<Record<AccessoryPosition, string>> = {
+  none: 'Not loaded',
+  'in-channel': 'In the channel',
+  'at-tip': 'At the tip',
+  extended: 'Beyond the tip',
+}
+
+/** What the operator tells the assistant, by tool: the exposing command first. */
+export const ACCESSORY_COMMAND_WORDS: Readonly<
+  Record<AccessoryKind, readonly { readonly state: AccessoryState; readonly words: string }[]>
+> = {
+  forceps: [
+    { state: 'forceps-open', words: 'Open the cups' },
+    { state: 'forceps-closed', words: 'Close the cups' },
+  ],
+  brush: [
+    { state: 'brush-exposed', words: 'Push the brush out' },
+    { state: 'brush-sheathed', words: 'Brush back into its sheath' },
+  ],
+  needle: [
+    { state: 'needle-exposed', words: 'Needle out' },
+    { state: 'needle-sheathed', words: 'Needle back in' },
+  ],
+}
+
+/** The operator's own look at the tool, which alone settles what it is doing. */
+export const ACCESSORY_CHECK_WORDS = 'Check it on the scope view'
+
+/** One line beside the controls, in place of the command note the drop-downs carried. */
+export function accessoryControlsNote(kind: AccessoryKind | null): string {
+  const tool = kind ? ACCESSORY_TOOL_WORDS[kind].name : 'tool'
+  return `Your assistant works the ${tool} when you say. The scope view shows what it is really doing.`
 }
 
 /** The geometric annulus of an ideal circular scope inside an ideal circular tube. */

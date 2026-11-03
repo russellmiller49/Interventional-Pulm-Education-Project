@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
-import { ScopePaneFrame } from './ScopeFallback'
+import { ScopePaneFrame, showsAirwayContext } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
 import { unnamedAirways } from '../../engine/scope/inspectionLedger'
@@ -21,7 +21,7 @@ import { TreeMap } from './TreeMap'
 
 const Scene = dynamic(() => import('./ScopeScene'), {
   ssr: false,
-  loading: () => <p role="status">Loading the teaching model…</p>,
+  loading: () => <p role="status">Loading the 3D view…</p>,
 })
 export const SCOPE_MODES_READY: ReadonlySet<ScopeMode> = new Set(SCOPE_MODES)
 export { resolveScopeInputs } from '../../engine/scope/scopeInputs'
@@ -32,14 +32,15 @@ export function ScopeScenePane(props: ScopePaneProps) {
 }
 
 /**
- * Why the scripted scene is standing still, and what moves it on.
+ * Why the scene's own clock (the breathing folds, the draining fluid) is standing still, and what
+ * moves it on.
  *
  * Reduced motion, an explicit Step control and the schematic view all hold the scene's clock. The
  * phase the goals read is the phase on the readouts, so saying the clock is held is the honest
  * alternative to animating it anyway.
  */
 const PAUSED_SCENE_NOTE =
-  'The scripted scene is held while motion is reduced. Step one second moves it on, one second at a time.'
+  'The scene is paused while motion is reduced. Step one second moves it on, one second at a time.'
 
 /** Said while the controls wait for the first drawn frame, so a pressed control is not silent. */
 const LOADING_CONTROLS_NOTE =
@@ -91,6 +92,9 @@ function ScenePane(props: ScopePaneProps) {
   )
   const report = useCallback((next: 'loading' | 'ready' | 'failed') => setStatus(next), [])
   const enabled = props.controlsEnabled && ready
+  // The map sits beside the view only on a step that steers, names or is answered on the map; a
+  // step without steering keeps its controls directly under the view (owner, 2026-11-03).
+  const showMap = props.state.place !== 'bench' && showsAirwayContext(props.view, props.treeAnswer)
   const keyboard = (event: KeyboardEvent) => {
     if (!enabled || event.altKey || event.metaKey || event.ctrlKey) return
     const target = event.target as HTMLElement
@@ -127,7 +131,11 @@ function ScenePane(props: ScopePaneProps) {
     >
       {schematic ? (
         <div ref={setPlaybackRoot}>
-          <p role="status">Schematic view. Use the airway map and controls to continue.</p>
+          <p role="status">
+            {showMap
+              ? 'Schematic view. Use the airway map and controls to continue.'
+              : 'Schematic view. Use the controls to continue.'}
+          </p>
           <button
             type="button"
             onClick={() => {
@@ -152,7 +160,7 @@ function ScenePane(props: ScopePaneProps) {
           benchState={presentation.state}
           opticalView={
             <>
-              {props.state.place !== 'bench' ? (
+              {showMap ? (
                 <div className={styles.visualTabs} role="tablist" aria-label="Scope and airway map">
                   <button
                     type="button"
@@ -175,7 +183,8 @@ function ScenePane(props: ScopePaneProps) {
               <div
                 className={styles.visualWorkspace}
                 data-bench={props.state.place === 'bench' ? 'true' : undefined}
-                data-visual-tab={visualTab}
+                data-map={showMap ? 'beside' : 'none'}
+                data-visual-tab={showMap ? visualTab : 'scope'}
               >
                 <div className={styles.scopeColumn} ref={setPlaybackRoot}>
                   <Scene
@@ -195,8 +204,9 @@ function ScenePane(props: ScopePaneProps) {
                     </button>
                   ) : null}
                 </div>
-                {props.state.place !== 'bench' ? (
-                  <div className={styles.mapColumn}>
+                {showMap ? (
+                  // Held to the view's height beside it, so it never pushes the controls down.
+                  <div className={styles.mapColumn} data-map-column>
                     <TreeMap
                       map={props.map}
                       lit={props.view.litAirways ?? []}

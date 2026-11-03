@@ -214,7 +214,9 @@ describe('the survey’s naming record on the stage', () => {
       ...SEGMENTAL_AIRWAY_LABELS,
     ])
     expect(pane().caption).toContain(UNNAMED_AIRWAY_WORDS)
-    expect(document.querySelector('[data-goal-now]')?.textContent).toContain(UNNAMED_AIRWAY_WORDS)
+    expect(document.querySelector('[data-location-caption]')?.textContent).toContain(
+      UNNAMED_AIRWAY_WORDS,
+    )
     expect(shownOutsideTheQuestion()).not.toContain(name)
     expect(shownOutsideTheQuestion()).not.toMatch(/\bRB1\b(?! to RB10)/)
 
@@ -236,7 +238,7 @@ describe('the survey’s naming record on the stage', () => {
     )
     expect(document.querySelectorAll('[data-airway-map] [data-unnamed="true"]')).toHaveLength(17)
     expect(document.querySelector('[data-name-segment-count]')?.textContent).toBe('1 of 18 named')
-    expect(document.querySelector('[data-goal-now]')?.textContent).toContain(name)
+    expect(document.querySelector('[data-location-caption]')?.textContent).toContain(name)
     // With this segment named there is nothing to ask until the tip is inside another.
     expect(question()?.getAttribute('data-name-segment')).toBe('waiting')
   })
