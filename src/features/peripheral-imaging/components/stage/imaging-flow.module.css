@@ -161,23 +161,67 @@
   background: #0e262d;
   box-shadow: 0 1rem 3rem #0009;
 }
+/* Laid out like the ECMO Sections list: numbered rows, the current one filled. */
+.outlineIntro {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0 0 0.25rem;
+}
+.outlineIntro strong {
+  font-size: 0.95rem;
+}
+.outlineIntro small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
 .outline h2 {
-  color: var(--cyan-bright);
-  font-size: 0.9rem;
-  margin: 1rem 0 0.25rem;
+  color: #6ed7cd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 1rem 0 0.4rem;
 }
 .outline ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
   list-style: none;
   padding: 0;
 }
 .outline a {
-  display: block;
-  padding: 0.4rem;
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #345363;
+  border-radius: 0.65rem;
+  color: #d5e4e9;
+  background: #102735;
   font-size: 0.9rem;
-  border-radius: 0.3rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.outline a:hover {
+  border-color: #65bfb8;
+  background: #153442;
+}
+.outline a > span:first-child {
+  color: #75d4cb;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-align: center;
 }
 .outline a[aria-current] {
-  background: var(--panel-3);
+  border-color: #69cfc5;
+  color: #061b22;
+  background: #80d9d0;
+  box-shadow: 0 0 0 2px rgba(105, 207, 197, 0.18);
+}
+.outline a[aria-current] > span:first-child {
+  color: #0c5755;
 }
 .progress {
   display: flex;

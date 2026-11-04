@@ -701,31 +701,106 @@
 }
 .outline {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   max-height: 70vh;
   overflow: auto;
   padding-right: 10px;
 }
+/* The outline is laid out like the ECMO Sections list: numbered rows, the current one filled. */
+.outlineIntro {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.outlineIntro strong {
+  font-size: 0.95rem;
+}
+.outlineIntro small {
+  color: var(--muted, #9eb3bd);
+  font-size: 0.8rem;
+}
 .outline h3 {
-  font-weight: 700;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  color: #6ed7cd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.outline li {
-  padding: 5px 0;
+.outline ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.outline a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.outline button {
-  border: 1px solid var(--line);
-  padding: 8px;
-  border-radius: 6px;
+.outlineLesson,
+.outlineTasks button {
+  display: grid;
+  width: 100%;
+  min-height: 2.75rem;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #345363;
+  border-radius: 0.65rem;
+  color: #d5e4e9;
+  background: #102735;
   text-align: left;
+  text-decoration: none;
 }
-.outline a[aria-current] {
+.outlineLesson:hover,
+.outlineTasks button:hover {
+  border-color: #65bfb8;
+  background: #153442;
+}
+.outlineLesson:focus-visible,
+.outlineTasks button:focus-visible {
+  outline: 3px solid #72d7ce;
+  outline-offset: 2px;
+}
+.outlineLesson > span:first-child {
+  color: #75d4cb;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-align: center;
+}
+.outlineLesson strong {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--cyan-bright);
+}
+.outlineLesson small {
+  color: #9eb3bd;
+  font-size: 0.8rem;
+}
+.outlineLesson[aria-current] {
+  border-color: #69cfc5;
+  color: #061b22;
+  background: #80d9d0;
+  box-shadow: 0 0 0 2px rgba(105, 207, 197, 0.18);
+}
+.outlineLesson[aria-current] > span:first-child,
+.outlineLesson[aria-current] small {
+  color: #0c5755;
+}
+/* The current lesson's tasks sit beneath it, indented, so the jump list stays in one place. */
+.outline .outlineTasks {
+  margin: 6px 0 4px 1.5rem;
+}
+.outlineTasks button {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  min-height: 2.4rem;
+  font-size: 0.85rem;
+}
+.outlineTasks button > span:first-child {
+  color: #75d4cb;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.outlineTasks button[aria-current] {
+  border-color: #69cfc5;
+  background: #173e47;
 }
 .lessonFlow .embed {
   min-height: 0;

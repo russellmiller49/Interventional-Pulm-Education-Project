@@ -18,6 +18,15 @@ import styles from './imaging-flow.module.css'
 import { useImagingFocusClearance } from './useImagingFocusClearance'
 import { useImagingOutlinePlacement } from './useImagingOutlinePlacement'
 
+/** The outline's phases, each section carrying its number through the whole course. */
+const outlineGroups = (() => {
+  let number = 0
+  return imagingPathwayGroups().map((group) => ({
+    ...group,
+    sections: group.sections.map((section) => ({ section, number: ++number })),
+  }))
+})()
+
 export interface ImagingNowAction extends NowCardAction {
   /** For a disclosure toggle, such as Show the explanation: whether what it opens is open. */
   readonly expanded?: boolean
@@ -125,20 +134,49 @@ export function ImagingActivityShell({
           ))}
         </nav>
         <div className={styles.headerTools}>
-          <details className={styles.outline} data-course-outline ref={outlineNode}>
+          <details
+            className={styles.outline}
+            data-course-outline
+            ref={outlineNode}
+            onToggle={(event) => {
+              // On opening, the current section is brought to the middle of the list.
+              const drawer = event.currentTarget
+              if (!drawer.open) return
+              const panel = drawer.querySelector<HTMLElement>('nav')
+              const current = panel?.querySelector<HTMLElement>('[aria-current="page"]')
+              if (!panel || !current) return
+              const offset = current.getBoundingClientRect().top - panel.getBoundingClientRect().top
+              panel.scrollTop += offset - (panel.clientHeight - current.offsetHeight) / 2
+            }}
+          >
             <summary ref={outlineTrigger}>Course outline</summary>
+            {/*
+             * Laid out like the ECMO Sections list (owner request, 2026-11-04): every section
+             * numbered through the whole course, to match "Section N of M" in the header, under its
+             * phase, the current one highlighted.
+             */}
             <nav aria-label="Course outline">
-              {imagingPathwayGroups().map((group) => (
+              <p className={styles.outlineIntro}>
+                <strong>
+                  Section {lesson.index + 1} of {lesson.total}
+                </strong>
+                <small>Jump ahead or revisit any section</small>
+              </p>
+              {outlineGroups.map((group) => (
                 <section key={group.phase}>
                   <h2>{group.title}</h2>
                   <ol>
-                    {group.sections.map((section) => (
+                    {group.sections.map(({ section, number }) => (
                       <li key={section.id}>
                         <Link
                           href={imagingSectionLinkTarget(section.id)}
                           aria-current={section.id === lesson.sectionId ? 'page' : undefined}
                         >
-                          {section.title}
+                          <span aria-hidden="true">{String(number).padStart(2, '0')}</span>
+                          <span>
+                            <span className="sr-only">Section {number}: </span>
+                            {section.title}
+                          </span>
                         </Link>
                       </li>
                     ))}

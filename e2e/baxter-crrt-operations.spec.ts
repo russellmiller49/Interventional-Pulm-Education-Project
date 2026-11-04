@@ -278,7 +278,8 @@ test('Batch B history and restart retain old work while replacing the whole inco
   await observations(page)
   await answer(page, /Compare actual accumulated effluent/)
   const old = (await saved(page)).learnTaskHistory
-  await page.getByRole('combobox', { name: 'CRRT lesson' }).selectOption('crrt-fluid-liberation')
+  await page.locator('[data-sections-drawer] summary').click()
+  await page.locator('[data-sections-drawer] button[data-section="crrt-fluid-liberation"]').click()
   await click(page, 'Continue')
   await click(page, 'Record to 1 hours')
   await page.goBack()

@@ -102,6 +102,16 @@ function LessonSession({
   const [dialog, setDialog] = useState<'outline' | 'help' | null>(null)
   const helpButton = useRef<HTMLButtonElement>(null)
   const outlineButton = useRef<HTMLButtonElement>(null)
+  const outlineList = useRef<HTMLDivElement>(null)
+  // On opening the outline, the current lesson is brought to the middle of the list (as in ECMO).
+  useEffect(() => {
+    if (dialog !== 'outline') return
+    const list = outlineList.current
+    const current = list?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!list || !current) return
+    const offset = current.getBoundingClientRect().top - list.getBoundingClientRect().top
+    list.scrollTop += offset - (list.clientHeight - current.offsetHeight) / 2
+  }, [dialog])
   const heading = useRef<HTMLHeadingElement>(null)
   const lessonFlow = useRef<HTMLDivElement>(null)
   const lessonChrome = useRef<HTMLDivElement>(null)
@@ -1123,54 +1133,86 @@ function LessonSession({
           returnFocusTo={dialogTrigger === 'outline' ? outlineButton : helpButton}
         >
           {dialog === 'outline' ? (
-            <div className={styles.outline}>
-              <ol aria-label="Tasks in this lesson">
-                {activities.map((activity, ordinal) => (
-                  <li key={activity.id}>
-                    <button
-                      aria-current={
-                        !finished && ordinal === position && !reviewId ? 'step' : undefined
-                      }
-                      onClick={() => {
-                        if (finished || ordinal < position) setReviewId(activity.id)
-                        else if (ordinal > position) goTo(activity.id)
-                        else setReviewId(null)
-                        setDialog(null)
-                      }}
-                    >
-                      {activity.title} · {activityStatus(activity, ordinal)}
-                      {!finished && ordinal < position
-                        ? ' · Review'
-                        : !finished && ordinal > position
-                          ? ' · Jump ahead'
-                          : ''}
-                    </button>
-                  </li>
-                ))}
-              </ol>
-              {CHAPTERS.map((entry) => (
-                <section key={entry.id}>
-                  <h3>{entry.title}</h3>
-                  <ul>
-                    {entry.lessons.map((item) => (
-                      <li key={item.id}>
-                        <Link
-                          href={lessonHref(item.id)}
-                          aria-current={item.id === lesson.id ? 'page' : undefined}
-                        >
-                          {item.title}
-                          {progress.reviewedLessonIds.includes(item.id)
-                            ? ' · Reviewed'
-                            : progress.visitedLessonIds.includes(item.id)
-                              ? ' · Opened'
-                              : ''}
-                          {progress.reviewLaterLessonIds.includes(item.id)
-                            ? ' · Saved for later'
-                            : ''}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+            /*
+             * Laid out like the ECMO Sections list (owner request, 2026-11-04): every lesson
+             * numbered 01–26 to match "Lesson 12 of 26" in the header, grouped under its chapter,
+             * the current one highlighted with its tasks beneath it.
+             */
+            <div className={styles.outline} ref={outlineList} data-ebus-outline>
+              <p className={styles.outlineIntro}>
+                <strong>
+                  Lesson {lessonIndex + 1} of {LESSONS.length}
+                </strong>
+                <small>Jump ahead or revisit any lesson or task</small>
+              </p>
+              {CHAPTERS.map((entry, chapterIndex) => (
+                <section key={entry.id} aria-labelledby={`ebus-outline-chapter-${entry.id}`}>
+                  <h3 id={`ebus-outline-chapter-${entry.id}`}>
+                    Chapter {chapterIndex + 1} · {entry.title}
+                  </h3>
+                  <ol>
+                    {entry.lessons.map((item) => {
+                      const number = LESSONS.findIndex((other) => other.id === item.id) + 1
+                      const current = item.id === lesson.id
+                      const marks = [
+                        progress.reviewedLessonIds.includes(item.id)
+                          ? 'Reviewed'
+                          : progress.visitedLessonIds.includes(item.id)
+                            ? 'Opened'
+                            : '',
+                        progress.reviewLaterLessonIds.includes(item.id) ? 'Saved for later' : '',
+                      ].filter(Boolean)
+                      return (
+                        <li key={item.id}>
+                          <Link
+                            href={lessonHref(item.id)}
+                            aria-current={current ? 'page' : undefined}
+                            className={styles.outlineLesson}
+                          >
+                            <span aria-hidden="true">{String(number).padStart(2, '0')}</span>
+                            <span>
+                              <strong>
+                                <span className="sr-only">Lesson {number}: </span>
+                                {item.title}
+                              </strong>
+                              {marks.length > 0 && <small>{' · ' + marks.join(' · ')}</small>}
+                            </span>
+                          </Link>
+                          {current && (
+                            <ol aria-label="Tasks in this lesson" className={styles.outlineTasks}>
+                              {activities.map((activity, ordinal) => (
+                                <li key={activity.id}>
+                                  <button
+                                    aria-current={
+                                      !finished && ordinal === position && !reviewId
+                                        ? 'step'
+                                        : undefined
+                                    }
+                                    onClick={() => {
+                                      if (finished || ordinal < position) setReviewId(activity.id)
+                                      else if (ordinal > position) goTo(activity.id)
+                                      else setReviewId(null)
+                                      setDialog(null)
+                                    }}
+                                  >
+                                    <span aria-hidden="true">Task {ordinal + 1}</span>
+                                    <span>
+                                      {activity.title} · {activityStatus(activity, ordinal)}
+                                      {!finished && ordinal < position
+                                        ? ' · Review'
+                                        : !finished && ordinal > position
+                                          ? ' · Jump ahead'
+                                          : ''}
+                                    </span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ol>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ol>
                 </section>
               ))}
             </div>

@@ -298,17 +298,19 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
   page,
 }) => {
   await page.goto(lesson + 'crrt-indications-modality')
-  const picker = page.getByRole('combobox', { name: 'CRRT lesson' })
-  const lessons = await picker
-    .locator('option')
-    .evaluateAll((es) =>
-      es.map((el) => ({ id: (el as HTMLOptionElement).value, label: el.textContent! })),
-    )
+  const picker = page.locator('[data-sections-drawer]')
+  const lessons = await picker.locator('button[data-section]').evaluateAll((es) =>
+    es.map((el) => ({
+      id: el.getAttribute('data-section')!,
+      label: el.getAttribute('aria-label')!,
+    })),
+  )
   expect(lessons).toHaveLength(8)
   for (const [index, item] of lessons.entries()) {
-    await picker.selectOption(item.id)
+    await picker.locator('summary').click()
+    await picker.locator(`button[data-section="${item.id}"]`).click()
     await expect(page).toHaveURL(new RegExp(`lesson=${item.id}$`))
-    await expect(page.getByText(`Lesson ${index + 1} of 8`, { exact: true })).toBeVisible()
+    await expect(page.locator('[data-crrt-lesson-number]')).toHaveText(`Lesson ${index + 1} of 8`)
     const nav = page.getByRole('navigation', { name: 'Previous and next lesson' })
     if (index > 0)
       await expect(
@@ -365,7 +367,7 @@ test('sanity 03: long task outline visits do not complete tasks; Save and exit p
   const resume = page.getByRole('link', { name: /Continue to the next topic/ })
   await expect(resume).toContainText('Lesson 1:')
   await resume.click()
-  await expect(page.getByText('Lesson 1 of 8')).toBeVisible()
+  await expect(page.locator('[data-crrt-lesson-number]')).toHaveText('Lesson 1 of 8')
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem('baxter-crrt-progress-v3')!).completedLessonIds,

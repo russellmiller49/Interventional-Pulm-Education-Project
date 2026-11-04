@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useId, useReducer, useRef, useState, type Ref } from 'react'
 import { LessonShell, NowCard } from '@/features/learning-module/stage'
+import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
+import type { LearningPathway } from '@/features/learning-module/curriculum/types'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { CrrtFoundationTask } from '../content/foundationLessons'
@@ -19,7 +21,7 @@ import { CrrtSourceDating } from './CrrtSourceDating'
 import { CrrtSourceRecord } from './CrrtSourceRecord'
 import { crrtSourceDating } from '../content/sourceReviewMetadata'
 import { crrtLearnerCitation } from '../sourcePresentation'
-import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
+import { baxterCrrtLearnLessonById } from '../content/learnLessons'
 import {
   BAXTER_CRRT_LEARN_LESSON_IDS,
   type BaxterCrrtLearnLessonId,
@@ -42,6 +44,27 @@ import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import styles from './crrt-foundations.module.css'
 import { CRRT_NUMBERS } from '../content/teachingNumbers'
+
+/**
+ * The eight lessons in the shape the shared Lessons menu reads, in the one authored order (F-10).
+ * The menu is the same numbered list the other guided modules and ECMO use (owner, 2026-11-04).
+ */
+const crrtLessonPathway: LearningPathway = {
+  moduleId: 'baxter-crrt',
+  arcSentence: '',
+  sections: BAXTER_CRRT_LEARN_LESSON_IDS.map((id) => {
+    const lesson = baxterCrrtLearnLessonById.get(id)!
+    return {
+      id,
+      shortTitle: lesson.title,
+      title: lesson.title,
+      minutes: 0,
+      description: lesson.summary,
+      stage: 'foundation',
+      activityId: id,
+    }
+  }),
+}
 
 export function CrrtFoundationLesson({
   lessonId,
@@ -287,20 +310,14 @@ export function CrrtFoundationLesson({
               </p>
               <h1>{lesson.title}</h1>
             </div>
-            <label>
-              Lesson
-              <select
-                aria-label="CRRT lesson"
-                value={lessonId}
-                onChange={(e) => onNavigate(e.target.value as BaxterCrrtLearnLessonId)}
-              >
-                {baxterCrrtLearnLessons.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {selectCrrtLessonSequence(item.id).number}. {item.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SectionsDrawer
+              pathway={crrtLessonPathway}
+              activeSectionId={lessonId}
+              position={`${sequence.number} of ${sequence.total}`}
+              label="CRRT lessons"
+              unit="Lesson"
+              onSelect={(id) => onNavigate(id as BaxterCrrtLearnLessonId)}
+            />
             <nav className={styles.lessonSteps} aria-label="Previous and next lesson">
               {previousLesson ? (
                 <button
