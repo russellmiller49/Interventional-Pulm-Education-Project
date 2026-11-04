@@ -55,6 +55,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // The bronchoscopy foundations course is in development alongside the earlier intro course,
   // which keeps `/intro-bronchoscopy` and its enrollment gate until the owner decides on a cutover.
   '/bronchoscopy-foundations',
+  // The IP Board Navigator: a personalized objective-level learning layer over the board-prep
+  // library, in development. Reachable by direct link without an account, noindex.
+  '/board-navigator',
   '/ebus-guided',
   // The EUS-B simulator is a development preview: reachable by direct link, noindex. Its page
   // embeds a standalone entry of the EBUS course build, which is already a public training embed.
@@ -103,6 +106,8 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   '/bronchoscopy-foundations',
   // The Dolphin Bronchoscopy module (hub, Learn, Practice, Integrated cases, Reference).
   '/dolphin-bronchoscopy',
+  // The IP Board Navigator (Today, knowledge map, repair lab, progress, curriculum).
+  '/board-navigator',
   '/ebus-guided',
   '/literature-atlas',
   // Beta testers reach the card builder and catalog by direct link without an account.
@@ -508,6 +513,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'
   }
+
+  if (first === 'board-navigator') return 'board-navigator'
 
   if (
     first === 'pccm-intro-course' ||

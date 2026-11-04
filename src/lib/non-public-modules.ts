@@ -26,6 +26,7 @@ export interface NonPublicModule {
 }
 
 export const nonPublicModuleGroups = [
+  'Board preparation',
   'IP tooling',
   'Pleural',
   'Bronchoscopy',
@@ -33,6 +34,13 @@ export const nonPublicModuleGroups = [
 ] as const
 
 export const nonPublicModules: NonPublicModule[] = [
+  {
+    path: '/board-navigator',
+    title: 'IP Board Navigator',
+    group: 'Board preparation',
+    summary:
+      'A personalized learning layer over the board-prep library: a knowledge map of objective-level evidence on the AABIP blueprint, short repair labs (diagnose, explain, manipulate, apply, review), rules-first recommendations with a readable rationale, and spaced retention checks. Pilot of 24 objectives across mediastinal staging, pleural disease, airway obstruction and stents, and therapeutic modalities. Record stays on the device.',
+  },
   {
     path: '/ebus-guided',
     title: 'EBUS: Guided Course',

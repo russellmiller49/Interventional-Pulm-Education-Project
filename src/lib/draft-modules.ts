@@ -10,6 +10,7 @@ import { MCS_RELEASE_STAGE } from '@/features/mechanical-circulatory-support/con
 import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '@/features/peripheral-imaging/content/release'
 import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '@/features/bronchoscopy-foundations/content/release'
 import { DOLPHIN_BRONCHOSCOPY_RELEASE_STAGE } from '@/features/dolphin-bronchoscopy/content/release'
+import { BOARD_NAVIGATOR_RELEASE_STAGE } from '@/features/board-navigator/content/release'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
@@ -55,6 +56,11 @@ const dolphinBronchoscopyUnlistedPathPrefixes =
     ? (['/dolphin-bronchoscopy'] as const)
     : ([] as const)
 
+const boardNavigatorUnlistedPathPrefixes =
+  BOARD_NAVIGATOR_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/board-navigator'] as const)
+    : ([] as const)
+
 const icuSimulationDraftPathPrefixes =
   ICU_SIMULATION_RELEASE_STAGE === 'published' ? ([] as const) : (['/icu-simulation'] as const)
 
@@ -96,6 +102,7 @@ const unlistedModulePathPrefixes = [
   ...peripheralImagingUnlistedPathPrefixes,
   ...bronchoscopyFoundationsUnlistedPathPrefixes,
   ...dolphinBronchoscopyUnlistedPathPrefixes,
+  ...boardNavigatorUnlistedPathPrefixes,
   // Phase D1 device-intelligence routes stay absent from all site navigation
   // (decision D-03 as modified): reachable by direct link only.
   '/clinical-roles',
