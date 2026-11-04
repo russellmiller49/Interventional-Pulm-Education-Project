@@ -103,7 +103,9 @@ export function KnowledgeMapScreen() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    router.replace(mapHref(objective.id), { scroll: false })
+                                    router.replace(mapHref(objective.id) as Route, {
+                                      scroll: false,
+                                    })
                                   }
                                   aria-pressed={active}
                                   data-objective-tile={objective.id}
@@ -137,7 +139,7 @@ export function KnowledgeMapScreen() {
             objective={selected}
             record={record}
             now={now}
-            onClose={() => router.replace(mapHref(), { scroll: false })}
+            onClose={() => router.replace(mapHref() as Route, { scroll: false })}
           />
         ) : null}
       </div>
