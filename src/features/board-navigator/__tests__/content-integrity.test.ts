@@ -9,7 +9,7 @@ import { BLUEPRINT_TOPICS, blueprintTopic } from '../content/blueprint'
 import { OBJECTIVES, objectiveById, tasksOf } from '../content/objectives'
 import { NAVIGATOR_SOURCE_IDS } from '../content/sources'
 import { BOARD_NAVIGATOR_NUMBERS } from '../content/teachingNumbers'
-import type { Task } from '../content/types'
+import { EXAM_CONTENT_VERSION, type Task } from '../content/types'
 
 /**
  * The content contract. Every objective has a lab whose verification task is a different kind from
@@ -29,6 +29,12 @@ const GRADING_TERMS = [
   'certified',
   'competent',
 ] as const
+
+/** Named clinical instruments whose names contain a scoring word; they are not grading language. */
+const CLINICAL_SCORE_NAMES = /\b(LENT|RAPID) score\b/g
+function stripClinicalScores(line: string): string {
+  return line.replace(CLINICAL_SCORE_NAMES, '$1')
+}
 
 function learnerCopy(task: Task): string[] {
   const copy: string[] = [task.stem, task.hint, task.teachingPoint]
@@ -182,7 +188,7 @@ describe('the objective catalogue', () => {
         ...objective.misconceptions.flatMap((entry) => [entry.label, entry.repair]),
         ...tasksOf(objective).flatMap(learnerCopy),
       ]
-      for (const line of copy) expect(line).not.toMatch(pattern)
+      for (const line of copy) expect(stripClinicalScores(line)).not.toMatch(pattern)
     }
   })
 
@@ -226,6 +232,73 @@ describe('the objective catalogue', () => {
       expect(objective.provenance.contentVersion.length).toBeGreaterThan(0)
       const copy = [objective.title, objective.competency, ...objective.whatToKnow].join(' ')
       expect(copy).not.toMatch(/NOT REVIEWED|draft|synthetic|authored/i)
+    }
+  })
+})
+
+describe('the exam-level calibration contract', () => {
+  const examLevel = OBJECTIVES.filter(
+    (objective) => objective.provenance.contentVersion === EXAM_CONTENT_VERSION,
+  )
+
+  it('has moved the pleural and staging objectives to the exam content version', () => {
+    const ids = new Set(examLevel.map((objective) => objective.id))
+    for (const id of [
+      'ms-01',
+      'ms-02',
+      'ms-03',
+      'ms-04',
+      'ms-05',
+      'ms-06',
+      'ms-07',
+      'pl-01',
+      'pl-02',
+      'pl-03',
+      'pl-04',
+      'pl-05',
+      'pl-06',
+      'pl-07',
+    ]) {
+      expect(ids.has(id)).toBe(true)
+    }
+  })
+
+  it('cites registered sources on every evidence card and guideline position', () => {
+    for (const objective of OBJECTIVES) {
+      const cardIds = objective.evidence.map((card) => card.id)
+      expect(new Set(cardIds).size).toBe(cardIds.length)
+      for (const card of objective.evidence) {
+        expect(card.id.startsWith(`${objective.id}.`)).toBe(true)
+        expect(NAVIGATOR_SOURCE_IDS.has(card.sourceId)).toBe(true)
+        expect(card.headline.length).toBeGreaterThan(20)
+      }
+      for (const position of objective.positions ?? []) {
+        expect(NAVIGATOR_SOURCE_IDS.has(position.sourceId)).toBe(true)
+      }
+      if (objective.positions) expect(objective.positions.length).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('backs every exam-level objective with evidence and stacks constraints in its stems', () => {
+    expect(examLevel.length).toBeGreaterThan(0)
+    for (const objective of examLevel) {
+      expect(objective.evidence.length).toBeGreaterThanOrEqual(1)
+      for (const task of [objective.lab.diagnose, objective.lab.verify]) {
+        expect(task.stemConstraints?.length ?? 0).toBeGreaterThanOrEqual(2)
+      }
+    }
+  })
+
+  it('keeps grading vocabulary out of evidence cards and positions', () => {
+    const pattern = new RegExp(`\\b(${GRADING_TERMS.join('|')})\\b`, 'i')
+    for (const objective of OBJECTIVES) {
+      for (const card of objective.evidence) {
+        for (const line of [card.label, card.population, card.headline, card.caveat ?? '']) {
+          expect(stripClinicalScores(line)).not.toMatch(pattern)
+        }
+      }
+      for (const position of objective.positions ?? [])
+        expect(stripClinicalScores(position.statement)).not.toMatch(pattern)
     }
   })
 })

@@ -20,6 +20,12 @@ export interface TaskBase {
   /** One line that links the task back to the idea, shown after commitment. */
   readonly teachingPoint: string
   readonly sourceIds: readonly NavigatorSourceId[]
+  /**
+   * Authoring metadata, never rendered: the competing constraints the stem stacks (an oxygen limit, an
+   * anatomical limit, a timing demand, performance status, device availability). An exam-level stem
+   * names at least two; the content test enforces it for objectives at the exam content version.
+   */
+  readonly stemConstraints?: readonly string[]
 }
 
 export interface ChoiceOption {
@@ -130,6 +136,38 @@ export interface ObjectiveLab {
   readonly verify: Task
 }
 
+export type EvidenceDesign =
+  | 'rct'
+  | 'meta-analysis'
+  | 'registry'
+  | 'cohort'
+  | 'guideline'
+  | 'consensus'
+
+/**
+ * One piece of evidence behind an objective, named the way the examination names it: the trial or
+ * guideline, its design, who it studied, and the one-sentence result with its number. Rendered in the
+ * Explain step and on the curriculum page so a learner leaves knowing the study, not only the rule.
+ */
+export interface EvidenceCard {
+  readonly id: string
+  readonly label: string
+  readonly year: number
+  readonly design: EvidenceDesign
+  readonly population: string
+  readonly headline: string
+  readonly caveat?: string
+  readonly sourceId: NavigatorSourceId
+}
+
+/** Where two bodies answer the same question differently, both are shown, attributed. */
+export interface GuidelinePosition {
+  readonly body: string
+  readonly year: number
+  readonly statement: string
+  readonly sourceId: NavigatorSourceId
+}
+
 /** Project metadata on an objective. Never rendered to the learner. */
 export interface ObjectiveProvenance {
   readonly contentVersion: string
@@ -153,6 +191,9 @@ export interface LearningObjective {
   readonly misconceptions: readonly Misconception[]
   readonly resources: readonly LearningResource[]
   readonly sourceIds: readonly NavigatorSourceId[]
+  readonly evidence: readonly EvidenceCard[]
+  /** Present only where guideline bodies differ on a decision the objective teaches. */
+  readonly positions?: readonly GuidelinePosition[]
   readonly estimatedMinutes: number
   readonly lab: ObjectiveLab
   readonly provenance: ObjectiveProvenance
@@ -161,6 +202,16 @@ export interface LearningObjective {
 export const PILOT_PROVENANCE: ObjectiveProvenance = {
   contentVersion: '2026.11-pilot',
   authoredOn: '2026-11-04',
+  reviewer: null,
+  lastReviewedOn: null,
+}
+
+/** The exam-level calibration pass: evidence cards present, stems stack two or more constraints. */
+export const EXAM_CONTENT_VERSION = '2026.12-exam'
+
+export const EXAM_PROVENANCE: ObjectiveProvenance = {
+  contentVersion: EXAM_CONTENT_VERSION,
+  authoredOn: '2026-11-05',
   reviewer: null,
   lastReviewedOn: null,
 }

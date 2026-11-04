@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 
 import { BLUEPRINT_DOMAINS, BLUEPRINT_VERSION, topicsInDomain } from '../content/blueprint'
 import { CONCEPT_TAG_LABELS } from '../content/concepts'
+import { EVIDENCE_DESIGN_LABELS } from '../content/evidenceLabels'
 import { objectivesInTopic } from '../content/objectives'
 import { labHref, mapHref } from '../content/routes'
 import { NAVIGATOR_SOURCES, navigatorSource } from '../content/sources'
@@ -166,6 +167,24 @@ export function CurriculumExplorer() {
                               {flagged ? 'Remove flag' : 'Flag as difficult'}
                             </button>
                           </div>
+                          {objective.evidence.length > 0 ? (
+                            <details className="text-xs text-muted-foreground">
+                              <summary className="cursor-pointer">
+                                Evidence ({objective.evidence.length})
+                              </summary>
+                              <ul className="mt-1 grid gap-1">
+                                {objective.evidence.map((card) => (
+                                  <li key={card.id}>
+                                    <span className="font-medium text-foreground">
+                                      {card.label}
+                                    </span>{' '}
+                                    ({card.year}, {EVIDENCE_DESIGN_LABELS[card.design]}):{' '}
+                                    {card.headline}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          ) : null}
                           <details className="text-xs text-muted-foreground">
                             <summary className="cursor-pointer">References</summary>
                             <ul className="mt-1 grid gap-1">

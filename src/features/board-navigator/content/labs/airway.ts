@@ -75,6 +75,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
       { label: 'Therapeutic bronchoscopy hub', href: '/therapeutic-bronchoscopy', kind: 'module' },
     ],
     sourceIds: ['ernst-cao-2004', 'ers-ats-ip-statement-2002'],
+    evidence: [],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
@@ -253,6 +254,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     sourceIds: ['freitag-stenosis-2007', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -384,6 +386,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [STENT_CHAPTER, BENIGN_CHAPTER, STENT_EXPLORER],
     sourceIds: ['fda-metal-stents-2005', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -542,6 +545,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [STENT_EXPLORER, STENT_CHAPTER],
     sourceIds: ['ernst-cao-2004', 'ers-ats-ip-statement-2002'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -700,6 +704,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [STENT_CHAPTER, STENT_EXPLORER],
     sourceIds: ['ernst-cao-2004', 'ers-ats-ip-statement-2002'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -875,6 +880,7 @@ export const AIRWAY_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     sourceIds: ['ers-ats-ip-statement-2002', 'accp-ip-procedures-2003', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 6,
     lab: {
       diagnose: {

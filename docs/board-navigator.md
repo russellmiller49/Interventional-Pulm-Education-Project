@@ -96,3 +96,28 @@ carries its rule and one sentence of rationale, and the learner can always pick 
 - Image-based labelling beyond the station schematic; CT/ultrasound stills.
 - AI-assisted teach-back or scenario variation.
 - Learner problem reports from inside the module.
+
+## Exam-level authoring rules (calibration pass, November 2026)
+
+A review against a 193-item board-style question bank (not reused here) showed the exam tests stacked
+constraints, named trials with their numbers, device physics, and both sides of guideline
+disagreements. Objectives at content version `2026.12-exam` follow these rules, which the content test
+enforces where it can:
+
+- **Stems stack constraints.** A diagnose or verify stem names at least two competing constraints
+  (`stemConstraints` on the task): an oxygen limit, an anatomical limit, a timing demand, performance
+  status, device availability, comorbidity. The decision is the one they jointly force.
+- **Evidence by name.** Every claim that rests on a study carries an `EvidenceCard` (label, year,
+  design, population, one-sentence headline with its number) and the number lives in the register.
+  Cards render in the Explain step and on the curriculum page.
+- **Both positions where bodies differ.** `positions` lists each body's statement with its source; the
+  stem says which frame it is asking in.
+- **Distractors are documented wrong models**, written generically: delayed modality for an acute
+  airway; treat the number not the patient; remove the catheter when it infects; a bigger tube is
+  better; on-site evaluation raises yield; a benign-looking node can be skipped; metal in a benign
+  airway; size decides the pneumothorax.
+- **Fresh scenarios only.** Relative to any question bank, change at least three of age and sex,
+  disease, side, numbers, setting, and the decision asked; never reuse an option list.
+
+The full assessment and the phased plan (sessions S1–S6) are in the owner's planning notes for this
+module; S1 covered the schema, the pleural and staging objectives, and these rules.

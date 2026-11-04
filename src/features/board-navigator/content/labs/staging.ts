@@ -1,5 +1,5 @@
 import { num } from '../teachingNumbers'
-import { PILOT_PROVENANCE, type LearningObjective } from '../types'
+import { EXAM_PROVENANCE, type LearningObjective } from '../types'
 
 /**
  * Mediastinal staging: the pilot area the vision names first. Seven objectives run from where a
@@ -59,13 +59,30 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     resources: [STATIONS_MODULE, STAGING_CHAPTER],
-    sourceIds: ['iaslc-node-map-2009'],
+    sourceIds: ['iaslc-node-map-2009', 'accp-staging-2013'],
+    evidence: [
+      {
+        id: 'ms-01.iaslc-map',
+        label: 'IASLC lymph node map',
+        year: 2009,
+        design: 'consensus',
+        population: 'The staging project’s proposal adopted for the seventh and later TNM editions',
+        headline:
+          'Station boundaries are defined on vessels and airway walls: the left lateral tracheal wall divides right from left; the azygos vein and the left pulmonary artery divide mediastinal (4) from hilar (10).',
+        sourceId: 'iaslc-node-map-2009',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'ms-01.diagnose',
         kind: 'choice',
-        stem: `On CT, a 12 mm node lies immediately in front of the trachea, its centre 4 mm to the left of the tracheal midline, at the level of the azygos arch and above the carina. Which station do you record?`,
+        stemConstraints: [
+          'pretracheal-left-of-midline',
+          'ct-and-ebus-both-available',
+          'left-sided-tumour-changes-N',
+        ],
+        stem: `A 66-year-old with a 3 cm left upper lobe tumour. On CT a 12 mm node lies immediately in front of the trachea, its centre 4 mm to the left of the tracheal midline, at the level of the azygos arch and above the carina. On EBUS you reach it from the right paratracheal position. The fellow records it as 4L, which would make it N2. Which station do you record, and what does that do to the N descriptor?`,
         hint: 'Find the boundary the IASLC map uses between right and left paratracheal nodes. It is not the midline.',
         teachingPoint:
           'Right versus left paratracheal is decided at the left lateral tracheal wall. Pretracheal nodes are right-sided.',
@@ -73,15 +90,23 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         options: [
           {
             id: '4r',
-            label: 'Station 4R',
+            label: 'Station 4R. For a left-sided tumour that is contralateral: N3, not N2',
             rationale:
-              'Yes. The node is above the azygos floor and to the right of the left lateral tracheal wall, which puts every pretracheal node on the right.',
+              'Yes. The node is above the azygos floor and to the right of the left lateral tracheal wall, which puts every pretracheal node on the right. For a left upper lobe tumour a 4R node is contralateral mediastinal, so the correct station raises the stage from N2 to N3.',
           },
           {
             id: '4l',
-            label: 'Station 4L',
+            label: 'Station 4L, as recorded: ipsilateral N2',
             rationale:
-              'A node has to lie to the left of the left lateral wall of the trachea to be 4L. Four millimetres left of the midline is still in front of the trachea.',
+              'A node has to lie to the left of the left lateral wall of the trachea to be 4L. Four millimetres left of the midline is still in front of the trachea, and the mis-assignment would understage a contralateral node.',
+            misconceptionId: 'ms-01.midline-divide',
+          },
+          {
+            id: 'ebus-side',
+            label:
+              'Whichever side the EBUS scope reached it from: 4R because you sampled from the right',
+            rationale:
+              'The scope position is a route, not a boundary. The station is defined by the node’s position relative to the left lateral tracheal wall, which here happens to agree with the approach.',
             misconceptionId: 'ms-01.midline-divide',
           },
           {
@@ -151,7 +176,8 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         id: 'ms-01.verify',
         kind: 'hotspot',
         figure: 'station-schematic',
-        stem: 'A node lies beside the right main bronchus, below the lower border of the azygos vein and before the right upper lobe takeoff. Click the region on the schematic where this node is recorded.',
+        stemConstraints: ['right-sided-tumour', 'node-below-azygos', 'N1-vs-N2-changes-surgery'],
+        stem: 'A right lower lobe tumour in a surgical candidate. The only abnormal node lies beside the right main bronchus, below the lower border of the azygos vein and before the right upper lobe takeoff. Whether it is mediastinal or hilar decides whether the surgeon operates first. Click the region on the schematic where this node is recorded.',
         hint: 'The azygos vein is the floor of one station and the ceiling of the next.',
         teachingPoint:
           'Below the azygos floor, beside the main bronchus, the node is hilar: station 10R, which is N1 for a right-sided tumour.',
@@ -162,7 +188,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         regionMisconceptions: { '4R': 'ms-01.four-vs-ten' },
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-02',
@@ -201,13 +227,39 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     resources: [TNM9_MODULE, STAGING_CHAPTER, STATIONS_MODULE],
-    sourceIds: ['tnm9-n-descriptors-2024', 'iaslc-node-map-2009'],
+    sourceIds: ['tnm9-n-descriptors-2024', 'iaslc-node-map-2009', 'tnm8-detterbeck-2017'],
+    evidence: [
+      {
+        id: 'ms-02.tnm9-n',
+        label: 'IASLC ninth-edition N descriptor proposal',
+        year: 2024,
+        design: 'consensus',
+        population: 'The IASLC staging database used for the ninth edition',
+        headline:
+          'N2 is split into N2a (single N2 station) and N2b (multiple N2 stations) because survival differed; N1 and N3 definitions are unchanged.',
+        sourceId: 'tnm9-n-descriptors-2024',
+      },
+      {
+        id: 'ms-02.tnm8-t',
+        label: 'Eighth-edition stage classification',
+        year: 2017,
+        design: 'consensus',
+        population: 'Review of the eighth-edition T, N and M descriptors',
+        headline: `A separate tumour nodule in the same lobe is ${num('tnm8-t3-separate-nodule')}; recurrent laryngeal nerve involvement is a T4 descriptor.`,
+        sourceId: 'tnm8-detterbeck-2017',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'ms-02.diagnose',
         kind: 'sort',
-        stem: 'A 3 cm right upper lobe adenocarcinoma. Sort each involved station into the N descriptor it gives this patient.',
+        stemConstraints: [
+          'right-sided-primary',
+          'seven-stations-mixed-sides',
+          'supraclavicular-node-present',
+        ],
+        stem: 'A 3 cm right upper lobe adenocarcinoma with a separate 8 mm nodule in the same lobe. The tumour board needs the N descriptor for each involved station before it can state the stage group. Sort each involved station into the N descriptor it gives this patient.',
         hint: 'Decide the side first, then the level. One station has no side at all.',
         teachingPoint:
           'Side first, then level: ipsilateral hilar is N1, ipsilateral mediastinal or subcarinal is N2, anything contralateral or supraclavicular is N3.',
@@ -275,7 +327,13 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-02.verify',
         kind: 'choice',
-        stem: 'A left lower lobe squamous carcinoma. EBUS confirms tumour in stations 7 and 4L, and in station 10R. Using the ninth edition, what is the N descriptor?',
+        stemConstraints: [
+          'left-sided-primary',
+          'contralateral-hilar-node',
+          'two-ipsilateral-N2-stations',
+          'hoarseness-T4',
+        ],
+        stem: 'A left lower lobe squamous carcinoma in a patient with three months of hoarseness and a paralysed left vocal cord on laryngoscopy. EBUS confirms tumour in stations 7 and 4L, and in station 10R. Using the ninth edition, what is the N descriptor, and does the hoarseness change the stage group?',
         hint: 'Look at every involved station and ask which lung it belongs to before you count N2 stations.',
         teachingPoint:
           'One contralateral node sets N3 whatever else is involved. The N2a/N2b count only matters when nothing is N3.',
@@ -311,7 +369,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'n3',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-03',
@@ -348,13 +406,40 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       { label: 'EBUS simulator', href: '/ebus-training/simulator', kind: 'simulator' },
       STAGING_CHAPTER,
     ],
-    sourceIds: ['ers-esge-ests-ebus-2015', 'accp-staging-2013'],
+    sourceIds: ['ers-esge-ests-ebus-2015', 'accp-staging-2013', 'herth-ctbna-ebus-2004'],
+    evidence: [
+      {
+        id: 'ms-03.ers-systematic',
+        label: 'ERS/ESGE/ESTS endosonography guideline',
+        year: 2015,
+        design: 'guideline',
+        population: 'Patients undergoing EBUS or combined EBUS/EUS for lung cancer staging',
+        headline: `Systematic staging samples at least ${num('systematic-staging-stations')}, in N3 → N2 → N1 order, with EUS added for stations the bronchoscope cannot reach.`,
+        sourceId: 'ers-esge-ests-ebus-2015',
+      },
+      {
+        id: 'ms-03.herth',
+        label: 'Conventional vs EBUS-guided TBNA',
+        year: 2004,
+        design: 'rct',
+        population:
+          'Two hundred patients with mediastinal or hilar nodes, randomised to blind or EBUS-guided TBNA',
+        headline: `${num('ctbna-vs-ebus')}: when EBUS is unavailable and the goal is diagnosis rather than staging, station 7 is the node blind TBNA can still hit.`,
+        sourceId: 'herth-ctbna-ebus-2004',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'ms-03.diagnose',
         kind: 'sequence',
-        stem: 'A right upper lobe tumour for EBUS staging. Three nodes are visible: a 7 mm node at 4L, a 14 mm node at station 7 and a 22 mm PET-avid node at 11R. You also plan an endobronchial biopsy of the primary. Put the four samples in the order you take them.',
+        stemConstraints: [
+          'staging-is-the-goal',
+          'largest-node-is-N1',
+          'smallest-node-is-N3',
+          'rose-available',
+        ],
+        stem: 'A right upper lobe tumour with no distant disease on PET, so staging decides the treatment. Three nodes are visible on EBUS: a 7 mm node at 4L, a 14 mm node at station 7 and a 22 mm PET-avid node at 11R. Rapid on-site evaluation is available. You also plan an endobronchial biopsy of the primary. Put the four samples in the order you take them.',
         hint: 'Assign each station its N descriptor for a right-sided tumour, then order by descriptor.',
         teachingPoint:
           'N3 before N2 before N1 before the primary. The smallest node here is the one that matters most.',
@@ -421,6 +506,12 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-03.verify',
         kind: 'choice',
+        stemConstraints: [
+          'staging-is-the-goal',
+          'contralateral-node-smallest',
+          'ebus-working',
+          'surgical-candidate',
+        ],
         stem: 'A left lower lobe tumour. On EBUS you see a 6 mm node at 4R, a 15 mm node at station 7 and a 20 mm hypermetabolic node at 10L. Which do you sample first?',
         hint: 'Which of these three stations is on the other side from the tumour?',
         teachingPoint:
@@ -457,7 +548,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         answerId: '4r',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-04',
@@ -491,12 +582,43 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [STAGING_CHAPTER, STATIONS_MODULE, TNM9_MODULE],
     sourceIds: ['accp-staging-2013', 'ers-esge-ests-ebus-2015'],
+    evidence: [
+      {
+        id: 'ms-04.accp-staging',
+        label: 'ACCP lung cancer staging guideline, 3rd edition',
+        year: 2013,
+        design: 'guideline',
+        population: 'Patients with known or suspected non-small cell lung cancer',
+        headline: `Invasive mediastinal staging is recommended for discrete CT enlargement (${num('ct-node-enlarged')}), PET-avid mediastinal nodes, a central tumour, or N1 uptake, even with a PET-negative mediastinum; a needle technique is the first test, and during staging nodes ${num('ebus-node-sampling-threshold')} on EBUS are sampled.`,
+        sourceId: 'accp-staging-2013',
+      },
+    ],
+    positions: [
+      {
+        body: 'ACCP',
+        year: 2013,
+        statement: `During a staging EBUS, every node ${num('ebus-node-sampling-threshold')} in short axis is sampled; the CT threshold of ${num('ct-node-enlarged')} decides who needs invasive staging, not which nodes are sampled once inside.`,
+        sourceId: 'accp-staging-2013',
+      },
+      {
+        body: 'ERS/ESGE/ESTS',
+        year: 2015,
+        statement: `Systematic staging samples at least ${num('systematic-staging-stations')} plus any node suspicious on imaging or ultrasound; the guideline frames the minimum by station rather than by a size cut-off.`,
+        sourceId: 'ers-esge-ests-ebus-2015',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'ms-04.diagnose',
         kind: 'choice',
-        stem: `A 4 cm central right lower lobe squamous carcinoma. All mediastinal nodes are below ${num('ct-node-enlarged')} on CT. PET shows no mediastinal uptake and faint uptake at 11R. The surgeon asks what comes next.`,
+        stemConstraints: [
+          'central-tumour',
+          'pet-negative-mediastinum',
+          'N1-uptake',
+          'surgeon-wants-to-book',
+        ],
+        stem: `A 4 cm central right lower lobe squamous carcinoma in a fit 68-year-old. All mediastinal nodes are below ${num('ct-node-enlarged')} on CT. PET shows no mediastinal uptake and faint uptake at 11R. The surgeon has a theatre slot next week and asks whether the PET is enough to proceed.`,
         hint: 'Two features of this tumour make imaging less reliable for the mediastinum. Find them.',
         teachingPoint:
           'A central tumour or an avid N1 node calls for invasive staging regardless of a PET-negative mediastinum, and the staging is systematic.',
@@ -581,7 +703,12 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-04.verify',
         kind: 'sort',
-        stem: 'Sort each patient by whether invasive mediastinal staging is recommended before treatment.',
+        stemConstraints: [
+          'four-patients-mixed-ct-pet',
+          'central-vs-peripheral',
+          'enlarged-but-pet-negative',
+        ],
+        stem: 'Four patients are listed for the same clinic. Sort each by whether invasive mediastinal staging is recommended before treatment.',
         hint: 'Ask three questions of each: is a node enlarged on CT, is anything avid on PET, is the tumour central?',
         teachingPoint:
           'Any one of discrete enlargement, PET uptake, central location or N1 involvement is enough to require invasive staging.',
@@ -622,7 +749,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         ],
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-05',
@@ -656,13 +783,31 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       STATIONS_MODULE,
       { label: 'EBUS simulator', href: '/ebus-training/simulator', kind: 'simulator' },
     ],
-    sourceIds: ['fujiwara-2010', 'ers-esge-ests-ebus-2015'],
+    sourceIds: ['fujiwara-2010', 'ers-esge-ests-ebus-2015', 'accp-staging-2013'],
+    evidence: [
+      {
+        id: 'ms-05.fujiwara',
+        label: 'Standard EBUS image classification',
+        year: 2010,
+        design: 'cohort',
+        population:
+          'Lymph nodes sampled by EBUS-TBNA in patients with lung cancer, features compared with pathology',
+        headline: `Round shape, distinct margin, heterogeneous echotexture and a coagulation necrosis sign independently predicted metastasis; size ${num('ebus-node-size-feature')} and an absent central hilar structure added less. No feature set excluded malignancy.`,
+        sourceId: 'fujiwara-2010',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'ms-05.diagnose',
         kind: 'choice',
-        stem: 'During systematic staging of a right upper lobe tumour you reach 4L. The node is 8 mm in short axis, oval, with indistinct margins, homogeneous echotexture and a visible central hilar structure. What do you do?',
+        stemConstraints: [
+          'benign-looking-features',
+          'node-above-5mm',
+          'contralateral-station',
+          'time-pressure',
+        ],
+        stem: `During systematic staging of a right upper lobe tumour in a surgical candidate you reach 4L, the last station, with the list running late. The node is 8 mm in short axis, oval, with indistinct margins, homogeneous echotexture, a visible central hilar structure and a single central vessel on Doppler. What do you do?`,
         hint: 'Separate what the features tell you about probability from what the procedure is for.',
         teachingPoint:
           'Benign-looking features lower the odds. In a staging procedure the required station is still sampled.',
@@ -748,7 +893,12 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-05.verify',
         kind: 'sort',
-        stem: 'Sort each ultrasound feature by the direction it moves your suspicion of malignancy.',
+        stemConstraints: [
+          'two-nodes-one-station',
+          'choose-which-to-target-first',
+          'features-guide-targeting',
+        ],
+        stem: 'Station 7 holds two nodes and you can sample only one before the patient’s sedation runs out. Sort each ultrasound feature by the direction it moves your suspicion, so you can decide which node to target first.',
         hint: 'Think about what a reactive node and a replaced node each look like inside.',
         teachingPoint:
           'Round, distinct, heterogeneous, necrotic and large lean malignant. A central hilar structure, oval shape, indistinct margin and homogeneous texture lean benign.',
@@ -805,7 +955,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         ],
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-06',
@@ -845,13 +995,47 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       },
       STATIONS_MODULE,
     ],
-    sourceIds: ['ers-esge-ests-ebus-2015', 'accp-staging-2013'],
+    sourceIds: [
+      'ers-esge-ests-ebus-2015',
+      'accp-staging-2013',
+      'sehgal-rose-meta-2018',
+      'lee-passes-2008',
+      'yarmus-molecular-passes-2013',
+      'labarca-molecular-adequacy-2018',
+    ],
+    evidence: [
+      {
+        id: 'ms-06.rose-meta',
+        label: 'ROSE during TBNA, systematic review',
+        year: 2018,
+        design: 'meta-analysis',
+        population:
+          'Five randomised trials, 618 patients, conventional and EBUS-guided TBNA with or without on-site evaluation',
+        headline: `${num('rose-effect')}.`,
+        sourceId: 'sehgal-rose-meta-2018',
+      },
+      {
+        id: 'ms-06.passes',
+        label: 'How many aspirations per station',
+        year: 2008,
+        design: 'cohort',
+        population: 'EBUS-TBNA staging without on-site evaluation',
+        headline: `Yield plateaued after ${num('ebus-passes-plateau')} passes per station; when molecular testing is planned, ${num('ebus-passes-molecular')} are recommended and EBUS samples are adequate for EGFR and ALK testing in ${num('ebus-molecular-adequacy')} of cases.`,
+        sourceId: 'lee-passes-2008',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'ms-06.diagnose',
         kind: 'choice',
-        stem: 'Two passes at station 7. Rapid on-site evaluation reports: "blood, scattered bronchial epithelial cells, no lymphocytes, no malignant cells." How do you record this station and what do you do next?',
+        stemConstraints: [
+          'no-nodal-elements',
+          'rose-available',
+          'molecular-testing-needed',
+          'two-passes-done',
+        ],
+        stem: 'A 72-year-old with a left upper lobe mass and liver lesions; the oncologist needs molecular results from whatever you obtain today. Two passes at station 7. Rapid on-site evaluation reports: "blood, scattered bronchial epithelial cells, no lymphocytes, no malignant cells." How do you record this station and what do you do next?',
         hint: 'What on the slide would prove the needle was inside the node?',
         teachingPoint:
           'No lymphoid tissue means no evidence of the node. The station is non-diagnostic and still needs sampling.',
@@ -900,7 +1084,12 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-06.verify',
         kind: 'predict',
-        stem: 'Keep the station and change the slide.',
+        stemConstraints: [
+          'adequate-nodal-sample',
+          'no-malignant-cells',
+          'decide-whether-to-continue-passes',
+        ],
+        stem: 'Keep the station and change the slide. The anaesthetist is asking how much longer you need.',
         baseline: 'Station 7 after two non-diagnostic passes: blood and bronchial cells only.',
         change:
           'A third pass shows abundant small lymphocytes, pigment-laden macrophages and no malignant cells.',
@@ -935,7 +1124,7 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'adequate-negative',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'ms-07',
@@ -967,13 +1156,42 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     resources: [STAGING_CHAPTER, TNM9_MODULE],
-    sourceIds: ['accp-staging-2013', 'tnm9-n-descriptors-2024'],
+    sourceIds: ['accp-staging-2013', 'tnm9-n-descriptors-2024', 'tnm8-detterbeck-2017'],
+    evidence: [
+      {
+        id: 'ms-07.accp-negative',
+        label: 'ACCP staging guideline: after a negative needle result',
+        year: 2013,
+        design: 'guideline',
+        population:
+          'Patients with high pretest probability of N2/N3 disease and a negative EBUS/EUS',
+        headline:
+          'A negative needle result in a patient with enlarged or PET-avid nodes or a central tumour is confirmed by surgical staging before resection; with low pretest probability the negative result stands.',
+        sourceId: 'accp-staging-2013',
+      },
+      {
+        id: 'ms-07.tnm9',
+        label: 'Ninth-edition N2a/N2b split',
+        year: 2024,
+        design: 'consensus',
+        population: 'The IASLC staging database',
+        headline:
+          'Single-station N2 (N2a) carried better survival than multi-station N2 (N2b), which is why the split informs the resectability discussion.',
+        sourceId: 'tnm9-n-descriptors-2024',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'ms-07.diagnose',
         kind: 'choice',
-        stem: 'A right upper lobe tumour with a 15 mm PET-avid 4R node. Systematic EBUS: three adequate passes at 4R with abundant lymphocytes and no malignant cells; 4L and 7 adequate and negative. The surgeon asks whether to book the lobectomy.',
+        stemConstraints: [
+          'pet-avid-enlarged-node',
+          'adequate-negative-ebus',
+          'surgeon-ready-to-book',
+          'three-passes-done',
+        ],
+        stem: 'A right upper lobe tumour with a 15 mm PET-avid 4R node in a fit 61-year-old. Systematic EBUS: three adequate passes at 4R with abundant lymphocytes and no malignant cells; 4L and 7 adequate and negative. The surgeon asks whether to book the lobectomy for next week.',
         hint: 'How likely was this node to be involved before the needle went in, and what does that do to a negative result?',
         teachingPoint:
           'A negative needle result in a high-probability node is confirmed surgically before resection.',
@@ -1021,6 +1239,11 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'ms-07.verify',
         kind: 'predict',
+        stemConstraints: [
+          'single-positive-ipsilateral-N2',
+          'other-stations-adequate-negative',
+          'stage-group-decides-pathway',
+        ],
         baseline:
           'The right upper lobe tumour with an avid 4R node that was adequate and negative, sent for surgical confirmation.',
         change:
@@ -1059,6 +1282,6 @@ export const STAGING_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'n2a',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
 ]

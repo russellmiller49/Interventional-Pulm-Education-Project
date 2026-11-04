@@ -1,5 +1,5 @@
 import { num } from '../teachingNumbers'
-import { PILOT_PROVENANCE, type LearningObjective } from '../types'
+import { EXAM_PROVENANCE, type LearningObjective } from '../types'
 
 /**
  * Pleural disease: seven objectives from the first fluid result to the choice of definitive
@@ -76,12 +76,41 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     sourceIds: ['light-1972', 'bts-investigation-2010'],
+    evidence: [
+      {
+        id: 'pl-01.light',
+        label: 'Light’s criteria',
+        year: 1972,
+        design: 'cohort',
+        population:
+          '150 pleural effusions with known cause, protein and LDH compared between transudates and exudates',
+        headline: `Any one of protein ratio ${num('lights-protein-ratio')}, LDH ratio ${num('lights-ldh-ratio')} or pleural LDH ${num('lights-ldh-absolute')} identified an exudate with high sensitivity.`,
+        caveat:
+          'Sensitivity was bought with specificity: about a quarter of heart-failure transudates on diuretics are labelled exudates.',
+        sourceId: 'light-1972',
+      },
+      {
+        id: 'pl-01.bts-gradient',
+        label: 'BTS investigation of a unilateral effusion',
+        year: 2010,
+        design: 'guideline',
+        population: 'Adults with a unilateral pleural effusion',
+        headline: `In a diuresed heart-failure patient whose fluid just meets a criterion, a serum-minus-pleural protein gradient ${num('protein-gradient')} or albumin gradient ${num('albumin-gradient')} identifies the transudate.`,
+        sourceId: 'bts-investigation-2010',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'pl-01.diagnose',
         kind: 'choice',
-        stem: 'A 74-year-old with heart failure, three days into intravenous furosemide, has a right effusion. Pleural protein 3.4 g/dL, serum protein 6.6 g/dL. Pleural LDH 100 U/L, serum LDH 200 U/L; the laboratory upper limit of normal for serum LDH is 250 U/L. How do you classify the fluid?',
+        stemConstraints: [
+          'heart-failure-on-diuretics',
+          'one-criterion-barely-met',
+          'exudate-workup-costly',
+          'renal-impairment',
+        ],
+        stem: 'A 74-year-old with heart failure and chronic kidney disease, three days into intravenous furosemide, has a right effusion. The team wants to send the fluid for cytology and arrange a pleural biopsy if it is an exudate. Pleural protein 3.4 g/dL, serum protein 6.6 g/dL. Pleural LDH 100 U/L, serum LDH 200 U/L; the laboratory upper limit of normal for serum LDH is 250 U/L. How do you classify the fluid?',
         hint: "Apply each criterion separately, then ask whether this patient's treatment could have changed the numbers.",
         teachingPoint:
           'One criterion makes an exudate on paper. In a diuresed heart-failure patient the protein gradient decides.',
@@ -166,7 +195,12 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-01.verify',
         kind: 'sort',
-        stem: 'The laboratory upper limit of normal for serum LDH is 240 U/L. Sort each fluid.',
+        stemConstraints: [
+          'four-fluids-mixed-causes',
+          'one-diuresed-heart-failure',
+          'single-criterion-cases',
+        ],
+        stem: 'Four effusions from one week on call; the laboratory upper limit of normal for serum LDH is 240 U/L. Sort each fluid, remembering which patient was on diuretics.',
         hint: 'Check each criterion on its own, then look for the one patient whose treatment could change the numbers.',
         teachingPoint:
           'Any single criterion gives an exudate; the gradient reclassifies only the diuresed heart-failure effusion.',
@@ -207,7 +241,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         ],
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-02',
@@ -246,21 +280,68 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         kind: 'chapter',
       },
     ],
-    sourceIds: ['bts-pleural-2023'],
+    sourceIds: ['bts-pleural-2023', 'mist1-2005', 'mist1-tube-size-2010', 'rapid-2014'],
+    evidence: [
+      {
+        id: 'pl-02.mist1-tube',
+        label: 'MIST1 chest tube size analysis',
+        year: 2010,
+        design: 'cohort',
+        population: '405 patients with pleural infection in the MIST1 trial, by tube size',
+        headline: `${num('empyema-tube-size')}.`,
+        sourceId: 'mist1-tube-size-2010',
+      },
+      {
+        id: 'pl-02.rapid',
+        label: 'RAPID score',
+        year: 2014,
+        design: 'cohort',
+        population: 'Derived from MIST1 and validated in MIST2',
+        headline: `${num('rapid-score')}; four of the five components need no fluid, so risk can be judged before the tap.`,
+        sourceId: 'rapid-2014',
+      },
+    ],
+    positions: [
+      {
+        body: 'BTS',
+        year: 2023,
+        statement: `Drain for frank pus, pH ${num('parapneumonic-ph-drain')}, positive microbiology, or a loculated or large effusion with sepsis; a small-bore tube is the default.`,
+        sourceId: 'bts-pleural-2023',
+      },
+      {
+        body: 'MIST1 analysis',
+        year: 2010,
+        statement: `Tube size did not change death or surgery; the smaller tube hurt less. A large-bore tube is not a reason to delay, and not a route to a better outcome.`,
+        sourceId: 'mist1-tube-size-2010',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'pl-02.diagnose',
         kind: 'choice',
-        stem: 'A 58-year-old, two days into antibiotics for pneumonia, is less febrile. Ultrasound shows a moderate effusion with septations. Aspirate: turbid fluid, pH 7.05 on the gas analyser, Gram stain negative. What do you do today?',
+        stemConstraints: [
+          'pneumonia-improving',
+          'ph-below-7.2',
+          'septations',
+          'only-small-bore-kit-available',
+          'high-rapid-risk',
+        ],
+        stem: 'A 68-year-old with diabetes and a serum albumin of 24 g/L, two days into antibiotics for community-acquired pneumonia, is less febrile. Ultrasound shows a moderate effusion with septations. Aspirate: turbid fluid, pH 7.05 on the gas analyser, Gram stain negative. The only drains on the ward tonight are 12F pigtails. What do you do today?',
         hint: 'Which finding here marks the effusion as complicated, and does the fever curve change what that finding means?',
         teachingPoint: `A pH ${num('parapneumonic-ph-drain')} with septations is a complicated effusion. Clinical improvement of the pneumonia does not defer the tube.`,
         sourceIds: ['bts-pleural-2023'],
         options: [
           {
             id: 'drain',
-            label: 'Place a chest tube now and continue antibiotics',
-            rationale: `Yes. pH ${num('parapneumonic-ph-drain')} and septations mark a complicated effusion that will organise if left; delay worsens outcome.`,
+            label: 'Place the 12F tube now, flush it regularly, and continue antibiotics',
+            rationale: `Yes. pH ${num('parapneumonic-ph-drain')} and septations mark a complicated effusion that will organise if left, and this patient’s age, renal function and albumin put the RAPID risk high, so delay costs most. ${num('empyema-tube-size')}, so the small tube is not a reason to wait.`,
+          },
+          {
+            id: 'wait-for-large',
+            label: 'Wait until tomorrow when a 28F surgical tube can be placed in theatre',
+            rationale:
+              'Tube size did not change outcome in the MIST1 analysis; a night’s delay in a high-risk patient does. The small tube goes in now.',
           },
           {
             id: 'wait',
@@ -333,7 +414,13 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-02.verify',
         kind: 'predict',
-        stem: 'Keep the patient and change the fluid.',
+        stemConstraints: [
+          'free-flowing-small-effusion',
+          'ph-above-7.2',
+          'patient-settling',
+          'low-rapid-risk',
+        ],
+        stem: 'Keep the patient and change the fluid; the patient is now 45 with normal renal function and albumin.',
         baseline:
           'The 58-year-old with pneumonia, improving on antibiotics, now with a moderate effusion.',
         change:
@@ -366,7 +453,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'observe',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-03',
@@ -405,22 +492,59 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         kind: 'chapter',
       },
     ],
-    sourceIds: ['mist2-2011', 'bts-pleural-2023'],
+    sourceIds: ['mist2-2011', 'bts-pleural-2023', 'mist1-2005', 'chaddha-consensus-2021'],
+    evidence: [
+      {
+        id: 'pl-03.mist2',
+        label: 'MIST2',
+        year: 2011,
+        design: 'rct',
+        population:
+          '210 patients with pleural infection and a chest tube, 2×2 factorial: tPA, DNase, both, or placebo',
+        headline: `${num('mist2-regimen')} reduced radiographic effusion size and surgical referral at 3 months; tPA alone and DNase alone did not improve the primary outcome, and DNase alone had more surgical referrals than placebo.`,
+        caveat: `Only ${num('mist2-completion')} received all six doses.`,
+        sourceId: 'mist2-2011',
+      },
+      {
+        id: 'pl-03.mist1',
+        label: 'MIST1',
+        year: 2005,
+        design: 'rct',
+        population: '454 patients with pleural infection, intrapleural streptokinase vs placebo',
+        headline: `${num('mist1-streptokinase')}: a fibrinolytic alone does not change the outcome that matters.`,
+        sourceId: 'mist1-2005',
+      },
+      {
+        id: 'pl-03.chaddha',
+        label: 'Fibrinolytic and DNase consensus statement',
+        year: 2021,
+        design: 'consensus',
+        population: '22 experts, modified Delphi, adult bacterial empyema',
+        headline:
+          'Use the MIST2 doses; individualise the number of doses to clinical and radiographic response; trial the combination before surgery in fibrinopurulent disease; the regimen can be given through an indwelling catheter.',
+        sourceId: 'chaddha-consensus-2021',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'pl-03.diagnose',
         kind: 'choice',
-        stem: 'A chest tube has been in for 48 hours for a complicated parapneumonic effusion. Output has fallen to a trickle, ultrasound shows a residual loculated collection, and the patient remains septic. The surgical team cannot operate this week. What do you give?',
+        stemConstraints: [
+          'tube-in-poor-drainage',
+          'persisting-sepsis',
+          'surgery-unavailable',
+          'anticoagulated-patient',
+        ],
+        stem: 'A chest tube has been in for 48 hours for a complicated parapneumonic effusion in a 70-year-old on apixaban for atrial fibrillation. Output has fallen to a trickle, ultrasound shows a residual loculated collection, and the patient remains septic. The surgical team cannot operate this week. What do you give, and what do you do about the anticoagulant?',
         hint: 'Which regimen was tested, and in which arm did the primary outcome improve?',
         teachingPoint: `The combination, ${num('mist2-regimen')}, is the regimen with evidence. Neither agent alone improved the primary outcome.`,
         sourceIds: ['mist2-2011'],
         options: [
           {
             id: 'combo',
-            label: `Intrapleural ${num('mist2-regimen')}, through the tube`,
-            rationale:
-              'Yes. This is the MIST2 regimen, and the combination arm is the one that reduced effusion size and surgical referral.',
+            label: `Hold the apixaban, then intrapleural ${num('mist2-regimen')} through the tube, reviewing after each dose whether the next is needed`,
+            rationale: `Yes. This is the MIST2 regimen, the only arm that reduced effusion size and surgical referral. Anticoagulation is reviewed and held where possible before the first dose, and the consensus statement individualises the number of doses to response, since only ${num('mist2-completion')} of trial participants received all six.`,
           },
           {
             id: 'tpa',
@@ -459,6 +583,11 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-03.verify',
         kind: 'predict',
+        stemConstraints: [
+          'therapeutic-anticoagulation',
+          'colleague-proposes-monotherapy',
+          'bleeding-fear-vs-evidence',
+        ],
         baseline:
           'A poorly draining empyema with a chest tube in place, for which the combination regimen is planned.',
         change:
@@ -493,7 +622,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'no-benefit',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-05',
@@ -528,12 +657,30 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [THORACENTESIS_MODULE, MPE_MODULE],
     sourceIds: ['lan-1997', 'ats-mpe-2018', 'bts-pleural-2023'],
+    evidence: [
+      {
+        id: 'pl-05.lan',
+        label: 'Pleural elastance and pleurodesis outcome',
+        year: 1997,
+        design: 'cohort',
+        population: '65 patients with malignant effusion undergoing manometry before pleurodesis',
+        headline: `Elastance ${num('pleural-elastance-nel')} predicted pleurodesis failure; most non-expandable lungs had elastance of 19 cmH₂O/L or more, and almost no expandable lung did.`,
+        sourceId: 'lan-1997',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'pl-05.diagnose',
         kind: 'choice',
-        stem: 'A large malignant effusion. After 1.4 L is drained the patient reports anterior chest tightness and the procedure stops. The patient is comfortable and stable. The film shows a small basal pneumothorax with residual fluid; the mediastinum is midline and there is no subcutaneous air. What has happened and what do you do?',
+        stemConstraints: [
+          'chest-tightness-during-drainage',
+          'post-tap-pneumothorax',
+          'no-air-leak',
+          'stable-patient',
+          'team-wants-tube',
+        ],
+        stem: 'A large malignant effusion. After 1.4 L is drained the patient reports anterior chest tightness and the procedure stops. The patient is comfortable and stable on room air. The film shows a small basal pneumothorax with residual fluid; the mediastinum is midline and there is no subcutaneous air. The admitting team has already asked for a chest tube. What has happened and what do you do?',
         hint: 'Ask what filled the space the fluid left, and whether there is an air leak to treat.',
         teachingPoint:
           'Chest tightness during drainage plus a basal pneumothorax without a leak is non-expandable lung. There is nothing to suck out.',
@@ -616,7 +763,12 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-05.verify',
         kind: 'sort',
-        stem: 'Sort each finding by what it suggests about the lung.',
+        stemConstraints: [
+          'six-findings-two-patients',
+          'manometry-values',
+          'imaging-after-drainage',
+        ],
+        stem: 'Two patients drained on the same list, with manometry on both. Sort each finding by what it suggests about the lung, because the one with expandable lung is being offered talc.',
         hint: 'Expandable lung follows the fluid out. Non-expandable lung leaves a gap and a pressure drop.',
         teachingPoint:
           'Tightness during drainage, a residual space and high elastance mark non-expandable lung; full re-expansion, relief and low elastance mark an expandable one.',
@@ -668,7 +820,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         ],
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-04',
@@ -714,13 +866,89 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         kind: 'chapter',
       },
     ],
-    sourceIds: ['ats-mpe-2018', 'time2-2012', 'bts-pleural-2023'],
+    sourceIds: [
+      'ats-mpe-2018',
+      'time2-2012',
+      'bts-pleural-2023',
+      'ample-2017',
+      'time1-2015',
+      'tapps-2020',
+      'puri-cost-2012',
+      'lent-2014',
+    ],
+    evidence: [
+      {
+        id: 'pl-04.time2',
+        label: 'TIME2',
+        year: 2012,
+        design: 'rct',
+        population:
+          '106 patients with malignant effusion, indwelling catheter vs chest tube and talc',
+        headline:
+          'No difference in breathlessness at 42 days; shorter initial hospital stay and fewer further pleural procedures with the catheter.',
+        sourceId: 'time2-2012',
+      },
+      {
+        id: 'pl-04.ample',
+        label: 'AMPLE',
+        year: 2017,
+        design: 'rct',
+        population: '146 patients with malignant effusion, catheter vs talc pleurodesis',
+        headline: `${num('ipc-hospital-days')}.`,
+        sourceId: 'ample-2017',
+      },
+      {
+        id: 'pl-04.time1',
+        label: 'TIME1',
+        year: 2015,
+        design: 'rct',
+        population:
+          '320 patients having talc pleurodesis, 2×2: NSAID vs opiate analgesia, 12F vs 24F tube',
+        headline: `${num('time1-findings')}.`,
+        sourceId: 'time1-2015',
+      },
+      {
+        id: 'pl-04.tapps',
+        label: 'TAPPS',
+        year: 2020,
+        design: 'rct',
+        population:
+          '330 patients with malignant effusion, thoracoscopic talc poudrage vs talc slurry',
+        headline: `${num('tapps-failure')}.`,
+        sourceId: 'tapps-2020',
+      },
+      {
+        id: 'pl-04.puri',
+        label: 'Cost-effectiveness of malignant effusion treatments',
+        year: 2012,
+        design: 'cohort',
+        population:
+          'Decision analysis of repeated thoracentesis, bedside pleurodesis, thoracoscopic pleurodesis and catheter',
+        headline: `${num('mpe-cost-by-survival')}.`,
+        sourceId: 'puri-cost-2012',
+      },
+      {
+        id: 'pl-04.lent',
+        label: 'LENT score',
+        year: 2014,
+        design: 'cohort',
+        population: 'Derivation and validation cohorts of malignant effusion',
+        headline: `${num('lent-score')}; it frames expected survival for the catheter-versus-pleurodesis conversation.`,
+        sourceId: 'lent-2014',
+      },
+    ],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
         id: 'pl-04.diagnose',
         kind: 'choice',
-        stem: 'A 66-year-old with metastatic breast cancer and an expected survival of many months has a recurrent, breathless right malignant effusion. After therapeutic drainage the breathlessness improves and the lung re-expands fully. The patient wants to avoid a hospital stay. What do you offer?',
+        stemConstraints: [
+          'expandable-lung',
+          'long-expected-survival',
+          'patient-prefers-no-admission',
+          'on-nsaids-for-bone-pain',
+        ],
+        stem: 'A 66-year-old with metastatic breast cancer, a low LENT score and an expected survival well beyond a year, takes regular ibuprofen for bone pain and has a recurrent, breathless right malignant effusion. After therapeutic drainage the breathlessness improves and the lung re-expands fully. The patient wants to avoid a hospital stay but asks whether that choice costs anything. What do you offer?',
         hint: 'Two findings from the drainage tell you which options are open. The patient’s preference then chooses between them.',
         teachingPoint:
           'Expandable lung opens both the catheter and pleurodesis. The patient’s priorities make the choice, and here they point to the catheter.',
@@ -729,9 +957,15 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
           {
             id: 'either-ipc',
             label:
-              'Either an indwelling pleural catheter or talc pleurodesis is appropriate; given the wish to avoid admission, offer the catheter',
+              'Either an indwelling catheter or talc pleurodesis; given the wish to avoid admission, offer the catheter, telling the patient that with a long survival bedside pleurodesis is the cheaper option and that the ibuprofen would not have to stop for talc',
+            rationale: `Yes. Symptom response and full re-expansion make both first-line; TIME2 and AMPLE showed equal relief with fewer hospital days for the catheter, and the patient’s priority decides. Honesty requires the two caveats: ${num('mpe-cost-by-survival')}, and ${num('time1-findings')}.`,
+          },
+          {
+            id: 'stop-nsaid',
+            label:
+              'Talc pleurodesis, but only after stopping the ibuprofen, because anti-inflammatories block pleurodesis',
             rationale:
-              'Yes. Symptom response and full re-expansion make both first-line. The catheter is placed as a day case and fits the stated priority.',
+              'TIME1 answered this: NSAID analgesia was non-inferior to opiates for pleurodesis success. The drug is not a reason to choose or to delay.',
           },
           {
             id: 'talc-first',
@@ -805,7 +1039,13 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-04.verify',
         kind: 'predict',
-        stem: 'Keep the patient and change the drainage result.',
+        stemConstraints: [
+          'non-expandable-lung',
+          'partial-symptom-relief',
+          'pneumothorax-ex-vacuo',
+          'patient-still-prefers-talc',
+        ],
+        stem: 'Keep the patient and change the drainage result. The patient, having heard that talc is cheaper over a long survival, now asks for talc.',
         baseline:
           'The 66-year-old with a recurrent, breathless malignant effusion, drained therapeutically.',
         change:
@@ -839,7 +1079,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'ipc',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-06',
@@ -879,13 +1119,70 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         kind: 'chapter',
       },
     ],
-    sourceIds: ['bts-pleural-2023', 'brown-psp-2020'],
+    sourceIds: [
+      'bts-pleural-2023',
+      'brown-psp-2020',
+      'accp-pneumothorax-2001',
+      'bts-pneumothorax-2010',
+    ],
+    evidence: [
+      {
+        id: 'pl-06.brown',
+        label: 'Conservative vs interventional treatment of primary spontaneous pneumothorax',
+        year: 2020,
+        design: 'rct',
+        population: '316 patients aged 14–50 with a moderate-to-large first primary pneumothorax',
+        headline:
+          'Conservative management was non-inferior for radiographic resolution at 8 weeks in the primary analysis, with fewer serious adverse events, most of which were caused by drains.',
+        caveat:
+          'Sensitivity analyses that handled missing data differently did not all confirm non-inferiority.',
+        sourceId: 'brown-psp-2020',
+      },
+      {
+        id: 'pl-06.accp',
+        label: 'ACCP Delphi consensus on spontaneous pneumothorax',
+        year: 2001,
+        design: 'consensus',
+        population: 'Expert consensus, United States',
+        headline: `A large (≥ 3 cm apex-to-cupola) or symptomatic primary pneumothorax is drained with a tube; needle aspiration was not endorsed; recurrence after a first episode is ${num('psp-recurrence')}.`,
+        sourceId: 'accp-pneumothorax-2001',
+      },
+    ],
+    positions: [
+      {
+        body: 'ACCP',
+        year: 2001,
+        statement:
+          'Size and symptoms both trigger intervention: a large primary pneumothorax is drained even when the patient is stable; aspiration is not recommended; a second episode or persistent leak calls for definitive (thoracoscopic) treatment.',
+        sourceId: 'accp-pneumothorax-2001',
+      },
+      {
+        body: 'BTS',
+        year: 2010,
+        statement:
+          'Size (≥ 2 cm at the hilum) or breathlessness triggers intervention, with needle aspiration first in primary pneumothorax and a chest drain if that fails; secondary pneumothorax is drained and admitted.',
+        sourceId: 'bts-pneumothorax-2010',
+      },
+      {
+        body: 'BTS',
+        year: 2023,
+        statement:
+          'Symptoms, not size, decide: minimal symptoms → conservative care whatever the size; significant symptoms → aspiration, ambulatory device or drain chosen with the patient; high-risk features → drain.',
+        sourceId: 'bts-pleural-2023',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'pl-06.diagnose',
         kind: 'choice',
-        stem: 'A 24-year-old, tall and otherwise well, presents with a large right primary spontaneous pneumothorax on the chest radiograph. Minimal symptoms, saturation 98% on air, heart rate 80, comfortable at rest and walking. What do you offer?',
+        stemConstraints: [
+          'large-on-film',
+          'minimal-symptoms',
+          'first-episode',
+          'guideline-frame-named',
+        ],
+        stem: 'A 24-year-old, tall and otherwise well, presents with a large right primary spontaneous pneumothorax on the chest radiograph, the first episode. Minimal symptoms, saturation 98% on air, heart rate 80, comfortable at rest and walking. Your department follows the 2023 BTS guideline. What do you offer, and what would a department following the 2001 ACCP consensus have done differently?',
         hint: 'Which two features of this patient decide the pathway, and is size one of them?',
         teachingPoint:
           'Minimal symptoms in a primary pneumothorax means conservative management whatever the size.',
@@ -893,9 +1190,10 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         options: [
           {
             id: 'conservative',
-            label: 'Conservative management with safety-netting and follow-up imaging',
+            label:
+              'Conservative management with safety-netting and follow-up imaging under BTS 2023; under ACCP 2001 the size alone would have led to a chest tube',
             rationale:
-              'Yes. Primary pneumothorax with minimal symptoms is observed regardless of size; the trial evidence showed non-inferior resolution with fewer serious adverse events.',
+              'Yes. Under the 2023 guideline a primary pneumothorax with minimal symptoms is observed regardless of size, on the strength of the 2020 trial. The 2001 ACCP consensus keyed on size as well as symptoms and would have drained a large pneumothorax; knowing which frame a question is asked in is part of the answer.',
           },
           {
             id: 'drain-size',
@@ -969,7 +1267,13 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-06.verify',
         kind: 'predict',
-        stem: 'Keep the pneumothorax and change the patient.',
+        stemConstraints: [
+          'underlying-copd',
+          'breathless-and-hypoxic',
+          'secondary-pneumothorax',
+          'all-guidelines-agree',
+        ],
+        stem: 'Keep the pneumothorax and change the patient. On this one, every guideline agrees.',
         baseline: 'A large right pneumothorax on the radiograph.',
         change: 'The patient is 68 with COPD, breathless, saturation 90% on air.',
         hint: 'Is this lung diseased, and is the patient symptomatic?',
@@ -1000,7 +1304,7 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         answerId: 'drain-admit',
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
   {
     id: 'pl-07',
@@ -1042,13 +1346,41 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         kind: 'simulator',
       },
     ],
-    sourceIds: ['bts-pleural-2023'],
+    sourceIds: ['bts-pleural-2023', 'hibbert-thrombocytopenia-2013'],
+    evidence: [
+      {
+        id: 'pl-07.hibbert',
+        label: 'Ultrasound-guided thoracentesis with abnormal coagulation',
+        year: 2013,
+        design: 'cohort',
+        population:
+          '1,009 ultrasound-guided thoracenteses, many with INR > 1.5 or platelets < 50 × 10⁹/L, uncorrected',
+        headline: `${num('thoracentesis-coagulopathy')}.`,
+        sourceId: 'hibbert-thrombocytopenia-2013',
+      },
+      {
+        id: 'pl-07.bts-us',
+        label: 'BTS pleural disease guideline',
+        year: 2023,
+        design: 'guideline',
+        population: 'Adults undergoing pleural procedures for fluid',
+        headline:
+          'Ultrasound guidance is used for every pleural procedure for fluid, by the operator, at the time and in the position of the procedure; remote site marking is not acceptable.',
+        sourceId: 'bts-pleural-2023',
+      },
+    ],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
         id: 'pl-07.diagnose',
         kind: 'choice',
-        stem: 'A patient was scanned in the radiology department two hours ago, sitting upright, and the site for thoracentesis was marked. The patient is now semi-recumbent on the ward and a drain is planned. What do you do?',
+        stemConstraints: [
+          'remote-mark',
+          'position-changed',
+          'coagulopathy-present',
+          'breathless-patient',
+        ],
+        stem: 'A breathless patient with cirrhosis (INR 1.9, platelets 60 × 10⁹/L) was scanned in the radiology department two hours ago, sitting upright, and the site for thoracentesis was marked. The patient is now semi-recumbent on the ward, a therapeutic tap is planned, and the junior asks whether to order plasma and platelets first. What do you do?',
         hint: 'What has happened to the fluid between the two rooms?',
         teachingPoint:
           'The scan that guides the needle is done by the operator, in the procedure position, immediately before the procedure.',
@@ -1057,9 +1389,15 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
           {
             id: 'rescan',
             label:
-              'Rescan at the bedside in the position the procedure will be done in, and choose the site from that scan',
+              'Rescan at the bedside in the position the procedure will be done in, choose the site from that scan, and proceed without correcting the INR or platelets',
+            rationale: `Yes. The fluid has moved with the patient, so the operator rescans in the procedure position. ${num('thoracentesis-coagulopathy')}, and the products would add volume to a breathless patient for no measured gain.`,
+          },
+          {
+            id: 'correct-first',
+            label:
+              'Transfuse plasma and platelets to an INR below 1.5 and platelets above 50 × 10⁹/L, then rescan and proceed',
             rationale:
-              'Yes. The fluid has moved with the patient. Real-time or immediately preceding ultrasound by the operator is the standard.',
+              'The correction has no measured benefit for ultrasound-guided thoracentesis and the volume can worsen the breathlessness. Rescanning is required; the transfusion is not.',
           },
           {
             id: 'use-mark',
@@ -1135,7 +1473,8 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
       verify: {
         id: 'pl-07.verify',
         kind: 'sequence',
-        stem: 'Put the steps of site selection for an ultrasound-guided thoracentesis in order.',
+        stemConstraints: ['elderly-patient', 'posterior-site-tempting', 'operator-performs-scan'],
+        stem: 'An 84-year-old with a moderate effusion, in whom a very posterior paravertebral site looks easiest. Put the steps of site selection for an ultrasound-guided thoracentesis in order, keeping the needle lateral and above the rib.',
         hint: 'The position comes before anything that depends on it, and nothing moves after the mark.',
         teachingPoint:
           'Position, scan, choose, mark and prepare, then needle, with the patient still throughout.',
@@ -1157,6 +1496,6 @@ export const PLEURAL_OBJECTIVES: readonly LearningObjective[] = [
         earlyMisconceptions: { scan: 'pl-07.remote-mark', insert: 'pl-07.below-rib' },
       },
     },
-    provenance: PILOT_PROVENANCE,
+    provenance: EXAM_PROVENANCE,
   },
 ]
