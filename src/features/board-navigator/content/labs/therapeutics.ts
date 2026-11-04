@@ -54,6 +54,7 @@ export const THERAPEUTIC_OBJECTIVES: readonly LearningObjective[] = [
     ],
     resources: [THERMAL_MODULE, THERMAL_CHAPTER, DELAYED_CHAPTER],
     sourceIds: ['ers-ats-ip-statement-2002', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -248,6 +249,7 @@ export const THERAPEUTIC_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     sourceIds: ['accp-ip-procedures-2003', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 6,
     lab: {
       diagnose: {
@@ -396,6 +398,7 @@ export const THERAPEUTIC_OBJECTIVES: readonly LearningObjective[] = [
       { label: 'Airway stent mechanics explorer', href: '/airway-stent-mechanics', kind: 'module' },
     ],
     sourceIds: ['ers-ats-ip-statement-2002', 'ernst-cao-2004'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {
@@ -534,6 +537,7 @@ export const THERAPEUTIC_OBJECTIVES: readonly LearningObjective[] = [
       },
     ],
     sourceIds: ['ers-ats-ip-statement-2002', 'freitag-stenosis-2007'],
+    evidence: [],
     estimatedMinutes: 5,
     lab: {
       diagnose: {

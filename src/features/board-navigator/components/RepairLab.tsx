@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 
+import { EVIDENCE_DESIGN_LABELS } from '../content/evidenceLabels'
 import { OBJECTIVES, objectiveById } from '../content/objectives'
 import { labHref, mapHref, BOARD_NAVIGATOR_NAV_BASE, type LabMode } from '../content/routes'
 import type { Task } from '../content/types'
@@ -259,6 +260,68 @@ function ExplainPanel({
       <p className="rounded-2xl border border-primary/40 bg-primary/5 p-4 text-sm leading-6">
         <span className="font-semibold">The distinction.</span> {objective.lab.repair.distinction}
       </p>
+      {objective.evidence.length > 0 ? (
+        <section
+          aria-labelledby="evidence-heading"
+          className="grid gap-2"
+          data-testid="evidence-cards"
+        >
+          <h3
+            id="evidence-heading"
+            className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Evidence behind this
+          </h3>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {objective.evidence.map((card) => (
+              <li
+                key={card.id}
+                className="grid gap-1 rounded-2xl border border-border/70 p-3 text-sm"
+              >
+                <p className="font-semibold">
+                  {card.label}{' '}
+                  <span className="font-normal text-muted-foreground">
+                    · {card.year} · {EVIDENCE_DESIGN_LABELS[card.design]}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">{card.population}</p>
+                <p>{card.headline}</p>
+                {card.caveat ? (
+                  <p className="text-xs text-muted-foreground">{card.caveat}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {objective.positions && objective.positions.length > 0 ? (
+        <section
+          aria-labelledby="positions-heading"
+          className="grid gap-2"
+          data-testid="guideline-positions"
+        >
+          <h3
+            id="positions-heading"
+            className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Where sources differ
+          </h3>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {objective.positions.map((position) => (
+              <li
+                key={`${position.body}-${position.year}`}
+                className="grid gap-1 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
+              >
+                <p className="font-semibold">
+                  {position.body}{' '}
+                  <span className="font-normal text-muted-foreground">· {position.year}</span>
+                </p>
+                <p>{position.statement}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" size="lg" onClick={onContinue} data-testid="explain-continue">
           {objective.lab.repair.manipulate ? 'Try changing one thing' : 'Apply it to a new case'}

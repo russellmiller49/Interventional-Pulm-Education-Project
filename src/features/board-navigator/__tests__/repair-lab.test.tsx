@@ -49,7 +49,7 @@ describe('the repair lab', () => {
     // Diagnose: take the hint, pick the midline-divide option, commit.
     fireEvent.click(screen.getByRole('button', { name: /show a hint/i }))
     expect(screen.getByTestId('task-hint')).toHaveTextContent(objective.lab.diagnose.hint)
-    fireEvent.click(within(lab).getByRole('radio', { name: 'Station 4L' }))
+    fireEvent.click(within(lab).getByRole('radio', { name: /^Station 4L, as recorded/ }))
     fireEvent.click(screen.getByLabelText('Fairly sure'))
     fireEvent.click(screen.getByTestId('task-commit'))
     expect(screen.getByRole('status')).toHaveTextContent('Not correct.')
@@ -110,19 +110,31 @@ describe('the repair lab', () => {
     render(<RepairLab objectiveId="pl-06" mode="repair" />)
     const diagnose = objectiveById('pl-06').lab.diagnose
     if (diagnose.kind !== 'choice') throw new Error('expected a choice')
-    fireEvent.click(screen.getByRole('radio', { name: diagnose.options.find((option) => option.id === diagnose.answerId)!.label }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: diagnose.options.find((option) => option.id === diagnose.answerId)!.label,
+      }),
+    )
     fireEvent.click(screen.getByTestId('task-commit'))
     fireEvent.click(screen.getByTestId('task-continue'))
     fireEvent.click(screen.getByTestId('explain-continue'))
     // Manipulate: pick the right answer.
     const manipulate = objectiveById('pl-06').lab.repair.manipulate!
-    fireEvent.click(screen.getByRole('radio', { name: manipulate.options.find((option) => option.id === manipulate.answerId)!.label }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: manipulate.options.find((option) => option.id === manipulate.answerId)!.label,
+      }),
+    )
     fireEvent.click(screen.getByTestId('task-commit'))
     fireEvent.click(screen.getByTestId('task-continue'))
     // Verify: miss on purpose.
     const verify = objectiveById('pl-06').lab.verify
     if (verify.kind !== 'predict') throw new Error('expected a prediction')
-    fireEvent.click(screen.getByRole('radio', { name: verify.options.find((option) => option.id !== verify.answerId)!.label }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: verify.options.find((option) => option.id !== verify.answerId)!.label,
+      }),
+    )
     fireEvent.click(screen.getByTestId('task-commit'))
     expect(screen.getByRole('status')).toHaveTextContent('Not correct.')
     fireEvent.click(screen.getByTestId('task-continue'))
