@@ -20,7 +20,10 @@ import { CrrtSourceRecord } from './CrrtSourceRecord'
 import { crrtSourceDating } from '../content/sourceReviewMetadata'
 import { crrtLearnerCitation } from '../sourcePresentation'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
-import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
+import {
+  BAXTER_CRRT_LEARN_LESSON_IDS,
+  type BaxterCrrtLearnLessonId,
+} from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
 import type { CrrtPrescriptionComparison } from '../foundationModel'
 import type { PressureLocalizationPrediction } from '../pressureLocalizationLabModel'
@@ -326,13 +329,23 @@ export function CrrtFoundationLesson({
               <button type="button" onClick={onRestart} aria-describedby={restartScopeId}>
                 Restart lesson
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  sequence.number === 1 ? onRestart() : onNavigate(BAXTER_CRRT_LEARN_LESSON_IDS[0])
+                }
+                data-restart-course
+              >
+                Restart course
+              </button>
               <button type="button" onClick={() => router.push(baxterCrrtNavBase)}>
                 Save & exit
               </button>
               <CrrtGlossaryButton />
               <p id={restartScopeId} className={styles.restartScope}>
                 Restart lesson goes back to task 1 and clears this visit&apos;s answers and
-                simulated runs. Visited topics stay saved on this device.
+                simulated runs. Visited topics stay saved on this device. Restart course opens
+                lesson 1 at task 1.
               </p>
             </div>
           </div>

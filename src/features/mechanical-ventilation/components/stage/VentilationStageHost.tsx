@@ -312,6 +312,12 @@ function VentilationStageSession({
     revealRequested.current = true
     goToStep(target)
   }
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const first = ventilationLearningUnits[0]
+    if (!first || first.id === unitId) restart()
+    else navigateToSection(first.id)
+  }
   function restart() {
     revealRequested.current = true
     setRestartCount((count) => count + 1)
@@ -799,6 +805,7 @@ function VentilationStageSession({
       onHelp={() => setHelpOpen(true)}
       onRestart={restart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       saveAndExitHref="/mechanical-ventilation/learn"
       resumedNote={
         reorganised

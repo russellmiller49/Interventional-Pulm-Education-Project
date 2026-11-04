@@ -49,6 +49,7 @@ export function ImagingActivityShell({
   onHelp,
   helpRef,
   onRestart,
+  onRestartCourse,
   reviewLater,
   onToggleReviewLater,
   finished,
@@ -71,6 +72,8 @@ export function ImagingActivityShell({
   onHelp: () => void
   helpRef: RefObject<HTMLButtonElement | null>
   onRestart: () => void
+  /** Opens the course's first section at its first activity. */
+  onRestartCourse: () => void
   reviewLater: boolean
   onToggleReviewLater: () => void
   finished: boolean
@@ -158,6 +161,9 @@ export function ImagingActivityShell({
           </button>
           <button type="button" onClick={onRestart}>
             Restart section
+          </button>
+          <button type="button" onClick={onRestartCourse} data-restart-course>
+            Restart course
           </button>
         </div>
       </header>

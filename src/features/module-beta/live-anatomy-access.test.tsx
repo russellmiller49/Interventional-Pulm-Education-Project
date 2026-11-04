@@ -169,7 +169,7 @@ async function standardLink() {
     createElement(sections.BetaHubSections, {
       locale: 'en',
       modules: betaModules.filter((entry) => entry.id === 'live-anatomy'),
-      rollout: betaRollout,
+      rollout: { ...betaRollout, 'live-anatomy': { stage: 'preview' } },
     }),
   )
   return /<a[^>]*href="([^"]+)"[^>]*>Standard module/.exec(html)?.[1] ?? ''
@@ -220,7 +220,8 @@ describe('a verified, registered reviewer with no entitlement', () => {
     expect(await reach(source, accounts.reviewer)).toBe('opens')
   })
 
-  it('reaches the lesson from the card on the hub', async () => {
+  // The hub no longer lists Live Anatomy (withheld, 2026-11-04); its card still links here if listed.
+  it('reaches the lesson from its card when the hub lists it', async () => {
     const link = await standardLink()
     expect(link).not.toBe('')
     expect(await reach(link, accounts.reviewer)).toBe('opens')

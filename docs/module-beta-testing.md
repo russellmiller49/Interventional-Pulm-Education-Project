@@ -32,21 +32,23 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 15 modules: EBUS Guided, the EUS-B Simulator, the two airway simulators, the
-existing live anatomy lesson, Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy
-Foundations, Dolphin Bronchoscopy (for veterinarians), the Literature Atlas tester preview (see
-[Literature Atlas preview](literature-atlas-preview.md)), and the five critical care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
-Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
-`/en/learn/anatomy/airway`.
+The catalog holds 15 modules; the hub lists 11 of them: EBUS Guided, the EUS-B Simulator,
+Synchronized Bronchoscopy (`/en/learn/anatomy/airway`), Bronchial Branch Tracing, Peripheral
+Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical care modules. By the owner's
+decision of 2026-11-04, Live Bronchoscopy Anatomy, Dolphin Bronchoscopy, Device Atlas and the
+Literature Atlas are `withheld`: the hub does not list them, and admins open them from
+**Modules in development** (`/en/admin/modules`). They keep their catalog entries, so their past
+feedback stays reviewable and their wrapper addresses still open when typed.
 
 The hub separates **Ready for review** from **Still in development**. Ready cards appear first
 with a tester note: who the module is for, what it teaches, an estimated time where the module's
 own sections and cases support one, where feedback helps most, and known limits. The ready section
-is omitted when empty. All 15 modules currently remain `preview` under **Still in development**,
-grouped by Bronchoscopy, Devices, Literature and Critical care; empty groups are omitted. A
-`preview` card may carry the same note: EBUS Guided, Synchronized Bronchoscopy, Peripheral
-Imaging, Bronchoscopy Foundations and Mechanical Ventilation do, and the others show their title
-and links only (see [Beta reviewer readiness](gap-remediation/beta-reviewer-readiness-2026-11-03.md)).
+is omitted when empty. All 11 listed modules currently remain `preview` under **Still in
+development**, grouped by Bronchoscopy and Critical care; empty groups are omitted. Every listed
+`preview` card carries the same note (see
+[Beta reviewer readiness](gap-remediation/beta-reviewer-readiness-2026-11-03.md); the notes for
+EUS-B, Branch Tracing, ECMO, CRRT, Hemodynamics and MCS were added on 2026-11-04 at the owner's
+request and list each module's open hold among its known limits).
 Readiness changes presentation only: every card keeps its
 **Test with feedback** wrapper link and **Standard module** link, with the same access and
 feedback behavior. A ready label does not authorize clinical use or public release. Modules

@@ -75,13 +75,15 @@ describe('the in-development boundary', () => {
     expect(resolveSiteModuleId(`/es${DOLPHIN_LEARN_HREF}`)).toBe('dolphin-bronchoscopy')
   })
 
-  it('joins the development beta hub with a framing rule and a feedback migration', () => {
+  // Withheld from the hub page by the owner (2026-11-04): it keeps its catalog entry, framing rule
+  // and feedback migration, and admins open it from Modules in development.
+  it('stays in the beta catalog, off the hub page, with a framing rule and a feedback migration', () => {
     expect(
       betaModules.some(
         (m) => m.id === 'dolphin-bronchoscopy' && m.path === DOLPHIN_BRONCHOSCOPY_NAV_BASE,
       ),
     ).toBe(true)
-    expect(betaRollout['dolphin-bronchoscopy']).toEqual({ stage: 'preview' })
+    expect(betaRollout['dolphin-bronchoscopy']).toEqual({ stage: 'withheld' })
     const config = fs.readFileSync(path.join(process.cwd(), 'next.config.mjs'), 'utf8')
     expect(config).toContain("'/dolphin-bronchoscopy/:path*'")
     const migrations = fs

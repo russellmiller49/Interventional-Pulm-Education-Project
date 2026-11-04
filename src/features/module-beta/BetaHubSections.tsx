@@ -69,7 +69,7 @@ function TesterNote({ note }: { note: BetaTesterNote }) {
 }
 
 /**
- * The hub's module list. Every module is listed and opens the same way whatever its stage; a
+ * The hub's module list. Every module passed in is listed and opens the same way; a
  * module that is ready for review moves to the first section and shows its tester note. A module
  * still in development shows its note too when it has one.
  */

@@ -1,10 +1,12 @@
-import type { BetaModule } from './catalog'
+import { betaModules, type BetaModule } from './catalog'
 
 /*
  * Which hub modules are ready for outside reviewers, and what a reviewer should know first.
  *
- * This is presentation only. Every module in the catalog stays listed and opens the same way
- * whatever its stage; the stage decides which heading it sits under on the hub page. Kept out of
+ * This is presentation only. The stage decides which heading a module sits under on the hub page,
+ * or, for `withheld`, that the hub does not list it. A withheld module keeps its catalog entry, so
+ * its past feedback stays reviewable and its feedback wrapper still opens by address; admins reach
+ * the module itself from Admin › Modules in development (`src/lib/non-public-modules.ts`). Kept out of
  * `catalog.ts` because that file is bundled into the proxy and the testing frame.
  *
  * A module moves to `ready` when it clears the gate in `docs/gap-remediation/beta-finish-line.md`.
@@ -32,6 +34,8 @@ export interface BetaTesterNote {
 export type BetaRolloutEntry =
   | { readonly stage: 'preview'; readonly note?: BetaTesterNote }
   | { readonly stage: 'ready'; readonly note: BetaTesterNote }
+  /** Off the hub page by the owner's decision (2026-11-04); not offered to reviewers. */
+  | { readonly stage: 'withheld'; readonly note?: undefined }
 
 export type BetaRollout = Readonly<Record<BetaModule['id'], BetaRolloutEntry>>
 
@@ -59,7 +63,26 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
-  'eus-b-simulator': { stage: 'preview' },
+  'eus-b-simulator': {
+    stage: 'preview',
+    note: {
+      audience:
+        'Pulmonary and interventional pulmonology fellows and bronchoscopists who already perform airway EBUS-TBNA.',
+      summary:
+        'The EBUS scope passed down the esophagus on one CT case: find 19 views, seven lymph node stations (2L, 4L, 5, 6, 7, 8 and 9), four mediastinal vessels and chambers, and eight structures below the diaphragm, by exploring freely or on a find-the-target task.',
+      lookFor: [
+        'Whether each station view, 8 and 9 especially, shows the landmarks you would use to call it from the esophagus.',
+        'Whether the transducer orientation and the image read the way your EUS-B images do.',
+        'Whether the views below the diaphragm (liver, celiac trunk, left adrenal) belong in a module for bronchoscopists.',
+      ],
+      knownLimits: [
+        'The ultrasound image and the controls that move the scope do not fit on one screen at common laptop and phone sizes; expect to scroll between them.',
+        'It is one CT case, and the image is simulated from CT, not recorded ultrasound; the page lists the model’s other limits.',
+        'There are no lessons, cases or scored questions yet: it is a free-exploration simulator.',
+        'Its teaching notes are not yet signed off by the author.',
+      ],
+    },
+  },
   'synchronized-anatomy': {
     stage: 'preview',
     note: {
@@ -77,8 +100,30 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
-  'branch-tracing': { stage: 'preview' },
-  'live-anatomy': { stage: 'preview' },
+  'branch-tracing': {
+    stage: 'preview',
+    note: {
+      audience: 'PCCM and interventional pulmonology fellows and practicing bronchoscopists.',
+      summary:
+        'Eight short lessons on reading the route to a peripheral lesion off the CT and driving it with the scope: at each fork, match the CT to the bronchoscopic view, identify each opening, choose the branch, then drive.',
+      estimate: {
+        minutes: 66,
+        basis:
+          "8 lessons, by the module's own count; the 13 practice lesions and the 3-lesion closing set are extra",
+      },
+      lookFor: [
+        'Lesson 1, why the CT looks reversed against the scope view, and whether the orientation reads the way you hold the scope.',
+        'Whether the forks each lesson uses (the right upper lobe, daughters that climb or drop, a route that comes back up) are the ones that trip fellows up.',
+        'Whether the lesions in Practice are ones you would plan a navigation route to.',
+      ],
+      knownLimits: [
+        'A simpler way of reading the route, with coronal and sagittal reference views and backing out of a wrong turn, is being built and will change this flow.',
+        'The CT slice used for the first fork is not yet confirmed by the author.',
+        'Forks whose openings are too small to click ask only for the branch choice.',
+      ],
+    },
+  },
+  'live-anatomy': { stage: 'withheld' },
   'peripheral-imaging': {
     stage: 'preview',
     note: {
@@ -122,12 +167,81 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
-  'dolphin-bronchoscopy': { stage: 'preview' },
-  devices: { stage: 'preview' },
-  'literature-atlas': { stage: 'preview' },
-  'cardiohelp-ecmo': { stage: 'preview' },
-  'baxter-crrt': { stage: 'preview' },
-  'icu-hemodynamics': { stage: 'preview' },
+  'dolphin-bronchoscopy': { stage: 'withheld' },
+  devices: { stage: 'withheld' },
+  'literature-atlas': { stage: 'withheld' },
+  'cardiohelp-ecmo': {
+    stage: 'preview',
+    note: {
+      audience: 'Fellows and ICU clinicians learning to run adult VV and peripheral VA ECMO.',
+      summary:
+        'Adult VV and peripheral VA ECMO on a simulated CARDIOHELP circuit: the console and its pressures first, then one problem at a time (a falling flow, the two pressures, the flow against the patient, CO₂, a stopped pump or lost power) and an integrated case on each track.',
+      estimate: {
+        minutes: 172,
+        basis:
+          "17 sections on the VV track, by the module's own count (180 minutes on the VA track); the seven practice cases on each track are extra",
+      },
+      lookFor: [
+        'Reading a falling flow and the drainage and return pressures cause-first: is the order the one you teach?',
+        'The VA track’s two circulations and differential hypoxemia: where the gas is drawn, and what is changed first.',
+        'Whether any simulated response looks implausible to you.',
+      ],
+      knownLimits: [
+        'Its 33 sourced teaching numbers are not yet signed off by the author.',
+        'In Section 2 the circuit map and the 3D circuit drain from opposite groins; one of them will change to match the other.',
+        'For a loaded left ventricle on VA, lower flow and an inotrope are simulated; volume removal and a vent are recorded as a plan, not simulated.',
+      ],
+    },
+  },
+  'baxter-crrt': {
+    stage: 'preview',
+    note: {
+      audience:
+        'Clinicians and trainees who know acute kidney injury and can read a basic acid–base and electrolyte picture; no earlier CRRT machine, circuit or prescription experience is assumed.',
+      summary:
+        'Continuous renal replacement therapy on a simulated PrisMax: eight lessons from indications and circuit anatomy through dose, alarms, citrate anticoagulation and fluid removal, then ten core cases and five cause-first safety drills.',
+      estimate: {
+        minutes: 107,
+        basis:
+          "8 lessons, by the module's own count; the cases, the five safety drills and the challenge case are extra",
+      },
+      lookFor: [
+        'Lesson 2, reading the access, return, filter and effluent pressures by cause: is it taught the way you would teach it?',
+        'Lesson 6, anticoagulation and citrate safety: are the monitoring and the first moves the ones you want a fellow to make?',
+        'Whether the prescriptions and delivered doses in the cases look realistic.',
+      ],
+      knownLimits: [
+        'Its 35 sourced teaching numbers are not yet signed off by the author.',
+        'Several recorded disagreements between sources and the simulation are not yet settled by the author.',
+        'The stem of case CRRT-03 does not mention the shock its monitor shows (MAP 61, heart rate 118, rising vasopressors).',
+        'The machine steps follow one PrisMax software version (2.xx).',
+      ],
+    },
+  },
+  'icu-hemodynamics': {
+    stage: 'preview',
+    note: {
+      audience:
+        'First-year fellows in the adult ICU; no earlier pulmonary-artery catheter experience is assumed.',
+      summary:
+        'Nine sections on the pulmonary-artery catheter, each on a live simulated patient: whether a number can be trusted, the waveform of each chamber, where the tip sits, the wedge, cardiac output and derived values, and a screen that does not fit the patient.',
+      estimate: {
+        minutes: 193,
+        basis:
+          "9 sections, by the module's own count, including the case that ends Sections 2 to 8",
+      },
+      lookFor: [
+        'Waveforms and the wedge: whether the tracings, and the rules for a wedge you can trust, read the way you teach them.',
+        'Thermodilution and derived values (Sections 7 and 8): the numbers and how they are worked out.',
+        'Whether any simulated response looks implausible to you.',
+      ],
+      knownLimits: [
+        'Its 25 sourced teaching numbers are not yet signed off by the author.',
+        'Case HD-05 is filed under the cardiogenic profile, whose row says filling pressures are high, but the case shows a right atrial pressure near 12 and a wedge near 8 mmHg.',
+        'Which fault the closing case and case HD-08 demonstrate is not yet settled by the author.',
+      ],
+    },
+  },
   'mechanical-ventilation': {
     stage: 'preview',
     note: {
@@ -150,5 +264,32 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
-  'mechanical-circulatory-support': { stage: 'preview' },
+  'mechanical-circulatory-support': {
+    stage: 'preview',
+    note: {
+      audience:
+        'Adult-ICU clinicians and trainees starting to look after patients on an IABP, an Impella or a durable LVAD; reading an arterial line and right-heart pressures is assumed.',
+      summary:
+        'IABP, Impella and durable LVAD support on one simulated circulation, in nine sections: why a normal pressure can mislead, balloon timing, inlet position and suction on an Impella, then speed, resistance and alarms on an LVAD.',
+      estimate: {
+        minutes: 114,
+        basis:
+          "9 sections, by the module's own count; the nine practice cases and three closing cases are extra",
+      },
+      lookFor: [
+        'Balloon timing (Section 3): whether early and late inflation and deflation read the way you teach them.',
+        'Impella position and suction (Sections 5 and 6), and the pulseless LVAD patient at the end of Section 8.',
+        'Whether any simulated response looks implausible to you.',
+      ],
+      knownLimits: [
+        'Its 19 sourced teaching numbers are not yet signed off by the author.',
+        'After a wrong answer, the feedback card lists the best answer under “Why the other answers do not fit”; this is being corrected.',
+      ],
+    },
+  },
 }
+
+/** The modules the hub page lists: every catalog module that is not withheld. */
+export const hubBetaModules: readonly BetaModule[] = betaModules.filter(
+  (entry) => betaRollout[entry.id].stage !== 'withheld',
+)

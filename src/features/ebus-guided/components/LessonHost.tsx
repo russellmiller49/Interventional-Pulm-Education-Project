@@ -334,7 +334,7 @@ function LessonSession({
     )
       return
     // The child acknowledges the actual decoded, paused frame before interpretation opens.
-     
+
     setRetained(observation)
     setHeldFor((held) => ({ ...held, [current.id]: true }))
     setHoldRequested(false)
@@ -576,6 +576,20 @@ function LessonSession({
               <button className={styles.secondary} onClick={onRestart}>
                 Restart lesson
               </button>
+              {/* The course's first lesson, at its first task. In the first lesson it restarts it. */}
+              {lessonIndex <= 0 ? (
+                <button className={styles.secondary} onClick={onRestart} data-restart-course>
+                  Restart course
+                </button>
+              ) : (
+                <Link
+                  className={styles.secondary}
+                  href={lessonHref(LESSONS[0].id)}
+                  data-restart-course
+                >
+                  Restart course
+                </Link>
+              )}
               <Link className={styles.secondary} href={BASE}>
                 Exit lesson
               </Link>

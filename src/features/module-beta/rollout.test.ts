@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import { betaModules } from './catalog'
-import { betaRollout, type BetaTesterNote } from './rollout'
+import { betaRollout, hubBetaModules, type BetaTesterNote } from './rollout'
 
 const notes = betaModules.flatMap((entry) => {
   const { note } = betaRollout[entry.id]
@@ -32,18 +32,34 @@ describe('hub readiness record', () => {
       'eus-b-simulator': 'preview',
       'synchronized-anatomy': 'preview',
       'branch-tracing': 'preview',
-      'live-anatomy': 'preview',
+      'live-anatomy': 'withheld',
       'peripheral-imaging': 'preview',
       'bronchoscopy-foundations': 'preview',
-      'dolphin-bronchoscopy': 'preview',
-      devices: 'preview',
-      'literature-atlas': 'preview',
+      'dolphin-bronchoscopy': 'withheld',
+      devices: 'withheld',
+      'literature-atlas': 'withheld',
       'cardiohelp-ecmo': 'preview',
       'baxter-crrt': 'preview',
       'icu-hemodynamics': 'preview',
       'mechanical-ventilation': 'preview',
       'mechanical-circulatory-support': 'preview',
     })
+  })
+
+  it('leaves withheld modules off the hub and keeps the rest in catalog order', () => {
+    // Owner decision 2026-11-04: these four open from Admin › Modules in development only.
+    expect(hubBetaModules.map((entry) => entry.id)).toEqual(
+      betaModules
+        .map((entry) => entry.id)
+        .filter(
+          (id) =>
+            !['live-anatomy', 'dolphin-bronchoscopy', 'devices', 'literature-atlas'].includes(id),
+        ),
+    )
+  })
+
+  it('gives every module on the hub a tester note', () => {
+    for (const entry of hubBetaModules) expect(betaRollout[entry.id].note).toBeDefined()
   })
 
   it('gives every module marked ready a tester note', () => {

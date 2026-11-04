@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 
 import { BetaHubSections } from './BetaHubSections'
 import { betaModules } from './catalog'
-import { betaRollout, type BetaRollout } from './rollout'
+import { betaRollout, hubBetaModules, type BetaRollout } from './rollout'
 
 const allPreview = Object.fromEntries(
   betaModules.map((entry) => [entry.id, { stage: 'preview' }]),
@@ -10,7 +10,7 @@ const allPreview = Object.fromEntries(
 
 describe('hub module sections', () => {
   it('lists every module once with both of its links, whatever its stage', () => {
-    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     expect(screen.getAllByRole('link', { name: /Test with feedback/ })).toHaveLength(
       betaModules.length,
     )
@@ -23,12 +23,12 @@ describe('hub module sections', () => {
   })
 
   it('shows each reviewer note on its card and leaves cards without one as they were', () => {
-    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+    render(<BetaHubSections locale="en" modules={hubBetaModules} rollout={betaRollout} />)
     // Nothing is marked ready yet, so every card, with or without a note, is still in development.
     expect(screen.queryByRole('heading', { name: 'Ready for review' })).not.toBeInTheDocument()
     const preview = screen.getByRole('region', { name: 'Still in development' })
 
-    for (const entry of betaModules) {
+    for (const entry of hubBetaModules) {
       const card = within(preview)
         .getByRole('heading', { name: entry.title })
         .closest('article') as HTMLElement
@@ -56,8 +56,20 @@ describe('hub module sections', () => {
         expect(card.textContent).toBe(`${entry.title}Test with feedback Standard module`)
       }
     }
-    expect(betaModules.some((entry) => betaRollout[entry.id].note)).toBe(true)
-    expect(betaModules.some((entry) => !betaRollout[entry.id].note)).toBe(true)
+    // Every listed module carries a note (owner request, 2026-11-04).
+    expect(hubBetaModules.every((entry) => betaRollout[entry.id].note)).toBe(true)
+  })
+
+  it('leaves a card without a note as it was: its title and the two links', () => {
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
+    const preview = screen.getByRole('region', { name: 'Still in development' })
+    for (const entry of betaModules) {
+      const card = within(preview)
+        .getByRole('heading', { name: entry.title })
+        .closest('article') as HTMLElement
+      expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
+      expect(card.textContent).toBe(`${entry.title}Test with feedback Standard module`)
+    }
   })
 
   it('has no ready section while nothing is ready', () => {

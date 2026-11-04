@@ -5,7 +5,10 @@ import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import type { NowCardAction } from '@/features/learning-module/stage/NowCard'
@@ -15,7 +18,7 @@ import { StageSourcesScope } from '@/features/learning-module/stage/StageSources
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
 import { imagingCaseById } from '../../content/cases'
 import { microCasesForSection } from '../../content/microCases'
@@ -191,6 +194,7 @@ function ImagingStageSession({
     () => imagingStageLesson(sectionId as ImagingStageLesson['sectionId']),
     [sectionId],
   )
+  const router = useRouter()
   const { session, dispatch } = useImagingStageSession(lesson)
   const nextSection = nextPathwaySection(peripheralImagingPathway, sectionId)
   const stageSources = useMemo(() => imagingStageSources(lesson.sectionId), [lesson.sectionId])
@@ -1100,6 +1104,12 @@ function ImagingStageSession({
           onHelp={() => setHelpOpen(true)}
           helpRef={helpButtonRef}
           onRestart={onRestart}
+          onRestartCourse={() => {
+            // The course's first section, at its first activity. In the first section it restarts it.
+            const firstId = firstPathwaySectionId(peripheralImagingPathway)
+            if (firstId === sectionId) onRestart()
+            else router.push(imagingSectionLinkTarget(firstId))
+          }}
           reviewLater={savedForReview}
           onToggleReviewLater={() =>
             setImagingSectionReviewLater(lesson.sectionId, !savedForReview)

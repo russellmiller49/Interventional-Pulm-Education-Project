@@ -3,9 +3,8 @@ import type { Route } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { MessageSquare, FlaskConical } from 'lucide-react'
 import { BetaHubSections } from '@/features/module-beta/BetaHubSections'
-import { betaRollout } from '@/features/module-beta/rollout'
+import { betaRollout, hubBetaModules } from '@/features/module-beta/rollout'
 import { feedbackMode } from '@/features/module-beta/config'
-import { betaModules } from '@/features/module-beta/catalog'
 import { OwnerDraftNotice } from '@/features/module-beta/OwnerDraftNotice'
 
 export default async function BetaHub({ params }: { params: Promise<{ locale: string }> }) {
@@ -47,7 +46,7 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
         )}
         {local && <OwnerDraftNotice locale={locale} />}
       </header>
-      <BetaHubSections locale={locale} modules={betaModules} rollout={betaRollout} />
+      <BetaHubSections locale={locale} modules={hubBetaModules} rollout={betaRollout} />
     </div>
   )
 }

@@ -53,6 +53,7 @@ export function EcmoSectionHeader({
   onHelp,
   onRestart,
   restartLabel = 'Restart',
+  onRestartCourse,
   onSaveAndExit,
   resumedNote,
 }: {
@@ -73,6 +74,8 @@ export function EcmoSectionHeader({
   readonly onHelp?: () => void
   readonly onRestart?: () => void
   readonly restartLabel?: string
+  /** Opens the course's first section at its first task, beside the restart of this one. */
+  readonly onRestartCourse?: () => void
   readonly onSaveAndExit?: () => void
   readonly resumedNote?: string
 }) {
@@ -88,6 +91,17 @@ export function EcmoSectionHeader({
       {restartLabel}
     </button>
   ) : null
+  const restartCourseButton = onRestartCourse ? (
+    <button
+      type="button"
+      className={styles.headerButton}
+      data-ecmo-restart-course
+      onClick={onRestartCourse}
+    >
+      Restart course
+    </button>
+  ) : null
+  const anyRestart = restartButton ?? restartCourseButton
   // Keep the same controls mounted across the breakpoint. If a control has focus, keep its
   // disclosure open when shrinking; when widening, a focused summary hands focus to its contents.
   const detailsRef = useRef<HTMLDetailsElement>(null)
@@ -103,7 +117,7 @@ export function EcmoSectionHeader({
     if (phone && active !== summary && active && details.contains(active)) setOptionsOpen(true)
   }, [phone])
   const responsiveOptions =
-    mainMenuButton || restartButton ? (
+    mainMenuButton || anyRestart ? (
       <details
         ref={detailsRef}
         className={styles.headerMore}
@@ -116,7 +130,7 @@ export function EcmoSectionHeader({
             setOptionsOpen((current) => !current)
           }}
         >
-          {mainMenuButton && restartButton
+          {mainMenuButton && anyRestart
             ? 'Main menu or restart'
             : mainMenuButton
               ? 'Main menu'
@@ -125,6 +139,7 @@ export function EcmoSectionHeader({
         <div className={styles.headerMoreBody}>
           {mainMenuButton}
           {restartButton}
+          {restartCourseButton}
         </div>
       </details>
     ) : null
