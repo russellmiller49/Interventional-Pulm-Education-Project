@@ -35,6 +35,10 @@ function phoneSnapshot() {
   )
 }
 
+/** What Save & exit keeps and what it does not. */
+const SAVE_LOCATION_NOTE =
+  'Save & exit saves your location, not the current teaching or case state. Your existing progress history is retained. Reopening starts fresh; answers, snapshots, and simulator actions from this run are not restored.'
+
 /**
  * The slim header of a lean ECMO activity: where you are, what it is called, and at most five
  * controls. Objectives are deliberately absent — they render inside the first step's own body,
@@ -179,6 +183,7 @@ export function EcmoSectionHeader({
             data-primary="true"
             data-ecmo-save-exit
             aria-describedby={saveLocationNoteId}
+            title={SAVE_LOCATION_NOTE}
             onClick={onSaveAndExit}
           >
             Save &amp; exit
@@ -186,11 +191,16 @@ export function EcmoSectionHeader({
         ) : null}
         {responsiveOptions}
       </div>
+      {/*
+        What Save & exit keeps, as the button's description rather than a line across the header.
+
+        It was printed under the header on every section, drill and case, and a tester (2026-10-23)
+        marked it as a redundant banner. It stays the button's accessible description, and the
+        button's tooltip, so it is still said where the decision is made.
+      */}
       {onSaveAndExit ? (
-        <p id={saveLocationNoteId} className={styles.resumedNote} data-ecmo-save-location-note>
-          Save &amp; exit saves your location, not the current teaching or case state. Your existing
-          progress history is retained. Reopening starts fresh; answers, snapshots, and simulator
-          actions from this run are not restored.
+        <p id={saveLocationNoteId} className="sr-only" data-ecmo-save-location-note>
+          {SAVE_LOCATION_NOTE}
         </p>
       ) : null}
       {resumedNote ? (

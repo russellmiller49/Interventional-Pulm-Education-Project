@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { isOffCircuitTarget, type EcmoMapAnswerTarget } from '../../content/mapAnswerTargets'
 import styles from '../cardiohelp-ecmo.module.css'
@@ -50,6 +50,12 @@ export interface CircuitMapAnswerProps {
   readonly inlineActions?: ReactNode
   /** The question is printed in large type above the task; the legend stays for assistive tech. */
   readonly stemShownElsewhere?: boolean
+  /**
+   * The numbered options and their radio group live in the host's question card, and the map
+   * carries only its numbered pins. The pins stay labels for the same radios (`htmlFor` reaches
+   * across the document), so pointing at a place still answers the question.
+   */
+  readonly choicesOutsideMap?: boolean
 }
 
 interface Option {
@@ -89,34 +95,89 @@ function optionsFor(props: CircuitMapAnswerProps): readonly Option[] {
   ]
 }
 
-export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
-  const { item, selectedChoiceId, committedChoiceId, correctChoiceIds, name, onSelect } = props
-  const baseId = useId()
-  const options = optionsFor(props)
-  if (options.filter((option) => option.rect).length === 0) return null
-  const committed = committedChoiceId !== null
-  const legendId = `${baseId}-legend`
-  const inputId = (choiceId: string) => `${baseId}-${choiceId}`
+/**
+ * Stable ids shared by the pins and the rows. Derived from the group's name rather than `useId`,
+ * so the pins on the map and the rows in a question card can be rendered by different components
+ * and still label the same radio.
+ */
+function answerInputId(name: string, choiceId: string): string {
+  return `${name}-${choiceId}`
+}
 
-  const stateOf = (choiceId: string) => {
-    if (!committed) return undefined
-    const chosen = choiceId === committedChoiceId
-    const correct = correctChoiceIds.includes(choiceId)
-    if (chosen && correct) return 'chosen-correct'
-    if (chosen) return 'chosen'
-    if (correct) return 'correct'
-    return undefined
-  }
+function answerStateOf(props: CircuitMapAnswerProps, choiceId: string) {
+  if (props.committedChoiceId === null) return undefined
+  const chosen = choiceId === props.committedChoiceId
+  const correct = props.correctChoiceIds.includes(choiceId)
+  if (chosen && correct) return 'chosen-correct'
+  if (chosen) return 'chosen'
+  if (correct) return 'correct'
+  return undefined
+}
 
-  const flagFor = (state: string | undefined) =>
-    state === 'chosen-correct'
-      ? 'Your answer · correct'
-      : state === 'chosen'
-        ? 'Your answer'
-        : state === 'correct'
-          ? 'Correct'
-          : null
+function answerFlagFor(state: string | undefined) {
+  return state === 'chosen-correct'
+    ? 'Your answer · correct'
+    : state === 'chosen'
+      ? 'Your answer'
+      : state === 'correct'
+        ? 'Correct'
+        : null
+}
 
+function hasPins(props: CircuitMapAnswerProps): boolean {
+  return optionsFor(props).some((option) => option.rect)
+}
+
+/** The pins: a second label each, over the place they stand on. */
+export function CircuitMapAnswerPins(props: CircuitMapAnswerProps) {
+  if (!hasPins(props)) return null
+  return (
+    <div className={styles.mapAnswerPins} data-map-answer-pins>
+      {optionsFor(props).map((option) => {
+        if (!option.rect) return null
+        const state = answerStateOf(props, option.choiceId)
+        const flag = answerFlagFor(state)
+        return (
+          <label
+            key={option.choiceId}
+            className={styles.mapAnswerPin}
+            htmlFor={answerInputId(props.name, option.choiceId)}
+            style={circuitMapHotspotPercent(option.rect)}
+            data-map-answer-choice={option.choiceId}
+            data-map-answer-state={state}
+            data-selected={props.selectedChoiceId === option.choiceId}
+          >
+            <span className={styles.mapAnswerPinBody}>{option.ordinal}</span>
+            {flag ? (
+              <span className={styles.mapAnswerFlag} data-map-answer-flag={state}>
+                {flag}
+              </span>
+            ) : null}
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * The options: one row each, whether or not it has a pin, inside the radio group's fieldset.
+ *
+ * With `legendClassName` the legend is the visible question stem (a host's question card); without
+ * it the legend is for assistive technology only, as it always was under the map.
+ */
+export function CircuitMapAnswerChoices({
+  legendClassName,
+  hint,
+  ...props
+}: CircuitMapAnswerProps & {
+  readonly legendClassName?: string
+  /** A line under the stem saying how to answer, inside the group. */
+  readonly hint?: ReactNode
+}) {
+  if (!hasPins(props)) return null
+  const committed = props.committedChoiceId !== null
+  const legendId = `${props.name}-legend`
   return (
     <>
       <fieldset
@@ -129,67 +190,43 @@ export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
         <legend
           id={legendId}
           className={
-            props.inlineActions && !props.stemShownElsewhere ? styles.mapAnswerStem : 'sr-only'
+            legendClassName ??
+            (props.inlineActions && !props.stemShownElsewhere ? styles.mapAnswerStem : 'sr-only')
           }
           data-map-question={props.inlineActions ? true : undefined}
         >
-          {item.stem}
+          {props.item.stem}
         </legend>
-
-        {/* The pins: a second label each, over the place they stand on. */}
-        <div className={styles.mapAnswerPins}>
-          {options.map((option) =>
-            option.rect ? (
-              <label
-                key={option.choiceId}
-                className={styles.mapAnswerPin}
-                htmlFor={inputId(option.choiceId)}
-                style={circuitMapHotspotPercent(option.rect)}
-                data-map-answer-choice={option.choiceId}
-                data-map-answer-state={stateOf(option.choiceId)}
-                data-selected={selectedChoiceId === option.choiceId}
-              >
-                <span className={styles.mapAnswerPinBody}>{option.ordinal}</span>
-                {flagFor(stateOf(option.choiceId)) ? (
-                  <span
-                    className={styles.mapAnswerFlag}
-                    data-map-answer-flag={stateOf(option.choiceId)}
-                  >
-                    {flagFor(stateOf(option.choiceId))}
-                  </span>
-                ) : null}
-              </label>
-            ) : null,
-          )}
-        </div>
-
-        {/* The options: one row each, whether or not it has a pin. */}
+        {hint}
+        {props.choicesOutsideMap ? null : <CircuitMapAnswerPins {...props} />}
         <ol className={styles.mapAnswerLegend} data-map-answer-legend>
-          {options.map((option) => {
-            const state = stateOf(option.choiceId)
+          {optionsFor(props).map((option) => {
+            const state = answerStateOf(props, option.choiceId)
+            const flag = answerFlagFor(state)
+            const inputId = answerInputId(props.name, option.choiceId)
             return (
               <li key={option.choiceId} data-map-answer-legend-item={option.choiceId}>
                 <input
                   type="radio"
-                  id={inputId(option.choiceId)}
+                  id={inputId}
                   className="sr-only"
-                  name={name}
+                  name={props.name}
                   value={option.choiceId}
-                  checked={selectedChoiceId === option.choiceId}
-                  onChange={() => onSelect(option.choiceId)}
+                  checked={props.selectedChoiceId === option.choiceId}
+                  onChange={() => props.onSelect(option.choiceId)}
                 />
                 <label
                   className={styles.mapAnswerRow}
-                  htmlFor={inputId(option.choiceId)}
+                  htmlFor={inputId}
                   data-map-answer-row={option.choiceId}
                   data-map-answer-state={state}
-                  data-selected={selectedChoiceId === option.choiceId}
+                  data-selected={props.selectedChoiceId === option.choiceId}
                 >
                   {/*
-                  The pin already announces the number; here it is a visual tie between the row and
-                  the drawing, so it stays out of the accessible name and the name reads
-                  "2. Between the pump outlet and the membrane lung" rather than "22Between…".
-                */}
+                    The pin already announces the number; here it is a visual tie between the row
+                    and the drawing, so it stays out of the accessible name and the name reads
+                    "2. Between the pump outlet and the membrane lung" rather than "22Between…".
+                  */}
                   <span
                     className={styles.mapAnswerLegendOrdinal}
                     data-map-answer-ordinal
@@ -199,9 +236,9 @@ export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
                   </span>
                   <span>
                     {option.label}
-                    {flagFor(state) ? (
+                    {flag ? (
                       <span className={styles.mapAnswerRowFlag} data-map-answer-row-flag={state}>
-                        {flagFor(state)}
+                        {flag}
                       </span>
                     ) : null}
                   </span>
@@ -214,4 +251,13 @@ export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
       {props.inlineActions}
     </>
   )
+}
+
+/**
+ * The whole answer under the map: pins over the drawing, rows beneath it, one fieldset. With
+ * `choicesOutsideMap` the map keeps only its pins and the host renders `CircuitMapAnswerChoices`.
+ */
+export function CircuitMapAnswerFieldset(props: CircuitMapAnswerProps) {
+  if (props.choicesOutsideMap) return <CircuitMapAnswerPins {...props} />
+  return <CircuitMapAnswerChoices {...props} />
 }

@@ -456,12 +456,18 @@ export function CircuitSchematic({
           <span aria-hidden="true">●</span> Guided focus: circuit and sensors
         </div>
       ) : null}
+      {/*
+        The heading only. A "BOUNDED MODEL" badge and a boxed "VV femoral-femoral configuration"
+        line (drainage → pump → oxygenator → return, with a mode pill) used to sit beside it on every
+        task. A tester (2026-10-23) asked for the configuration box to go and its sentence to open
+        the module instead; the circuit walk now says it where the learner first meets the circuit
+        (`data-circuit-configuration`), the map draws it, and the mode is in the context strip.
+      */}
       <div className={styles.panelHeading}>
         <div>
           <span className={styles.kicker}>Circuit model</span>
           <h2 id="circuit-heading">Pressure zones and sensor orientation</h2>
         </div>
-        <span className={styles.simulatedBadge}>BOUNDED MODEL</span>
       </div>
 
       {circuitMeasurementNote ? (
@@ -469,20 +475,6 @@ export function CircuitSchematic({
           {circuitMeasurementNote}
         </p>
       ) : null}
-      <div
-        className={styles.circuitModeSummary}
-        role="group"
-        aria-label={`${supportModeLabel} femoral-femoral circuit configuration`}
-      >
-        <div>
-          <strong>{supportModeLabel} femoral-femoral configuration</strong>
-          <span>
-            Drainage: femoral vein → centrifugal pump → membrane oxygenator. Return:{' '}
-            {returnVesselLabel} → {returnDestinationLabel}.
-          </span>
-        </div>
-        <span className={styles.modePill}>{supportModeLabel}</span>
-      </div>
       {readingsFirst ? (
         <div className={styles.circuitReadingsFirst} data-circuit-readings-first>
           {readingsBlock}
@@ -571,7 +563,9 @@ export function CircuitSchematic({
         */}
         {answerPending ? (
           <p className={styles.circuitAnswerElsewhere} data-answer-elsewhere>
-            This step is answered on the pressure-zone map.{' '}
+            {answerable?.choicesOutsideMap
+              ? 'The numbered places in this question are on the pressure-zone map.'
+              : 'This step is answered on the pressure-zone map.'}{' '}
             <button type="button" onClick={() => setCircuitView('diagnostic')}>
               Show the pressure-zone map
             </button>
@@ -1155,10 +1149,9 @@ export function CircuitSchematic({
           // boundary — the one sentence saying the drawn mixing region is not computed — at every
           // desktop width (VA11-1).
           <p className={styles.circuitMapNote} data-local-model-boundary="va-mixing-fixed">
-            Model boundary: the mixing region is drawn where this diagram places it and does not
-            move. In a real VA circuit its position shifts with the balance between native ejection
-            and circuit flow, and that shift is what decides which beds each side supplies. This
-            simulation does not derive it, so nothing you change here will move the label.
+            The mixing region is drawn in one place. In a patient it moves with the balance between
+            native ejection and circuit flow, and where it sits decides which arterial branches
+            receive blood from the native lungs and which receive blood from the circuit.
           </p>
         ) : null}
         {mixingCueWithheld ? (

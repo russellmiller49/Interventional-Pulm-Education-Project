@@ -328,19 +328,25 @@ describe('B. the work and what it is read against, together', () => {
   })
 
   /*
-   * Revised 2026-10-13. The card said "Model reference for this task · VV reference circuit · clock
-   * held" with the meta-text in an "About this model" disclosure. A tester then asked "When do I
-   * click on this simulator?", so the card now says what the circuit is for in one sentence.
+   * Revised 2026-10-13, then again 2026-10-23. The card said "Model reference for this task · VV
+   * reference circuit · clock held" with the meta-text in an "About this model" disclosure; a tester
+   * asked "When do I click on this simulator?", so it became one sentence ("VV reference circuit. You
+   * don’t operate the circuit in these sections…"); the same tester then asked for it to go. The
+   * map now opens the visual column, and the loaded state is stamped on the task, not printed.
    */
-  it('S2-5: names the circuit and says the learner does not operate it here', async () => {
+  it('S2-5: opens the visual column on the circuit, with no card about the model', async () => {
     render(<EcmoFoundationLessonActivity sectionId="circuit-flow-path" supportMode="vv" />)
     await screen.findByRole('heading', { name: /Follow the blood/i })
-    const card = document.querySelector('[data-model-reference="compact"]')
-    expect(card).not.toBeNull()
-    expect(card?.textContent).toMatch(/^VV reference circuit\./)
-    expect(card?.textContent).toMatch(/You don’t operate the circuit in these sections/)
-    expect(card?.querySelector('details')).toBeNull()
-    expect(card?.textContent).not.toMatch(/clock held|Observation-only|modeled/i)
+    expect(document.querySelector('[data-model-reference]')).toBeNull()
+    expect(document.body.textContent).not.toMatch(
+      /VV reference circuit\.|You don’t operate the circuit|clock held|Observation-only/i,
+    )
+    const surfaces = document.querySelector('[data-simulator-surfaces]')!
+    expect(surfaces.firstElementChild?.querySelector('#cardiohelp-circuit-panel')).not.toBeNull()
+    expect(document.querySelector('[data-now-focus]')).toHaveAttribute(
+      'data-active-state-variant',
+      'reference-circuit',
+    )
   })
 
   it('S3-1: the result sits under the action, and replay takes the action’s slot', async () => {
