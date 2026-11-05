@@ -1,0 +1,196 @@
+/* Lesson 16 figures: the feature atlas and the image-reading task. Theme tokens come from
+   course.module.css (.moduleShell). */
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 9px;
+  background: #000;
+}
+.image polygon,
+.image polyline,
+.image line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.image [data-outline='node'] {
+  stroke: #f5a8d0;
+  stroke-width: 1.6;
+  stroke-dasharray: 5 4;
+}
+.image [data-outline='distinct-margin'] {
+  stroke: #6cc6ff;
+  stroke-width: 3.5;
+}
+.image [data-outline='indistinct-margin'] {
+  stroke: #ffd166;
+  stroke-width: 3.5;
+  stroke-dasharray: 7 5;
+}
+.image [data-outline='chs'] {
+  fill: rgba(136, 216, 172, 0.32);
+  stroke: #88d8ac;
+  stroke-width: 2;
+}
+.image [data-outline='cns'] {
+  fill: rgba(255, 176, 103, 0.35);
+  stroke: #ffb067;
+  stroke-width: 2;
+}
+.image [data-outline='long-axis'] line {
+  stroke: #ffffff;
+  stroke-width: 2.2;
+}
+.image [data-outline='long-axis'] circle {
+  fill: #ffffff;
+}
+.image [data-outline='short-axis'] line {
+  stroke: #ff9098;
+  stroke-width: 2.2;
+}
+.image [data-outline='short-axis'] circle {
+  fill: #ff9098;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.swatch {
+  display: inline-block;
+  width: 22px;
+  height: 0;
+  border-top: 3px solid currentColor;
+}
+.swatch[data-swatch='node'] {
+  border-top: 2px dashed #f5a8d0;
+}
+.swatch[data-swatch='distinct-margin'] {
+  border-top-color: #6cc6ff;
+}
+.swatch[data-swatch='indistinct-margin'] {
+  border-top: 3px dashed #ffd166;
+}
+.swatch[data-swatch='chs'] {
+  height: 10px;
+  border: 2px solid #88d8ac;
+  background: rgba(136, 216, 172, 0.32);
+}
+.swatch[data-swatch='cns'] {
+  height: 10px;
+  border: 2px solid #ffb067;
+  background: rgba(255, 176, 103, 0.35);
+}
+.swatch[data-swatch='long-axis'] {
+  border-top-color: #ffffff;
+}
+.swatch[data-swatch='short-axis'] {
+  border-top-color: #ff9098;
+}
+
+/* Atlas */
+.atlas {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tabs button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+.tabs button[aria-selected='true'] {
+  border-color: var(--cyan-bright);
+  background: #18505b;
+  font-weight: 650;
+}
+.panel {
+  display: grid;
+  gap: 10px;
+}
+.definition,
+.meaning {
+  margin: 0;
+  line-height: 1.55;
+}
+.meaning {
+  color: var(--stage-muted);
+  font-size: 0.92rem;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+.examples {
+  display: flex;
+  gap: 6px;
+}
+.examples button[aria-pressed='true'] {
+  border-color: var(--cyan-bright);
+  background: #18505b;
+}
+.caption {
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* Reading task */
+.reading {
+  display: grid;
+  gap: 12px;
+}
+.readingHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.readingHeader p {
+  margin: 0;
+}
+.readingNav {
+  display: flex;
+  gap: 8px;
+}
+.readingBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .readingBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Image and question share one screen: the image never pushes the question's controls away. */
+.readingImage .image {
+  max-height: min(62vh, 620px);
+}
+.readingImage p {
+  margin: 8px 0 0;
+}

@@ -454,12 +454,7 @@ describe('activity titles describe the actual task (L15-3, L16-3, L20-5, L23-4)'
       'Match bronchial relationships to interlobar stations',
       'matching',
     ],
-    [
-      'node-characterization',
-      'node-description',
-      'Choose the description the vignette supports',
-      'record',
-    ],
+    ['node-characterization', 'feature-reading', 'Read the features on eight nodes', 'read'],
     [
       'needle-safety',
       'apply-another-situation',

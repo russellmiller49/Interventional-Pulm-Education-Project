@@ -95,7 +95,8 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition: 'A linear, flat, hyperechoic central area, as described in ICS/IAB 2023 Table 5.',
     sources: ['ICS/IAB 2023, Table 5'],
     sourceContext: 'Source',
-    firstUse: ['node-characterization'],
+    lessonId: 'node-characterization',
+    firstUse: [],
   },
 
   {

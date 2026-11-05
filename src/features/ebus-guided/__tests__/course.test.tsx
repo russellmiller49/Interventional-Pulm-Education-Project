@@ -5,6 +5,7 @@ import { CHAPTERS, LESSONS } from '../content/curriculum'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
 import { SOURCES } from '../content/sources'
 import { activitiesForLesson } from '../content/stage'
+import { READING_ITEMS } from '../content/node-features'
 import { LessonHost } from '../components/LessonHost'
 import { CasePlayer } from '../components/CasePlayer'
 import { IntegratedCasesPage } from '../components/IntegratedCasesPage'
@@ -110,9 +111,13 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
     const questionId = document
       .querySelector('[data-question-id]')!
       .getAttribute('data-question-id')
-    const question = [lesson.question, lesson.observation, lesson.transfer].find(
-      (item) => item.id === questionId,
-    )!
+    // Lesson 16's first check is its image-reading task, one question per annotated image.
+    const question = [
+      lesson.question,
+      lesson.observation,
+      lesson.transfer,
+      ...READING_ITEMS.map((item) => item.question),
+    ].find((item) => item.id === questionId)!
     expect(explanation()).toBeNull()
     expect(screen.queryByText(question.explanation)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
