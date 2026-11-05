@@ -90,7 +90,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
-  await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+  await page.getByRole('button', { name: 'Skip this task' }).click()
   const explain = page.getByRole('button', { name: 'Show worked explanation', exact: true })
   await explain.focus()
   await page.keyboard.press('Enter')
@@ -103,7 +103,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await expect(page.getByRole('status')).toContainText('Your choice is not the accepted answer')
   await page.getByRole('button', { name: 'Try again', exact: true }).click()
   await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+  await page.getByRole('button', { name: 'Skip this task' }).click()
   await expect(
     page.getByRole('heading', { name: 'Apply again: a different fluid goal', exact: true }),
   ).toBeVisible()

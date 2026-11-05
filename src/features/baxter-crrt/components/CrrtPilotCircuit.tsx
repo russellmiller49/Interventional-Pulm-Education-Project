@@ -650,16 +650,15 @@ export function CrrtPilotCircuit({
         </defs>
 
         <rect x="16" y="16" width="1298" height="748" rx="30" className={styles.backdrop} />
+        {/* The drawing names what it shows (the modality or view), not how it was made. */}
         <text x="44" y="52" className={styles.sectionLabel}>
-          ORIGINAL EDUCATIONAL SCHEMATIC · FIXED ORIENTATION · {overlay.label.toUpperCase()}
+          {overlay.label.toUpperCase()}
         </text>
-        <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
-          {staticTeaching
-            ? 'STATIC TEACHING VIEW'
-            : running
-              ? 'FLOW MOTION: ACTIVE'
-              : 'FLOW MOTION: STOPPED'}
-        </text>
+        {staticTeaching ? null : (
+          <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
+            {running ? 'FLOW MOTION: ACTIVE' : 'FLOW MOTION: STOPPED'}
+          </text>
+        )}
 
         {/* Every path is drawn in every view. Only its active state changes. */}
         <g className={styles.pathLayer}>

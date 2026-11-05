@@ -73,9 +73,9 @@ export const crrtAdvancedTasks: Partial<
       title: 'Worked example: follow an infusion',
       exampleId: 'citrate-calcium-delivery-reference',
       kind: 'read',
-      instruction: 'Read how verified delivery changes the interpretation of a low patient result.',
+      instruction: 'Read the worked example.',
       teaching: [
-        'Constructed example: systemic ionized calcium has fallen, the post-filter result is unchanged, and inspection confirms that the separate calcium infusion was interrupted.',
+        'Systemic ionized calcium has fallen, the post-filter result is unchanged, and inspection confirms that the separate calcium infusion was interrupted.',
         'The interruption provides patient-side delivery evidence. Review it with the systemic result and clinical condition; changing citrate solely because the patient calcium is low would confuse the two questions. The reviewed local protocol governs any treatment response.',
       ],
     },

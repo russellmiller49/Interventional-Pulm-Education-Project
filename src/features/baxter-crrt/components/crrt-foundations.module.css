@@ -157,6 +157,23 @@
 .circuitControls .controls {
   margin: 0;
 }
+/* The explanation of the current selection sits under the buttons that make it, beside the
+   circuit, not under the drawing where it scrolled out of view (tester report, 2026-11-05). */
+.circuitControls .observation {
+  margin: 0.6rem 0 0;
+}
+/* A control that names an abbreviation spells it out under the abbreviation. */
+.controlName {
+  display: block;
+  font-weight: 800;
+}
+.controlDetail {
+  display: block;
+  margin-top: 0.15rem;
+  color: #cfe7e3;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
 .circuitVisual {
   min-width: 0;
 }
@@ -226,6 +243,10 @@
 }
 .question {
   margin-top: 0.8rem;
+}
+/* Worked explanation, Check reasoning and Skip sit in one row with room between them. */
+.question > button {
+  margin: 0 0.5rem 0.5rem 0;
 }
 .question fieldset {
   border: 0;
@@ -407,15 +428,6 @@
   font-size: 0.85rem;
 }
 
-.jumpButton.jumpButton {
-  display: inline-flex;
-  min-height: 44px;
-  margin-top: 0.35rem;
-  padding: 0.35rem 0.7rem;
-  border-style: dashed;
-  font-size: 0.9rem;
-}
-
 .controlRow {
   display: flex;
   flex-wrap: wrap;
@@ -434,29 +446,11 @@
   font-weight: 700;
 }
 
+/* The exercise's own action row: its completion button and, until that is available, Skip. */
 .taskActions {
   display: grid;
   gap: 0.55rem;
   margin-top: 1rem;
-  padding: 0.85rem;
-  border: 1px solid #5e8c93;
-  border-radius: 10px;
-  background: #0f2a31;
-  scroll-margin-top: calc(var(--site-header-height, 5rem) + 1rem);
-}
-
-.taskActions:focus-visible {
-  outline: 3px solid #ffce80;
-  outline-offset: 3px;
-}
-
-.taskActionsHeading {
-  margin: 0;
-  color: #9be8b8;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .taskActionRow {
@@ -491,12 +485,5 @@
   background: rgba(75, 51, 18, 0.45);
   color: #f6e6cf;
   font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.taskActionsNote {
-  margin: 0;
-  color: #b9cdd0;
-  font-size: 0.85rem;
   line-height: 1.5;
 }

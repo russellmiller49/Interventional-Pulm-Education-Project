@@ -73,8 +73,16 @@ const review = (page: Page) => click(page, 'Review feedback and continue')
 async function selectAll(page: Page, names: string[]) {
   for (const name of names) await click(page, name)
 }
+// Each modality button spells out its abbreviation under it (tester report, 2026-11-05), so its
+// accessible name is the abbreviation followed by the full name.
+const modalityButtons = [
+  'SCUF Slow continuous ultrafiltration',
+  'CVVH Continuous venovenous hemofiltration',
+  'CVVHD Continuous venovenous hemodialysis',
+  'CVVHDF Continuous venovenous hemodiafiltration',
+]
 async function modalityWalk(page: Page) {
-  await selectAll(page, ['SCUF', 'CVVH', 'CVVHD', 'CVVHDF'])
+  await selectAll(page, modalityButtons)
   await click(page, 'Review observations and continue')
 }
 async function answer(page: Page, name: RegExp) {
@@ -309,7 +317,7 @@ test('compact reduced-motion keyboard-only introductory journey and reflow', asy
   await screenshot(page, info, 'phone-orientation')
   await keyboardActivate('Continue')
   await keyboardActivate('Continue')
-  for (const name of ['SCUF', 'CVVH', 'CVVHD', 'CVVHDF']) await keyboardActivate(name)
+  for (const name of modalityButtons) await keyboardActivate(name)
   await screenshot(page, info, 'phone-modality-selection')
   await keyboardActivate('Review observations and continue')
   await keyboardActivate(/Solute\/acid-base support and fluid management/, 'radio')
