@@ -332,6 +332,35 @@
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
 }
 
+/*
+ * Inside the drawer the shared rail becomes a numbered list, as the ECMO drawer already lays it
+ * out (owner request, 2026-11-04). As a horizontal rail in this 26 rem panel it showed two sections
+ * and hid the rest behind a sideways scroller with no visible cue. Stacked, every section is in the
+ * panel, which scrolls vertically. `PathwayNav` itself is unchanged.
+ */
+.sectionsPanel nav {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  overflow: visible;
+  padding: 0.25rem;
+  border-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sectionsPanel nav ol {
+  flex-direction: column;
+  overflow: visible;
+}
+
+.sectionsPanel nav li {
+  min-width: 0;
+}
+
+.sectionsPanel nav button {
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------------ *
  * Task column cards
  * ------------------------------------------------------------------ */

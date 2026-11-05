@@ -341,6 +341,12 @@ function DolphinStage({
       onHelp={() => setHelpOpen(true)}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={() => {
+        // The course's first section, at its first step. In the first section it restarts it.
+        const firstId = dolphinPathway.sections[0]?.id
+        if (!firstId || firstId === lesson.sectionId) onRestart()
+        else router.push(dolphinSectionLinkTarget(firstId))
+      }}
     />
   )
 

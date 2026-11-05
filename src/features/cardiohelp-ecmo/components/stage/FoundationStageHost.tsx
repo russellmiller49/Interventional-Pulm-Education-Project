@@ -8,7 +8,10 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import { criticalCareSourceConflictById } from '@/features/critical-care/content/sourceConflicts'
 import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
@@ -629,6 +632,13 @@ function FoundationStageSession({
       pathname: `${cardiohelpEcmoNavBase}/learn`,
       query: { lesson: targetId, track: supportMode },
     })
+  }
+
+  /** The track's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const firstId = firstPathwaySectionId(pathway)
+    if (firstId === sectionId) onRestart()
+    else goToSection(firstId)
   }
 
   const openSurfaces = useMemo(
@@ -1800,6 +1810,7 @@ function FoundationStageSession({
       onHelp={() => setHelpOpen(true)}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       onSaveAndExit={() => router.push(cardiohelpEcmoNavBase)}
       resumedNote={
         focusedFoundation && mount.clamped

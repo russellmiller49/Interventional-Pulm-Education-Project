@@ -1,5 +1,6 @@
 import { test, expect, chromium } from '@playwright/test'
-import { betaModuleReviewPath, betaModules } from '../src/features/module-beta/catalog'
+import { betaModuleReviewPath } from '../src/features/module-beta/catalog'
+import { hubBetaModules } from '../src/features/module-beta/rollout'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
 test('all preview modules remain under Still in development with sign-in, noindex and feedback API gates', async ({
@@ -22,17 +23,27 @@ test('all preview modules remain under Still in development with sign-in, noinde
   expect(hub!.headers()['x-robots-tag']).toContain('noindex')
   await expect(page.getByRole('heading', { name: 'Help shape the next modules' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(
-    betaModules.length,
+    hubBetaModules.length,
   )
   await expect(page.getByRole('heading', { name: 'Ready for review', exact: true })).toHaveCount(0)
   const preview = page.getByRole('region', { name: 'Still in development', exact: true })
   await expect(preview).toBeVisible()
-  await expect(preview.getByRole('article')).toHaveCount(15)
-  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(15)
-  for (const group of ['Bronchoscopy', 'Devices', 'Literature', 'Critical care']) {
+  await expect(preview.getByRole('article')).toHaveCount(hubBetaModules.length)
+  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(
+    hubBetaModules.length,
+  )
+  for (const group of ['Bronchoscopy', 'Critical care']) {
     await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
   }
-  for (const entry of betaModules) {
+  // Withheld by the owner (2026-11-04); they open from Admin › Modules in development instead.
+  for (const title of [
+    'Live Bronchoscopy Anatomy',
+    'Dolphin Bronchoscopy',
+    'Device Atlas — Device Intelligence beta',
+    'Literature Atlas',
+  ])
+    await expect(page.getByRole('heading', { name: title, exact: true })).toHaveCount(0)
+  for (const entry of hubBetaModules) {
     const card = preview.getByRole('article').filter({
       has: page.getByRole('heading', { name: entry.title, exact: true }),
     })

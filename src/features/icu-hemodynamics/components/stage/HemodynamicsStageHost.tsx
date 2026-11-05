@@ -8,7 +8,10 @@ import {
   type ClinicalLearningItem,
 } from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { FlowContent } from '@/features/learning-module/stage/FlowContent'
@@ -507,6 +510,14 @@ function HemodynamicsStageSession({
 
   function returnToLive() {
     setViewIndex(null)
+  }
+
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    if (held) return
+    const firstId = firstPathwaySectionId(hemodynamicsPathway)
+    if (firstId === sectionId) onRestart()
+    else goToSection(firstId)
   }
 
   function goToSection(nextId: string) {
@@ -1812,6 +1823,8 @@ function HemodynamicsStageSession({
       onHelp={() => setHelpOpen(true)}
       onRestart={onRestart}
       restartLabel={held ? 'Abandon this simulation and restart the section' : 'Restart section'}
+      // A held simulation must come down before the learner leaves the section, as for Save & exit.
+      onRestartCourse={held ? undefined : restartCourse}
       saveAndExitHref={held ? undefined : icuHemodynamicsNavBase}
     />
   )

@@ -60,7 +60,12 @@ function modalities() {
   reviewedObservations()
 }
 function openLesson(id: string) {
-  fireEvent.change(screen.getByRole('combobox', { name: 'CRRT lesson' }), { target: { value: id } })
+  // The Lessons menu (the shared numbered list) replaced the lesson dropdown on 2026-11-04.
+  fireEvent.click(
+    document.querySelector<HTMLButtonElement>(
+      `[data-sections-drawer] button[data-section="${id}"]`,
+    )!,
+  )
 }
 
 beforeEach(() => {

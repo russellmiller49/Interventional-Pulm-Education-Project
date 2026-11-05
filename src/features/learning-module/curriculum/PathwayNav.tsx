@@ -12,6 +12,8 @@ interface PathwayNavProps {
   readonly onSelect: (sectionId: string) => void
   /** Rail heading, e.g. "PAC learning pathway". Defaults to a neutral label. */
   readonly label?: string
+  /** What the module calls one entry: "Section" (the default) or "Lesson". */
+  readonly unit?: string
 }
 
 /**
@@ -25,6 +27,7 @@ export function PathwayNav({
   activeSectionId,
   onSelect,
   label = 'Learning pathway',
+  unit = 'Section',
 }: PathwayNavProps) {
   const activeIndex = pathway.sections.findIndex((section) => section.id === activeSectionId)
 
@@ -33,11 +36,11 @@ export function PathwayNav({
       <div className={styles.pathwayNavIntro}>
         <span>{label}</span>
         <strong>
-          Section {activeIndex + 1} of {pathway.sections.length}
+          {unit} {activeIndex + 1} of {pathway.sections.length}
         </strong>
         <small>
           <FastForward className="size-3" aria-hidden="true" />
-          Jump ahead or revisit any section
+          Jump ahead or revisit any {unit.toLowerCase()}
         </small>
       </div>
       <ol>
@@ -47,6 +50,7 @@ export function PathwayNav({
             <li key={section.id}>
               <button
                 type="button"
+                data-section={section.id}
                 aria-current={active ? 'step' : undefined}
                 aria-label={`${index + 1}. ${section.title}${
                   section.stage === 'integration' ? ', integration capstone' : ''

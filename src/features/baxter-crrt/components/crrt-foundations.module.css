@@ -56,18 +56,15 @@
   font-size: clamp(1.15rem, 2vw, 1.6rem);
   margin: 0.15rem 0;
 }
-.header label {
-  display: grid;
-  gap: 0.25rem;
-  max-width: 100%;
-  font-size: 0.8rem;
+/*
+ * The Lessons menu (shared with the other guided modules) sits near the right of this header, so
+ * its panel opens leftward from the button's right edge instead of running off the screen.
+ */
+.header [data-sections-drawer] > div {
+  right: 0;
+  left: auto;
 }
-.foundation select {
-  width: min(100%, 22rem);
-  min-width: 0;
-}
-.foundation button,
-.foundation select {
+.foundation button {
   min-height: 44px;
   border: 1px solid #49676e;
   border-radius: 8px;
@@ -88,7 +85,6 @@
   border-color: #91ecee;
 }
 .foundation button:focus-visible,
-.foundation select:focus-visible,
 .foundation summary:focus-visible,
 .foundation input:focus-visible {
   outline: 3px solid #ffce80;
@@ -369,12 +365,6 @@
   }
   .header {
     align-items: stretch;
-  }
-  .header label {
-    width: 100%;
-  }
-  .foundation select {
-    width: 100%;
   }
   .table th,
   .table td {

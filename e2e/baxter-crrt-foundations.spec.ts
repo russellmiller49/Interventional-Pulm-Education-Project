@@ -93,7 +93,9 @@ async function noOverflow(page: Page) {
   ).toBe(true)
 }
 async function toLesson(page: Page, id: string) {
-  await page.getByRole('combobox', { name: 'CRRT lesson' }).selectOption(id)
+  // The Lessons menu (the shared numbered list) replaced the lesson dropdown on 2026-11-04.
+  await page.locator('[data-sections-drawer] summary').click()
+  await page.locator(`[data-sections-drawer] button[data-section="${id}"]`).click()
 }
 
 for (const keyboardOnly of [false, true]) {

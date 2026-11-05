@@ -12,7 +12,10 @@ import {
 import { ArrowRight, Check } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import type { ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
@@ -563,6 +566,22 @@ function McsStageSession({
       pathname: `${mechanicalCirculatorySupportNavBase}/learn`,
       query: { lesson: targetId },
     })
+  }
+
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const firstId = firstPathwaySectionId(pathway)
+    if (firstId !== sectionId) {
+      goToSection(firstId)
+      return
+    }
+    // Drop a saved phase so the section reopens at its first task, not where it was resumed.
+    if (requestedPhase !== 'recognize')
+      router.push({
+        pathname: `${mechanicalCirculatorySupportNavBase}/learn`,
+        query: { lesson: firstId },
+      })
+    else onRestart()
   }
 
   const openSurfaces = useMemo(
@@ -1877,6 +1896,7 @@ function McsStageSession({
       }}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       saveAndExitHref={mechanicalCirculatorySupportNavBase}
       resumedNote={
         mount.index > 0

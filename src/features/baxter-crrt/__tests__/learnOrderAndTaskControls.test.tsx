@@ -78,17 +78,27 @@ describe('one canonical Learn order (F-10)', () => {
 
   it('the lesson picker, the header number and previous/next agree on the middle lesson', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
-    expect(screen.getByText('Lesson 4 of 8')).toBeInTheDocument()
-    const picker = screen.getByRole('combobox', { name: 'CRRT lesson' })
+    expect(
+      screen.getByText('Lesson 4 of 8', { selector: '[data-crrt-lesson-number]' }),
+    ).toBeInTheDocument()
+    const picker = screen.getByRole('navigation', { name: 'CRRT lessons sections' })
     expect(
       within(picker)
-        .getAllByRole('option')
-        .map((option) => option.textContent),
+        .getAllByRole('button')
+        .map((option) => option.getAttribute('aria-label')),
     ).toEqual(baxterCrrtLearnLessons.map((lesson, index) => `${index + 1}. ${lesson.title}`))
+    expect(within(picker).getByRole('button', { current: 'step' })).toHaveAccessibleName(
+      `4. ${baxterCrrtLearnLessons[3].title}`,
+    )
+    expect(document.querySelector('[data-sections-drawer] summary')).toHaveTextContent(
+      'Lessons4 of 8',
+    )
     const steps = screen.getByRole('navigation', { name: 'Previous and next lesson' })
     expect(within(steps).getByRole('button', { name: /^Previous lesson: 3\. / })).toBeVisible()
     fireEvent.click(within(steps).getByRole('button', { name: /^Next lesson: 5\. / }))
-    expect(screen.getByText('Lesson 5 of 8')).toBeInTheDocument()
+    expect(
+      screen.getByText('Lesson 5 of 8', { selector: '[data-crrt-lesson-number]' }),
+    ).toBeInTheDocument()
     expect(new URL(window.location.href).searchParams.get('lesson')).toBe(
       'crrt-alarms-troubleshooting',
     )
@@ -100,7 +110,9 @@ describe('one canonical Learn order (F-10)', () => {
     first.unmount()
     render(<BaxterCrrtLearn initialLessonId={BAXTER_CRRT_LEARN_LESSON_IDS[7]} />)
     expect(screen.getByText('Last lesson')).toBeInTheDocument()
-    expect(screen.getByText('Lesson 8 of 8')).toBeInTheDocument()
+    expect(
+      screen.getByText('Lesson 8 of 8', { selector: '[data-crrt-lesson-number]' }),
+    ).toBeInTheDocument()
   })
 
   it('the hub map numbers lessons in that order and labels stations as topical groups', async () => {

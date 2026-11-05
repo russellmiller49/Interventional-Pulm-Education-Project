@@ -5,7 +5,10 @@ import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { type NowCardAction, type NowCardModel } from '@/features/learning-module/stage/NowCard'
@@ -468,6 +471,13 @@ function BronchStageSessionView({
   function goToSection(nextId: string) {
     if (nextId === sectionId) return
     router.push({ pathname: BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF, query: { section: nextId } })
+  }
+
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const firstId = firstPathwaySectionId(bronchoscopyFoundationsPathway)
+    if (firstId === sectionId) onRestart()
+    else goToSection(firstId)
   }
 
   function finish() {
@@ -1502,6 +1512,7 @@ function BronchStageSessionView({
       onHelp={() => setHelpOpen(true)}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       saveAndExitHref={BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}
     />
   )

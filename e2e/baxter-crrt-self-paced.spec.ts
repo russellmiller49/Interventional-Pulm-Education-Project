@@ -108,9 +108,10 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
     page.getByRole('heading', { name: 'Apply again: a different fluid goal', exact: true }),
   ).toBeVisible()
   await assertUngraded(page)
+  await page.locator('[data-sections-drawer] summary').click()
   await page
-    .getByRole('combobox', { name: 'CRRT lesson', exact: true })
-    .selectOption('crrt-pressure-profile-integration')
+    .locator('[data-sections-drawer] button[data-section="crrt-pressure-profile-integration"]')
+    .click()
   await page.getByText(/Lesson tasks ·/, { exact: false }).click()
   const map = page.locator('details').filter({ has: page.getByText(/Lesson tasks ·/) })
   await map.getByRole('button').last().click()

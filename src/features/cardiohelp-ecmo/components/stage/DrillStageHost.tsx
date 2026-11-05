@@ -5,7 +5,10 @@ import { ArrowRight, LocateFixed, Play, SlidersHorizontal } from 'lucide-react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
@@ -932,6 +935,7 @@ export function DrillStageHost({
       onHelp={() => setHelpOpen(true)}
       onRestart={core.resetActivity}
       restartLabel="Restart section"
+      onRestartCourse={() => goToSection(firstPathwaySectionId(pathway))}
       onSaveAndExit={core.saveAndExit}
       resumedNote={
         progression.clampedFrom
