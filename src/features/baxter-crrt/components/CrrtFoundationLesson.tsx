@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useId, useReducer, useRef, useState, type Ref } from 'react'
+import { Fragment, useEffect, useId, useReducer, useRef, useState } from 'react'
 import { LessonShell, NowCard } from '@/features/learning-module/stage'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
 import type { LearningPathway } from '@/features/learning-module/curriculum/types'
@@ -91,7 +91,6 @@ export function CrrtFoundationLesson({
     identity: ReturnType<typeof crrtCurrentTaskIdentity>
     progress: CrrtToolProgress
   } | null>(null)
-  const actionsRef = useRef<HTMLDivElement>(null)
   const restartScopeId = useId()
   const activeIdentity = crrtCurrentTaskIdentity(attempt)
   const guidedResponse =
@@ -118,16 +117,15 @@ export function CrrtFoundationLesson({
   useEffect(() => {
     if (previousTaskLocation.current === taskLocation && !taskMapSelection.current) return
     previousTaskLocation.current = taskLocation
-    // Continue, skip and task-map navigation replace the document beneath the learner.
-    // Target the instruction, excluding the persistent (possibly expanded) task map.
-    // Initial entry and ordinary workbench operations do not scroll or move focus here.
-    if (taskMapSelection.current) {
-      taskMapSelection.current = false
-      const heading = instructionRef.current?.querySelector('h2')
-      if (heading) {
-        heading.tabIndex = -1
-        heading.focus({ preventScroll: true })
-      }
+    // Continue, Skip and task-map navigation replace the document beneath the learner, and the
+    // button that was pressed goes with it. Focus the new task's heading so the keyboard lands
+    // where reading starts, and target the instruction, excluding the persistent (possibly
+    // expanded) task map. Initial entry and ordinary workbench operations do neither.
+    taskMapSelection.current = false
+    const heading = instructionRef.current?.querySelector('h2')
+    if (heading) {
+      heading.tabIndex = -1
+      heading.focus({ preventScroll: true })
     }
     instructionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
     // Also consume explicit re-selection of the current task after its reducer render.
@@ -281,14 +279,6 @@ export function CrrtFoundationLesson({
         : { identity: activeIdentity, progress },
     )
   }
-  function goToTaskControls() {
-    const target = actionsRef.current
-    if (!target) return
-    // Focus moves now, so its destination must be visible now, including keyboard activation.
-    // Explicit instant scrolling also avoids inheriting the site's smooth-scroll preference.
-    target.scrollIntoView?.({ block: 'center', behavior: 'instant' })
-    target.focus({ preventScroll: true })
-  }
   return (
     <div className={styles.foundation} data-foundation-lesson={lessonId}>
       <LessonShell
@@ -441,42 +431,10 @@ export function CrrtFoundationLesson({
                 model={{
                   kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' || task.kind === 'numeric' ? 'Apply · optional try' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,
                   heading: task.title,
+                  // The instruction says what to do and the exercise follows it directly, so there
+                  // is no separate "Where to look" line or jump button competing with the
+                  // exercise's own first control (tester report, 2026-11-05).
                   body: task.instruction,
-                  where: (
-                    <span>
-                      Where to look:{' '}
-                      {task.advancedTool
-                        ? task.advancedTool === 'citrate-path'
-                          ? 'Citrate path and sampling points'
-                          : 'Four citrate patterns'
-                        : task.operation === 'hardware'
-                          ? 'Machine functions and fluid destinations'
-                          : task.operation
-                            ? 'Current run and recorded observations'
-                            : task.tool === 'builder'
-                              ? 'Staged Prescription Builder'
-                              : task.tool === 'known-pressure'
-                                ? 'Pressure Localization Lab'
-                                : task.kind === 'question'
-                                  ? 'Application check'
-                                  : task.tool
-                                    ? 'Canonical CRRT circuit'
-                                    : task.title}
-                      , below.
-                      {task.kind !== 'read' ? (
-                        <>
-                          {' '}
-                          <button
-                            type="button"
-                            className={styles.jumpButton}
-                            onClick={goToTaskControls}
-                          >
-                            Go to this task&apos;s continue controls
-                          </button>
-                        </>
-                      ) : null}
-                    </span>
-                  ),
                   // A reading task has one thing to do, so its Continue stays on the card. An
                   // exercise's controls follow the exercise itself (F-13), below.
                   primary:
@@ -558,6 +516,7 @@ export function CrrtFoundationLesson({
                     onContinue={() =>
                       evidence && finish({ ...evidence, feedbackDisplayed: true, reviewed: true })
                     }
+                    onSkip={continueTopic}
                   />
                 ) : null}
                 {task.tool === 'known-pressure' ? (
@@ -592,9 +551,11 @@ export function CrrtFoundationLesson({
                     }
                   />
                 ) : null}
-                {task.kind !== 'read' ? (
+                {/* A question carries its Skip in its own button row; every other exercise gets
+                    one row here, directly after the exercise. Once the exercise offers its own
+                    way on (an enabled continue, or feedback with its continue), Skip goes. */}
+                {task.kind !== 'read' && task.kind !== 'question' ? (
                   <CrrtTaskActions
-                    ref={actionsRef}
                     primary={
                       guidedPrimary
                         ? {
@@ -615,11 +576,7 @@ export function CrrtFoundationLesson({
                           }
                         : undefined
                     }
-                    ownControlsNote={
-                      guidedPrimary
-                        ? null
-                        : 'This exercise has its own check and continue buttons above. Using it is optional.'
-                    }
+                    skippable={guidedPrimary ? !readyResponse : !evidence?.feedbackDisplayed}
                     onSkip={continueTopic}
                   />
                 ) : null}
@@ -694,45 +651,58 @@ export function CrrtFoundationLesson({
 }
 
 /**
+ * The one way past an exercise without doing it (tester report, 2026-11-05).
+ *
+ * It replaces a pair — "Go to this task's continue controls" under the instruction and "Continue
+ * without this exercise" in a box after the exercise — that read as two competing first steps.
+ * Skip sits in the exercise's own action row, moves to the next task, and marks nothing as
+ * reviewed; the task stays open from Lesson tasks.
+ */
+function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
+  return (
+    <button
+      type="button"
+      className={styles.taskSkip}
+      aria-label="Skip this task"
+      onClick={onSkip}
+      data-crrt-skip
+    >
+      Skip
+    </button>
+  )
+}
+
+/**
  * The exercise's own controls, directly after the exercise (F-13).
  *
- * Before this, "Continue without this exercise" was the first full-width button in every task
- * and the real completion button sat about 1,200 px lower, greyed out with a generic reason.
- * Now the completion button leads, its disabled reason names exactly what is left, and the skip
- * stays beside it — secondary, full-size and keyboard-reachable. Skipping marks nothing as
- * reviewed; nothing here counts, grades or requires an answer.
+ * The completion button leads and its disabled reason names exactly what is left. Skip stands
+ * beside it until the completion button is available, then leaves, so the row never offers two
+ * ways forward at once. An exercise with its own check and continue (a lab, the builder, a
+ * calculation) gets only the Skip here, and only until its own continue appears.
  */
 function CrrtTaskActions({
-  ref,
   primary,
-  ownControlsNote,
+  skippable,
   onSkip,
 }: {
-  readonly ref: Ref<HTMLDivElement>
   readonly primary?: {
     readonly label: string
     readonly disabled: boolean
     readonly disabledReason: string
     readonly onActivate: () => void
   }
-  readonly ownControlsNote: string | null
+  readonly skippable: boolean
   readonly onSkip: () => void
 }) {
   const reasonId = useId()
-  const headingId = useId()
+  if (!primary && !skippable) return null
   return (
     <div
-      ref={ref}
       className={styles.taskActions}
       role="group"
-      aria-labelledby={headingId}
-      tabIndex={-1}
+      aria-label="Task actions"
       data-crrt-task-actions
     >
-      <p id={headingId} className={styles.taskActionsHeading}>
-        Continue from this task
-      </p>
-      {ownControlsNote ? <p className={styles.taskActionsNote}>{ownControlsNote}</p> : null}
       <div className={styles.taskActionRow}>
         {primary ? (
           <button
@@ -745,19 +715,13 @@ function CrrtTaskActions({
             {primary.label}
           </button>
         ) : null}
-        <button type="button" className={styles.taskSkip} onClick={onSkip}>
-          Continue without this exercise
-        </button>
+        {skippable ? <SkipButton onSkip={onSkip} /> : null}
       </div>
       {primary?.disabled ? (
         <p id={reasonId} className={styles.taskReason} data-crrt-disabled-reason>
           {primary.disabledReason}
         </p>
       ) : null}
-      <p className={styles.taskActionsNote}>
-        Continuing without the exercise marks nothing as reviewed. You can come back to it from
-        Lesson tasks.
-      </p>
     </div>
   )
 }
@@ -770,6 +734,7 @@ function QuestionTask({
   onFeedbackDisplayed,
   onContinue,
   onRetry,
+  onSkip,
 }: {
   task: CrrtFoundationTask
   ready?: boolean
@@ -778,6 +743,7 @@ function QuestionTask({
   onFeedbackDisplayed: () => void
   onContinue: () => void
   onRetry: () => void
+  onSkip: () => void
 }) {
   const [choiceId, setChoiceId] = useState<string | null>(null)
   const [explanationVisible, setExplanationVisible] = useState(false)
@@ -793,8 +759,7 @@ function QuestionTask({
       <h3>Optional application check</h3>
       <p className={styles.questionMode}>
         Optional try: choose an answer and check it, or open the worked explanation first — it shows
-        the accepted answer. Nothing here is saved or counted, and you can try again or continue
-        without answering.
+        the accepted answer. Nothing here is saved or counted, and you can try again or skip.
       </p>
       <fieldset disabled={Boolean(evidence)}>
         <legend>{task.question}</legend>
@@ -871,18 +836,21 @@ function QuestionTask({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={!choiceId || !ready}
-          onClick={() => choiceId && ready && onSubmit(choiceId)}
-        >
-          Check reasoning
-        </button>
+        <>
+          <button
+            type="button"
+            disabled={!choiceId || !ready}
+            onClick={() => choiceId && ready && onSubmit(choiceId)}
+          >
+            Check reasoning
+          </button>
+          <SkipButton onSkip={onSkip} />
+        </>
       )}
       {!ready ? (
         <p>
-          This run has no recorded observations for this question yet. Review the explanation,
-          continue, or perform the preceding simulation actions.
+          This run has no recorded observations for this question yet. Review the explanation, skip,
+          or perform the preceding simulation actions.
         </p>
       ) : null}
     </section>

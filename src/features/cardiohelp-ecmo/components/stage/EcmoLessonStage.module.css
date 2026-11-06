@@ -598,30 +598,6 @@
   margin: 0;
 }
 
-/*
- * The compact reference opens the visual column, directly above the map. Stacked it was three rows
- * — label, identity, the "About this model" disclosure — about 120px before the first pixel of the
- * drawing. With room they share one row; the disclosure's text, once opened, takes the row beneath.
- */
-@media (min-width: 1100px) {
-  .stateCard[data-model-reference='compact'] {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.15rem 1rem;
-    padding-block: 0.35rem;
-  }
-
-  .stateCard[data-model-reference='compact'] > details {
-    margin-inline-start: auto;
-  }
-
-  .stateCard[data-model-reference='compact'] > details[open] {
-    flex-basis: 100%;
-    margin-inline-start: 0;
-  }
-}
-
 .stateControls {
   display: flex;
   flex-wrap: wrap;
@@ -1014,16 +990,58 @@
   scroll-margin-top: 5rem;
 }
 
-/* A question answered on the map, stated at the head of the task in large type. */
+/*
+ * A question answered on the map, as its own card: the question, the numbered places, Submit, and
+ * Show answer / Skip together, in the column beside the map (tester feedback, 2026-10-23).
+ */
 .mapQuestionCallout {
   display: grid;
   gap: 0.35rem;
-  margin-block: 0.5rem 0.25rem;
-  padding: 0.9rem 1rem;
+  align-content: start;
+  min-width: 0;
+  padding: 1rem 1.1rem;
   border: 1px solid var(--ecmo-shell-accent, #71e1e5);
   border-left-width: 5px;
   border-radius: 0.85rem;
   background: rgba(113, 225, 229, 0.08);
+}
+
+/* The legend is the stem; the line under it says how to answer. */
+.mapQuestionCallout legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.mapQuestionCallout legend + .mapQuestionHow {
+  margin-bottom: 0.25rem;
+}
+
+/* The numbered places read as answer options here, not as a key under a drawing. */
+.mapQuestionCallout [data-map-answer-legend] {
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.mapQuestionCallout [data-map-answer-row] {
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+}
+
+/* Outlined while unchosen; the chosen and marked rows keep their own colours. */
+.mapQuestionCallout
+  [data-map-answer-row]:not(:hover, [data-selected='true'], [data-map-answer-state]) {
+  border-color: rgba(125, 216, 221, 0.35);
+}
+
+.mapQuestionCallout [data-map-question-actions] {
+  margin-top: 0.85rem;
+}
+
+.mapQuestionCallout [data-optional-support] {
+  margin-block: 0.25rem 0;
 }
 
 .mapQuestionKicker {

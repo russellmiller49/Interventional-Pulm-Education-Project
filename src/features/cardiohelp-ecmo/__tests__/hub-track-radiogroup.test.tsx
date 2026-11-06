@@ -199,6 +199,8 @@ describe('keyboard track selection carries through to both entry actions', () =>
   it('shows the selected track in the grouped list heading', () => {
     render(<CardiohelpHub />)
     fireEvent.keyDown(vv(), { key: 'ArrowRight' })
+    // The heading belongs to the browsed list, which opens from the card (2026-10-23).
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
 
     expect(screen.getByRole('heading', { name: /pathway$/ }).textContent).toBe('VA pathway')
   })

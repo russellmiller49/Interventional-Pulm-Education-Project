@@ -96,7 +96,15 @@ export interface Lesson {
    * L25-5). `specimens` draws the running case's supplied specimens and `troubleshooting` the
    * lesson's own troubleshooting questions (L22-6, L24-2).
    */
-  diagram?: 'ultrasound' | 'stations' | 'needle' | 'specimens' | 'troubleshooting'
+  diagram?:
+    | 'ultrasound'
+    | 'stations'
+    | 'needle'
+    | 'specimens'
+    | 'troubleshooting'
+    /** Lesson 16: the six sonographic features on real EBUS images, and reading them. */
+    | 'node-features'
+    | 'node-reading'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]

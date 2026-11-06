@@ -192,21 +192,32 @@ describe('answering on the circuit', () => {
       `[data-map-answer] input[value="${choiceId}"]`,
     ) as HTMLInputElement
 
-  it('puts one answer group beside the map within the integrated task', () => {
+  /*
+   * Revised 2026-10-23 (tester feedback: the question read as step-by-step text). The answer group
+   * moved out of the map into a question card of its own — question, numbered places, Submit, Show
+   * answer and Skip together — and the map keeps only the numbered pins, which label the same radios.
+   */
+  it('puts one answer group in the question card, and the pins on the map beside it', () => {
     const { container } = mountAtPredict()
     const fieldset = container.querySelector('[data-map-answer]')
     expect(fieldset).not.toBeNull()
-    // The map owns the answer form; the flowing task wraps both, without a second form.
-    expect(fieldset?.closest('#cardiohelp-circuit-panel')).not.toBeNull()
+    const card = container.querySelector('[data-map-question-callout]')!
+    expect(card).toContainElement(fieldset as HTMLElement)
+    expect(fieldset?.closest('#cardiohelp-circuit-panel')).toBeNull()
     expect(fieldset?.closest('[data-ecmo-flow]')).not.toBeNull()
     expect(container.querySelectorAll('[data-map-answer]')).toHaveLength(1)
     expect(container.querySelectorAll('[data-prediction-choices]')).toHaveLength(1)
-    // The question is still asked where the learner is working, and it says where to answer.
+    // The pins stay on the drawing.
+    const pins = container.querySelector('[data-map-answer-pins]')
+    expect(pins?.closest('#cardiohelp-circuit-panel')).not.toBeNull()
+    // The question, its Submit and its Show answer / Skip are one unit.
     const prompt = container.querySelector('[data-map-question]')
     expect(prompt?.textContent).toContain(item().stem)
-    expect(prompt?.closest('#cardiohelp-circuit-panel')).toContainElement(
-      screen.getByRole('button', { name: 'Submit answer' }),
-    )
+    expect(card).toContainElement(prompt as HTMLElement)
+    expect(card).toContainElement(screen.getByRole('button', { name: 'Submit answer' }))
+    expect(card).toContainElement(screen.getByRole('button', { name: 'Show answer' }))
+    expect(card).toContainElement(screen.getByRole('button', { name: 'Skip' }))
+    expect(container.querySelectorAll('[data-optional-support]')).toHaveLength(1)
   })
 
   it('is a real radio group, so the browser supplies the behaviour', () => {
@@ -230,7 +241,8 @@ describe('answering on the circuit', () => {
       expect(labels).toHaveLength(2)
       const ordinal = String(index + 1)
       // The pin shows the number, the row shows the words, and the name carries both — so each
-      // visible label is part of what is announced.
+      // visible label is part of what is announced. The rows now come before the map in the
+      // document, so the words lead.
       expect(pin(target.choiceId)?.textContent?.trim()).toBe(ordinal)
       const choiceLabel = item().choices.find((choice) => choice.id === target.choiceId)?.label
       const name = labels
@@ -242,7 +254,7 @@ describe('answering on the circuit', () => {
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim()
-      expect(name).toBe(`${ordinal} ${choiceLabel}`)
+      expect(name).toBe(`${choiceLabel} ${ordinal}`)
     }
   })
 
@@ -259,16 +271,20 @@ describe('answering on the circuit', () => {
     ])
   })
 
-  it('echoes the chosen place and commits it', () => {
+  it('marks the chosen place in the list and on the map, and commits it', () => {
     const { container } = mountAtPredict()
-    expect(container.querySelector('[data-map-answer-chosen]')).toBeNull()
+    expect(container.querySelector('[data-selected="true"]')).toBeNull()
 
     fireEvent.click(radio('after-membrane'))
     expect(radio('after-membrane').checked).toBe(true)
     expect(pin('after-membrane')?.getAttribute('data-selected')).toBe('true')
-    expect(container.querySelector('[data-map-answer-chosen]')?.textContent).toContain(
-      'After the membrane lung, on the return limb.',
-    )
+    // The chosen row sits directly above Submit, so there is no separate "Your answer:" echo.
+    expect(
+      container
+        .querySelector('[data-map-answer-row="after-membrane"]')
+        ?.getAttribute('data-selected'),
+    ).toBe('true')
+    expect(container.querySelector('[data-map-answer-chosen]')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
     // The learner's own answer went to the engine, wrong one included.
@@ -319,7 +335,7 @@ describe('answering on the circuit', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Bedside 3D circuit' }))
     expect(container.querySelector('[data-answer-elsewhere]')?.textContent).toContain(
-      'answered on the pressure-zone map',
+      'The numbered places in this question are on the pressure-zone map.',
     )
     fireEvent.click(screen.getByRole('button', { name: 'Show the pressure-zone map' }))
     expect(document.getElementById('cardiohelp-diagnostic-view-tab')).toHaveAttribute(

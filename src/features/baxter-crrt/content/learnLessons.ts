@@ -35,7 +35,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-indications-modality',
     title: 'CRRT indications and modality selection',
     summary:
-      'Start with a patient-centered goal, then choose the transport and fluid strategy that serves it.',
+      'What CRRT is for, how to name its two treatment goals, and what SCUF, CVVH, CVVHD and CVVHDF mean on the circuit.',
     paragraphs: [
       'CRRT is a way to deliver kidney support continuously; it is not a diagnosis or a goal by itself. First define the problem to solve—solute control, acid-base support, fluid removal, or a combination—and name the physiologic constraint that makes a continuous approach useful.',
       'The modality label describes how solute and water move through the circuit. The prescription still has to specify the intended dose, fluid goal, anticoagulation plan, monitoring plan, and conditions for reassessment.',
@@ -59,7 +59,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-circuit-pressures',
     title: 'Circuit anatomy and pressure localization',
     summary:
-      'Use the circuit path to localize a pattern before reacting to an isolated pressure value.',
+      'Trace blood and fluid through the circuit, learn where each pressure is measured, and use a pressure change to locate a problem.',
     paragraphs: [
       'Trace the blood path from patient access through the access segment, blood pump, filter, return segment, and back to the patient. The effluent path leaves the filter and is measured separately.',
       'Pressure values are location-dependent signals. Interpret access, filter, return, effluent, transmembrane pressure, and filter pressure drop together and across time. A number by itself does not establish a diagnosis or a universal alarm response.',
@@ -84,7 +84,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-solute-transport',
     title: 'Solute and water transport',
     summary:
-      'Separate diffusion, convection, ultrafiltration, and adsorption before interpreting a modality.',
+      'How diffusion, convection and ultrafiltration move solute and water, and what raising dialysate or replacement flow changes.',
     paragraphs: [
       'Diffusion moves solute down a concentration gradient across the membrane and is shaped by dialysate flow, blood-side delivery, membrane properties, and molecule size. Convection carries dissolved solute with ultrafiltered plasma water; its effect depends on ultrafiltration and sieving behavior.',
       'Ultrafiltration describes water movement across the membrane. Adsorption describes solute binding to the membrane or circuit. These mechanisms can coexist, but they should not be treated as interchangeable explanations.',
@@ -106,7 +106,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-prescription-dosing',
     title: 'Prescription and delivered dose',
     summary:
-      'Translate the clinical goal into explicit flows, then reconcile prescribed and delivered therapy.',
+      'Turn the goals into flows, calculate the effluent dose, and see how downtime lowers the dose the patient actually receives.',
     paragraphs: [
       'A complete prescription makes each flow and its purpose explicit. Effluent-based dose is commonly normalized to weight for comparison, but the displayed or prescribed number is not the same as therapy actually delivered over time.',
       'Predilution can reduce the concentration presented to the filter and may change clearance and filter burden. Postdilution preserves concentration at the filter but may increase hemoconcentration. The balance is context dependent; this module does not prescribe a universal split.',
@@ -137,7 +137,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-alarms-troubleshooting',
     title: 'Alarms and cause-first troubleshooting',
     summary:
-      'Turn a changed pressure pattern into a place on the circuit, then verify the cause before anything resumes.',
+      'Set up and start a PrisMax run, then work an access alert cause first: find and correct the cause, then confirm treatment is delivered again.',
     paragraphs: [
       'An alarm is a device response to a detected condition; acknowledgement is not proof that the condition has resolved. Start with the patient, then inspect the corresponding circuit, fluid, detector, scale, or power domain — the same circuit you traced earlier, with each pressure still sitting where it sat then.',
       'Power interruption and end-of-treatment decisions follow the same doctrine: assess the patient and circuit, verify device state and downtime, use current instructions and local policy, and never infer a universal blood-return or discard decision from the simulator.',
@@ -164,7 +164,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-anticoagulation',
     title: 'Anticoagulation and citrate safety',
     summary:
-      'Follow citrate into the circuit and calcium back to the patient, and keep the two sampling domains answering different questions.',
+      'How regional citrate anticoagulates the circuit, which calcium sample answers which question, and how citrate accumulation shows up.',
     paragraphs: [
       'Regional citrate is the first-choice anticoagulant for CRRT where it is available and not contraindicated, because it anticoagulates the circuit without raising the patient’s bleeding risk. Heparin is the alternative. The choice turns on bleeding risk, liver function and perfusion.',
       'Citrate makes that pairing concrete: it binds ionized calcium in the circuit, and some citrate–calcium complexes leave in effluent. Remaining citrate returns to the patient for metabolism. In this schematic, citrate enters before the blood pump and calcium replacement uses a separate patient line; actual infusion sites depend on the approved configuration. Circuit and systemic ionized calcium samples answer different questions, and neither substitutes for the other.',
@@ -192,7 +192,8 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
   lesson({
     id: 'crrt-fluid-liberation',
     title: 'Fluid management and liberation',
-    summary: 'Maintain two fluid ledgers and make liberation a reassessed clinical transition.',
+    summary:
+      'Keep the machine’s fluid removal separate from the patient’s whole fluid balance, adjust net removal, and reassess when CRRT can stop.',
     paragraphs: [
       'The machine fluid-removal value is only one part of the whole-patient balance. Reconcile all external inputs, non-machine outputs, device removal, interruptions, and unintended variance over the same interval.',
       'Liberation is not a console-only event. Reassess the original indication, native kidney function, hemodynamics, fluid trajectory, solute and acid-base control, medication and nutrition needs, and the plan if support is stopped.',
@@ -217,7 +218,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     id: 'crrt-pressure-profile-integration',
     title: 'Pressure-profile integration',
     summary:
-      'Localize a deteriorating run from the whole pressure profile, then reconcile prescription, anticoagulation, and fluid before deciding what to change.',
+      'Put it together on a run that is going wrong: read the whole pressure profile, find the cause, and reconcile dose, anticoagulation and fluid.',
     paragraphs: [
       'Every earlier section supplies one reading of the same run. Circuit anatomy says where each transducer sits. Transport and prescription say what the run was supposed to deliver. Anticoagulation says how the filter was being protected. The fluid ledger says what was being removed and at what rate. A single pressure value does not distinguish among those; the profile read together with its trend often does.',
       'Read the profile as a set of relationships rather than a list of numbers. Access pressure describes the inflow side, return pressure the outflow side, and transmembrane pressure with filter pressure drop describe the membrane and the filter itself. Ask which combination of those would have to be true for each competing explanation, then look for the one the whole profile supports. Name the location before naming the fix.',

@@ -80,9 +80,9 @@ export const crrtFoundationTasks: Partial<
       instruction:
         'Follow blood from patient access to the filter and back. Separate the two questions the prescription must answer.',
       teaching: [
-        'Continuous renal replacement therapy (CRRT) provides kidney support over time. Solute and acid-base support address the composition of blood. Net fluid removal addresses how much fluid CRRT removes from the patient.',
+        'Continuous renal replacement therapy (CRRT) is kidney support that runs around the clock. Blood flows continuously from the patient through a filter and back, so solute and fluid are removed slowly over the whole day rather than in a session of a few hours, as in intermittent hemodialysis. Every prescription answers two questions. Solute and acid-base support addresses the composition of the blood. Net fluid removal addresses how much fluid CRRT removes from the patient.',
         'Blood leaves the patient through the access limb, passes a pump and filter, then returns through the return limb. The membrane separates blood from the fluid compartment. Later tasks add each fluid path to this same circuit.',
-        'The continuous approach spreads treatment over time. Hemodynamic tolerance, urgency and the ability to maintain treatment matter; a modality name alone does not answer these questions. General ICU physiology is the prerequisite; this lesson introduces the CRRT terms.',
+        'Because CRRT spreads treatment over the whole day, it avoids rapid shifts of fluid and solute, which matters most when blood pressure is unstable. Whether a continuous approach fits depends on how well the patient tolerates fluid shifts, how urgent the problem is, and whether treatment can be kept running. The modality names later in this lesson describe how the circuit moves solute and water; they do not answer those questions.',
       ],
     },
     {
@@ -90,11 +90,11 @@ export const crrtFoundationTasks: Partial<
       title: 'Worked example: separate support from removal',
       exampleId: 'constructed-solute-support',
       kind: 'read',
-      instruction: 'Read how the clinician separates a treatment goal from a constraint.',
+      instruction: 'Read the worked example.',
       teaching: [
-        'Constructed example: an adult with AKI needs ongoing solute and acid-base support. The team currently seeks no net removal by CRRT, and hemodynamic instability makes rapid fluid shifts difficult to tolerate.',
-        'Reasoning: name solute/acid-base support as the goal, zero net CRRT removal as a separate fluid assumption, and tolerance plus continuity as constraints. Zero CRRT removal does not mean the whole patient is fluid-neutral.',
-        'An urgent threat requires timely clinical treatment and escalation. A software exercise or checklist must never delay it. These examples do not select an individual regimen.',
+        'An adult with AKI needs ongoing solute and acid-base support. For now the team wants CRRT to remove no net fluid, and the patient is hemodynamically unstable, so rapid fluid shifts would be poorly tolerated.',
+        'How to frame it: the goal is solute and acid-base support. Net fluid removal is a separate setting, here zero. The constraints are what the patient can tolerate and keeping treatment running. Zero net removal by CRRT does not make the patient fluid-neutral: intake and other outputs still count.',
+        'A life-threatening problem such as severe hyperkalemia is treated at once with medical therapy while CRRT is being arranged. Setting up the circuit takes time and must never delay that treatment.',
       ],
     },
     {
@@ -104,10 +104,10 @@ export const crrtFoundationTasks: Partial<
       kind: 'guided',
       tool: 'modalities',
       instruction:
-        'Select each of the four modality views and follow the active paths. These are illustrations, not applied prescriptions.',
+        'Select each of the four modalities beside the circuit. Read what it does under the buttons, and follow the paths it lights up.',
       teaching: [
         'Dialysate flows on the fluid side of the membrane. Replacement fluid enters the blood path. Ultrafiltration moves water from blood across the membrane to the effluent path, which carries everything leaving the fluid side of the filter to collection.',
-        'The four names describe which transport paths are used. Combining mechanisms does not establish a better modality; the treatment goal and clinical context still determine the choice. Quantitative settings come later.',
+        'Each name tells you which paths the circuit uses. Using both mechanisms does not make CVVHDF a better modality: trials have not shown that one continuous modality gives better outcomes than another. The treatment goal and the patient’s condition decide which modality to use. Flow rates and dose come in lessons 3 and 4.',
       ],
     },
     {
@@ -190,8 +190,7 @@ export const crrtFoundationTasks: Partial<
       exampleId: 'fluid-topology',
       kind: 'guided',
       tool: 'fluid-walk',
-      instruction:
-        'Select each fluid path and identify where it enters or leaves. The combined view illustrates topology, not a prescription.',
+      instruction: 'Select each fluid path and identify where it enters or leaves.',
       teaching: [
         'Dialysate stays on the fluid side of the membrane as a bulk flow, while solutes exchange across it. Pre- and post-filter replacement enter blood at different sites. Pre-blood-pump (PBP) fluid enters before the blood pump. Effluent leaves the fluid compartment for collection.',
         'PBP describes a location; it does not establish which solution should run there. Citrate solution selection and dosing remain protocol-dependent.',
@@ -309,10 +308,10 @@ export const crrtFoundationTasks: Partial<
       kind: 'guided',
       tool: 'modalities',
       instruction:
-        'Select all four views. Compare active dialysate and replacement paths while the blood topology stays fixed.',
+        'Select all four modalities. The blood path stays the same; compare which dialysate and replacement paths each one uses.',
       teaching: [
         'SCUF emphasizes net ultrafiltration; CVVH uses replacement-supported hemofiltration; CVVHD uses dialysate-supported diffusion; CVVHDF combines the two solute-transport approaches.',
-        'These views constrain incompatible paths. Changing a picture does not apply a machine prescription. The supported device workflow remains separately scoped.',
+        'The blood path is the same in all four. What changes is which fluid runs: SCUF uses neither dialysate nor replacement fluid, CVVH uses replacement fluid, CVVHD uses dialysate, and CVVHDF uses both.',
       ],
     },
     {

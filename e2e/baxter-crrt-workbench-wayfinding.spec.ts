@@ -246,7 +246,7 @@ test('Learn: one order across hub, picker, previous/next and resume', async ({ p
   await expect(steps.getByText('Last lesson')).toBeVisible()
 })
 
-test('Learn task: the exercise leads, the reason names what is left, skip stays usable', async ({
+test('Learn task: the exercise leads, the reason names what is left, one Skip until ready', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
@@ -270,12 +270,26 @@ test('Learn task: the exercise leads, the reason names what is left, skip stays 
   })
   expect(scale).toBeGreaterThan(0.7)
 
-  await page.getByRole('button', { name: "Go to this task's continue controls" }).click()
-  const actions = page.getByRole('group', { name: 'Continue from this task' })
-  await expect(actions).toBeFocused()
+  // Tester report 2026-11-05: no jump button and no "Continue from this task" box. One Skip sits
+  // in the exercise's own action row beside the completion button.
+  await expect(
+    page.getByRole('button', { name: "Go to this task's continue controls" }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('group', { name: 'Continue from this task' })).toHaveCount(0)
+  await expect(page.getByText('Where to look:')).toHaveCount(0)
+  const actions = page.getByRole('group', { name: 'Task actions' })
   const primary = actions.getByRole('button', { name: 'Review observations and continue' })
   await expect(primary).toBeDisabled()
   await expect(actions).toContainText('Still to select, in order: Patient access')
+
+  // Skip is a full-size button, reachable by keyboard, and the only skip on the page.
+  const skip = actions.getByRole('button', { name: 'Skip this task' })
+  await expect(skip).toHaveText('Skip')
+  await expect(page.getByRole('button', { name: /skip|continue without/i })).toHaveCount(1)
+  const skipBox = (await skip.boundingBox())!
+  expect(skipBox.height).toBeGreaterThanOrEqual(44)
+  await skip.focus()
+  await expect(skip).toBeFocused()
 
   // Keyboard through the stops, first to last.
   for (const name of [
@@ -294,13 +308,15 @@ test('Learn task: the exercise leads, the reason names what is left, skip stays 
   await expect(last).toHaveAttribute('aria-pressed', 'true')
   await expect(work.getByText('6 of 6 stops selected')).toBeVisible()
   await expect(primary).toBeEnabled()
+  // With the way on available, Skip leaves: the row never offers two ways forward.
+  await expect(skip).toHaveCount(0)
 
-  // Skip is a full-size button, reachable by keyboard.
-  const skip = actions.getByRole('button', { name: 'Continue without this exercise' })
-  const skipBox = (await skip.boundingBox())!
-  expect(skipBox.height).toBeGreaterThanOrEqual(44)
-  await skip.focus()
-  await expect(skip).toBeFocused()
+  // Continuing replaces the task; focus lands on the next task's heading.
+  await primary.focus()
+  await page.keyboard.press('Enter')
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Add the fluids one path at a time' }),
+  ).toBeFocused()
 })
 
 test('circuit expanded view: keyboard open, size, Escape back to the button', async ({ page }) => {
@@ -343,7 +359,7 @@ test('membrane comparison and pressure arithmetic render beside their teaching',
 
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-circuit-pressures')
   for (let step = 0; step < 2; step++)
-    await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+    await page.getByRole('button', { name: 'Skip this task' }).click()
   const tmp = page.getByRole('region', { name: 'How this TMP is calculated now' })
   const drop = page.getByRole('region', { name: 'How this filter pressure drop is calculated now' })
   await expect(tmp).toContainText('(50 + 20) ÷ 2 − (−20) + (−18) = 37 mmHg')

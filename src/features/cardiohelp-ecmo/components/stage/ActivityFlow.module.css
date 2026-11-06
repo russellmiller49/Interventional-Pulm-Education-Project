@@ -170,6 +170,12 @@
   .content:has([data-circuit-enlarged='true']) {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* A map question's card holds a stem, the options and their answer: a little more measure. */
+  .content:has(> .explanation > [data-map-question-callout]):not(
+      :has([data-circuit-enlarged='true'])
+    ) {
+    grid-template-columns: minmax(24rem, 30rem) minmax(0, 1fr);
+  }
 }
 
 .flow [data-pane='teaching'] {

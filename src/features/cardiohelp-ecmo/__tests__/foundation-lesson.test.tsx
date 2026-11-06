@@ -487,15 +487,23 @@ describe('foundation teaching panels', () => {
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
 
-  it('circuit-flow-path shows the venous-line value the console reads, beside the estimate', () => {
+  /*
+   * Revised 2026-10-23. The flow and saturation guides sat in an optional "More about flow and
+   * saturation measurements" disclosure under the circuit-and-patient task; a tester asked whether
+   * it served that task, and it does not. The section still names the reading once, where the walk
+   * meets it, and the guides are taught in the physiology sections that use them.
+   */
+  it('circuit-flow-path names the venous-line reading once and leaves its guides to later sections', () => {
     const state = settled('vv')
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={state} />,
     )
-    expect(container.querySelector('[data-derived-value="ecmo.venousLineSaturation"]')).toBeTruthy()
+    expect(container.querySelector('[data-first-use="venous-line-saturation"]')).toBeTruthy()
+    expect(container.querySelector('[data-derived-value="ecmo.venousLineSaturation"]')).toBeNull()
     expect(
       container.querySelector('[data-derived-value="ecmo.systemicVenousSaturationEstimate"]'),
-    ).toBeTruthy()
+    ).toBeNull()
+    expect(container.textContent).not.toMatch(/More about flow and saturation measurements/)
   })
 
   it('circuit-flow-path returns to the arterial side under VA, and the venous side under VV', () => {

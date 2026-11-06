@@ -3103,8 +3103,8 @@
  * readings and the clamps below. On a 1700 × 900 window the map began a full screen down the task
  * and the clamps that act on it were under the fold beneath it. Two things change with room:
  *
- *  - from about 44rem the heading and the configuration share a row, and so do the view tabs and
- *    the full-width toggle, which returns roughly 140px to the drawing;
+ *  - from about 44rem the view tabs and the full-width toggle share a row, which returns height to
+ *    the drawing (the configuration card that once shared the heading's row is gone, 2026-10-23);
  *  - from about 62rem the live readings and the clamps move into a rail beside the drawing, so
  *    closing a clamp and reading the pressures it changes are on one screen.
  *
@@ -3133,19 +3133,13 @@
   }
 
   .circuitPanel > .panelHeading {
-    grid-column: 1;
+    grid-column: 1 / -1;
     align-self: center;
     margin-bottom: 0.6rem;
   }
 
   .circuitPanel > .panelHeading h2 {
     font-size: 1.2rem;
-  }
-
-  .circuitPanel > .circuitModeSummary {
-    grid-column: 2 / -1;
-    margin-bottom: 0.6rem;
-    padding: 0.5rem 0.75rem;
   }
 
   .circuitPanel > .circuitViewTabs {
@@ -3218,48 +3212,6 @@
 /* Readings above the views on a read-the-pattern step (S8-2). */
 .circuitReadingsFirst {
   margin: 0 0 0.75rem;
-}
-
-.circuitModeSummary {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid rgba(113, 225, 229, 0.24);
-  border-radius: 14px;
-  background: rgba(54, 195, 202, 0.07);
-}
-
-.circuitModeSummary strong,
-.circuitModeSummary span {
-  display: block;
-}
-
-.circuitModeSummary strong {
-  color: var(--ink);
-  font-size: 0.86rem;
-}
-
-.circuitModeSummary > div > span {
-  margin-top: 0.22rem;
-  color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1.45;
-}
-
-.modePill {
-  flex: 0 0 auto;
-  min-width: 52px;
-  padding: 0.52rem 0.7rem;
-  color: #04191c;
-  border-radius: 999px;
-  background: var(--cyan-bright);
-  font-size: 0.82rem;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-align: center;
 }
 
 .circuitViewTabs {
@@ -6735,7 +6687,17 @@
 .hubBrowsePanel {
   display: grid;
   gap: 0.7rem;
-  margin-top: 0.9rem;
+  margin-top: 1.1rem;
+}
+
+/* The open list's heading: which track it is, and what the track is made of. */
+.hubBrowseHeading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.hubBrowseHeading .hubEntryComposition {
+  margin-top: 0.3rem;
 }
 
 .hubBrowsePanel[hidden] {
@@ -7177,12 +7139,13 @@ details[open] > .hubUnitSummary::after {
   font-size: 0.98rem;
 }
 
+/*
+ * About this module: the last row of the hub's one card (tester feedback, 2026-10-23), set off by a
+ * rule rather than drawn as a box of its own.
+ */
 .hubAbout {
-  max-width: 1680px;
-  margin: 0 auto 1rem;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: rgba(8, 30, 35, 0.82);
+  margin-top: 1.4rem;
+  border-top: 1px solid var(--line);
 }
 
 .hubAbout > summary {
@@ -7191,7 +7154,7 @@ details[open] > .hubUnitSummary::after {
   gap: 0.2rem 0.9rem;
   align-items: baseline;
   min-height: 44px;
-  padding: 0.95rem clamp(1.1rem, 2.5vw, 1.8rem);
+  padding: 0.95rem 0 0.2rem;
   cursor: pointer;
 }
 
@@ -7213,7 +7176,7 @@ details[open] > .hubUnitSummary::after {
 }
 
 .hubAboutBody {
-  padding: 0 clamp(1.1rem, 2.5vw, 1.8rem) clamp(1.1rem, 2.5vw, 1.8rem);
+  padding: 0.6rem 0 0;
 }
 
 .hubAboutBody h3 {

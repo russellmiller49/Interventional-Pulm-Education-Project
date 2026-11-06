@@ -12,6 +12,7 @@ import { crrtCaseReuseNote, crrtLearnPracticeCaseReuse } from '../caseReuse'
 import { BaxterCrrtHub } from '../components/BaxterCrrtHub'
 import { BaxterCrrtLearnLanding } from '../components/BaxterCrrtLearnLanding'
 import { BaxterCrrtPractice } from '../components/BaxterCrrtPractice'
+import { CrrtCaseNavigator } from '../components/CrrtCaseNavigator'
 import { CrrtFoundationLesson } from '../components/CrrtFoundationLesson'
 import { baxterCrrtCases, getBaxterCrrtCase } from '../content/completeCases'
 import {
@@ -31,7 +32,7 @@ import { crrtLearnTasks } from '../content/learnTasks'
 import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine/learningSession'
 import { BAXTER_CRRT_PROGRESS_STORAGE_KEY, createDefaultProgress } from '../engine/progress'
 import { selectCrrtLabEvidence } from '../labEvidence'
-import { recordCrrtVisit } from '../selfPacedProgress'
+import { readCrrtSelfPacedProgress, recordCrrtVisit } from '../selfPacedProgress'
 
 /**
  * CRRT-FELLOW-04 — F-20 (visited means opened), F-24 (glossary, terminology, units), F-25
@@ -90,7 +91,9 @@ describe('visited means opened on this device, never completed (F-20)', () => {
     const { container } = render(<BaxterCrrtHub />)
     await settle()
     const visited = container.querySelectorAll('[data-visited="true"]')
-    expect(visited.length).toBeGreaterThanOrEqual(2) // the sequence entry and the station chip
+    // The hub lists each lesson once (tester report, 2026-11-05): one visited entry.
+    expect(visited).toHaveLength(1)
+    expect(visited[0]).toHaveAttribute('href', expect.stringContaining('crrt-indications-modality'))
     for (const marker of Array.from(markers())) {
       expect(marker).toHaveTextContent('Visited')
       expect(marker).toHaveTextContent('opened on this device; not a record of completion')
@@ -102,16 +105,36 @@ describe('visited means opened on this device, never completed (F-20)', () => {
     expect(record.selfPaced.visitedLessonIds).toEqual(['crrt-indications-modality'])
   })
 
-  it('marks a visited case, and keeps markers for a returning learner', async () => {
+  it('marks a visited case in the Practice Cases list, and keeps it for a returning learner', async () => {
+    // The hub no longer repeats the cases (tester report, 2026-11-05); Practice lists them all.
     recordCrrtVisit({ section: 'practice', id: 'CRRT-01' })
-    const first = render(<BaxterCrrtHub />)
+    const hub = render(<BaxterCrrtHub />)
     await settle()
-    const chip = screen.getByRole('link', { name: /CRRT-01 · .* Visited/ })
-    expect(chip).toHaveAttribute('data-visited', 'true')
-    first.unmount()
-    render(<BaxterCrrtHub />)
-    await settle()
-    expect(screen.getByRole('link', { name: /CRRT-01 · .* Visited/ })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /CRRT-01/ })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Open practice' })).toBeInTheDocument()
+    hub.unmount()
+    const option = (caseId: string) =>
+      within(screen.getByRole('combobox', { name: 'Cases' }))
+        .getAllByRole('option')
+        .find((candidate) => (candidate as HTMLOptionElement).value === caseId)!
+    const visit = render(
+      <CrrtCaseNavigator
+        caseId="CRRT-02"
+        visitedCaseIds={readCrrtSelfPacedProgress().visitedCaseIds}
+        onChoose={() => {}}
+      />,
+    )
+    expect(option('CRRT-01')).toHaveTextContent(/· visited$/)
+    expect(option('CRRT-04')).not.toHaveTextContent(/visited/)
+    visit.unmount()
+    render(
+      <CrrtCaseNavigator
+        caseId="CRRT-02"
+        visitedCaseIds={readCrrtSelfPacedProgress().visitedCaseIds}
+        onChoose={() => {}}
+      />,
+    )
+    expect(option('CRRT-01')).toHaveTextContent(/· visited$/)
   })
 
   it('never reinterprets a historical completed array as visited, and writes nothing', async () => {
@@ -237,7 +260,7 @@ describe('glossary (F-24)', () => {
     expect(screen.getAllByRole('button', { name: 'Glossary' }).length).toBeGreaterThan(0)
   })
 
-  it('expands TMP, PBP and PFR where Learn first uses them, and glosses effluent', () => {
+  it('expands CRRT, TMP, PBP and PFR where Learn first uses them, and glosses effluent', () => {
     // Each task renders its instruction first, then its teaching, question and choices.
     const firstUse = (pattern: RegExp) => {
       for (const lessonId of BAXTER_CRRT_LEARN_LESSON_IDS) {
@@ -254,6 +277,10 @@ describe('glossary (F-24)', () => {
       }
       return null
     }
+    // Tester report 2026-11-05: CRRT itself is spelled out where lesson 1 first uses it.
+    expect(firstUse(/\bCRRT\b/)).toMatch(
+      /^crrt-indications-modality\/orient: Continuous renal replacement therapy \(CRRT\) is kidney support that runs around the clock/,
+    )
     expect(firstUse(/\bTMP\b/)).toMatch(
       /^crrt-circuit-pressures\/read-sites: .*TMP \(transmembrane pressure\)/,
     )

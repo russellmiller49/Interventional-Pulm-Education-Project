@@ -110,14 +110,15 @@ function compositionLine(track: SupportMode): string {
 }
 
 /**
- * The module hub: one door, one map.
+ * The module hub: one card.
  *
- * The hero holds the single primary call to action, resolved through the pathway, and the track
- * choice that changes it. The map is one accordion of seven units, opened in place from a browse
- * button rather than reached through a second page. How the module is organised, the device
- * profile and the sources sit in one closed disclosure under it (tester feedback, 2026-10-13: the
- * page ran to three screens and it was not clear what anything below the start action was for).
- * Everything a learner reads here is counted from the registries.
+ * Everything the page offers sits in the one card: the single primary call to action, resolved
+ * through the pathway; beside it, the browse button that opens every section of the track in
+ * place; the track choice that changes both; and, closed, what the module is, its device profile
+ * and its sources. Tester feedback, 2026-10-13: the page ran to three screens and it was not clear
+ * what anything below the start action was for. Tester feedback, 2026-10-23: three boxes should be
+ * one, with the way to see all the sections at the top. Everything a learner reads here is counted
+ * from the registries.
  */
 export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
   const { progress, hydrated } = useStoredProgress()
@@ -183,12 +184,17 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
   return (
     <CardiohelpModuleFrame locale={locale} activeHref={cardiohelpEcmoNavBase}>
       <div data-hydrated={hydrated}>
-        <header className={styles.hubHero}>
-          <h1>ECMO Management</h1>
+        <section className={styles.hubHero} aria-labelledby="hub-title" data-hub-card>
+          <h1 id="hub-title">ECMO Management</h1>
           <p>
             Adult VV and peripheral VA ECMO on a simulated CARDIOHELP circuit. Start with the first
             section and work through them in order.
           </p>
+          {/*
+            The two ways in, side by side: start (or continue) where the pathway says, or see every
+            section of the track first. The browse button used to sit in a second box under the
+            track choice (tester feedback, 2026-10-23).
+          */}
           <div className={styles.hubEntryActions}>
             {next ? (
               <Link
@@ -212,9 +218,19 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             ) : (
               <p className={styles.hubTrackDone} data-ecmo-continue="complete">
                 Every section of the {track.toUpperCase()} track has been visited. Revisit any of
-                them below, or open the integrated case.
+                them from Browse all {total} sections, or open the integrated case.
               </p>
             )}
+            <button
+              type="button"
+              className={styles.hubBrowseToggle}
+              aria-expanded={browsing}
+              aria-controls={accordionId}
+              onClick={() => setBrowsing((current) => !current)}
+            >
+              Browse all {total} sections
+              <ChevronDown aria-hidden="true" />
+            </button>
           </div>
           {saved ? (
             <p className={styles.hubSavedAside}>
@@ -223,8 +239,31 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
               </Link>
             </p>
           ) : null}
+          {/* The controlled region exists whether or not it is open, so `aria-controls` always resolves. */}
+          <div
+            className={styles.hubBrowsePanel}
+            id={accordionId}
+            hidden={!browsing}
+            data-hub-browse
+          >
+            {browsing ? (
+              <>
+                <div className={styles.hubBrowseHeading}>
+                  <h2 id="hub-curriculum-heading">{track.toUpperCase()} pathway</h2>
+                  <p className={styles.hubEntryComposition}>{compositionLine(track)}</p>
+                </div>
+                <EcmoPathwayAccordion track={track} progress={progress} />
+                <Link
+                  className={styles.hubPathwayPageLink}
+                  href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}
+                >
+                  Open the pathway page
+                </Link>
+              </>
+            ) : null}
+          </div>
           {/*
-            The track choice, in the card that holds the action it changes.
+            The track choice, in the card that holds the actions it changes.
 
             It used to be a section of its own two screens down, between the pathway and a
             description of the module, and a tester (2026-10-13) asked what everything under the
@@ -268,103 +307,72 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             </div>
             <p>Both tracks share the first four sections. New to ECMO? Start with VV.</p>
           </div>
-        </header>
 
-        <section className={styles.hubCurriculum} aria-labelledby="hub-curriculum-heading">
-          <div className={styles.hubCurriculumHeading}>
-            <h2 id="hub-curriculum-heading">{track.toUpperCase()} pathway</h2>
-          </div>
-          <p className={styles.hubEntryComposition}>{compositionLine(track)}</p>
-          <button
-            type="button"
-            className={styles.hubBrowseToggle}
-            aria-expanded={browsing}
-            aria-controls={accordionId}
-            onClick={() => setBrowsing((current) => !current)}
-          >
-            Browse all {total} sections
-            <ChevronDown aria-hidden="true" />
-          </button>
-          {/* The controlled region exists whether or not it is open, so `aria-controls` always resolves. */}
-          <div className={styles.hubBrowsePanel} id={accordionId} hidden={!browsing}>
-            {browsing ? (
-              <>
-                <EcmoPathwayAccordion track={track} progress={progress} />
-                <Link
-                  className={styles.hubPathwayPageLink}
-                  href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}
-                >
-                  Open the pathway page
-                </Link>
-              </>
-            ) : null}
-          </div>
+          {/*
+            Reference material, one click away and inside the same card.
+
+            How the module is organised, the device profile, and the sources with their reference
+            values used to follow the pathway in full, which made the first page three screens long.
+            None of it is needed to begin, so it opens on request.
+          */}
+          <details className={styles.hubAbout} data-hub-about>
+            <summary>
+              <h2 id="hub-about-heading">About this module</h2>
+              <span>How it is organised, the device profile, and sources</span>
+            </summary>
+            <div className={styles.hubAboutBody}>
+              <h3>How it is organised</h3>
+              <ol className={styles.hubLayers}>
+                <li>
+                  <Link href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}>
+                    Learn
+                  </Link>
+                  <span>
+                    one ordered pathway per track on the simulated console, {total} sections per
+                    track: the physiology, the controls, then one failure at a time.
+                  </span>
+                </li>
+                <li>
+                  <Link href={{ pathname: `${cardiohelpEcmoNavBase}/practice`, query: { track } }}>
+                    Practice
+                  </Link>
+                  <span>
+                    self-paced clinical cases with optional predictions, simulator actions, and
+                    explanations — {orderedCaseScenarioIds(track).length} cases per track.
+                  </span>
+                </li>
+                <li>
+                  <Link href={{ pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track } }}>
+                    Integrated cases
+                  </Link>
+                  <span>
+                    one integrated case per track. Start, use a hint, read the explanation, or move
+                    on at any time.
+                  </span>
+                </li>
+              </ol>
+              <section className={styles.profileStrip} aria-label="Fixed device profile">
+                <span>
+                  <strong>Profile</strong> {cardiohelpDeviceProfile.displayName}
+                </span>
+                <span>
+                  <strong>U.S. IFU</strong> rev {cardiohelpDeviceProfile.ifuRevision} ·{' '}
+                  {cardiohelpDeviceProfile.ifuDate}
+                </span>
+                <span>
+                  <strong>Software</strong> ≥{cardiohelpDeviceProfile.minimumSoftwareVersion}
+                </span>
+                <span>
+                  <strong>thApp</strong> {cardiohelpDeviceProfile.thApp}
+                </span>
+                <span>
+                  <strong>Pathway</strong> VV + peripheral VA
+                </span>
+              </section>
+              <SourcesPanel />
+            </div>
+          </details>
         </section>
-
-        {/*
-          Reference material, one click away.
-
-          How the module is organised, the device profile, and the sources with their reference
-          values used to follow the pathway in full, which made the first page three screens long.
-          None of it is needed to begin, so it opens on request.
-        */}
-        <details className={styles.hubAbout} data-hub-about>
-          <summary>
-            <h2 id="hub-about-heading">About this module</h2>
-            <span>How it is organised, the device profile, and sources</span>
-          </summary>
-          <div className={styles.hubAboutBody}>
-            <h3>How it is organised</h3>
-            <ol className={styles.hubLayers}>
-              <li>
-                <Link href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}>
-                  Learn
-                </Link>
-                <span>
-                  one ordered pathway per track on the simulated console, {total} sections per
-                  track: the physiology, the controls, then one failure at a time.
-                </span>
-              </li>
-              <li>
-                <Link href={{ pathname: `${cardiohelpEcmoNavBase}/practice`, query: { track } }}>
-                  Practice
-                </Link>
-                <span>
-                  self-paced clinical cases with optional predictions, simulator actions, and
-                  explanations — {orderedCaseScenarioIds(track).length} cases per track.
-                </span>
-              </li>
-              <li>
-                <Link href={{ pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track } }}>
-                  Integrated cases
-                </Link>
-                <span>
-                  one integrated case per track. Start, use a hint, read the explanation, or move on
-                  at any time.
-                </span>
-              </li>
-            </ol>
-            <section className={styles.profileStrip} aria-label="Fixed device profile">
-              <span>
-                <strong>Profile</strong> {cardiohelpDeviceProfile.displayName}
-              </span>
-              <span>
-                <strong>U.S. IFU</strong> rev {cardiohelpDeviceProfile.ifuRevision} ·{' '}
-                {cardiohelpDeviceProfile.ifuDate}
-              </span>
-              <span>
-                <strong>Software</strong> ≥{cardiohelpDeviceProfile.minimumSoftwareVersion}
-              </span>
-              <span>
-                <strong>thApp</strong> {cardiohelpDeviceProfile.thApp}
-              </span>
-              <span>
-                <strong>Pathway</strong> VV + peripheral VA
-              </span>
-            </section>
-            <SourcesPanel />
-          </div>
-        </details>
       </div>
     </CardiohelpModuleFrame>
   )

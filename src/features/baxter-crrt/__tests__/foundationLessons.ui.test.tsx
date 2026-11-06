@@ -56,7 +56,13 @@ function reviewedAnswer() {
   fireEvent.click(button('Review feedback and continue'))
 }
 function modalities() {
-  selections(['SCUF', 'CVVH', 'CVVHD', 'CVVHDF'])
+  // Each modality button spells out its abbreviation under it (tester report, 2026-11-05).
+  selections([
+    'SCUF Slow continuous ultrafiltration',
+    'CVVH Continuous venovenous hemofiltration',
+    'CVVHD Continuous venovenous hemodialysis',
+    'CVVHDF Continuous venovenous hemodiafiltration',
+  ])
   reviewedObservations()
 }
 function openLesson(id: string) {
@@ -100,7 +106,7 @@ describe('rendered CRRT introductory pathway', () => {
       render(<BaxterCrrtLearn initialLessonId="crrt-solute-transport" />)
       fireEvent.click(button('Convection'))
       expect(scrollIntoView).not.toHaveBeenCalled()
-      fireEvent.click(button('Continue without this exercise'))
+      fireEvent.click(button('Skip this task'))
       expect(scrollIntoView).toHaveBeenCalledTimes(1)
       expect(scrollIntoView.mock.contexts[0]).toContainElement(
         screen.getByRole('heading', { name: crrtLearnTasks['crrt-solute-transport']![1].title }),
@@ -128,6 +134,43 @@ describe('rendered CRRT introductory pathway', () => {
     })
     fireEvent.click(button(/Continue to Predicted consequences/))
     expect(await axe(view.container)).toHaveNoViolations()
+  })
+  it('spells out each modality on its button and explains the selection beside the circuit (tester report, 2026-11-05)', () => {
+    render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
+    // CRRT is spelled out where lesson 1 first uses it.
+    expect(
+      screen.getByText(/^Continuous renal replacement therapy \(CRRT\) is kidney support/),
+    ).toBeVisible()
+    next()
+    expect(screen.getByRole('heading', { level: 2, name: /^Worked example/ })).toBeVisible()
+    expect(screen.getByText('Read the worked example.')).toBeVisible()
+    expect(screen.queryByText(/software exercise|do not select an individual regimen/)).toBeNull()
+    next()
+    const workbench = document.querySelector<HTMLElement>('[data-crrt-circuit-workbench]')!
+    const controls = within(workbench).getByRole('group', { name: 'Teaching selections' })
+    const explanation = workbench.querySelector('[data-crrt-selection-explanation]')!
+    const drawing = workbench.querySelector('svg[data-overlay]')!
+    // The explanation follows the buttons and comes before the drawing, in the same column.
+    expect(
+      controls.compareDocumentPosition(explanation) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      explanation.compareDocumentPosition(drawing) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    // Buttons and explanation share the control column; the drawing is in the other one.
+    const column = workbench.firstElementChild!
+    expect(column).toContainElement(controls)
+    expect(column).toContainElement(explanation as HTMLElement)
+    expect(column).not.toContainElement(drawing as unknown as HTMLElement)
+    fireEvent.click(button('CVVH Continuous venovenous hemofiltration'))
+    expect(explanation).toHaveTextContent(/^CVVH filters water out of the blood/)
+    fireEvent.click(button('SCUF Slow continuous ultrafiltration'))
+    expect(explanation).toHaveTextContent(/^SCUF removes water only/)
+    expect(screen.getByText('2 of 4 modalities selected')).toBeInTheDocument()
+    expect(
+      screen.queryByText(/Conceptual configuration only|illustrations, not applied prescriptions/),
+    ).toBeNull()
+    expect(screen.queryByText(/ORIGINAL EDUCATIONAL SCHEMATIC|STATIC TEACHING VIEW/)).toBeNull()
   })
   it('teaches before a changed-case decision, keeps wrong-response feedback in-session and allows review', async () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)

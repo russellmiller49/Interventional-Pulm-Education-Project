@@ -33,6 +33,13 @@ export const SOURCES = [
     type: 'Guideline',
   },
   {
+    id: 'fujiwara2010',
+    title:
+      'Fujiwara T, Yasufuku K, Nakajima T, et al. The utility of sonographic features during EBUS-TBNA for lymph node staging in patients with lung cancer: a standard endobronchial ultrasound image classification system. Chest 2010;138:641-647',
+    url: 'https://doi.org/10.1378/chest.09-2006',
+    type: 'Cohort study',
+  },
+  {
     id: 'atlas',
     title: 'IASLC lymph node map: radiologic atlas and review (2015)',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4499584/',

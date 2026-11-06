@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { ecmoSensorSite } from '../../content/circuitSegments'
-import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../engine/types'
 import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import { EcmoCircuitWalk } from './EcmoCircuitWalk'
@@ -10,9 +9,8 @@ import {
   ChannelValue,
   CircuitPressureIdentity,
   FoundationTeachingBlock,
-  GuidedValue,
   TextEquivalent,
-  VaConfigurationLabel,
+  VA_MODELED_CONFIGURATION,
   styles,
 } from './shared'
 import { useEcmoCircuitWalkNavigation, type EcmoWalkPanelProps } from './useEcmoCircuitWalk'
@@ -39,8 +37,28 @@ export function CircuitFlowPathPanel({
   const { circuit, gas } = state
   return (
     <div className={styles.panel} data-teaching-panel="circuit-flow-path">
-      {state.supportMode === 'va' ? <VaConfigurationLabel /> : null}
       <FoundationTeachingBlock id="blood-path" title="Review the blood path">
+        {/*
+          The configuration, said once where the learner first meets the circuit.
+
+          It used to be a box in the circuit panel's header on every task ("VV femoral-femoral
+          configuration · Drainage: femoral vein → centrifugal pump → membrane oxygenator. Return:
+          femoral vein → right atrium."), and on VA a "Modeled configuration" pill above this panel
+          as well. A tester (2026-10-23) asked for the box to go and its sentence to open the module.
+        */}
+        {!walking || navigation.activeStopId === 'walk-drainage' ? (
+          <p
+            className="mb-3 text-sm leading-6"
+            data-circuit-configuration={state.supportMode}
+            data-va-configuration={
+              state.supportMode === 'va' ? VA_MODELED_CONFIGURATION : undefined
+            }
+          >
+            {state.supportMode === 'va'
+              ? 'This circuit is peripheral femoral VA ECMO. Blood drains from a femoral vein, passes through the centrifugal pump and then the membrane oxygenator, and returns through a femoral artery, flowing retrograde up the aorta toward the heart.'
+              : 'This circuit is femoral–femoral VV ECMO. Blood drains from a femoral vein, passes through the centrifugal pump and then the membrane oxygenator, and returns through a femoral vein to the right atrium.'}
+          </p>
+        ) : null}
         <EcmoCircuitWalk {...navigation} pastPrediction state={state} />
         {/*
           One stop on screen, and only the notes that belong to it.
@@ -88,14 +106,28 @@ export function CircuitFlowPathPanel({
             setting here is a request, not proof of delivery"); a tester (2026-10-14) was unsure
             what she was reading.
           */}
-          <p className="mt-3 text-sm leading-6">
-            Sweep gas runs from the wall supply through the blender, which sets the sweep rate and
-            its oxygen fraction, into the gas side of the membrane lung and out through the exhaust.
-            On the map it is the dashed line.
+          {/*
+            What sweep gas is and what it does, before any question leans on it. A tester
+            (2026-10-23) met "sweep gas" in an answer option at the end of this section and did not
+            remember it being taught; this task named its path but never said what it was for. The
+            statements are the module's own: the membrane walk stop's takeaway and the control
+            section's narrative.
+          */}
+          <p className="mt-3 text-sm leading-6" data-sweep-definition>
+            <strong>Sweep gas</strong> is the gas that ventilates the membrane lung: oxygen, or a
+            blend of oxygen and air. It flows through the inside of the hollow fibres while blood
+            flows around the outside. Gas and blood never mix: across the fibre walls, oxygen moves
+            from the gas into the blood and CO₂ moves from the blood into the gas.
           </p>
           <p className="mt-2 text-sm leading-6">
-            Gas and blood never mix. Inside the membrane lung, oxygen moves from the gas into the
-            blood and CO₂ moves from the blood into the gas, across the fibre walls.
+            The gas runs from the wall supply through the blender, which sets the sweep flow rate
+            and its oxygen fraction, into the gas side of the membrane lung and out through the
+            exhaust. On the map it is the dashed line.
+          </p>
+          <p className="mt-2 text-sm leading-6" data-sweep-effect>
+            The sweep flow rate mainly sets CO₂ removal: more sweep clears more CO₂ and lowers the
+            PaCO₂. Oxygenation depends mostly on blood flow and the sweep gas’s oxygen fraction, not
+            on how fast the sweep runs.
           </p>
           <TextEquivalent>
             Sweep is {gas.sweepLpm.toFixed(1)} L/min and sweep-gas oxygen fraction is{' '}
@@ -222,26 +254,12 @@ export function CircuitFlowPathPanel({
               : ''}
           </p>
         </section>
-        <details className={`${styles.section} mt-4`}>
-          <summary className="cursor-pointer font-semibold">
-            More about flow and saturation measurements
-          </summary>
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.circuitBloodFlow}
-            value={circuit.bloodFlow}
-            headingLevel={3}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.venousLineSaturation}
-            value={circuit.readouts.venousLineSaturation.displayed}
-            headingLevel={3}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.systemicVenousSaturationEstimate}
-            value={state.patient.systemicVenousSaturationEstimate}
-            headingLevel={3}
-          />
-        </details>
+        {/*
+          "More about flow and saturation measurements" (circuit blood flow, the drainage-line
+          saturation and the systemic venous estimate) used to close this task. A tester
+          (2026-10-23) asked whether it served the task's point; it does not, and the saturation
+          guides are taught where they are used (the VV and VA physiology sections).
+        */}
       </FoundationTeachingBlock>
     </div>
   )

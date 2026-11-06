@@ -187,10 +187,13 @@ describe('the hub counts what the registry actually holds', () => {
   it.each(TRACKS)('renders a %s composition line that matches the pathway', (track) => {
     const { total, foundations, consoleOrientation, drills, capstone } =
       ecmoPathwayComposition(track)
-    // The hub opens on VV; the VA numbers are identical, which this also confirms.
+    // The hub opens on VV; the VA numbers are identical, which this also confirms. The line heads
+    // the browsed list (one card since 2026-10-23), so the list is opened first.
     render(<CardiohelpHub />)
+    expect(screen.queryByText(/sections ·/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
 
-    const composition = screen.getByText(/sections ·/)
+    const composition = screen.getByText(/^\d+ sections ·/)
     expect(composition.textContent).toBe(
       `${total} sections · ${foundations} foundations · console orientation · ${drills} drills · integration capstone`,
     )

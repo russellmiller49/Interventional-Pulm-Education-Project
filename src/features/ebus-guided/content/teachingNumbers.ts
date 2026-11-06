@@ -36,7 +36,97 @@ const ics = (locator: string, grade: string | null): TeachingNumberCitation => (
   locator,
 })
 
+/** Lesson 16's sonographic-feature numbers, read 2026-11-05 (none signed yet). */
+const FEATURES_CHECKED = {
+  checkedOn: '2026-11-05',
+  checkedBy:
+    'ICS/IAB 2023 full text (PMC10401980), Table 5 and the sonographic-characteristics text',
+  signedBy: null,
+  signedOn: null,
+} as const
+const FUJIWARA_ABSTRACT = {
+  ...FEATURES_CHECKED,
+  checkedBy: 'Fujiwara 2010, PubMed abstract (PMID 20382710); full text not read',
+} as const
+const fujiwara = (locator: string): TeachingNumberCitation => ({
+  sourceId: 'fujiwara2010',
+  year: 2010,
+  grade: 'retrospective cohort',
+  locator,
+})
+
 export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
+  'node-short-axis': {
+    label: 'Node short axis that favors malignancy on EBUS',
+    value: 'more than 1 cm',
+    class: 'guideline',
+    sources: [
+      ics('Table 6 and sonographic nodal characteristics', null),
+      fujiwara('Abstract: size category'),
+    ],
+    note: 'Size was not an independent predictor in Fujiwara’s multivariate analysis.',
+    ...FEATURES_CHECKED,
+  },
+  'node-round-ratio': {
+    label: 'Long axis ÷ short axis below which a node is round',
+    value: '1.5',
+    class: 'guideline',
+    sources: [ics('Table 5, Shape', null)],
+    ...FEATURES_CHECKED,
+  },
+  'node-distinct-margin': {
+    label: 'Share of the border sharply seen for a distinct margin',
+    value: 'more than half',
+    class: 'guideline',
+    sources: [ics('Table 5, Margins', null)],
+    ...FEATURES_CHECKED,
+  },
+  'fujiwara-nodes': {
+    label: 'Nodes in the Fujiwara EBUS image classification study',
+    value: '1,061',
+    appliesTo: '487 patients with lung cancer',
+    class: 'consensus',
+    sources: [fujiwara('Abstract')],
+    ...FUJIWARA_ABSTRACT,
+  },
+  'fujiwara-none-of-four': {
+    label: 'Nodes not metastatic when none of the four predictive features was present',
+    value: '96%',
+    appliesTo: '381 of 397 nodes',
+    class: 'consensus',
+    sources: [fujiwara('Abstract')],
+    ...FUJIWARA_ABSTRACT,
+  },
+  'fujiwara-any-of-four': {
+    label: 'Nodes metastatic when at least one of the four predictive features was present',
+    value: '43%',
+    appliesTo: '285 of 664 nodes',
+    class: 'consensus',
+    sources: [fujiwara('Abstract')],
+    ...FUJIWARA_ABSTRACT,
+  },
+  'chs-absent-sensitivity': {
+    label: 'Sensitivity of an absent central hilar structure for malignancy',
+    value: '91%',
+    class: 'guideline',
+    sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
+    note: 'Pooled across 29 studies (8,204 nodes), as reported by ICS/IAB 2023.',
+    ...FEATURES_CHECKED,
+  },
+  'cns-specificity': {
+    label: 'Specificity of a coagulation necrosis sign for malignancy',
+    value: '93%',
+    class: 'guideline',
+    sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
+    ...FEATURES_CHECKED,
+  },
+  'heterogeneous-specificity': {
+    label: 'Specificity of heterogeneous echogenicity for malignancy',
+    value: '82%',
+    class: 'guideline',
+    sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
+    ...FEATURES_CHECKED,
+  },
   'passes-per-station': {
     label: 'Needle passes per station, suspected malignancy',
     value: 'at least 4',

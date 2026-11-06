@@ -126,9 +126,11 @@ export const ecmoFoundationTeachingTasks: Readonly<
       mapRetrieval: true,
       // The labels are withheld until the answer is in; the host now honours `mapRetrieval` (it
       // passed "full" for every task, and a tester answered with the pInt label in view).
+      // The question itself is in its own card beside the map (tester feedback, 2026-10-23: the
+      // task read as step-by-step text rather than a question), so this line only points at it.
       instruction:
-        'Find where the circuit measures this pressure. The map’s sensor labels are hidden until you answer.',
-      lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
+        'Answer the question below, using the circuit map. The map’s sensor labels are hidden until you answer.',
+      lookIn: { pane: 'simulator', landmark: 'the question card and the circuit map' },
     },
     {
       id: 'transfer',
@@ -199,7 +201,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'application',
       instruction:
         'Use the speed, flow and drainage-pressure trend in this case to decide where the problem is.',
-      lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
+      lookIn: { pane: 'simulator', landmark: 'the question card and the circuit map' },
     },
   ],
   'blood-flow-versus-sweep': [

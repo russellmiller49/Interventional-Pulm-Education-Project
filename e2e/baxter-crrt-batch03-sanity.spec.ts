@@ -183,19 +183,30 @@ test('sanity 03: every Cases option is reachable and all four group boundaries s
 })
 
 for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`sanity 03: keyboard jump reaches visible controls immediately (${reducedMotion})`, async ({
+  test(`sanity 03: keyboard Skip lands visible focus on the next task immediately (${reducedMotion})`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion })
     await page.goto(lesson + 'crrt-circuit-pressures')
-    await page.getByRole('button', { name: "Go to this task's continue controls" }).focus()
+    // Tester report 2026-11-05: the jump button and its "Continue from this task" target are
+    // gone; one Skip sits in the exercise's own action row.
+    await expect(
+      page.getByRole('button', { name: "Go to this task's continue controls" }),
+    ).toHaveCount(0)
+    const skip = page
+      .getByRole('group', { name: 'Task actions' })
+      .getByRole('button', { name: 'Skip this task' })
+    await skip.focus()
     await page.keyboard.press('Enter')
-    const target = page.getByRole('group', { name: 'Continue from this task' })
-    // No retry or animation wait: focus must be visible at the moment it moves.
-    await visibleFocus(target)
+    // No retry or animation wait: focus must be visible on the next task the moment it moves.
+    await visibleFocus(
+      page.getByRole('heading', { level: 2, name: 'Add the fluids one path at a time' }),
+    )
     await page.keyboard.press('Tab')
     await expect(
-      target.getByRole('button', { name: 'Continue without this exercise' }),
+      page
+        .locator('[data-crrt-circuit-workbench]')
+        .getByRole('button', { name: 'Dialysate', exact: true }),
     ).toBeFocused()
   })
 }
@@ -326,7 +337,7 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
     await outline.locator('summary').click()
     await outline.getByRole('button').last().click()
     await expect(outline.getByRole('button').last()).not.toContainText('reviewed')
-    const skip = page.getByRole('button', { name: 'Continue without this exercise', exact: true })
+    const skip = page.getByRole('button', { name: 'Skip this task', exact: true })
     if (await skip.count()) await skip.click()
     else await page.getByRole('button', { name: 'Continue', exact: true }).click()
     await expect(

@@ -65,7 +65,7 @@ function openFirstApplicationCheck() {
   )
   click('Continue')
   click('Continue')
-  click('Continue without this exercise')
+  click('Skip this task')
   expect(
     screen.getByRole('heading', { name: 'Apply: identify goals and constraints' }),
   ).toBeVisible()
@@ -159,7 +159,7 @@ describe('the 25 optional application checks (F-06)', () => {
 
   it('lets the learner skip without answering, and records no answer, score or attempt', () => {
     openFirstApplicationCheck()
-    click('Continue without this exercise')
+    click('Skip this task')
     expect(
       screen.getByRole('heading', { name: 'Apply again: a different fluid goal' }),
     ).toBeVisible()

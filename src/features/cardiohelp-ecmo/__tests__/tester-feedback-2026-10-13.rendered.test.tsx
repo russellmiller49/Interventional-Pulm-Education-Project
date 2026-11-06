@@ -79,8 +79,8 @@ afterEach(cleanup)
 describe('1. the hub opens on the one thing to do', () => {
   it('keeps the start action and the track choice together, and folds the rest away', () => {
     const { container } = render(<CardiohelpHub />)
-    // The frame has a header of its own; the hero is the hub's.
-    const hero = container.querySelector<HTMLElement>('header[class*="hubHero"]')!
+    // The frame has a header of its own; the hero is the hub's (one card since 2026-10-23).
+    const hero = container.querySelector<HTMLElement>('[data-hub-card]')!
     expect(within(hero).getByRole('link', { name: /^Start —/ })).toBeInTheDocument()
     // The track choice is the other decision the page asks for, so it sits in the same card.
     expect(within(hero).getByRole('radiogroup', { name: 'ECMO support mode' })).toBeInTheDocument()
@@ -152,7 +152,10 @@ describe('2. teaching stands where notes about the simulator stood', () => {
         )
         expect(document.querySelector('[data-independent-application]')).toBeNull()
         // Nothing stands in the teaching column, so the stylesheet gives its width to the question.
-        expect(document.querySelector('[data-pane="teaching"]')?.childElementCount).toBe(0)
+        // A map question (2026-10-23) puts its own question card in that column instead.
+        const teachingColumn = document.querySelector('[data-pane="teaching"]')
+        if (teachingColumn) expect(teachingColumn.childElementCount).toBe(0)
+        else expect(document.querySelector('[data-map-question-callout]')).not.toBeNull()
       }
     }
   })
@@ -267,8 +270,10 @@ describe('4. nothing is said twice', () => {
     // …and they are still taught, on the tasks they are about.
     reachFoundationStep(WALK, 'pressure-sites')
     expect(document.querySelector('[data-channel-vocabulary]')).not.toBeNull()
+    // "More about flow and saturation measurements" was here; a tester (2026-10-23) asked whether
+    // it served the task, and it went. The saturation guides are taught in the physiology sections.
     reachFoundationStep(WALK, 'observe')
-    expect(pageText()).toMatch(/More about flow and saturation measurements/)
+    expect(pageText()).not.toMatch(/More about flow and saturation measurements/)
   })
 })
 
@@ -301,12 +306,15 @@ describe('5. the way forward stays in view', () => {
 })
 
 describe('6. the second batch: the pressure tasks and the speed comparison', () => {
-  it('says the circuit is not operated here, in place of "Model reference … clock held"', () => {
-    // "When do I click on this simulator?"
+  it('has no card about the model, and says on the task what to select', () => {
+    // "When do I click on this simulator?" — answered 2026-10-13 by a one-sentence card ("You don’t
+    // operate the circuit in these sections…"), which the same tester asked to remove on
+    // 2026-10-23. The task's own instruction says what to press.
     mount(WALK)
     reachFoundationStep(WALK, 'pressure-sites')
-    const card = document.querySelector('[data-model-reference="compact"]')!
-    expect(card.textContent).toMatch(/You don’t operate the circuit in these sections/)
+    expect(document.querySelector('[data-model-reference]')).toBeNull()
+    expect(document.querySelector('[data-circuit-role]')).toBeNull()
+    expect(pageText()).not.toMatch(/You don’t operate the circuit/)
     expect(pageText()).not.toMatch(/Model reference for this task|About this model|clock held/)
     // The instruction names the controls that are on screen, and where.
     expect(document.querySelector('[data-now-card] h2 + p')?.textContent).toMatch(

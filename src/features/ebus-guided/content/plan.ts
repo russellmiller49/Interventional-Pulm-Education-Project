@@ -1,29 +1,32 @@
 import type { Lesson } from './types'
+import { EBUS_NUMBERS } from './teachingNumbers'
 import { question as q, matching, sequence, withBareSteps } from './authoring'
 export const planLessons: Lesson[] = [
   {
     id: 'node-characterization',
-    title: 'Describe the node without diagnosing the image',
+    title: 'Describe the node: the six sonographic features',
     topic: 'Plan',
-    minutes: 6,
-    objective: 'Distinguish features that inform suspicion from findings that establish pathology.',
+    minutes: 12,
+    objective:
+      'Describe a node by its six standard sonographic features and state what they can and cannot establish.',
     recall: 'Gain, contrast, plane, and contact influence the displayed appearance.',
-    concept: 'Morphology supports a sampling decision',
+    concept: 'One standard description, six features',
     paragraphs: [
-      'Describe the node systematically: station, size and measurement plane, shape, borders, internal echogenicity, visible central hilar structure, and vascular relationships. Heterogeneity or necrotic-appearing areas may influence target selection, but no single feature establishes malignancy.',
-      'A small or bland-appearing node can contain tumor. Conversely, inflammatory nodes may be enlarged and suspicious. Do not use a reassuring appearance to omit indicated systematic staging.',
-      'When sampling is indicated, select an accessible target and a safe path. Avoid equating a low-echo center with either proven necrosis or an avascular space.',
+      'Describe every node the same way, using the classification Fujiwara and colleagues proposed in 2010 and the ICS/IAB 2023 recommendations use: size, shape, margin, echogenicity, central hilar structure (CHS) and coagulation necrosis sign (CNS). Optimize depth and gain first, then freeze on the node’s largest cross-section. The figure shows each feature on real EBUS images; hide the outlines to read the image unmarked.',
+      `Size is the short axis, measured with calipers at right angles to the long axis; ${EBUS_NUMBERS.value('node-short-axis')} favors malignancy. Shape compares the two axes: round when the long axis is less than ${EBUS_NUMBERS.value('node-round-ratio')} times the short axis, oval when it is more. The margin is distinct when ${EBUS_NUMBERS.value('node-distinct-margin')} of the border is sharply seen. Echogenicity is homogeneous (fine, even echoes) or heterogeneous (mixed brighter and darker areas). A CHS is a linear, flat, hyperechoic band in the center of the node. A CNS is a hypoechoic area inside the node with no flow on Doppler; on grayscale alone it is only suspected.`,
+      `In Fujiwara’s ${EBUS_NUMBERS.value('fujiwara-nodes')} nodes, round shape, distinct margin, heterogeneous echogenicity and CNS each independently predicted metastasis. When all four were absent, ${EBUS_NUMBERS.value('fujiwara-none-of-four')} of nodes were not metastatic; when at least one was present, ${EBUS_NUMBERS.value('fujiwara-any-of-four')} were metastatic. Across later studies, an absent CHS was the most sensitive single feature (${EBUS_NUMBERS.value('chs-absent-sensitivity')}) and CNS the most specific (${EBUS_NUMBERS.value('cns-specificity')}), followed by heterogeneous echogenicity (${EBUS_NUMBERS.value('heterogeneous-specificity')}).`,
+      'These features rank suspicion; they do not replace tissue. ICS/IAB 2023 states that sonographic features do not preclude aspiration, and during systematic staging a small, oval, homogeneous node in a required station is still sampled. Granulomatous nodes, tuberculosis in particular, can be heterogeneous with a necrosis sign. Record the features you saw and leave the diagnosis to the specimen.',
     ],
     checklist: [
-      'Optimize before describing morphology.',
-      'Separate observed features from their interpretation.',
-      'Link sampling to the clinical question.',
+      'Optimize depth and gain, then freeze on the largest cross-section.',
+      'Name all six features, including the reassuring ones.',
+      'Confirm a suspected necrosis sign with Doppler.',
+      'Record the description; leave the diagnosis to tissue.',
     ],
     worked: {
       context:
-        'An oval, homogeneous node appears less suspicious than a round heterogeneous node elsewhere.',
-      reasoning:
-        'The comparison may guide suspicion and targeting. It does not make the first node proven benign or the second proven malignant.',
+        'At station 7 you freeze on a node whose long axis is about the same length as its short axis, with a sharp border around most of its circumference.',
+      reasoning: `Long ÷ short is below ${EBUS_NUMBERS.value('node-round-ratio')}, so the node is round, and the margin is distinct: two of the four features that independently predicted metastasis. That raises suspicion for this node. It does not change the staging order, and it is still a description until the aspirate is read.`,
     },
     question: q(
       'morphology-predict',
@@ -90,12 +93,13 @@ export const planLessons: Lesson[] = [
     ),
     station: '7',
     takeaways: [
-      'Describe what is seen before inferring what it means.',
+      'Name all six features on a frozen, optimized image.',
+      'Round shape, distinct margin, heterogeneous echoes and a confirmed necrosis sign raise suspicion; none of them is a diagnosis.',
       'Morphology does not replace an indicated tissue examination.',
     ],
-    sources: ['ics2023', 'ers2026'],
+    sources: ['fujiwara2010', 'ics2023', 'ers2026'],
     boundary:
-      'The reference image has no linked pathology result in this course. It must not be used as a labeled benign or malignant training example.',
+      'Each image was chosen to show a feature. Pathology for these nodes is not part of the course, so none of them is a benign or malignant example.',
   },
   {
     id: 'systematic-staging',

@@ -1,6 +1,6 @@
 import type { Lesson } from './types'
 import type { ExaminationCase, RecordTask } from '../engine/examination'
-import { DESCRIPTION_CASE, EXAMINATION_CASE, MODEL_WINDOW_CASE } from './examination-cases'
+import { EXAMINATION_CASE, MODEL_WINDOW_CASE } from './examination-cases'
 
 export type QuestionSlot = 'question' | 'observation' | 'transfer'
 export type Presentation =
@@ -33,6 +33,8 @@ export interface ActivitySpec {
   questions: QuestionSlot[]
   task?: 'guided' | 'changed-window'
   companion?: string
+  /** The figure this activity shows when `image` is 'diagram', if not the lesson's own. */
+  figure?: Lesson['diagram']
   note?: string
   /**
    * What the activity is for, said plainly where the task is scaffolded (EBUS-PRE-REVIEW-04, part
@@ -381,18 +383,23 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Apply the primary side to another case'),
   ],
   'node-characterization': [
-    brief(
-      'description-evidence',
-      'Describe the appearance before its implications',
-      'briefing',
-      'none',
-    ),
-    record(
-      'node-description',
-      'Choose the description the vignette supports',
-      'node-description',
-      DESCRIPTION_CASE,
-    ),
+    {
+      ...brief('description-evidence', 'Learn the six features on real images', 'briefing'),
+      figure: 'node-features',
+    },
+    {
+      id: 'feature-reading',
+      title: 'Read the features on eight nodes',
+      kind: 'interpretation',
+      presentation: 'ultrasound',
+      image: 'diagram',
+      figure: 'node-reading',
+      interaction: 'read',
+      teaching: [],
+      questions: [],
+      instruction:
+        'Each image was chosen to show one or two features. Answer the question beside it; the outlines appear when you check your answer.',
+    },
     apply('description-reasoning', 'Separate description from pathology', 'matching'),
     transfer('Interpret a different morphology report'),
   ],

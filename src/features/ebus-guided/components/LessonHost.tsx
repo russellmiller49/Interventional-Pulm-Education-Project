@@ -16,6 +16,7 @@ import { retainedImageAvailable } from '../engine/evidence'
 import { COURSE_NAV, EbusModuleFrame } from './ModuleFrame'
 import { SourceList } from './SourceList'
 import { TeachingDiagram } from './Diagram'
+import { NodeFeatureAtlas, NodeFeatureReading } from './NodeFeatureFigures'
 import { QuestionBody } from './QuestionBody'
 import { MatchingActivity } from './MatchingActivity'
 import { StationFigure } from './StationFigure'
@@ -352,7 +353,7 @@ function LessonSession({
   }, [holdRequested, current, observation, labDone])
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
   /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
-  const figure = current.image === 'diagram' ? lesson.diagram : undefined
+  const figure = current.image === 'diagram' ? (current.figure ?? lesson.diagram) : undefined
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * What the evidence beside the task actually is (EBUS-PRE-REVIEW-01: L3-8, L5-1, L9-4, L11-5).
@@ -375,7 +376,7 @@ function LessonSession({
           ? ('held-missing' as const)
           : current.image === 'live'
             ? ('live' as const)
-            : ['reference', 'diagram'].includes(current.image)
+            : ['reference', 'diagram'].includes(current.image) && figure !== 'node-reading'
               ? ('supplied' as const)
               : undefined
   const heldContactMode =
@@ -688,7 +689,8 @@ function LessonSession({
              * feedback of 2026-10-11). Beside the text the workbench was too narrow for a row
              * and stacked its views, and the controls scrolled away from the image they change.
              */
-            data-stacked={showDemo && !finished ? 'true' : undefined}
+            data-stacked={(showDemo || figure === 'node-reading') && !finished ? 'true' : undefined}
+            data-figure={figure}
           >
             <div
               className={styles.taskEvidence}
@@ -747,6 +749,10 @@ function LessonSession({
                 <CaseSpecimens />
               ) : figure === 'troubleshooting' ? (
                 <TroubleshootingFlow />
+              ) : figure === 'node-features' ? (
+                <NodeFeatureAtlas />
+              ) : figure === 'node-reading' ? (
+                <NodeFeatureReading />
               ) : figure ? (
                 <TeachingDiagram kind={figure} />
               ) : null}

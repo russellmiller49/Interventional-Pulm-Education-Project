@@ -581,6 +581,10 @@
   max-width: 1200px;
   margin: auto;
 }
+/* Lesson 16's feature atlas needs room for a readable ultrasound image beside the teaching. */
+.taskComposition[data-composition='briefing'][data-figure='node-features'] {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
 .taskComposition[data-composition='ultrasound'] {
   grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.8fr);
 }
