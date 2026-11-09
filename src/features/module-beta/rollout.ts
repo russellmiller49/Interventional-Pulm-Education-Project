@@ -56,9 +56,8 @@ export const betaRollout: BetaRollout = {
         'The find-the-structure task: whether it asks for the structures you would expect a fellow to identify, and whether the hint after a wrong pick helps.',
       ],
       knownLimits: [
-        'Its 13 sourced teaching numbers are not yet signed off by the author.',
+        'Its 22 sourced teaching numbers are not yet signed off by the author.',
         'The bleeding sequence is written from practice rather than a cited source, and the AQuIRE figures were checked against the abstract only.',
-        'Lesson 16 describes node features in words; the ultrasound stills that would show them are not yet cleared for use.',
         'The labs need a desktop or tablet; below about 1,100 px wide they fall back to a reading layout.',
       ],
     },
