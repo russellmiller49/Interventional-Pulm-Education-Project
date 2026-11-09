@@ -13,6 +13,12 @@ import { HandoffContent } from '@/i18n/handoff'
  */
 const ATLAS_ENTRY = '/api/literature-atlas'
 
+/**
+ * The private physician-review portal: a separate service with its own invitation-only sign-in
+ * (the Atlas's IP_Literature Supabase project, not this site's accounts). Linked, never framed or relayed.
+ */
+const REVIEW_PORTAL = 'https://review.interventionalpulm.org/review'
+
 export const metadata: Metadata = {
   title: 'Literature Atlas (tester preview)',
   description:
@@ -51,6 +57,11 @@ export default async function LiteratureAtlasPage({
                 <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
                   About this preview
                 </a>
+                <Button asChild size="sm" variant="outline">
+                  <a href={REVIEW_PORTAL} target="_blank" rel="noreferrer">
+                    Physician Review
+                  </a>
+                </Button>
                 <Button asChild size="sm">
                   <a href={ATLAS_ENTRY} target="_blank" rel="noreferrer">
                     Open Full Window
@@ -83,6 +94,23 @@ export default async function LiteratureAtlasPage({
               labeled when a physician has reviewed them (~35 reviewed to date). Unreviewed machine
               briefs can contain extraction errors or incomplete context—always verify anything you
               rely on against the primary publication. The Atlas does not provide clinical guidance.
+            </p>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              Start in Primary Evidence (clinical studies, and case reports and series), or switch
+              to Emerging Evidence, Synthesis &amp; Guidance, or All Literature.
+            </p>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              Invited physician reviewers verify machine-extracted values against the original
+              articles in a separate, private portal.{' '}
+              <a
+                href={REVIEW_PORTAL}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-foreground underline underline-offset-4"
+              >
+                Sign in to Physician Review
+              </a>{' '}
+              (invitation only; this site&apos;s accounts do not apply).
             </p>
           </section>
         </div>
