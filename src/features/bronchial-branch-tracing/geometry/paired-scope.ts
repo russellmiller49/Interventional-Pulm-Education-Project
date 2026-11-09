@@ -5,6 +5,9 @@ import type { Vec3 } from './coordinates'
 const distance = (a: readonly number[], b: readonly number[]) =>
   Math.hypot(...a.map((v, i) => v - b[i]))
 const edges = new Map(routes.edges.map((e) => [e.id, e.points]))
+/** One airway's centreline from the source graph, from its parent fork outward; null if not copied. */
+export const edgePoints = (id: number): Vec3[] | null =>
+  (edges.get(id) as Vec3[] | undefined) ?? null
 const cache = new Map<string, { points: Vec3[]; arcs: number[]; segmentEdges: number[] }>()
 /** One route as a single polyline from the top of the trachea, with arc lengths. */
 export function pairedPath(trace: CtTrace) {

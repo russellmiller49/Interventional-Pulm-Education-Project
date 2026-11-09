@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import type { TripPlan } from '../engine/trip-session'
 import { Link, useRouter } from '@/i18n/navigation'
 import { TEACHING_SIMULATOR_STATEMENT, summaryLines } from '../content/bench-copy'
 import { NAMING_KEY, NAMING_USE, SLICE_DIRECTION_NOTE, targetNaming } from '../content/course-guide'
@@ -10,15 +11,24 @@ import { routePlan } from '../content/nav-lessons'
 import {
   ASSESS_TARGET_IDS,
   TARGET_IDS,
+  lobeOf,
   targetById,
   targetLabel,
   targetsByLobe,
   traceForTarget,
 } from '../content/targets'
+import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
-import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import {
+  navKey,
+  orientationShown,
+  readNavEntry,
+  readOrientationProgress,
+  writeNavEntry,
+} from '../engine/nav-storage'
+import { PLAN_PARTS, summarizePlan } from '../engine/plan-session'
 import { ModuleFrame } from './ModuleFrame'
-import { NavigationBench } from './NavigationBench'
+import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
 import { useTrip } from './useTrip'
 import styles from './nav-bench.module.css'
@@ -26,9 +36,10 @@ import styles from './nav-bench.module.css'
 type Mode = 'practice' | 'assess'
 
 /**
- * Whole routes, trachea to lesion. Practice offers every lesion with help on. The closing set
- * (the `assess` address) is three lesions in three lobes with the help off: openings are numbered
- * but not named until chosen, and a missed mark is told what it is in, not which way to move.
+ * Whole lesions: plan from the lesion back, draw the map, then drive from the trachea. Practice
+ * offers every lesion with help on. The closing set (the `assess` address) is three lesions in
+ * three lobes with the help off: openings are numbered but not named until chosen, a miss is told
+ * that it missed, not which way to move, and a turn into a branch that leads away is counted.
  */
 export function NavRouteHost({ mode, requestedTarget }: { mode: Mode; requestedTarget?: string }) {
   const hydrated = useHydrated()
@@ -70,7 +81,8 @@ function LesionPicker({ mode }: { mode: Mode }) {
   const open = (id: string) => {
     // A route already driven to its lesion starts again from the trachea.
     const key = navKey(mode, id)
-    if (readNavEntry(key).entry?.session.phase === 'arrived') writeNavEntry(key, null)
+    const saved = readNavEntry(key).entry
+    if (saved && tripOver(saved.trip)) writeNavEntry(key, null)
     router.push(`${BASE_PATH}/${mode}?lesion=${id}`)
   }
   const ids = groups.flatMap((group) => group.targets.map((target) => target.id))
@@ -79,8 +91,8 @@ function LesionPicker({ mode }: { mode: Mode }) {
       <h1>{mode === 'assess' ? 'Three lesions, no hints' : 'Pick a lesion'}</h1>
       <p>
         {mode === 'assess'
-          ? 'Each route runs from the trachea to the lesion. Openings are numbered but not named until you have chosen, and a missed mark is told what it landed in, not which way to move. The match, identify, choose and drive steps are the same.'
-          : 'Each route runs from the trachea to the lesion: match the CT to the scope, identify the openings, choose toward the lesion and drive on, at every fork. The trachea and main bronchus are chosen, not marked.'}
+          ? 'Plan each lesion from the lesion back, draw its map, then drive from the trachea. There are no hints: openings are numbered but not named until you have chosen, and a check tells you only whether it fits. A turn into a branch that leads away is counted, and so is backing out of it.'
+          : 'Plan each lesion from the lesion back: find the airway into it, name its segment, draw the ostium circle and the arcs to the lesion. Then drive the scope from the trachea, using your map past the segmental ostium.'}
       </p>
       <div className={styles.pickerGroups}>
         {groups.map((group) => (
@@ -90,10 +102,8 @@ function LesionPicker({ mode }: { mode: Mode }) {
               {group.targets.map((target) => (
                 <li key={target.id}>
                   <button onClick={() => open(target.id)} data-lesion={target.id}>
-                    {target.segment.code} · {target.segment.name}
-                    <small>
-                      by {target.approachCode} · slice {target.slice}
-                    </small>
+                    Lesion on slice {target.slice}
+                    <small>{group.lobe}</small>
                   </button>
                 </li>
               ))}
@@ -118,28 +128,40 @@ function LesionPicker({ mode }: { mode: Mode }) {
 
 function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
   const trace = useMemo(() => traceForTarget(target.id), [target.id])
-  const plan = useMemo(() => routePlan(trace), [trace])
+  const trip: TripPlan = useMemo(
+    () => ({
+      plan: { traceId: trace.id, targetId: target.id, parts: PLAN_PARTS },
+      nav: routePlan(trace, { matchOptional: orientationShown(readOrientationProgress()) }),
+    }),
+    [trace, target.id],
+  )
   const storageKey = navKey(mode, target.id)
-  const [session, dispatch] = useTrip(trace, plan, storageKey, 0)
-  const forkNames = plan.stations.map(
+  const [session, dispatch] = useTrip(trace, target, trip, storageKey, 0)
+  const forkNames = trip.nav!.stations.map(
     (station) => trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
   )
   const naming = targetNaming(target)
   return (
-    <NavigationBench
+    <TripBench
       section={mode}
-      title={`${mode === 'assess' ? 'Closing set' : 'Practice'} · ${targetLabel(target)}`}
-      subtitle="Trachea to the lesion"
+      title={`${mode === 'assess' ? 'Closing set' : 'Practice'} · A lesion in the ${lobeOf(target).toLowerCase()}, slice ${target.slice}`}
+      subtitle="From the lesion back, then the trachea to the lesion"
       trace={trace}
-      plan={plan}
-      intro={`${naming.sentence} Start by matching the CT to the scope in the trachea.`}
+      target={target}
+      trip={trip}
+      intro="Plan it from the lesion back, draw the map, then drive."
       independent={mode === 'assess'}
       help={mode === 'practice'}
       session={session}
       dispatch={dispatch}
       closing={{
         heading: 'You have reached the lesion',
-        body: [...summaryLines(summarize(session), forkNames), TEACHING_SIMULATOR_STATEMENT],
+        body: [
+          `${targetLabel(target)}. ${naming.sentence}`,
+          ...(session.plan ? planSummaryLines(summarizePlan(trip.plan!, session.plan)) : []),
+          ...(session.nav ? summaryLines(summarize(session.nav), forkNames) : []),
+          TEACHING_SIMULATOR_STATEMENT,
+        ],
         next: { label: 'Choose another lesion', href: `${BASE_PATH}/${mode}` },
       }}
       exit={<Link href={`${BASE_PATH}/${mode}`}>All lesions</Link>}

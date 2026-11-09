@@ -3,8 +3,8 @@
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { PRIMER, PRIMER_TITLE, TEACHING_SIMULATOR_STATEMENT } from '../content/bench-copy'
-import { NAMING_KEY, NAMING_USE, patternFor } from '../content/course-guide'
-import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
+import { METHOD_STEPS, NAMING_KEY, NAMING_USE } from '../content/course-guide'
+import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import { LESSON_GROUPS, NAV_LESSONS, lessonNumber, totalMinutes } from '../content/nav-lessons'
 import { ASSESS_TARGET_IDS, TARGET_IDS } from '../content/targets'
 import { recommendedLesson } from '../engine/selfPacedProgress'
@@ -30,14 +30,15 @@ export function BranchTracingOverview() {
           <div>
             <h1>Bronchial branch tracing</h1>
             <p className={styles.subtitle}>
-              Read the route off the CT, then drive it with the scope.
+              Plan from the lesion back, draw the map, then drive it with the scope.
             </p>
             <p>
               Branch tracing is how you plan a bronchoscopic route to a peripheral lesion before you
-              scope. This course puts a virtual bronchoscope beside the axial CT. At every fork you
-              turn the CT so it faces the way the scope does, find each opening on the CT, choose
-              the one that leads toward the lesion, and drive on to the next fork, until the airway
-              ends beside the lesion.
+              scope. This course teaches the simplified method: find the airway that runs into the
+              lesion, follow it back to its segmental bronchus, draw that segment’s ostium as a
+              circle with four directions, and draw each division to the lesion as arcs nested in
+              the one before. Then a virtual bronchoscope drives from the trachea, and past the
+              segment your map chooses each opening.
             </p>
             <Link className={styles.primary} href={lessonHref(door.id)} aria-disabled={!ready}>
               {!ready
@@ -77,6 +78,16 @@ export function BranchTracingOverview() {
             <p key={paragraph}>{paragraph}</p>
           ))}
         </section>
+        <section className={styles.courseMap} aria-labelledby="bbt-method" data-method-steps>
+          <h2 id="bbt-method">The method in five steps</h2>
+          <ol>
+            {METHOD_STEPS.map((step) => (
+              <li key={step.name}>
+                <strong>{step.name}.</strong> {step.what}
+              </li>
+            ))}
+          </ol>
+        </section>
         <section>
           <div className={styles.sectionTitle}>
             <h2>Lessons</h2>
@@ -90,7 +101,6 @@ export function BranchTracingOverview() {
               <ol className={styles.lessonList}>
                 {group.ids.map((id) => {
                   const lesson = NAV_LESSONS.find((entry) => entry.id === id)!
-                  const pattern = patternFor(id)
                   return (
                     <li key={id}>
                       <span className={styles.lessonNumber}>
@@ -98,9 +108,6 @@ export function BranchTracingOverview() {
                       </span>
                       <div>
                         <Link href={lessonHref(id)}>{lesson.title}</Link>
-                        {pattern && (
-                          <span className={styles.patternTag}>Pattern: {pattern.name}</span>
-                        )}
                         <p>{lesson.objective}</p>
                       </div>
                       <span>
@@ -127,8 +134,8 @@ export function BranchTracingOverview() {
               <Link href={`${BASE_PATH}/practice`}>Practice: pick a lesion</Link>
             </h2>
             <p>
-              {TARGET_IDS.length} simulated lesions across five lobes. Each route runs from the
-              trachea to the lesion with the same four moves at every fork, and help on request.
+              {TARGET_IDS.length} simulated lesions across five lobes. Plan each from the lesion
+              back, draw its map, then drive from the trachea, with help on request.
             </p>
           </section>
           <section>
@@ -138,8 +145,8 @@ export function BranchTracingOverview() {
               </Link>
             </h2>
             <p>
-              Three routes in three lobes. Openings are numbered but not named until you have
-              chosen, and a missed mark is told what it landed in, not which way to move.
+              Three lesions in three lobes, planned, mapped and driven on your own. Openings are
+              numbered but not named until you have chosen, and a check says only whether it fits.
             </p>
           </section>
         </div>
@@ -147,7 +154,11 @@ export function BranchTracingOverview() {
           <h2>What this is built on</h2>
           <p data-teaching-simulator-statement>{TEACHING_SIMULATOR_STATEMENT}</p>
           <p>
-            The method and the four fork patterns follow{' '}
+            The method follows{' '}
+            <a href={METHOD_SOURCE.url} target="_blank" rel="noreferrer">
+              {METHOD_SOURCE.title}
+            </a>
+            . The scope’s roll at each division and the airway names follow{' '}
             <a href={SOURCE.url} target="_blank" rel="noreferrer">
               {SOURCE.title}
             </a>

@@ -1,5 +1,12 @@
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
-import { NAV_LESSONS, THIN_LUMEN_FORKS, buildTrip, routePlan } from '../content/nav-lessons'
+import {
+  NAV_LESSONS,
+  THIN_LUMEN_FORKS,
+  buildTrip,
+  defaultSteps,
+  identifiable,
+  routePlan,
+} from '../content/nav-lessons'
 import {
   edgeAirway,
   edgeCrossings,
@@ -12,7 +19,7 @@ import {
 } from '../engine/junction-feedback'
 import decisions from '../geometry/branch-decisions.json'
 import routes from '../geometry/paired-routes.json'
-import { CT_TRACES, NATIVE_CT } from '../geometry/native-ct'
+import { CT_TRACES, NATIVE_CT, traceById } from '../geometry/native-ct'
 
 /** Every route that passes a division, with the division's index on it. */
 const stationsFor = (checkpointId: string) =>
@@ -114,21 +121,70 @@ describe('fork explanations', () => {
   })
 
   it('explains every fork where a learner is asked to mark the openings', () => {
-    // Whole routes (Practice and the closing set) and every lesson trip.
-    const plans = [
-      ...CT_TRACES.map((trace) => ({ trace, plan: routePlan(trace) })),
-      ...NAV_LESSONS.flatMap((lesson) => lesson.trips.map((trip) => buildTrip(trip))),
-    ]
+    // Whole routes (Practice and the closing set) and every lesson trip, built with turning the CT
+    // asked for and as optional.
+    const plans = [false, true].flatMap((matchOptional) => [
+      ...CT_TRACES.map((trace) => ({
+        trace,
+        plan: routePlan(trace, { matchOptional }),
+        marks: false,
+      })),
+      ...NAV_LESSONS.flatMap((lesson) =>
+        lesson.trips.flatMap((spec) => {
+          const { trace, trip } = buildTrip(spec, { matchOptional })
+          return trip.nav ? [{ trace, plan: trip.nav, marks: Boolean(spec.identify) }] : []
+        }),
+      ),
+    ])
     const marked = new Set<string>()
-    for (const { trace, plan } of plans)
+    for (const { trace, plan, marks } of plans)
       for (const stop of plan.stations)
-        if (stop.steps.includes('identify')) marked.add(trace.checkpoints[stop.checkpointIndex].id)
-    expect(marked.size).toBe(27)
+        if (stop.steps.includes('identify')) {
+          const id = trace.checkpoints[stop.checkpointIndex].id
+          marked.add(id)
+          // Only a trip that marks openings asks for marks.
+          expect([id, marks]).toEqual([id, true])
+        }
+    // The same forks, read off the lessons: in a trip that marks openings, each fork it drives
+    // through, with the steps written for it or, where none are, marked if it can be.
+    const expected = new Set<string>()
+    for (const lesson of NAV_LESSONS)
+      for (const spec of lesson.trips) {
+        if (!spec.identify || !spec.from) continue
+        const trace = traceById(spec.traceId)
+        const forks = trace.checkpoints.flatMap((checkpoint, index) =>
+          checkpoint.decision ? [{ id: checkpoint.id, index }] : [],
+        )
+        const first = forks.findIndex((fork) => fork.id === spec.from)
+        const last = spec.through
+          ? forks.findIndex((fork) => fork.id === spec.through)
+          : forks.length - 1
+        for (const { id, index } of forks.slice(first, last + 1))
+          if ((spec.stations?.[id]?.steps ?? defaultSteps(trace, index)).includes('identify'))
+            expected.add(id)
+      }
+    // Practice and the closing set are chosen with the map: they mark nothing.
+    for (const trace of CT_TRACES)
+      expect(
+        routePlan(trace, { matchOptional: false }).stations.some((stop) =>
+          stop.steps.includes('identify'),
+        ),
+      ).toBe(false)
+    expect(marked.size).toBeGreaterThan(0)
+    expect([...marked].sort()).toEqual([...expected].sort())
     expect([...marked].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
-    // Eight explained forks are never marked: the left main bronchus, two small LB6 forks, and
-    // the five forks with a lumen about 2 mm wide.
-    expect(JUNCTION_FEEDBACK_SCOPE.filter((id) => !marked.has(id))).toEqual([
-      'junction-3',
+    // A trip that marks openings can be written for any fork whose lumens can be clicked: each of
+    // those, on every route, already has its explanation.
+    const markable = new Set<string>()
+    for (const trace of CT_TRACES)
+      trace.checkpoints.forEach((checkpoint, index) => {
+        if (identifiable(trace, index)) markable.add(checkpoint.id)
+      })
+    for (const id of marked) expect(markable).toContain(id)
+    expect([...markable].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
+    // Seven explained forks could not be marked at all: two small LB6 forks, and the five forks
+    // with a lumen about 2 mm wide.
+    expect(JUNCTION_FEEDBACK_SCOPE.filter((id) => !markable.has(id))).toEqual([
       'junction-25',
       'junction-52',
       'junction-138',

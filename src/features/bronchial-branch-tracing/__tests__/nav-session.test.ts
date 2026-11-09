@@ -85,10 +85,10 @@ function walk(trace: CtTrace, plan: NavPlan, cap = 400) {
 
 describe('starting a trip', () => {
   test('a route starts at the trachea in standard axial, asked to match the CT to the scope', () => {
-    const plan = routePlan(central)
+    const plan = routePlan(central, { matchOptional: false })
     const session = startSession(central, plan)
     expect(session).toMatchObject({
-      version: 1,
+      version: 2,
       traceId: 'central-right',
       station: 0,
       phase: 'match',
@@ -99,6 +99,8 @@ describe('starting a trip', () => {
       marks: [null, null],
       declined: [],
       choice: null,
+      astray: null,
+      optionalCheck: null,
     })
     expect(session.log).toEqual([
       {
@@ -111,6 +113,8 @@ describe('starting a trip', () => {
         chooseAsked: true,
         chooseMisses: 0,
         chooseShown: false,
+        wrongTurns: 0,
+        backedOut: 0,
       },
     ])
     // The mirror is what the trachea needs, and the CT does not start there.
@@ -156,7 +160,7 @@ describe('starting a trip', () => {
 })
 
 describe('match', () => {
-  const plan = routePlan(central)
+  const plan = routePlan(central, { matchOptional: false })
   const reduce = navReducer(central, plan)
   const start = startSession(central, plan)
 
@@ -343,7 +347,7 @@ describe('identify', () => {
 })
 
 describe('choose', () => {
-  const plan = routePlan(central)
+  const plan = routePlan(central, { matchOptional: false })
   const reduce = navReducer(central, plan)
   const choosing = run(central, plan, [{ type: 'show-match' }])
   const route = routeOption(central, 0)
@@ -361,15 +365,29 @@ describe('choose', () => {
     expect(onwardOption(central, plan, choosing)).toBe(route)
   })
 
-  test('an opening that leads away is declined once, however often it is chosen', () => {
-    const declined = reduce(choosing, { type: 'choose', option: other })
-    expect(declined.phase).toBe('choose')
-    expect(declined.choice).toBeNull()
-    expect(declined.declined).toEqual([other])
-    expect(declined.log[0].chooseMisses).toBe(1)
-    expect(reduce(declined, { type: 'choose', option: other })).toBe(declined)
-    // The route's opening is still open to it afterwards.
-    const chosen = reduce(declined, { type: 'choose', option: route })
+  test('an opening that leads away is driven into, backed out of, then greyed', () => {
+    const turning = reduce(choosing, { type: 'choose', option: other })
+    expect(turning).toMatchObject({ phase: 'astray-in', astray: other, choice: null, declined: [] })
+    expect(turning.log[0]).toMatchObject({ chooseMisses: 1, wrongTurns: 1, backedOut: 0 })
+    // Nothing else happens while the scope moves.
+    expect(reduce(turning, { type: 'turn', operation: 'flip' })).toBe(turning)
+    expect(reduce(turning, { type: 'choose', option: route })).toBe(turning)
+    expect(reduce(turning, { type: 'back-out' })).toBe(turning)
+    const inside = reduce(turning, { type: 'astray-arrive' })
+    expect(inside).toMatchObject({ phase: 'astray', astray: other })
+    expect(reduce(inside, { type: 'choose', option: route })).toBe(inside)
+    // The CT can be turned while the scope rests in the other branch.
+    expect(reduce(inside, { type: 'turn', operation: 'flip' }).orientation).not.toEqual(
+      inside.orientation,
+    )
+    const leaving = reduce(inside, { type: 'back-out' })
+    expect(leaving.phase).toBe('astray-out')
+    const back = reduce(leaving, { type: 'astray-return' })
+    expect(back).toMatchObject({ phase: 'choose', astray: null, declined: [other], choice: null })
+    expect(back.log[0]).toMatchObject({ chooseMisses: 1, wrongTurns: 1, backedOut: 1 })
+    // Once backed out of, the opening is greyed: choosing it again does nothing.
+    expect(reduce(back, { type: 'choose', option: other })).toBe(back)
+    const chosen = reduce(back, { type: 'choose', option: route })
     expect(chosen).toMatchObject({ phase: 'ready', choice: route, declined: [other] })
     expect(chosen.log[0].chooseMisses).toBe(1)
   })
@@ -390,7 +408,7 @@ describe('choose', () => {
 })
 
 describe('driving on', () => {
-  const plan = routePlan(central)
+  const plan = routePlan(central, { matchOptional: false })
   const reduce = navReducer(central, plan)
   const ready = run(central, plan, [{ type: 'show-match' }, { type: 'show-choice' }])
 
@@ -437,7 +455,7 @@ describe('driving on', () => {
 
   test('arriving where the scope’s view has turned asks for the match again', () => {
     const trace = traceById('right-upper-apical')
-    const upper = routePlan(trace)
+    const upper = routePlan(trace, { matchOptional: false })
     const actions: NavAction[] = [
       { type: 'show-match' },
       { type: 'show-choice' },
@@ -574,8 +592,11 @@ describe('the closing summary', () => {
       { type: 'mark', mark: markAt(central, 0, 1) },
       { type: 'mark', mark: markAt(central, 0, 0) },
       { type: 'mark', mark: markAt(central, 0, 1) },
-      // Choose: the opening that leads away, then the route's.
+      // Choose: the opening that leads away, in and back out, then the route's.
       { type: 'choose', option: 1 - route },
+      { type: 'astray-arrive' },
+      { type: 'back-out' },
+      { type: 'astray-return' },
       { type: 'choose', option: route },
       { type: 'drive' },
       { type: 'arrive' },
@@ -597,6 +618,8 @@ describe('the closing summary', () => {
         chooseAsked: true,
         chooseMisses: 1,
         chooseShown: false,
+        wrongTurns: 1,
+        backedOut: 1,
       },
       {
         matchAsked: false,
@@ -608,6 +631,8 @@ describe('the closing summary', () => {
         chooseAsked: true,
         chooseMisses: 0,
         chooseShown: false,
+        wrongTurns: 0,
+        backedOut: 0,
       },
     ])
     expect(summarize(session)).toEqual({
@@ -615,6 +640,8 @@ describe('the closing summary', () => {
       match: { asked: 1, firstTry: 0 },
       identify: { asked: 2, firstTry: 0 },
       choose: { asked: 2, firstTry: 1 },
+      wrongTurns: 1,
+      backedOut: 1,
       slowest: { station: 0, tries: 4 },
     })
   })
@@ -634,6 +661,8 @@ describe('the closing summary', () => {
       match: { asked: 1, firstTry: 1 },
       identify: { asked: 1, firstTry: 1 },
       choose: { asked: 1, firstTry: 1 },
+      wrongTurns: 0,
+      backedOut: 0,
       slowest: null,
     })
     expect(summarize(startSession(central, twoForks))).toMatchObject({
@@ -650,7 +679,7 @@ describe('every route', () => {
   test.each(CT_TRACES.map((trace) => [trace.id, trace] as const))(
     '%s can be driven from the trachea to the lesion with every step shown',
     (_, trace) => {
-      const plan = routePlan(trace)
+      const plan = routePlan(trace, { matchOptional: false })
       const forks = trace.checkpoints.filter((checkpoint) => checkpoint.decision).length
       expect(plan.stations).toHaveLength(forks)
       expect(plan.arrive).toBe(true)
@@ -699,5 +728,44 @@ describe('the bench’s own marks', () => {
         })
       })
     expect(checked).toBeGreaterThan(200)
+  })
+})
+
+describe('turning the CT once it is optional', () => {
+  const plan = routePlan(central, { matchOptional: true })
+  const reduce = navReducer(central, plan)
+  const start = startSession(central, plan)
+
+  test('no fork waits for the match; the CT stays as the learner left it', () => {
+    expect(start).toMatchObject({ phase: 'choose', matchNote: 'optional', optionalCheck: null })
+    expect(start.orientation).toEqual(STANDARD_ORIENTATION)
+    expect(start.log[0].matchAsked).toBe(false)
+    const turned = reduce(start, { type: 'turn', operation: 'flip' })
+    const driven = run(central, plan, [
+      { type: 'turn', operation: 'flip' },
+      { type: 'show-choice' },
+      { type: 'drive' },
+      { type: 'arrive' },
+    ])
+    expect(driven).toMatchObject({ station: 1, matchNote: 'optional' })
+    expect(driven.orientation).toEqual(turned.orientation)
+  })
+
+  test('a check is answered without holding the fork, and a turn clears it', () => {
+    const checked = reduce(start, { type: 'check-match' })
+    expect(checked).toMatchObject({ phase: 'choose', optionalCheck: { ok: false } })
+    expect(checked.log[0].matchMisses).toBe(0)
+    expect(reduce(checked, { type: 'check-match' })).toBe(checked)
+    const flipped = reduce(checked, { type: 'turn', operation: 'flip' })
+    expect(flipped.optionalCheck).toBeNull()
+    expect(reduce(flipped, { type: 'check-match' }).optionalCheck).toMatchObject({ ok: true })
+  })
+
+  test('a check is not answered where turning is still asked for', () => {
+    const asking = routePlan(central, { matchOptional: false })
+    const asked = startSession(central, asking)
+    const ready = run(central, asking, [{ type: 'show-match' }])
+    expect(asked.phase).toBe('match')
+    expect(navReducer(central, asking)(ready, { type: 'check-match' })).toBe(ready)
   })
 })

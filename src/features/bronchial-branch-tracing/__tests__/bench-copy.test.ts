@@ -5,6 +5,7 @@ import {
   TEACHING_SIMULATOR_STATEMENT,
   alongSliceSentence,
   arrivalSentence,
+  astrayView,
   chooseDeclined,
   chooseTaken,
   forkPatternSentence,
@@ -40,6 +41,8 @@ import {
   stationMatch,
   type OrientationMatch,
 } from '../engine/orientation-match'
+import { STAGE_STEPS } from '../content/plan-copy'
+import { astrayPath } from '../geometry/astray'
 import { CT_TARGETS, CT_TRACES, targetForTrace, traceById } from '../geometry/native-ct'
 import { STANDARD_ORIENTATION, orientationName, type CtOrientation } from '../geometry/orientation'
 import { lookingDirection } from '../geometry/reference-frames'
@@ -120,6 +123,7 @@ test('every function the bench can call is exercised below', () => {
   expect(functions).toEqual([
     'alongSliceSentence',
     'arrivalSentence',
+    'astrayView',
     'chooseDeclined',
     'chooseTaken',
     'forkPatternSentence',
@@ -284,6 +288,19 @@ describe('match', () => {
     expect(matchNoteSentence('kept', MIRROR, false)).toBe(
       'The CT still matches the scope from the last fork.',
     )
+  })
+
+  test('where turning the CT is the learner’s choice, the note says so and names the display as it stands', () => {
+    for (const orientation of ALL_ORIENTATIONS)
+      for (const firstFork of [true, false])
+        for (const oblique of [true, false]) {
+          const text = sentence(matchNoteSentence('optional', orientation, firstFork, oblique))
+          // The same at every fork, oblique or not: the CT was left as the learner had it.
+          expect(text).toBe(
+            `Turning the CT is your choice now: it is shown ${orientationName(orientation).toLowerCase()}. Read the letters on its edges against the scope’s, or turn it with the CT controls and check the match.`,
+          )
+          expect(text).not.toMatch(/has been turned|last fork|no turn of the CT/)
+        }
   })
 
   test('a sideways look is explained, naming the axis that runs into the picture', () => {
@@ -594,7 +611,12 @@ describe('choose', () => {
         expect(declined.headline[0]).toBe(declined.headline[0].toUpperCase())
         expect(declined.detail).toContain(`It runs ${opening.course} from the fork.`)
         expect(declined.detail).toContain(`The lesion lies ${lesion.bearing}, `)
-        expect(declined.detail).toContain('First move: back to the fork')
+        // The scope has backed out of it: the learner is told where they are and what is left.
+        expect(declined.detail.endsWith('You are back at the fork: take the other opening.')).toBe(
+          true,
+        )
+        // Nothing about the CT is asked of the learner here: the choice is all that is left.
+        expect(declined.detail).not.toMatch(/First move|follow the other lumen/)
         if (!named)
           for (const text of [declined.headline, declined.detail]) {
             expect(text).not.toMatch(withCode(opening.airway.code))
@@ -611,6 +633,61 @@ describe('choose', () => {
       'LMSB leads away from the lesion.',
     )
     expect(chooseTaken(facts.openings[0], lesion).headline).toBe('RMSB leads toward the lesion.')
+  })
+
+  test('inside a branch that leads away, the view is told apart from the map, and why only with help', () => {
+    let ending = 0
+    let dividing = 0
+    for (const { trace, index, opening, lesion } of OPENINGS) {
+      if (opening.onRoute) continue
+      // Every opening that leads away can be driven into.
+      const path = astrayPath(trace, index, opening.index)!
+      expect([trace.id, index, opening.index, path === null]).toEqual([
+        trace.id,
+        index,
+        opening.index,
+        false,
+      ])
+      if (path.ends) ending++
+      else dividing++
+      const seen = path.ends
+        ? 'The airway narrows and ends ahead, with no branch toward the lesion.'
+        : 'The division ahead is not one your map draws.'
+      for (const named of [true, false]) {
+        const helped = band(astrayView(opening, named, lesion, path.ends, true))
+        const quiet = band(astrayView(opening, named, lesion, path.ends, false))
+        // With help, the same headline as a refusal at the fork, and why it leads away.
+        expect(helped.headline).toBe(chooseDeclined(opening, named, lesion).headline)
+        expect(helped.detail.startsWith(`${seen} It runs ${opening.course} from the fork; `)).toBe(
+          true,
+        )
+        expect(helped.detail).toContain(`the lesion lies ${lesion.bearing}, `)
+        // Without help, only what the learner would see, and nothing that names the opening.
+        expect(quiet).toEqual({
+          headline: 'This view does not match the map.',
+          detail: `${seen} Back out to the fork.`,
+        })
+        for (const value of [helped, quiet])
+          expect(value.detail.endsWith('Back out to the fork.')).toBe(true)
+        if (!named)
+          for (const text of [helped.headline, helped.detail]) {
+            expect(text).not.toMatch(withCode(opening.airway.code))
+            expect(text).not.toContain(opening.airway.name)
+          }
+        else expect(helped.headline).toContain(opening.airway.code)
+      }
+    }
+    // Both kinds of view occur on the routes.
+    expect(ending).toBeGreaterThan(0)
+    expect(dividing).toBeGreaterThan(0)
+    expect(ending + dividing).toBe(OPENINGS.length - STATIONS.length)
+    const { facts, lesion } = stationOn('central-right', 'junction-1')
+    expect(astrayView(facts.openings[1], true, lesion, false, true).headline).toBe(
+      'LMSB leads away from the lesion.',
+    )
+    expect(astrayView(facts.openings[1], false, lesion, false, true).headline).toBe(
+      'Opening 2 leads away from the lesion.',
+    )
   })
 
   test('a lesion within two slices of the fork is at about its level; farther off, the level is given', () => {
@@ -711,6 +788,8 @@ describe('fork facts, arrival and the summary', () => {
       match: { asked: 3, firstTry: 2 },
       identify: { asked: 4, firstTry: 1 },
       choose: { asked: 6, firstTry: 6 },
+      wrongTurns: 0,
+      backedOut: 0,
       slowest: { station: 1, tries: 4 },
     }
     const names = ['Trachea', 'RMSB', 'BI']
@@ -722,6 +801,19 @@ describe('fork facts, arrival and the summary', () => {
       'Opening toward the lesion chosen first try: 6 of 6.',
       'The fork that took longest: RMSB, 4 tries.',
     ])
+    // Branches driven into that lead away get a line of their own, before the slowest fork.
+    const astray = summaryLines({ ...summary, wrongTurns: 2, backedOut: 1 }, names)
+    astray.forEach(sentence)
+    expect(astray).toEqual([
+      'CT matched to the scope first try: 2 of 3.',
+      'Openings identified first try: 1 of 4.',
+      'Opening toward the lesion chosen first try: 6 of 6.',
+      'Branches that led away, driven into: 2; backed out of: 1.',
+      'The fork that took longest: RMSB, 4 tries.',
+    ])
+    expect(
+      summaryLines({ ...summary, wrongTurns: 1, backedOut: 1, slowest: null }, names).at(-1),
+    ).toBe('Branches that led away, driven into: 1; backed out of: 1.')
     // A step no fork asked for has no line.
     const none = { asked: 0, firstTry: 0 }
     expect(summaryLines({ ...summary, identify: none, slowest: null }, names)).toEqual([
@@ -732,7 +824,18 @@ describe('fork facts, arrival and the summary', () => {
       ['Opening toward the lesion chosen first try: 6 of 6.'],
     )
     expect(
-      summaryLines({ forks: 2, match: none, identify: none, choose: none, slowest: null }, names),
+      summaryLines(
+        {
+          forks: 2,
+          match: none,
+          identify: none,
+          choose: none,
+          wrongTurns: 0,
+          backedOut: 0,
+          slowest: null,
+        },
+        names,
+      ),
     ).toEqual([])
     // A fork whose name is not known is still mentioned.
     expect(summaryLines({ ...summary, slowest: { station: 5, tries: 2 } }, names).at(-1)).toBe(
@@ -748,13 +851,26 @@ describe('the words the bench uses', () => {
     PRIMER.forEach(sentence)
     sentence(PRIMER_TITLE)
     sentence(TEACHING_SIMULATOR_STATEMENT)
-    // The four moves are named in the order they are worked.
-    const moves = ['Match:', 'Identify:', 'Choose:', 'Drive:'].map((move) =>
-      PRIMER[2].indexOf(move),
-    )
-    expect(moves.every((at) => at >= 0)).toBe(true)
-    expect(moves).toEqual([...moves].sort((a, b) => a - b))
+    // The three stages the bench's strip names are named in the order they are worked: plan from
+    // the lesion back, map, then navigate.
+    expect(STAGE_STEPS.map((step) => step.label)).toEqual(['Plan', 'Map', 'Navigate'])
+    const text = PRIMER.join(' ')
+    const stages = STAGE_STEPS.map((step) => text.indexOf(`${step.label}:`))
+    expect(stages.every((at) => at >= 0)).toBe(true)
+    expect(stages).toEqual([...stages].sort((a, b) => a - b))
+    expect(PRIMER[1]).toMatch(/Mortimer and Saghaie/)
+    expect(PRIMER[1]).toMatch(/start at the lesion/)
+    expect(PRIMER[1]).toMatch(/ostium/)
+    expect(PRIMER[1]).toMatch(/star the branch that reaches the lesion/)
+    expect(PRIMER[2]).toMatch(/back out to the fork/)
+    // Turning the CT is still explained, and left to the learner after the first lesson.
+    expect(PRIMER[3]).toMatch(/mirrored/)
+    expect(PRIMER[3]).toMatch(/rotated/)
+    expect(PRIMER[3]).toMatch(/turning it on screen is your choice/)
+    // The earlier course's four moves and fork patterns are gone.
+    expect(text).not.toMatch(/\b(Match|Identify|Choose|Drive):|fork patterns?|Kurimoto/)
     expect(TEACHING_SIMULATOR_STATEMENT).toMatch(/teaching simulator built on one CT scan/)
+    expect(TEACHING_SIMULATOR_STATEMENT).toMatch(/plan an airway route on the CT, map it/)
     expect(TEACHING_SIMULATOR_STATEMENT).toMatch(/does not replace supervised practice on patients/)
   })
 
@@ -781,9 +897,10 @@ describe('the words the bench uses', () => {
       for (const orientation of ALL_ORIENTATIONS) {
         for (const help of [true, false])
           bands(matchVerdict(readMatch(match, orientation), orientation, help))
-        for (const note of ['kept', 'set'] as const)
+        for (const note of ['kept', 'set', 'optional'] as const)
           for (const firstFork of [true, false])
-            all.push(matchNoteSentence(note, orientation, firstFork))
+            for (const oblique of [true, false])
+              all.push(matchNoteSentence(note, orientation, firstFork, oblique))
       }
       for (const opening of facts.openings) {
         all.push(
@@ -796,6 +913,8 @@ describe('the words the bench uses', () => {
         for (const named of [true, false]) {
           all.push(openingName(opening, named), openingShort(opening, named))
           bands(chooseDeclined(opening, named, lesion))
+          for (const ends of [true, false])
+            for (const help of [true, false]) bands(astrayView(opening, named, lesion, ends, help))
           for (const verdict of VERDICTS)
             for (const help of [true, false])
               bands(
@@ -818,6 +937,8 @@ describe('the words the bench uses', () => {
           match: { asked: 3, firstTry: 2 },
           identify: { asked: 2, firstTry: 1 },
           choose: { asked: 3, firstTry: 3 },
+          wrongTurns: 2,
+          backedOut: 2,
           slowest: { station: 1, tries: 3 },
         },
         ['Trachea', 'RMSB', 'BI'],

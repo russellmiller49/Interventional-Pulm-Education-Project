@@ -50,10 +50,41 @@ const COMPASS_RADIUS = 43
 /** Letters nearer than this are moved apart along the rim. */
 const COMPASS_CLEARANCE = 9
 
-export function compassLetters(direction: Vec3, up: Vec3, level: boolean): CompassLetter[] {
+/**
+ * The map's own words, past the segmental ostium: medial and lateral by the lung the route is in,
+ * abbreviated so that L never means both left and lateral.
+ */
+function segmentalAxes(side: 'right' | 'left') {
+  const medial: [string, string] = ['Med', 'medial'],
+    lateral: [string, string] = ['Lat', 'lateral']
+  return [
+    {
+      positive: side === 'right' ? medial : lateral,
+      negative: side === 'right' ? lateral : medial,
+      vector: [1, 0, 0] as Vec3,
+    },
+    {
+      positive: ['Post', 'posterior'] as [string, string],
+      negative: ['Ant', 'anterior'] as [string, string],
+      vector: [0, 1, 0] as Vec3,
+    },
+    {
+      positive: ['Sup', 'superior'] as [string, string],
+      negative: ['Inf', 'inferior'] as [string, string],
+      vector: [0, 0, 1] as Vec3,
+    },
+  ]
+}
+
+export function compassLetters(
+  direction: Vec3,
+  up: Vec3,
+  level: boolean,
+  segmental?: 'right' | 'left',
+): CompassLetter[] {
   const basis = cameraBasis(direction, up)
   const letters: CompassLetter[] = []
-  for (const axis of COMPASS_AXES) {
+  for (const axis of segmental ? segmentalAxes(segmental) : COMPASS_AXES) {
     const [x, y] = projectDirection(basis, axis.vector)
     const length = Math.hypot(x, y)
     // An axis that runs along the line of sight has no side on this screen.
@@ -98,6 +129,7 @@ export function ScopeView({
   moving,
   caption,
   phase,
+  segmental,
 }: {
   position: Vec3
   direction: Vec3
@@ -106,6 +138,8 @@ export function ScopeView({
   moving: boolean
   caption: string
   phase: string
+  /** Past the segmental ostium: the rim in the map's words, for this lung. */
+  segmental?: 'right' | 'left'
 }) {
   const [projected, setProjected] = useState<ProjectedOpening[]>([])
   const [ready, setReady] = useState(false)
@@ -117,8 +151,8 @@ export function ScopeView({
   const anchors = useMemo(() => JSON.parse(anchorKey) as ScopeOpening[], [anchorKey])
   const onProject = useCallback((results: ProjectedOpening[]) => setProjected(results), [])
   const compass = useMemo(
-    () => compassLetters(direction, up, lookKind(direction) === 'level'),
-    [direction, up],
+    () => compassLetters(direction, up, lookKind(direction) === 'level', segmental),
+    [direction, up, segmental],
   )
   const placed = moving
     ? []

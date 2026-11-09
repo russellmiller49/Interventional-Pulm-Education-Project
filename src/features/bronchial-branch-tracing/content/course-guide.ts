@@ -1,53 +1,55 @@
 import type { CtNoduleTarget } from './ct-types'
 
 /**
- * The short reference every lesson can open: the four fork patterns, the naming key and how this
- * CT numbers its slices.
+ * The short reference every lesson can open: the method's steps, its tips, the naming key and how
+ * this CT numbers its slices.
  *
- * Pattern names and definitions follow Kurimoto & Morita, Bronchial Branch Tracing (Springer
- * 2020), chapter 1, as recorded in docs/bronchial-branch-tracing/clinical-review.md. Subsegment
- * letters follow the same book (pp. 27, 46–47).
+ * The method is the simplified bronchial branch tracing of Mortimer and Saghaie, J Clin Med
+ * 2025;14:8009 (paraphrased, not quoted). Subsegment letters follow Kurimoto & Morita, Bronchial
+ * Branch Tracing (Springer 2020), pp. 27, 46–47.
  */
-export interface PatternReference {
-  /** The lesson that works this pattern. */
+export interface MethodStep {
+  /** The lesson that teaches this step. */
   lessonId: string
   name: string
-  definition: string[]
+  what: string
 }
+export const METHOD_STEPS: readonly MethodStep[] = [
+  {
+    lessonId: 'start-at-the-lesion',
+    name: 'Start at the lesion',
+    what: 'Find the airway that runs into the lesion, or the one that gives the best approach, and follow it back through the slices to the ostium of its segmental bronchus.',
+  },
+  {
+    lessonId: 'views-that-help',
+    name: 'Set up the views',
+    what: 'Turn or flip the axial CT if it helps you picture the scope’s view, and add a coronal or sagittal reconstruction where the segment runs across the axial plane. Neither is required.',
+  },
+  {
+    lessonId: 'stand-at-the-ostium',
+    name: 'Stand at the ostium',
+    what: 'Imagine the scope at the ostium, looking in. Draw a circle for that view and write the four directions that lie across it round its edge.',
+  },
+  {
+    lessonId: 'nested-arcs',
+    name: 'Draw each division',
+    what: 'Scroll to the next division, see which way each branch leaves compared with the others, and draw each as an arc on that side, inside the arc of the branch before. Repeat to the lesion and star the branch that reaches it.',
+  },
+  {
+    lessonId: 'drive-with-the-map',
+    name: 'Drive with the map',
+    what: 'Past the segmental ostium, take the opening on the side of the arc that holds the star. When the view stops matching the map, back out to the last division you are sure of.',
+  },
+]
 
-export const PATTERNS: PatternReference[] = [
-  {
-    lessonId: 'look-up-rul',
-    name: 'Vertical',
-    definition: [
-      'A vertical airway crosses successive axial planes as a compact lumen.',
-      'When a bronchus runs close to perpendicular to the axial plane, its lumen appears on successive CT levels.',
-    ],
-  },
-  {
-    lessonId: 'middle-lobe-flat',
-    name: 'Horizontal–horizontal',
-    definition: [
-      'A horizontal airway can travel a considerable distance while remaining within a narrow range of axial levels.',
-      'For a horizontal–horizontal division, reconstruct the relationship as seen along the parent airway.',
-    ],
-  },
-  {
-    lessonId: 'rb5-up-or-down',
-    name: 'Horizontal–vertical',
-    definition: [
-      'The daughter’s change in level resolves a horizontal–vertical relationship.',
-      'Viewed along a horizontal parent, cranial and caudal daughters can form an up–down relationship.',
-    ],
-  },
-  {
-    lessonId: 'oblique',
-    name: 'Horizontal–oblique',
-    definition: [
-      'An oblique branch moves across the image and through the stack.',
-      'An oblique daughter leaves a horizontal parent with both in-plane and craniocaudal motion.',
-    ],
-  },
+/** Practical points from the method, said once in the reference. */
+export const METHOD_TIPS: readonly string[] = [
+  'Plan on thin slices: the airways near a peripheral lesion are a millimetre or two across.',
+  'A break in a bronchial wall is often where a small branch leaves.',
+  'Small pulmonary arteries run with the airways; when an airway is hard to see, follow its artery.',
+  'Number the divisions in the order the scope will meet them.',
+  'Drawing a generation inside the branches that do not lead to the lesion helps you recognise a turn into a branch that leads away.',
+  'The scope rolls as it enters each branch: turn the map, or the scope, to match before choosing.',
 ]
 
 /** A related idea taught in its own lesson; the course does not call it a fifth pattern. */
@@ -59,8 +61,6 @@ export const DIRECTION_CHANGE = {
     'A route can descend and then turn cranially. Do not force every distal step to move toward a lower slice number. Follow the lumen from the last certain connection.',
   ],
 }
-
-export const patternFor = (lessonId: string) => PATTERNS.find((p) => p.lessonId === lessonId)
 
 export const NAMING_KEY =
   'R or L gives the side. B denotes a bronchus and S its pulmonary segment. Numbers identify segmental bronchi; a, b and c identify subsegments.'
