@@ -1,29 +1,26 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { ArrowUpRight } from 'lucide-react'
-import { betaModuleReviewPath, type BetaModule } from './catalog'
+import type { BetaModule } from './catalog'
 import type { BetaRollout, BetaTesterNote } from './rollout'
 import { ReviewStatus } from './HubReviewStatus'
 
 const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
+/*
+ * The hub opens a module only in its feedback wrapper. Direct links to the modules themselves are
+ * an admin tool, on Admin › Modules in development, and are not offered to reviewers here
+ * (owner decision, 2026-11-09).
+ */
 function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-          href={`/${locale}/development-beta/${entry.id}` as Route}
-        >
-          Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
-        </Link>
-        <Link
-          className="text-sm underline underline-offset-4"
-          href={`/${locale}${betaModuleReviewPath(entry)}` as Route}
-        >
-          Standard module
-        </Link>
-      </div>
+      <Link
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        href={`/${locale}/development-beta/${entry.id}` as Route}
+      >
+        Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
+      </Link>
       <ReviewStatus moduleId={entry.id} locale={locale} />
     </div>
   )

@@ -9,14 +9,15 @@ const allPreview = Object.fromEntries(
 ) as BetaRollout
 
 describe('hub module sections', () => {
-  it('lists every module once with both of its links, whatever its stage', () => {
+  it('lists every module once, opening only in its feedback wrapper, whatever its stage', () => {
     render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     expect(screen.getAllByRole('link', { name: /Test with feedback/ })).toHaveLength(
       betaModules.length,
     )
-    expect(screen.getAllByRole('link', { name: 'Standard module' })).toHaveLength(
-      betaModules.length,
-    )
+    // Direct module links live on Admin › Modules in development, not on the hub (2026-11-09).
+    expect(screen.getAllByRole('link')).toHaveLength(betaModules.length)
+    for (const link of screen.getAllByRole('link'))
+      expect(link.getAttribute('href')).toMatch(/^\/en\/development-beta\/[a-z0-9-]+$/)
     for (const entry of betaModules) {
       expect(screen.getAllByRole('heading', { name: entry.title })).toHaveLength(1)
     }
@@ -51,16 +52,16 @@ describe('hub module sections', () => {
           expect(within(card).queryByText('Estimated time:')).not.toBeInTheDocument()
         }
       } else {
-        // The card a module had before notes existed: its title and the two links, nothing else.
+        // The card a module had before notes existed: its title and its link, nothing else.
         expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-        expect(card.textContent).toBe(`${entry.title}Test with feedback Standard module`)
+        expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
       }
     }
     // Every listed module carries a note (owner request, 2026-11-04).
     expect(hubBetaModules.every((entry) => betaRollout[entry.id].note)).toBe(true)
   })
 
-  it('leaves a card without a note as it was: its title and the two links', () => {
+  it('leaves a card without a note as it was: its title and its link', () => {
     render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     const preview = screen.getByRole('region', { name: 'Still in development' })
     for (const entry of betaModules) {
@@ -68,7 +69,7 @@ describe('hub module sections', () => {
         .getByRole('heading', { name: entry.title })
         .closest('article') as HTMLElement
       expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-      expect(card.textContent).toBe(`${entry.title}Test with feedback Standard module`)
+      expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
     }
   })
 
@@ -78,7 +79,7 @@ describe('hub module sections', () => {
     expect(screen.getByRole('heading', { name: 'Still in development' })).toBeInTheDocument()
   })
 
-  it('moves a ready module to the first section with its note and the same two links', () => {
+  it('moves a ready module to the first section with its note and the same link', () => {
     const rollout: BetaRollout = {
       ...allPreview,
       devices: {
@@ -105,10 +106,7 @@ describe('hub module sections', () => {
       'href',
       '/es/development-beta/devices',
     )
-    expect(within(ready).getByRole('link', { name: 'Standard module' })).toHaveAttribute(
-      'href',
-      '/es/devices',
-    )
+    expect(within(ready).getAllByRole('link')).toHaveLength(1)
 
     const preview = screen.getByRole('region', { name: 'Still in development' })
     expect(within(preview).queryByRole('heading', { name: /Device Atlas/ })).not.toBeInTheDocument()

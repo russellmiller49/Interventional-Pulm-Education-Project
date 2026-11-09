@@ -50,8 +50,10 @@ development**, grouped by Bronchoscopy and Critical care; empty groups are omitt
 EUS-B, Branch Tracing, ECMO, CRRT, Hemodynamics and MCS were added on 2026-11-04 at the owner's
 request and list each module's open hold among its known limits).
 Readiness changes presentation only: every card keeps its
-**Test with feedback** wrapper link and **Standard module** link, with the same access and
-feedback behavior. A ready label does not authorize clinical use or public release. Modules
+**Test with feedback** wrapper link, with the same access and feedback behavior. The hub opens a
+module only in that wrapper. By the owner's decision of 2026-11-09 it no longer offers a
+**Standard module** link; direct links to every module stay on **Admin → Modules in development**
+(`/en/admin/modules`), which is separate from reviewer access. A ready label does not authorize clinical use or public release. Modules
 move to `ready` with a real tester note only after the gate in
 [Beta finish line](gap-remediation/beta-finish-line.md#2-the-gate) is satisfied.
 
@@ -73,8 +75,7 @@ Live Bronchoscopy Anatomy is the exception. Its standard address,
 `/en/intro-bronchoscopy/airway-anatomy`, sits under the intro course layout, which answers 404
 in production to everyone without a course entitlement or `site_admin`, signed in or not. A
 development server enables draft modules and hides that. Reviewers therefore open the same lesson
-at `/en/development-beta/live-anatomy/lesson`, which is what the wrapper frames and what the card's
-**Standard module** link opens. The proxy requires a verified, registered account there, as for
+at `/en/development-beta/live-anatomy/lesson`, which is what the wrapper frames. The proxy requires a verified, registered account there, as for
 the rest of the hub, and the page sits outside `/intro-bronchoscopy`, so it grants no course
 access. It needs no database row: the feedback module id `live-anatomy` is unchanged.
 

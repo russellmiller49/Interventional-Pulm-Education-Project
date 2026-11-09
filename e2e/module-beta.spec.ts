@@ -1,5 +1,4 @@
 import { test, expect, chromium } from '@playwright/test'
-import { betaModuleReviewPath } from '../src/features/module-beta/catalog'
 import { hubBetaModules } from '../src/features/module-beta/rollout'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
@@ -29,9 +28,8 @@ test('all preview modules remain under Still in development with sign-in, noinde
   const preview = page.getByRole('region', { name: 'Still in development', exact: true })
   await expect(preview).toBeVisible()
   await expect(preview.getByRole('article')).toHaveCount(hubBetaModules.length)
-  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(
-    hubBetaModules.length,
-  )
+  // The hub opens modules only in their feedback wrapper; direct links are an admin tool.
+  await expect(page.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(0)
   for (const group of ['Bronchoscopy', 'Critical care']) {
     await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
   }
@@ -51,10 +49,6 @@ test('all preview modules remain under Still in development with sign-in, noinde
     await expect(
       card.getByRole('link', { name: 'Test with feedback', exact: true }),
     ).toHaveAttribute('href', `/en/development-beta/${entry.id}`)
-    await expect(card.getByRole('link', { name: 'Standard module', exact: true })).toHaveAttribute(
-      'href',
-      `/en${betaModuleReviewPath(entry)}`,
-    )
   }
   await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
   await page.screenshot({
