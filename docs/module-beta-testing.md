@@ -81,6 +81,15 @@ access. It needs no database row: the feedback module id `live-anatomy` is uncha
 
 ## Tester feedback
 
+**How to give feedback.** A one-screen guide (`FeedbackGuide.tsx`) pictures the four steps: open
+a module with **Test with feedback**, report each problem with **Give feedback** on its page, show
+where with a marked screenshot, and finish with the overall review. It opens by itself the first
+time a reviewer reaches the hub on a browser; closing it in any way stores
+`module-beta:feedback-guide-seen:v1` in that browser's local storage (a flag only, no content).
+After that it opens from **How to give feedback** in the hub's intro box and beside **Beta
+testing** in every module's top bar, where it never opens by itself. Server mode only; added at
+the owner's request on 2026-11-09.
+
 The feedback button records the current module page, supported lesson/view query parameters,
 and fragment, plus any selected text. Testers can edit the quoted text, write a comment, upload
 or paste an image, or choose **Capture this tab**. On supported browsers the permission picker
