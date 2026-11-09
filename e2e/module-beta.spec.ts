@@ -1,8 +1,13 @@
 import { test, expect, chromium } from '@playwright/test'
-import { betaModuleReviewPath } from '../src/features/module-beta/catalog'
 import { hubBetaModules } from '../src/features/module-beta/rollout'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
+const guideSeenKey = 'module-beta:feedback-guide-seen:v1'
+// The hub opens its feedback guide on a first visit; every test but the guide's own starts past it.
+test.beforeEach(async ({ context }, testInfo) => {
+  if (!testInfo.title.startsWith('feedback guide'))
+    await context.addInitScript((key) => window.localStorage.setItem(key, '1'), guideSeenKey)
+})
 test('all preview modules remain under Still in development with sign-in, noindex and feedback API gates', async ({
   page,
   context,
@@ -29,9 +34,8 @@ test('all preview modules remain under Still in development with sign-in, noinde
   const preview = page.getByRole('region', { name: 'Still in development', exact: true })
   await expect(preview).toBeVisible()
   await expect(preview.getByRole('article')).toHaveCount(hubBetaModules.length)
-  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(
-    hubBetaModules.length,
-  )
+  // The hub opens modules only in their feedback wrapper; direct links are an admin tool.
+  await expect(page.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(0)
   for (const group of ['Bronchoscopy', 'Critical care']) {
     await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
   }
@@ -51,10 +55,6 @@ test('all preview modules remain under Still in development with sign-in, noinde
     await expect(
       card.getByRole('link', { name: 'Test with feedback', exact: true }),
     ).toHaveAttribute('href', `/en/development-beta/${entry.id}`)
-    await expect(card.getByRole('link', { name: 'Standard module', exact: true })).toHaveAttribute(
-      'href',
-      `/en${betaModuleReviewPath(entry)}`,
-    )
   }
   await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
   await page.screenshot({
@@ -120,7 +120,7 @@ test('feedback preserves the page, selection and all annotation tools across con
     selection.addRange(range)
     history.pushState(null, '', '/en/devices?view=grid#label')
   })
-  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByRole('button', { name: 'Give feedback', exact: true }).click()
   await expect(page.getByLabel('Text or section')).toHaveValue(
     'This device label needs more contrast.',
   )
@@ -245,15 +245,19 @@ test('server-mode drafts stay in memory: an empty dialog is no draft and nothing
   await page.getByRole('button', { name: 'Continue testing' }).click()
   await expect(button).toHaveText('Continue feedback')
   await page.waitForTimeout(900)
+  // The only thing a server-mode hub keeps is that this browser has seen the guide: no content.
   const kept = () =>
-    page.evaluate(async () => ({
-      databases: (await indexedDB.databases())
-        .map((db) => db.name ?? '')
-        .filter((name) => name.startsWith('module-owner-feedback')),
-      storage: [...Object.keys(localStorage), ...Object.keys(sessionStorage)].filter((key) =>
-        /feedback|draft/i.test(key),
-      ),
-    }))
+    page.evaluate(
+      async (guideKey) => ({
+        databases: (await indexedDB.databases())
+          .map((db) => db.name ?? '')
+          .filter((name) => name.startsWith('module-owner-feedback')),
+        storage: [...Object.keys(localStorage), ...Object.keys(sessionStorage)].filter(
+          (key) => /feedback|draft/i.test(key) && key !== guideKey,
+        ),
+      }),
+      guideSeenKey,
+    )
   expect(await kept()).toEqual({ databases: [], storage: [] })
   // The compact review shell applies here too: one row of controls, no hidden page scroll.
   expect(
@@ -457,7 +461,7 @@ test('real standard module pages permit same-origin beta framing and have no fee
   await expect(
     page.getByRole('heading', { name: 'Live Bronchoscopy Anatomy', exact: true }),
   ).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Give feedback' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Give feedback', exact: true })).toHaveCount(0)
 })
 
 test('tab capture hides the form, verifies this tab and stops sharing after one screenshot', async ({
@@ -536,7 +540,7 @@ test('tab capture hides the form, verifies this tab and stops sharing after one 
       },
     })
   })
-  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByRole('button', { name: 'Give feedback', exact: true }).click()
   await page.getByRole('button', { name: 'Capture this tab' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await page.evaluate(() => (window as Window & { finishCapture?: () => void }).finishCapture?.())
@@ -639,7 +643,7 @@ test('native Chromium capture includes the module without the feedback overlay',
     await expect(
       page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas capture target' }),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Give feedback' }).click()
+    await page.getByRole('button', { name: 'Give feedback', exact: true }).click()
     await page.getByRole('button', { name: 'Capture this tab' }).click()
     const canvas = page.getByLabel('Screenshot preview.', { exact: false })
     await expect(canvas).toBeVisible()
@@ -689,7 +693,7 @@ test('unsupported tab capture keeps upload and annotation tools available on mob
       value: undefined,
     }),
   )
-  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByRole('button', { name: 'Give feedback', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Capture this tab' })).toHaveCount(0)
   await expect(
     page.getByText('Tab capture is unavailable in this browser.', { exact: false }),
@@ -782,7 +786,7 @@ test('overall review: the form by track, the offer on leaving, the hub status an
   await form.getByRole('button', { name: 'Close', exact: true }).click()
 
   // A detailed report first; leaving then offers the overall review.
-  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByRole('button', { name: 'Give feedback', exact: true }).click()
   await page.getByLabel('What should we know?').fill('Station 7 landmark label is off')
   await page.getByRole('button', { name: 'Send feedback' }).click()
   await expect(page.getByRole('status')).toContainText('Feedback saved')
@@ -903,4 +907,76 @@ test('overall review: the form by track, the offer on leaving, the hub status an
   await expect
     .poll(() => feedbackUrls.at(-1))
     .toContain('user=6a1d1c5e-6c56-4a77-8a5b-111111111111')
+})
+
+test('feedback guide: opens on the first hub visit only, reopens from the hub and the module bar', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  await page.setViewportSize({ width: 1600, height: 905 })
+  await page.route('**/en/ebus-guided', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>EBUS Guided</h1><p>Station 7</p>' }),
+  )
+  await page.route('**/api/module-review/mine', (route) =>
+    route.fulfill({
+      json: { profile: null, reviewsOpen: true, reviews: [], reportCounts: {} },
+    }),
+  )
+  const guide = page.getByRole('dialog', { name: 'How to give feedback' })
+  await page.goto('/en/development-beta')
+  await expect(guide).toBeVisible()
+  await expect(guide.getByRole('listitem')).toHaveCount(4)
+  // The whole guide fits the reviewers' window without scrolling.
+  expect(await guide.evaluate((node) => node.scrollHeight <= node.clientHeight)).toBe(true)
+  await page.screenshot({
+    path: 'artifacts/module-beta-feedback-guide.png',
+    animations: 'disabled',
+  })
+  await guide.getByRole('button', { name: 'Start testing' }).click()
+  await expect(guide).toBeHidden()
+
+  // Seen once on this browser: a reload leaves it closed, and the hub button brings it back.
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Help shape the next modules' })).toBeVisible()
+  await expect(page.getByText('Overall review: not yet').first()).toBeVisible()
+  await expect(guide).toBeHidden()
+  await page.getByRole('button', { name: 'How to give feedback' }).click()
+  await expect(guide).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(guide).toBeHidden()
+
+  // In a module the guide never opens by itself; the top bar's button opens it.
+  await page.goto('/en/development-beta/ebus-guided')
+  await expect(
+    page.frameLocator('iframe').getByRole('heading', { name: 'EBUS Guided' }),
+  ).toBeVisible()
+  await expect(guide).toBeHidden()
+  const barButton = page.getByRole('button', { name: 'How to give feedback' })
+  await expect(barButton).toBeVisible()
+  await page.screenshot({
+    path: 'artifacts/module-beta-guide-bar-button.png',
+    animations: 'disabled',
+  })
+  await barButton.click()
+  await expect(guide).toBeVisible()
+  await guide.getByRole('button', { name: 'Back to the module' }).click()
+  await expect(guide).toBeHidden()
+
+  // On a phone the steps stack and the guide scrolls inside its own window.
+  await page.evaluate((key) => window.localStorage.removeItem(key), guideSeenKey)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/en/development-beta')
+  await expect(guide).toBeVisible()
+  await page.screenshot({
+    path: 'artifacts/module-beta-feedback-guide-mobile.png',
+    animations: 'disabled',
+  })
 })

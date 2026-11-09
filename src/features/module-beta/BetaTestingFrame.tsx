@@ -53,6 +53,7 @@ import {
   type ReviewModuleNote,
   type SavedReview,
 } from './OverallReviewDialog'
+import { FeedbackGuide } from './FeedbackGuide'
 
 const message = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
@@ -811,9 +812,13 @@ export function BetaTestingFrame({
           <span className="hidden whitespace-nowrap sm:inline">All modules</span>
         </Link>
         <div className="min-w-0 flex-1 basis-48">
-          <p className="text-xs font-semibold text-primary">
-            {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
-          </p>
+          {/* The guide link rides on the label line, so it costs the bar no width or height. */}
+          <div className="flex flex-wrap items-center gap-x-3 text-xs">
+            <p className="font-semibold text-primary">
+              {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
+            </p>
+            {!local && <FeedbackGuide placement="toolbar" />}
+          </div>
           <h1 className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere] md:text-base">
             {moduleEntry.title}
           </h1>

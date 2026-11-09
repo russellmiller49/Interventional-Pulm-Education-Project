@@ -156,25 +156,6 @@ async function renderedFrame() {
 
 const frameSource = async () => /<iframe[^>]*\ssrc="([^"]+)"/.exec(await renderedFrame())?.[1] ?? ''
 
-async function standardLink() {
-  const [{ renderToStaticMarkup }, { createElement }, sections, { betaModules }, { betaRollout }] =
-    await Promise.all([
-      import('react-dom/server'),
-      import('react'),
-      import('./BetaHubSections'),
-      import('./catalog'),
-      import('./rollout'),
-    ])
-  const html = renderToStaticMarkup(
-    createElement(sections.BetaHubSections, {
-      locale: 'en',
-      modules: betaModules.filter((entry) => entry.id === 'live-anatomy'),
-      rollout: { ...betaRollout, 'live-anatomy': { stage: 'preview' } },
-    }),
-  )
-  return /<a[^>]*href="([^"]+)"[^>]*>Standard module/.exec(html)?.[1] ?? ''
-}
-
 async function renderedPage(path: string) {
   const [{ renderToStaticMarkup }, { createElement }] = await Promise.all([
     import('react-dom/server'),
@@ -218,13 +199,6 @@ describe('a verified, registered reviewer with no entitlement', () => {
     const source = await frameSource()
     expect(source).not.toBe('')
     expect(await reach(source, accounts.reviewer)).toBe('opens')
-  })
-
-  // The hub no longer lists Live Anatomy (withheld, 2026-11-04); its card still links here if listed.
-  it('reaches the lesson from its card when the hub lists it', async () => {
-    const link = await standardLink()
-    expect(link).not.toBe('')
-    expect(await reach(link, accounts.reviewer)).toBe('opens')
   })
 
   it('gets the lesson itself, with no link into the course it cannot open', async () => {

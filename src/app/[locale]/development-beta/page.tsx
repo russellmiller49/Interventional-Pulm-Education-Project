@@ -7,6 +7,7 @@ import { betaRollout, hubBetaModules } from '@/features/module-beta/rollout'
 import { feedbackMode } from '@/features/module-beta/config'
 import { OwnerDraftNotice } from '@/features/module-beta/OwnerDraftNotice'
 import { ReviewStatusProvider } from '@/features/module-beta/HubReviewStatus'
+import { FeedbackGuide } from '@/features/module-beta/FeedbackGuide'
 
 export default async function BetaHub({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -30,14 +31,17 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
         </p>
         <div className="flex gap-3 rounded-xl border bg-muted/30 p-4 text-sm leading-6">
           <MessageSquare className="mt-1 h-5 w-5 shrink-0" aria-hidden />
-          <p>
-            Choose <strong>Test with feedback</strong> to open a module with a feedback button. Add
-            a comment, quote selected text, or attach and highlight an image.{' '}
-            {!local &&
-              'Send detailed feedback any time while testing, and finish each module with a short overall review. '}
-            These are development previews: content may be unfinished or still under faculty review,
-            and nothing here is for clinical decisions.
-          </p>
+          <div className="space-y-3">
+            <p>
+              Choose <strong>Test with feedback</strong> to open a module with a feedback button.
+              Add a comment, quote selected text, or attach and highlight an image.{' '}
+              {!local &&
+                'Send detailed feedback any time while testing, and finish each module with a short overall review. '}
+              These are development previews: content may be unfinished or still under faculty
+              review, and nothing here is for clinical decisions.
+            </p>
+            {!local && <FeedbackGuide placement="hub" />}
+          </div>
         </div>
         {local && (
           <Link
