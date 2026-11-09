@@ -711,3 +711,196 @@ test('unsupported tab capture keeps upload and annotation tools available on mob
       .evaluate((element) => element.scrollWidth <= element.clientWidth),
   ).toBe(true)
 })
+
+test('overall review: the form by track, the offer on leaving, the hub status and the admin tab', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  await page.setViewportSize({ width: 1600, height: 905 })
+  const saved: Record<string, unknown>[] = []
+  await page.route('**/en/ebus-guided', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>EBUS Guided</h1><p>Station 7</p>' }),
+  )
+  await page.route('**/api/module-feedback', (route) =>
+    route.fulfill({ status: 201, json: { id } }),
+  )
+  await page.route('**/api/module-review/mine', (route) =>
+    route.fulfill({
+      json: {
+        profile: { label: 'Interventional Pulmonologist · 10-20 years', defaultTrack: 'educator' },
+        reviewsOpen: true,
+        reviews: saved,
+        reportCounts: {},
+      },
+    }),
+  )
+  await page.route('**/api/module-review', async (route) => {
+    const body = route.request().postDataJSON()
+    const review = {
+      id: 'r1',
+      module_id: body.moduleId,
+      track: body.track,
+      answers: body.answers,
+      updated_at: '2026-11-09T18:00:00Z',
+    }
+    saved.splice(0, saved.length, review)
+    await route.fulfill({ json: { review } })
+  })
+  const heading = page.frameLocator('iframe').getByRole('heading', { name: 'EBUS Guided' })
+  const reviewButton = page.getByRole('button', { name: /^(Edit )?overall review$/i })
+  const form = page.getByRole('dialog', { name: 'Overall review' })
+  await page.goto('/en/development-beta/ebus-guided')
+  await expect(heading).toBeVisible()
+
+  // An attending starts on the educator form, which carries the module's own questions.
+  await reviewButton.click()
+  await expect(form.getByText('Interventional Pulmonologist · 10-20 years')).toBeVisible()
+  await expect(
+    form.getByRole('radio', { name: 'An educator or practicing clinician', exact: true }),
+  ).toBeChecked()
+  await expect(form.getByRole('heading', { name: 'This module’s own questions' })).toHaveCount(0)
+  await expect(form.getByText('This module’s own questions')).toBeVisible()
+  await form.getByText('This module’s own questions').scrollIntoViewIfNeeded()
+  await page.screenshot({
+    path: 'artifacts/module-beta-overall-review-educator.png',
+    animations: 'disabled',
+  })
+  await form.getByText('A learner', { exact: true }).click()
+  await expect(form.getByRole('heading', { name: 'As a learner' })).toBeVisible()
+  await page.screenshot({
+    path: 'artifacts/module-beta-overall-review-learner.png',
+    animations: 'disabled',
+  })
+  await form.getByRole('button', { name: 'Close', exact: true }).click()
+
+  // A detailed report first; leaving then offers the overall review.
+  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByLabel('What should we know?').fill('Station 7 landmark label is off')
+  await page.getByRole('button', { name: 'Send feedback' }).click()
+  await expect(page.getByRole('status')).toContainText('Feedback saved')
+  await page.getByRole('link', { name: 'All beta modules' }).click()
+  const offer = page.getByRole('dialog', { name: 'Before you go' })
+  await expect(offer).toBeVisible()
+  await expect(page).toHaveURL(/\/en\/development-beta\/ebus-guided$/)
+  await page.screenshot({
+    path: 'artifacts/module-beta-overall-review-offer.png',
+    animations: 'disabled',
+  })
+  await offer.getByRole('button', { name: 'Start overall review' }).click()
+
+  // The learner answers kept from before, then the rest of the form.
+  await expect(form.getByRole('radio', { name: 'A learner', exact: true })).toBeChecked()
+  // Choices are pills a reviewer clicks; the rating grids are plain radios.
+  const pill = (name: string) => form.getByText(name, { exact: true }).click()
+  const rate = (name: string) => form.getByLabel(name, { exact: true }).check()
+  await pill('Most of it')
+  await pill('Do it with supervision')
+  await rate('Overall quality: Very good')
+  await rate('Clarity of the teaching: Very good')
+  await rate('Ease of use: finding your way, the controls: Good')
+  await rate('The interactive parts: simulator, cases, questions: Excellent')
+  await pill('About right')
+  await rate('Before the module: Slightly')
+  await rate('Now: Confident')
+  await form.locator('[data-review-question="wouldUse"]').getByText('Yes', { exact: true }).click()
+  await pill('Ready after minor fixes')
+  await form.getByLabel('The one thing to fix before release (optional)').fill('Station 4L view')
+  await form.getByRole('button', { name: 'Send review' }).click()
+  await expect(form.getByText(/your overall review is saved/i)).toBeVisible()
+  expect(saved[0]).toMatchObject({ module_id: 'ebus-guided', track: 'learner' })
+  await form.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(reviewButton).toHaveText('Edit overall review')
+
+  // Reviewed: leaving goes straight to the hub, which shows the review on the card.
+  await page.getByRole('link', { name: 'All beta modules' }).click()
+  await expect(page).toHaveURL(/\/en\/development-beta$/)
+  const card = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'EBUS: Guided Course', exact: true }),
+  })
+  await expect(card.getByText(/Overall review: submitted/)).toBeVisible()
+  await expect(card.getByRole('link', { name: 'Edit', exact: true })).toHaveAttribute(
+    'href',
+    '/en/development-beta/ebus-guided?review=1',
+  )
+  await expect(page.getByText('Overall review: not yet').first()).toBeVisible()
+  await card.scrollIntoViewIfNeeded()
+  await page.screenshot({
+    path: 'artifacts/module-beta-overall-review-hub.png',
+    animations: 'disabled',
+  })
+
+  // The admin tab: summary, the review, and that reviewer's detailed reports.
+  const feedbackUrls: string[] = []
+  await page.route('**/api/module-feedback?**', (route) => {
+    feedbackUrls.push(route.request().url())
+    return route.fulfill({
+      json: {
+        entries: [
+          {
+            id,
+            user_id: '6a1d1c5e-6c56-4a77-8a5b-111111111111',
+            module_id: 'ebus-guided',
+            page_path: '/en/ebus-guided',
+            comment: 'Station 7 landmark label is off',
+            selected_text: '',
+            tester_email: 'fellow@example.org',
+            created_at: '2026-11-09T17:00:00Z',
+            screenshot_path: null,
+            status: 'new',
+            reviewer_notes: '',
+          },
+        ],
+        count: 1,
+        reviewers: { '6a1d1c5e-6c56-4a77-8a5b-111111111111': 'PCCM Fellow · Fellow Year 2' },
+      },
+    })
+  })
+  await page.route('**/api/module-review?**', (route) =>
+    route.fulfill({
+      json: {
+        reviews: [
+          {
+            ...saved[0],
+            user_id: '6a1d1c5e-6c56-4a77-8a5b-111111111111',
+            tester_email: 'fellow@example.org',
+            profile_snapshot: {
+              professional_role: 'pccm_fellow',
+              training_level: 'fellow_year_2',
+            },
+            form_version: 1,
+            created_at: '2026-11-09T18:00:00Z',
+          },
+        ],
+        reportCounts: { '6a1d1c5e-6c56-4a77-8a5b-111111111111:ebus-guided': 1 },
+      },
+    }),
+  )
+  await page.goto('/en/admin/module-feedback')
+  await expect(page.getByText('PCCM Fellow · Fellow Year 2')).toBeVisible()
+  await page.getByRole('tab', { name: 'Overall reviews' }).click()
+  const row = page.getByRole('row', { name: /EBUS: Guided Course/ })
+  await expect(row).toContainText('1 (1 / 0)')
+  await expect(row).toContainText('2.0 → 4.0')
+  await page.screenshot({
+    path: 'artifacts/module-beta-overall-review-admin.png',
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await page.getByRole('button', { name: 'Their 1 detailed report on this module' }).click()
+  await expect(page.getByRole('tab', { name: 'Detailed reports' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await expect(page.getByText('Showing reports from')).toContainText('PCCM Fellow · Fellow Year 2')
+  await expect
+    .poll(() => feedbackUrls.at(-1))
+    .toContain('user=6a1d1c5e-6c56-4a77-8a5b-111111111111')
+})

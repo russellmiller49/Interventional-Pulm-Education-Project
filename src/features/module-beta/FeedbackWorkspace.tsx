@@ -14,10 +14,20 @@ import {
   type OwnerFeedbackEntry,
 } from './ownerFeedbackStore'
 import { exportOwnerFeedback } from './ownerFeedbackExport'
+import { OverallReviewsPanel } from './OverallReviewsPanel'
 
 type ReviewEntry = FeedbackEntry | OwnerFeedbackEntry
 
-function FeedbackCard({ entry, onSaved }: { entry: ReviewEntry; onSaved: () => void }) {
+function FeedbackCard({
+  entry,
+  reviewer,
+  onSaved,
+}: {
+  entry: ReviewEntry
+  /** Who sent it, from their site profile: "PCCM Fellow · Fellow Year 2". */
+  reviewer?: string
+  onSaved: () => void
+}) {
   const [status, setStatus] = useState(entry.status)
   const [notes, setNotes] = useState(entry.reviewer_notes)
   const [saving, setSaving] = useState(false)
@@ -68,6 +78,14 @@ function FeedbackCard({ entry, onSaved }: { entry: ReviewEntry; onSaved: () => v
             {feedbackReviewModuleById(entry.module_id)?.title ?? entry.module_id}
           </h2>
           <p className="mt-1 break-all text-xs text-muted-foreground">
+            {reviewer ? (
+              <>
+                <strong className="text-foreground" data-reviewer-role>
+                  {reviewer}
+                </strong>{' '}
+                ·{' '}
+              </>
+            ) : null}
             {localEntry ? 'Owner review' : (entry as FeedbackEntry).tester_email} ·{' '}
             {new Date(entry.created_at).toLocaleString()} · {entry.id}
           </p>
@@ -171,19 +189,23 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Server mode: detailed reports, or the overall reviews; and, from a review, one reviewer.
+  const [tab, setTab] = useState<'reports' | 'reviews'>('reports')
+  const [reviewerFilter, setReviewerFilter] = useState<{ id: string; label: string } | null>(null)
+  const [reviewers, setReviewers] = useState<Record<string, string>>({})
   const generation = useRef(0)
   const refresh = useCallback(async () => {
     const current = ++generation.current
     setLoading(true)
     setError('')
     try {
-      let result: { entries: ReviewEntry[]; count: number }
+      let result: { entries: ReviewEntry[]; count: number; reviewers?: Record<string, string> }
       if (local) {
         const all = await listOwnerFeedback({ moduleId, status })
         result = { entries: all.slice(page * 30, page * 30 + 30), count: all.length }
       } else {
         const response = await fetch(
-          `/api/module-feedback?${new URLSearchParams({ module: moduleId, status, page: String(page) })}`,
+          `/api/module-feedback?${new URLSearchParams({ module: moduleId, status, page: String(page), user: reviewerFilter?.id ?? '' })}`,
           { cache: 'no-store' },
         )
         result = await response.json()
@@ -193,13 +215,14 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
       if (current !== generation.current) return
       setEntries(result.entries)
       setCount(result.count)
+      setReviewers(result.reviewers ?? {})
     } catch (err) {
       if (current === generation.current)
         setError(err instanceof Error ? err.message : 'Feedback could not be loaded.')
     } finally {
       if (current === generation.current) setLoading(false)
     }
-  }, [local, moduleId, status, page])
+  }, [local, moduleId, status, page, reviewerFilter])
   useEffect(() => {
     void refresh()
     return () => {
@@ -271,124 +294,183 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
         <p className="max-w-2xl leading-7 text-muted-foreground">
           Review {local ? 'owner findings' : 'tester comments'} and annotated screenshots. Track
           each report from new to resolved, with private notes for your next revision.
+          {!local &&
+            ' Overall reviews give each reviewer’s verdict on a whole module, with who they are.'}
         </p>
-      </header>
-      {local && (
-        <section
-          aria-label="Local feedback management"
-          className="space-y-3 rounded-xl border border-primary/40 bg-muted/30 p-4"
-        >
-          <p className="text-sm leading-6">
-            Reports and screenshots are saved only in this browser on this site, with no account
-            identity or server upload. Clearing site data, private browsing, or browser storage
-            eviction can remove them. Export regularly. Disable owner-local mode before sharing
-            external beta links.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button disabled={managing} onClick={() => exportFeedback(false)}>
-              Export feedback
-            </Button>
-            <Button
-              variant="outline"
-              disabled={managing || (!moduleId && !status)}
-              onClick={() => exportFeedback(true)}
-            >
-              Export filtered feedback
-            </Button>
-            <Button variant="outline" disabled={managing} onClick={clearFeedback}>
-              Clear saved feedback
-            </Button>
+        {!local && (
+          <div role="tablist" aria-label="Feedback type" className="flex gap-2 border-b">
+            {(
+              [
+                ['reports', 'Detailed reports'],
+                ['reviews', 'Overall reviews'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={tab === value}
+                onClick={() => setTab(value)}
+                className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold ${tab === value ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-          <p className="text-xs leading-5 text-muted-foreground">
-            Unsent drafts are kept separately and are not removed by this action.
-          </p>
-          {managementMessage && (
-            <p role="status" className="text-sm">
-              {managementMessage}
-            </p>
-          )}
-        </section>
-      )}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-muted/20 p-4">
-        <label className="min-w-0 max-w-full text-sm font-medium">
-          Module
-          <select
-            aria-label="Module"
-            value={moduleId}
-            onChange={(event) => {
-              setModuleId(event.target.value)
-              setPage(0)
-            }}
-            className="mt-1 block w-full max-w-full rounded-lg border bg-background p-2"
-          >
-            <option value="">All modules</option>
-            {feedbackReviewModules.map((entry) => (
-              <option value={entry.id} key={entry.id}>
-                {entry.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="min-w-0 max-w-full text-sm font-medium">
-          Status
-          <select
-            aria-label="Status"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value)
-              setPage(0)
-            }}
-            className="mt-1 block rounded-lg border bg-background p-2"
-          >
-            <option value="">All statuses</option>
-            {feedbackStatuses.map((value) => (
-              <option key={value} value={value}>
-                {value === 'in-review' ? 'In review' : value === 'new' ? 'New' : 'Resolved'}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button variant="outline" onClick={refresh} disabled={loading}>
-          Refresh
-        </Button>
-      </div>
-      {error ? (
-        <p role="alert" className="rounded-xl border p-5 text-destructive">
-          {error}
-        </p>
-      ) : loading ? (
-        <p role="status">Loading feedback…</p>
+        )}
+      </header>
+      {!local && tab === 'reviews' ? (
+        <OverallReviewsPanel
+          onShowReports={(user, reviewedModule) => {
+            setReviewerFilter(user)
+            setModuleId(reviewedModule)
+            setStatus('')
+            setPage(0)
+            setTab('reports')
+          }}
+        />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">
-            {count} {count === 1 ? 'report' : 'reports'}
-            {count > 0 && ` · Showing ${page * 30 + 1}–${Math.min(count, (page + 1) * 30)}`}
-          </p>
-          {entries.length === 0 ? (
-            <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-              No feedback matches these filters.
-            </div>
-          ) : (
-            entries.map((entry) => (
-              <FeedbackCard
-                key={`${entry.id}:${entry.status}:${entry.reviewer_notes}`}
-                entry={entry}
-                onSaved={refresh}
-              />
-            ))
-          )}
-          <div className="flex justify-between">
-            <Button variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={(page + 1) * 30 >= count}
-              onClick={() => setPage(page + 1)}
+          {local && (
+            <section
+              aria-label="Local feedback management"
+              className="space-y-3 rounded-xl border border-primary/40 bg-muted/30 p-4"
             >
-              Next
+              <p className="text-sm leading-6">
+                Reports and screenshots are saved only in this browser on this site, with no account
+                identity or server upload. Clearing site data, private browsing, or browser storage
+                eviction can remove them. Export regularly. Disable owner-local mode before sharing
+                external beta links.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={managing} onClick={() => exportFeedback(false)}>
+                  Export feedback
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={managing || (!moduleId && !status)}
+                  onClick={() => exportFeedback(true)}
+                >
+                  Export filtered feedback
+                </Button>
+                <Button variant="outline" disabled={managing} onClick={clearFeedback}>
+                  Clear saved feedback
+                </Button>
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Unsent drafts are kept separately and are not removed by this action.
+              </p>
+              {managementMessage && (
+                <p role="status" className="text-sm">
+                  {managementMessage}
+                </p>
+              )}
+            </section>
+          )}
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-muted/20 p-4">
+            <label className="min-w-0 max-w-full text-sm font-medium">
+              Module
+              <select
+                aria-label="Module"
+                value={moduleId}
+                onChange={(event) => {
+                  setModuleId(event.target.value)
+                  setPage(0)
+                }}
+                className="mt-1 block w-full max-w-full rounded-lg border bg-background p-2"
+              >
+                <option value="">All modules</option>
+                {feedbackReviewModules.map((entry) => (
+                  <option value={entry.id} key={entry.id}>
+                    {entry.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0 max-w-full text-sm font-medium">
+              Status
+              <select
+                aria-label="Status"
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value)
+                  setPage(0)
+                }}
+                className="mt-1 block rounded-lg border bg-background p-2"
+              >
+                <option value="">All statuses</option>
+                {feedbackStatuses.map((value) => (
+                  <option key={value} value={value}>
+                    {value === 'in-review' ? 'In review' : value === 'new' ? 'New' : 'Resolved'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button variant="outline" onClick={refresh} disabled={loading}>
+              Refresh
             </Button>
           </div>
+          {reviewerFilter && (
+            <p
+              role="status"
+              className="flex flex-wrap items-center gap-3 text-sm"
+              data-reviewer-filter
+            >
+              Showing reports from <strong>{reviewerFilter.label}</strong>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReviewerFilter(null)
+                  setPage(0)
+                }}
+              >
+                Show every reviewer
+              </Button>
+            </p>
+          )}
+          {error ? (
+            <p role="alert" className="rounded-xl border p-5 text-destructive">
+              {error}
+            </p>
+          ) : loading ? (
+            <p role="status">Loading feedback…</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {count} {count === 1 ? 'report' : 'reports'}
+                {count > 0 && ` · Showing ${page * 30 + 1}–${Math.min(count, (page + 1) * 30)}`}
+              </p>
+              {entries.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+                  No feedback matches these filters.
+                </div>
+              ) : (
+                entries.map((entry) => (
+                  <FeedbackCard
+                    key={`${entry.id}:${entry.status}:${entry.reviewer_notes}`}
+                    entry={entry}
+                    reviewer={
+                      'user_id' in entry && entry.user_id ? reviewers[entry.user_id] : undefined
+                    }
+                    onSaved={refresh}
+                  />
+                ))
+              )}
+              <div className="flex justify-between">
+                <Button variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={(page + 1) * 30 >= count}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

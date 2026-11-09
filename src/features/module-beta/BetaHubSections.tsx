@@ -3,24 +3,28 @@ import type { Route } from 'next'
 import { ArrowUpRight } from 'lucide-react'
 import { betaModuleReviewPath, type BetaModule } from './catalog'
 import type { BetaRollout, BetaTesterNote } from './rollout'
+import { ReviewStatus } from './HubReviewStatus'
 
 const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
 function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Link
-        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-        href={`/${locale}/development-beta/${entry.id}` as Route}
-      >
-        Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
-      </Link>
-      <Link
-        className="text-sm underline underline-offset-4"
-        href={`/${locale}${betaModuleReviewPath(entry)}` as Route}
-      >
-        Standard module
-      </Link>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-4">
+        <Link
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          href={`/${locale}/development-beta/${entry.id}` as Route}
+        >
+          Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
+        </Link>
+        <Link
+          className="text-sm underline underline-offset-4"
+          href={`/${locale}${betaModuleReviewPath(entry)}` as Route}
+        >
+          Standard module
+        </Link>
+      </div>
+      <ReviewStatus moduleId={entry.id} locale={locale} />
     </div>
   )
 }
