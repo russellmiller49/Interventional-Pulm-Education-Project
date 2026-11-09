@@ -48,7 +48,7 @@ export const METHOD_TIPS: readonly string[] = [
   'A break in a bronchial wall is often where a small branch leaves.',
   'Small pulmonary arteries run with the airways; when an airway is hard to see, follow its artery.',
   'Number the divisions in the order the scope will meet them.',
-  'Drawing a generation inside the branches that do not lead to the lesion helps you recognise a turn into a branch that leads away.',
+  'Drawing a generation inside the branches that do not lead to the lesion helps you recognize a turn into a branch that leads away.',
   'The scope rolls as it enters each branch: turn the map, or the scope, to match before choosing.',
 ]
 

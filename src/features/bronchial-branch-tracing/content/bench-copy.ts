@@ -35,7 +35,7 @@ export const TEACHING_SIMULATOR_STATEMENT =
 
 export const PRIMER_TITLE = 'What we are doing, and why'
 export const PRIMER: readonly string[] = [
-  'A peripheral lesion is reached by taking the right opening at every division: a series of two- and three-way choices. Past the segmental bronchus there are seldom more than four or five of them.',
+  'A peripheral lesion is reached by taking the right opening at every division: a series of two- and three-way choices. Past the segmental bronchus, no route in this course has more than five of them.',
   'This course plans the route on the CT before the scope moves, by the simplified bronchial branch tracing of Mortimer and Saghaie. Plan: start at the lesion, find the airway that runs into it and follow it back to its segmental bronchus. Map: stand, in your head, at that segment’s ostium and draw the view as a circle with four directions round it; at each division to the lesion, draw each branch as an arc where it leaves, inside the arc before, and star the branch that reaches the lesion.',
   'Navigate: drive the scope from the trachea. Above the segment you name the airways as you go. Past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
   'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. The first lesson shows you how to turn the CT to match. After that, turning it on screen is your choice.',

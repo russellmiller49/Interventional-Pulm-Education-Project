@@ -94,7 +94,7 @@ import {
   type PlanAction,
 } from '../engine/plan-session'
 import { startTrip, tripReducer, type TripAction, type TripSession } from '../engine/trip-session'
-import { CT_TARGETS, CT_TRACES, traceById } from '../geometry/native-ct'
+import { CT_TARGETS, CT_TRACES, NATIVE_CT, traceById } from '../geometry/native-ct'
 import { STANDARD_ORIENTATION } from '../geometry/orientation'
 
 /**
@@ -1021,5 +1021,74 @@ describe('the words the course uses', () => {
       ).map((word) => `${label}: "${word}"`)
     })
     expect(hits).toEqual([])
+  })
+})
+
+describe('what a lesson says before the segment is named', () => {
+  // Anything on screen while the airway into the lesion is found and the segment is named: the
+  // lesson's title, objective and concept (lesson notes), every trip title (subtitle and trip
+  // list), and this trip's intro and planning text for those two steps.
+  const shownBeforeNaming = (lesson: (typeof NAV_LESSONS)[number], spec: NavTripSpec) => [
+    lesson.title,
+    lesson.objective,
+    lesson.concept,
+    ...lesson.trips.map((trip) => trip.title),
+    spec.intro,
+    spec.plan?.teach?.lesion ?? '',
+    spec.plan?.teach?.segment ?? '',
+  ]
+
+  test('no lesson names the segment it asks the learner to name', () => {
+    const asked = NAV_LESSONS.flatMap((lesson) =>
+      lesson.trips
+        .filter((spec) => spec.plan?.parts.includes('segment'))
+        .map((spec) => ({ lesson, spec })),
+    )
+    expect(asked.length).toBeGreaterThanOrEqual(6)
+    for (const { lesson, spec } of asked) {
+      const target = plannedTarget(traceById(spec.traceId))
+      const choice = segmentChoices(target).find((c) => c.code === target.segment.bronchusCode)!
+      const giveaways = [
+        new RegExp(`\\b${target.segment.code.replace('+', '\\+')}\\b`),
+        new RegExp(`\\b${target.segment.bronchusCode.replace('+', '\\+')}\\b`),
+        new RegExp(`\\b${target.approachCode.replace('+', '\\+')}\\b`),
+        new RegExp(`\\b${choice.name} segment`, 'i'),
+        new RegExp(target.segment.name, 'i'),
+      ]
+      for (const text of shownBeforeNaming(lesson, spec))
+        for (const giveaway of giveaways)
+          expect({ lesson: lesson.id, trip: spec.title, found: giveaway.exec(text)?.[0] }).toEqual({
+            lesson: lesson.id,
+            trip: spec.title,
+            found: undefined,
+          })
+    }
+  })
+
+  test('the primer’s count of divisions past the segment holds for every route', () => {
+    const most = Math.max(
+      ...Object.keys(TARGET_FOR_TRACE).map((id) => {
+        const trace = traceById(id)
+        return mappedForks(trace, plannedTarget(trace)).length
+      }),
+    )
+    expect(most).toBeLessThanOrEqual(5)
+    expect(PRIMER.join(' ')).toContain('no route in this course has more than five of them')
+  })
+
+  test('the lesion of the route that comes back up lies above the division of the left main bronchus', () => {
+    const trace = traceById('left-lower-returning')
+    const target = plannedTarget(trace)
+    const fork = trace.checkpoints.find((checkpoint) => checkpoint.id === 'junction-3')!
+    expect(fork.decision!.parent.airway.code).toBe('LMSB')
+    // Slice numbers rise toward the head: every slice of the lesion is above the fork.
+    const forkSlice = Math.round(
+      (fork.decision!.junctionLps[2] - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2],
+    )
+    const lowest = Math.min(...target.patch.frames.map((frame) => frame.slice))
+    expect(lowest).toBeGreaterThan(forkSlice)
+    expect(lessonById('turn-back')!.trips[0].intro).toContain(
+      'above the fork where the left main bronchus divides',
+    )
   })
 })

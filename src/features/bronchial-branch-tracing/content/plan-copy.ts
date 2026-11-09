@@ -135,7 +135,7 @@ export function segmentMiss(choice: SegmentChoice, help: boolean) {
   return {
     headline: `Not ${choice.code}.`,
     detail: help
-      ? 'Follow the airway back again from the lesion, one slice at a time, and note the first bronchus it joins that leaves the lobar bronchus.'
+      ? 'Follow the airway back again from the lesion, one slice at a time. The segmental bronchus is the largest airway on the way that still supplies this segment alone; beyond it the airway joins the lobar bronchus or a trunk it shares with other segments.'
       : 'Follow the airway back again from the lesion.',
   }
 }

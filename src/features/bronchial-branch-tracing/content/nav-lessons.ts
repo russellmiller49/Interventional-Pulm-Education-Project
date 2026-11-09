@@ -341,9 +341,9 @@ export const NAV_LESSONS: readonly NavLesson[] = [
           parts: ['lesion', 'segment'],
           teach: {
             lesion:
-              'Scroll through the lesion and look for an airway that runs into it: a bronchus sign. The airways out here are a millimetre or two across, which is why planning uses thin slices. Where the wall of a larger airway shows a break, a small branch leaves through it. A small pulmonary artery runs beside each airway; where the airway is hard to see, follow the artery. Click the airway where it runs into the lesion.',
+              'Scroll through the lesion and look for an airway that runs into it: a bronchus sign. The airways out here are a millimeter or two across, which is why planning uses thin slices. Where the wall of a larger airway shows a break, a small branch leaves through it. A small pulmonary artery runs beside each airway; where the airway is hard to see, follow the artery. Click the airway where it runs into the lesion.',
             segment:
-              'Now follow that airway back toward the hilum, a slice at a time, keeping it in view as it joins larger airways. Stop when you reach the bronchus that leaves the lobar bronchus: that is the segmental bronchus, and its ostium is where the map will start. Name it.',
+              'Now follow that airway back toward the hilum, a slice at a time, keeping it in view as it joins larger airways. Stop at the segmental bronchus: the largest airway on the way back that still supplies this segment alone. Beyond it the airway joins the lobar bronchus, or a trunk it shares with other segments. Its ostium is where the map will start. Name it.',
           },
         },
       },
@@ -448,7 +448,7 @@ export const NAV_LESSONS: readonly NavLesson[] = [
     title: 'Drive with the map',
     minutes: 9,
     objective:
-      'Drive the scope from the trachea to a lesion using your map past the segmental ostium, and recognise and back out of a branch that leads away.',
+      'Drive the scope from the trachea to a lesion using your map past the segmental ostium, and recognize and back out of a branch that leads away.',
     concept:
       'Above the segment you navigate by naming airways you know. From the segmental ostium the map takes over: at each division, find the arc that holds the star and take the opening on that side. A branch that leads away shows a division that is not on your map; that is the signal to back out.',
     trips: [
@@ -486,13 +486,13 @@ export const NAV_LESSONS: readonly NavLesson[] = [
     objective:
       'Use a coronal or sagittal reconstruction beside the axial CT to see a segment that runs forward, backward or out toward the chest wall, and map it.',
     concept:
-      'An axial slice shows best the airways that run up and down through it. A segment that runs forward or backward is seen in profile on a coronal reconstruction; one that runs out toward the chest wall, on a sagittal. Mortimer and Saghaie suggest a pairing for each segment; take it as a starting point and use whatever shows the airway.',
+      'An axial slice cuts across the airways that run up and down, so scrolling it shows each division as one ring becoming two. A segment that runs forward or back is cut across by a coronal reconstruction instead, and one that runs out toward the chest wall by a sagittal. Mortimer and Saghaie suggest a pairing for each segment; take it as a starting point and use whatever shows the airway.',
     trips: [
       {
         traceId: 'upper-oblique-medial',
-        title: 'RB3: the anterior segment',
+        title: 'A lesion in the right upper lobe',
         intro:
-          'A lesion in the anterior segment of the right upper lobe. Plan it from the lesion, and open a reconstruction before you draw the map.',
+          'Another lesion in the right upper lobe. Plan it from the lesion; once you have named its segment, open a reconstruction before you draw the map.',
         plan: {
           parts: ['lesion', 'segment', 'views', 'frame', 'arcs'],
           teach: {
@@ -503,9 +503,9 @@ export const NAV_LESSONS: readonly NavLesson[] = [
       },
       {
         traceId: 'middle-lobe-lateral',
-        title: 'RB4: the lateral segment',
+        title: 'A lesion in the middle lobe',
         intro:
-          'A lesion in the lateral segment of the middle lobe, which runs out toward the chest wall. Choose your own views this time.',
+          'A lesion in the middle lobe. Plan it the same way, and choose your own views this time.',
         plan: { parts: ['lesion', 'segment', 'views', 'frame', 'arcs'] },
       },
     ],
@@ -517,15 +517,15 @@ export const NAV_LESSONS: readonly NavLesson[] = [
     title: 'A route that comes back up',
     minutes: 9,
     objective:
-      'Plan, map and drive to a lesion in the superior segment of the left lower lobe, where the route runs down and then turns back toward the head.',
+      'Plan, map and drive to a lower-lobe lesion whose route runs down and then turns back toward the head.',
     concept:
       'A route can run down and then turn back toward the head. The slice numbers reverse; the airway connection does not. Tracing back from the lesion follows the connection, so the reversal does not mislead you.',
     trips: [
       {
         traceId: 'left-lower-returning',
-        title: 'The superior segment of the left lower lobe',
+        title: 'A lesion in the left lower lobe',
         intro:
-          'The lesion is in the superior segment of the left lower lobe, LS6. It lies above the fork that leads to its lobe. Plan it from the lesion, then drive.',
+          'The lesion is in the left lower lobe, yet it lies above the fork where the left main bronchus divides into its lobes. Plan it from the lesion, then drive.',
         plan: { parts: ['lesion', 'segment', 'frame', 'arcs'] },
         from: 'junction-1',
         arrive: true,
