@@ -105,21 +105,22 @@ export const betaRollout: BetaRollout = {
     note: {
       audience: 'PCCM and interventional pulmonology fellows and practicing bronchoscopists.',
       summary:
-        'Eight short lessons on reading the route to a peripheral lesion off the CT and driving it with the scope: at each fork, match the CT to the bronchoscopic view, identify each opening, choose the branch, then drive.',
+        "Nine short lessons on reaching a peripheral lesion by Mortimer and Saghaie's simplified branch tracing: plan the route on the CT from the lesion back to its segment, map the segment's ostium and each division to the lesion as nested arcs, then drive the scope with the map beside it, with coronal and sagittal views and backing out of a branch that leads away.",
       estimate: {
-        minutes: 66,
+        minutes: 79,
         basis:
-          "8 lessons, by the module's own count; the 13 practice lesions and the 3-lesion closing set are extra",
+          "9 lessons, by the module's own count; the 13 practice lesions and the 3-lesion closing set are extra",
       },
       lookFor: [
         'Lesson 1, why the CT looks reversed against the scope view, and whether the orientation reads the way you hold the scope.',
-        'Whether the forks each lesson uses (the right upper lobe, daughters that climb or drop, a route that comes back up) are the ones that trip fellows up.',
+        'Lessons 3 to 5, planning from the lesion: whether naming the segment, the ostium circle and the arcs read the way you plan a route to a peripheral lesion.',
+        'Lesson 6, a branch that leads away: whether backing out to the last division you are sure of looks and feels like what you do at the scope.',
         'Whether the lesions in Practice are ones you would plan a navigation route to.',
       ],
       knownLimits: [
-        'A simpler way of reading the route, with coronal and sagittal reference views and backing out of a wrong turn, is being built and will change this flow.',
         'The CT slice used for the first fork is not yet confirmed by the author.',
-        'Forks whose openings are too small to click ask only for the branch choice.',
+        'Only lessons 1 and 2 ask for the openings to be marked on the CT; on whole routes the CT is read while planning, and each fork asks only for the branch.',
+        "The model map does not yet draw the next generation inside the branches the route does not take, the method's tip for recognizing a branch that leads away.",
       ],
     },
   },

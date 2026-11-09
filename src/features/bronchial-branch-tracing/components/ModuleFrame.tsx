@@ -25,11 +25,11 @@ export function ModuleFrame({
   }, [])
   const items = [
     { href: BASE_PATH, title: 'Overview', description: 'The course and where you left off' },
-    { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Scope and CT, fork by fork' },
+    { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Plan, map, then drive' },
     {
       href: `${BASE_PATH}/practice`,
       title: 'Practice',
-      description: `Navigate to one of ${TARGET_IDS.length} lesions`,
+      description: `Plan and reach one of ${TARGET_IDS.length} lesions`,
     },
     {
       href: `${BASE_PATH}/assess`,

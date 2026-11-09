@@ -9,7 +9,8 @@ import {
   writeCriticalCareProgress,
 } from '@/features/learning-module/activity/progress'
 import { BranchTracingOverview } from '../components/BranchTracingOverview'
-import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
+import { METHOD_STEPS } from '../content/course-guide'
+import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import { NAV_LESSONS } from '../content/nav-lessons'
 import { NAV_STORAGE_KEY } from '../engine/nav-storage'
 import {
@@ -73,7 +74,11 @@ function expectNoGradeWording(root: HTMLElement) {
 
 describe('self-paced record', () => {
   it('stores only declared place fields, writes idempotently and never overwrites an unreadable value', () => {
-    expect([FIRST, SECOND, THIRD]).toEqual(['carina-orientation', 'two-levels', 'middle-lobe-flat'])
+    expect([FIRST, SECOND, THIRD]).toEqual([
+      'carina-orientation',
+      'two-levels',
+      'start-at-the-lesion',
+    ])
     expect(readSelfPacedRecord(localStorage).status).toBe('empty')
     expect(recordLessonOpened(FIRST, localStorage)).toBe(true)
     const once = localStorage.getItem(SELF_PACED_STORAGE_KEY)
@@ -259,7 +264,7 @@ describe('storage boundary', () => {
     expect(found.sort()).toEqual(Object.keys(writers).sort())
     // Three keys, each the module's own.
     expect(keys.sort()).toEqual([
-      'branch-tracing.nav-v1',
+      'branch-tracing.nav-v2',
       'branch-tracing.primer-seen-v1',
       'branch-tracing.self-paced-v1',
     ])
@@ -282,6 +287,18 @@ describe('Overview', () => {
     }
     expect(container.querySelectorAll('[data-lesson-group] a')).toHaveLength(NAV_LESSONS.length)
     expect(screen.getByRole('link', { name: SOURCE.title })).toHaveAttribute('href', SOURCE.url)
+    expect(screen.getByRole('link', { name: METHOD_SOURCE.title })).toHaveAttribute(
+      'href',
+      METHOD_SOURCE.url,
+    )
+    // The method's steps are listed in order, each with what it asks for.
+    const steps = Array.from(container.querySelectorAll('[data-method-steps] li'))
+    expect(steps.map((li) => li.textContent)).toEqual(
+      METHOD_STEPS.map((step) => `${step.name}. ${step.what}`),
+    )
+    // The earlier course's fork-pattern tags are gone from the lesson list.
+    expect(container.querySelector('[data-lesson-group]')!.textContent).not.toMatch(/Pattern:/)
+    expect(container.textContent).not.toMatch(/fork patterns?/i)
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'))
     expect(hrefs).toContain(`${BASE_PATH}/practice`)
     expect(hrefs).toContain(`${BASE_PATH}/assess`)

@@ -322,7 +322,7 @@ export function TracingCtViewer({
               )}
             </g>
             {nodulePoint && inField(nodulePoint) && (
-              <g aria-label={`Simulated lesion in ${target.segment.code}`} data-ct-lesion-ring>
+              <g aria-label="Simulated lesion" data-ct-lesion-ring>
                 <circle
                   cx={nodulePoint[0]}
                   cy={nodulePoint[1]}

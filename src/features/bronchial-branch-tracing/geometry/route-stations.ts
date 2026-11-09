@@ -1,6 +1,6 @@
 import type { CtTrace } from '../content/ct-types'
 import type { DisplayPreset, Vec3 } from './coordinates'
-import { NATIVE_CT } from './native-ct'
+import { lpsToVoxel } from './native-ct'
 import { pairedPath } from './paired-scope'
 import { cameraBasis, type CameraBasis } from './reference-frames'
 
@@ -73,8 +73,7 @@ export function arcNearest(trace: CtTrace, target: readonly number[]): number {
 
 /** The native slice an arc length lies on, kept inside the route's own slice range. */
 export function arcToSlice(trace: CtTrace, arc: number): number {
-  const z = sampleRoute(trace, arc)[2]
-  const slice = Math.round((z - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2])
+  const slice = Math.round(lpsToVoxel(sampleRoute(trace, arc))[2])
   return Math.max(trace.range[0], Math.min(trace.range[1], slice))
 }
 
@@ -288,8 +287,26 @@ const unit = (v: Vec3, fallback: Vec3): Vec3 => {
 export function drivePose(trace: CtTrace, drive: Drive, progress: number): ScopePose {
   const t = Math.max(0, Math.min(1, progress))
   const arc = drive.fromArc + (drive.toArc - drive.fromArc) * t
-  const along = poseAt(trace, arc)
-  const end = drive.to ?? poseAt(trace, drive.toArc)
+  return blendPose(
+    poseAt(trace, arc),
+    drive.from,
+    drive.to ?? poseAt(trace, drive.toArc),
+    t,
+    trace.preset,
+  )
+}
+
+/**
+ * The scope part-way between two rest poses, travelling with `along`: it leaves `from`'s look and
+ * roll over the first 30 % and settles onto `end`'s over the last 30 %.
+ */
+export function blendPose(
+  along: ScopePose,
+  from: ScopePose,
+  end: ScopePose,
+  t: number,
+  preset: DisplayPreset,
+): ScopePose {
   const leaving = 1 - smooth(t / 0.3)
   const arriving = smooth((t - 0.7) / 0.3)
   const cruising = Math.max(0, 1 - leaving - arriving)
@@ -297,16 +314,16 @@ export function drivePose(trace: CtTrace, drive: Drive, progress: number): Scope
     [0, 1, 2].map(
       (axis) =>
         along.direction[axis] * cruising +
-        drive.from.direction[axis] * leaving +
+        from.direction[axis] * leaving +
         end.direction[axis] * arriving,
     ) as Vec3,
     along.direction,
   )
-  const blended = mix(drive.from.up, end.up, smooth(t))
+  const blended = mix(from.up, end.up, smooth(t))
   const onSight =
     Math.abs(blended[0] * direction[0] + blended[1] * direction[1] + blended[2] * direction[2]) /
     (Math.hypot(...blended) || 1)
   // A blended roll that has swung onto the line of sight carries no roll: keep the look's own.
-  const up = onSight < 0.98 ? unit(blended, along.up) : scopeUp(trace.preset, direction)
-  return { arc, position: along.position, direction, up }
+  const up = onSight < 0.98 ? unit(blended, along.up) : scopeUp(preset, direction)
+  return { arc: along.arc, position: along.position, direction, up }
 }

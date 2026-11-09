@@ -8,22 +8,31 @@ import {
   NAMING_USE,
   SLICE_DIRECTION_NOTE,
   SUBSEGMENT_NOTE,
-  patternFor,
 } from '../content/course-guide'
-import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
+import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import {
   NAV_LESSONS,
+  ORIENTATION_LESSON,
   buildTrip,
   lessonAfter,
   lessonById,
   lessonNumber,
   type NavLesson,
 } from '../content/nav-lessons'
+import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
-import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import {
+  navKey,
+  orientationShown,
+  readNavEntry,
+  readOrientationProgress,
+  recordOrientationProgress,
+  writeNavEntry,
+} from '../engine/nav-storage'
+import { summarizePlan } from '../engine/plan-session'
 import { recordLessonOpened, setLessonReviewed } from '../engine/selfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
-import { NavigationBench } from './NavigationBench'
+import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
 import { useTrip } from './useTrip'
 import styles from './nav-bench.module.css'
@@ -53,10 +62,7 @@ function LessonTrips({ lesson }: { lesson: NavLesson }) {
     if (!saved) return 0
     const last = lesson.trips.length - 1
     // A lesson already driven to its end opens again from its first trip.
-    if (
-      saved.leg >= last &&
-      (saved.session.phase === 'arrived' || saved.session.phase === 'done')
-    ) {
+    if (saved.leg >= last && tripOver(saved.trip)) {
       writeNavEntry(key, null)
       return 0
     }
@@ -90,24 +96,40 @@ function Trip({
   onNext: () => void
   onTrip: (index: number) => void
 }) {
-  const trip = useMemo(() => buildTrip(lesson.trips[tripIndex]), [lesson, tripIndex])
-  const [session, dispatch] = useTrip(trip.trace, trip.plan, storageKey, tripIndex)
+  // Turning the CT is asked for in the first lesson, and afterwards until the learner has shown it.
+  const matchOptional = useMemo(
+    () => lesson.id !== ORIENTATION_LESSON && orientationShown(readOrientationProgress()),
+    [lesson.id],
+  )
+  const trip = useMemo(
+    () => buildTrip(lesson.trips[tripIndex], { matchOptional }),
+    [lesson, tripIndex, matchOptional],
+  )
+  const [session, dispatch] = useTrip(trip.trace, trip.target, trip.trip, storageKey, tripIndex)
   const lastTrip = tripIndex === lesson.trips.length - 1
-  const over = session.phase === 'arrived' || session.phase === 'done'
+  const over = tripOver(session)
   useEffect(() => {
     // Reaching the end of a lesson is the learner's place in the course, not a result.
     if (over && lastTrip) setLessonReviewed(lesson.id, true)
+    if (over && lastTrip && lesson.id === ORIENTATION_LESSON)
+      recordOrientationProgress({ lessonOneDone: true })
   }, [over, lastTrip, lesson.id])
   const next = lessonAfter(lesson.id)
-  const forkNames = trip.plan.stations.map(
+  const stations = trip.trip.nav?.stations ?? []
+  const forkNames = stations.map(
     (station) => trip.trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
   )
   // A count of first tries says something only over a route of several forks.
-  const summary = trip.plan.stations.length >= 3 ? summaryLines(summarize(session), forkNames) : []
-  const pattern = patternFor(lesson.id)
+  const summary = [
+    ...(session.plan && trip.trip.plan
+      ? planSummaryLines(summarizePlan(trip.trip.plan, session.plan))
+      : []),
+    ...(session.nav && stations.length >= 3 ? summaryLines(summarize(session.nav), forkNames) : []),
+  ]
+  const arrived = session.nav?.phase === 'arrived'
   const number = lessonNumber(lesson.id)
   return (
-    <NavigationBench
+    <TripBench
       section="learn"
       title={`Lesson ${number} · ${lesson.title}`}
       subtitle={
@@ -116,8 +138,12 @@ function Trip({
           : trip.spec.title
       }
       trace={trip.trace}
-      plan={trip.plan}
+      target={trip.target}
+      trip={trip.trip}
       teach={trip.teach}
+      planTeach={trip.spec.plan?.teach}
+      divisionTeach={trip.divisionTeach}
+      locators={trip.spec.plan?.locators}
       intro={trip.spec.intro}
       independent={trip.spec.independent}
       help
@@ -126,18 +152,16 @@ function Trip({
       closing={
         lastTrip
           ? {
-              heading:
-                session.phase === 'arrived'
-                  ? 'You have reached the lesion. End of the lesson.'
-                  : 'End of the lesson',
+              heading: arrived
+                ? 'You have reached the lesion. End of the lesson.'
+                : 'End of the lesson',
               body: [lesson.closing, ...summary, TEACHING_SIMULATOR_STATEMENT],
               next: next
                 ? { label: `Lesson ${number + 1}: ${next.title}`, href: lessonHref(next.id) }
                 : { label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` },
             }
           : {
-              heading:
-                session.phase === 'arrived' ? 'You have reached the lesion' : 'End of this trip',
+              heading: arrived ? 'You have reached the lesion' : 'End of this trip',
               body: [...summary, `Next: ${lesson.trips[tripIndex + 1].title}.`],
               next: { label: 'Next trip', onActivate: onNext },
             }
@@ -163,14 +187,6 @@ function Trip({
               ))}
             </ol>
           )}
-          {pattern && (
-            <dl>
-              <dt>Fork pattern: {pattern.name}</dt>
-              {pattern.definition.map((line) => (
-                <dd key={line}>{line}</dd>
-              ))}
-            </dl>
-          )}
           <dl>
             <dt>Names</dt>
             <dd>
@@ -178,7 +194,12 @@ function Trip({
             </dd>
             <dt>Slices</dt>
             <dd>{SLICE_DIRECTION_NOTE}</dd>
-            <dt>Source</dt>
+            <dt>Sources</dt>
+            <dd>
+              <a href={METHOD_SOURCE.url} target="_blank" rel="noreferrer">
+                {METHOD_SOURCE.title}
+              </a>
+            </dd>
             <dd>
               <a href={SOURCE.url} target="_blank" rel="noreferrer">
                 {SOURCE.title}

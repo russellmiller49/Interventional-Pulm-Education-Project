@@ -1,16 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
 
 /**
- * Bronchial Branch Tracing: the navigation bench.
+ * Bronchial Branch Tracing: planning, the map and the navigation bench.
  *
- *   BRANCH_TRACING_BASE_URL=http://localhost:3127 \
+ *   BRANCH_TRACING_BASE_URL=http://localhost:3120 \
  *     npx playwright test -c playwright.branch-tracing.config.ts
  *
- * The routes are public-unlisted, so no sign-in is needed. Every test drives the real bench:
- * the scope, the CT and the task card.
+ * The routes are public-unlisted, so no sign-in is needed. Every test drives the real benches:
+ * the map, the scope, the CT and the task card.
  */
 const BASE = '/en/learn/anatomy/branch-tracing'
 const BANNED = /\b(score|scored|points|grade|graded|mastery|correct|incorrect|wrong|synthetic)\b/i
+const NAV_KEY = 'branch-tracing.nav-v2'
 
 const shell = (page: Page) => page.locator('[data-lesson-shell]')
 const stage = (page: Page) => shell(page).getAttribute('data-stage')
@@ -34,19 +35,35 @@ async function expectStage(page: Page, value: string | RegExp) {
 }
 const nowButton = (page: Page, name: string | RegExp) => now(page).getByRole('button', { name })
 
+/** The task card's way on from a stage that waits for the learner but checks nothing. */
+const ONWARD = [
+  'Drive on',
+  'Back out to the fork',
+  'On to the ostium',
+  'Drive to the lesion',
+  'Finish',
+]
+
 /** Lets the bench do every step until the stage matches, or the trip is over. */
 async function showUntil(page: Page, until: RegExp, limit = 200) {
   for (let i = 0; i < limit; i++) {
     const current = (await stage(page)) ?? ''
     if (until.test(current)) return current
     if (/arrived|done/.test(current)) return current
-    if (current.endsWith('drive')) {
+    if (/(drive|astray-in|astray-out)$/.test(current)) {
       await expect(shell(page)).not.toHaveAttribute('data-stage', current, { timeout: 15000 })
       continue
     }
-    const drive = nowButton(page, 'Drive on')
-    if (await drive.count()) await drive.click()
-    else await nowButton(page, /^Show/).first().click()
+    let moved = false
+    for (const name of ONWARD) {
+      const button = nowButton(page, name)
+      if (await button.count()) {
+        await button.click()
+        moved = true
+        break
+      }
+    }
+    if (!moved) await nowButton(page, /^Show/).first().click()
     await expect(shell(page)).not.toHaveAttribute('data-stage', current)
   }
   throw new Error(`The bench did not reach ${until}`)
@@ -69,6 +86,38 @@ async function clickSourcePixel(page: Page, x: number, y: number) {
   )
   await page.mouse.click(at.x, at.y)
 }
+/** Moves the CT slider to a slice. */
+async function goToSlice(page: Page, slice: number) {
+  await page.getByLabel('CT slice').evaluate((input, value) => {
+    const element = input as HTMLInputElement
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
+      element,
+      String(value),
+    )
+    element.dispatchEvent(new Event('input', { bubbles: true }))
+    element.dispatchEvent(new Event('change', { bubbles: true }))
+  }, slice)
+  await expect(ct(page)).toHaveAttribute('data-slice', String(slice))
+}
+/** Labels the ostium circle: top, right, bottom, left. */
+async function labelCircle(page: Page, words: [string, string, string, string]) {
+  const rims = ['top', 'right', 'bottom', 'left']
+  for (let i = 0; i < 4; i++)
+    await page.locator(`[data-rim-picker="${rims[i]}"]`).selectOption(words[i])
+}
+/** A device that has already finished lesion 1: turning the CT is optional. */
+const orientationShown = (page: Page) =>
+  page.addInitScript((key) => {
+    if (!localStorage.getItem(key))
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          version: 2,
+          entries: {},
+          orientation: { firstTryMatches: 0, lessonOneDone: true },
+        }),
+      )
+  }, NAV_KEY)
 
 test.describe('course', () => {
   test('the hub and every section open without an account and are not indexed', async ({
@@ -81,7 +130,10 @@ test.describe('course', () => {
     }
     await page.goto(BASE)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bronchial branch tracing')
-    await expect(page.locator('[data-course-overview] ol li')).toHaveCount(8)
+    await expect(page.locator('[data-lesson-group] ol li')).toHaveCount(9)
+    await expect(page.locator('[data-method-steps] li')).toHaveCount(5)
+    await expect(page.locator('[data-course-overview]')).toContainText('Mortimer & Saghaie')
+    await expect(page.locator('[data-course-overview]')).not.toContainText('Pattern:')
     await expect(page.locator('[data-teaching-simulator-statement]')).toContainText(
       'teaching simulator',
     )
@@ -105,10 +157,10 @@ test.describe('course', () => {
     await expect(page.locator('[data-bench]')).toBeVisible()
     await expect(dialog).toBeHidden()
     await page.locator('[data-bench-help]').click()
-    await expect(dialog).toContainText('Match')
-    await expect(dialog).toContainText('Identify')
-    await expect(dialog).toContainText('Choose')
-    await expect(dialog).toContainText('Drive')
+    await expect(dialog).toContainText('Plan:')
+    await expect(dialog).toContainText('Map:')
+    await expect(dialog).toContainText('Navigate:')
+    await expect(dialog).toContainText('Mortimer and Saghaie')
     await page.keyboard.press('Escape')
     await expect(page.locator('[data-bench-help]')).toBeFocused()
   })
@@ -226,18 +278,25 @@ test.describe('lesson 2: choose and drive', () => {
     await expectStage(page, '0:match')
   })
 
-  test('an opening that leads away is refused at the fork; the right one drives on', async ({
+  test('an opening that leads away is driven into, backed out of, then greyed', async ({
     page,
   }) => {
     await showUntil(page, /^0:choose$/)
     const pose = await scope(page).getAttribute('data-scope-pose')
     await expect(page.locator('[data-choice]')).toHaveCount(2)
     await page.locator('[data-choice="1"]').click()
+    // The scope goes into the branch, one generation, and stops looking at what comes next.
+    await expectStage(page, '0:astray')
+    expect(await scope(page).getAttribute('data-scope-pose')).not.toBe(pose)
+    await expect(now(page)).toContainText('leads away from the lesion')
+    await expect(page.locator('[data-choice]')).toHaveCount(0)
+    await nowButton(page, 'Back out to the fork').click()
     await expectStage(page, '0:choose')
-    await expect(feedback(page)).toContainText('leads away from the lesion')
-    await expect(feedback(page)).toContainText('back to the fork')
+    // Back exactly where it waited, with that opening greyed and the reason under the card.
+    await expect(scope(page)).toHaveAttribute('data-scope-pose', pose!)
     await expect(page.locator('[data-choice="1"]')).toBeDisabled()
-    expect(await scope(page).getAttribute('data-scope-pose')).toBe(pose)
+    await expect(feedback(page)).toContainText('leads away from the lesion')
+    await expect(feedback(page)).toContainText('take the other opening')
     await page.locator('[data-choice="2"]').click()
     await expectStage(page, '0:ready')
     await expect(feedback(page)).toContainText('leads toward the lesion')
@@ -260,7 +319,7 @@ test.describe('lesson 2: choose and drive', () => {
     await expect(page.locator('[data-bench]')).toBeVisible()
     await expectStage(page, '1:identify:0')
     await expect(ct(page)).toHaveAttribute('data-orientation', '0r')
-    await page.evaluate(() => localStorage.setItem('branch-tracing.nav-v1', '{not json'))
+    await page.evaluate(() => localStorage.setItem('branch-tracing.nav-v2', '{not json'))
     await page.reload()
     await expectStage(page, '0:match')
   })
@@ -326,73 +385,252 @@ test.describe('lesson 2: choose and drive', () => {
   })
 })
 
-test.describe('whole routes', () => {
-  test('Practice offers thirteen lesions and drives one from the trachea to the lesion', async ({
+test.describe('turning the CT is optional once it has been shown', () => {
+  test('no fork waits for the match; a check is answered on request', async ({ page }) => {
+    await orientationShown(page)
+    await openBench(page, '/learn?lesson=two-levels')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, '0:identify:0')
+    await expect(page.locator('[data-match-note="optional"]')).toBeVisible()
+    await expect(page.locator('[data-loop-step="match"]')).toHaveAttribute(
+      'data-loop-state',
+      'optional',
+    )
+    await expect(ct(page)).toHaveAttribute('data-orientation', '0')
+    await page.locator('[data-ct-check-turn]').click()
+    await expect(feedback(page)).toContainText('Mirrored')
+    await expectStage(page, '0:identify:0')
+    await page.locator('[data-ct-turn="flip"]').click()
+    await page.locator('[data-ct-check-turn]').click()
+    await expect(feedback(page)).toContainText('The CT matches the scope')
+  })
+
+  test('lesson 1 still asks for the match', async ({ page }) => {
+    await orientationShown(page)
+    await openBench(page, '/learn?lesson=carina-orientation')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, '0:match')
+  })
+})
+
+test.describe('planning from the lesion', () => {
+  test('the segment stays unnamed until the learner names it', async ({ page }) => {
+    await openBench(page, '/practice?lesion=l-superior')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, 'plan:lesion')
+    const bench = page.locator('[data-lesson-shell]')
+    expect(await bench.innerText()).not.toMatch(/LS6|LB6|superior segment/)
+    await expect(page.locator('[data-map-waiting]')).toBeVisible()
+    await expect(page.locator('[data-route-chip="lesion"]')).toHaveText('Lesion · Left lower lobe')
+    // A click on lung beside the airway is not it, and help says which way the airway lies.
+    await goToSlice(page, 369)
+    await clickSourcePixel(page, 345, 382)
+    await expectStage(page, 'plan:lesion')
+    await expect(feedback(page)).toContainText('Not the airway that runs into the lesion')
+    await expect(feedback(page)).toContainText('toward the patient’s right')
+    // The airway itself, on the slice where it runs toward the lesion.
+    await clickSourcePixel(page, 325.45, 382.32)
+    await expectStage(page, 'plan:segment')
+    await expect(feedback(page)).toContainText('That is the airway into the lesion')
+    await page.locator('[data-segment-choice="LB9"]').click()
+    await expect(feedback(page)).toContainText('Not LB9')
+    await page.locator('[data-segment-choice="LB6"]').click()
+    await expectStage(page, 'plan:views')
+    await expect(page.locator('[data-route-chip="lesion"]')).toHaveText('Lesion · LS6')
+    await nowButton(page, 'On to the ostium').click()
+    await expectStage(page, 'plan:frame')
+    await expect(page.locator('[data-arc-map]')).toBeVisible()
+    expect(await bench.innerText()).not.toMatch(BANNED)
+  })
+
+  test('the ostium circle is accepted in any roll and refused as a mirror image', async ({
     page,
   }) => {
+    await openBench(page, '/learn?lesson=stand-at-the-ostium')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, 'plan:frame')
+    // RB1, looking up: medial, posterior, lateral, anterior (Mortimer & Saghaie, Fig. 1E).
+    await expect(nowButton(page, 'Check the circle')).toBeDisabled()
+    await labelCircle(page, ['medial', 'anterior', 'lateral', 'posterior'])
+    await nowButton(page, 'Check the circle').click()
+    await expectStage(page, 'plan:frame')
+    await expect(feedback(page)).toContainText('mirror image')
+    // The same arrangement a quarter turn round.
+    await labelCircle(page, ['anterior', 'medial', 'posterior', 'lateral'])
+    await nowButton(page, 'Check the circle').click()
+    await expectStage(page, 'plan:done:closed')
+    await expect(page.locator('[data-arc-rim="top"]')).toHaveText('Anterior')
+    await nowButton(page, 'Next trip').click()
+    await expectStage(page, 'plan:frame')
+  })
+
+  test('the map is drawn one division at a time and checked against the airway', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=nested-arcs')
+    await page.locator('[data-bench-restart]').click()
+    await nowButton(page, 'Show me').click()
+    await expectStage(page, 'plan:arcs:0')
+    // RB1 divides into RB1b, toward the front, and RB1a, toward the back.
+    await page.locator('[data-sector-button="6"]').click()
+    await page.locator('[data-sector-button="2"]').click()
+    await expect(page.locator('[data-arc-pending]')).toHaveCount(2)
+    await expect(nowButton(page, 'Check the branches')).toBeDisabled()
+    await page.locator('[data-leads-on="1"]').click()
+    await nowButton(page, 'Check the branches').click()
+    await expectStage(page, 'plan:arcs:1')
+    await expect(feedback(page)).toContainText('Drawn.')
+    // The next division: drawn on the wrong sides, it is held and told so.
+    await page.locator('[data-sector-button="2"]').click()
+    await page.locator('[data-sector-button="6"]').click()
+    await page.locator('[data-leads-on="1"]').click()
+    await nowButton(page, 'Check the branches').click()
+    await expectStage(page, 'plan:arcs:1')
+    await expect(feedback(page)).toContainText('drawn where it leaves')
+    await page.locator('[data-remove-branch="1"]').click()
+    await expect(page.locator('[data-placed-branch]')).toHaveCount(1)
+    await showUntil(page, /^plan:review$/)
+    await expect(page.locator('[data-map-pair] [data-arc-map]')).toHaveCount(2)
+    await expect(page.locator('[data-map-pair] [data-arc-star]')).toHaveCount(2)
+    await expect(now(page)).toContainText('3 divisions')
+    expect(await page.locator('[data-lesson-shell]').innerText()).not.toMatch(BANNED)
+  })
+})
+
+test.describe('coronal and sagittal views', () => {
+  test('planning offers the paper’s pairing, and a click on the reconstruction moves the axial CT', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=views-that-help')
+    await page.locator('[data-bench-restart]').click()
+    await showUntil(page, /^plan:views$/)
+    // RB3 runs forward: axial plus coronal (Mortimer & Saghaie, Figure 2).
+    await expect(now(page)).toContainText('suggest axial plus coronal')
+    await page.locator('[data-open-view="coronal"]').click()
+    const view = page.locator('[data-ref-view]')
+    await expect(view).toHaveAttribute('data-ref-plane', 'coronal')
+    await expect(page.locator('[data-ref-image]')).toHaveAttribute('data-ref-ready', 'true')
+    await expect(page.locator('[data-ref-follow]')).toHaveAttribute('data-ref-follow', 'on')
+    const before = await ct(page).getAttribute('data-slice')
+    // The picture keeps its true proportions inside its box: its centre is always on it.
+    const box = (await page.locator('[data-ref-image]').boundingBox())!
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5)
+    await expect(ct(page)).not.toHaveAttribute('data-slice', before!)
+    const after = await ct(page).getAttribute('data-slice')
+    await expect(page.locator('[data-ref-axial-line]')).toHaveAttribute(
+      'data-ref-axial-line',
+      after!,
+    )
+    // The axial CT and the reconstruction stay side by side, and the page does not scroll.
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+    ).toBeLessThanOrEqual(1)
+    await page.locator('[data-side-tab="sagittal"]').click()
+    await expect(view).toHaveAttribute('data-ref-plane', 'sagittal')
+    await page.locator('[data-side-tab="map"]').click()
+    await expect(page.locator('[data-ref-view]')).toHaveCount(0)
+  })
+
+  test('while driving, a reconstruction follows the scope tip and a click opens the axial CT there', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=two-levels')
+    await page.locator('[data-bench-restart]').click()
+    await page.locator('[data-centre-tab="coronal"]').click()
+    await expect(page.locator('[data-centre-pane="coronal"]')).toBeVisible()
+    await expect(page.locator('[data-ref-image]')).toHaveAttribute('data-ref-ready', 'true')
+    await expect(page.locator('[data-ref-focus]')).toHaveAttribute('data-ref-focus', 'on-plane')
+    const box = (await page.locator('[data-ref-image]').boundingBox())!
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5)
+    await expect(page.locator('[data-centre-pane="ct"]')).toBeVisible()
+    await expect(ct(page)).toBeVisible()
+  })
+})
+
+test.describe('driving with the map', () => {
+  test('past the ostium the map sits beside the scope, and a turn that leads away is backed out of', async ({
+    page,
+  }) => {
+    test.setTimeout(180000)
+    await openBench(page, '/learn?lesson=drive-with-the-map')
+    await page.locator('[data-bench-restart]').click()
+    await showUntil(page, /^plan:review$/)
+    await nowButton(page, 'Drive to the lesion').click()
+    await expectStage(page, '0:match')
+    await expect(page.locator('[data-centre-pane="ct"]')).toBeVisible()
+    await expect(page.locator('[data-stage-step="navigate"]')).toHaveAttribute(
+      'data-stage-state',
+      'now',
+    )
+    await showUntil(page, /^5:choose$/)
+    await expect(page.locator('[data-centre-pane="map"]')).toBeVisible()
+    await expect(scope(page).locator('[data-compass="Med"]')).toHaveCount(1)
+    await expect(now(page)).toContainText('the arc that holds the star')
+    const pose = await scope(page).getAttribute('data-scope-pose')
+    await page.locator('[data-choice="2"]').click()
+    await expectStage(page, '5:astray')
+    await expect(now(page)).toContainText('The division ahead is not one your map draws')
+    await nowButton(page, 'Back out to the fork').click()
+    await expectStage(page, '5:choose')
+    await expect(scope(page)).toHaveAttribute('data-scope-pose', pose!)
+    // The CT is a tab away.
+    await page.locator('[data-centre-tab="ct"]').click()
+    await expect(ct(page)).toBeVisible()
+    await page.locator('[data-centre-tab="map"]').click()
+    await page.locator('[data-map-turn]').check()
+    await expect(page.locator('[data-arc-map]')).toBeVisible()
+    await showUntil(page, /arrived/)
+    const closing = await page.locator('[data-bench-closing]').innerText()
+    expect(closing).toContain('Branches that led away, driven into: 1; backed out of: 1.')
+    expect(closing).not.toMatch(BANNED)
+  })
+})
+
+test.describe('whole lesions', () => {
+  test('Practice plans, maps and drives a lesion from the trachea', async ({ page }) => {
     test.setTimeout(180000)
     await primerSeen(page)
     await page.goto(`${BASE}/practice`)
     await expect(page.locator('[data-lesion]')).toHaveCount(13)
     await expect(page.locator('[data-lesion-picker]')).toContainText('teaching simulator')
+    expect(await page.locator('[data-lesion-picker]').innerText()).not.toMatch(/RS8|RB8/)
     await page.locator('[data-lesion="r-anterior-basal"]').click()
     await expect(page).toHaveURL(/lesion=r-anterior-basal/)
     await expect(page.locator('[data-bench]')).toBeVisible()
     await page.locator('[data-bench-restart]').click()
-    // The trachea and main bronchus are chosen, not marked.
+    await expectStage(page, 'plan:lesion')
+    await showUntil(page, /^plan:review$/)
+    await nowButton(page, 'Drive to the lesion').click()
     await expectStage(page, '0:match')
-    await nowButton(page, 'Show me').click()
-    await expectStage(page, '0:choose')
-    // At the RB8 fork both branches are RB8. A mark for opening 1 placed in opening 2's lumen is
-    // told it is in opening 2, and the fork's own advice says where opening 1 is.
-    await showUntil(page, /^6:identify:0$/)
-    await nowButton(page, /Go to slice 255/).click()
-    await expect(ct(page)).toHaveAttribute('data-slice', '255')
-    await clickSourcePixel(page, 168.7, 314.8)
-    await expectStage(page, '6:identify:0')
-    await expect(feedback(page)).toContainText('That lumen is opening 2.')
-    await expect(feedback(page)).toContainText(
-      'On slice 255 opening 1 is the flat oval at the back of the pair',
-    )
-    await clickSourcePixel(page, 163, 321.2)
-    await expectStage(page, '6:identify:1')
-    // The last fork divides three ways. One branch there is a channel about 2 mm wide, so the
-    // fork is chosen at, not marked: no marking step, and no note about marking.
-    await showUntil(page, /^7:/)
-    await expectStage(page, '7:choose')
-    await expect(page.locator('[data-fork-entry-note]')).toHaveCount(0)
-    const more = page.locator('[data-fork-more]')
-    await more.locator('summary').click()
-    await expect(more).toContainText('divides in three at about slice 249')
-    await expect(more).toContainText('opening 1 stays almost level')
-    await expect(more).toContainText('turn Zoom up to see it')
-    const explained = await more.innerText()
-    expect(explained).not.toMatch(/\bDaughter [A-C]\b/)
-    expect(explained).not.toMatch(/\bmark(s|ed)?\b/i)
-    await more.locator('summary').click()
+    // No fork asks for its openings to be marked: the map was read off the CT in planning.
+    await showUntil(page, /^7:choose$/)
     await expect(page.locator('[data-choice]')).toHaveCount(3)
     await expect(scope(page).locator('[data-scope-opening]')).toHaveCount(3)
-    const labels = await page.locator('[data-choice] strong').allInnerTexts()
-    expect(new Set(labels).size).toBe(3)
     await showUntil(page, /arrived/)
     await expect(now(page)).toContainText('You have reached the lesion')
-    await expect(ct(page).locator('[data-ct-nodule]')).toHaveCount(1)
-    await expect(ct(page).locator('[data-ct-lesion-ring]')).toHaveCount(1)
     const closing = await page.locator('[data-bench-closing]').innerText()
+    expect(closing).toContain('RS8')
     expect(closing).toContain('teaching simulator')
-    expect(closing).toMatch(/first try: \d+ of \d+/)
+    expect(closing).toMatch(/Divisions drawn right at the first check: \d+ of 2/)
     expect(closing).not.toMatch(BANNED)
   })
 
-  test('the closing set withholds names and directions until the learner has chosen', async ({
+  test('the closing set gives no hints and withholds names until the learner has chosen', async ({
     page,
   }) => {
+    test.setTimeout(120000)
     await primerSeen(page)
     await page.goto(`${BASE}/assess`)
     await expect(page.locator('[data-lesion]')).toHaveCount(3)
     await page.locator('[data-lesion="l-inferior-lingula"]').click()
     await expect(page.locator('[data-bench]')).toBeVisible()
     await page.locator('[data-bench-restart]').click()
+    await expectStage(page, 'plan:lesion')
+    await clickCt(page, 0.1, 0.1)
+    await expect(feedback(page)).toContainText('Not the airway that runs into the lesion')
+    await expect(feedback(page)).not.toContainText('mm')
+    await showUntil(page, /^plan:review$/)
+    await nowButton(page, 'Drive to the lesion').click()
     await nowButton(page, 'Check the match').click()
     // Told what is off, not how to fix it.
     await expect(feedback(page)).toContainText('Mirrored')
@@ -430,15 +668,16 @@ test.describe('resilience', () => {
 test.describe('one screen', () => {
   for (const viewport of [
     { width: 1440, height: 900 },
+    // The beta reviewers' window, and what the beta frame leaves the module inside it.
+    { width: 1600, height: 905 },
+    { width: 1600, height: 852 },
     { width: 1707, height: 900 },
   ])
-    test(`the scope, the CT and every control fit ${viewport.width}×${viewport.height}`, async ({
+    test(`the pictures and every control fit ${viewport.width}×${viewport.height}`, async ({
       page,
     }, info) => {
+      test.setTimeout(180000)
       await page.setViewportSize(viewport)
-      await openBench(page, '/learn?lesson=two-levels')
-      await page.locator('[data-bench-restart]').click()
-      await expect(scope(page)).toHaveAttribute('data-scope-ready', 'true', { timeout: 30000 })
       const inside = async (label: string, locator: ReturnType<Page['locator']>) => {
         const count = await locator.count()
         expect(count, label).toBeGreaterThan(0)
@@ -451,7 +690,12 @@ test.describe('one screen', () => {
           expect(box!.y + box!.height, `${label} bottom`).toBeLessThanOrEqual(viewport.height + 0.5)
         }
       }
-      const check = async (state: string) => {
+      const square = async (state: string, label: string, locator: ReturnType<Page['locator']>) => {
+        const box = (await locator.boundingBox())!
+        expect(Math.abs(box.width - box.height), `${state}: ${label} is square`).toBeLessThan(2)
+        expect(box.width, `${state}: ${label} size`).toBeGreaterThanOrEqual(440)
+      }
+      const pageFits = async (state: string) => {
         // Nothing but the detail column scrolls: the page itself does not.
         const page_ = await page.evaluate(() => ({
           h: document.documentElement.scrollHeight,
@@ -461,22 +705,35 @@ test.describe('one screen', () => {
         }))
         expect(page_.h, `${state}: page height`).toBeLessThanOrEqual(page_.ih + 1)
         expect(page_.w, `${state}: page width`).toBeLessThanOrEqual(page_.iw + 1)
-        await inside(`${state}: scope`, scope(page))
-        await inside(`${state}: CT`, ct(page))
-        await inside(`${state}: turn controls`, page.locator('[data-ct-turn]'))
-        await inside(`${state}: slice slider`, page.getByLabel('CT slice'))
+        // The bench reaches the bottom of the window, whatever the task column holds.
+        const bench = (await page.locator('[data-bench]').boundingBox())!
+        expect(bench.y + bench.height, `${state}: bench reaches the bottom`).toBeGreaterThan(
+          page_.ih - 4,
+        )
         await inside(`${state}: instruction`, now(page).locator('h2'))
         await inside(`${state}: task buttons`, now(page).getByRole('button'))
-        const ctBox = (await ct(page).boundingBox())!
-        const scopeBox = (await scope(page).boundingBox())!
-        expect(Math.abs(ctBox.width - ctBox.height), `${state}: CT is square`).toBeLessThan(2)
-        expect(ctBox.width, `${state}: CT size`).toBeGreaterThanOrEqual(440)
-        expect(scopeBox.width, `${state}: scope size`).toBeGreaterThanOrEqual(440)
         await info.attach(`${viewport.width}x${viewport.height}-${state}`, {
           body: await page.screenshot(),
           contentType: 'image/png',
         })
       }
+      const ctFits = async (state: string) => {
+        await inside(`${state}: CT`, ct(page))
+        await inside(`${state}: turn controls`, page.locator('[data-ct-turn]'))
+        await inside(`${state}: slice slider`, page.getByLabel('CT slice'))
+        await square(state, 'CT', ct(page))
+      }
+      const check = async (state: string) => {
+        await pageFits(state)
+        await ctFits(state)
+        await inside(`${state}: scope`, scope(page))
+        await square(state, 'scope', scope(page))
+      }
+
+      // The drive bench, one fork through its moves.
+      await openBench(page, '/learn?lesson=two-levels')
+      await page.locator('[data-bench-restart]').click()
+      await expect(scope(page)).toHaveAttribute('data-scope-ready', 'true', { timeout: 30000 })
       await check('match')
       await nowButton(page, 'Check the match').click()
       await check('match-feedback')
@@ -486,10 +743,50 @@ test.describe('one screen', () => {
       await inside('choose: openings', page.locator('[data-choice]'))
       await check('choose')
       await page.locator('[data-choice="1"]').click()
+      await expectStage(page, '0:astray')
+      await check('astray')
+      await nowButton(page, 'Back out to the fork').click()
+      await expectStage(page, '0:choose')
       await inside('choose-feedback: openings', page.locator('[data-choice]'))
       await check('choose-feedback')
       await showUntil(page, /^0:ready$/)
       await check('drive')
+
+      // The planning bench: the map, the CT and the task.
+      await page.goto(`${BASE}/learn?lesson=nested-arcs`)
+      await page.locator('[data-bench-restart]').click()
+      await expectStage(page, 'plan:frame')
+      const map = page.locator('[data-arc-map]')
+      const planCheck = async (state: string) => {
+        await pageFits(state)
+        await ctFits(state)
+        await inside(`${state}: map`, map)
+        await square(state, 'map', map)
+      }
+      await planCheck('frame')
+      await inside('frame: pickers', page.locator('[data-rim-picker]'))
+      await nowButton(page, 'Show me').click()
+      await planCheck('arcs')
+      await inside('arcs: directions', page.locator('[data-sector-button]'))
+      await page.locator('[data-sector-button="6"]').click()
+      await page.locator('[data-sector-button="2"]').click()
+      await planCheck('arcs-drawn')
+      await inside('arcs-drawn: branch list', page.locator('[data-leads-on]'))
+      await showUntil(page, /^plan:review$/)
+      await pageFits('review')
+
+      // Driving past the ostium: the scope and the map side by side.
+      await page.goto(`${BASE}/learn?lesson=drive-with-the-map`)
+      await page.locator('[data-bench-restart]').click()
+      await showUntil(page, /^plan:review$/)
+      await nowButton(page, 'Drive to the lesion').click()
+      await showUntil(page, /^5:choose$/)
+      await pageFits('map-drive')
+      await inside('map-drive: scope', scope(page))
+      await inside('map-drive: map', map)
+      await square('map-drive', 'scope', scope(page))
+      await square('map-drive', 'map', map)
+      await inside('map-drive: openings', page.locator('[data-choice]'))
     })
 
   test('a narrow screen stacks the instruction above the two pictures', async ({ page }) => {

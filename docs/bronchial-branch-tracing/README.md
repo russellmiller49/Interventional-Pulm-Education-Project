@@ -1,53 +1,64 @@
-# Bronchial branch tracing: scope-first navigation
+# Bronchial branch tracing: plan from the lesion, map, navigate
 
 Entry: `/en/learn/anatomy/branch-tracing`. Anonymous direct access, noindex, no catalog, search or sitemap listing. The module is unpublished.
 
-**Rebuilt October 9, 2026.** The earlier course asked the learner to mark airway lumens on the CT slice by slice, lesson after lesson. The owner asked for the teaching to be turned round: start from the bronchoscopic view, make the learner turn the CT to match it, identify which airway is which on the CT, and use branch tracing to navigate to a lesion. Everything below describes the rebuilt module. Documents listed under [Earlier design records](#earlier-design-records) describe the course it replaced.
+**Rebuilt October 21, 2026** around the simplified bronchial branch tracing of Mortimer and Saghaie, _Lost in navigation: a simplified CT-based airway mapping method for ultrathin navigational bronchoscopy_, J Clin Med 2025;14:8009 ([doi](https://doi.org/10.3390/jcm14228009)). The October 9 rebuild (scope-first: match, identify, choose, drive at every fork) is kept for lessons 1 and 2 and for the drive itself; planning and the nested-arc map are new. Documents listed under [Earlier design records](#earlier-design-records) describe earlier courses.
 
 ## What the learner does
 
-A virtual bronchoscope sits beside the axial CT. At every fork:
+A lesion trip has three stages.
 
-1. **Match.** The scope shows where the patient's right, left, front and back are in its view. The learner turns or flips the CT (quarter turns and a left–right flip) until the letters sit on the same sides.
-2. **Identify.** The learner finds each numbered opening's lumen on the CT, scrolling to the slice where it leaves the parent, and clicks it. The result says which lumen the click landed in.
-3. **Choose.** The learner picks the opening that leads toward the lesion. An opening that leads away is refused at the fork, with the reason.
-4. **Drive.** The scope advances to the next fork and the CT follows its tip.
+1. **Plan, from the lesion back** (`engine/plan-session.ts`).
+   - _The airway into the lesion._ The learner clicks the airway that runs into the lesion. It counts within 3 mm of the route's own centreline over the last 20 mm before the lesion, in three dimensions, so an airway that runs along the slice counts all along it (`lesionVerdict`).
+   - _Its segment._ The learner names the segmental bronchus from that lobe's segmental bronchi (`segmentChoices`).
+   - _Views._ Turning or flipping the CT, and the coronal and sagittal reconstructions, are offered and never checked.
+   - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits. In Learn, a lesson that asks for the segment names only the lobe in its title, objective, concept, trip titles and intro (`__tests__/nav-lessons.test.ts`).
+2. **Map** (`engine/arc-map.ts`).
+   - _The ostium circle._ The learner labels the four rim positions of the view into the segment's ostium with superior, inferior, medial, lateral, anterior or posterior. Any roll of the right arrangement is accepted; a mirror image is refused (`gradeFrame`). A rim position between two directions accepts either word.
+   - _The divisions._ At each division from the ostium to the lesion the learner draws each branch as an arc on one of eight sides of the current branch and marks the branch that goes on. A drawn branch counts when it is within 67.5° (the same or a neighbouring side) of where that branch leaves _relative to its siblings_, read in the ostium frame; drawn branches are matched to daughters by the closest overall fit (`gradeArcs`). The next division is drawn inside the marked branch.
+   - _Review._ The learner's map beside the model's, with the star on the branch that reaches the lesion.
+3. **Navigate** (`engine/nav-session.ts`, the scope-first bench).
+   - Every fork is chosen at; no fork asks for its openings to be marked (lessons 1 and 2 still mark them).
+   - Turning the CT to match the scope is asked for in lesson 1, and everywhere until the learner has finished lesson 1 or matched three forks on the first check. After that no fork waits for it: the CT stays as the learner left it, with **Check my turn** beside it. Kept on the device (`nav-storage.ts`, `orientation`).
+   - Past the segmental ostium the middle pane shows the map beside the scope, zoomed on the current division, with **Turn the map to the scope** (`mapTurnToScope`); the CT is a tab away. The scope's rim reads Med, Lat, Ant, Post, Sup, Inf instead of R, L, A, P, Head, Feet.
+   - **A turn that leads away.** Choosing an opening that leads away drives the scope into it, stopping 8 mm short of that branch's own next division (or short of where the model ends), looking at it (`geometry/astray.ts`). The learner backs out along the same path to the fork's exact waiting pose, and that opening is greyed. Wrong turns and back-outs are logged and summarised, in the closing set too.
 
-Any step can be shown on request; nothing blocks.
+| Section     | Address                 | What it is                                                                                                                   |
+| ----------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Learn       | `/learn?lesson=<id>`    | Nine lessons, about 79 minutes.                                                                                              |
+| Practice    | `/practice?lesion=<id>` | Thirteen simulated lesions: plan, map and drive each, help on request.                                                       |
+| Closing set | `/assess?lesion=<id>`   | Three lesions in three lobes, no hints: a check says only whether it fits; openings are numbered but not named until chosen. |
 
-| Section     | Address                 | What it is                                                                                                                                      |
-| ----------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Learn       | `/learn?lesson=<id>`    | Eight lessons, about 66 minutes. Each is one or two short trips along a route.                                                                  |
-| Practice    | `/practice?lesion=<id>` | Thirteen simulated lesions. Whole routes from the trachea, help on request.                                                                     |
-| Closing set | `/assess?lesion=<id>`   | Three lesions in three lobes. Openings are numbered but not named until chosen; a missed mark is told what it landed in, not which way to move. |
-
-Lessons, in order: `carina-orientation`, `two-levels`, `middle-lobe-flat` (horizontal–horizontal), `rb5-up-or-down` (horizontal–vertical), `look-up-rul` (vertical), `oblique` (horizontal–oblique), `turn-back`, `navigate`.
+Lessons, in order: `carina-orientation` and `two-levels` (reading the CT against the scope), `start-at-the-lesion`, `stand-at-the-ostium`, `nested-arcs` (planning from the lesion), `drive-with-the-map`, `views-that-help` (driving with the map), `turn-back`, `navigate` (the whole method).
 
 ## How it is built
 
 All under `src/features/bronchial-branch-tracing/`.
 
-| Layer          | Files                                                                                                                              | What it holds                                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Route geometry | `geometry/route-stations.ts`, `geometry/paired-scope.ts`                                                                           | Where the scope waits at each fork, how it is rolled, how it travels between forks.                            |
-| Matching       | `engine/orientation-match.ts`                                                                                                      | Which CT displays match the scope at a fork, and how a given display differs.                                  |
-| Lumen verdict  | `engine/junction-feedback.ts`, `engine/response-planes.ts`, `geometry/answer-plane-air.json`                                       | Which lumen a click is in, read from the CT's own air.                                                         |
-| Fork facts     | `engine/fork-facts.ts`                                                                                                             | Where each opening sits in the scope, which way it runs, which slice it is identified on.                      |
-| Session        | `engine/nav-session.ts`, `engine/nav-storage.ts`                                                                                   | The reducer for one trip, and the place kept on the device (`branch-tracing.nav-v1`).                          |
-| Content        | `content/nav-lessons.ts`, `content/bench-copy.ts`, `content/junction-feedback.ts`, `content/course-guide.ts`, `content/targets.ts` | Lessons, every sentence the bench says, thirty-five written fork explanations, the reference, the lesion list. |
-| Bench          | `components/NavigationBench.tsx`, `ScopeView.tsx`, `ScopeCanvas.tsx`, `TracingCtViewer.tsx`                                        | Scope, CT and task on one screen.                                                                              |
-| Hosts          | `components/NavLessonHost.tsx`, `NavRouteHost.tsx`, `BranchTracingOverview.tsx`                                                    | Lessons, routes, the hub.                                                                                      |
+| Layer          | Files                                                                                                                                                      | What it holds                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Route geometry | `geometry/route-stations.ts`, `geometry/paired-scope.ts`, `geometry/astray.ts`                                                                             | Where the scope waits at each fork, how it travels, and the turn into a branch that leads away and back out.        |
+| The map        | `engine/arc-map.ts`                                                                                                                                        | The ostium frame, where each branch is drawn, how a circle and arcs are read, the nested layout, the turn to scope. |
+| Planning       | `engine/plan-session.ts`, `engine/trip-session.ts`                                                                                                         | The planning reducer; a trip as planning then the drive.                                                            |
+| Matching       | `engine/orientation-match.ts`                                                                                                                              | Which CT displays match the scope at a fork, and how a given display differs.                                       |
+| Lumen verdict  | `engine/junction-feedback.ts`, `engine/response-planes.ts`, `geometry/answer-plane-air.json`                                                               | Which lumen a click is in, read from the CT's own air (lessons 1 and 2).                                            |
+| Session        | `engine/nav-session.ts`, `engine/nav-storage.ts`                                                                                                           | The drive reducer; the place kept on the device (`branch-tracing.nav-v2`).                                          |
+| Content        | `content/nav-lessons.ts`, `content/bench-copy.ts`, `content/plan-copy.ts`, `content/junction-feedback.ts`, `content/course-guide.ts`, `content/targets.ts` | Lessons, every computed sentence, the fork explanations, the method's steps and tips, the lesion list.              |
+| Benches        | `components/TripBench.tsx`, `PlanBench.tsx`, `NavigationBench.tsx`, `ArcMap.tsx`, `ScopeView.tsx`, `TracingCtViewer.tsx`                                   | Planning and the drive, each on one screen.                                                                         |
+| Hosts          | `components/NavLessonHost.tsx`, `NavRouteHost.tsx`, `BranchTracingOverview.tsx`                                                                            | Lessons, lesions, the hub.                                                                                          |
 
-The source export is unchanged: `geometry/branch-decisions.json` (17 routes, 128 fork decisions over 57 forks), the native CT in `public/branch-tracing/native-v1` and the lesions in `public/branch-tracing/targets-v1`. `geometry/paired-routes.json` is copied from the same source graph and holds the centreline of every airway a fork names: 116 airways, 70 along the routes and 46 daughters the routes do not take.
+The source export is unchanged: `geometry/branch-decisions.json` (17 routes, 128 fork decisions over 57 forks), the native CT in `public/branch-tracing/native-v1` and the lesions in `public/branch-tracing/targets-v1`. `geometry/paired-routes.json` holds the centreline of every airway a fork names (116). `geometry/off-route-children.json` holds one generation past each of the 115 fork daughters (the first 15 mm of each child; 23 daughters end in the model) and the source graph's airway radii. It is kept out of `paired-routes.json` on purpose: the lumen verdict reads every edge there as a named airway. Both are written by `scripts/branch-tracing/build-paired-routes.mjs`.
 
 ### Rules the geometry follows
 
 - **Scope roll** (`scopeUp`). Looking down an airway: anterior at the top. Looking along a horizontal bronchus: the head at the top. Looking up an airway inside an upper lobe: the lateral chest wall at the bottom, which is how Kurimoto and Morita display the right upper lobe and the left upper division; looking up anywhere else: anterior at the top.
 - **Where the scope waits** (`stationCamera`). 8 mm short of the fork, aimed between the openings. Farther back (to 20 mm) when a wide airway would put the openings at the rim, and nearer when the fork before is closer than 8 mm: it always stays inside the parent airway.
-- **What matches** (`matchOrientation`). A patient axis counts when at least half of it lies across the scope's line of sight. A display matches when every such axis points the same way on both pictures. When the scope looks along the slice, one CT axis runs into the picture and either way round is accepted for it. When the scope looks at an angle that lays both CT axes along one edge of its view, no display matches exactly: the bench sets the closest one and says so, and the match is not asked.
-- **Where a daughter is identified** (`responsePlane`). On the export's own response plane, except the tracheal bifurcation, which is identified on slice 372 where the carina shows (`RESPONSE_PLANE_OVERRIDES`).
-- **What a click is in** (`optionVerdict`). The click's air region is flood-filled to 12 mm; it is in the named airway whose centre that region reaches and is nearest. Four small distal daughters have no air under their centre at the threshold; there the nearest centre within 3 mm decides. A mark the bench places itself goes in the air nearest the daughter's centre (`responseLumen`). Every daughter of a fork has a centreline, on the route or off it, so a mark in the other daughter is named as that airway.
-- **What is asked at a fork** (`defaultSteps`, `routePlan`). A fork whose lumens are under 5 mm² on their slices is chosen at, not marked. So are five forks where an opening is a lumen about 2 mm wide that shows as a thin dark line, listed by name in `THIN_LUMEN_FORKS`. On whole routes the trachea and main bronchus are chosen, not marked.
+- **The ostium frame** (`ostiumFrame`). The station camera at the segment's first division, its up, right, down and left named by the nearest anatomical direction; a second direction within 0.15 makes the position a combination. At RB1 this is medial up, posterior right, lateral down, anterior left: Mortimer and Saghaie's Figure 1E–F. The frames of all ten segments the lesions use are pinned in `__tests__/arc-map.test.ts` and were read before any text was written about them.
+- **Where a branch is drawn** (`branchBearings`). Each daughter's direction 6 mm along its centreline, minus the mean of its siblings, laid across the ostium frame. No mapped division has a branch whose separation lies mostly along the view (the smallest in-view share is 0.44, at `junction-71`).
+- **What matches** (`matchOrientation`). A patient axis counts when at least half of it lies across the scope's line of sight. A display matches when every such axis points the same way on both pictures.
+- **Where a daughter is identified** (`responsePlane`, lessons 1–2). On the export's own response plane, except the tracheal bifurcation, identified on slice 372 (`RESPONSE_PLANE_OVERRIDES`).
+- **What a click is in** (`optionVerdict`, lessons 1–2). The click's air region is flood-filled to 12 mm; it is in the named airway whose centre that region reaches and is nearest.
+- **What is asked at a fork.** Lessons 1 and 2 mark openings where their lumens are 5 mm² or more and not in `THIN_LUMEN_FORKS`. Every other drive is choose-only (`MAP_STEPS`).
 
 ## Written fork explanations
 
@@ -95,27 +106,32 @@ Each statement comes from one of three places: the airway model (fork level, cou
 ## Run and check
 
 ```sh
-npx next dev --port 3127 --webpack          # or the launch entry `claude-bbt-nav`
+npm run dev:claude                          # port 3120; the launch entry `claude-worktree`
 npx jest src/features/bronchial-branch-tracing
-BRANCH_TRACING_BASE_URL=http://localhost:3127 npx playwright test -c playwright.branch-tracing.config.ts
+BRANCH_TRACING_BASE_URL=http://localhost:3120 npx playwright test -c playwright.branch-tracing.config.ts
 npx tsx scripts/branch-tracing/orientation-match-report.ts            # the match at every fork
 node scripts/branch-tracing/build-answer-plane-air.mjs --report      # lumen size and threshold margin per daughter
-node scripts/branch-tracing/build-paired-routes.mjs                  # recopy the 116 centrelines from the source graph
+node scripts/branch-tracing/build-paired-routes.mjs                  # recopy the 116 centrelines and the next division of every fork daughter
 node scripts/branch-tracing/build-answer-plane-air.mjs               # regenerate the air masks (after the centrelines)
 ```
 
-The Playwright spec includes the one-screen check: at 1440×900 and 1707×900 the scope, the CT, every CT control and the task buttons are inside the viewport in each state, and the page does not scroll.
+The Playwright spec includes the one-screen check: at 1440×900, 1600×905 (the beta reviewers' window), 1600×852 (what the beta frame leaves the module in that window) and 1707×900, for the drive (match, identify, choose, a turn that leads away, drive), the planning bench (circle, divisions, review) and the drive past the ostium with the map beside the scope, every picture and control is inside the viewport, the page does not scroll and the bench reaches the bottom of the window.
 
 ## Open for the owner
 
-These were decided by the build and are easy to change:
+Decided on October 21, 2026: rebuild around the simplified method; wrong turns go one generation, everywhere, and are counted in the closing set; the map is graded on relative direction with the model map shown after; turning the CT becomes optional after lesson 1 or three first-try matches.
 
-1. The tracheal bifurcation is identified on slice 372 everywhere (lessons, Practice and the closing set).
-2. An opening that leads away from the lesion is refused at the fork. The scope does not drive into it and come back. Every daughter now has a centreline, so a short look into the other branch could be added if wanted.
-3. The scope's roll follows the three-part rule above. It is a rule for a teaching model, not a recording of how any one operator holds the scope.
-4. Thirty-five of the 57 forks have a written slice-by-slice explanation (see [Written fork explanations](#written-fork-explanations)), which covers every fork where openings are marked. The other 22 are chosen at and show their computed levels and directions only.
-5. Which forks count as too thin to mark is a list of five read off the images, not a measured rule. A width measurement could replace the list if more routes are added.
-6. The "looking up, turn and do not flip" teaching in lesson 1 follows from the geometry and the book's right upper lobe display; it has not been checked line by line against Kurimoto and Morita pp. 4–8.
+Decided by the build and easy to change:
+
+1. **Tolerance.** A drawn branch counts within 67.5° of its relative bearing (the same or a neighbouring of eight sides). `ARC_TOLERANCE_DEG` in `engine/arc-map.ts`.
+2. **The circle's roll.** Any roll of the right arrangement is accepted, because how the scope is held is the operator's choice; the map is then drawn on the learner's circle and turned to the scope on request. A mirror image is refused.
+3. **No marking on whole routes.** Practice and the closing set no longer ask for openings to be marked at any fork: the CT is read in planning. Lessons 1 and 2 still mark.
+4. **The airway into the lesion** counts within 3 mm of the route centreline, not by the air flood fill: near most lesions the lumen is 1–3 mm² at the air threshold and the lesion patch covers about 28 slices, so no clean air mask exists there.
+5. **The segment naming step** offers the lobe's segmental bronchi. The lesion picker and titles name only the lobe and slice until the segment is named, so the step is not given away by the lesion's own S-code.
+6. **The model map** does not yet draw a generation inside the branches the route does not take (the paper's tip for recognising a wrong turn). `off-route-children.json` has the geometry for it.
+7. **Coronal and sagittal views** (`public/branch-tracing/mpr-v1`, `components/ReferenceCtView.tsx`, built by `scripts/branch-tracing/build-reference-planes.mjs`): 276 coronal and 363 sagittal planes rebuilt losslessly from the shipped axial PNGs, 34.17 MB. In planning they are tabs beside the axial CT and follow the lesion, then the division being drawn; the views step gives Mortimer and Saghaie's Figure 2 pairing for the segment (`content/reference-views.ts`). While driving they are tabs in the middle pane and follow the scope tip. A click on either moves the axial CT to that point. None of it is checked.
+8. The tracheal bifurcation is identified on slice 372 everywhere it is marked; five thin-lumen forks are a named list, not a measured rule; lesson 1's "looking up, turn and do not flip" is not checked line by line against Kurimoto and Morita pp. 4–8.
+9. **Wording changed on November 9, 2026, for your read.** The segmental bronchus is defined as the largest airway on the way back from the lesion that still supplies the segment alone (lesson 3 and the hint after a wrong segment); the earlier "the bronchus that leaves the lobar bronchus" did not hold for RB1, which leaves the RB1/B2 trunk in this CT, or for the basal segments. Lesson 7 now says a coronal reconstruction _cuts across_ a segment that runs forward or back, as the Figure 2 reasons say, not that it shows it in profile. The primer's "seldom more than four or five" divisions past the segment is now this CT's own count: no route has more than five (pinned in `nav-lessons.test.ts`).
 
 ## Earlier design records
 

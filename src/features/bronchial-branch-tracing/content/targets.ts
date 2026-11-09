@@ -36,6 +36,12 @@ const LOBES: { lobe: string; segments: string[] }[] = [
 ]
 
 export const targetById = (id: string) => CT_TARGETS.find((target) => target.id === id)
+/** "Right upper lobe": the lobe a lesion is in, said where its segment is not yet to be named. */
+export function lobeOf(target: CtNoduleTarget): string {
+  const lobe = LOBES.find((l) => l.segments.includes(target.segment.code))
+  if (!lobe) throw new Error(`No lobe listed for segment ${target.segment.code}`)
+  return lobe.lobe
+}
 export function traceForTarget(targetId: string): CtTrace {
   const traceId = ROUTE_FOR_TARGET[targetId]
   if (!traceId) throw new Error(`No route is named for lesion ${targetId}`)
