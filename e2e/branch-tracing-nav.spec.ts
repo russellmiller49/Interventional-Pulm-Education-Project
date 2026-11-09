@@ -668,6 +668,9 @@ test.describe('resilience', () => {
 test.describe('one screen', () => {
   for (const viewport of [
     { width: 1440, height: 900 },
+    // The beta reviewers' window, and what the beta frame leaves the module inside it.
+    { width: 1600, height: 905 },
+    { width: 1600, height: 852 },
     { width: 1707, height: 900 },
   ])
     test(`the pictures and every control fit ${viewport.width}×${viewport.height}`, async ({

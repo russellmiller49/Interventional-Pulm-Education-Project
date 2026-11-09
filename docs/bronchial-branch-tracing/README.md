@@ -12,7 +12,7 @@ A lesion trip has three stages.
    - _The airway into the lesion._ The learner clicks the airway that runs into the lesion. It counts within 3 mm of the route's own centreline over the last 20 mm before the lesion, in three dimensions, so an airway that runs along the slice counts all along it (`lesionVerdict`).
    - _Its segment._ The learner names the segmental bronchus from that lobe's segmental bronchi (`segmentChoices`).
    - _Views._ Turning or flipping the CT, and the coronal and sagittal reconstructions, are offered and never checked.
-   - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits.
+   - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits. In Learn, a lesson that asks for the segment names only the lobe in its title, objective, concept, trip titles and intro (`__tests__/nav-lessons.test.ts`).
 2. **Map** (`engine/arc-map.ts`).
    - _The ostium circle._ The learner labels the four rim positions of the view into the segment's ostium with superior, inferior, medial, lateral, anterior or posterior. Any roll of the right arrangement is accepted; a mirror image is refused (`gradeFrame`). A rim position between two directions accepts either word.
    - _The divisions._ At each division from the ostium to the lesion the learner draws each branch as an arc on one of eight sides of the current branch and marks the branch that goes on. A drawn branch counts when it is within 67.5° (the same or a neighbouring side) of where that branch leaves _relative to its siblings_, read in the ostium frame; drawn branches are matched to daughters by the closest overall fit (`gradeArcs`). The next division is drawn inside the marked branch.
@@ -115,7 +115,7 @@ node scripts/branch-tracing/build-paired-routes.mjs                  # recopy th
 node scripts/branch-tracing/build-answer-plane-air.mjs               # regenerate the air masks (after the centrelines)
 ```
 
-The Playwright spec includes the one-screen check: at 1440×900 and 1707×900, for the drive (match, identify, choose, a turn that leads away, drive), the planning bench (circle, divisions, review) and the drive past the ostium with the map beside the scope, every picture and control is inside the viewport, the page does not scroll and the bench reaches the bottom of the window.
+The Playwright spec includes the one-screen check: at 1440×900, 1600×905 (the beta reviewers' window), 1600×852 (what the beta frame leaves the module in that window) and 1707×900, for the drive (match, identify, choose, a turn that leads away, drive), the planning bench (circle, divisions, review) and the drive past the ostium with the map beside the scope, every picture and control is inside the viewport, the page does not scroll and the bench reaches the bottom of the window.
 
 ## Open for the owner
 
@@ -131,6 +131,7 @@ Decided by the build and easy to change:
 6. **The model map** does not yet draw a generation inside the branches the route does not take (the paper's tip for recognising a wrong turn). `off-route-children.json` has the geometry for it.
 7. **Coronal and sagittal views** (`public/branch-tracing/mpr-v1`, `components/ReferenceCtView.tsx`, built by `scripts/branch-tracing/build-reference-planes.mjs`): 276 coronal and 363 sagittal planes rebuilt losslessly from the shipped axial PNGs, 34.17 MB. In planning they are tabs beside the axial CT and follow the lesion, then the division being drawn; the views step gives Mortimer and Saghaie's Figure 2 pairing for the segment (`content/reference-views.ts`). While driving they are tabs in the middle pane and follow the scope tip. A click on either moves the axial CT to that point. None of it is checked.
 8. The tracheal bifurcation is identified on slice 372 everywhere it is marked; five thin-lumen forks are a named list, not a measured rule; lesson 1's "looking up, turn and do not flip" is not checked line by line against Kurimoto and Morita pp. 4–8.
+9. **Wording changed on November 9, 2026, for your read.** The segmental bronchus is defined as the largest airway on the way back from the lesion that still supplies the segment alone (lesson 3 and the hint after a wrong segment); the earlier "the bronchus that leaves the lobar bronchus" did not hold for RB1, which leaves the RB1/B2 trunk in this CT, or for the basal segments. Lesson 7 now says a coronal reconstruction _cuts across_ a segment that runs forward or back, as the Figure 2 reasons say, not that it shows it in profile. The primer's "seldom more than four or five" divisions past the segment is now this CT's own count: no route has more than five (pinned in `nav-lessons.test.ts`).
 
 ## Earlier design records
 
