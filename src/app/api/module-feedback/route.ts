@@ -1,5 +1,11 @@
+import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { feedbackSchema, isPngScreenshot, maxScreenshotBytes } from '@/features/module-beta/schema'
+import {
+  describeReviewer,
+  reviewerProfileColumns,
+  type ReviewerProfile,
+} from '@/features/module-beta/reviewSchema'
 import {
   feedbackBucket,
   feedbackJson,
@@ -110,11 +116,13 @@ export async function GET(request: Request) {
   let query = supabaseAdmin
     .from('module_beta_feedback')
     .select(
-      'id,module_id,page_path,comment,selected_text,tester_email,created_at,screenshot_path,status,reviewer_notes',
+      'id,user_id,module_id,page_path,comment,selected_text,tester_email,created_at,screenshot_path,status,reviewer_notes',
       { count: 'exact' },
     )
   if (params.get('module')) query = query.eq('module_id', params.get('module')!)
   if (params.get('status')) query = query.eq('status', params.get('status')!)
+  const user = params.get('user')
+  if (user && z.string().uuid().safeParse(user).success) query = query.eq('user_id', user)
   const { data, count, error } = await query
     .order('created_at', { ascending: false })
     .order('id')
@@ -124,5 +132,16 @@ export async function GET(request: Request) {
       { error: 'Feedback could not be loaded. Check that feedback storage has been set up.' },
       503,
     )
-  return feedbackJson({ entries: data, count })
+  // Who sent each report, from their site profile, so a comment can be weighed by its author.
+  const users = [...new Set((data ?? []).map((entry) => entry.user_id).filter(Boolean))]
+  const reviewers: Record<string, string> = {}
+  if (users.length) {
+    const { data: profiles } = await supabaseAdmin
+      .from('site_profiles')
+      .select(`id,${reviewerProfileColumns}`)
+      .in('id', users)
+    for (const profile of (profiles ?? []) as (ReviewerProfile & { id: string })[])
+      reviewers[profile.id] = describeReviewer(profile)
+  }
+  return feedbackJson({ entries: data, count, reviewers })
 }

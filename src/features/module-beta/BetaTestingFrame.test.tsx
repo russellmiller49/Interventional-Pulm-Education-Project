@@ -926,8 +926,12 @@ describe('server mode', () => {
     } finally {
       globalThis.fetch = original
     }
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    // The page also reads the reviewer's own overall reviews; only one report is sent.
+    const sends = (fetchMock.mock.calls as unknown as [string, RequestInit?][]).filter(
+      ([url]) => url === '/api/module-feedback',
+    )
+    expect(sends).toHaveLength(1)
+    const [, init] = sends[0] as [string, RequestInit]
     const body = init.body as FormData
     expect(body.get('moduleId')).toBe('live-anatomy')
     expect(body.get('pagePath')).toBe(`${lesson}?tab=explore`)

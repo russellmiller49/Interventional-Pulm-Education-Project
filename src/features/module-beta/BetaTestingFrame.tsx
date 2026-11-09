@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, MessageSquare } from 'lucide-react'
+import { ArrowLeft, ClipboardCheck, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -47,6 +47,12 @@ import {
   encodeScreenshotSource,
   type DraftImage,
 } from './screenshotDraftImage'
+import {
+  OverallReviewDialog,
+  type ReviewContext,
+  type ReviewModuleNote,
+  type SavedReview,
+} from './OverallReviewDialog'
 
 const message = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
@@ -87,14 +93,29 @@ const signatureOf = (content: DraftContent) =>
 // nothing read later.
 type SaveSnapshot = DraftContent & { png: Blob | null }
 
+// Leaving by All modules offers the overall review only after real use of the module.
+const reviewOfferAfterMs = 10 * 60 * 1000
+
 export function BetaTestingFrame({
   moduleEntry,
   locale,
+  reviewNote = null,
 }: {
   moduleEntry: BetaModule
   locale: string
+  /** From the module's hub card; the overall review asks the module's own questions from it. */
+  reviewNote?: ReviewModuleNote | null
 }) {
   const local = feedbackMode() === 'owner-local'
+  const hubHref = `/${locale}/development-beta`
+  // Server mode only: the overall review needs the reviewer's account and site profile.
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [reviewContext, setReviewContext] = useState<ReviewContext | null>(null)
+  const [reviewDirty, setReviewDirty] = useState(false)
+  const [leaveOffer, setLeaveOffer] = useState(false)
+  const visitStart = useRef(0)
+  const reportsSent = useRef(0)
+  const offeredReview = useRef(false)
   const shell = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
   const screenshotDraft = useRef<ScreenshotDraft>(createScreenshotDraft())
@@ -141,7 +162,49 @@ export function BetaTestingFrame({
   const pendingDraft = isMeaningfulDraft({ comment, selectedText, hasImage })
   // A server-mode draft exists only in this page, so leaving the page loses it. Owner-local
   // drafts are kept on the browser and offered again, so leaving never needs a warning there.
-  const guardDraft = !local && pendingDraft
+  // Unsent overall-review answers are kept the same way, in this page only.
+  const guardDraft = !local && (pendingDraft || reviewDirty)
+
+  useEffect(() => {
+    visitStart.current = Date.now()
+    if (local) return
+    // The hub's "Edit" link asks for the overall review to open with the module.
+    if (new URLSearchParams(window.location.search).get('review') === '1') setReviewOpen(true)
+    let cancelled = false
+    fetch('/api/module-review/mine')
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((mine) => {
+        if (cancelled) return
+        const review =
+          (mine?.reviews as SavedReview[] | undefined)?.find(
+            (entry) => entry.module_id === moduleEntry.id,
+          ) ?? null
+        setReviewContext({
+          profileLabel: mine?.profile?.label ?? '',
+          defaultTrack: mine?.profile?.defaultTrack ?? null,
+          reviewsOpen: Boolean(mine?.reviewsOpen),
+          review,
+          reportCount: mine?.reportCounts?.[moduleEntry.id] ?? 0,
+        })
+      })
+      .catch(() => {
+        if (!cancelled)
+          setReviewContext({
+            profileLabel: '',
+            defaultTrack: null,
+            reviewsOpen: false,
+            review: null,
+            reportCount: 0,
+          })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [local, moduleEntry.id])
+
+  const onReviewSaved = useCallback((review: SavedReview) => {
+    setReviewContext((current) => (current ? { ...current, review, reviewsOpen: true } : current))
+  }, [])
 
   useEffect(() => {
     latest.current = { reportId, comment, selectedText, pagePath, moduleId: reportModule.id }
@@ -687,6 +750,12 @@ export function BetaTestingFrame({
       kept.current = null
       resetDraft()
       setSuccess(`Feedback saved${local ? ' locally' : ''}. Reference ${savedId.slice(0, 8)}.`)
+      if (!local) {
+        reportsSent.current += 1
+        setReviewContext((current) =>
+          current ? { ...current, reportCount: current.reportCount + 1 } : current,
+        )
+      }
       void restoreDraft()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Feedback could not be saved. Please retry.')
@@ -699,13 +768,27 @@ export function BetaTestingFrame({
       }
     }
   }
+  // Leaving after real use, with no overall review yet, offers one once per visit.
+  function shouldOfferReview() {
+    if (local || offeredReview.current || !reviewContext?.reviewsOpen || reviewContext.review)
+      return false
+    return Date.now() - visitStart.current >= reviewOfferAfterMs || reportsSent.current > 0
+  }
   // The wrapper's own link leaves by client-side navigation, which no unload prompt covers.
   function confirmLeave(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (!guardDraft) return
     // Opening the link in a new tab or window leaves this page, and its draft, where they are.
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return
-    if (!window.confirm(leaveUnsent)) event.preventDefault()
+    // Unsent work is asked about first; the review offer never stacks on that question.
+    if (guardDraft) {
+      if (!window.confirm(leaveUnsent)) event.preventDefault()
+      return
+    }
+    if (shouldOfferReview()) {
+      event.preventDefault()
+      offeredReview.current = true
+      setLeaveOffer(true)
+    }
   }
   async function removeUnreadableDrafts() {
     try {
@@ -720,7 +803,7 @@ export function BetaTestingFrame({
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-1.5 sm:px-4">
         <Link
           aria-label="All beta modules"
-          href={`/${locale}/development-beta` as Route}
+          href={hubHref as Route}
           onClick={confirmLeave}
           className="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1 text-sm underline underline-offset-4 sm:justify-start"
         >
@@ -740,6 +823,17 @@ export function BetaTestingFrame({
             <Link href={`/${locale}/admin/module-feedback` as Route} className="text-sm underline">
               Review feedback
             </Link>
+          )}
+          {!local && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setReviewOpen(true)}
+              data-overall-review-button
+            >
+              <ClipboardCheck className="mr-2 h-4 w-4 shrink-0" aria-hidden />
+              {reviewContext?.review ? 'Edit overall review' : 'Overall review'}
+            </Button>
           )}
           <Button size="sm" onClick={beginFeedback} disabled={!draftReady}>
             <MessageSquare className="mr-2 h-4 w-4 shrink-0" aria-hidden />
@@ -894,6 +988,47 @@ export function BetaTestingFrame({
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+      {!local && (
+        <OverallReviewDialog
+          moduleEntry={moduleEntry}
+          note={reviewNote}
+          context={reviewContext}
+          open={reviewOpen}
+          onOpenChange={setReviewOpen}
+          onSaved={onReviewSaved}
+          onDirtyChange={setReviewDirty}
+        />
+      )}
+      <Dialog open={leaveOffer} onOpenChange={setLeaveOffer}>
+        <DialogContent className="max-w-lg" data-review-offer>
+          <DialogHeader>
+            <DialogTitle>Before you go</DialogTitle>
+            <DialogDescription>
+              A 3-minute overall review of {moduleEntry.title} tells us whether it is ready. You can
+              also give it later from the hub.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setLeaveOffer(false)}>
+              Stay
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={hubHref as Route} onClick={() => setLeaveOffer(false)}>
+                Leave without it
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setLeaveOffer(false)
+                setReviewOpen(true)
+              }}
+            >
+              Start overall review
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -108,13 +108,67 @@ see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmat
 server persists the report. Report IDs make retries idempotent, and submissions are limited to
 30 per account per hour.
 
+## Overall review
+
+Detailed feedback is one problem on one page. The overall review is one reviewer's verdict on a
+whole module: how far they got, how good it is, whether it is ready, and who they are. Each
+reviewer gives one per module and can edit it later; editing replaces their earlier answers.
+Owner-local mode does not offer it.
+
+**Where and when.** The testing toolbar has an **Overall review** button beside **Give feedback**
+(**Edit overall review** once one is saved). Leaving by **All modules** offers it once per visit
+("Before you go", with Start overall review / Leave without it / Stay), and only when:
+
+- the module has no overall review from this reviewer;
+- they spent at least 10 minutes in it, or sent at least one detailed report, on this visit;
+- no detailed report or review answers are unsent (the existing unsent-feedback question comes
+  first, and the offer is not stacked on it).
+
+Each hub card says **Overall review: not yet**, or **submitted <date> · Edit**; the Edit link
+opens the module with the form open (`?review=1`). The hub intro tells reviewers to send detailed
+feedback while testing and finish each module with an overall review. Nothing interrupts a
+reviewer mid-module.
+
+**Who the reviewer is** comes from the site profile the hub already requires (role, training
+level, years in practice); the form shows it ("Reviewing as PCCM Fellow · Fellow Year 2") and
+does not ask again. The reviewer answers **as a learner** or **as an educator or practicing
+clinician**. Students, residents and fellows start as learners, everyone else as educators, and
+anyone may switch.
+
+**Questions** (`src/features/module-beta/reviewSchema.ts`; every choice is required, the two text
+boxes are optional):
+
+- Everyone: how much of the module they went through; their experience with the topic before it;
+  overall quality, clarity, ease of use and the interactive parts (Poor to Excellent); the level
+  for the audience on the hub card (too basic / about right / too advanced); readiness (ready now
+  / after minor fixes / needs major changes / not ready); what worked best; the one thing to fix.
+- Learners: confidence with the topic before the module and now (retrospective pre/post); whether
+  they would use it to prepare for a rotation, a procedure or boards.
+- Educators: clinical accuracy (or "can't judge"); whether it is consistent with how they teach or
+  practice; whether they would assign it; and each of the module's own **Where feedback helps
+  most** prompts from its hub card (`rollout.ts`), answered looks right / needs changes / didn't
+  reach it. Each prompt is stored with its wording, and the server refuses answers given against
+  wording that has since changed.
+
+Unsent answers stay in memory on the testing page, like a detailed draft, and are covered by the
+same leave warnings. Switching "Answer as" alone is not unsent work. Change `reviewFormVersion`
+whenever a question or its options change meaning.
+
 ## Review workspace
 
 `/en/admin/module-feedback` requires the existing active, unexpired `site_admin` entitlement.
 The **Modules in development with direct links** admin page links both the beta hub and this
 workspace. Reviewers can filter by module/status, open the reported page, read the tester's
 comment and selected text, view the annotated screenshot, set New / In review / Resolved, and
-save private review notes. Reports are paginated in batches of 30.
+save private review notes. Reports are paginated in batches of 30. Each report names its sender
+from their site profile (for example "PCCM Fellow · Fellow Year 2").
+
+The **Overall reviews** tab summarizes each module: reviews from learners and educators, median
+and mean overall quality, mean clarity, ease of use, interactive parts and (educators) accuracy,
+learners' confidence before and now, and the readiness counts. With one module selected it also
+counts the educators' answers to that module's own prompts. Each review card shows the reviewer,
+their answers and text, and a button that opens that reviewer's detailed reports on the module.
+**Export CSV** downloads the reviews shown, with cells that a spreadsheet will not run as formulas.
 
 Every feedback API separately verifies a real main-site account; review, image retrieval, and
 status updates also check `site_admin`. Local development preview cookies do not authorize
@@ -145,6 +199,12 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
    permits Dolphin Bronchoscopy submissions, keeping every earlier module ID. **Not applied.**
    Until it is, feedback on the Dolphin Bronchoscopy card cannot be saved. Apply it from the
    primary checkout.
+6. `supabase/migrations/20261109120000_module_beta_reviews.sql`: the overall-review table, one
+   row per reviewer per module, with the same service-role-only access as the feedback table.
+   **Not applied.** Until it is, hub cards show no review status, the form says reviews are not
+   open yet and keeps the reviewer's answers on the page, and the leave offer is not shown.
+   Module IDs are checked by the API against the catalog, so adding a module needs no change to
+   this table.
 
 The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
 literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
