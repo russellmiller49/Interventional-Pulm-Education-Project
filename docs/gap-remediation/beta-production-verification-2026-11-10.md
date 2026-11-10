@@ -4,21 +4,20 @@ Date: 2026-11-10 (America/Los_Angeles). Target merge commit:
 `657186b194ebe278bf5b9d7696e11315475afd80`.
 Source handoff: [beta launch PR 1](beta-launch-pr1-2026-11-10.md).
 
-**Current recommendation: NO-GO / hold for Module Collaborator Recognition pending Gate 3.**
-The exact target SHA is deployed successfully and read-only production checks pass. Authenticated
-production verification is in progress with explicitly named, existing A/B/C accounts. All
-authorized writes and non-admin/public access checks passed. C's uncached private image retrieval
-is the remaining live case. No PATCH, migration, account creation, entitlement change, cleanup,
+**Infrastructure recommendation: GO for Module Collaborator Recognition.** The exact target SHA
+is healthy and the required authorized Gate 3 cases passed. This clears the infrastructure
+prerequisite for the next feature; publication, module readiness and invitations retain their own
+approval requirements. No PATCH, migration, account creation, entitlement change, cleanup,
 merge, deployment action or invitation was performed.
 
 ## Four separate approval gates
 
-| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                                                                                        |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                                                                                           |
-| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized.                                                                   |
-| 3. Synthetic live tests  | **Authorized and running.** The owner supplied actual A/B/C identifiers and separately signed-in sessions, confirmed A's pre-existing EBUS review was synthetic and could be replaced, and authorized the bounded procedure with all exclusions retained. A/B live admin-list requests return 403. Private account and record identifiers stay outside Git. |
-| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                                                                                        |
+| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                      |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                         |
+| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized. |
+| 3. Synthetic live tests  | **Passed.** The owner named and signed into A/B/C, authorized the bounded procedure, and approved replacing A's existing synthetic EBUS review. Submission, editing, isolation, screenshot retry, admin retrieval and denial checks passed. Test identifiers stay outside Git.            |
+| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                      |
 
 The user explicitly prohibited unapproved account creation, production submissions, entitlement
 changes, record cleanup and migrations. The handoff additionally states: “This checklist does
@@ -115,7 +114,7 @@ At **20:33:11 UTC (12:33:11 PST)**, read-only Railway preflight still confirmed 
 zero crashed replicas, no pending rollout or recent failure/notification. The preceding deployment
 remained `canRollback: true`. No synthetic live request was sent and no new test result is claimed.
 
-## Authorized live execution — in progress
+## Authorized live execution — complete
 
 The owner subsequently supplied the actual account mapping and confirmed that A's existing EBUS
 review is synthetic and may be replaced. The three named accounts were checked by a narrowly
@@ -125,16 +124,16 @@ in their separate browser sessions before any production write. A uses `.com`, B
 (the same Railway service and Endoreels backend), and C uses a separate `.com` incognito session.
 This hostname/session distinction is part of the evidence; no cookies or tokens were exported.
 
-| Live case                                                    | Expected                                                      | Actual so far                                                                                                          |
+| Live case                                                    | Expected                                                      | Observed result                                                                                                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | A own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS; private, no-store                                                                                                |
-| B own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS on `.org`; private, no-store; own list initially empty                                                            |
+| B own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS on `.org`; private, no-store; own list initially empty; admin workspace redirected to dashboard                   |
 | A hub / admin workspace                                      | 11 preview cards, no ready/withheld cards; workspace denied   | PASS; admin route ended at `/en/dashboard?required=site_admin`                                                         |
 | A learner save                                               | 200, one own row, server identity/profile and all answers     | PASS at 21:39:25 UTC; all expected answers and profile/email checked in a scoped database read                         |
 | A same-record edit and reload                                | 200, same ID/creation time, later update time, changed answer | PASS at 21:41:58 UTC; one row; all selections/comments restored in the real form after reload                          |
 | B educator save / forged-identity replay                     | Two 200 responses affecting B only                            | PASS; new B row, three module prompts, reload and same B ID/creation time after the forged replay; A unchanged         |
 | Annotated PNG blocked-send / retry / duplicate / B collision | Local failure, then 201, 200 and 409                          | PASS; four marks and draft preserved, identical UUID/PNG; one report/object, owner/path unchanged                      |
-| C uncached image retrieval / A/B/signed-out image denial     | 200 PNG / 403 / 403 / 401                                     | A/B/signed-out PASS with private, no-store; C uncached read PENDING console focus                                      |
+| C uncached image retrieval / A/B/signed-out image denial     | 200 PNG / 403 / 403 / 401                                     | PASS; C 200 PNG with matching digest and private, no-store; A/B 403 and signed-out 401                                 |
 | Direct browser-role table and Storage denial                 | No private rows or image bytes                                | PASS; A/B valid identities, tables 403/42501, Storage 400/NoSuchKey; anonymous tables 401/42501 and public Storage 400 |
 | Existing expired/revoked admin session                       | Denied, if explicitly available                               | UNTESTED; no such session supplied; no grants changed                                                                  |
 
@@ -175,8 +174,18 @@ The signed-out synthetic image request returned **401**; the public Storage URL 
 A/B image route requests returned **403**. Direct browser-role reads validated each browser token
 against the correct named account (Auth user **200**) and returned **403 / 42501** for both private
 tables and **400 / NoSuchKey** for private Storage. Anonymous table probes returned **401 / 42501**.
-No auth state or tokens were exported. C's dashboard identity was confirmed; a manual console focus
-handoff is pending because the native developer command did not reliably target its window.
+No auth state or tokens were exported.
+
+The owner focused C's authenticated console after the native window shortcut could not reliably
+target it. C's filtered report/review reads both returned **200**, `private, no-store`: the synthetic
+report belonged to A, A's edited answer was present, and B retained its own identity. C retrieved
+the image with `cache: no-store`. Two complete receipts confirmed **200**, `image/png`,
+`Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, and a decoded 640 × 360 PNG
+of **13,822 bytes** with the exact submitted SHA-256. The second response in the first console
+receipt was clipped in the UI; a further uncached GET supplied the complete confirmation. Railway
+therefore shows **three** successful C image GETs. No image bytes or private paths were published.
+The verified bytes preserve the same four annotations observed on A's canvas. C's console was
+closed after verification.
 
 At **21:51:40 UTC (13:51:40 PST)**, the target remained Online / SUCCESS with 1 running and
 0 crashed replicas, no pending work, failures or warning/critical notifications. No target runtime
@@ -184,6 +193,24 @@ entries appeared since the 21:17 UTC account preflight. Last-hour per-path Railw
 `/api/module-review`: 2 2xx + 2 expected 4xx + 0 5xx; `/api/module-feedback`: 2 expected 4xx,
 0 2xx/5xx. These counts agree with A's two saves and the A/B authorization probes; they are not
 substitutes for the scoped persistence and browser checks above.
+
+At **23:00:55 UTC (15:00:55 PST)**, the exact target SHA still served in deployment
+`08d8b84b-bf33-4e4b-96e2-cfa32426bc24`: `SUCCESS`, one running replica, zero crashed replicas,
+no recent failed deployments, no warning/critical notifications and no pending rollout work.
+Closing `/health` returned 200 / `{"ok":true}`. Runtime logs had no new entries from 21:17 UTC
+through the closing check. The last-hour service aggregate was **584 requests, zero 5xx**.
+Deployment-scoped HTTP logs for the three tested endpoints cover the full test window:
+
+| Scope                          | Observed requests                                                        |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Overall-review POST            | Four 200 responses; two A saves and two B saves                          |
+| Feedback POST                  | A 201, A duplicate 200, B collision 409; no request from the local block |
+| Synthetic image GET            | A 403, B 403, signed-out 401, C 200 × 3                                  |
+| Admin review/feedback list GET | A/B 403 on each; C filtered reads 200 on each                            |
+
+No upstream errors appeared in these scoped HTTP logs. The technical rollback candidate and
+snapshot remained available. Private receipts identify the one updated existing synthetic A review,
+one new B review, and one A report/private image. No test records or objects were removed.
 
 ## Authorized test procedure and execution requirements
 
@@ -197,13 +224,12 @@ Check only those named users. Never enumerate accounts or use an existing clinic
 If an account fails preflight, stop that account's test; do not complete registration, reset
 passwords, resend verification, grant access, or create a replacement without permission.
 
-Use three separate normal browser profiles and a fourth clean signed-out context. The owner
+Use three separate browser sessions and a clean signed-out context. The owner
 signs in through the normal production flow; do not request passwords or tokens in chat.
 No local-preview cookies, intercepted successful API responses, service keys in the browser,
 or saved authentication-state/HAR exports. Disable browser cache for the image checks.
 
-The owner has authorized this precise bounded write scope. Execution still requires actual A/B/C
-identifiers and their separate normal production sessions:
+The owner authorized this precise bounded write scope for the named A/B/C production sessions:
 
 - Module under test: `ebus-guided`; two overall-review records, one for A and one for B.
 - Four overall-review POSTs: A's learner submission, A's edit, B's educator submission, and
@@ -379,7 +405,7 @@ owner with the failed deployment and sanitized reason; execute no rollback witho
 
 ## Rollback readiness
 
-Candidate revalidated before and after rollout: deployment `561529fc-2bce-48e4-9139-3999f85b7eb7`, source
+Candidate revalidated before rollout, after rollout, and at Gate 3 close: deployment `561529fc-2bce-48e4-9139-3999f85b7eb7`, source
 `54a02a1a104a552ea66d85d49bfa02af70fec1de`, created 2026-11-10 02:15:16.636 UTC,
 `SUCCESS` before replacement, now `REMOVED` with **`canRollback: true`** and
 `canRedeploy: true` after replacement; configuration snapshot
@@ -388,34 +414,29 @@ Candidate revalidated before and after rollout: deployment `561529fc-2bce-48e4-9
 Operator remains Russell Miller or an explicitly named delegate. Intended mechanism remains
 **Railway service → Deployments → candidate menu → Rollback → confirm**. Railway documents
 that [rollback restores the image and custom variables, subject to retention](https://docs.railway.com/deployments/deployment-actions#rollback).
-Tool eligibility is verified; operator access and acceptance of that retained configuration
-snapshot still need owner confirmation without exposing variable values. Revalidate eligibility
-after rollout and immediately before any authorized rollback. Do not substitute Deploy Latest,
+Technical eligibility and the retained snapshot are verified. The named operator must confirm
+access and inspect the image/configuration snapshot before any authorized rollback, without
+exposing variable values. Revalidate eligibility immediately before execution. Do not substitute Deploy Latest,
 Redeploy, a new merge, a migration or an entitlement change.
 
 After an authorized rollback, confirm the restored deployment/source, health and read-only
 gate checks; record the failed target and reason. Rollback does not remove synthetic rows or
 private orphan objects. Cleanup remains a separate authorization.
 
-## Blockers and decision criteria
+## Decision and remaining items
 
-The deployed-source/build/health/signed-out gate portion is **PASS**. Remaining blockers:
+**GO for the infrastructure prerequisite to proceed with Module Collaborator Recognition.** The
+exact build and deployment, health, authorized review and feedback persistence, reviewer
+isolation, annotation retry, private admin retrieval, and access-denial checks passed. Both
+non-admin accounts opened all 11 expected wrapper frames. No blocking infrastructure failure was
+observed, and the previous deployment remains eligible for rollback. The optional expired/revoked
+admin case is untested because no existing authorized session was available; no grant was changed.
 
-1. All approved writes, persistence/isolation and non-admin/public denials passed. C's uncached
-   image retrieval and filtered admin review/report reads still await the console focus handoff.
-2. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase;
-   technical candidate eligibility is confirmed.
+The Synchronized Anatomy optional calibration asset's 400 is a module issue for its owner to
+assess before any readiness change. Its fallback and rendered viewer were observed; clinical
+calibration and complete lesson behavior were not assessed. The migration-ledger discrepancy
+remains a separate owner disposition; the earlier inspection found the live schema effects in
+place. **Do not replay missing migrations, mark ledger entries applied or run a blanket push.**
 
-The handoff's migration-ledger discrepancy remains a separate owner disposition, not a new
-approval gate or evidence of missing live tables: three unrecorded migration effects and
-differently timestamped earlier entries were documented, with live schema parity at that
-inspection. This pass did not re-query or modify the schema. **Do not replay missing migrations,
-mark ledger entries applied or run a blanket push.**
-
-Issue an infrastructure **GO for proceeding to Module Collaborator Recognition** only after
-the exact deployed SHA/build/runtime checks and all required authorized live cases pass and
-rollback readiness is confirmed. Disclose any unavailable optional expired/revoked-session case
-and record the owner's migration-history disposition separately; ledger repair is not implied.
-Any real persistence, image or isolation failure is **NO-GO**. Pending authorization is **NO-GO / hold**, not an executed-test failure. A GO remains
-limited to infrastructure and next-phase planning: it does not approve recognition publication,
-module clinical acceptance, readiness changes or gate-4 invitations.
+This decision covers infrastructure only. Module acceptance, readiness, recognition publication
+and Gate 4 invitations retain their existing authorization requirements.
