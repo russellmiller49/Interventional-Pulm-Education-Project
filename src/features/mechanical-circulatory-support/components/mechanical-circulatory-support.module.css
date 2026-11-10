@@ -1528,6 +1528,20 @@
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
+.anatomyPointed {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  max-width: calc(100% - 1.4rem);
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(255, 209, 102, 0.7);
+  border-radius: 0.5rem;
+  color: #ffe9b0;
+  background: rgba(4, 23, 29, 0.82);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
 .anatomyFlowChip strong {
   color: #7be1d4;
   font-size: 0.75rem;

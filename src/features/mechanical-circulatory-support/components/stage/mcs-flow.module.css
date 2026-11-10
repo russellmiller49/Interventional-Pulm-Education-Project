@@ -293,6 +293,44 @@
   display: block;
   font-size: 0.75rem;
 }
+/*
+ * Pointing at a reading. The label of a reading taken at a place on the loop is a button: a dotted
+ * underline says it does something, and hovering, focusing or pressing it lights the place on the
+ * map and the heart. The row being pointed at is marked with a filled edge and a tint, and the
+ * line above the readings says where it is in words.
+ */
+.readingsHint {
+  margin: 0.6rem 0 0;
+  color: var(--stage-muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+.readingsHint[data-pointing] {
+  color: #ffd166;
+}
+.readings dt button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: start;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.readings dt button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 3px;
+  border-radius: 0.2rem;
+}
+.readings div[data-pointable] {
+  border-radius: 0 0.4rem 0.4rem 0;
+}
+.readings div[data-pointed] {
+  border-left: 4px solid #ffd166;
+  padding-left: calc(0.75rem - 2px);
+  background: rgba(255, 209, 102, 0.1);
+}
 .tour {
   display: grid;
   gap: 0.75rem;

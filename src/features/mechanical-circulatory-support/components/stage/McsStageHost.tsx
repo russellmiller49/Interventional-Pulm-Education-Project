@@ -91,6 +91,7 @@ import { McsClockBar } from './McsClockBar'
 import { McsPrerequisiteReference, mcsHasPrerequisiteReference } from './McsPrerequisiteReference'
 import { McsTaskPresentation } from './McsTaskPresentation'
 import { useWorkspaceLayout } from './useWorkspaceLayout'
+import type { McsPointedPlace } from '../../content/readingPlaces'
 
 /** MCS-local self-paced host. Answers and observations live only in this mounted session.
  * Navigation never manufactures a response, performed action, capture or achievement.
@@ -265,6 +266,11 @@ function McsStageSession({
     transferLoaded: lesson.steps[mount.index].interaction.kind === 'transfer',
   }))
   const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
+  /** The reading being pointed at, and the step it was pointed at on: display only. */
+  const [pointedAt, setPointedAt] = useState<{
+    readonly stepId: string
+    readonly place: McsPointedPlace
+  } | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
@@ -1539,6 +1545,13 @@ function McsStageSession({
         )
       }}
       stepKey={activeStep.id}
+      pointed={pointedAt?.stepId === activeStep.id ? pointedAt.place : null}
+      // A lit place is a hint. While a place on the map is the question, the readings do not point.
+      onPoint={
+        identifyOnMap && committedChoiceId === null
+          ? undefined
+          : (place) => setPointedAt(place ? { stepId: activeStep.id, place } : null)
+      }
     />
   )
 

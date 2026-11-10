@@ -21,6 +21,7 @@ import { McsTaskControls } from './McsTaskControls'
 import { McsTimingFigure } from './McsTimingFigure'
 import { McsTaskReadings } from './McsTaskReadings'
 import type { McsLeadVisual, McsPresentationKind } from '../../content/taskPresentation'
+import type { McsPointedPlace } from '../../content/readingPlaces'
 
 const McsAnatomy3D = lazy(() =>
   import('../McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
@@ -57,6 +58,8 @@ export function McsSimulatorPane({
   monitorOpen = monitorPointedAt,
   onMonitorToggle,
   stepKey,
+  pointed = null,
+  onPoint,
 }: {
   readonly presentation: McsPresentationKind
   /** The picture this task opens on (see `mcsLeadVisual`). */
@@ -85,6 +88,13 @@ export function McsSimulatorPane({
   readonly onMonitorToggle?: (open: boolean) => void
   /** The step on screen: each step starts its disclosures in that step's own default. */
   readonly stepKey?: string
+  /**
+   * The reading the learner is pointing at, lit on the map, the heart and the monitor. `onPoint`
+   * is absent where pointing is off (a place on the map is the question): the readings are then
+   * plain rows.
+   */
+  readonly pointed?: McsPointedPlace | null
+  readonly onPoint?: (place: McsPointedPlace | null) => void
 }) {
   const monitorTarget: McsMonitorTargetId | undefined =
     lesson.contract.primarySurface === 'monitor'
@@ -99,14 +109,22 @@ export function McsSimulatorPane({
       className={styles.readableMap}
       tabIndex={0}
     >
-      <CirculationMap state={state} emphasis={emphasis} answer={mapAnswer} />
+      <CirculationMap
+        state={state}
+        emphasis={
+          pointed
+            ? { segmentIds: pointed.segmentIds, caption: pointed.sentence, tone: 'implicated' }
+            : emphasis
+        }
+        answer={mapAnswer}
+      />
     </div>
   )
 
   const fullMonitor = (
     <McsMonitor
       state={state}
-      highlightTarget={monitorTarget}
+      highlightTarget={pointed?.monitorTarget ?? monitorTarget}
       highlightNote={predictionCommitted}
       revealCausality={predictionCommitted || teachingAvailable}
       withheldNote="What produced this display appears once you have committed your prediction."
@@ -153,7 +171,7 @@ export function McsSimulatorPane({
             <Suspense
               fallback={<p className={shellStyles.meta}>Loading the three-dimensional view…</p>}
             >
-              <McsAnatomy3D state={state} compact={anatomyLeads} />
+              <McsAnatomy3D state={state} compact={anatomyLeads} pointed={pointed} />
             </Suspense>
           </SimulationLaunchGate>
         ) : null}
@@ -213,7 +231,13 @@ export function McsSimulatorPane({
         teachingAvailable &&
         (presentation === 'circulation-reader' || presentation === 'mechanism-comparison')
       ) ? (
-        <McsTaskReadings state={state} kind={presentation} withholdFlow={flowAccountWithheld} />
+        <McsTaskReadings
+          state={state}
+          kind={presentation}
+          withholdFlow={flowAccountWithheld}
+          pointed={pointed}
+          onPoint={onPoint}
+        />
       ) : null}
       {/*
        * Collapsed by default, except on the steps whose own words say "Look here" at one of its

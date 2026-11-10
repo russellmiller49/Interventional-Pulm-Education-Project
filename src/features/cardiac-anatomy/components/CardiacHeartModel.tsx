@@ -14,7 +14,14 @@ interface CardiacHeartModelProps {
   deviceEmphasis?: boolean | 'lvad'
   paused?: boolean
   reducedMotion?: boolean
+  /**
+   * Mesh names to light (`CT_RA_Cavity`, `CT_Aorta`, …): the named structures brighten and turn
+   * more solid and the rest dim, until the list is empty again. Display only; the heart beats on.
+   */
+  highlightMeshNames?: readonly string[]
 }
+
+const HIGHLIGHT_COLOR = new THREE.Color('#ffd166')
 
 export function CardiacHeartModel({
   heartRateBpm,
@@ -22,6 +29,7 @@ export function CardiacHeartModel({
   deviceEmphasis = false,
   paused = false,
   reducedMotion = false,
+  highlightMeshNames,
 }: CardiacHeartModelProps) {
   const emphasisEnabled = Boolean(deviceEmphasis)
   const lvadEmphasis = deviceEmphasis === 'lvad'
@@ -102,6 +110,39 @@ export function CardiacHeartModel({
     })
     return clone
   }, [emphasisEnabled, lvadEmphasis, source.scene])
+  /*
+   * Every mesh owns its materials (cloned above), so a structure can be lit without touching its
+   * neighbours. Each material remembers the look it was built with and returns to it.
+   */
+  const highlightKey = (highlightMeshNames ?? []).join('|')
+  useEffect(() => {
+    const wanted = new Set(highlightKey ? highlightKey.split('|') : [])
+    root.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return
+      const materials = Array.isArray(object.material) ? object.material : [object.material]
+      for (const material of materials) {
+        if (!(material instanceof THREE.MeshStandardMaterial)) continue
+        const base = (material.userData.base ??= {
+          opacity: material.opacity,
+          emissive: material.emissive.clone(),
+          emissiveIntensity: material.emissiveIntensity,
+        }) as { opacity: number; emissive: THREE.Color; emissiveIntensity: number }
+        if (wanted.size === 0) {
+          material.opacity = base.opacity
+          material.emissive.copy(base.emissive)
+          material.emissiveIntensity = base.emissiveIntensity
+        } else if (wanted.has(object.name)) {
+          material.opacity = Math.max(base.opacity, 0.78)
+          material.emissive.copy(HIGHLIGHT_COLOR)
+          material.emissiveIntensity = 0.6
+        } else {
+          material.opacity = base.opacity * 0.55
+          material.emissive.copy(base.emissive)
+          material.emissiveIntensity = base.emissiveIntensity
+        }
+      }
+    })
+  }, [highlightKey, root])
   const mixer = useMemo(() => new THREE.AnimationMixer(root), [root])
   const clip = source.animations.find((animation) => animation.name === 'CardiacCycle')
   const playableClip = useMemo(() => {

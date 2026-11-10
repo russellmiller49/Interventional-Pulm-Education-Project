@@ -40,6 +40,7 @@ import {
   MCS_LVAD_CAMERA_Y_SHIFT,
   type CameraFitExtent,
 } from './cardiacCameraFit'
+import { mcsHeartMeshesFor, type McsPointedPlace } from '../content/readingPlaces'
 import styles from './mechanical-circulatory-support.module.css'
 
 const IabpModel = lazy(() => import('./three/IabpModel'))
@@ -167,9 +168,16 @@ export function McsAnatomy3D({
   revealCausality = true,
   highlightTarget,
   compact = false,
+  pointed = null,
 }: {
   state: McsSimulationState
   revealCausality?: boolean
+  /**
+   * The reading the learner is pointing at, when there is one: its structures light on the heart
+   * and a line under the flow chip says so in words. The balloon scene draws the aorta alone, so
+   * there the sentence carries it.
+   */
+  pointed?: McsPointedPlace | null
   /**
    * The view is a task's lead picture, beside its readings: the canvas is sized to the window and
    * the written account of the view (pathway summary and text equivalent) folds under one
@@ -244,6 +252,10 @@ export function McsAnatomy3D({
               ? 'RP · IVC inlet → pulmonary artery'
               : 'Impella support off'
         : 'LVAD · apical inflow → ascending-aortic outflow'
+  const pointedMeshes = useMemo(
+    () => (pointed ? mcsHeartMeshesFor(pointed.segmentIds) : undefined),
+    [pointed],
+  )
   const publishCameraPosition = useCallback((position: readonly number[]) => {
     const viewport = viewportRef.current
     if (!viewport) return
@@ -370,6 +382,7 @@ export function McsAnatomy3D({
                       aorticValveOpening={state.metrics.aorticValveOpening}
                       deviceEmphasis={state.device.kind === 'lvad' ? 'lvad' : true}
                       reducedMotion={reducedMotion}
+                      highlightMeshNames={pointedMeshes}
                     />
                     {state.device.kind === 'impella' ? (
                       <>
@@ -411,6 +424,11 @@ export function McsAnatomy3D({
           <strong>{state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective</strong>
           <span>{placementSummary}</span>
         </div>
+        {pointed ? (
+          <p className={styles.anatomyPointed} role="status" data-anatomy-pointed>
+            Lit: {pointed.placeName}
+          </p>
+        ) : null}
       </div>
       <AnatomyWords compact={compact}>
         <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
