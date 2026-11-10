@@ -16,6 +16,11 @@ const auth = jest.mocked(requireFeedbackUser)
 const from = jest.mocked(supabaseAdmin!.from)
 const storageFrom = jest.mocked(supabaseAdmin!.storage.from)
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
+const png = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aE1sAAAAASUVORK5CYII=',
+  'base64',
+)
+const screenshot = () => new Blob([png], { type: 'image/png' })
 function request(extra: Record<string, string> = {}, screenshot?: Blob) {
   const body = new FormData()
   for (const [key, value] of Object.entries({
@@ -115,17 +120,121 @@ it('removes a new screenshot when saving the report fails', async () => {
     .mockReturnValueOnce(query({ data: null }) as never)
     .mockReturnValueOnce(query({ count: 0 }) as never)
     .mockReturnValueOnce(query({ error: { message: 'offline' } }) as never)
+    .mockReturnValueOnce(query({ data: null, error: null }) as never)
   const storage = {
     upload: jest.fn(async () => ({ error: null })),
     remove: jest.fn(async () => ({ error: null })),
   }
   storageFrom.mockReturnValue(storage as never)
-  const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aE1sAAAAASUVORK5CYII=',
-    'base64',
-  )
   expect((await POST(request({}, new Blob([png], { type: 'image/png' })))).status).toBe(503)
-  expect(storage.remove).toHaveBeenCalledWith([`tester/${id}.png`])
+  expect(storage.remove).toHaveBeenCalledWith([
+    expect.stringMatching(new RegExp(`^tester/${id}/.+\\.png$`)),
+  ])
+})
+
+it('retries after a failed row insert and failed cleanup without colliding with the orphan image', async () => {
+  const objects = new Set<string>()
+  const storage = {
+    upload: jest.fn(async (path: string) => {
+      if (objects.has(path)) return { error: { message: 'already exists' } }
+      objects.add(path)
+      return { error: null }
+    }),
+    remove: jest.fn(async () => ({ error: { message: 'cleanup offline' } })),
+  }
+  storageFrom.mockReturnValue(storage as never)
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ error: { message: 'insert offline' } }) as never)
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ error: null }) as never)
+  expect((await POST(request({}, screenshot()))).status).toBe(503)
+  expect((await POST(request({}, screenshot()))).status).toBe(201)
+  expect(storage.upload).toHaveBeenCalledTimes(2)
+  expect(objects.size).toBe(2)
+})
+
+it('preserves the referenced screenshot when an insert commits but its response is lost', async () => {
+  let path = ''
+  storageFrom.mockReturnValue({
+    upload: jest.fn(async (value: string) => {
+      path = value
+      return { error: null }
+    }),
+    remove: jest.fn(),
+  } as never)
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ error: { message: 'response lost' } }) as never)
+    .mockImplementationOnce(
+      () => query({ data: { id, user_id: 'tester', screenshot_path: path } }) as never,
+    )
+  expect((await POST(request({}, screenshot()))).status).toBe(200)
+  expect(storageFrom).toHaveBeenCalledTimes(1) // upload only; never remove the persisted image
+})
+
+it('does not insert a report when screenshot upload fails, and retry uses the same report ID', async () => {
+  const upload = jest
+    .fn()
+    .mockResolvedValueOnce({ error: { message: 'offline' } })
+    .mockResolvedValueOnce({ error: null })
+  storageFrom.mockReturnValue({ upload } as never)
+  const insert = query({ error: null })
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(insert as never)
+  expect((await POST(request({}, screenshot()))).status).toBe(503)
+  expect(insert.insert).not.toHaveBeenCalled()
+  expect((await POST(request({}, screenshot()))).status).toBe(201)
+  expect(insert.insert).toHaveBeenCalledWith(expect.objectContaining({ id }))
+  expect(upload.mock.calls[1][1]).toEqual(new Uint8Array(png))
+})
+
+it('refuses a retry ID owned by someone else without accessing storage', async () => {
+  from.mockReturnValueOnce(query({ data: { id, user_id: 'other-reviewer' } }) as never)
+  expect((await POST(request({}, screenshot()))).status).toBe(409)
+  expect(storageFrom).not.toHaveBeenCalled()
+})
+
+it('keeps a possibly committed image when the reconciliation lookup is unavailable', async () => {
+  const remove = jest.fn()
+  storageFrom.mockReturnValue({ upload: jest.fn(async () => ({ error: null })), remove } as never)
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ error: { message: 'response lost' } }) as never)
+    .mockReturnValueOnce(query({ data: null, error: { message: 'lookup offline' } }) as never)
+  expect((await POST(request({}, screenshot()))).status).toBe(503)
+  expect(remove).not.toHaveBeenCalled()
+})
+
+it('cleans only the losing attempt’s image when an overlapping retry already saved the report', async () => {
+  let uploaded = ''
+  const remove = jest.fn(async () => ({ error: null }))
+  storageFrom.mockReturnValue({
+    upload: jest.fn(async (path: string) => {
+      uploaded = path
+      return { error: null }
+    }),
+    remove,
+  } as never)
+  from
+    .mockReturnValueOnce(query({ data: null }) as never)
+    .mockReturnValueOnce(query({ count: 0 }) as never)
+    .mockReturnValueOnce(query({ error: { code: '23505' } }) as never)
+    .mockReturnValueOnce(
+      query({ data: { id, user_id: 'tester', screenshot_path: 'winning-attempt.png' } }) as never,
+    )
+  expect((await POST(request({}, screenshot()))).status).toBe(200)
+  expect(remove).toHaveBeenCalledWith([uploaded])
+  expect(uploaded).not.toBe('winning-attempt.png')
 })
 it('requires admin authorization for every read and review operation', async () => {
   auth.mockResolvedValue({ ok: false, response: feedbackJson({ error: 'Admin required' }, 403) })

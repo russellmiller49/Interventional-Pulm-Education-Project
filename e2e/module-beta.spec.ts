@@ -1,5 +1,6 @@
 import { test, expect, chromium } from '@playwright/test'
 import { hubBetaModules } from '../src/features/module-beta/rollout'
+import { betaModuleReviewPath } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
 const guideSeenKey = 'module-beta:feedback-guide-seen:v1'
@@ -92,12 +93,14 @@ test('feedback preserves the page, selection and all annotation tools across con
     }),
   )
   let submitted: FormData | undefined
+  const attempts: FormData[] = []
   let failFirst = true
   await page.route('**/api/module-feedback', async (route) => {
     const req = route.request()
     submitted = await new Response(new Uint8Array(req.postDataBuffer() ?? []), {
       headers: { 'Content-Type': req.headers()['content-type'] },
     }).formData()
+    attempts.push(submitted)
     if (failFirst) {
       failFirst = false
       await route.fulfill({
@@ -184,6 +187,7 @@ test('feedback preserves the page, selection and all annotation tools across con
   await expect(page.getByRole('alert')).toHaveText(
     'Feedback storage is not available yet. Your draft has been kept open.',
   )
+  await expect(page.getByRole('status')).not.toContainText('Feedback saved')
   await expect(page.getByLabel('What should we know?')).toHaveValue('Increase contrast here.')
   expect(
     (await page.evaluate(() => indexedDB.databases())).some((db) =>
@@ -192,6 +196,12 @@ test('feedback preserves the page, selection and all annotation tools across con
   ).toBe(false)
   await page.getByRole('button', { name: 'Send feedback' }).click()
   await expect(page.getByRole('status')).toContainText('Feedback saved')
+  expect(attempts).toHaveLength(2)
+  expect(attempts[0].get('id')).toBe(attempts[1].get('id'))
+  for (const attempt of attempts) {
+    const image = attempt.get('screenshot') as File
+    expect(Buffer.from(await image.arrayBuffer())).toEqual(Buffer.from(annotated, 'base64'))
+  }
   expect(submitted!.get('pagePath')).toBe('/en/devices?view=grid#label')
   expect(submitted!.get('selectedText')).toBe('This device label needs more contrast.')
   const attachment = submitted!.get('screenshot') as File
@@ -823,6 +833,27 @@ test('overall review: the form by track, the offer on leaving, the hub status an
   await form.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(reviewButton).toHaveText('Edit overall review')
 
+  // Edit and reload through the browser UI. Persistence here is a synthetic route adapter;
+  // the API authorization suite and production metadata cover separate boundaries.
+  await reviewButton.click()
+  await expect(form.getByLabel('The one thing to fix before release (optional)')).toHaveValue(
+    'Station 4L view',
+  )
+  await form
+    .getByLabel('The one thing to fix before release (optional)')
+    .fill('Updated synthetic finding')
+  await form.getByRole('button', { name: 'Update review' }).click()
+  await expect(form.getByText('Your overall review is updated.', { exact: true })).toBeVisible()
+  expect(saved).toHaveLength(1)
+  expect(saved[0]).toMatchObject({ id: 'r1', answers: { oneFix: 'Updated synthetic finding' } })
+  await form.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.reload()
+  await reviewButton.click()
+  await expect(form.getByLabel('The one thing to fix before release (optional)')).toHaveValue(
+    'Updated synthetic finding',
+  )
+  await form.getByRole('button', { name: 'Close', exact: true }).click()
+
   // Reviewed: leaving goes straight to the hub, which shows the review on the card.
   await page.getByRole('link', { name: 'All beta modules' }).click()
   await expect(page).toHaveURL(/\/en\/development-beta$/)
@@ -907,6 +938,37 @@ test('overall review: the form by track, the offer on leaving, the hub status an
   await expect
     .poll(() => feedbackUrls.at(-1))
     .toContain('user=6a1d1c5e-6c56-4a77-8a5b-111111111111')
+})
+
+test('all 11 visible hub wrappers resolve their catalog module and frame route', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90000)
+  expect(hubBetaModules).toHaveLength(11)
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  // Keep this wrapper check small; the separate standard-route check loads the real pages.
+  for (const entry of hubBetaModules) {
+    const path = `/en${betaModuleReviewPath(entry)}`
+    await page.route(`**${path}`, (route) =>
+      route.fulfill({ contentType: 'text/html', body: `<h1>Synthetic ${entry.id}</h1>` }),
+    )
+    const response = await page.goto(`/en/development-beta/${entry.id}`)
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('iframe')).toHaveAttribute('src', path)
+    await expect(
+      page.frameLocator('iframe').getByRole('heading', { name: `Synthetic ${entry.id}` }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Give feedback', exact: true })).toBeVisible()
+    await page.unroute(`**${path}`)
+  }
 })
 
 test('feedback guide: opens on the first hub visit only, reopens from the hub and the module bar', async ({

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { feedbackSchema, isPngScreenshot, maxScreenshotBytes } from '@/features/module-beta/schema'
@@ -76,7 +77,9 @@ export async function POST(request: Request) {
       { error: 'You have sent 30 reports in the past hour. Please try again later.' },
       429,
     )
-  const screenshotPath = bytes ? `${auth.user.id}/${body.id}.png` : null
+  // Each attempt owns its image. A failed cleanup or overlapping retry must not block a
+  // later upload or let the losing request delete the winning request's screenshot.
+  const screenshotPath = bytes ? `${auth.user.id}/${body.id}/${randomUUID()}.png` : null
   if (bytes && screenshotPath) {
     const { error } = await supabaseAdmin.storage
       .from(feedbackBucket)
@@ -98,7 +101,24 @@ export async function POST(request: Request) {
     screenshot_path: screenshotPath,
   })
   if (error) {
-    if (screenshotPath) await supabaseAdmin.storage.from(feedbackBucket).remove([screenshotPath])
+    // An insert can commit even when its response is lost. Resolve the report ID before
+    // cleanup; if the lookup also fails, keep the image until a retry can establish state.
+    const { data: persisted, error: lookupError } = await supabaseAdmin
+      .from('module_beta_feedback')
+      .select('id,user_id,screenshot_path')
+      .eq('id', body.id)
+      .maybeSingle()
+    if (!lookupError) {
+      if (screenshotPath && persisted?.screenshot_path !== screenshotPath)
+        await supabaseAdmin.storage
+          .from(feedbackBucket)
+          .remove([screenshotPath])
+          .catch(() => {})
+      if (persisted)
+        return persisted.user_id === auth.user.id
+          ? feedbackJson({ id: persisted.id })
+          : feedbackJson({ error: 'Start a new feedback report and try again.' }, 409)
+    }
     return feedbackJson(
       { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
       503,

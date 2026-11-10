@@ -3,7 +3,7 @@
 ## Live user feedback — current
 
 The deployed beta hub uses server storage. Verified main-site users can submit feedback and
-optional screenshots from any of the 13 beta modules. Reports are available to the site owner
+optional screenshots from any of the 15 catalogued beta modules (11 visible on the hub). Reports are available to the site owner
 at `/en/admin/module-feedback` using the existing `site_admin` account. Open **Admin → Modules
 in development → Review module feedback**, or visit that address directly. The workspace
 supports module/status filters, screenshots, review status, and private notes. Choose **Refresh**
@@ -116,7 +116,11 @@ while the draft holds a comment, referenced text or an image; an empty dialog th
 closed leaves **Give feedback**. Local owner review keeps unsent drafts in that browser instead;
 see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmation is shown only after the
 server persists the report. Report IDs make retries idempotent, and submissions are limited to
-30 per account per hour.
+30 per account per hour. Each screenshot upload attempt has its own private object path. If a
+report insert fails, the API checks whether the report was persisted before removing an image;
+it retains a possibly referenced image when that check is unavailable. Failed cleanup may leave
+private orphan images, but does not block retrying the report. Orphan cleanup requires separate
+owner-authorized work.
 
 ## Overall review
 
@@ -187,7 +191,11 @@ Stored URLs exclude arbitrary query parameters such as auth tokens.
 
 ## Deployment
 
-The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs these migrations:
+The **main-site Supabase project** is `tqnhxlwvkkswuckszlee` (Endoreels), separate from
+IP_Literature. Read-only inspection on **2026-11-10 17:59:14 UTC** found the expected cumulative
+beta schema, but migration history does not match repository versions. See the exact comparison
+and launch evidence in [Beta launch PR 1](gap-remediation/beta-launch-pr1-2026-11-10.md).
+These files describe the expected schema; this list is **not** an instruction to reapply them:
 
 1. `supabase/migrations/20260912234953_module_beta_feedback.sql`: feedback table, indexes,
    and private `module-beta-feedback` screenshot bucket.
@@ -202,22 +210,23 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
    yet been verified**; this migration record is not a successful tester submission or admin
    review. No migration or database write was run for this documentation update.
 4. `supabase/migrations/20261016025933_add_literature_atlas_to_module_beta_feedback.sql`: permits
-   Literature Atlas submissions, keeping all 14 earlier module IDs. **Not applied.** Until it is,
-   feedback on the Literature Atlas card cannot be saved; applying it is one of the owner's
-   go-live steps in [Literature Atlas preview](literature-atlas-preview.md).
+   Literature Atlas submissions, keeping all 14 earlier module IDs. The live constraint includes
+   `literature-atlas`, but neither this version nor migration name is recorded in production history.
 5. `supabase/migrations/20261103180000_add_dolphin_bronchoscopy_to_module_beta_feedback.sql`:
-   permits Dolphin Bronchoscopy submissions, keeping every earlier module ID. **Not applied.**
-   Until it is, feedback on the Dolphin Bronchoscopy card cannot be saved. Apply it from the
-   primary checkout.
+   permits Dolphin Bronchoscopy submissions, keeping every earlier module ID. The live constraint
+   includes `dolphin-bronchoscopy`, but neither this version nor name is recorded in production history.
 6. `supabase/migrations/20261109120000_module_beta_reviews.sql`: the overall-review table, one
    row per reviewer per module, with the same service-role-only access as the feedback table.
-   **Not applied.** Until it is, hub cards show no review status, the form says reviews are not
-   open yet and keeps the reviewer's answers on the page, and the leave offer is not shown.
+   The table exists and matches the columns, constraints, indexes, RLS and role permissions in
+   this SQL; it contains one review. Neither this version nor name is recorded in production history.
    Module IDs are checked by the API against the catalog, so adding a module needs no change to
    this table.
 
-The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
-literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
+The first two are recorded in the main-site project on 2026-09-25 UTC as versions
+`20260925055413` and `20260925055423`, respectively. No production schema/history changes were
+made during the November 10 inspection. Never blindly reapply a `CREATE TABLE` migration when
+its table exists. Reconcile history only through a separately authorized plan after rechecking
+the live objects. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
 
 In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
 configuration. `NEXT_PUBLIC_MODULE_FEEDBACK_MODE` selects local development storage only; it never changes
@@ -232,6 +241,15 @@ unavailable error and preserves the current draft. After deployment, verify a re
 submission with an image and a real admin review before distributing the beta link.
 
 ## Validation
+
+Current beta infrastructure evidence and the concise
+[owner-run live verification checklist](gap-remediation/beta-launch-pr1-2026-11-10.md#owner-run-live-verification-checklist)
+are dated November 10, 2026. Read-only inspection confirms 74 detailed reports, 49 screenshot
+references and one overall review; all 11 standard module routes respond with framing headers,
+and their signed-out wrappers redirect to login. **Authenticated non-admin production end-to-end
+testing remains untested in this pass.** Counts, metadata and intercepted local browser tests do
+not satisfy that gate. The owner must explicitly authorize test accounts and synthetic live writes
+before executing it. The September verification below is historical evidence only.
 
 Live verification on 2026-09-25 UTC used a temporary verified tester against
 `https://interventionalpulm.com`: all 12 modules saved reports; an EBUS screenshot upload and
