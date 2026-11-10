@@ -138,6 +138,10 @@ test.describe('course', () => {
       'teaching simulator',
     )
     expect(await page.locator('[data-course-overview]').innerText()).not.toMatch(BANNED)
+    // The lesion pictured on the hub is one a lesson asks the learner to name: lobe only.
+    const pictured = page.locator('figure figcaption').first()
+    await expect(pictured).toContainText('A lesion in the right middle lobe')
+    await expect(pictured).not.toContainText(/RS5|medial segment/i)
     await page
       .getByRole('link', { name: /Start lesson 1|Why the CT looks backwards/ })
       .first()
@@ -414,6 +418,19 @@ test.describe('turning the CT is optional once it has been shown', () => {
 })
 
 test.describe('planning from the lesion', () => {
+  test('a lesson that only plans draws no circle: its words are the next lesson’s to find', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=start-at-the-lesion')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, 'plan:lesion')
+    await expect(page.locator('[data-arc-rim]')).toHaveCount(0)
+    await expect(page.locator('[data-map-waiting]')).toBeVisible()
+    await showUntil(page, /^plan:done/)
+    await expect(page.locator('[data-arc-rim]')).toHaveCount(0)
+    await expect(page.locator('[data-map-waiting="named"]')).toContainText('RB1 ostium')
+  })
+
   test('the segment stays unnamed until the learner names it', async ({ page }) => {
     await openBench(page, '/practice?lesion=l-superior')
     await page.locator('[data-bench-restart]').click()
@@ -435,10 +452,15 @@ test.describe('planning from the lesion', () => {
     await page.locator('[data-segment-choice="LB9"]').click()
     await expect(feedback(page)).toContainText('Not LB9')
     await page.locator('[data-segment-choice="LB6"]').click()
-    await expectStage(page, 'plan:views')
-    await expect(page.locator('[data-route-chip="lesion"]')).toHaveText('Lesion · LS6')
-    await nowButton(page, 'On to the ostium').click()
+    // Outside the lessons the views are not a step of their own: the circle comes next, with the
+    // views offered beside it.
     await expectStage(page, 'plan:frame')
+    await expect(page.locator('[data-route-chip="lesion"]')).toHaveText('Lesion · LS6')
+    await expect(page.locator('[data-arc-map]')).toBeVisible()
+    await expect(page.locator('[data-views-note]')).toContainText('Nothing here is checked')
+    await page.locator('[data-views-note] [data-open-view="coronal"]').click()
+    await expect(page.locator('[data-ref-view]')).toHaveAttribute('data-ref-plane', 'coronal')
+    await page.locator('[data-side-tab="map"]').click()
     await expect(page.locator('[data-arc-map]')).toBeVisible()
     expect(await bench.innerText()).not.toMatch(BANNED)
   })
@@ -556,7 +578,8 @@ test.describe('driving with the map', () => {
     await page.locator('[data-bench-restart]').click()
     await showUntil(page, /^plan:review$/)
     await nowButton(page, 'Drive to the lesion').click()
-    await expectStage(page, '0:match')
+    // A drive that follows a map never waits for the CT to be turned.
+    await expectStage(page, '0:choose')
     await expect(page.locator('[data-centre-pane="ct"]')).toBeVisible()
     await expect(page.locator('[data-stage-step="navigate"]')).toHaveAttribute(
       'data-stage-state',
@@ -566,6 +589,10 @@ test.describe('driving with the map', () => {
     await expect(page.locator('[data-centre-pane="map"]')).toBeVisible()
     await expect(scope(page).locator('[data-compass="Med"]')).toHaveCount(1)
     await expect(now(page)).toContainText('the arc that holds the star')
+    // Past the ostium the way is the map's to give: the card says where the lesion is, not which
+    // way it lies from this fork.
+    await expect(now(page)).toContainText('ringed on slice')
+    await expect(now(page)).not.toContainText('mm away')
     const pose = await scope(page).getAttribute('data-scope-pose')
     await page.locator('[data-choice="2"]').click()
     await expectStage(page, '5:astray')
@@ -583,6 +610,9 @@ test.describe('driving with the map', () => {
     const closing = await page.locator('[data-bench-closing]').innerText()
     expect(closing).toContain('Branches that led away, driven into: 1; backed out of: 1.')
     expect(closing).not.toMatch(BANNED)
+    // The summary runs past the bottom of the window; the way on to the next lesson stays in it.
+    const onward = (await now(page).locator('[data-now-footer="pinned"]').boundingBox())!
+    expect(onward.y + onward.height).toBeLessThanOrEqual(page.viewportSize()!.height + 0.5)
   })
 })
 
@@ -601,7 +631,9 @@ test.describe('whole lesions', () => {
     await expectStage(page, 'plan:lesion')
     await showUntil(page, /^plan:review$/)
     await nowButton(page, 'Drive to the lesion').click()
-    await expectStage(page, '0:match')
+    await expectStage(page, '0:choose')
+    // Above the ostium, with help on, the card says which way the lesion lies from the fork.
+    await expect(now(page)).toContainText('mm away')
     // No fork asks for its openings to be marked: the map was read off the CT in planning.
     await showUntil(page, /^7:choose$/)
     await expect(page.locator('[data-choice]')).toHaveCount(3)
@@ -631,14 +663,24 @@ test.describe('whole lesions', () => {
     await expect(feedback(page)).not.toContainText('mm')
     await showUntil(page, /^plan:review$/)
     await nowButton(page, 'Drive to the lesion').click()
-    await nowButton(page, 'Check the match').click()
-    // Told what is off, not how to fix it.
+    // No fork waits for the CT to be turned. A check on request says what is off, not how to
+    // fix it.
+    await expectStage(page, '0:choose')
+    await page.locator('[data-ct-check-turn]').click()
     await expect(feedback(page)).toContainText('Mirrored')
     await expect(feedback(page)).not.toContainText('Flip')
-    await nowButton(page, 'Show me').click()
-    await expectStage(page, '0:choose')
+    // The card places the lesion and says nothing of which way it lies from the fork.
+    await expect(now(page)).toContainText('ringed on slice')
+    await expect(now(page)).not.toContainText('mm away')
     await expect(page.locator('[data-choice] strong').first()).toHaveText('Opening 1')
     await expect(page.locator('[data-fork-card]')).not.toContainText('LMSB')
+    // A branch that leads away is told as that, with nothing of where the lesion lies.
+    await page.locator('[data-choice="1"]').click()
+    await expectStage(page, '0:astray')
+    await nowButton(page, 'Back out to the fork').click()
+    await expectStage(page, '0:choose')
+    await expect(feedback(page)).toContainText('leads away from the lesion')
+    await expect(feedback(page)).not.toContainText('The lesion lies')
     await nowButton(page, 'Show me').click()
     await expectStage(page, '0:ready')
     await expect(page.locator('[data-fork-card]')).toContainText('LMSB')
@@ -788,6 +830,21 @@ test.describe('one screen', () => {
       await square('map-drive', 'map', map)
       await inside('map-drive: openings', page.locator('[data-choice]'))
     })
+
+  test('a bench has the whole window: no site menu or section tabs above it', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 852 })
+    await page.goto(BASE)
+    await expect(page.locator('#site-header')).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Branch tracing sections' })).toBeVisible()
+    await openBench(page, '/learn?lesson=drive-with-the-map')
+    await expect(page.locator('#site-header')).toBeHidden()
+    await expect(page.getByRole('navigation', { name: 'Branch tracing sections' })).toBeHidden()
+    const shellTop = (await shell(page).boundingBox())!.y
+    expect(shellTop).toBeLessThan(2)
+    // The bench's own bar is the way out.
+    await page.getByRole('link', { name: 'Course overview' }).click()
+    await expect(page.locator('#site-header')).toBeVisible()
+  })
 
   test('a narrow screen stacks the instruction above the two pictures', async ({ page }) => {
     await page.setViewportSize({ width: 820, height: 1100 })

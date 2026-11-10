@@ -11,6 +11,7 @@ import {
   forkPatternSentence,
   identifyInstruction,
   identifyVerdict,
+  lesionPlaceSentence,
   lesionSentence,
   lookCaption,
   matchNoteSentence,
@@ -129,6 +130,7 @@ test('every function the bench can call is exercised below', () => {
     'forkPatternSentence',
     'identifyInstruction',
     'identifyVerdict',
+    'lesionPlaceSentence',
     'lesionSentence',
     'lookCaption',
     'matchNoteSentence',
@@ -596,6 +598,18 @@ describe('choose', () => {
     }
   })
 
+  test('where the way is the learner’s to find, the lesion is placed without distance or bearing', () => {
+    for (const { trace, lesion } of STATIONS) {
+      const target = targetForTrace(trace)
+      const text = sentence(lesionPlaceSentence(target))
+      expect(text).toBe(
+        `The lesion is in ${target.segment.code}, the ${target.segment.name.toLowerCase()}, ringed on slice ${target.slice}.`,
+      )
+      expect(text).not.toMatch(/\bmm\b|toward the (head|feet)|this fork/)
+      expect(text).not.toContain(lesion.bearing)
+    }
+  })
+
   test('an opening that leads away is told why, and the route’s opening is confirmed', () => {
     for (const { opening, lesion } of OPENINGS) {
       if (opening.onRoute) {
@@ -606,7 +620,12 @@ describe('choose', () => {
         continue
       }
       for (const named of [true, false]) {
-        const declined = band(chooseDeclined(opening, named, lesion))
+        const declined = band(chooseDeclined(opening, named, lesion, true))
+        // Without hints the refusal says only that the branch led away: nothing of where the
+        // lesion lies, which is the learner's to work out.
+        const quiet = band(chooseDeclined(opening, named, lesion, false))
+        expect(quiet.headline).toBe(declined.headline)
+        expect(quiet.detail).toBe('You are back at the fork: take the other opening.')
         expect(declined.headline.endsWith(' leads away from the lesion.')).toBe(true)
         expect(declined.headline[0]).toBe(declined.headline[0].toUpperCase())
         expect(declined.detail).toContain(`It runs ${opening.course} from the fork.`)
@@ -626,10 +645,10 @@ describe('choose', () => {
       }
     }
     const { facts, lesion } = stationOn('central-right', 'junction-1')
-    expect(chooseDeclined(facts.openings[1], false, lesion).headline).toBe(
+    expect(chooseDeclined(facts.openings[1], false, lesion, true).headline).toBe(
       'Opening 2 leads away from the lesion.',
     )
-    expect(chooseDeclined(facts.openings[1], true, lesion).headline).toBe(
+    expect(chooseDeclined(facts.openings[1], true, lesion, true).headline).toBe(
       'LMSB leads away from the lesion.',
     )
     expect(chooseTaken(facts.openings[0], lesion).headline).toBe('RMSB leads toward the lesion.')
@@ -657,7 +676,7 @@ describe('choose', () => {
         const helped = band(astrayView(opening, named, lesion, path.ends, true))
         const quiet = band(astrayView(opening, named, lesion, path.ends, false))
         // With help, the same headline as a refusal at the fork, and why it leads away.
-        expect(helped.headline).toBe(chooseDeclined(opening, named, lesion).headline)
+        expect(helped.headline).toBe(chooseDeclined(opening, named, lesion, true).headline)
         expect(helped.detail.startsWith(`${seen} It runs ${opening.course} from the fork; `)).toBe(
           true,
         )
@@ -706,7 +725,7 @@ describe('choose', () => {
     expect(chooseTaken(rmsb, lesionAt(-3)).detail).toContain(
       'The lesion lies forward, 3 slices (1.5 mm) toward the feet of this fork.',
     )
-    expect(chooseDeclined(rmsb, true, lesionAt(12)).detail).toContain(
+    expect(chooseDeclined(rmsb, true, lesionAt(12), true).detail).toContain(
       'The lesion lies forward, 12 slices (6 mm) toward the head of this fork.',
     )
   })
@@ -912,7 +931,7 @@ describe('the words the bench uses', () => {
         bands(chooseTaken(opening, lesion))
         for (const named of [true, false]) {
           all.push(openingName(opening, named), openingShort(opening, named))
-          bands(chooseDeclined(opening, named, lesion))
+          for (const help of [true, false]) bands(chooseDeclined(opening, named, lesion, help))
           for (const ends of [true, false])
             for (const help of [true, false]) bands(astrayView(opening, named, lesion, ends, help))
           for (const verdict of VERDICTS)

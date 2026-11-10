@@ -28,6 +28,7 @@ import {
   forkPatternSentence,
   identifyInstruction,
   identifyVerdict,
+  lesionPlaceSentence,
   lesionSentence,
   lookCaption,
   matchNoteSentence,
@@ -94,7 +95,9 @@ import {
   type CtOverlayMark,
   type CtSliderTick,
 } from './TracingCtViewer'
+import { Band } from './Band'
 import { useFillViewport } from './useFillViewport'
+import { useStageFocus } from './useStageFocus'
 import styles from './nav-bench.module.css'
 
 /**
@@ -257,6 +260,10 @@ export function NavigationBench({
   const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
+  useStageFocus(
+    benchRef,
+    `${session.station}:${phase}${phase === 'identify' ? `:${session.identifyOption}` : ''}`,
+  )
   const [wheelSlices, setWheelSlices] = useState(false)
   useEffect(() => {
     // In the fixed workspace the page does not scroll, so the wheel can step slices.
@@ -606,7 +613,10 @@ export function NavigationBench({
     now = {
       kicker: `${forkCount} · Choose`,
       heading: 'Which opening leads toward the lesion?',
-      body: lesionSentence(target, lesion),
+      // Which way the lesion lies from this fork is a hint, and past the segmental ostium it is
+      // the map's to give: said there, the opening could be chosen without the map.
+      body:
+        help && !(map && pastOstium) ? lesionSentence(target, lesion) : lesionPlaceSentence(target),
       where:
         map && pastOstium
           ? 'Map panel: the arc that holds the star. Take the opening on that side.'
@@ -674,6 +684,8 @@ export function NavigationBench({
     now = {
       kicker: phase === 'arrived' ? 'Arrived' : 'End of this trip',
       heading: closing.heading,
+      // The summary can run past the bottom of the window; the way on stays in view.
+      pinActions: true,
       primary: closing.next
         ? {
             label: closing.next.label,
@@ -980,7 +992,7 @@ export function NavigationBench({
               session.declined.length > 0 &&
               (() => {
                 const opening = facts.openings[session.declined[session.declined.length - 1]]
-                const copy = chooseDeclined(opening, named(opening), lesion)
+                const copy = chooseDeclined(opening, named(opening), lesion, help)
                 return <Band tone="miss" {...copy} />
               })()}
             {phase === 'ready' && <Band tone="in" {...chooseTaken(route, lesion)} />}
@@ -1004,7 +1016,9 @@ export function NavigationBench({
                   {intro}
                 </p>
               )}
-              {phase !== 'match' && session.matchNote !== 'asked' && !moving && (
+              {/* A note about the CT's turn belongs beside the CT: with the map or a
+                  reconstruction in the middle pane it would point at a picture that is not there. */}
+              {phase !== 'match' && session.matchNote !== 'asked' && !moving && centre === 'ct' && (
                 <p className={styles.note} data-match-note={session.matchNote}>
                   {matchNoteSentence(
                     session.matchNote,
@@ -1167,22 +1181,6 @@ const LOOP_STEPS: { id: LoopStepId; label: string; what: string }[] = [
   { id: 'choose', label: 'Choose', what: 'toward the lesion' },
   { id: 'drive', label: 'Drive', what: 'to the next fork' },
 ]
-
-function Band({
-  tone,
-  headline,
-  detail,
-}: {
-  tone: 'in' | 'near' | 'miss'
-  headline: string
-  detail: string
-}) {
-  return (
-    <p className={styles.band} data-verdict-tone={tone} role="status">
-      <strong>{headline}</strong> {detail}
-    </p>
-  )
-}
 
 function orientationSummary(session: NavSession) {
   const o = session.orientation

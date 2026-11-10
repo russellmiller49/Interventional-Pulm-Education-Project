@@ -233,8 +233,10 @@
     flex: 1;
     min-height: 0;
   }
+  /* In a bench the section tabs give their row to the pictures: the bench's own bar leads back
+     to the course overview or the lesion list, where the tabs are. */
   .module[data-activity='true'] > nav {
-    flex: 0 0 auto;
+    display: none;
   }
 }
 @media (max-width: 760px) {

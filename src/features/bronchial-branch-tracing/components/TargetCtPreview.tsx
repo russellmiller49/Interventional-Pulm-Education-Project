@@ -5,9 +5,13 @@ import {
   targetForTrace,
   traceById,
 } from '../geometry/native-ct'
+import { lobeOf } from '../content/targets'
 import styles from './branch-tracing.module.css'
 
-/** Start with standard axial even on the landing page; do not preview the orientation answer. */
+/**
+ * Start with standard axial even on the landing page; do not preview the orientation answer. The
+ * lesion is named by its lobe only: a lesson asks the learner to name its segment.
+ */
 export function TargetCtPreview({ traceId = 'middle-lobe-caudal' }: { traceId?: string }) {
   const trace = traceById(traceId),
     target = targetForTrace(trace)
@@ -18,7 +22,7 @@ export function TargetCtPreview({ traceId = 'middle-lobe-caudal' }: { traceId?: 
       <svg
         viewBox="0 0 100 100"
         role="img"
-        aria-label={`Simulated nodule in the ${target.segment.name.toLowerCase()} on real CT, in standard axial view`}
+        aria-label={`Simulated nodule in the ${lobeOf(target).toLowerCase()} on real CT, in standard axial view`}
       >
         <g
           transform={`translate(50 50) scale(${100 / 190}) translate(${-target.pixel[0]} ${-target.pixel[1]})`}
@@ -58,9 +62,7 @@ export function TargetCtPreview({ traceId = 'middle-lobe-caudal' }: { traceId?: 
         </text>
       </svg>
       <figcaption>
-        <strong>
-          {target.segment.code} · {target.segment.name}
-        </strong>
+        <strong>A lesion in the {lobeOf(target).toLowerCase()}</strong>
         <span>Standard axial · simulated nodule · 0.5 mm slices</span>
       </figcaption>
     </figure>

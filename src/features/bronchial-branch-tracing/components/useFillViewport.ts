@@ -30,6 +30,10 @@ export function useFillViewport<T extends HTMLElement>() {
     const header = element.closest('[data-lesson-shell]')?.firstElementChild
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
     if (header && observer) observer.observe(header)
+    // The site menu is hidden while a bench is open; if it comes or goes, the bench starts
+    // somewhere else.
+    const siteHeader = document.getElementById('site-header')
+    if (siteHeader && observer) observer.observe(siteHeader)
     return () => {
       window.removeEventListener('resize', update)
       query.removeEventListener('change', update)

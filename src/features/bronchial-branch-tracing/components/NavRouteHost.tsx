@@ -19,14 +19,8 @@ import {
 } from '../content/targets'
 import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
-import {
-  navKey,
-  orientationShown,
-  readNavEntry,
-  readOrientationProgress,
-  writeNavEntry,
-} from '../engine/nav-storage'
-import { PLAN_PARTS, summarizePlan } from '../engine/plan-session'
+import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import { ROUTE_PLAN_PARTS, summarizePlan } from '../engine/plan-session'
 import { ModuleFrame } from './ModuleFrame'
 import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
@@ -130,8 +124,9 @@ function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
   const trace = useMemo(() => traceForTarget(target.id), [target.id])
   const trip: TripPlan = useMemo(
     () => ({
-      plan: { traceId: trace.id, targetId: target.id, parts: PLAN_PARTS },
-      nav: routePlan(trace, { matchOptional: orientationShown(readOrientationProgress()) }),
+      plan: { traceId: trace.id, targetId: target.id, parts: ROUTE_PLAN_PARTS },
+      // A whole lesion is driven with its map: no fork waits for the CT to be turned.
+      nav: routePlan(trace, { matchOptional: true }),
     }),
     [trace, target.id],
   )

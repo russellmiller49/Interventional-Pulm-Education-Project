@@ -70,7 +70,9 @@ import {
   type CtOverlayMark,
   type CtSliderTick,
 } from './TracingCtViewer'
+import { Band } from './Band'
 import { useFillViewport } from './useFillViewport'
+import { useStageFocus } from './useStageFocus'
 import styles from './nav-bench.module.css'
 
 /**
@@ -179,8 +181,9 @@ export function PlanBench({
     ]
   }, [trace, target])
 
-  // The words round the learner's circle: their own once accepted, the model's where the trip
-  // does not ask for the circle, and what they have chosen so far while they label it.
+  // The words round the learner's circle: their own once accepted, and what they have chosen so
+  // far while they label it. A trip that does not ask for the circle draws none (see the map
+  // pane), so the model's words are never on screen ahead of the lesson that asks for them.
   const rim: Record<Rim, Anatomical | null> = useMemo(() => {
     if (stage === 'frame' || (frameAsked && plan.frameTurn !== null)) return plan.frame
     const model = turnedRim(frame.rim, plan.frameTurn ?? 0)
@@ -239,6 +242,10 @@ export function PlanBench({
   const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
+  useStageFocus(
+    benchRef,
+    `${stage}${stage === 'arcs' ? `:${plan.division}` : ''}${done ? ':closed' : ''}`,
+  )
   const [wheelSlices, setWheelSlices] = useState(false)
   useEffect(() => {
     const query = window.matchMedia('(min-width: 1024px) and (min-height: 700px)')
@@ -358,6 +365,8 @@ export function PlanBench({
     now = {
       kicker: 'End of this trip',
       heading: closing.heading,
+      // The summary can run past the bottom of the window; the way on stays in view.
+      pinActions: true,
       primary: closing.next
         ? {
             label: closing.next.label,
@@ -466,6 +475,9 @@ export function PlanBench({
   const stageId = stage === 'frame' || stage === 'arcs' || stage === 'review' ? 'map' : 'plan'
   const stageState = (id: string) =>
     id === stageId ? 'now' : id === 'plan' && stageId === 'map' ? 'done' : 'todo'
+  // Outside the lessons the views are not a step: they are offered where the circle is labelled.
+  const viewsBesideCircle =
+    section !== 'learn' && stage === 'frame' && !spec.parts.includes('views')
   const partTeach = teach?.[stage as PlanPart]
   const hereTeach = stage === 'arcs' ? divisionTeach?.[division] : undefined
 
@@ -610,12 +622,18 @@ export function PlanBench({
                     <figcaption>The model’s</figcaption>
                   </figure>
                 </div>
-              ) : mapReady || !frameAsked ? (
+              ) : mapReady && frameAsked ? (
                 sideMap
-              ) : (
+              ) : frameAsked || !segmentKnown || stage !== 'done' ? (
                 <p className={styles.mapWaiting} data-map-waiting>
                   The map starts at the ostium of the lesion’s segmental bronchus. Find the airway
                   into the lesion and follow it back first.
+                </p>
+              ) : (
+                // A trip that only plans draws no circle: its words are the next lesson's to find.
+                <p className={styles.mapWaiting} data-map-waiting="named">
+                  The map of this route starts at the {target.segment.bronchusCode} ostium, the
+                  bronchus you have just named.
                 </p>
               )}
             </div>
@@ -842,6 +860,22 @@ export function PlanBench({
                   {hereTeach}
                 </p>
               )}
+              {viewsBesideCircle && (
+                <div className={styles.note} data-views-note>
+                  <p>{viewsInstruction(target.segment.bronchusCode)}</p>
+                  <p className={styles.mapTools}>
+                    <button onClick={() => openReconstruction('coronal')} data-open-view="coronal">
+                      Open the coronal view
+                    </button>
+                    <button
+                      onClick={() => openReconstruction('sagittal')}
+                      data-open-view="sagittal"
+                    >
+                      Open the sagittal view
+                    </button>
+                  </p>
+                </div>
+              )}
               {stage === 'arcs' && packet && help && section !== 'assess' && here.checked && (
                 <details data-fork-more>
                   <summary>More about this division on the CT</summary>
@@ -865,22 +899,6 @@ export function PlanBench({
         ))}
       </HelpDialog>
     </LessonShell>
-  )
-}
-
-function Band({
-  tone,
-  headline,
-  detail,
-}: {
-  tone: 'in' | 'near' | 'miss'
-  headline: string
-  detail: string
-}) {
-  return (
-    <p className={styles.band} data-verdict-tone={tone} role="status">
-      <strong>{headline}</strong> {detail}
-    </p>
   )
 }
 

@@ -249,17 +249,38 @@ export function lesionSentence(target: CtNoduleTarget, lesion: LesionFacts) {
   return `The lesion is in ${target.segment.code}, the ${target.segment.name.toLowerCase()}. It lies ${level} (slice ${lesion.slice}), about ${Math.round(lesion.mm)} mm away, ${lesion.bearing}.`
 }
 
+/**
+ * Where the lesion is, with nothing about which way it lies from the fork. The choose card says
+ * this wherever the way is the learner's to work out: past the segmental ostium, where the map
+ * gives it, and at every fork of a trip that offers no hints.
+ */
+export function lesionPlaceSentence(target: CtNoduleTarget) {
+  return `The lesion is in ${target.segment.code}, the ${target.segment.name.toLowerCase()}, ringed on slice ${target.slice}.`
+}
+
 /** "37 mm toward the feet of this fork" / "at about this fork's level" */
 function lesionLevel(lesion: LesionFacts) {
   return Math.abs(lesion.slicesFromFork) <= 2
     ? 'at about this fork’s level'
     : `${levelPhrase(lesion.slicesFromFork)} of this fork`
 }
-export function chooseDeclined(opening: OpeningFacts, named: boolean, lesion: LesionFacts) {
+/**
+ * Back at the fork after a branch that led away. With hints on, which way the lesion lies; without,
+ * only that the branch led away, which is what the learner saw.
+ */
+export function chooseDeclined(
+  opening: OpeningFacts,
+  named: boolean,
+  lesion: LesionFacts,
+  help: boolean,
+) {
   const subject = openingShort(opening, named)
+  const back = 'You are back at the fork: take the other opening.'
   return {
     headline: `${subject[0].toUpperCase()}${subject.slice(1)} leads away from the lesion.`,
-    detail: `It runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}. You are back at the fork: take the other opening.`,
+    detail: help
+      ? `It runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}. ${back}`
+      : back,
   }
 }
 /**
