@@ -80,7 +80,7 @@ function ScenePane(props: ScopePaneProps) {
   const lastMove = useRef(0)
   const [schematic, setSchematic] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const [visualTab, setVisualTab] = useState<'scope' | 'map'>('scope')
+  const [visualTab, setVisualTab] = useState<'scope' | 'map' | 'position'>('scope')
   const ready = schematic || status === 'ready'
   const playback = useScopePlayback(props, playbackRoot, ready, schematic)
   // One displayed bench state for the scene and for the end-on drawing under the controls. The
@@ -95,6 +95,13 @@ function ScenePane(props: ScopePaneProps) {
   // The map sits beside the view only on a step that steers, names or is answered on the map; a
   // step without steering keeps its controls directly under the view (owner, 2026-11-03).
   const showMap = props.state.place !== 'bench' && showsAirwayContext(props.view, props.treeAnswer)
+  // The outside view: the see-through airway tree with the scope in it, in the flat map's place.
+  // It carries no names, so it says no more than the map's own tip marker. It is not offered while
+  // a question is answered on the map, or while the step withholds where the tip is.
+  const positionAllowed =
+    showMap && !props.treeAnswer && props.state.script?.phase !== 'unidentified'
+  const shownTab = visualTab === 'position' && !positionAllowed ? 'scope' : visualTab
+  const position = shownTab === 'position'
   const keyboard = (event: KeyboardEvent) => {
     if (!enabled || event.altKey || event.metaKey || event.ctrlKey) return
     const target = event.target as HTMLElement
@@ -165,7 +172,7 @@ function ScenePane(props: ScopePaneProps) {
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={visualTab === 'scope'}
+                    aria-selected={shownTab === 'scope'}
                     onClick={() => setVisualTab('scope')}
                   >
                     Scope view
@@ -173,18 +180,30 @@ function ScenePane(props: ScopePaneProps) {
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={visualTab === 'map'}
+                    aria-selected={shownTab === 'map'}
                     onClick={() => setVisualTab('map')}
                   >
                     Airway map
                   </button>
+                  {positionAllowed ? (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={position}
+                      onClick={() => setVisualTab('position')}
+                      data-position-tab
+                    >
+                      3D view
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
               <div
                 className={styles.visualWorkspace}
                 data-bench={props.state.place === 'bench' ? 'true' : undefined}
-                data-map={showMap ? 'beside' : 'none'}
-                data-visual-tab={showMap ? visualTab : 'scope'}
+                data-map={showMap && !position ? 'beside' : 'none'}
+                data-visual-tab={showMap ? shownTab : 'scope'}
+                data-position-view={position ? 'true' : undefined}
               >
                 <div className={styles.scopeColumn} ref={setPlaybackRoot}>
                   <Scene
@@ -193,6 +212,8 @@ function ScenePane(props: ScopePaneProps) {
                     visible={playback.visible}
                     onStatus={report}
                     presentation={presentation}
+                    positionView={position}
+                    onShowMap={() => setVisualTab('map')}
                   />
                   {status === 'failed' ? (
                     <button
@@ -204,9 +225,19 @@ function ScenePane(props: ScopePaneProps) {
                     </button>
                   ) : null}
                 </div>
-                {showMap ? (
+                {showMap && !position ? (
                   // Held to the view's height beside it, so it never pushes the controls down.
                   <div className={styles.mapColumn} data-map-column>
+                    {positionAllowed ? (
+                      <button
+                        type="button"
+                        className={styles.viewSwitch}
+                        onClick={() => setVisualTab('position')}
+                        data-show-position-view
+                      >
+                        3D view
+                      </button>
+                    ) : null}
                     <TreeMap
                       map={props.map}
                       lit={props.view.litAirways ?? []}

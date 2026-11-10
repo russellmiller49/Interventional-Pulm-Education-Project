@@ -3166,3 +3166,40 @@ test.describe('Feedback 2026-10-13: guided travel, orientation and the course’
     expect(response.headers()['content-type']).toContain('image/jpeg')
   })
 })
+
+test('the outside 3D view takes the flat map’s place beside the scope view, and gives it back', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await walkToStep(page, 'right-side', 'right-side-flow-v1-application')
+  await ready(page)
+  const views = page.locator('[data-three-state]')
+  await expect(page.locator('[data-map-column]')).toBeVisible()
+  await expect(views).not.toHaveAttribute('data-observer', 'true')
+
+  await page.locator('[data-show-position-view]').click()
+  await expect(page.locator('[data-map-column]')).toHaveCount(0)
+  await expect(views).toHaveAttribute('data-observer', 'true')
+  await expect(page.locator('[data-position-note]')).toContainText('patient’s right is on the left')
+  // It names no airway: the step's opening names are off, and the outside view adds none.
+  await expect(page.locator('[data-ostium-pin]:not([aria-label="An opening ahead"])')).toHaveCount(
+    0,
+  )
+  // The goal, both views and the controls under them stay on one laptop screen.
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const dockBottom = await page
+    .locator('[data-scope-controls]')
+    .evaluate((element) => element.getBoundingClientRect().bottom)
+  expect(dockBottom).toBeLessThanOrEqual(768)
+  // The controls still drive the scope with the outside view open: it travels to the next fork,
+  // where the scope waits and says so.
+  for (let press = 0; press < 8; press += 1) {
+    if (await page.locator('[data-scope-message]').count()) break
+    await control(page, 'advance').click()
+  }
+  await expect(page.locator('[data-scope-message]')).toBeVisible()
+
+  await page.locator('[data-show-flat-map]').click()
+  await expect(page.locator('[data-map-column]')).toBeVisible()
+  await expect(views).not.toHaveAttribute('data-observer', 'true')
+})

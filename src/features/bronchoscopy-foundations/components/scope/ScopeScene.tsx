@@ -44,6 +44,13 @@ interface SceneProps extends ScopePaneProps {
   onStatus: (status: SceneStatus) => void
   /** The bench as it is being shown; the pane owns it so the drawings outside this scene agree. */
   presentation: BenchPresentation
+  /**
+   * Draw the outside view beside the scope view on a step that drives through the airways: the
+   * see-through tree with the scope in it. The pane offers it in place of the flat map.
+   */
+  positionView?: boolean
+  /** Back to the flat map, from the outside view's own corner. */
+  onShowMap?: () => void
 }
 
 class SceneBoundary extends Component<
@@ -92,8 +99,9 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
   const { invalidate, gl } = useThree()
   const drawn = useRef(false)
   useEffect(() => {
+    // The outside view coming or going moves the views without a scroll or a resize.
     invalidate(8)
-  }, [props.state, props.visible, invalidate])
+  }, [props.state, props.visible, props.positionView, invalidate])
   useEffect(() => {
     // View updates its offscreen flag in React, then clears its scissor in a layout effect.
     // Leave frames after that effect to repaint newly revealed close-ups on compact layouts.
@@ -191,7 +199,9 @@ export default function ScopeScene(props: SceneProps) {
       cancelled = true
     }
   }, [view.mode, view.profile, detailedBench, generation, failed])
-  const observer = ['controls-isolated', 'larynx-entry', 'tube', 'accessory'].includes(view.mode)
+  const observer =
+    ['controls-isolated', 'larynx-entry', 'tube', 'accessory'].includes(view.mode) ||
+    props.positionView === true
   const optical = view.mode !== 'idle'
   useEffect(() => {
     const element = opticalRoot.current
@@ -465,7 +475,9 @@ export default function ScopeScene(props: SceneProps) {
                     ? 'Outside view: bronchoscope control head and enlarged distal bending section'
                     : view.mode === 'tube'
                       ? 'Tube cutaway: the scope inside the tube'
-                      : 'Outside view: the scope in the airway'
+                      : props.positionView
+                        ? 'Outside view from the front: the airway tree with the scope in it, and the tip marked'
+                        : 'Outside view: the scope in the airway'
                 }
                 data-control-closeups={detailedBench ? 'true' : undefined}
               >
@@ -523,9 +535,26 @@ export default function ScopeScene(props: SceneProps) {
                     <span className={styles.viewHeading}>
                       {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'}
                     </span>
+                    {props.positionView ? (
+                      <span className={styles.positionNote} data-position-note>
+                        From the front: the patient’s right is on the left. The yellow dot is the
+                        tip.
+                      </span>
+                    ) : null}
                   </>
                 )}
               </div>
+            ) : null}
+            {props.positionView && props.onShowMap ? (
+              // Outside the picture's own element, so the button is a button to every reader.
+              <button
+                type="button"
+                className={styles.viewSwitch}
+                onClick={props.onShowMap}
+                data-show-flat-map
+              >
+                Flat map
+              </button>
             ) : null}
           </SceneBoundary>
         ) : null}
