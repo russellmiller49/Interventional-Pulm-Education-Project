@@ -50,6 +50,40 @@ export const MCS_ECHO_POSITION = {
   ],
 } as const
 
+/**
+ * The two Impella CP depths the long-axis drawing is ruled against, in centimetres below the
+ * annulus. They restate register rows `impella-cp-inlet-depth` (3.5 cm) and
+ * `impella-cp-inlet-too-deep` (more than 4 cm); `impella-echo-figure.test.tsx` holds them to those
+ * rows.
+ */
+export const MCS_ECHO_CP_TARGET_DEPTH_CM = 3.5
+export const MCS_ECHO_CP_TOO_DEEP_BEYOND_CM = 4
+
+/**
+ * The three positions the drawing shows. Each sentence is the module's own account of that
+ * position, shortened: the aligned findings and the two malpositions above.
+ */
+export const MCS_ECHO_FIGURE_STATES = [
+  {
+    id: 'aligned',
+    label: 'Aligned',
+    reading: `Inlet ${MCS_ECHO_CP_TARGET_DEPTH_CM} cm below the annulus, in the ventricle and angled toward the apex. Outlet above the valve, with the color mosaic at the outlet.`,
+  },
+  {
+    id: 'too-deep',
+    label: 'Too deep',
+    reading: `Inlet more than ${MCS_ECHO_CP_TOO_DEEP_BEYOND_CM} cm below the annulus and the outlet at the valve, so both ends are in the ventricle. The color mosaic is below the valve.`,
+  },
+  {
+    id: 'inlet-in-aorta',
+    label: 'Inlet in the aorta',
+    reading:
+      'Inlet at or above the valve, so the pump draws from the aorta and the ventricle is not unloaded. The pigtail lies close to the mitral valve.',
+  },
+] as const
+
+export type McsEchoFigureStateId = (typeof MCS_ECHO_FIGURE_STATES)[number]['id']
+
 /** The inlet depth measured in the worked example, in centimetres below the annulus. */
 export const MCS_ECHO_WORKED_INLET_DEPTH_CM = 5
 

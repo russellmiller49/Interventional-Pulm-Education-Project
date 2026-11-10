@@ -888,3 +888,139 @@
   max-width: 70ch;
   list-style: disc;
 }
+
+/*
+ * The drawn LVAD controller (Section 7's tour).
+ *
+ * A generic controller face: a dark body, a screen of four tiles, and the driveline. It is not a
+ * manufacturer's layout. The tiles are the tour's first four buttons and carry the live values;
+ * the two quantities that are not on a controller sit beside it.
+ */
+.controllerTour {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.controller {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 2px solid #3a5560;
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #223840, #16282e);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.controllerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  color: #b8cccf;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.controllerLamp {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #76d69b;
+  box-shadow: 0 0 0.4rem rgba(118, 214, 155, 0.7);
+}
+
+.controllerScreen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border-radius: 0.6rem;
+  background: #06161a;
+}
+
+.controllerScreen button {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 4.25rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(113, 225, 229, 0.25);
+  border-radius: 0.45rem;
+  color: #d9f5f1;
+  background: #0b2a32;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.controllerScreen button span {
+  color: #9fb4b7;
+  font-size: var(--stage-type-floor, 0.875rem);
+  line-height: 1.25;
+}
+
+.controllerScreen button strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.controllerScreen button small {
+  color: #9fb4b7;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.controllerScreen button[aria-pressed='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: #1f4249;
+  box-shadow: inset 0 0 0 1px var(--cyan-bright, #71e1e5);
+}
+
+.controllerScreen button:focus-visible,
+.controllerBeside button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.controllerFoot {
+  margin: 0;
+  padding-top: 0.35rem;
+  border-top: 2px dashed #3a5560;
+  color: #9fb4b7;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.controllerBeside {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  align-items: center;
+}
+
+.controllerBeside p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--stage-muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+  font-weight: 700;
+}
+
+.controllerBeside button {
+  min-height: 2.75rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--stage-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.5rem;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.controllerBeside button[aria-pressed='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: #1f4249;
+}
