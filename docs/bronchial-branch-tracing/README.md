@@ -2,7 +2,7 @@
 
 Entry: `/en/learn/anatomy/branch-tracing`. Anonymous direct access, noindex, no catalog, search or sitemap listing. The module is unpublished.
 
-**Rebuilt October 21, 2026** around the simplified bronchial branch tracing of Mortimer and Saghaie, _Lost in navigation: a simplified CT-based airway mapping method for ultrathin navigational bronchoscopy_, J Clin Med 2025;14:8009 ([doi](https://doi.org/10.3390/jcm14228009)). The October 9 rebuild (scope-first: match, identify, choose, drive at every fork) is kept for lessons 1 and 2 and for the drive itself; planning and the nested-arc map are new. Documents listed under [Earlier design records](#earlier-design-records) describe earlier courses.
+**Rebuilt October 21, 2026** around the simplified bronchial branch tracing of Mortimer and Saghaie, _Lost in navigation: a simplified CT-based airway mapping method for ultrathin navigational bronchoscopy_, J Clin Med 2025;14:8009 ([doi](https://doi.org/10.3390/jcm14228009)). The October 9 rebuild (scope-first: match, identify, choose, drive at every fork) is kept for the two refresher lessons and for the drive itself; planning and the nested-arc map are new. Documents listed under [Earlier design records](#earlier-design-records) describe earlier courses.
 
 ## What the learner does
 
@@ -12,25 +12,31 @@ A lesion trip has three stages.
    - _The airway into the lesion._ The learner clicks the airway that runs into the lesion. It counts within 3 mm of the route's own centreline over the last 20 mm before the lesion, in three dimensions, so an airway that runs along the slice counts all along it (`lesionVerdict`).
    - _Its segment._ The learner names the segmental bronchus from that lobe's segmental bronchi (`segmentChoices`).
    - _Views._ Turning or flipping the CT, and the coronal and sagittal reconstructions, are offered and never checked. In the lessons that teach them this is a step of its own. In Practice and the closing set it is not a step (`ROUTE_PLAN_PARTS`): the paper's pairing for the segment and the two open-view links sit beside the ostium circle. A place saved on the old step opens on the circle (`settlePlan`).
-   - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits. A trip that does not ask for the circle draws none, so lesson 3 never shows the circle lesson 4 asks for, and the lesion pictured on the hub is named by its lobe. In Learn, a lesson that asks for the segment names only the lobe in its title, objective, concept, trip titles and intro (`__tests__/nav-lessons.test.ts`).
+   - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits. A trip that does not ask for the circle draws none, so `start-at-the-lesion` never shows the circle `stand-at-the-ostium` asks for, and the lesion pictured on the hub is named by its lobe. In Learn, a lesson that asks for the segment names only the lobe in its title, objective, concept, trip titles and intro (`__tests__/nav-lessons.test.ts`).
 2. **Map** (`engine/arc-map.ts`).
    - _The ostium circle._ The learner labels the four rim positions of the view into the segment's ostium with superior, inferior, medial, lateral, anterior or posterior. Any roll of the right arrangement is accepted; a mirror image is refused (`gradeFrame`). A rim position between two directions accepts either word.
    - _The divisions._ At each division from the ostium to the lesion the learner draws each branch as an arc on one of eight sides of the current branch and marks the branch that goes on. A drawn branch counts when it is within 67.5° (the same or a neighbouring side) of where that branch leaves _relative to its siblings_, read in the ostium frame; drawn branches are matched to daughters by the closest overall fit (`gradeArcs`). The next division is drawn inside the marked branch.
    - _Review._ The learner's map beside the model's, with the star on the branch that reaches the lesion.
 3. **Navigate** (`engine/nav-session.ts`, the scope-first bench).
-   - Every fork is chosen at; no fork asks for its openings to be marked (lessons 1 and 2 still mark them).
-   - Turning the CT to match the scope is asked for in lesson 1, and in lesson 2 until the learner has finished lesson 1 or matched three forks on the first check (kept on the device: `nav-storage.ts`, `orientation`). A drive that follows a map never waits for it, in the lessons, Practice and the closing set: the CT stays as the learner left it, with **Check my turn** beside it. The note about the CT's turn shows only while the CT is the middle pane.
+   - **The central airways are flown through** (`cruise` on a station, `cruiseCount` in `content/nav-lessons.ts`, `flyingThrough` in `engine/nav-session.ts`). On a drive that follows a map, every fork above the one that gives off the lesion's segmental bronchus is passed without stopping: nothing is asked there and nothing is logged as asked, so first-try counts cover only the forks chosen at. The card names what is passing and offers **Stop at the next fork**, which makes that fork an ordinary one. A lesson stops earlier at any fork it has something to say at (lesson 6, the left main bronchus). The drive waits for the scope's picture before it sets off. **Choose at every fork from the trachea** on the hub and the lesion lists turns the fly-through off (`engine/prefs-storage.ts`, key `branch-tracing.prefs-v1`).
+   - Every fork stopped at is chosen at, by its button or by a click on its number in the scope; no fork asks for its openings to be marked (the two refreshers still mark them). On a drive that follows a map an opening is named once the learner has chosen: the first fork stopped at gives off the bronchus the learner named in planning, so its name on an opening would be the answer.
+   - Turning the CT to match the scope is asked for in the orientation check and the first refresher (`carina-orientation`), and in the second (`two-levels`) until the learner has finished the first or matched three forks on the first check (kept on the device: `nav-storage.ts`, `orientation`). A drive that follows a map never waits for it, in the lessons, Practice and the closing set: the CT stays as the learner left it, with **Check my turn** beside it. The note about the CT's turn shows only while the CT is the middle pane.
    - **Where the lesion lies from the fork** (segment, slices, distance, bearing) is said on the choose card only above the segmental ostium and only where hints are on. Past the ostium, and at every fork of the closing set, the card says where the lesion is (segment and slice) and nothing of which way: there the way is the map's to give (`lesionPlaceSentence`). A refusal after a branch that led away gives the bearing only where hints are on (`chooseDeclined`).
    - Past the segmental ostium the middle pane shows the map beside the scope, zoomed on the current division, with **Turn the map to the scope** (`mapTurnToScope`); the CT is a tab away. The scope's rim reads Med, Lat, Ant, Post, Sup, Inf instead of R, L, A, P, Head, Feet.
    - **A turn that leads away.** Choosing an opening that leads away drives the scope into it, stopping 8 mm short of that branch's own next division (or short of where the model ends), looking at it (`geometry/astray.ts`). The learner backs out along the same path to the fork's exact waiting pose, and that opening is greyed. Wrong turns and back-outs are logged and summarised, in the closing set too.
 
 | Section     | Address                 | What it is                                                                                                                   |
 | ----------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Learn       | `/learn?lesson=<id>`    | Nine lessons, about 79 minutes.                                                                                              |
+| Learn       | `/learn?lesson=<id>`    | Seven lessons, about 61 minutes; an optional orientation check before them and two refreshers after.                         |
 | Practice    | `/practice?lesion=<id>` | Thirteen simulated lesions: plan, map and drive each, help on request.                                                       |
 | Closing set | `/assess?lesion=<id>`   | Three lesions in three lobes, no hints: a check says only whether it fits; openings are numbered but not named until chosen. |
 
-Lessons, in order: `carina-orientation` and `two-levels` (reading the CT against the scope), `start-at-the-lesion`, `stand-at-the-ostium`, `nested-arcs` (planning from the lesion), `drive-with-the-map`, `views-that-help` (driving with the map), `turn-back`, `navigate` (the whole method).
+The course, in order (`NAV_LESSONS`): `start-at-the-lesion`, `stand-at-the-ostium`, `nested-arcs` (planning from the lesion), `drive-with-the-map`, `views-that-help` (driving with the map), `turn-back`, `navigate` (the whole method). The course is for bronchoscopists who know the airways down to the segments, so it opens on planning.
+
+- **Orientation check** (`orientation-check`, optional, hints off): three forks that ask only for the CT to be turned to the scope. The carina is a flip, RB1 a quarter turn left, the left upper division a quarter turn right. All three matched at the first check lead on to lesson 1; otherwise the closing card offers the first refresher. Nothing waits on it.
+- **Refreshers** (`REFRESHER_LESSONS`): `carina-orientation` and `two-levels`, the two lessons that used to open the course. They keep their addresses, their marking of openings and their saved places.
+- **Lesson 4 (`drive-with-the-map`) opens with its map drawn** (`prefilled` on the plan): the RB1 map of lesson 3, as the airway model has it, at the review. **Draw it myself** clears it. A map the bench drew is left out of the summary.
+- The hub's first-visit button is the orientation check, with "Skip to planning: lesson 1" beside it.
 
 ## How it is built
 
@@ -42,7 +48,7 @@ All under `src/features/bronchial-branch-tracing/`.
 | The map        | `engine/arc-map.ts`                                                                                                                                        | The ostium frame, where each branch is drawn, how a circle and arcs are read, the nested layout, the turn to scope. |
 | Planning       | `engine/plan-session.ts`, `engine/trip-session.ts`                                                                                                         | The planning reducer; a trip as planning then the drive.                                                            |
 | Matching       | `engine/orientation-match.ts`                                                                                                                              | Which CT displays match the scope at a fork, and how a given display differs.                                       |
-| Lumen verdict  | `engine/junction-feedback.ts`, `engine/response-planes.ts`, `geometry/answer-plane-air.json`                                                               | Which lumen a click is in, read from the CT's own air (lessons 1 and 2).                                            |
+| Lumen verdict  | `engine/junction-feedback.ts`, `engine/response-planes.ts`, `geometry/answer-plane-air.json`                                                               | Which lumen a click is in, read from the CT's own air (the refreshers).                                             |
 | Session        | `engine/nav-session.ts`, `engine/nav-storage.ts`                                                                                                           | The drive reducer; the place kept on the device (`branch-tracing.nav-v2`).                                          |
 | Content        | `content/nav-lessons.ts`, `content/bench-copy.ts`, `content/plan-copy.ts`, `content/junction-feedback.ts`, `content/course-guide.ts`, `content/targets.ts` | Lessons, every computed sentence, the fork explanations, the method's steps and tips, the lesion list.              |
 | Benches        | `components/TripBench.tsx`, `PlanBench.tsx`, `NavigationBench.tsx`, `ArcMap.tsx`, `ScopeView.tsx`, `TracingCtViewer.tsx`                                   | Planning and the drive, each on one screen.                                                                         |
@@ -120,6 +126,8 @@ The Playwright spec includes the one-screen check: at 1440×900, 1600×905 (the 
 
 ## Open for the owner
 
+Lesson numbers in the dated notes below are those of the day. Before round 1 (November 10, 2026) the course had nine lessons; the two that are now refreshers were lessons 1 and 2, so every later lesson's number has since moved down by two.
+
 Decided on October 21, 2026: rebuild around the simplified method; wrong turns go one generation, everywhere, and are counted in the closing set; the map is graded on relative direction with the model map shown after; turning the CT becomes optional after lesson 1 or three first-try matches.
 
 Decided by the build and easy to change:
@@ -144,6 +152,14 @@ The plan came from a review of the module for third-year fellows and attendings,
 4. **Views are not a step in Practice or the closing set**; they are offered beside the circle.
 5. **A bench has the whole window**: no site menu or section tabs above it.
 6. The closing card's way on is pinned in view; the zoomed map is a round lens; what a check found carries an icon as well as a colour; focus goes to the task heading when a step's button went with the step; the scope's light narrows to a cone about its line of sight (`HEADLIGHT_CONE` in `components/ScopeCanvas.tsx`), and the scene lights that did nothing are gone.
+
+### Changed on November 10, 2026 (round 1), for your read
+
+1. **The fly-through.** The first choice on every drive is now the fork that gives off the lesion's segmental bronchus. Lesson 6 (`turn-back`, the old lesson 8) stops at the left main bronchus because it teaches there. About 20 mm/s; three central forks pass in about three seconds.
+2. **Opening names wait for the choice on every drive that follows a map**, not only in the closing set and the second trip of lesson 7 (`navigate`). Above the ostium the choose card still says which way the lesion lies where hints are on.
+3. **The course is seven lessons, 61 minutes.** Lesson numbers moved down by two; the beta hub card (`src/features/module-beta/rollout.ts`) says so. Lesson 4 is counted at 6 minutes, down from 9, because its map is already drawn.
+4. **The orientation check** routes to the refresher only when a fork did not match at the first check on that visit; a reload in the middle of it counts the earlier forks as not matched.
+5. **The primer** (hub and the "What are we doing?" dialog) now describes the fly-through and the check.
 
 ## Earlier design records
 

@@ -11,7 +11,7 @@ import {
 import { BranchTracingOverview } from '../components/BranchTracingOverview'
 import { METHOD_STEPS } from '../content/course-guide'
 import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
-import { NAV_LESSONS } from '../content/nav-lessons'
+import { ALL_LESSONS, NAV_LESSONS, ORIENTATION_CHECK } from '../content/nav-lessons'
 import { NAV_STORAGE_KEY } from '../engine/nav-storage'
 import {
   emptySelfPacedRecord,
@@ -75,9 +75,9 @@ function expectNoGradeWording(root: HTMLElement) {
 describe('self-paced record', () => {
   it('stores only declared place fields, writes idempotently and never overwrites an unreadable value', () => {
     expect([FIRST, SECOND, THIRD]).toEqual([
-      'carina-orientation',
-      'two-levels',
       'start-at-the-lesion',
+      'stand-at-the-ostium',
+      'nested-arcs',
     ])
     expect(readSelfPacedRecord(localStorage).status).toBe('empty')
     expect(recordLessonOpened(FIRST, localStorage)).toBe(true)
@@ -236,6 +236,7 @@ describe('storage boundary', () => {
       'engine/selfPacedProgress.ts': 'SELF_PACED_STORAGE_KEY',
       'engine/nav-storage.ts': 'NAV_STORAGE_KEY',
       'components/NavigationBench.tsx': 'PRIMER_SEEN_KEY',
+      'engine/prefs-storage.ts': 'PREFS_STORAGE_KEY',
     }
     const files = sourceFiles(featureRoot)
     expect(files.length).toBeGreaterThan(20)
@@ -262,9 +263,10 @@ describe('storage boundary', () => {
       keys.push(text.match(new RegExp(`export const ${writers[rel]} = '([^']+)'`))![1])
     }
     expect(found.sort()).toEqual(Object.keys(writers).sort())
-    // Three keys, each the module's own.
+    // Four keys, each the module's own.
     expect(keys.sort()).toEqual([
       'branch-tracing.nav-v2',
+      'branch-tracing.prefs-v1',
       'branch-tracing.primer-seen-v1',
       'branch-tracing.self-paced-v1',
     ])
@@ -274,18 +276,33 @@ describe('storage boundary', () => {
 })
 
 describe('Overview', () => {
-  it('opens every lesson, starts at lesson 1, cites the named source and shows no grade', async () => {
+  it('opens every lesson, starts at the optional check with planning one link away, cites the named source and shows no grade', async () => {
     const { container } = render(<BranchTracingOverview />)
-    const start = await screen.findByRole('link', { name: 'Start lesson 1' })
-    expect(start).toHaveAttribute('href', lessonHref(FIRST))
+    const start = await screen.findByRole('link', { name: 'Start with the orientation check' })
+    expect(start).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
+    // The check is on nobody's way: lesson 1, planning, is one link from the start button.
+    expect(screen.getByRole('link', { name: 'Skip to planning: lesson 1' })).toHaveAttribute(
+      'href',
+      lessonHref(FIRST),
+    )
+    expect(container.querySelector('[data-skip-check]')!.textContent).toMatch(/It is optional\./)
     expect(lessonHref(FIRST)).toBe(`${BASE_PATH}/learn?lesson=${FIRST}`)
-    for (const lesson of NAV_LESSONS) {
+    // How the drive runs is one choice, off by default: the central airways are flown through.
+    const everyFork = container.querySelector('[data-cruise-choice] input') as HTMLInputElement
+    expect(everyFork.checked).toBe(false)
+    for (const lesson of ALL_LESSONS) {
       const link = Array.from(container.querySelectorAll('[data-lesson-group] a')).find(
         (a) => a.getAttribute('href') === lessonHref(lesson.id),
       )
       expect([lesson.id, link?.textContent]).toEqual([lesson.id, lesson.title])
     }
-    expect(container.querySelectorAll('[data-lesson-group] a')).toHaveLength(NAV_LESSONS.length)
+    expect(container.querySelectorAll('[data-lesson-group] a')).toHaveLength(ALL_LESSONS.length)
+    // The numbered course is the seven lessons; the check and the refreshers carry no number.
+    expect(
+      Array.from(container.querySelectorAll('[data-lesson-group] li > span:first-child')).map(
+        (cell) => cell.textContent,
+      ),
+    ).toEqual(['·', '01', '02', '03', '04', '05', '06', '07', '·', '·'])
     expect(screen.getByRole('link', { name: SOURCE.title })).toHaveAttribute('href', SOURCE.url)
     expect(screen.getByRole('link', { name: METHOD_SOURCE.title })).toHaveAttribute(
       'href',
@@ -326,8 +343,18 @@ describe('Overview', () => {
     const bytes = localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
     expect(bytes).not.toBeNull()
     render(<BranchTracingOverview />)
-    expect(await screen.findByRole('link', { name: 'Start lesson 1' })).toBeVisible()
+    expect(
+      await screen.findByRole('link', { name: 'Start with the orientation check' }),
+    ).toBeVisible()
     expect(screen.queryByText('Reached the end')).toBeNull()
+    // The check, once opened and not finished, is where the course resumes.
+    act(() => {
+      recordLessonOpened(ORIENTATION_CHECK.id)
+    })
+    expect(
+      screen.getByRole('link', { name: `Resume: ${ORIENTATION_CHECK.title}` }),
+    ).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
+    expect(screen.queryByRole('link', { name: 'Skip to planning: lesson 1' })).toBeNull()
     act(() => {
       recordLessonOpened(FIRST)
       setLessonReviewed(FIRST, true)
@@ -350,10 +377,9 @@ describe('Overview', () => {
   it('leaves a saved place it cannot read untouched, and still opens the course', async () => {
     localStorage.setItem(SELF_PACED_STORAGE_KEY, '{"version":2}')
     render(<BranchTracingOverview />)
-    expect(await screen.findByRole('link', { name: 'Start lesson 1' })).toHaveAttribute(
-      'href',
-      lessonHref(FIRST),
-    )
+    expect(
+      await screen.findByRole('link', { name: 'Start with the orientation check' }),
+    ).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
     expect(localStorage.getItem(SELF_PACED_STORAGE_KEY)).toBe('{"version":2}')
   })
 })

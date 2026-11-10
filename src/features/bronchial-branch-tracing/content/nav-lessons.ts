@@ -34,6 +34,8 @@ export interface PlanTripSpec {
   parts: readonly PlanPart[]
   /** The bench demonstrates: "Show me" leads at every check. */
   worked?: boolean
+  /** The map is on the bench already; the learner can clear it and draw their own. */
+  prefilled?: boolean
   /** Number the branches of each division on the CT while the map is drawn. */
   locators?: boolean
   /** Said at the start of each part. */
@@ -75,6 +77,8 @@ export interface NavLesson {
   trips: readonly NavTripSpec[]
   /** Said on the closing screen. */
   closing: string
+  /** No hints: a check says what is off, not how to fix it. */
+  unaided?: boolean
 }
 
 /** The trachea and a main bronchus: the first two forks of every route. */
@@ -127,15 +131,54 @@ export const MAP_STEPS: readonly NavStep[] = ['match', 'choose']
 export interface DriveOptions {
   /** The learner has shown they can turn the CT: no fork waits for it. */
   matchOptional: boolean
+  /**
+   * Fly through the central airways on a drive that follows a map (the default). False: the
+   * learner chooses at every fork from the trachea.
+   */
+  cruise?: boolean
 }
 
-/** The route Practice and the closing set drive, after planning: every fork chosen at. */
+/**
+ * How many forks, from the start of a drive that follows a map, the scope flies through.
+ *
+ * The learner knows the airways down to the segments, so the drive's work begins at the fork that
+ * gives off the segmental bronchus: the last fork before the first division the map draws. Every
+ * fork above it is flown through. A fork the trip has something to say at, or asks its own steps
+ * of (`held`), is stopped at, and so is every fork after it.
+ */
+export function cruiseCount(
+  trace: CtTrace,
+  target: CtNoduleTarget,
+  stations: readonly { checkpointIndex: number; held?: boolean }[],
+): number {
+  const firstMapped = mappedForks(trace, target)[0]
+  if (firstMapped === undefined) return 0
+  const above = stations.filter((station) => station.checkpointIndex < firstMapped).length
+  const firstHeld = stations.findIndex((station) => station.held)
+  const count = Math.max(0, above - 1)
+  return firstHeld < 0 ? count : Math.min(count, firstHeld)
+}
+
+/**
+ * The route Practice and the closing set drive, after planning: the central airways flown
+ * through, then every fork chosen at.
+ */
 export function routePlan(trace: CtTrace, options: DriveOptions): NavPlan {
   const stations: NavStation[] = []
   trace.checkpoints.forEach((checkpoint, checkpointIndex) => {
     if (checkpoint.decision) stations.push({ checkpointIndex, steps: MAP_STEPS })
   })
-  return { traceId: trace.id, stations, arrive: true, matchOptional: options.matchOptional }
+  // A route that ends at no lesion has no map to begin at, so nothing on it is flown through.
+  const cruised =
+    options.cruise === false || !TARGET_FOR_TRACE[trace.id]
+      ? 0
+      : cruiseCount(trace, plannedTarget(trace), stations)
+  return {
+    traceId: trace.id,
+    stations: stations.map((station, i) => (i < cruised ? { ...station, cruise: true } : station)),
+    arrive: true,
+    matchOptional: options.matchOptional,
+  }
 }
 
 /** The lesion each route is planned to: the route a lesion opens (`content/targets.ts`). */
@@ -186,6 +229,7 @@ export function buildTrip(spec: NavTripSpec, options: DriveOptions): BuiltTrip {
         targetId: target!.id,
         parts: spec.plan.parts,
         worked: spec.plan.worked,
+        ...(spec.plan.prefilled ? { prefilled: true } : {}),
       }
     : null
   if (!spec.from) {
@@ -218,16 +262,30 @@ export function buildTrip(spec: NavTripSpec, options: DriveOptions): BuiltTrip {
   for (const id of Object.keys(spec.stations ?? {}))
     if (!chosen.some(({ checkpoint }) => checkpoint.id === id))
       throw new Error(`Trip ${spec.traceId} names ${id}, which it does not visit`)
+  // A drive that follows a map flies through the central airways, up to the first fork the
+  // lesson has something to say at.
+  const cruised =
+    target && options.cruise !== false && spec.plan?.parts.includes('arcs') && !spec.identify
+      ? cruiseCount(
+          trace,
+          target,
+          chosen.map(({ checkpoint, index }) => {
+            const station = spec.stations?.[checkpoint.id]
+            return { checkpointIndex: index, held: Boolean(station?.teach || station?.steps) }
+          }),
+        )
+      : 0
   const nav: NavPlan = {
     traceId: trace.id,
     arrive: Boolean(spec.arrive),
     matchOptional: options.matchOptional,
-    stations: chosen.map(({ checkpoint, index }) => {
+    stations: chosen.map(({ checkpoint, index }, i) => {
       const station = spec.stations?.[checkpoint.id]
       return {
         checkpointIndex: index,
         steps: station?.steps ?? (spec.identify ? defaultSteps(trace, index) : MAP_STEPS),
         worked: station?.worked ?? spec.worked,
+        ...(i < cruised ? { cruise: true } : {}),
       }
     }),
   }
@@ -245,7 +303,7 @@ export function buildTrip(spec: NavTripSpec, options: DriveOptions): BuiltTrip {
 const OSTIUM_CHECKLIST =
   'Work out the circle in three steps. First, which way does the segment run from its ostium? That direction and its opposite are along your line of sight, so they are not on the circle. Second, read the other four off the CT: looking toward the head, the axial CT as drawn is the view; looking toward the feet, it is that CT mirrored; looking along the slice, stand facing that way with your head up, and your right-hand side is the circle’s right. Third, turn the circle to however you hold the scope, but never mirror it.'
 
-export const NAV_LESSONS: readonly NavLesson[] = [
+const AUTHORED: readonly NavLesson[] = [
   {
     id: 'carina-orientation',
     title: 'Why the CT looks backwards',
@@ -446,18 +504,18 @@ export const NAV_LESSONS: readonly NavLesson[] = [
   {
     id: 'drive-with-the-map',
     title: 'Drive with the map',
-    minutes: 9,
+    minutes: 6,
     objective:
       'Drive the scope from the trachea to a lesion using your map past the segmental ostium, and recognize and back out of a branch that leads away.',
     concept:
-      'Above the segment you navigate by naming airways you know. From the segmental ostium the map takes over: at each division, find the arc that holds the star and take the opening on that side. A branch that leads away shows a division that is not on your map; that is the signal to back out.',
+      'Above the segment the scope flies through airways you know, and stops at the fork where the segment’s bronchus leaves. From the segmental ostium the map takes over: at each division, find the arc that holds the star and take the opening on that side. A branch that leads away shows a division that is not on your map; that is the signal to back out.',
     trips: [
       {
         traceId: 'right-upper-apical',
         title: 'Trachea to the RB1 lesion',
         intro:
-          'The RB1 lesion again. Draw its map, then drive from the trachea. At the second division past the ostium, take the branch that leads away on purpose this once, to see what it looks like.',
-        plan: { parts: ['frame', 'arcs'] },
+          'The RB1 lesion again, with the map you drew in the last lesson already on the bench. Drive from the trachea: the scope flies through the airways you know and stops where RB1 leaves. At the second division past the ostium, take the branch that leads away on purpose this once, to see what it looks like.',
+        plan: { parts: ['frame', 'arcs'], prefilled: true },
         from: 'junction-1',
         arrive: true,
         stations: {
@@ -577,21 +635,120 @@ export const NAV_LESSONS: readonly NavLesson[] = [
   },
 ]
 
-export const lessonById = (id: string | undefined) => NAV_LESSONS.find((l) => l.id === id)
+/**
+ * The course is for bronchoscopists who know the airways down to the segments, so it opens on
+ * planning. Reading the CT against the scope at the central airways is not a lesson they must
+ * sit through: it is a short check at the front, with nothing explained before each check, and
+ * the two lessons that teach it slowly are kept as refreshers for whoever wants them.
+ */
+const REFRESHER_IDS = ['carina-orientation', 'two-levels']
+/** Reading the CT against the scope, taught slowly: open to all, on nobody's way. */
+export const REFRESHER_LESSONS: readonly NavLesson[] = AUTHORED.filter((lesson) =>
+  REFRESHER_IDS.includes(lesson.id),
+)
+/** The course, in order: planning from the lesion, the map, the drive, the whole method. */
+export const NAV_LESSONS: readonly NavLesson[] = AUTHORED.filter(
+  (lesson) => !REFRESHER_IDS.includes(lesson.id),
+)
+
+/**
+ * Three forks, each asking only for the CT to be turned to the scope: looking down the trachea
+ * (a mirror), looking up into the right upper lobe (a quarter turn) and looking up into the left
+ * upper lobe (the other quarter turn). Optional, and nothing waits on it.
+ */
+export const ORIENTATION_CHECK: NavLesson = {
+  id: 'orientation-check',
+  title: 'Orientation check',
+  minutes: 3,
+  objective:
+    'Turn an axial CT to face the way the bronchoscope does at three forks: looking down the trachea, looking up into the right upper lobe, and looking up into the left upper lobe.',
+  concept:
+    'An axial CT is drawn as if you stood at the patient’s feet looking toward the head. Which way the scope looks, and how it has rolled, decides whether the CT must be mirrored or turned to face the same way.',
+  unaided: true,
+  trips: [
+    {
+      traceId: 'central-right',
+      title: 'The carina',
+      from: 'junction-1',
+      through: 'junction-1',
+      intro:
+        'The scope is in the lower trachea, looking down at the carina. Turn the CT until its letters sit where the scope has them, then check.',
+      stations: { 'junction-1': { steps: ['match'] } },
+    },
+    {
+      traceId: 'right-upper-apical',
+      title: 'Looking up into the right upper lobe',
+      from: 'junction-14',
+      through: 'junction-14',
+      intro: 'The scope is in RB1, the apical bronchus of the right upper lobe, looking up.',
+      stations: { 'junction-14': { steps: ['match'] } },
+    },
+    {
+      traceId: 'left-upper-division',
+      title: 'Looking up into the left upper lobe',
+      from: 'junction-23',
+      through: 'junction-23',
+      intro: 'The scope is in the upper division of the left upper lobe bronchus, looking up.',
+      stations: { 'junction-23': { steps: ['match'] } },
+    },
+  ],
+  closing:
+    'Looking down an airway, the CT is mirrored. Looking up an airway, it is not: it only needs turning, one way in the right upper lobe and the other way in the left.',
+}
+
+/** What the check's closing card says, by whether all three forks matched at the first check. */
+export const ORIENTATION_CHECK_RESULT = {
+  matched:
+    'All three matched at the first check. From here on the course never waits for the CT to be turned: turn it on screen or in your head, and Check my turn stays beside the CT.',
+  notYet:
+    'At least one fork did not match at the first check, or was shown. The two refresher lessons take the mirror and the turn slowly. They are optional: planning is open from the course overview whenever you want it.',
+} as const
+
+/** Every lesson that has an address: the check, the course, the refreshers. */
+export const ALL_LESSONS: readonly NavLesson[] = [
+  ORIENTATION_CHECK,
+  ...NAV_LESSONS,
+  ...REFRESHER_LESSONS,
+]
+export type LessonKind = 'check' | 'course' | 'refresher'
+export const lessonKind = (id: string): LessonKind =>
+  id === ORIENTATION_CHECK.id ? 'check' : REFRESHER_IDS.includes(id) ? 'refresher' : 'course'
+
+export const lessonById = (id: string | undefined) => ALL_LESSONS.find((l) => l.id === id)
+/** A course lesson's number, from 1; the check and the refreshers have none (0). */
 export const lessonNumber = (id: string) => NAV_LESSONS.findIndex((l) => l.id === id) + 1
-export const lessonAfter = (id: string) =>
-  NAV_LESSONS[NAV_LESSONS.findIndex((l) => l.id === id) + 1]
+/** "Lesson 4 · Drive with the map", "Orientation check", "Refresher · Two openings, two slices". */
+export function lessonLabel(lesson: NavLesson, separator = ' · ') {
+  const kind = lessonKind(lesson.id)
+  if (kind === 'check') return lesson.title
+  if (kind === 'refresher') return `Refresher${separator}${lesson.title}`
+  return `Lesson ${lessonNumber(lesson.id)}${separator}${lesson.title}`
+}
+/**
+ * What follows a lesson: the next course lesson; after the check, or after the last refresher,
+ * the first course lesson; after the last course lesson, nothing (Practice).
+ */
+export function lessonAfter(id: string): NavLesson | undefined {
+  const kind = lessonKind(id)
+  if (kind === 'check') return NAV_LESSONS[0]
+  if (kind === 'refresher')
+    return REFRESHER_LESSONS[REFRESHER_LESSONS.findIndex((l) => l.id === id) + 1] ?? NAV_LESSONS[0]
+  return NAV_LESSONS[NAV_LESSONS.findIndex((l) => l.id === id) + 1]
+}
 export const totalMinutes = () => NAV_LESSONS.reduce((sum, lesson) => sum + lesson.minutes, 0)
 
 /** Lesson groups for the hub, by lesson id. */
 export const LESSON_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Reading the CT against the scope', ids: ['carina-orientation', 'two-levels'] },
+  { label: 'Before you start (optional)', ids: [ORIENTATION_CHECK.id] },
   {
     label: 'Planning from the lesion',
     ids: ['start-at-the-lesion', 'stand-at-the-ostium', 'nested-arcs'],
   },
   { label: 'Driving with the map', ids: ['drive-with-the-map', 'views-that-help'] },
   { label: 'The whole method', ids: ['turn-back', 'navigate'] },
+  { label: 'Refreshers: reading the CT against the scope', ids: REFRESHER_IDS },
 ]
-/** Turning the CT is required in this lesson, whatever the learner has shown before. */
+/** Finishing this lesson shows the learner can turn the CT to the scope. */
 export const ORIENTATION_LESSON = 'carina-orientation'
+/** Turning the CT is asked for in these lessons, whatever the learner has shown before. */
+export const MATCH_REQUIRED_LESSONS: readonly string[] = [ORIENTATION_LESSON, ORIENTATION_CHECK.id]

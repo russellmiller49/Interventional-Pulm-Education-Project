@@ -105,6 +105,14 @@ async function labelCircle(page: Page, words: [string, string, string, string]) 
   for (let i = 0; i < 4; i++)
     await page.locator(`[data-rim-picker="${rims[i]}"]`).selectOption(words[i])
 }
+/** A device set to choose at every fork: nothing is flown through. */
+const everyFork = (page: Page) =>
+  page.addInitScript(() =>
+    localStorage.setItem(
+      'branch-tracing.prefs-v1',
+      JSON.stringify({ version: 1, everyFork: true }),
+    ),
+  )
 /** A device that has already finished lesion 1: turning the CT is optional. */
 const orientationShown = (page: Page) =>
   page.addInitScript((key) => {
@@ -130,7 +138,11 @@ test.describe('course', () => {
     }
     await page.goto(BASE)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bronchial branch tracing')
-    await expect(page.locator('[data-lesson-group] ol li')).toHaveCount(9)
+    // The optional check, the seven lessons of the course, and the two refreshers.
+    await expect(page.locator('[data-lesson-group] ol li')).toHaveCount(10)
+    await expect(page.locator('[data-course-overview]')).toContainText(
+      '7 lessons, about 61 minutes',
+    )
     await expect(page.locator('[data-method-steps] li')).toHaveCount(5)
     await expect(page.locator('[data-course-overview]')).toContainText('Mortimer & Saghaie')
     await expect(page.locator('[data-course-overview]')).not.toContainText('Pattern:')
@@ -142,12 +154,18 @@ test.describe('course', () => {
     const pictured = page.locator('figure figcaption').first()
     await expect(pictured).toContainText('A lesion in the right middle lobe')
     await expect(pictured).not.toContainText(/RS5|medial segment/i)
-    await page
-      .getByRole('link', { name: /Start lesson 1|Why the CT looks backwards/ })
-      .first()
-      .click()
-    await expect(page).toHaveURL(/lesson=carina-orientation/)
+    // Opening the sections above left a place on this device; a first visit has none.
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+    // A first visit starts at the optional orientation check, with planning one link away.
+    await expect(page.getByRole('link', { name: 'Skip to planning: lesson 1' })).toHaveAttribute(
+      'href',
+      /lesson=start-at-the-lesion/,
+    )
+    await page.getByRole('link', { name: 'Start with the orientation check' }).click()
+    await expect(page).toHaveURL(/lesson=orientation-check/)
     await expectStage(page, '0:match')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Orientation check')
   })
 
   test('the primer opens by itself the first time, then from its button', async ({ page }) => {
@@ -170,7 +188,7 @@ test.describe('course', () => {
   })
 })
 
-test.describe('lesson 1: match and identify at the carina', () => {
+test.describe('refresher 1: match and identify at the carina', () => {
   test.beforeEach(async ({ page }) => {
     await openBench(page, '/learn?lesson=carina-orientation')
     await page.locator('[data-bench-restart]').click()
@@ -275,7 +293,7 @@ test.describe('lesson 1: match and identify at the carina', () => {
   })
 })
 
-test.describe('lesson 2: choose and drive', () => {
+test.describe('refresher 2: choose and drive', () => {
   test.beforeEach(async ({ page }) => {
     await openBench(page, '/learn?lesson=two-levels')
     await page.locator('[data-bench-restart]').click()
@@ -409,7 +427,7 @@ test.describe('turning the CT is optional once it has been shown', () => {
     await expect(feedback(page)).toContainText('The CT matches the scope')
   })
 
-  test('lesson 1 still asks for the match', async ({ page }) => {
+  test('the first refresher still asks for the match', async ({ page }) => {
     await orientationShown(page)
     await openBench(page, '/learn?lesson=carina-orientation')
     await page.locator('[data-bench-restart]').click()
@@ -576,10 +594,24 @@ test.describe('driving with the map', () => {
     test.setTimeout(180000)
     await openBench(page, '/learn?lesson=drive-with-the-map')
     await page.locator('[data-bench-restart]').click()
-    await showUntil(page, /^plan:review$/)
+    // Lesson 4 is about the drive: its map is on the bench already, as one picture.
+    await expectStage(page, 'plan:review')
+    await expect(now(page)).toContainText('The map, drawn for you')
+    await expect(page.locator('[data-map-pair]')).toHaveCount(0)
+    await expect(page.locator('[data-arc-map] [data-arc-star]')).toHaveCount(1)
+    await expect(nowButton(page, 'Draw it myself')).toBeVisible()
     await nowButton(page, 'Drive to the lesion').click()
-    // A drive that follows a map never waits for the CT to be turned.
-    await expectStage(page, '0:choose')
+    // The scope flies through the central airways and stops at the fork that gives off RB1,
+    // with nothing asked on the way and the CT never waited for.
+    await expectStage(page, /^[0-2]:drive$/)
+    await expect(now(page)).toContainText('Flying through to')
+    await expect(now(page)).toContainText('Passing: Trachea')
+    await expectStage(page, '3:choose')
+    await expect(page.locator('[data-route-chip="current"]')).toHaveText('RB1/B2')
+    // This fork gives off the bronchus the learner named in planning, so its openings are
+    // numbered and not named until one is chosen: the name would be the answer.
+    await expect(page.locator('[data-choice] strong')).toHaveText(['Opening 1', 'Opening 2'])
+    await expect(page.locator('[data-fork-card] tbody')).not.toContainText('RB1')
     await expect(page.locator('[data-centre-pane="ct"]')).toBeVisible()
     await expect(page.locator('[data-stage-step="navigate"]')).toHaveAttribute(
       'data-stage-state',
@@ -616,6 +648,124 @@ test.describe('driving with the map', () => {
   })
 })
 
+test.describe('the fly-through of the central airways', () => {
+  test('it can be stopped at the next fork, an opening is chosen on the scope, and it goes on', async ({
+    page,
+  }) => {
+    test.setTimeout(120000)
+    await openBench(page, '/practice?lesion=r-apical-anterior')
+    await page.locator('[data-bench-restart]').click()
+    await showUntil(page, /^plan:review$/)
+    await nowButton(page, 'Drive to the lesion').click()
+    await expectStage(page, '0:drive')
+    await expect(now(page)).toContainText('Flying through to RB1/B2')
+    await nowButton(page, 'Stop at the next fork').click()
+    await expect(now(page)).toContainText('Stopping at the next fork')
+    // The next fork is then an ordinary one: the right main bronchus, chosen at.
+    await expectStage(page, '1:choose')
+    await expect(page.locator('[data-route-chip="current"]')).toHaveText('RMSB')
+    await expect(scope(page)).toHaveAttribute('data-scope-ready', 'true', { timeout: 30000 })
+    // A click on an opening's number in the scope takes it: the upper lobe bronchus, opening 1.
+    await expect(scope(page).locator('[data-opening-pick]')).toHaveCount(2)
+    await scope(page).locator('[data-scope-opening="1"]').click()
+    await expectStage(page, '1:ready')
+    await nowButton(page, 'Drive on').click()
+    // From there the fly-through goes on, to the fork that gives off RB1.
+    await expectStage(page, '3:choose')
+    await expect(page.locator('[data-route-chip="current"]')).toHaveText('RB1/B2')
+    // Only the forks chosen at are counted at the end.
+    await showUntil(page, /arrived/)
+    await expect(page.locator('[data-bench-closing]')).toContainText(
+      // Five forks were chosen at, of seven: the one taken on the scope, and four shown.
+      'Opening toward the lesion chosen first try: 1 of 5.',
+    )
+  })
+
+  test('asked for on the lesion list, every fork from the trachea is chosen at', async ({
+    page,
+  }) => {
+    test.setTimeout(120000)
+    await primerSeen(page)
+    await page.goto(`${BASE}/practice`)
+    const choice = page.locator('[data-cruise-choice] input')
+    await expect(choice).not.toBeChecked()
+    await choice.check()
+    expect(await page.evaluate(() => localStorage.getItem('branch-tracing.prefs-v1'))).toBe(
+      '{"version":1,"everyFork":true}',
+    )
+    await page.locator('[data-lesion="r-apical-anterior"]').click()
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await page.locator('[data-bench-restart]').click()
+    await showUntil(page, /^plan:review$/)
+    await nowButton(page, 'Drive to the lesion').click()
+    await expectStage(page, '0:choose')
+    await expect(page.locator('[data-route-chip="current"]')).toHaveText('Trachea')
+  })
+})
+
+test.describe('the orientation check and the refreshers', () => {
+  test('three forks matched at the first check lead on to planning; a miss leads to the refresher', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=orientation-check')
+    await page.locator('[data-bench-restart]').click()
+    const turnAndCheck = async (turn: string) => {
+      await expectStage(page, '0:match')
+      await page.locator(`[data-ct-turn="${turn}"]`).click()
+      await nowButton(page, 'Check the match').click()
+      await expectStage(page, '0:done')
+    }
+    // The carina is a mirror; the right upper lobe one quarter turn; the left the other.
+    await turnAndCheck('flip')
+    await now(page).getByRole('button', { name: 'Next trip' }).click()
+    await turnAndCheck('left')
+    await now(page).getByRole('button', { name: 'Next trip' }).click()
+    await turnAndCheck('right')
+    const closing = page.locator('[data-bench-closing]')
+    await expect(closing).toContainText('All three matched at the first check')
+    await expect(
+      now(page).getByRole('link', { name: 'Lesson 1: Start at the lesion' }),
+    ).toHaveAttribute('href', /lesson=start-at-the-lesion/)
+    expect(await shell(page).innerText()).not.toMatch(BANNED)
+
+    // Again, with the first fork checked before it is turned: told what is off, not how to fix it.
+    await page.reload()
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await expectStage(page, '0:match')
+    await nowButton(page, 'Check the match').click()
+    await expect(feedback(page)).toContainText('Mirrored')
+    await expect(feedback(page)).not.toContainText('Flip')
+    await page.locator('[data-ct-turn="flip"]').click()
+    await nowButton(page, 'Check the match').click()
+    await now(page).getByRole('button', { name: 'Next trip' }).click()
+    await turnAndCheck('left')
+    await now(page).getByRole('button', { name: 'Next trip' }).click()
+    await turnAndCheck('right')
+    await expect(closing).toContainText('At least one fork did not match at the first check')
+    await expect(
+      now(page).getByRole('link', { name: 'Refresher: Why the CT looks backwards' }),
+    ).toHaveAttribute('href', /lesson=carina-orientation/)
+  })
+
+  test('the two earlier lessons stay open as refreshers, one leading to the next and then to planning', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=carina-orientation')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Refresher · Why the CT looks backwards',
+    )
+    await openBench(page, '/learn?lesson=start-at-the-lesion')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Lesson 1 · Start at the lesion',
+    )
+    // With no lesson named, the course opens on planning.
+    await openBench(page, '/learn')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Lesson 1 · Start at the lesion',
+    )
+  })
+})
+
 test.describe('whole lesions', () => {
   test('Practice plans, maps and drives a lesion from the trachea', async ({ page }) => {
     test.setTimeout(180000)
@@ -631,7 +781,9 @@ test.describe('whole lesions', () => {
     await expectStage(page, 'plan:lesion')
     await showUntil(page, /^plan:review$/)
     await nowButton(page, 'Drive to the lesion').click()
-    await expectStage(page, '0:choose')
+    // The central airways are flown through: the first choice is the fork that gives off RB8.
+    await showUntil(page, /choose$/)
+    await expectStage(page, '5:choose')
     // Above the ostium, with help on, the card says which way the lesion lies from the fork.
     await expect(now(page)).toContainText('mm away')
     // No fork asks for its openings to be marked: the map was read off the CT in planning.
@@ -652,7 +804,10 @@ test.describe('whole lesions', () => {
   }) => {
     test.setTimeout(120000)
     await primerSeen(page)
+    // Asked to choose at every fork from the trachea, so the first fork is the carina.
+    await everyFork(page)
     await page.goto(`${BASE}/assess`)
+    await expect(page.locator('[data-cruise-choice] input')).toBeChecked()
     await expect(page.locator('[data-lesion]')).toHaveCount(3)
     await page.locator('[data-lesion="l-inferior-lingula"]').click()
     await expect(page.locator('[data-bench]')).toBeVisible()

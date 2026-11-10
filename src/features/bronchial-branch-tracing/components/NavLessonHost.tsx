@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { TEACHING_SIMULATOR_STATEMENT, summaryLines } from '../content/bench-copy'
 import {
@@ -11,12 +11,16 @@ import {
 } from '../content/course-guide'
 import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import {
+  MATCH_REQUIRED_LESSONS,
   NAV_LESSONS,
+  ORIENTATION_CHECK,
+  ORIENTATION_CHECK_RESULT,
   ORIENTATION_LESSON,
+  REFRESHER_LESSONS,
   buildTrip,
   lessonAfter,
   lessonById,
-  lessonNumber,
+  lessonLabel,
   type NavLesson,
 } from '../content/nav-lessons'
 import { planSummaryLines } from '../content/plan-copy'
@@ -30,6 +34,7 @@ import {
   writeNavEntry,
 } from '../engine/nav-storage'
 import { summarizePlan } from '../engine/plan-session'
+import { readPrefs } from '../engine/prefs-storage'
 import { recordLessonOpened, setLessonReviewed } from '../engine/selfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
 import { TripBench, tripOver } from './TripBench'
@@ -47,7 +52,7 @@ export function NavLessonHost({ requestedId }: { requestedId?: string }) {
       ) : (
         <section aria-busy="true">
           <p role="status" style={{ padding: '1rem' }}>
-            Loading lesson {lessonNumber(lesson.id)}…
+            Loading {lessonLabel(lesson, ': ')}…
           </p>
         </section>
       )}
@@ -71,12 +76,21 @@ function LessonTrips({ lesson }: { lesson: NavLesson }) {
   useEffect(() => {
     recordLessonOpened(lesson.id)
   }, [lesson.id])
+  // The orientation check: which of its forks matched at the first check, on this visit.
+  const [firstCheck, setFirstCheck] = useState<Record<number, boolean>>({})
+  const onFirstCheck = useCallback(
+    (index: number, clean: boolean) =>
+      setFirstCheck((all) => (all[index] === clean ? all : { ...all, [index]: clean })),
+    [],
+  )
   return (
     <Trip
       key={tripIndex}
       lesson={lesson}
       tripIndex={tripIndex}
       storageKey={key}
+      firstCheck={firstCheck}
+      onFirstCheck={onFirstCheck}
       onNext={() => setTripIndex((index) => Math.min(lesson.trips.length - 1, index + 1))}
       onTrip={setTripIndex}
     />
@@ -87,12 +101,16 @@ function Trip({
   lesson,
   tripIndex,
   storageKey,
+  firstCheck,
+  onFirstCheck,
   onNext,
   onTrip,
 }: {
   lesson: NavLesson
   tripIndex: number
   storageKey: string
+  firstCheck: Record<number, boolean>
+  onFirstCheck: (index: number, clean: boolean) => void
   onNext: () => void
   onTrip: (index: number) => void
 }) {
@@ -103,12 +121,12 @@ function Trip({
   const drivesWithMap = Boolean(spec.from && spec.plan?.parts.includes('arcs'))
   const matchOptional = useMemo(
     () =>
-      lesson.id !== ORIENTATION_LESSON &&
+      !MATCH_REQUIRED_LESSONS.includes(lesson.id) &&
       (drivesWithMap || orientationShown(readOrientationProgress())),
     [lesson.id, drivesWithMap],
   )
   const trip = useMemo(
-    () => buildTrip(lesson.trips[tripIndex], { matchOptional }),
+    () => buildTrip(lesson.trips[tripIndex], { matchOptional, cruise: !readPrefs().everyFork }),
     [lesson, tripIndex, matchOptional],
   )
   const [session, dispatch] = useTrip(trip.trace, trip.target, trip.trip, storageKey, tripIndex)
@@ -120,7 +138,19 @@ function Trip({
     if (over && lastTrip && lesson.id === ORIENTATION_LESSON)
       recordOrientationProgress({ lessonOneDone: true })
   }, [over, lastTrip, lesson.id])
-  const next = lessonAfter(lesson.id)
+  // The orientation check: this fork matched at the first check, without being shown.
+  const isCheck = lesson.id === ORIENTATION_CHECK.id
+  const forkLog = session.nav?.log[0]
+  const cleanHere = Boolean(
+    forkLog?.matchAsked && !forkLog.matchMisses && !forkLog.matchShown && over,
+  )
+  useEffect(() => {
+    if (isCheck && over) onFirstCheck(tripIndex, cleanHere)
+  }, [isCheck, over, tripIndex, cleanHere, onFirstCheck])
+  const allFirstCheck =
+    isCheck && lesson.trips.every((_, i) => (i === tripIndex ? cleanHere : firstCheck[i] === true))
+  // After the check: on to planning, or to the first refresher when a fork did not match.
+  const next = isCheck && !allFirstCheck ? REFRESHER_LESSONS[0] : lessonAfter(lesson.id)
   const stations = trip.trip.nav?.stations ?? []
   const forkNames = stations.map(
     (station) => trip.trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
@@ -133,11 +163,10 @@ function Trip({
     ...(session.nav && stations.length >= 3 ? summaryLines(summarize(session.nav), forkNames) : []),
   ]
   const arrived = session.nav?.phase === 'arrived'
-  const number = lessonNumber(lesson.id)
   return (
     <TripBench
       section="learn"
-      title={`Lesson ${number} · ${lesson.title}`}
+      title={lessonLabel(lesson)}
       subtitle={
         lesson.trips.length > 1
           ? `Trip ${tripIndex + 1} of ${lesson.trips.length} · ${trip.spec.title}`
@@ -152,7 +181,7 @@ function Trip({
       locators={trip.spec.plan?.locators}
       intro={trip.spec.intro}
       independent={trip.spec.independent}
-      help
+      help={!lesson.unaided}
       session={session}
       dispatch={dispatch}
       closing={
@@ -160,10 +189,23 @@ function Trip({
           ? {
               heading: arrived
                 ? 'You have reached the lesion. End of the lesson.'
-                : 'End of the lesson',
-              body: [lesson.closing, ...summary, TEACHING_SIMULATOR_STATEMENT],
+                : isCheck
+                  ? 'End of the check'
+                  : 'End of the lesson',
+              body: [
+                ...(isCheck
+                  ? [
+                      allFirstCheck
+                        ? ORIENTATION_CHECK_RESULT.matched
+                        : ORIENTATION_CHECK_RESULT.notYet,
+                    ]
+                  : []),
+                lesson.closing,
+                ...summary,
+                TEACHING_SIMULATOR_STATEMENT,
+              ],
               next: next
-                ? { label: `Lesson ${number + 1}: ${next.title}`, href: lessonHref(next.id) }
+                ? { label: lessonLabel(next, ': '), href: lessonHref(next.id) }
                 : { label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` },
             }
           : {

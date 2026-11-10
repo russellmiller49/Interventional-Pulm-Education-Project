@@ -25,6 +25,7 @@ import {
   lesionFound,
   lesionInstruction,
   lesionMiss,
+  prefilledReview,
   reviewSentence,
   sectorPhrase,
   segmentFound,
@@ -50,6 +51,7 @@ import {
   divisionBearings,
   lesionVerdict,
   planFrame,
+  planPrefilled,
   segmentChoices,
   type PlanAction,
   type PlanPart,
@@ -168,6 +170,8 @@ export function PlanBench({
   const stage = plan.stage
   const worked = Boolean(spec.worked)
   const arcsAsked = spec.parts.includes('arcs')
+  // The map on the bench is the bench's own: there is nothing of the learner's to set beside it.
+  const prefilled = planPrefilled(spec, plan)
   const frameAsked = spec.parts.includes('frame')
   const division = Math.min(plan.division, forks.length - 1)
   const divisionIndex = forks[division]
@@ -460,16 +464,23 @@ export function PlanBench({
   else
     now = {
       kicker: kicker(PLAN_PART_TITLES.review),
-      heading: 'Your map, beside the model’s',
-      body: reviewSentence(
-        plan.arcs.length,
-        plan.arcs.filter((a) => a.ok && !a.shown && a.misses === 0).length,
-      ),
+      ...(prefilled
+        ? prefilledReview(target.segment.bronchusCode, plan.arcs.length)
+        : {
+            heading: 'Your map, beside the model’s',
+            body: reviewSentence(
+              plan.arcs.length,
+              plan.arcs.filter((a) => a.ok && !a.shown && a.misses === 0).length,
+            ),
+          }),
       primary: {
         label: drives ? 'Drive to the lesion' : 'Finish',
         onActivate: show({ type: 'finish' }),
         icon: <ArrowRight size={16} aria-hidden />,
       },
+      secondary: prefilled
+        ? { label: 'Draw it myself', onActivate: show({ type: 'draw-own' }) }
+        : undefined,
     }
 
   const stageId = stage === 'frame' || stage === 'arcs' || stage === 'review' ? 'map' : 'plan'
@@ -599,7 +610,7 @@ export function PlanBench({
                   phase="ostium"
                   segmental={frame.side}
                 />
-              ) : finished && arcsAsked ? (
+              ) : finished && arcsAsked && !prefilled ? (
                 <div className={styles.mapPair} data-map-pair>
                   <figure>
                     <ArcMap
@@ -838,7 +849,7 @@ export function PlanBench({
             {stage === 'arcs' && division > 0 && !here.checked && plan.arcs[division - 1]?.ok && (
               <Band tone="in" {...arcsFound(false)} />
             )}
-            {stage === 'review' && <Band tone="in" {...arcsFound(true)} />}
+            {stage === 'review' && !prefilled && <Band tone="in" {...arcsFound(true)} />}
           </div>
         </div>
 

@@ -50,6 +50,12 @@ export interface PlanSpec {
   parts: readonly PlanPart[]
   /** The bench demonstrates: "Show me" is the main action at each check. */
   worked?: boolean
+  /**
+   * The map is on the bench already, drawn from the airway model: the plan opens on its review,
+   * so a lesson about the drive starts at the drive. The learner can clear it and draw their own
+   * (`draw-own`). Only for a plan that asks for the circle and the arcs and nothing before them.
+   */
+  prefilled?: boolean
 }
 
 export interface PlanStepLog {
@@ -109,6 +115,8 @@ export type PlanAction =
   | { type: 'lead-on'; index: number }
   | { type: 'check-arcs' }
   | { type: 'show-arcs' }
+  /** Clear a map the bench drew and draw it oneself, from the circle. */
+  | { type: 'draw-own' }
   | { type: 'finish' }
   | { type: 'restart' }
 
@@ -327,8 +335,42 @@ export function settlePlan(spec: PlanSpec, state: PlanSession): PlanSession {
   return { ...state, stage: nextStage(spec, stage) }
 }
 
+/** The map on the bench is the one the bench drew: the learner has not asked to draw their own. */
+export const planPrefilled = (spec: PlanSpec, plan: PlanSession) =>
+  Boolean(spec.prefilled) && !plan.log.frame.asked
+
 export function startPlan(trace: CtTrace, target: CtNoduleTarget, spec: PlanSpec): PlanSession {
   const divisions = mappedForks(trace, target)
+  const frame = divisions.length ? ostiumFrame(trace, divisions[0]) : null
+  if (spec.prefilled && frame && spec.parts.includes('frame') && spec.parts.includes('arcs')) {
+    // The model's own circle and arcs, held the way the model scope holds them. Nothing here was
+    // asked of the learner, so the log holds nothing asked and the summary leaves it out.
+    const rim = turnedRim(frame.rim, 0)
+    return {
+      version: 1,
+      traceId: trace.id,
+      targetId: target.id,
+      stage: 'review',
+      lesionMark: null,
+      segmentChoice: null,
+      views: { coronal: false, sagittal: false },
+      frame: Object.fromEntries(RIMS.map((r) => [r, rim[r].word])) as FrameLabels,
+      frameChecked: false,
+      frameTurn: 0,
+      division: Math.max(0, divisions.length - 1),
+      arcs: divisions.map((fork) => {
+        const bearings = branchBearings(trace, fork, frame)
+        return {
+          ...emptyArcs(),
+          placed: bearings.map((bearing) => bearing.sector),
+          leadsOn: bearings.findIndex((bearing) => bearing.onRoute),
+          ok: true,
+          shown: true,
+        }
+      }),
+      log: { lesion: emptyStep(false), segment: emptyStep(false), frame: emptyStep(false) },
+    }
+  }
   return {
     version: 1,
     traceId: trace.id,
@@ -534,6 +576,10 @@ export function planReducer(trace: CtTrace, target: CtNoduleTarget, spec: PlanSp
           }),
         )
       }
+      case 'draw-own':
+        return planPrefilled(spec, state)
+          ? startPlan(trace, target, { ...spec, prefilled: false })
+          : state
       case 'finish':
         return state.stage === 'review' ? { ...state, stage: 'done' } : state
     }
@@ -554,16 +600,16 @@ export interface PlanSummary {
   arcs: { asked: number; firstTry: number }
 }
 export function summarizePlan(spec: PlanSpec, plan: PlanSession): PlanSummary {
-  const asked = spec.parts.includes('arcs') ? plan.arcs.length : 0
+  // A map the bench drew was not asked of the learner.
+  const drawn = spec.parts.includes('arcs') && !planPrefilled(spec, plan)
+  const asked = drawn ? plan.arcs.length : 0
   return {
     lesion: plan.log.lesion,
     segment: plan.log.segment,
     frame: plan.log.frame,
     arcs: {
       asked,
-      firstTry: spec.parts.includes('arcs')
-        ? plan.arcs.filter((a) => a.ok && !a.shown && a.misses === 0).length
-        : 0,
+      firstTry: drawn ? plan.arcs.filter((a) => a.ok && !a.shown && a.misses === 0).length : 0,
     },
   }
 }

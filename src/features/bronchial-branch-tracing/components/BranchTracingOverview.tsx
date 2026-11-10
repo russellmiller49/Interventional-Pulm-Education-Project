@@ -5,9 +5,17 @@ import { Link } from '@/i18n/navigation'
 import { PRIMER, PRIMER_TITLE, TEACHING_SIMULATOR_STATEMENT } from '../content/bench-copy'
 import { METHOD_STEPS, NAMING_KEY, NAMING_USE } from '../content/course-guide'
 import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
-import { LESSON_GROUPS, NAV_LESSONS, lessonNumber, totalMinutes } from '../content/nav-lessons'
+import {
+  ALL_LESSONS,
+  LESSON_GROUPS,
+  NAV_LESSONS,
+  ORIENTATION_CHECK,
+  lessonNumber,
+  totalMinutes,
+} from '../content/nav-lessons'
 import { ASSESS_TARGET_IDS, TARGET_IDS } from '../content/targets'
 import { recommendedLesson } from '../engine/selfPacedProgress'
+import { CruiseChoice } from './CruiseChoice'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
@@ -19,7 +27,9 @@ export function BranchTracingOverview() {
   const { ready, status, record } = useSelfPacedProgress()
   const recommendation = recommendedLesson(record)
   const reviewed = NAV_LESSONS.filter((l) => record.reviewedLessonIds.includes(l.id))
-  const door = recommendation?.lesson ?? NAV_LESSONS[0]
+  // A first visit opens on the optional orientation check, with planning one link away.
+  const firstVisit = recommendation?.kind === 'start'
+  const door = firstVisit ? ORIENTATION_CHECK : (recommendation?.lesson ?? NAV_LESSONS[0])
   return (
     <ModuleFrame section="overview">
       <main className={styles.overview} data-course-overview>
@@ -37,19 +47,26 @@ export function BranchTracingOverview() {
               scope. This course teaches the simplified method: find the airway that runs into the
               lesion, follow it back to its segmental bronchus, draw that segment’s ostium as a
               circle with four directions, and draw each division to the lesion as arcs nested in
-              the one before. Then a virtual bronchoscope drives from the trachea, and past the
-              segment your map chooses each opening.
+              the one before. Then a virtual bronchoscope flies through the central airways, and
+              past the segment your map chooses each opening.
             </p>
             <Link className={styles.primary} href={lessonHref(door.id)} aria-disabled={!ready}>
               {!ready
                 ? 'Loading your place'
                 : !recommendation
                   ? 'Review the course'
-                  : recommendation.kind === 'start'
-                    ? 'Start lesson 1'
+                  : firstVisit
+                    ? 'Start with the orientation check'
                     : `${recommendation.kind === 'resume' ? 'Resume' : 'Continue'}: ${door.title}`}
               <ArrowRight size={18} aria-hidden />
             </Link>
+            {ready && firstVisit && (
+              <p className={styles.small} data-skip-check>
+                Three forks, about {ORIENTATION_CHECK.minutes} minutes: turn the CT to face the way
+                the scope does. It is optional.{' '}
+                <Link href={lessonHref(NAV_LESSONS[0].id)}>Skip to planning: lesson 1</Link>
+              </p>
+            )}
             <p className={styles.small}>
               {NAV_LESSONS.length} lessons, about {totalMinutes()} minutes, then Practice on{' '}
               {TARGET_IDS.length} lesions. Every lesson is open. {reviewed.length} of{' '}
@@ -95,16 +112,18 @@ export function BranchTracingOverview() {
               {reviewed.length}/{NAV_LESSONS.length} reached on this device
             </span>
           </div>
+          <CruiseChoice />
           {LESSON_GROUPS.map((group) => (
             <div key={group.label} data-lesson-group>
               <h3 className={styles.small}>{group.label}</h3>
               <ol className={styles.lessonList}>
                 {group.ids.map((id) => {
-                  const lesson = NAV_LESSONS.find((entry) => entry.id === id)!
+                  const lesson = ALL_LESSONS.find((entry) => entry.id === id)!
                   return (
                     <li key={id}>
                       <span className={styles.lessonNumber}>
-                        {String(lessonNumber(id)).padStart(2, '0')}
+                        {/* The check and the refreshers are off the numbered course. */}
+                        {lessonNumber(id) ? String(lessonNumber(id)).padStart(2, '0') : '·'}
                       </span>
                       <div>
                         <Link href={lessonHref(id)}>{lesson.title}</Link>
@@ -135,7 +154,7 @@ export function BranchTracingOverview() {
             </h2>
             <p>
               {TARGET_IDS.length} simulated lesions across five lobes. Plan each from the lesion
-              back, draw its map, then drive from the trachea, with help on request.
+              back, draw its map, then drive it, with help on request.
             </p>
           </section>
           <section>

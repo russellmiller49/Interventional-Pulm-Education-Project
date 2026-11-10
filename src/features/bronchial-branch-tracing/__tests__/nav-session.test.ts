@@ -8,6 +8,7 @@ import {
 } from '../engine/junction-feedback'
 import {
   benchOrientation,
+  flyingThrough,
   matchable,
   navReducer,
   onwardOption,
@@ -22,6 +23,8 @@ import {
 } from '../engine/nav-session'
 import { isAccepted, stationMatch } from '../engine/orientation-match'
 import { CT_TRACES, traceById } from '../geometry/native-ct'
+import { mappedForks } from '../engine/arc-map'
+import { TARGET_FOR_TRACE, plannedTarget } from '../content/nav-lessons'
 import {
   STANDARD_ORIENTATION,
   orientationFor,
@@ -455,7 +458,7 @@ describe('driving on', () => {
 
   test('arriving where the scope’s view has turned asks for the match again', () => {
     const trace = traceById('right-upper-apical')
-    const upper = routePlan(trace, { matchOptional: false })
+    const upper = routePlan(trace, { matchOptional: false, cruise: false })
     const actions: NavAction[] = [
       { type: 'show-match' },
       { type: 'show-choice' },
@@ -679,9 +682,10 @@ describe('every route', () => {
   test.each(CT_TRACES.map((trace) => [trace.id, trace] as const))(
     '%s can be driven from the trachea to the lesion with every step shown',
     (_, trace) => {
-      const plan = routePlan(trace, { matchOptional: false })
+      const plan = routePlan(trace, { matchOptional: false, cruise: false })
       const forks = trace.checkpoints.filter((checkpoint) => checkpoint.decision).length
       expect(plan.stations).toHaveLength(forks)
+      expect(plan.stations.some((station) => station.cruise)).toBe(false)
       expect(plan.arrive).toBe(true)
       const { state, actions } = walk(trace, plan)
       expect(state.phase).toBe('arrived')
@@ -700,6 +704,97 @@ describe('every route', () => {
       expect(state.choice).toBe(routeOption(trace, last))
     },
   )
+})
+
+describe('the fly-through of the central airways', () => {
+  const apical = traceById('right-upper-apical')
+  const plan = routePlan(apical, { matchOptional: true })
+
+  test('the scope flies through every fork above the one that gives off the segment, and stops there', () => {
+    expect(plan.stations.map((station) => Boolean(station.cruise))).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+    ])
+    const start = startSession(apical, plan)
+    expect(start).toMatchObject({ station: 0, phase: 'drive', matchNote: 'optional', choice: null })
+    expect(flyingThrough(plan, start)).toBe(true)
+    const second = run(apical, plan, [{ type: 'arrive' }, { type: 'arrive' }])
+    expect([second.station, second.phase, flyingThrough(plan, second)]).toEqual([2, 'drive', true])
+    const stop = run(apical, plan, [{ type: 'arrive' }], second)
+    expect([stop.station, stop.phase, flyingThrough(plan, stop)]).toEqual([3, 'choose', false])
+    // Nothing was asked at the forks flown through, and the CT was left as it was.
+    for (const entry of stop.log.slice(0, 3))
+      expect([entry.matchAsked, entry.identifyAsked, entry.chooseAsked]).toEqual([
+        false,
+        false,
+        false,
+      ])
+    expect(stop.log[3].chooseAsked).toBe(true)
+    expect(stop.orientation).toEqual(STANDARD_ORIENTATION)
+  })
+
+  test('asked to stop, the next fork is an ordinary one, and the fly-through goes on after it', () => {
+    const held = run(apical, plan, [{ type: 'arrive', hold: true }])
+    expect([held.station, held.phase, flyingThrough(plan, held)]).toEqual([1, 'choose', false])
+    expect(held.log[1].chooseAsked).toBe(true)
+    const driving = run(apical, plan, [{ type: 'show-choice' }, { type: 'drive' }], held)
+    // Driving on from a fork that was stopped at is an ordinary drive, not the fly-through.
+    expect([driving.phase, flyingThrough(plan, driving)]).toEqual(['drive', false])
+    const on = run(apical, plan, [{ type: 'arrive' }], driving)
+    expect([on.station, on.phase, flyingThrough(plan, on)]).toEqual([2, 'drive', true])
+  })
+
+  test('the summary counts only the forks that were chosen at', () => {
+    const { state } = walk(apical, plan)
+    expect(state.phase).toBe('arrived')
+    const summary = summarize(state)
+    expect(summary.forks).toBe(7)
+    expect(summary.choose).toEqual({ asked: 4, firstTry: 0 })
+    expect(summary.match.asked).toBe(0)
+    expect(summary.slowest).toBeNull()
+  })
+
+  test('where turning the CT is asked for, the bench turns it at the forks flown through', () => {
+    const asked = routePlan(apical, { matchOptional: false })
+    const start = startSession(apical, asked)
+    expect(start.phase).toBe('drive')
+    expect(isAccepted(stationMatch(apical, 0)!, start.orientation)).toBe(true)
+    expect(start.matchNote).toBe('set')
+    expect(start.log[0].matchAsked).toBe(false)
+  })
+
+  test.each(
+    CT_TRACES.filter((trace) => TARGET_FOR_TRACE[trace.id]).map(
+      (trace) => [trace.id, trace] as const,
+    ),
+  )('%s stops first at the fork that gives off the lesion’s segmental bronchus', (_, trace) => {
+    const target = plannedTarget(trace)
+    const route = routePlan(trace, { matchOptional: true })
+    const flown = route.stations.filter((station) => station.cruise).length
+    // The forks flown through are the first ones, with no gap.
+    expect(route.stations.slice(0, flown).every((station) => station.cruise)).toBe(true)
+    expect(flown).toBeGreaterThanOrEqual(1)
+    const first = route.stations[flown]
+    // The next fork after it is the first division the map draws.
+    expect(route.stations[flown + 1].checkpointIndex).toBe(mappedForks(trace, target)[0])
+    const decision = trace.checkpoints[first.checkpointIndex].decision!
+    expect(decision.options[routeOption(trace, first.checkpointIndex)].airway.code).toBe(
+      target.segment.bronchusCode,
+    )
+    const { state } = walk(trace, route)
+    expect(state.phase).toBe('arrived')
+    expect(summarize(state).choose.asked).toBe(route.stations.length - flown)
+  })
+
+  test('a route that ends at no lesion is not flown through', () => {
+    const plain = routePlan(central, { matchOptional: true })
+    expect(plain.stations.some((station) => station.cruise)).toBe(false)
+  })
 })
 
 describe('the bench’s own marks', () => {

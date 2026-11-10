@@ -8,6 +8,7 @@ import {
   astrayView,
   chooseDeclined,
   chooseTaken,
+  flyThroughCard,
   forkPatternSentence,
   identifyInstruction,
   identifyVerdict,
@@ -23,6 +24,7 @@ import {
   openingNumber,
   openingShort,
   packetProse,
+  passingSentence,
   summaryLines,
 } from '../content/bench-copy'
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
@@ -127,6 +129,7 @@ test('every function the bench can call is exercised below', () => {
     'astrayView',
     'chooseDeclined',
     'chooseTaken',
+    'flyThroughCard',
     'forkPatternSentence',
     'identifyInstruction',
     'identifyVerdict',
@@ -142,6 +145,7 @@ test('every function the bench can call is exercised below', () => {
     'openingNumber',
     'openingShort',
     'packetProse',
+    'passingSentence',
     'summaryLines',
   ])
   expect(STATIONS).toHaveLength(128)
@@ -583,6 +587,18 @@ describe('identify', () => {
   })
 })
 
+describe('the fly-through', () => {
+  test('the card says where the scope will stop, and what is passing', () => {
+    expect(flyThroughCard('RUL', false)).toEqual({
+      heading: 'Flying through to RUL',
+      body: 'The scope flies through the airways you know and stops in RUL, where the choices begin.',
+    })
+    expect(flyThroughCard('RUL', true).heading).toBe('Stopping at the next fork')
+    expect(flyThroughCard('RUL', true).body).not.toContain('RUL')
+    expect(passingSentence(['Trachea', 'RMSB'])).toBe('Passing: Trachea › RMSB.')
+  })
+})
+
 describe('choose', () => {
   test('the lesion is placed from the fork: segment, level, distance and bearing', () => {
     for (const { trace, lesion } of STATIONS) {
@@ -885,7 +901,11 @@ describe('the words the bench uses', () => {
     // Turning the CT is still explained, and left to the learner after the first lesson.
     expect(PRIMER[3]).toMatch(/mirrored/)
     expect(PRIMER[3]).toMatch(/rotated/)
-    expect(PRIMER[3]).toMatch(/turning it on screen is your choice/)
+    expect(PRIMER[3]).toMatch(/turning the CT on screen is your choice/)
+    // The course opens on planning: the central airways are flown, and reading the CT against
+    // the scope is a short check with two refreshers behind it.
+    expect(PRIMER[2]).toMatch(/flies through the central airways/)
+    expect(PRIMER[3]).toMatch(/A short check at the start/)
     // The earlier course's four moves and fork patterns are gone.
     expect(text).not.toMatch(/\b(Match|Identify|Choose|Drive):|fork patterns?|Kurimoto/)
     expect(TEACHING_SIMULATOR_STATEMENT).toMatch(/teaching simulator built on one CT scan/)
@@ -949,6 +969,11 @@ describe('the words the bench uses', () => {
       }
     }
     all.push(moveSentence({ mm: 6, leftMm: -4, posteriorMm: 4.5 }))
+    for (const stopping of [true, false]) {
+      const card = flyThroughCard('RB1/B2', stopping)
+      all.push(card.heading, card.body)
+    }
+    all.push(passingSentence(['Trachea', 'RMSB', 'RUL']))
     all.push(
       ...summaryLines(
         {
