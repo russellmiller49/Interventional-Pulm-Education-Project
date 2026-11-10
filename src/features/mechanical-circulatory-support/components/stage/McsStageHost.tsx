@@ -280,6 +280,16 @@ function McsStageSession({
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
   const unloadingExample = activeStep.presentation === 'unloading-comparison'
+  /*
+   * The surfaces a step opens on, until the learner opens or closes one. They are the step's own,
+   * less the three-dimensional view on a window below the desktop workspace: there it would open
+   * on a "larger screen recommended" notice instead of a picture, so it waits to be asked for and
+   * the circulation map stands in.
+   */
+  const defaultSurfaces = useMemo(
+    () => (workspace ? activeStep.surfaces : activeStep.surfaces.filter((id) => id !== 'anatomy')),
+    [activeStep.surfaces, workspace],
+  )
   const performedIds = useMemo(() => new Set(progression.performedIds), [progression.performedIds])
   const stepPerformed = performedIds.has(activeStep.id)
   const isLastStep = activeIndex === lesson.steps.length - 1
@@ -553,7 +563,7 @@ function McsStageSession({
   function toggleSurface(surface: McsStageSurfaceId, open: boolean) {
     const stepId = activeStep.id
     setProgression((current) => {
-      const next = new Set(current.surfacesByStepId[stepId] ?? activeStep.surfaces)
+      const next = new Set(current.surfacesByStepId[stepId] ?? defaultSurfaces)
       if (open) next.add(surface)
       else next.delete(surface)
       return { ...current, surfacesByStepId: { ...current.surfacesByStepId, [stepId]: [...next] } }
@@ -586,10 +596,8 @@ function McsStageSession({
 
   const openSurfaces = useMemo(
     () =>
-      new Set<McsStageSurfaceId>(
-        progression.surfacesByStepId[activeStep.id] ?? activeStep.surfaces,
-      ),
-    [activeStep.id, activeStep.surfaces, progression.surfacesByStepId],
+      new Set<McsStageSurfaceId>(progression.surfacesByStepId[activeStep.id] ?? defaultSurfaces),
+    [activeStep.id, defaultSurfaces, progression.surfacesByStepId],
   )
 
   /* ---------------------------------------------------------------- *
@@ -1509,6 +1517,7 @@ function McsStageSession({
     <McsSimulatorPane
       lesson={lesson}
       presentation={activeStep.presentation}
+      leadVisual={activeStep.leadVisual}
       state={state}
       dispatch={dispatch}
       predictionCommitted={true}
