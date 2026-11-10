@@ -154,18 +154,56 @@ describe('ChoiceReasoningFeedback', () => {
 })
 
 /**
- * The other answers, folded under the verdict.
+ * The other answers, under the verdict.
  *
  * `AnswerVerdict` has always offered why the alternatives do not fit; this card, which three
  * modules render for its concept links and citations, never did. A caller that passes the item's
  * choices gets the same folded disclosure; a caller that passes nothing renders exactly as before.
+ *
+ * SHARED-FEEDBACK-02: the fold holds the choices that do not fit and nothing else. Until November
+ * 2026 it held every choice the learner did not take, so after any selection but the best one the
+ * best-supported answer was filed under "Why the other answers do not fit".
  */
 describe('ChoiceReasoningFeedback other answers', () => {
   const choices: readonly Choice[] = [
-    { ...choice('best'), id: 'best-read', label: 'The best read' },
-    { ...choice('incorrect-mechanism'), id: 'other-mechanism', label: 'Another mechanism' },
-    { ...choice('unsafe'), id: 'harmful-move', label: 'A harmful move' },
+    {
+      ...choice('best'),
+      id: 'best-read',
+      label: 'The best read',
+      rationale: 'The discriminating cue is present, so this read holds.',
+    },
+    {
+      ...choice('incorrect-mechanism'),
+      id: 'other-mechanism',
+      label: 'Another mechanism',
+      rationale: 'This mechanism would move the pressure the other way.',
+    },
+    {
+      ...choice('reasonable-but-incomplete'),
+      id: 'partial-read',
+      label: 'A partial read',
+      rationale: 'This read stops before the cue that limits it.',
+    },
+    {
+      ...choice('unsafe'),
+      id: 'harmful-move',
+      label: 'A harmful move',
+      rationale: 'This move removes the support the patient depends on.',
+    },
   ]
+  const best = choices[0]
+
+  function renderCard(chosen: Choice, alternatives: readonly Choice[] | undefined = choices) {
+    return render(
+      <ChoiceReasoningFeedback
+        choice={chosen}
+        outcome="stated"
+        explanation="Compare the expected waveform and patient response."
+        evidenceIds={['esc-ers-ph-2022']}
+        alternatives={alternatives}
+      />,
+    )
+  }
 
   it('renders no disclosure unless the caller passes the choices', () => {
     const { container } = render(
@@ -176,27 +214,100 @@ describe('ChoiceReasoningFeedback other answers', () => {
       />,
     )
     expect(container.querySelector('[data-other-answers-panel]')).toBeNull()
+    expect(container.querySelector('[data-best-supported-answers]')).toBeNull()
   })
 
-  it('folds every choice but the chosen one, each with its rationale', () => {
-    const { container } = render(
-      <ChoiceReasoningFeedback
-        choice={choices[1]}
-        outcome="stated"
-        explanation="Compare the expected waveform and patient response."
-        evidenceIds={['esc-ers-ph-2022']}
-        alternatives={choices}
-      />,
-    )
+  it('after the best choice, folds every other choice under the heading that is true of them', () => {
+    const { container } = renderCard(best)
     const panel = container.querySelector<HTMLDetailsElement>('[data-other-answers-panel]')
     expect(panel).not.toBeNull()
     expect(panel?.open).toBe(false)
     expect(panel?.querySelector('summary')?.textContent).toBe('Why the other answers do not fit')
-    expect(container.querySelector('[data-other-answer="other-mechanism"]')).toBeNull()
-    for (const other of choices.filter((candidate) => candidate.id !== 'other-mechanism')) {
-      const row = container.querySelector(`[data-other-answer="${other.id}"]`)
+    expect(container.querySelector('[data-best-supported-answers]')).toBeNull()
+    expect(container.querySelector('[data-other-answer="best-read"]')).toBeNull()
+    const rows = panel!.querySelectorAll('[data-other-answer]')
+    expect(rows).toHaveLength(choices.length - 1)
+    for (const other of choices.filter((candidate) => candidate.id !== best.id)) {
+      const row = panel!.querySelector(`[data-other-answer="${other.id}"]`)
+      expect(row).toHaveAttribute('data-other-answer-role', 'alternative')
       expect(row?.textContent).toContain(other.label)
       expect(row?.textContent).toContain(other.rationale)
+    }
+  })
+
+  it.each(['other-mechanism', 'partial-read', 'harmful-move'] as const)(
+    'after %s, states the best-supported answer apart from the answers that do not fit',
+    (chosenId) => {
+      const chosen = choices.find((candidate) => candidate.id === chosenId)!
+      const { container } = renderCard(chosen)
+
+      // The best-supported answer: named as such, with its own reasoning, open to read.
+      const stated = container.querySelector<HTMLElement>('[data-best-supported-answers]')
+      expect(stated).not.toBeNull()
+      expect(stated!.closest('details')).toBeNull()
+      expect(stated!.querySelector('[data-keyed-answer-label]')?.textContent).toBe(
+        'Best-supported answer',
+      )
+      const keyed = stated!.querySelector('[data-other-answer="best-read"]')
+      expect(keyed).toHaveAttribute('data-other-answer-role', 'keyed')
+      expect(keyed?.textContent).toContain(best.label)
+      expect(keyed?.textContent).toContain(best.rationale)
+
+      // The fold: only what does not fit. This is the assertion that failed before the repair.
+      const panel = container.querySelector<HTMLDetailsElement>('[data-other-answers-panel]')!
+      expect(panel.open).toBe(false)
+      expect(panel.querySelector('summary')?.textContent).toBe('Why the other answers do not fit')
+      expect(panel.querySelector('[data-other-answer="best-read"]')).toBeNull()
+      expect(panel.textContent).not.toContain(best.label)
+      expect(panel.textContent).not.toContain(best.rationale)
+      const doNotFit = choices.filter(
+        (candidate) => candidate.id !== chosenId && candidate.id !== best.id,
+      )
+      expect(panel.querySelectorAll('[data-other-answer]')).toHaveLength(doNotFit.length)
+      for (const other of doNotFit) {
+        const row = panel.querySelector(`[data-other-answer="${other.id}"]`)
+        expect(row).toHaveAttribute('data-other-answer-role', 'alternative')
+        expect(row?.textContent).toContain(other.label)
+        expect(row?.textContent).toContain(other.rationale)
+      }
+
+      // The chosen answer is the card's own subject and is in neither group.
+      expect(container.querySelector(`[data-other-answer="${chosenId}"]`)).toBeNull()
+      // Reading order: the learner's answer, then the best-supported one, then the rest.
+      expect(stated!.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    },
+  )
+
+  it('renders no empty fold when the best-supported answer is the only other choice', () => {
+    const pair = [choices[0], choices[1]]
+    const { container } = renderCard(pair[1], pair)
+    expect(container.querySelector('[data-best-supported-answers]')).not.toBeNull()
+    expect(container.querySelector('[data-other-answers-panel]')).toBeNull()
+  })
+
+  it('never files a second best-supported answer under the fold either', () => {
+    const second: Choice = {
+      ...choice('best'),
+      id: 'second-best-read',
+      label: 'A second best read',
+      rationale: 'This read holds on the same cue.',
+    }
+    const { container } = renderCard(best, [...choices, second])
+    const stated = container.querySelector('[data-best-supported-answers]')!
+    expect(stated.querySelector('[data-keyed-answer-label]')?.textContent).toBe(
+      'Another best-supported answer',
+    )
+    expect(stated.querySelector('[data-other-answer="second-best-read"]')).not.toBeNull()
+    expect(
+      container.querySelector('[data-other-answers-panel] [data-other-answer="second-best-read"]'),
+    ).toBeNull()
+  })
+
+  it('adds no scoring word to the card in either arrangement', () => {
+    for (const chosen of choices) {
+      const { container, unmount } = renderCard(chosen)
+      expect(flaggedGradingCopyTerms(container.textContent ?? '')).toEqual([])
+      unmount()
     }
   })
 })
