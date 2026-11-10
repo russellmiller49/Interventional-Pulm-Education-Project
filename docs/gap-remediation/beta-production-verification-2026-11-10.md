@@ -6,19 +6,20 @@ Source handoff: [beta launch PR 1](beta-launch-pr1-2026-11-10.md).
 
 **Current recommendation: NO-GO / hold for Module Collaborator Recognition pending Gate 3.**
 The exact target SHA is deployed successfully and read-only production checks pass. Authenticated
-production verification is not authorized or complete. This is a pending infrastructure
-decision, not a finding that the repair failed.
+production verification is incomplete. The owner has authorized the bounded synthetic procedure,
+but account identifiers remain placeholders and usable A/B/C sessions are not established.
+This is a pending infrastructure decision, not a finding that the repair failed.
 No account was selected or used, and no production POST, PATCH, migration, account creation,
 entitlement change, cleanup, merge, deployment action or invitation was performed in this pass.
 
 ## Four separate approval gates
 
-| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                                                                      |
-| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized.                                              |
-| 3. Synthetic live tests  | **Pending.** The owner must name two existing dedicated non-admin test accounts, A and B, and a separate existing admin account C, and explicitly authorize the bounded synthetic writes below. No identities, credentials or usable test sessions were supplied in this request. Deployment approval does not authorize these writes. |
-| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                                                                   |
+| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                                                                                                                  |
+| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized.                                                                                          |
+| 3. Synthetic live tests  | **Scope authorized; account mapping pending.** The owner explicitly authorized the bounded synthetic procedure in a follow-up, retaining all exclusions. The A/B/C email/ID fields still contain bracketed placeholders; no actual accounts or usable test-session mapping has been supplied. Do not repeat the scope-approval request or infer identities from existing sessions. |
+| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                                                                                                               |
 
 The user explicitly prohibited unapproved account creation, production submissions, entitlement
 changes, record cleanup and migrations. The handoff additionally states: “This checklist does
@@ -96,6 +97,25 @@ samples were CPU 0 and memory 0.386 GB; the tool's one-hour averages span both r
 not post-release-only measurements. No new target runtime entries appeared during the HTTP
 checks. This is a short read-only smoke window; no successful authenticated submission is claimed.
 
+## Authorization follow-up and preflight recheck
+
+At the follow-up, the owner authorized the four review POSTs affecting two records, one annotated
+PNG/report with a locally blocked send and retry, duplicate replay, B's denied collision, and the
+specified verification reads. Synthetic data only; stop on unexpected authorization/data-integrity
+behavior. Account creation, entitlement changes, deletion/cleanup, additional submissions,
+migrations and invitations remain excluded. This authorization persists; it need not be repeated.
+
+The supplied A/B/C identifiers were still literal bracketed placeholders rather than actual
+emails/IDs. Browser inventory exposed one connected Chrome profile; a mapping to three separate
+A/B/C test sessions was not established. No signed-in account was inspected or used. A concise
+request for actual account identifiers, profile/tab mapping and user-completed sign-in is pending.
+Do not use an existing clinician account or select an account by guesswork.
+
+At **20:33:11 UTC (12:33:11 PST)**, read-only Railway preflight still confirmed deployment
+`08d8b84b-bf33-4e4b-96e2-cfa32426bc24` / exact target SHA / SUCCESS, one running replica,
+zero crashed replicas, no pending rollout or recent failure/notification. The preceding deployment
+remained `canRollback: true`. No synthetic live request was sent and no new test result is claimed.
+
 ## Exact authenticated procedure — prepared, not executed
 
 ### Owner authorization and preflight
@@ -113,7 +133,8 @@ signs in through the normal production flow; do not request passwords or tokens 
 No local-preview cookies, intercepted successful API responses, service keys in the browser,
 or saved authentication-state/HAR exports. Disable browser cache for the image checks.
 
-Authorize this precise bounded write scope before execution:
+The owner has authorized this precise bounded write scope. Execution still requires actual A/B/C
+identifiers and their separate normal production sessions:
 
 - Module under test: `ebus-guided`; two overall-review records, one for A and one for B.
 - Four overall-review POSTs: A's learner submission, A's edit, B's educator submission, and
@@ -311,7 +332,9 @@ private orphan objects. Cleanup remains a separate authorization.
 
 The deployed-source/build/health/signed-out gate portion is **PASS**. Remaining blockers:
 
-1. A/B/C have not been named or authorized; every authenticated case remains **UNTESTED**.
+1. The limited procedure is authorized, but actual A/B/C account identifiers and separate ready
+   sessions are missing. The supplied email/ID fields were bracketed placeholders. Every
+   authenticated case remains **UNTESTED**; no test records or test IDs have been created.
 2. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase;
    technical candidate eligibility is confirmed.
 
