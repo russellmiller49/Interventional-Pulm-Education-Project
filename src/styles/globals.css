@@ -523,6 +523,31 @@ body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
 }
 
 /*
+ * Lesson mode. A module frame that sets `data-site-header="hidden"` (see `ModuleFrameV2`) has an
+ * activity open and has asked for the whole window: the site menu took 81 px of a 900 px screen
+ * above a lesson that already carries its own bar, and the simulator ran off the bottom. The
+ * header is removed and its height published as zero, so every shell sized to
+ * `100dvh - var(--site-header-height)` takes up the room. `SiteHeaderHeight` then measures the
+ * hidden header as zero and keeps the variable there; the declaration here covers the first paint.
+ * Save & exit in the lesson bar leads back to the module's overview, where the site menu is shown
+ * again.
+ *
+ * Only in the fixed workspace (the threshold the lesson shells use). There the page does not
+ * scroll and the lesson bar is always on screen. Below it a lesson flows with the document and
+ * some lesson bars scroll away with it; the site header is then the one pinned way out, so it
+ * stays.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  html:has(#main-content [data-site-header='hidden']) {
+    --site-header-height: 0px;
+  }
+
+  html:has(#main-content [data-site-header='hidden']) #site-header {
+    display: none;
+  }
+}
+
+/*
  * The site header switches to its compact menu by the room it has in rem, not only by the
  * viewport's pixels (`lg:` in the navigation), so enlarged text gets the compact menu too. At 200 %
  * text the desktop row wrapped to three or four rows, 297–377 px of a 900 px window; the threshold

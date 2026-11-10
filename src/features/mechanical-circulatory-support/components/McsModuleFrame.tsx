@@ -49,6 +49,7 @@ export function McsModuleFrame({
           navAriaLabel="Mechanical circulatory support module sections"
           theme={theme}
           activityMode={activityMode}
+          hideSiteHeader
           safetyNotice={
             /*
               The module's one boundary statement, as a disclosure (ECMO tester feedback,

@@ -86,6 +86,7 @@ export function IcuHemodynamicsModuleFrameV2({
         safetyNotice={ICU_HEMODYNAMICS_SAFETY_NOTICE}
         theme={activityMode ? 'dark' : 'light'}
         activityMode={activityMode}
+        hideSiteHeader
       >
         {locale !== 'en' ? (
           <div className={styles.englishFallback} role="note">
