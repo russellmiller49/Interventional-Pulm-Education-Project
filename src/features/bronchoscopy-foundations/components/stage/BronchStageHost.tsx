@@ -67,6 +67,9 @@ import {
   withSurveySnapshot,
   writeBronchSelfPacedRecord,
   type BronchSelfPacedRecord,
+  clearBronchSectionPlaces,
+  readBronchSectionPlace,
+  writeBronchSectionPlace,
 } from '../../engine/selfPacedProgress'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../../engine/scope/scopeCaption'
 import type { ScopeCase } from '../../engine/scope/scopeCase'
@@ -145,7 +148,11 @@ export function BronchStageHost({
       key={`${sectionId}:${restartCount}`}
       sectionId={sectionId}
       locale={locale}
-      onRestart={() => setRestartCount((count) => count + 1)}
+      onRestart={() => {
+        // A restarted section opens at its first screen, on this visit and the next.
+        writeBronchSectionPlace(sectionId, null)
+        setRestartCount((count) => count + 1)
+      }}
     />
   )
 }
@@ -370,6 +377,31 @@ function BronchStageSessionView({
     saveRecord((record) => withSectionOpened(record, lesson.sectionId))
   }, [lesson.sectionId, saveRecord])
 
+  // Return to the screen the learner had reached. The place is read once, when the section mounts,
+  // and applied after mount, so the server's first screen and the browser's first render agree.
+  // Each earlier screen is moved past, exactly as "continue without answering" does: nothing is
+  // marked done, no answer comes back and the screen opens fresh.
+  const [resumeStepId] = useState(() => readBronchSectionPlace(sectionId))
+  const resumeIndex = Math.max(
+    resumeStepId ? lesson.steps.findIndex((step) => step.id === resumeStepId) : 0,
+    0,
+  )
+  const resumeStarted = useRef(false)
+  useEffect(() => {
+    if (resumeStarted.current) return
+    resumeStarted.current = true
+    for (let past = 0; past < resumeIndex; past++) dispatch({ type: 'SKIP_PAST', index: past })
+  }, [resumeIndex, dispatch])
+
+  // Keep the place: the screen the learner is on, once past the first. A finished section and a
+  // section still on its first screen keep none, so they open at the start. Nothing is written
+  // until the return above has landed.
+  useEffect(() => {
+    if (liveIndex < resumeIndex) return
+    const place = !finished && liveIndex > 0 ? (lesson.steps[liveIndex]?.id ?? null) : null
+    writeBronchSectionPlace(lesson.sectionId, place)
+  }, [resumeIndex, finished, liveIndex, lesson])
+
   useEffect(() => {
     if (!finished || completionRecorded.current) return
     completionRecorded.current = true
@@ -476,6 +508,7 @@ function BronchStageSessionView({
   /** The course's first section, at its first task. In the first section it restarts it. */
   function restartCourse() {
     const firstId = firstPathwaySectionId(bronchoscopyFoundationsPathway)
+    clearBronchSectionPlaces()
     if (firstId === sectionId) onRestart()
     else goToSection(firstId)
   }
@@ -1479,9 +1512,13 @@ function BronchStageSessionView({
     </StageTeachingScope>
   )
 
+  // Screens passed by returning to a saved place were not skipped on this visit.
+  const resumedPastIds = new Set(lesson.steps.slice(0, resumeIndex).map((step) => step.id))
   const movedPastTitles = [
     ...new Set(
-      progress.movedPastIds.map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
+      progress.movedPastIds
+        .filter((id) => !resumedPastIds.has(id))
+        .map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
     ),
   ]
 
@@ -1571,7 +1608,7 @@ function BronchStageSessionView({
                 // The hub carries the course's one boundary statement; a section says only what
                 // happens to the learner's work.
                 <p data-stage-footer-note>
-                  Answers are not saved. Reloading starts this section again from its first screen.
+                  Your answers are not saved. This device remembers the screen you were on.
                 </p>
               ) : (
                 <p>

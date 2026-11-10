@@ -200,7 +200,7 @@ test('every five-controls activity can be left without doing it, and nothing is 
   expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 })
 
-test('an unfinished reload and review keep nothing and do not pretend to restore the task', async () => {
+test('an unfinished reload returns to the screen reached and restores nothing of the task', async () => {
   const { lesson } = await mountSection('five-controls')
   const afterDepth = unitIndex(lesson, 'depth') + 1
   await performFiveControlsLearn(lesson, afterDepth)
@@ -211,7 +211,9 @@ test('an unfinished reload and review keep nothing and do not pretend to restore
   expect(currentStepId()).toBe(lesson.steps[afterDepth].id)
   cleanup()
   await mountSection('five-controls')
-  expect(currentStepId()).toBe(lesson.steps[0].id)
+  // The place comes back. The task on that screen opens fresh, with nothing marked done.
+  expect(currentStepId()).toBe(lesson.steps[afterDepth].id)
+  expect(nowPrimary()).toBeDisabled()
   expect(selfPaced().reviewedSectionIds).toEqual([])
 })
 

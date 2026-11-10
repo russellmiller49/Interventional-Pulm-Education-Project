@@ -71,6 +71,10 @@ test.beforeEach(async ({ page }) => {
 })
 async function openSection(page: Page, id: BronchSectionId) {
   const lesson = bronchStageLesson(id)
+  // A section reopens at the screen it was left on. These helpers start each one at its first
+  // screen, so a place kept earlier in the same test is forgotten before the section is opened.
+  if (page.url().startsWith('http'))
+    await page.evaluate(() => localStorage.removeItem('ip-bronchoscopy-foundations-place-v1'))
   await page.goto(base + '/learn?section=' + id)
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   return lesson
@@ -300,9 +304,9 @@ test('one entry, explanation before an answer, Back review and a reload that res
     'visitedSectionIds',
   ])
   expect(await earlierRecord(page)).toBeNull()
+  // A reload returns to the screen reached. The answer given there does not come back.
   await page.reload()
-  await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
-  for (let index = 0; index < lesson.predictionStepIndex; index++) await primary(page).click()
+  await expect(stage(page)).toHaveAttribute('data-stage', check.id)
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
   await skip(page).click()
