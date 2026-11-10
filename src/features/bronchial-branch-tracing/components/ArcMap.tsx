@@ -99,6 +99,7 @@ export function ArcMap({
       className={styles.arcMap}
       data-arc-map={label}
       data-arc-map-variant={variant}
+      data-arc-zoomed={zoomed ? true : undefined}
       role="img"
       aria-label={`${label}: ${RIMS.map((r) => `${r} ${rim[r] ?? 'blank'}`).join(', ')}. ${all.length} ${all.length === 1 ? 'division' : 'divisions'} drawn.`}
     >

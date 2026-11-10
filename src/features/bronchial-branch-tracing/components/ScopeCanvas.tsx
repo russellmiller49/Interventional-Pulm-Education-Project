@@ -187,9 +187,26 @@ function OpeningProjector({
   return null
 }
 
-function Surface({ geometry }: { geometry: THREE.BufferGeometry }) {
-  const material = useMemo(() => createBronchoscopyMaterial(), [])
+/**
+ * How far the scope's light narrows to a cone about its line of sight: 0 lights the whole view
+ * evenly, 1 dims the rim to a fifth. Part-way, the wall beside the lens falls off toward the rim
+ * as it does in a bronchoscope's picture, and a small airway is no longer one even pink.
+ */
+const HEADLIGHT_CONE = 0.7
+
+function Surface({ geometry, direction }: { geometry: THREE.BufferGeometry; direction: Vec3 }) {
+  const { invalidate } = useThree()
+  const material = useMemo(() => {
+    const made = createBronchoscopyMaterial()
+    made.uniforms.uHeadlightFalloff.value = HEADLIGHT_CONE
+    return made
+  }, [])
   useEffect(() => () => material.dispose(), [material])
+  // The light travels with the lens: its cone follows the line of sight.
+  useEffect(() => {
+    ;(material.uniforms.uHeadlightAxis.value as THREE.Vector3).set(...direction).normalize()
+    invalidate()
+  }, [material, direction, invalidate])
   return <mesh geometry={geometry} material={material} dispose={null} />
 }
 
@@ -278,9 +295,8 @@ export function ScopeCanvas({
         }}
       >
         <color attach="background" args={['#081118']} />
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[200, -400, 200]} intensity={2} />
-        <Surface geometry={geometry} />
+        {/* No scene lights: the surface's own shader lights it from the lens. */}
+        <Surface geometry={geometry} direction={direction} />
         <ScopeCamera position={position} direction={direction} up={up} />
         {openings.length > 0 && (
           <OpeningProjector

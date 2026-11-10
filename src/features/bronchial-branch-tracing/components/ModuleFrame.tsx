@@ -41,6 +41,9 @@ export function ModuleFrame({
     <div
       className={styles.module}
       data-activity={activity}
+      // A bench has its own bar and its own way out, so it takes the whole window: the site menu
+      // (the rule is in `src/styles/globals.css`) and the section tabs give up their rows.
+      data-site-header={activity ? 'hidden' : undefined}
       data-learning-scroll-owner={activity ? 'workspace' : 'document'}
       data-enlarged-text={enlargedText || undefined}
       lang="en"

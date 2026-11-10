@@ -36,6 +36,12 @@ import {
  */
 export type PlanPart = 'lesion' | 'segment' | 'views' | 'frame' | 'arcs'
 export const PLAN_PARTS: readonly PlanPart[] = ['lesion', 'segment', 'views', 'frame', 'arcs']
+/**
+ * The parts of a whole lesion planned outside the lessons. Setting up the views is offered beside
+ * the ostium circle there, not as a step of its own: nothing in it is checked, and a step whose
+ * only move is "go on" is a click with nothing behind it.
+ */
+export const ROUTE_PLAN_PARTS: readonly PlanPart[] = ['lesion', 'segment', 'frame', 'arcs']
 export type PlanStage = PlanPart | 'review' | 'done'
 
 export interface PlanSpec {
@@ -309,6 +315,16 @@ const nextStage = (spec: PlanSpec, after: PlanStage | null): PlanStage => {
     if (spec.parts.includes(stage as PlanPart)) return stage
   }
   return 'done'
+}
+
+/**
+ * A place saved under an earlier list of parts: a stage this plan no longer asks for moves on to
+ * the next one it does, so no saved place opens on a step that has gone.
+ */
+export function settlePlan(spec: PlanSpec, state: PlanSession): PlanSession {
+  const stage = state.stage
+  if (stage === 'review' || stage === 'done' || spec.parts.includes(stage)) return state
+  return { ...state, stage: nextStage(spec, stage) }
 }
 
 export function startPlan(trace: CtTrace, target: CtNoduleTarget, spec: PlanSpec): PlanSession {

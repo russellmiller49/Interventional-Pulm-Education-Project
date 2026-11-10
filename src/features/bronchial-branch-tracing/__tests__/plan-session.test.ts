@@ -1,6 +1,7 @@
 import { RIMS, mappedForks, turnedRim, type FrameLabels, type Sector } from '../engine/arc-map'
 import {
   LESION_REACH_MM,
+  ROUTE_PLAN_PARTS,
   divisionBearings,
   lesionPathCrossings,
   lesionPathSlices,
@@ -9,6 +10,7 @@ import {
   planFrame,
   planReducer,
   segmentChoices,
+  settlePlan,
   startPlan,
   summarizePlan,
   type PlanAction,
@@ -223,5 +225,34 @@ describe('a whole plan', () => {
     const s = run(start, { type: 'show-lesion' }, { type: 'show-segment' })
     expect(s.stage).toBe('done')
     expect(start.frameTurn).toBe(0)
+  })
+})
+
+describe('a whole lesion outside the lessons', () => {
+  it('plans without a views step: naming the segment leads straight to the circle', () => {
+    expect(ROUTE_PLAN_PARTS).toEqual(['lesion', 'segment', 'frame', 'arcs'])
+    const { run, start, trace } = setup('r-apical-anterior', ROUTE_PLAN_PARTS)
+    const named = run(
+      start,
+      { type: 'mark-lesion', mark: lesionShowPoint(trace) },
+      { type: 'choose-segment', code: 'RB1' },
+    )
+    expect(named.stage).toBe('frame')
+    // Opening a reconstruction is still recorded, though no step waits on it.
+    expect(run(named, { type: 'set-view', view: 'coronal', on: true }).views.coronal).toBe(true)
+  })
+
+  it('a place saved on the views step opens on the circle; every other place is left alone', () => {
+    const full = setup('r-apical-anterior')
+    const saved = full.run(full.start, { type: 'show-lesion' }, { type: 'show-segment' })
+    expect(saved.stage).toBe('views')
+    const route = setup('r-apical-anterior', ROUTE_PLAN_PARTS)
+    const settled = settlePlan(route.spec, saved)
+    expect(settled).toEqual({ ...saved, stage: 'frame' })
+    expect(settlePlan(route.spec, route.start)).toBe(route.start)
+    expect(settlePlan(full.spec, saved)).toBe(saved)
+    // A plan that asks only for the first two parts ends where the saved step is gone.
+    const short = setup('r-apical-anterior', ['lesion', 'segment'])
+    expect(settlePlan(short.spec, saved).stage).toBe('done')
   })
 })

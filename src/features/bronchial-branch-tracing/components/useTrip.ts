@@ -5,7 +5,7 @@ import type { CtNoduleTarget, CtTrace } from '../content/ct-types'
 import { mappedForks } from '../engine/arc-map'
 import type { NavPlan, NavSession } from '../engine/nav-session'
 import { readNavEntry, writeNavEntry } from '../engine/nav-storage'
-import type { PlanSession } from '../engine/plan-session'
+import { settlePlan, type PlanSession } from '../engine/plan-session'
 import { startTrip, tripReducer, type TripPlan, type TripSession } from '../engine/trip-session'
 
 /** A saved drive is used only if it still fits the plan it was saved for. */
@@ -43,8 +43,15 @@ function fits(saved: TripSession, trace: CtTrace, target: CtNoduleTarget | null,
   return true
 }
 
-/** A reload while the scope was moving resumes where it was going. */
-function settle(trip: TripSession): TripSession {
+/**
+ * A reload while the scope was moving resumes where it was going, and a place saved on a planning
+ * step the trip no longer has resumes on the next one.
+ */
+function settle(saved: TripSession, plan: TripPlan): TripSession {
+  const trip =
+    saved.stage === 'plan' && saved.plan && plan.plan
+      ? { ...saved, plan: settlePlan(plan.plan, saved.plan) }
+      : saved
   const nav = trip.nav
   if (!nav) return trip
   if (nav.phase === 'drive') return { ...trip, nav: { ...nav, phase: 'ready' } }
@@ -68,7 +75,7 @@ export function useTrip(
   const [session, dispatch] = useReducer(reducer, null, () => {
     const saved = readNavEntry(storageKey).entry
     if (saved && saved.leg === leg && fits(saved.trip, trace, target, trip))
-      return settle(saved.trip)
+      return settle(saved.trip, trip)
     return startTrip(trace, target, trip)
   })
   useEffect(() => {

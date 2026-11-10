@@ -539,6 +539,9 @@
   border-left-color: var(--amber);
 }
 .band {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
   margin: 0.35rem 0;
   padding: 0.45rem 0.65rem;
   border-left: 4px solid var(--amber);
@@ -547,11 +550,35 @@
   font-size: 0.875rem;
   line-height: 1.45;
 }
+.band > span {
+  min-width: 0;
+}
+.bandIcon {
+  flex: none;
+  margin-top: 0.18rem;
+  color: var(--amber);
+}
+/* The views offered beside the circle: a note with its two links under it. */
+.note > p + p {
+  margin-top: 0.35rem;
+}
+/* Focus moved here when a step's button went with the step. */
+.now [data-now-card] h2:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 .band[data-verdict-tone='in'] {
   border-left-color: var(--green);
 }
 .band[data-verdict-tone='miss'] {
   border-left-color: #e9a39a;
+}
+.band[data-verdict-tone='in'] .bandIcon {
+  color: var(--green);
+}
+.band[data-verdict-tone='miss'] .bandIcon {
+  color: #e9a39a;
 }
 .choices {
   display: grid;
@@ -811,6 +838,12 @@
   width: 82%;
   height: 82%;
   overflow: hidden;
+}
+/* Zoomed on a division, the picture is a round lens on the map, not a square cut out of it. */
+.arcMap[data-arc-zoomed] svg {
+  border-radius: 50%;
+  background: #0d1c24;
+  box-shadow: 0 0 0 2px #d9e6ea;
 }
 .arcOstium {
   fill: #0d1c24;

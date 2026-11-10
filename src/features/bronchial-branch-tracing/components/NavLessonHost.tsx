@@ -96,10 +96,16 @@ function Trip({
   onNext: () => void
   onTrip: (index: number) => void
 }) {
-  // Turning the CT is asked for in the first lesson, and afterwards until the learner has shown it.
+  // Turning the CT is asked for in the first lesson, and afterwards until the learner has shown
+  // it, on a drive that reads the CT at each fork. A drive that follows a map never waits for it:
+  // the CT was read in planning, and past the ostium the map is what sits beside the scope.
+  const spec = lesson.trips[tripIndex]
+  const drivesWithMap = Boolean(spec.from && spec.plan?.parts.includes('arcs'))
   const matchOptional = useMemo(
-    () => lesson.id !== ORIENTATION_LESSON && orientationShown(readOrientationProgress()),
-    [lesson.id],
+    () =>
+      lesson.id !== ORIENTATION_LESSON &&
+      (drivesWithMap || orientationShown(readOrientationProgress())),
+    [lesson.id, drivesWithMap],
   )
   const trip = useMemo(
     () => buildTrip(lesson.trips[tripIndex], { matchOptional }),
