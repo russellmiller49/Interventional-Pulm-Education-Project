@@ -1,5 +1,5 @@
 'use client'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { dosePlanes } from '../doseModel'
 import { Quad } from '../SceneGeometry'
 import { add, scale } from '../suiteModel'

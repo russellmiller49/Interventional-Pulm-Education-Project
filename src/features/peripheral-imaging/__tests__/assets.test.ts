@@ -33,7 +33,7 @@ describe('self-contained original model downloads', () => {
 
 describe('CT-derived Slicer assets', () => {
   it('ships a 2400 × 1000 room still under 400 KB with flush shell edges and render provenance', async () => {
-    const png = readFileSync(resolve('public/peripheral-imaging/room-hero.png'))
+    const png = readFileSync(resolve('public/peripheral-imaging/room-suite.png'))
     expect(png.length).toBeLessThan(400_000)
     const { data, info } = await sharp(png)
       .removeAlpha()
@@ -54,7 +54,7 @@ describe('CT-derived Slicer assets', () => {
     expect(edgeMismatches).toBe(0)
     expect(painted).toBeGreaterThan(info.width * info.height * 0.02)
     expect(roomProvenance.output).toEqual({
-      path: 'room-hero.png',
+      path: 'room-suite.png',
       width: 2400,
       height: 1000,
       bytes: png.length,
@@ -66,7 +66,7 @@ describe('CT-derived Slicer assets', () => {
       createHash('sha256').update(JSON.stringify(roomProvenance.sources)).digest('hex'),
     )
     expect(
-      packageManifest.assets.find((asset) => asset.path === 'room-hero.png')?.sourceSha256,
+      packageManifest.assets.find((asset) => asset.path === 'room-suite.png')?.sourceSha256,
     ).toBe(roomProvenance.sourceSha256)
     expect(roomProvenance.render.camera).toBe('room')
     expect(roomProvenance.render.background).toBe('#061519')

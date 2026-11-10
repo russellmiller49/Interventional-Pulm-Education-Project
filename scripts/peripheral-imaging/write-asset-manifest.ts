@@ -6,7 +6,7 @@ const hash = (path: string) => createHash('sha256').update(readFileSync(path)).d
 const root = 'public/peripheral-imaging/'
 const entries = [
   {
-    path: 'room-hero.png',
+    path: 'room-suite.png',
     sourceSha256: room.sourceSha256,
     source: room.source,
     provenance: 'room-hero.json',

@@ -74,8 +74,10 @@ export function Anatomy({
   }, [original, map, contextOpacity, room])
   useEffect(() => {
     scene.traverse((object) => {
-      if (object instanceof Mesh)
-        object.visible = layers.includes(object.name.replaceAll('_', ' ') as SuiteLayer)
+      if (!(object instanceof Mesh)) return
+      const name = object.name.replaceAll('_', ' ')
+      // The CT's own skin surface ends where the scan does; the patient figure stands in for it.
+      object.visible = name !== 'Thoracic envelope' && layers.includes(name as SuiteLayer)
     })
     invalidate()
   }, [scene, layers, invalidate])

@@ -165,7 +165,9 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   projection: view('projection', {
     mode: 'projection',
     litStop: 'beam',
-    camera: 'beam',
+    // From the head of the table: obliquity is the C-arm swinging round the patient, toward the
+    // side the lesson's hand-on-the-chest rule names. The beam's own view stays one press away.
+    camera: 'head',
     layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
     // The anatomy readout sits second so that, with the two controls, it stays above the action bar.
@@ -174,7 +176,9 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   signal: view('signal', {
     mode: 'signal',
     litStop: 'patient',
-    camera: 'beam',
+    // The coloured path through the nodule is a line from tube to detector; seen along the beam it
+    // would be a point, so this section opens across it.
+    camera: 'head',
     layers: [...ANATOMY, 'Ribs and spine', ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
     readouts: ['rayCrosses'],

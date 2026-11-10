@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import type { DrrTextureSource, DrrPose } from '../drrTextureSource'
 import { labReadouts } from '../../../engine/labMetrics'

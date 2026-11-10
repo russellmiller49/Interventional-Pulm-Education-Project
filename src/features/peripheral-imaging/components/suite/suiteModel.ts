@@ -26,6 +26,20 @@ export const subtract = (a: Point3, b: Point3): Point3 => a.map((n, i) => n - b[
 export const scale = (a: Point3, factor: number): Point3 => a.map((n) => n * factor) as Point3
 export const dot = (a: Point3, b: Point3) => a.reduce((sum, n, i) => sum + n * b[i], 0)
 
+/**
+ * From the model's frame to the renderer's.
+ *
+ * Every position in this module is patient-based: x toward the patient's left, y anterior,
+ * z superior. That frame is left-handed and the renderer's is right-handed, so drawing it directly
+ * shows the room in a mirror — from the head of the table the patient's left lung appears on the
+ * viewer's right, and a right anterior oblique swings the detector to the viewer's left. The scene
+ * is therefore drawn inside one group reflected in x (`SCENE_REFLECTION`), and anything that meets
+ * the camera outside that group — the camera's own pose, a label's projected anchor — goes through
+ * `toScene`. The reflection is its own inverse.
+ */
+export const SCENE_REFLECTION: Point3 = [-1, 1, 1]
+export const toScene = ([x, y, z]: Point3): Point3 => [-x, y, z]
+
 export interface SuiteFrame {
   readonly orbit: number
   readonly tilt: number

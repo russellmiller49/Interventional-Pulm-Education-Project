@@ -11,7 +11,7 @@ original clinical source files remain outside Git in the primary checkout.
 | `anatomy/dts-projections.png` | Thirteen parallel projections for each of five authored sweeps, using the same nodule plus a straight tool             |
 | `anatomy/fluoroview-carm.glb` | Retained original FluoroView gantry animation; retirement remains an owner decision                                    |
 | `sampling-window.glb`         | Repository-authored sphere and fictional needle side window                                                            |
-| `room-hero.png`               | Text-free 2400 × 1000 room-mode still with visible thorax, beam and grounded suite, on `#061519`; approximately 201 KB |
+| `room-suite.png`              | Text-free 2400 × 1000 room-mode still: patient figure, C-arm, table, beam and monitor cart, on `#061519`; about 290 KB |
 
 `manifest.json` records source/output SHA-256 hashes and sizes for every binary
 asset. `anatomy/manifest.json` records CT coordinates, quantization, source SHA,
@@ -27,14 +27,20 @@ not a finding in the source CT. A voxel comparison to the contract commit found
 use that same target density. The CT supplies context, while the analytic
 sphere/tool geometry remains the source of exercise feedback.
 
-The suite's C-arm, room, detector and cone are procedural components. Their posed
-source/detector share `lib/physics.ts` and the original DRR renderer's geometry.
-They need no extra GLB or renderer. The live monitor canvas supplies the detector
-texture, keeping the view to two WebGL contexts. The former schematic thorax,
-fixed-suite and mobile-suite GLBs are not part of this package.
+The suite's C-arm and its stands, the procedure table, the monitor cart, the patient figure, the
+staff figure and the cone are procedural components (`src/features/peripheral-imaging/components/suite`).
+The C-arm's posed source/detector share `lib/physics.ts` and the original DRR renderer's geometry;
+everything else is authored housing around them, not a manufacturer's dimensions. The patient
+figure is drawn round the CT (its back rests where the CT's does and the chest holds the ribs) for
+orientation only: it is not the source patient's outline. They need no extra GLB or renderer. The
+live monitor canvas supplies the detector texture and the cart's screen, keeping the view to two
+WebGL contexts. The former schematic thorax, fixed-suite and mobile-suite GLBs are not part of this
+package, and the CT's own skin surface in `thorax.glb` is no longer drawn.
 
 Coordinates are millimeters, x left / y anterior / z superior. GLB roots convert
-millimeters to meters; the runtime restores the teaching millimeter scale. The
+millimeters to meters; the runtime restores the teaching millimeter scale. That frame is
+left-handed, so the scene is drawn inside one reflected group (`SCENE_REFLECTION` in
+`suiteModel.ts`): from the head of the table the patient's left is on the viewer's left. The
 package is approximately 6.8 MiB by file bytes, under the 12 MiB budget. Runtime assets are PNG,
 GLB and JSON only; the existing decoder is local at `/fluoroview/draco/`.
 

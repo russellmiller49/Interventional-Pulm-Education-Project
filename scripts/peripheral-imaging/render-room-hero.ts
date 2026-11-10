@@ -137,9 +137,9 @@ async function main() {
         'Anatomy.tsx',
         'CameraRig.tsx',
         'Room.tsx',
-        'RoomGantry.tsx',
-        'RoomGround.tsx',
-        'RoomPatient.tsx',
+        'PatientBody.tsx',
+        'loft.ts',
+        'cameraPose.ts',
         'ChainPins.tsx',
         'ParametricCarm.tsx',
         'DetectorImage.tsx',
@@ -155,15 +155,15 @@ async function main() {
     ].map((file) => ({ path: file, sha256: sha256(readFileSync(path.join(root, file))) }))
     const provenance = {
       schema: 'peripheral-imaging-room-render/v1',
-      authoredOn: '2026-09-09',
+      authoredOn: '2026-11-10',
       source:
-        'Repository-authored room, gantry and schematic patient context with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR',
+        'Repository-authored room, C-arm, table and patient figure with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR',
       sourceSha256: sha256(JSON.stringify(sources)),
       ctSourceSha256: anatomy.sourceSha256,
       airwaySourceSha256: anatomy.airwaySourceSha256,
       sources,
       output: {
-        path: 'room-hero.png',
+        path: 'room-suite.png',
         width: info.width,
         height: info.height,
         bytes: png.length,
