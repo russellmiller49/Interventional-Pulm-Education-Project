@@ -281,10 +281,7 @@ export const betaRollout: BetaRollout = {
         'Impella position and suction (Sections 5 and 6), and the pulseless LVAD patient at the end of Section 8.',
         'Whether any simulated response looks implausible to you.',
       ],
-      knownLimits: [
-        'Its 19 sourced teaching numbers are not yet signed off by the author.',
-        'After a wrong answer, the feedback card lists the best answer under “Why the other answers do not fit”; this is being corrected.',
-      ],
+      knownLimits: ['Its 19 sourced teaching numbers are not yet signed off by the author.'],
     },
   },
 }
