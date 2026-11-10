@@ -658,6 +658,18 @@
   margin: 0;
 }
 
+.completionTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.completion .completionMark {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .completionActions {
   display: flex;
   flex-wrap: wrap;
