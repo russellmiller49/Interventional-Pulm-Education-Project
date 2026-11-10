@@ -171,6 +171,85 @@ module content is synthetic. The separate standard-route test requests the real 
 All 11 stay `preview`. The four withheld catalog entries stay withheld. Signed-out redirects
 alone do not prove that a non-admin can open a module after signing in, or that all assets load.
 
+## Independent-review repair evidence
+
+Reviewed head: `e2b0b525c929562e6004d4f683ff8245df795f35`.
+Repair/source validation commit: **`d1f10da1031b64812057dd78e89ccaad508083b1`**.
+The later evidence-only commit changes documentation, not the tested handler or tests.
+
+**Red before green.** Before editing the handler, this command ran the two new regressions against
+the reviewed implementation:
+
+```sh
+npx jest --runInBand src/app/api/module-feedback/route.test.ts --testNamePattern='delayed commit|unexpected thrown insert'
+```
+
+Result: **2 failed, 15 skipped**. The delayed-commit test uploads PNG bytes, records the pending
+insert, returns a transport error, observes an empty reconciliation lookup and finishes the 503
+response. Only then does it commit the original report in the synthetic database. At the reviewed
+head, that report referenced an object already deleted by the handler: expected PNG bytes,
+received `undefined`. The second test demonstrated an uncaught thrown insert failure. Both pass
+after removing deletion and handling thrown insert/reconciliation errors.
+
+Additional tests cover a commit completed before reconciliation, a failed or thrown lookup, a
+definite failed insert followed by a successful retry, two genuinely overlapping requests with
+one report ID (one stored row, both images retained), another user's ID both before insert and
+during reconciliation, and a duplicate same-user retry without another insert/upload. These are
+deterministically scheduled synthetic adapters, not live database transactions.
+
+**Expiration test improvement.** The clock is frozen at `2026-11-10T18:00:00.000Z`. The adapter
+parses the actual `.or()` cutoff instead of using its own clock, and assertions require exactly
+`expires_at.is.null,expires_at.gt.2026-11-10T18:00:00.000Z`. Active grants with no expiry or a
+future expiry succeed; missing, revoked, inactive, already expired and exactly-at-cutoff grants
+fail. A temporary mutation of the helper's cutoff to `2000-01-01T00:00:00.000Z` made all five
+denial cases fail (including the expired and exact-cutoff cases passing the authorization boundary).
+The original helper was restored byte-for-byte in a `finally` block; it has no committed changes.
+
+Mutation check command:
+`npx jest --runInBand src/app/api/module-review/authorization.test.ts --testNamePattern='denies private screenshots'`
+returned **5 failed, 5 skipped** with the mutation. Restored-helper command:
+`npx jest --runInBand src/app/api/module-review/authorization.test.ts` returned **10 passed**.
+
+| Final repair validation                                                                               | Result                                                                      |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `npx jest --runInBand src/features/module-beta src/app/api/module-review src/app/api/module-feedback` | 16 suites, **258 passed**                                                   |
+| `npx playwright test --config playwright.module-beta.config.ts`                                       | **12 passed in one uninterrupted run**, 1.8 minutes                         |
+| `NODE_OPTIONS=--max-old-space-size=8192 npm run type-check`                                           | **Passed** after browser and production build completed                     |
+| Changed-file ESLint command from the initial evidence below                                           | Passed, zero warnings                                                       |
+| Repository production build, detailed below                                                           | **Passed**, Node 22.19.0, 4 GB heap; 850 static pages and standalone output |
+| `git diff --check`                                                                                    | Passed                                                                      |
+
+Production build command (local, with the Node version and 4 GB build heap from
+[`production-build-memory.md`](../production-build-memory.md)):
+
+```sh
+NODE_ENV=production NEXT_PUBLIC_SUPABASE_URL=https://preview.invalid NEXT_PUBLIC_SUPABASE_ANON_KEY=preview-only NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3110 VITE_SUPABASE_URL=https://preview.invalid VITE_SUPABASE_ANON_KEY=preview-only SUPABASE_SERVICE_ROLE_KEY= LOCAL_DEV_AUTH_ENABLED=0 NODE_OPTIONS=--max-old-space-size=4096 npx --yes --package=node@22.19.0 -c 'node --version && npm run build'
+```
+
+This runs the repository's complete production pipeline: embedded training apps, Contentlayer,
+critical-care/cardiac asset validation, Next webpack build with `tsconfig.build.json`, route
+generation and standalone packaging. Backend settings are synthetic, with an empty service key;
+no production backend access is required. This is a local compilation check, not a deployable
+production-credential artifact or evidence of a successful Railway build. The owner must still
+confirm Railway's build/deployment at gate 2. Full-repository type checking runs only after the
+browser/build processes finish generating route declarations.
+
+The build completed production TypeScript checking in 46 seconds and generated all 850 static
+pages before preparing standalone output. Nonblocking warnings concern large embedded-app
+chunks, old Browserslist data, webpack cache parsing in next-intl/Contentlayer, Mermaid's
+`vscode-languageserver-types` dynamic require, and missing metadataBase falling back to localhost
+in this synthetic local build. No compiler checks were disabled and no unrelated configuration
+or dependency changes were made to suppress warnings.
+
+Logs are local `/tmp/beta-pr461-*`; only sanitized results are committed. Production authenticated
+submission/edit/isolation and real image retrieval remain **untested and unauthorized by this PR**.
+Private orphan storage growth is an accepted remaining limitation. Historical orphan inspection
+or cleanup requires a separate plan; automatic garbage collection is outside this repair.
+
+**Independent re-review requested** of the repaired handler, delayed-commit/overlap regressions,
+expiration mutation evidence and production release/rollback disclosure before gate 2. No merge,
+deployment, Railway configuration change, production data change, migration or email was performed.
+
 ## Initial validation and baseline review (reviewed head)
 
 Commands run from the permanent Codex worktree. Test output is local under `/tmp/beta-pr1-*`;
@@ -227,19 +306,19 @@ environment files are part of the PR.
 
 ## Scenario matrix
 
-| Scenario                                                               | Automated/local result                                 | Production result                                  |
-| ---------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
-| Verified non-admin complete learner + educator review                  | Passed, real auth helper + synthetic adapters          | Untested                                           |
-| Edit same review; same ID and creation time, one row per user/module   | Passed, modeled upsert; browser edit/reload            | Untested real persistence; unique index inspected  |
-| Forged account/email/profile/review ID cannot replace server identity  | Passed                                                 | Untested authenticated request                     |
-| Reviewer B cannot read or overwrite A; all-review list admin-only      | Passed                                                 | Untested with two accounts                         |
-| Annotated PNG failure preserves exact bytes and report ID on retry     | Passed in browser; API upload/retry tests passed       | Untested                                           |
+| Scenario                                                               | Automated/local result                                                 | Production result                                  |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
+| Verified non-admin complete learner + educator review                  | Passed, real auth helper + synthetic adapters                          | Untested                                           |
+| Edit same review; same ID and creation time, one row per user/module   | Passed, modeled upsert; browser edit/reload                            | Untested real persistence; unique index inspected  |
+| Forged account/email/profile/review ID cannot replace server identity  | Passed                                                                 | Untested authenticated request                     |
+| Reviewer B cannot read or overwrite A; all-review list admin-only      | Passed                                                                 | Untested with two accounts                         |
+| Annotated PNG failure preserves exact bytes and report ID on retry     | Passed in browser; API upload/retry tests passed                       | Untested                                           |
 | Upload/insert failure; delayed/lost commit response; overlapping retry | Passed, synthetic error injection; images retained after insert starts | Untested                                           |
-| Expired/revoked/missing admin grant denies image before storage read   | Passed, real auth helper + synthetic entitlement query | Untested authenticated request                     |
-| Current admin can retrieve an uncached PNG                             | Passed, synthetic storage                              | Untested real retrieval                            |
-| Browser roles denied private table/bucket access                       | Live metadata matches intended rules                   | Metadata passed; authenticated HTTP untested       |
-| Visible wrappers/catalog and standard route framing                    | Passed, all 11 local wrappers                          | Signed-out gates and 11 standard routes passed     |
-| Migration ledger matches repository versions                           | Discrepancies documented                               | **Failed ledger parity**, schema comparison passed |
+| Expired/revoked/missing admin grant denies image before storage read   | Passed, real auth helper + synthetic entitlement query                 | Untested authenticated request                     |
+| Current admin can retrieve an uncached PNG                             | Passed, synthetic storage                                              | Untested real retrieval                            |
+| Browser roles denied private table/bucket access                       | Live metadata matches intended rules                                   | Metadata passed; authenticated HTTP untested       |
+| Visible wrappers/catalog and standard route framing                    | Passed, all 11 local wrappers                                          | Signed-out gates and 11 standard routes passed     |
+| Migration ledger matches repository versions                           | Discrepancies documented                                               | **Failed ledger parity**, schema comparison passed |
 
 ## Owner-run live verification checklist
 
