@@ -51,6 +51,11 @@ export const HEMODYNAMICS_NUMBER_ONLY_SOURCES = [
       'Ragosta M. Pericardial and restrictive myocardial diseases. In: Ragosta M, ed. Textbook of Clinical Hemodynamics. 3rd ed. Elsevier; 2025: chapter 10.',
   },
   {
+    id: 'TEXT-RAGOSTA-3E-CH8-RIGHT',
+    title:
+      'Ragosta M. Right-sided heart disorders. In: Ragosta M, ed. Textbook of Clinical Hemodynamics. 3rd ed. Elsevier; 2025: chapter 8.',
+  },
+  {
     id: 'TEXT-RAGOSTA-3E-CH11-SHOCK',
     title:
       'Taylor AM. Left ventricular hemodynamics, heart failure, shock, and mechanical circulatory support. In: Ragosta M, ed. Textbook of Clinical Hemodynamics. 3rd ed. Elsevier; 2025: chapter 11.',
@@ -343,6 +348,9 @@ export type HemodynamicsNumberId = (typeof HEMODYNAMICS_NUMBERS.rows)[number]['i
  * table's own grouping into low-output and high-output states. That table prints one "High" for
  * obstructive filling pressure, and the chapter's text (§2.3.1.3) means central venous pressure,
  * so the row names the RAP and `HEMODYNAMICS_OBSTRUCTIVE_PATTERNS` separates the wedge by cause.
+ * Its "High" for cardiogenic is also the central venous pressure (§2.3.1.2), and the wedge is
+ * normal or low when the right ventricle is the one that failed, so that row names the side and
+ * `HEMODYNAMICS_CARDIOGENIC_PATTERNS` reads each one.
  */
 export const HEMODYNAMICS_SHOCK_PROFILES = Object.freeze([
   {
@@ -358,7 +366,7 @@ export const HEMODYNAMICS_SHOCK_PROFILES = Object.freeze([
     id: 'cardiogenic',
     label: 'Cardiogenic',
     cardiacOutput: 'Low',
-    fillingPressures: 'High',
+    fillingPressures: 'High on the failing side: wedge in LV failure, RAP in RV failure (below)',
     systemicVascularResistance: 'High',
     mixedVenousSaturation: 'Low',
     firstMove: 'Inotrope, a vasopressor to hold pressure, and treat the cause.',
@@ -389,6 +397,43 @@ export const HEMODYNAMICS_SHOCK_PROFILE_SOURCE = cite(
   2019,
   'Table 2.1',
 )
+
+/**
+ * Cardiogenic shock read one side of the heart at a time.
+ *
+ * The filling pressure that rises is the one behind the ventricle that failed. Shock from
+ * right-sided failure shows a normal to low wedge (Ragosta, p. 227), so a cardiogenic case does
+ * not need a high wedge.
+ */
+export const HEMODYNAMICS_CARDIOGENIC_PATTERNS = Object.freeze([
+  {
+    id: 'left-ventricular',
+    label: 'Left ventricular failure',
+    reading: 'Wedge high.',
+    why: 'The LV empties poorly, its end-diastolic pressure rises, and the lungs congest.',
+    sources: [cite('TEXT-RAGOSTA-3E-CH11-SHOCK', 2025, 'pp. 225 and 227')],
+  },
+  {
+    id: 'right-ventricular',
+    label: 'Right ventricular failure',
+    reading: 'RAP high; wedge low or normal.',
+    why: 'The RV passes little blood across the lungs, so the left heart is underfilled. Severe pulmonary hypertension and RV infarction are causes.',
+    sources: [
+      cite('TEXT-RAGOSTA-3E-CH11-SHOCK', 2025, 'p. 227'),
+      cite('TEXT-RAGOSTA-3E-CH8-RIGHT', 2025, 'pp. 161 and 164'),
+    ],
+  },
+  {
+    id: 'biventricular',
+    label: 'Both ventricles',
+    reading: 'RAP and wedge both high.',
+    why: 'Pressure rises behind each ventricle. Left heart failure is the most common cause of right heart failure.',
+    sources: [
+      cite('TEXT-RAGOSTA-3E-CH11-SHOCK', 2025, 'p. 225'),
+      cite('TEXT-RAGOSTA-3E-CH8-RIGHT', 2025, 'p. 161'),
+    ],
+  },
+] as const)
 
 /**
  * Obstructive shock read one side of the heart at a time.

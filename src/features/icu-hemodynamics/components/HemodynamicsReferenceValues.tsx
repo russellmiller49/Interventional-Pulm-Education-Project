@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import {
+  HEMODYNAMICS_CARDIOGENIC_PATTERNS,
   HEMODYNAMICS_NUMBERS,
   HEMODYNAMICS_OBSTRUCTIVE_PATTERNS,
   HEMODYNAMICS_SHOCK_PROFILES,
@@ -18,6 +19,7 @@ const HEMODYNAMICS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
   'TEXT-AHM-2021-CH24-CS': 'Grigoryev, Advanced Hemodynamic Monitoring',
   'TEXT-ESICM-HM-2019-CH2-SHOCK': 'Pinsky, Hemodynamic Monitoring',
   'TEXT-RAGOSTA-3E-CO': 'Ragosta, Textbook of Clinical Hemodynamics',
+  'TEXT-RAGOSTA-3E-CH8-RIGHT': 'Ragosta, Textbook of Clinical Hemodynamics',
   'TEXT-RAGOSTA-3E-CH10-PERICARDIAL': 'Ragosta, Textbook of Clinical Hemodynamics',
   'TEXT-RAGOSTA-3E-CH11-SHOCK': 'Taylor, Textbook of Clinical Hemodynamics',
   'TEXT-ESICM-HM-2019-CH24-FLUID': 'Monnet and Teboul, Hemodynamic Monitoring',
@@ -79,6 +81,7 @@ export function HemodynamicsReferenceValues({
 const CELL_CLASS = 'border-t px-2 py-1 text-left align-top'
 
 export type HemodynamicsShockProfileId = (typeof HEMODYNAMICS_SHOCK_PROFILES)[number]['id']
+export type HemodynamicsCardiogenicSideId = (typeof HEMODYNAMICS_CARDIOGENIC_PATTERNS)[number]['id']
 export type HemodynamicsObstructiveCauseId =
   (typeof HEMODYNAMICS_OBSTRUCTIVE_PATTERNS)[number]['id']
 
@@ -86,15 +89,17 @@ export type HemodynamicsObstructiveCauseId =
  * The four shock profiles as the pulmonary-artery catheter shows them, with the first move for
  * each, the cardiogenic-shock criterion and the usual vasoactive dose ranges.
  *
- * `highlight` marks the row a Practice case belongs to, and `highlightCause` the obstructive
- * pattern it shows.
+ * `highlight` marks the row a Practice case belongs to, `highlightSide` the ventricle that has
+ * failed in a cardiogenic case, and `highlightCause` the obstructive pattern it shows.
  */
 export function HemodynamicsShockProfiles({
   highlight,
+  highlightSide,
   highlightCause,
   doses = true,
 }: {
   readonly highlight?: HemodynamicsShockProfileId | null
+  readonly highlightSide?: HemodynamicsCardiogenicSideId | null
   readonly highlightCause?: HemodynamicsObstructiveCauseId | null
   readonly doses?: boolean
 }) {
@@ -153,6 +158,26 @@ export function HemodynamicsShockProfiles({
           {HEMODYNAMICS_SHOCK_PROFILE_SOURCE.locator})
         </small>
       </p>
+      <div className="mt-2" data-cardiogenic-patterns>
+        <h5 className="text-xs font-semibold">Cardiogenic shock, one side at a time</h5>
+        <p>The pressure that rises is the one behind the ventricle that failed.</p>
+        <ul className="mt-1 grid gap-1">
+          {HEMODYNAMICS_CARDIOGENIC_PATTERNS.map((pattern) => (
+            <li
+              key={pattern.id}
+              data-cardiogenic-pattern={pattern.id}
+              data-current={pattern.id === highlightSide ? 'true' : undefined}
+              className={pattern.id === highlightSide ? 'font-semibold' : undefined}
+            >
+              <strong>
+                {pattern.label}
+                {pattern.id === highlightSide ? ' (this case)' : ''}:
+              </strong>{' '}
+              {pattern.reading} {pattern.why} <small>({citation(pattern.sources)})</small>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="mt-2" data-obstructive-patterns>
         <h5 className="text-xs font-semibold">Obstructive shock, one side at a time</h5>
         <p>A high RAP does not mean the left ventricle is full.</p>

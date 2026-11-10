@@ -58,7 +58,11 @@ import {
   latentPhysiologicalEstimates,
 } from '../engine/simulation'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
-import { hemodynamicCaseObstructiveCause, hemodynamicCaseShockProfile } from '../content/cases'
+import {
+  hemodynamicCaseCardiogenicSide,
+  hemodynamicCaseObstructiveCause,
+  hemodynamicCaseShockProfile,
+} from '../content/cases'
 import {
   HEMODYNAMICS_NUMBERS,
   HEMODYNAMICS_SHOCK_PROFILES,
@@ -1084,6 +1088,7 @@ export function HemodynamicCaseActivity({
                   </p>
                   <HemodynamicsShockProfiles
                     highlight={shockProfileId}
+                    highlightSide={hemodynamicCaseCardiogenicSide[definition.id] ?? null}
                     highlightCause={hemodynamicCaseObstructiveCause[definition.id] ?? null}
                   />
                 </div>

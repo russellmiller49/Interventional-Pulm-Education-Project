@@ -7,6 +7,7 @@ import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/conten
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from './clinicalThresholds'
 import {
   HEMODYNAMICS_NUMBERS,
+  type HEMODYNAMICS_CARDIOGENIC_PATTERNS,
   type HEMODYNAMICS_OBSTRUCTIVE_PATTERNS,
   type HEMODYNAMICS_SHOCK_PROFILES,
 } from './teachingNumbers'
@@ -766,6 +767,15 @@ export const hemodynamicCaseShockProfile: Readonly<
   'HD-06': 'cardiogenic',
   'HD-07': 'obstructive',
   'HD-08': null,
+}
+
+/** Which ventricle has failed in a Practice case, for the three cases on the cardiogenic row. */
+export const hemodynamicCaseCardiogenicSide: Readonly<
+  Record<string, (typeof HEMODYNAMICS_CARDIOGENIC_PATTERNS)[number]['id']>
+> = {
+  'HD-03': 'left-ventricular',
+  'HD-05': 'right-ventricular',
+  'HD-06': 'biventricular',
 }
 
 /** Which obstructive pattern a Practice case shows, for the two cases on that row. */
