@@ -1922,7 +1922,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     stationId: 'define-goal',
     difficulty: 'advanced',
     patientDescription:
-      'A 74 kg adult with acute liver failure and grade 3 encephalopathy develops oliguric AKI. Potassium is 6.9 mmol/L, pH 7.08, bicarbonate 10 mmol/L, sodium 136 mmol/L, glucose 104 mg/dL, and urea (the small-solute marker on the monitor) 38 mmol/L. No ECG has been recorded since these results came back. CRRT is running as CVVHD with dialysate at 1,000 mL/h and no net fluid removal. The night team asks whether to switch to intermittent hemodialysis "to fix the numbers faster".',
+      'A 74 kg adult with acute liver failure and grade 3 encephalopathy develops oliguric AKI. The patient is in shock: MAP 61 mmHg and heart rate 118/min on a rising vasopressor dose. Potassium is 6.9 mmol/L, pH 7.08, bicarbonate 10 mmol/L, sodium 136 mmol/L, glucose 104 mg/dL, and urea (the small-solute marker on the monitor) 38 mmol/L. No ECG has been recorded since these results came back. CRRT is running as CVVHD with dialysate at 1,000 mL/h and no net fluid removal. The night team asks whether to switch to intermittent hemodialysis "to fix the numbers faster".',
     learningObjectives: [
       'Treat severe hyperkalemia in order: ECG and monitor, calcium for ECG changes, then insulin with glucose and salbutamol.',
       'Set the glucose and potassium checks that insulin needs in a patient with liver failure and AKI.',
@@ -1942,7 +1942,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     alternativeWhy: `Reasonable when a 12-lead cannot be done at once. KDIGO suggests calcium for a potassium ${N('calcium-without-ecg')} when an ECG or monitor is not immediately possible; UKKA gives calcium only for ECG changes. Get the ECG as soon as you can: it decides whether more calcium is needed.`,
     unsafeAction: 'Switch to intermittent hemodialysis to fix the numbers faster',
     unsafeWhy:
-      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. KDIGO suggests continuous therapy for patients with acute brain injury or raised intracranial pressure for this reason, and EASL says continuous RRT should always be used in the critically ill patient with acute liver failure.',
+      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. KDIGO suggests continuous therapy for patients with acute brain injury or raised intracranial pressure for this reason, and EASL says continuous RRT should always be used in the critically ill patient with acute liver failure. KDIGO suggests continuous therapy for hemodynamically unstable patients too, and this one has a MAP of 61 mmHg on a rising vasopressor dose.',
     secondUnsafe: {
       action: `Raise the dialysate so the dose reaches ${N('dose-delivered')}, then recheck potassium, pH and sodium in a few hours`,
       why: `The dose does need to come up, but CRRT removes potassium over hours and does nothing for the heart in the next few minutes. At this potassium the patient needs an ECG, calcium for any ECG change, and insulin with glucose now. UKKA gives calcium to dialysis patients with toxic ECG changes even when dialysis is immediately available, so a running machine is no reason to wait.`,

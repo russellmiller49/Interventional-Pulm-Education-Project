@@ -105,6 +105,29 @@ describe('CRRT-03 keys immediate potassium treatment, then controlled clearance'
     expect(definition.debrief.causalChain.join(' ')).toContain(N('post-insulin-glucose-trigger'))
   })
 
+  it('states the shock the monitor shows, in the stem', () => {
+    const { heartRatePerMin, meanArterialPressureMmHg, vasopressorState } =
+      definition.initialPatient.hemodynamics
+    expect(meanArterialPressureMmHg).toBeLessThan(65)
+    expect(vasopressorState).toBe('increasing')
+    expect(definition.patientDescription).toContain(`MAP ${meanArterialPressureMmHg} mmHg`)
+    expect(definition.patientDescription).toContain(`heart rate ${heartRatePerMin}/min`)
+    expect(definition.patientDescription).toMatch(/in shock/)
+    expect(definition.patientDescription).toMatch(/rising vasopressor dose/)
+    // The engine fixture agrees that a vasopressor is running.
+    expect(definition.engineFixtureConfiguration.patient.vasopressorSupportIndex).toBeGreaterThan(0)
+  })
+
+  it('uses that instability as a second reason to stay continuous', () => {
+    const hemodialysis = definition.interventions.find(({ label }) =>
+      /intermittent hemodialysis/i.test(label),
+    )!
+    expect(hemodialysis.response).toMatch(/hemodynamically unstable/)
+    expect(hemodialysis.response).toContain(
+      `MAP of ${definition.initialPatient.hemodynamics.meanArterialPressureMmHg} mmHg`,
+    )
+  })
+
   it('shows both sources where they differ', () => {
     const chain = definition.debrief.causalChain.join(' ')
     expect(chain).toContain(N('insulin-glucose'))
