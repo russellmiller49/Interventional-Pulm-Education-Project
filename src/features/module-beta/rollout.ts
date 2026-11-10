@@ -188,7 +188,6 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Its 33 sourced teaching numbers are not yet signed off by the author.',
-        'In Section 2 the circuit map and the 3D circuit drain from opposite groins; one of them will change to match the other.',
         'For a loaded left ventricle on VA, lower flow and an inotrope are simulated; volume removal and a vent are recorded as a plan, not simulated.',
       ],
     },
