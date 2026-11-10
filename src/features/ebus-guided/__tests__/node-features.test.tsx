@@ -47,9 +47,10 @@ describe('lesson 16 uses the owner’s annotated EBUS images', () => {
     expect(flow.map((activity) => activity.figure ?? activity.interaction)).toEqual([
       'node-features',
       'node-reading',
-      'matching',
       'questions',
     ])
+    // Eight image readings and one transfer: the matching task and two more checks are gone.
+    expect(flow.flatMap((activity) => activity.questions)).toEqual(['transfer'])
     expect(flow.some((activity) => activity.recordTask === 'node-description')).toBe(false)
   })
 

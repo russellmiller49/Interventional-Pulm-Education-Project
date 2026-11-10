@@ -243,6 +243,7 @@ for (const viewport of [
     await page.evaluate(() => {
       delete (window as unknown as { spacingObservation?: unknown }).spacingObservation
     })
+    await page.getByRole('button', { name: 'More', exact: true }).click()
     await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
     frame = await enterLive(page)
     await scopeReady(page, frame)

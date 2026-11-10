@@ -820,6 +820,11 @@ body,
   flex: 1 1 auto;
   min-height: 270px;
 }
+/* The three-view row alone may go shorter, so the views and their controls share an 800 px tall
+   screen. The two-view model labs keep 270 px: their route arrows are sized from this height. */
+.linked-console .linked-trio {
+  min-height: 240px;
+}
 .linked-console .linked-trio .linked-canvas,
 .linked-console .linked-trio .guided-anatomy,
 .linked-console .linked-stage {

@@ -297,6 +297,9 @@ describe('evidence identity', () => {
   it('names what the pane beside the task is, and never calls a reference an acquisition', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'ct-map')!
     render(<LessonHost lesson={lesson} />)
+    // The prediction comes first and shows no figure; the briefing after it shows the reference.
+    expect(document.querySelector('[data-evidence-identity]')).toBeNull()
+    fireEvent.click(document.querySelector('[data-now-primary]')!)
     const identity = document.querySelector('[data-evidence-identity]')!
     expect(identity).toHaveAttribute('data-evidence-identity', 'supplied')
     expect(identity.textContent).toBe('Reference figure.')
@@ -408,6 +411,7 @@ describe('the skip is available but not the brightest thing on the screen', () =
   it('steps back while a task is open, and leads only when the primary cannot', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'clinical-question')!
     render(<LessonHost lesson={lesson} />)
+    fireEvent.click(document.querySelector('[data-now-primary]')!) // past the prediction
     fireEvent.click(document.querySelector('[data-now-primary]')!) // into the matching task
     const advance = document.querySelector('[data-now-primary]')!
     expect(advance.textContent).toContain('without completing this task')

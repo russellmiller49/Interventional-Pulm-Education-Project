@@ -17,6 +17,12 @@ export const prepareLessons: Lesson[] = [
       'Linear EBUS places an ultrasound transducer beside the airway and displays a needle in its imaging plane. EBUS-TBNA can obtain material for diagnosis and nodal staging. Radial EBUS, used to localize peripheral lesions, serves a different procedural role.',
       'A diagnostic procedure asks what the lesion is. A staging procedure asks where tumor has spread. A malignant sample from one accessible node may answer the first question while leaving other relevant stations unexamined. State both questions when both affect care.',
       'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
+      /*
+       * The N categories, where the course first leans on them (flow review of 2026-11-10: they
+       * were tested in lessons 1, 12 and 15 and taught in the staging lesson). TNM ninth edition
+       * keeps these definitions; the staging lesson adds the N2a/N2b split and the sampling order.
+       */
+      'In lung cancer the nodal extent is the N category, counted from the side of the primary: ipsilateral hilar and intrapulmonary nodes are N1, ipsilateral mediastinal and subcarinal nodes are N2, and contralateral mediastinal or hilar nodes, or any supraclavicular or scalene node, are N3. A staging examination therefore has to look at both sides of the mediastinum.',
     ],
     checklist: [
       'Name the decision the result will change.',
@@ -125,7 +131,7 @@ export const prepareLessons: Lesson[] = [
       'A positive sample and a complete examination answer different questions.',
       'Plan tissue handling before the first pass.',
     ],
-    sources: ['ers2026', 'chest2024', 'ics2023'],
+    sources: ['ers2026', 'chest2024', 'ics2023', 'iaslc9'],
   },
   {
     id: 'preparation',

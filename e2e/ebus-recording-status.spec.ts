@@ -22,6 +22,9 @@ for (const resource of ['Depth4.mp4', 'knobology_lookup.json']) {
     await expect(
       page.getByRole('button', { name: 'Continue with this image', exact: true }),
     ).toBeDisabled()
-    await expect(page.locator('[data-requirement="frame-ready"]')).toBeVisible()
+    // Waiting for the image is not listed as a step of the learner's (owner feedback of
+    // 2026-10-11); the list keeps the learner's own steps and the button stays off.
+    await expect(page.locator('[data-requirement="frame-ready"]')).toHaveCount(0)
+    await expect(page.locator('[data-acquisition-outstanding] li').first()).toBeVisible()
   })
 }

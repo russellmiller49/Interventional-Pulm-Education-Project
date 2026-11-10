@@ -1076,7 +1076,13 @@ export function LinkedModelView(props: Props) {
           {/* The line names the step the lesson is actually waiting for (owner feedback of
               2026-10-12): this lesson asks for the model section, not a sweep. */}
           {config.linkedLesson !== 'ct-map' ? (
-            'Now sweep the scope rotation through the node.'
+            /* Once the sweep is done the line under the controls says so; this one used to go on
+               asking for it beside "Sweep done" (flow review of 2026-11-10). */
+            sweepStatus?.state.startsWith('complete') ? (
+              ''
+            ) : (
+              'Now sweep the scope rotation through the node.'
+            )
           ) : !evidence.modelSectionViewed ? (
             <>
               Next: open the model section to see this level as a slice.{' '}

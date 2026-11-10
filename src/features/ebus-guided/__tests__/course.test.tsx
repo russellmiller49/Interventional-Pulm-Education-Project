@@ -71,11 +71,23 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
     expect([lesson.lab, lesson.sequence, lesson.matching].filter(Boolean)).toHaveLength(1)
     expect(lesson.sources.every((id) => SOURCES.some((s) => s.id === id))).toBe(true)
     const activities = activitiesForLesson({ ...lesson })
-    expect(activities.flatMap((activity) => activity.questions).sort()).toEqual([
-      'observation',
-      'question',
+    /*
+     * Flow change of 2026-11-10: a lesson asks each of its checks at most once, always ends on
+     * the transfer, and no longer asks a middle check that repeats its first one.
+     */
+    const asked = activities.flatMap((activity) => activity.questions)
+    expect(new Set(asked).size).toBe(asked.length)
+    expect(asked).toContain('transfer')
+    expect(activities.findLast((activity) => activity.questions.length)!.questions).toEqual([
       'transfer',
     ])
+    // A prediction is the lesson's first screen: no teaching is shown before the commitment.
+    const prediction = activities.findIndex((activity) => activity.kind === 'prediction')
+    expect(prediction).toBeLessThanOrEqual(0)
+    if (prediction === 0) {
+      expect(activities[0].teaching).toEqual([])
+      expect(activities[0].image).toBe('none')
+    }
     expect(activities.some((activity) => activity.teaching.includes('foundation'))).toBe(true)
     expect(activities.some((activity) => activity.teaching.includes('worked'))).toBe(true)
     expect(activities.some((activity) => activity.teaching.includes('takeaways'))).toBe(true)
@@ -99,14 +111,19 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
   'renders authored teaching for %s and opens the first check’s explanation before any answer, storing only the location',
   (_, lesson) => {
     render(<LessonHost lesson={lesson} />)
-    expect(screen.getByText(lesson.objective, { exact: false })).toBeVisible()
-    for (const paragraph of lesson.paragraphs) expect(screen.getByText(paragraph)).toBeVisible()
     const activities = activitiesForLesson(lesson)
-    const worked = activities.find(
-      (activity) => activity.interaction === 'read' && activity.teaching.includes('worked'),
-    )
-    if (worked && activities.indexOf(worked) === 0)
-      expect(screen.getByText(lesson.worked.reasoning, { exact: false })).toBeVisible()
+    const teachingIsOnScreen = () => {
+      expect(screen.getByText(lesson.objective, { exact: false })).toBeVisible()
+      for (const paragraph of lesson.paragraphs) expect(screen.getByText(paragraph)).toBeVisible()
+      if (activities.find((activity) => activity.kind === 'briefing')!.teaching.includes('worked'))
+        expect(screen.getByText(lesson.worked.reasoning, { exact: false })).toBeVisible()
+    }
+    const predicts = activities[0].kind === 'prediction'
+    if (predicts) {
+      // The commitment comes first: none of the teaching, and no worked example, is shown yet.
+      expect(screen.queryByText(lesson.paragraphs[0])).not.toBeInTheDocument()
+      expect(screen.queryByText(lesson.worked.reasoning, { exact: false })).not.toBeInTheDocument()
+    } else teachingIsOnScreen()
     expect(reachFirstCheck()).toBe(true)
     const questionId = document
       .querySelector('[data-question-id]')!
@@ -134,8 +151,21 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
     expect(saved.progress.visitedLessonIds).toEqual([lesson.id])
     expect(saved.progress.reviewedLessonIds).toEqual([])
     expect(Object.keys(localStorage)).toEqual([PROGRESS_STORAGE_KEY])
+    if (predicts) {
+      next()
+      teachingIsOnScreen()
+    }
   },
 )
+it('names the three lessons that open on their teaching instead of a prediction', () => {
+  // Doppler's title names its first answer; lesson 16 commits image by image; the contact model
+  // keeps the check on the learner's own image instead.
+  expect(
+    LESSONS.filter((lesson) => activitiesForLesson(lesson)[0].kind !== 'prediction').map(
+      (lesson) => lesson.id,
+    ),
+  ).toEqual(['contact-cutaway-model', 'doppler', 'node-characterization'])
+})
 it('explains an unsafe practice response immediately, allows retry and moving on, and stores no answer', () => {
   const item = PRACTICE_CASES.find((c) => c.id === 'practice-handoff')!
   const exit = jest.fn()

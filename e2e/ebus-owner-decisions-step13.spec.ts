@@ -29,6 +29,8 @@ for (const condition of [
     for (const id of ['preparation', 'scope-orientation', 'results-reporting']) {
       await page.goto(`/en/ebus-guided/learn?section=${id}`)
       await expect(page.locator('html')).toHaveClass(new RegExp(condition.theme))
+      // Each of these lessons opens on its prediction; the teaching is the next screen.
+      await page.locator('[data-now-primary]').click()
       const copy = lesson(id).paragraphs.find((text) =>
         /Patients should fast|Image right is toward the patient’s head|recommends against routine/.test(
           text,
@@ -87,7 +89,7 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
   await condition.selectOption('gap')
   await page.getByRole('button', { name: 'Continue with this image', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toContainText('air gap')
-  await page.locator('[data-now-primary]').click()
+  // The check on the learner's own model image is the first one on this screen (2026-11-10).
   const question = page.locator('[data-question-id="cutaway-observe"]')
   await expect(question).toContainText(lesson('contact-cutaway-model').observation.prompt)
   await expect(page.locator('[data-task-instruction]')).toContainText(
@@ -120,6 +122,7 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
     }),
   ).toBeChecked()
   await page.screenshot({ path: test.info().outputPath('held-gap-mechanism-comparison.png') })
+  await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toHaveCount(0)
   await page.reload()
@@ -130,7 +133,8 @@ test('OD-03 sequence reveal includes approved protected-preparation wording befo
   page,
 }) => {
   await page.goto('/en/ebus-guided/learn?section=needle-safety')
-  await page.locator('[data-now-primary]').click()
+  await page.locator('[data-now-primary]').click() // prediction → briefing
+  await page.locator('[data-now-primary]').click() // briefing → sequence
   await page.getByRole('button', { name: 'Show the sequence', exact: true }).click()
   await expect(
     page.getByText(lesson('needle-safety').sequence!.explanation, { exact: false }),
