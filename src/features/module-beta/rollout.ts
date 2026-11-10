@@ -213,7 +213,6 @@ export const betaRollout: BetaRollout = {
       knownLimits: [
         'Its 35 sourced teaching numbers are not yet signed off by the author.',
         'Several recorded disagreements between sources and the simulation are not yet settled by the author.',
-        'The stem of case CRRT-03 does not mention the shock its monitor shows (MAP 61, heart rate 118, rising vasopressors).',
         'The machine steps follow one PrisMax software version (2.xx).',
       ],
     },
@@ -237,7 +236,6 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Its 25 sourced teaching numbers are not yet signed off by the author.',
-        'Case HD-05 is filed under the cardiogenic profile, whose row says filling pressures are high, but the case shows a right atrial pressure near 12 and a wedge near 8 mmHg.',
         'Which fault the closing case and case HD-08 demonstrate is not yet settled by the author.',
       ],
     },
