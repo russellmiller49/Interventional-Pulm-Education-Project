@@ -147,12 +147,13 @@ export const prepareLessons: Lesson[] = [
       `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
       `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
       /*
-       * Sedation and airway (owner decision of 2026-11-10 to add them). The CHEST 2016 statement is
-       * written from the guideline's first recommendation; its abstract does not list the
-       * recommendations and the full text was not re-read in this round, so the owner checks the
-       * wording before signing. The airway sentences are practice points, not a guideline.
+       * Sedation and airway (owner decision of 2026-11-10 to add them). The owner verified the CHEST
+       * 2016 sedation statement on 2026-11-10. The airway sentences are practice points, not a
+       * guideline; by his direction of the same day they describe laryngeal-mask and
+       * endotracheal-tube access as depending on device position and on what the procedure
+       * requires, not as absolute.
        */
-      'EBUS-TBNA is done under moderate sedation, deep sedation or general anesthesia; CHEST 2016 suggests that either moderate or deep sedation is acceptable. The choice sets the airway. Under moderate sedation the scope passes the cords with topical anesthesia, and cough and movement limit how long a stable window lasts. A laryngeal mask leaves the whole trachea reachable. An endotracheal tube lies over the upper trachea and can cover the high paratracheal stations, so say before induction which stations must be reached.',
+      'EBUS-TBNA is done under moderate sedation, deep sedation or general anesthesia; CHEST 2016 suggests that either moderate or deep sedation is acceptable. The choice shapes the airway plan. Under moderate sedation the scope passes the cords with topical anesthesia, and cough and movement can limit how long a stable window lasts. With a laryngeal mask or an endotracheal tube, which stations can be reached depends on where the device sits and on what the procedure requires: a laryngeal mask generally leaves more of the upper trachea accessible, while an endotracheal tube may overlie the high paratracheal stations unless it is positioned to expose them. Say before induction which stations must be reached, so the airway can be chosen and positioned for them.',
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
     checklist: [

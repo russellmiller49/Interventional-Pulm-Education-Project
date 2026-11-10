@@ -116,9 +116,9 @@ export const planLessons: Lesson[] = [
       'A usual staging sampling order is N3 → N2 → N1, with the primary tumor sampled later when appropriate. This reduces the risk of carrying tumor material from a lower-stage target into a higher-stage site. Define the categories relative to the primary side and keep specimens separate.',
       'In TNM ninth edition, N2a means involvement of a single ipsilateral mediastinal or subcarinal station; N2b means multiple such stations. Count involved stations, not individual nodes or needle passes. This distinction does not itself prescribe treatment.',
       /*
-       * Restaging (owner decision of 2026-11-10 to add it). The figure is the pooled estimate in
-       * Jiang 2020, read from the abstract; the sentence after it is that number's plain meaning,
-       * not a guideline recommendation.
+       * Restaging (owner decision of 2026-11-10 to add it). The figures are the pooled estimates in
+       * Jiang 2020, read from the abstract and verified by the owner on 2026-11-10; the sentence
+       * after them is those numbers' plain meaning, not a guideline recommendation.
        */
       `Restaging after induction therapy is the same examination with a lower yield: in pooled data EBUS-TBNA found ${EBUS_NUMBERS.value('restaging-sensitivity')} of persistent nodal disease, with a specificity of ${EBUS_NUMBERS.value('restaging-specificity')} (Jiang 2020). A positive restaging result stands. A negative one misses about one case in three, so report it as a negative sample, not as a cleared mediastinum, and agree with the team how it will be confirmed.`,
     ],
