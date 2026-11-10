@@ -12,10 +12,13 @@ export function BlockCard({
   block,
   listId,
   role,
+  hideMedia = false,
 }: {
   readonly block: BronchTeachingBlock
   readonly listId: string
   readonly role: 'framing' | 'mechanism'
+  /** The card's picture is shown beside the text by the screen, so the card leaves it out. */
+  readonly hideMedia?: boolean
 }) {
   return (
     <section
@@ -27,7 +30,7 @@ export function BlockCard({
       data-claim-class={block.claimClass}
     >
       <h3 className={styles.kicker}>{block.heading}</h3>
-      {block.media ? <MediaFigure media={block.media} compact /> : null}
+      {block.media && !hideMedia ? <MediaFigure media={block.media} compact /> : null}
       {block.body.split(/\n\s*\n/).map((paragraph, index) => (
         <p key={index}>{paragraph}</p>
       ))}
