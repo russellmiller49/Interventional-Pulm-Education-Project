@@ -91,6 +91,7 @@ import { McsClockBar } from './McsClockBar'
 import { McsPrerequisiteReference, mcsHasPrerequisiteReference } from './McsPrerequisiteReference'
 import { McsTaskPresentation } from './McsTaskPresentation'
 import { useWorkspaceLayout } from './useWorkspaceLayout'
+import type { McsPointedPlace } from '../../content/readingPlaces'
 
 /** MCS-local self-paced host. Answers and observations live only in this mounted session.
  * Navigation never manufactures a response, performed action, capture or achievement.
@@ -265,6 +266,11 @@ function McsStageSession({
     transferLoaded: lesson.steps[mount.index].interaction.kind === 'transfer',
   }))
   const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
+  /** The reading being pointed at, and the step it was pointed at on: display only. */
+  const [pointedAt, setPointedAt] = useState<{
+    readonly stepId: string
+    readonly place: McsPointedPlace
+  } | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
@@ -280,6 +286,16 @@ function McsStageSession({
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
   const unloadingExample = activeStep.presentation === 'unloading-comparison'
+  /*
+   * The surfaces a step opens on, until the learner opens or closes one. They are the step's own,
+   * less the three-dimensional view on a window below the desktop workspace: there it would open
+   * on a "larger screen recommended" notice instead of a picture, so it waits to be asked for and
+   * the circulation map stands in.
+   */
+  const defaultSurfaces = useMemo(
+    () => (workspace ? activeStep.surfaces : activeStep.surfaces.filter((id) => id !== 'anatomy')),
+    [activeStep.surfaces, workspace],
+  )
   const performedIds = useMemo(() => new Set(progression.performedIds), [progression.performedIds])
   const stepPerformed = performedIds.has(activeStep.id)
   const isLastStep = activeIndex === lesson.steps.length - 1
@@ -553,7 +569,7 @@ function McsStageSession({
   function toggleSurface(surface: McsStageSurfaceId, open: boolean) {
     const stepId = activeStep.id
     setProgression((current) => {
-      const next = new Set(current.surfacesByStepId[stepId] ?? activeStep.surfaces)
+      const next = new Set(current.surfacesByStepId[stepId] ?? defaultSurfaces)
       if (open) next.add(surface)
       else next.delete(surface)
       return { ...current, surfacesByStepId: { ...current.surfacesByStepId, [stepId]: [...next] } }
@@ -586,10 +602,8 @@ function McsStageSession({
 
   const openSurfaces = useMemo(
     () =>
-      new Set<McsStageSurfaceId>(
-        progression.surfacesByStepId[activeStep.id] ?? activeStep.surfaces,
-      ),
-    [activeStep.id, activeStep.surfaces, progression.surfacesByStepId],
+      new Set<McsStageSurfaceId>(progression.surfacesByStepId[activeStep.id] ?? defaultSurfaces),
+    [activeStep.id, defaultSurfaces, progression.surfacesByStepId],
   )
 
   /* ---------------------------------------------------------------- *
@@ -1509,6 +1523,7 @@ function McsStageSession({
     <McsSimulatorPane
       lesson={lesson}
       presentation={activeStep.presentation}
+      leadVisual={activeStep.leadVisual}
       state={state}
       dispatch={dispatch}
       predictionCommitted={true}
@@ -1530,6 +1545,13 @@ function McsStageSession({
         )
       }}
       stepKey={activeStep.id}
+      pointed={pointedAt?.stepId === activeStep.id ? pointedAt.place : null}
+      // A lit place is a hint. While a place on the map is the question, the readings do not point.
+      onPoint={
+        identifyOnMap && committedChoiceId === null
+          ? undefined
+          : (place) => setPointedAt(place ? { stepId: activeStep.id, place } : null)
+      }
     />
   )
 

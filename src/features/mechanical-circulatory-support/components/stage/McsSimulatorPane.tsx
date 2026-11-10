@@ -20,7 +20,8 @@ import styles from './mcs-stage.module.css'
 import { McsTaskControls } from './McsTaskControls'
 import { McsTimingFigure } from './McsTimingFigure'
 import { McsTaskReadings } from './McsTaskReadings'
-import type { McsPresentationKind } from '../../content/taskPresentation'
+import type { McsLeadVisual, McsPresentationKind } from '../../content/taskPresentation'
+import type { McsPointedPlace } from '../../content/readingPlaces'
 
 const McsAnatomy3D = lazy(() =>
   import('../McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
@@ -29,15 +30,18 @@ const McsAnatomy3D = lazy(() =>
 /**
  * The simulator pane: the right-hand pane of every task but the unloading comparison.
  *
- * Under the clock bar (the host's), a timing lab leads with its timing figure, then the circulation
- * map where the task reads or answers on it, the task's own controls, the current readings, the
- * full monitor in a disclosure that opens where the task points at it, and the three-dimensional
- * view on request. The module's one statement that this is a teaching simulator is in the frame;
- * the pane does not repeat it.
+ * Under the clock bar (the host's), every task opens on one picture, its lead visual: a timing lab
+ * on its timing figure, a task read on the loop on the circulation map, and the rest (a patient
+ * on a device, the controller's readings, the three pathways) on the heart and the device in
+ * three dimensions. Then the task's own controls, the current readings, and the full monitor in a
+ * disclosure that opens where the task points at it. Whichever of the map and the
+ * three-dimensional view is not leading stays one press away. The module's one statement that
+ * this is a teaching simulator is in the frame; the pane does not repeat it.
  */
 export function McsSimulatorPane({
   lesson,
   presentation,
+  leadVisual,
   state,
   dispatch,
   predictionCommitted,
@@ -54,8 +58,12 @@ export function McsSimulatorPane({
   monitorOpen = monitorPointedAt,
   onMonitorToggle,
   stepKey,
+  pointed = null,
+  onPoint,
 }: {
   readonly presentation: McsPresentationKind
+  /** The picture this task opens on (see `mcsLeadVisual`). */
+  readonly leadVisual: McsLeadVisual
   readonly lesson: McsStageLesson
   readonly state: McsSimulationState
   readonly dispatch: Dispatch<McsAction>
@@ -80,6 +88,13 @@ export function McsSimulatorPane({
   readonly onMonitorToggle?: (open: boolean) => void
   /** The step on screen: each step starts its disclosures in that step's own default. */
   readonly stepKey?: string
+  /**
+   * The reading the learner is pointing at, lit on the map, the heart and the monitor. `onPoint`
+   * is absent where pointing is off (a place on the map is the question): the readings are then
+   * plain rows.
+   */
+  readonly pointed?: McsPointedPlace | null
+  readonly onPoint?: (place: McsPointedPlace | null) => void
 }) {
   const monitorTarget: McsMonitorTargetId | undefined =
     lesson.contract.primarySurface === 'monitor'
@@ -94,14 +109,22 @@ export function McsSimulatorPane({
       className={styles.readableMap}
       tabIndex={0}
     >
-      <CirculationMap state={state} emphasis={emphasis} answer={mapAnswer} />
+      <CirculationMap
+        state={state}
+        emphasis={
+          pointed
+            ? { segmentIds: pointed.segmentIds, caption: pointed.sentence, tone: 'implicated' }
+            : emphasis
+        }
+        answer={mapAnswer}
+      />
     </div>
   )
 
   const fullMonitor = (
     <McsMonitor
       state={state}
-      highlightTarget={monitorTarget}
+      highlightTarget={pointed?.monitorTarget ?? monitorTarget}
       highlightNote={predictionCommitted}
       revealCausality={predictionCommitted || teachingAvailable}
       withheldNote="What produced this display appears once you have committed your prediction."
@@ -118,8 +141,50 @@ export function McsSimulatorPane({
     (id) =>
       !id.startsWith('inspect:') && !id.startsWith('device:select:') && id !== 'team:escalate',
   )
+  const anatomyOpen = openSurfaces.has('anatomy')
+  /*
+   * The heart and the device lead where the task's picture is the device itself. Open, the view
+   * takes the lead column beside the readings; closed by the learner, or left closed on a window
+   * too small for it, the circulation map opens in its place so the pane still shows a picture.
+   */
+  const anatomyLeads = leadVisual === 'anatomy' && !showMap && anatomyOpen
+  const mapStandsIn = leadVisual === 'anatomy' && !showMap && !anatomyOpen
+  const anatomy =
+    predictionCommitted || teachingAvailable ? (
+      <section data-surface="anatomy" data-leading={anatomyLeads || undefined}>
+        <button
+          type="button"
+          aria-expanded={anatomyOpen}
+          onClick={() => onToggleSurface('anatomy', !anatomyOpen)}
+        >
+          Three-dimensional view
+        </button>
+        {anatomyOpen ? (
+          <SimulationLaunchGate
+            activityTitle="Three-dimensional view of the heart and the device"
+            minimumViewport="desktop"
+            bandwidthClass="heavy"
+            estimatedSizeLabel="Interactive heart and device model"
+            lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
+            theme="dark"
+          >
+            <Suspense
+              fallback={<p className={shellStyles.meta}>Loading the three-dimensional view…</p>}
+            >
+              <McsAnatomy3D state={state} compact={anatomyLeads} pointed={pointed} />
+            </Suspense>
+          </SimulationLaunchGate>
+        ) : null}
+      </section>
+    ) : null
   return (
-    <div className={styles.simulator} data-simulator-surfaces data-map-leads={showMap || undefined}>
+    <div
+      className={styles.simulator}
+      data-simulator-surfaces
+      data-lead-visual={leadVisual}
+      data-map-leads={showMap || undefined}
+      data-anatomy-leads={anatomyLeads || undefined}
+    >
       {/*
        * The reference's legend and measured limits start open on the first timing step and on
        * the step that names the relationship; on the demonstrations between they are folded,
@@ -142,6 +207,7 @@ export function McsSimulatorPane({
           {map}
         </section>
       ) : null}
+      {anatomyLeads ? anatomy : null}
       {controls ? (
         <section data-surface="controls">
           <h3>Controls for this task</h3>
@@ -165,7 +231,13 @@ export function McsSimulatorPane({
         teachingAvailable &&
         (presentation === 'circulation-reader' || presentation === 'mechanism-comparison')
       ) ? (
-        <McsTaskReadings state={state} kind={presentation} withholdFlow={flowAccountWithheld} />
+        <McsTaskReadings
+          state={state}
+          kind={presentation}
+          withholdFlow={flowAccountWithheld}
+          pointed={pointed}
+          onPoint={onPoint}
+        />
       ) : null}
       {/*
        * Collapsed by default, except on the steps whose own words say "Look here" at one of its
@@ -184,38 +256,12 @@ export function McsSimulatorPane({
         {fullMonitor}
       </details>
       {!showMap ? (
-        <details>
+        <details key={`map-${stepKey ?? ''}-${mapStandsIn}`} open={mapStandsIn || undefined}>
           <summary>Circulation map</summary>
           {map}
         </details>
       ) : null}
-      {predictionCommitted || teachingAvailable ? (
-        <section data-surface="anatomy">
-          <button
-            type="button"
-            aria-expanded={openSurfaces.has('anatomy')}
-            onClick={() => onToggleSurface('anatomy', !openSurfaces.has('anatomy'))}
-          >
-            Three-dimensional view
-          </button>
-          {openSurfaces.has('anatomy') ? (
-            <SimulationLaunchGate
-              activityTitle="Three-dimensional view of the heart and the device"
-              minimumViewport="desktop"
-              bandwidthClass="heavy"
-              estimatedSizeLabel="Interactive heart and device model"
-              lightweightAlternativeHref="/critical-care/reference?item=mcs-cardiac-text-summary"
-              theme="dark"
-            >
-              <Suspense
-                fallback={<p className={shellStyles.meta}>Loading the three-dimensional view…</p>}
-              >
-                <McsAnatomy3D state={state} />
-              </Suspense>
-            </SimulationLaunchGate>
-          ) : null}
-        </section>
-      ) : null}
+      {anatomyLeads ? null : anatomy}
     </div>
   )
 }

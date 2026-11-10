@@ -1,0 +1,199 @@
+/*
+ * The long-axis drawing of an Impella CP (Section 5).
+ *
+ * Read in the text column, which is about 28rem wide on a desktop: the drawing is 480 units wide
+ * so its 14-unit labels render at about the shell's type floor there.
+ */
+.figure {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.states button {
+  min-height: 2.75rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--stage-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.5rem;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.states button[aria-pressed='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: #1f4249;
+}
+
+.states button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.drawing {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  height: auto;
+  border-radius: 0.6rem;
+  background: #050d10;
+}
+
+.sector {
+  fill: #0b1c21;
+  stroke: rgba(163, 206, 209, 0.3);
+  stroke-width: 1;
+}
+
+.chamber {
+  fill: rgba(143, 183, 184, 0.08);
+  stroke: #8fb7b8;
+  stroke-width: 2;
+}
+
+.wall {
+  fill: none;
+  stroke: #8fb7b8;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.leaflet {
+  fill: none;
+  stroke: #d6ecec;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.annulus {
+  stroke: #ffd166;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.catheter {
+  fill: none;
+  stroke: #9aa9ad;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.cannula {
+  fill: none;
+  stroke: #e8f1f2;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pigtail {
+  fill: none;
+  stroke: #e8f1f2;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.inlet {
+  fill: #36c3ca;
+  stroke: #05252a;
+  stroke-width: 2;
+}
+
+.outlet {
+  fill: #ffa94d;
+  stroke: #2b1a05;
+  stroke-width: 2;
+}
+
+.ruler,
+.rulerTick {
+  stroke: #ffd166;
+  stroke-width: 1.5;
+}
+
+.rulerLimit {
+  stroke: #ff6b73;
+  stroke-width: 3;
+}
+
+.label {
+  fill: #b8cccf;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.note {
+  fill: #ffd166;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inletLabel {
+  fill: #7fe3e8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.outletLabel {
+  fill: #ffc078;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.depth {
+  fill: #ffd166;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.figure figcaption {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.figure figcaption p {
+  margin: 0;
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  align-items: center;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.key span {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+}
+
+.key span[data-key='inlet'] {
+  background: #36c3ca;
+}
+
+.key span[data-key='outlet'] {
+  margin-left: 0.5rem;
+  background: #ffa94d;
+}
+
+.key span[data-key='mosaic'] {
+  margin-left: 0.5rem;
+  background: conic-gradient(#ff5a5f, #ffd166, #80ed99, #4cc9f0, #ff5a5f);
+}
+
+.caption {
+  color: var(--stage-muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}

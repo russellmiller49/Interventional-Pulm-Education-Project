@@ -9,8 +9,9 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { Html, OrbitControls } from '@react-three/drei'
 import { Canvas, type RootState, useThree } from '@react-three/fiber'
 import { RotateCcw } from 'lucide-react'
 import * as THREE from 'three'
@@ -39,6 +40,7 @@ import {
   MCS_LVAD_CAMERA_Y_SHIFT,
   type CameraFitExtent,
 } from './cardiacCameraFit'
+import { mcsHeartMeshesFor, type McsPointedPlace } from '../content/readingPlaces'
 import styles from './mechanical-circulatory-support.module.css'
 
 const IabpModel = lazy(() => import('./three/IabpModel'))
@@ -146,13 +148,68 @@ function ManagedOrbitControls({
   )
 }
 
+/**
+ * Names pinned to the model, so the picture can be read without the paragraph beside it.
+ *
+ * On the heart: the four chambers and the two great arteries, each at the centre of its structure
+ * in the CT model. In the balloon scene the points are the rig's own: the left subclavian artery
+ * and the renal arteries the balloon lies between, the balloon, the ascending aorta the blood
+ * arrives through, and the femoral end of the catheter. Names only: no distance is drawn.
+ */
+const HEART_PINS = [
+  { meshName: 'CT_LV_Cavity', text: 'LV' },
+  { meshName: 'CT_RV_Cavity', text: 'RV' },
+  { meshName: 'CT_LA_Cavity', text: 'LA' },
+  { meshName: 'CT_RA_Cavity', text: 'RA' },
+  { meshName: 'CT_Aorta', text: 'Aorta' },
+  { meshName: 'CT_PulmonaryArteries', text: 'PA' },
+] as const
+
+const IABP_PINS: readonly { readonly text: string; readonly position: [number, number, number] }[] =
+  [
+    { text: 'Left subclavian artery', position: [0.72, 3.5, 0.13] },
+    { text: 'Ascending aorta', position: [-2.05, 1.9, 0.13] },
+    { text: 'Balloon', position: [0.62, 1.04, 0.13] },
+    { text: 'Renal arteries', position: [1.32, -0.3, 0.13] },
+    { text: 'Femoral access', position: [1.16, -2.6, 0.13] },
+  ]
+
+/**
+ * The written account of the view: the pathway summary and the text equivalent. In full it sits
+ * under the canvas; in the compact card it folds under one disclosure, so the picture and the
+ * task's readings share a screen and the words stay one press away.
+ */
+function AnatomyWords({ compact, children }: { compact: boolean; children: ReactNode }) {
+  if (!compact) return <>{children}</>
+  return (
+    <details className={styles.anatomyWords}>
+      <summary>This view in words</summary>
+      {children}
+    </details>
+  )
+}
+
 export function McsAnatomy3D({
   state,
   revealCausality = true,
   highlightTarget,
+  compact = false,
+  pointed = null,
 }: {
   state: McsSimulationState
   revealCausality?: boolean
+  /**
+   * The reading the learner is pointing at, when there is one: its structures light on the heart
+   * and a line under the flow chip says so in words. The balloon scene draws the aorta alone, so
+   * there the sentence carries it.
+   */
+  pointed?: McsPointedPlace | null
+  /**
+   * The view is a task's lead picture, beside its readings: the canvas is sized to the window and
+   * the written account of the view (pathway summary and text equivalent) folds under one
+   * disclosure, so the picture and the task's readings are on one screen.
+   */
+  compact?: boolean
   /** The authored Learn target to emphasize, when this anatomy is a section's primary surface. */
   highlightTarget?: McsAnatomyTargetId
 }) {
@@ -164,6 +221,7 @@ export function McsAnatomy3D({
   const [placementReplayKey, setPlacementReplayKey] = useState(0)
   const [isOrbiting, setIsOrbiting] = useState(false)
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [showLabels, setShowLabels] = useState(true)
   const viewportRef = useRef<HTMLDivElement>(null)
   const interactionHintId = useId()
   const anatomy = MCS_DEVICE_ANATOMY[state.deviceKind]
@@ -221,6 +279,10 @@ export function McsAnatomy3D({
               ? 'RP · IVC inlet → pulmonary artery'
               : 'Impella support off'
         : 'LVAD · apical inflow → ascending-aortic outflow'
+  const pointedMeshes = useMemo(
+    () => (pointed ? mcsHeartMeshesFor(pointed.segmentIds) : undefined),
+    [pointed],
+  )
   const publishCameraPosition = useCallback((position: readonly number[]) => {
     const viewport = viewportRef.current
     if (!viewport) return
@@ -233,7 +295,11 @@ export function McsAnatomy3D({
   }, [])
 
   return (
-    <section className={styles.anatomyCard} aria-label="Animated mechanical-support anatomy">
+    <section
+      className={styles.anatomyCard}
+      aria-label="Animated mechanical-support anatomy"
+      data-compact={compact || undefined}
+    >
       <header>
         <span className={styles.monitorLabel}>3D ANATOMY + MECHANISM</span>
         <strong>{impellaTitle}</strong>
@@ -265,6 +331,14 @@ export function McsAnatomy3D({
               }}
             >
               <RotateCcw aria-hidden="true" /> Reset view
+            </button>
+            <button
+              type="button"
+              aria-pressed={showLabels}
+              onClick={() => setShowLabels((shown) => !shown)}
+              data-anatomy-labels-toggle
+            >
+              Labels
             </button>
             {state.device.kind === 'impella' &&
             (state.device.left.enabled || state.device.right.enabled) ? (
@@ -335,6 +409,21 @@ export function McsAnatomy3D({
                   <>
                     <IabpAortaModel />
                     <IabpModel state={state} reducedMotion={reducedMotion} />
+                    {showLabels
+                      ? IABP_PINS.map((pin) => (
+                          <Html
+                            key={pin.text}
+                            position={pin.position}
+                            center
+                            zIndexRange={[20, 0]}
+                            style={{ pointerEvents: 'none' }}
+                          >
+                            <span className={styles.anatomyPin} data-anatomy-pin>
+                              {pin.text}
+                            </span>
+                          </Html>
+                        ))
+                      : null}
                   </>
                 ) : (
                   <>
@@ -343,6 +432,10 @@ export function McsAnatomy3D({
                       aorticValveOpening={state.metrics.aorticValveOpening}
                       deviceEmphasis={state.device.kind === 'lvad' ? 'lvad' : true}
                       reducedMotion={reducedMotion}
+                      highlightMeshNames={pointedMeshes}
+                      labels={showLabels ? HEART_PINS : undefined}
+                      labelClassName={styles.anatomyPin}
+                      labelSpread={1.7}
                     />
                     {state.device.kind === 'impella' ? (
                       <>
@@ -384,45 +477,52 @@ export function McsAnatomy3D({
           <strong>{state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective</strong>
           <span>{placementSummary}</span>
         </div>
+        {pointed ? (
+          <p className={styles.anatomyPointed} role="status" data-anatomy-pointed>
+            Lit: {pointed.placeName}
+          </p>
+        ) : null}
       </div>
-      <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
-      <div className={styles.anatomyTextEquivalent} role="status">
-        <strong>Text equivalent</strong>
-        <span>{impellaLocation}</span>
-        <span>
-          {revealCausality
-            ? state.causalExplanation
-            : 'Use the visible loading, flow, valve, waveform, and alarm signals to build the causal chain.'}
-        </span>
-        <span>
-          LVEDV {state.metrics.lvedvMl} mL · aortic valve{' '}
-          {state.metrics.aorticValveOpening ? 'opening' : 'not opening'} · recirculation{' '}
-          {state.metrics.recirculatingFlowLMin.toFixed(1)} L/min.
-        </span>
-        <span>
-          The transparent anatomy and illustrative device facsimiles are educational. They are not
-          implantation, catheter-depth, sizing, or positioning guidance.
-        </span>
-        {sceneId === 'heart' ? (
+      <AnatomyWords compact={compact}>
+        <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
+        <div className={styles.anatomyTextEquivalent} role="status">
+          <strong>Text equivalent</strong>
+          <span>{impellaLocation}</span>
           <span>
-            CT morphology: aortic cusps are segmented; the other valve locations are proxies, so
-            mitral chordal clearance cannot be assessed.
+            {revealCausality
+              ? state.causalExplanation
+              : 'Use the visible loading, flow, valve, waveform, and alarm signals to build the causal chain.'}
           </span>
-        ) : null}
-        {state.device.kind === 'impella' ? (
-          <>
+          <span>
+            LVEDV {state.metrics.lvedvMl} mL · aortic valve{' '}
+            {state.metrics.aorticValveOpening ? 'opening' : 'not opening'} · recirculation{' '}
+            {state.metrics.recirculatingFlowLMin.toFixed(1)} L/min.
+          </span>
+          <span>
+            The transparent anatomy and illustrative device facsimiles are educational. They are not
+            implantation, catheter-depth, sizing, or positioning guidance.
+          </span>
+          {sceneId === 'heart' ? (
             <span>
-              When a pump is running, red particles converge into its inlet, travel through the
-              cannula, and accelerate outward from its outlet.
+              CT morphology: aortic cusps are segmented; the other valve locations are proxies, so
+              mitral chordal clearance cannot be assessed.
             </span>
-            <span>
-              Path provenance: imaged vessel segments are centerline-derived and peripheral access
-              is an explicit authored boundary. Only the aortic cusps have segmented valve
-              morphology; tricuspid and pulmonic points are route/orifice proxies.
-            </span>
-          </>
-        ) : null}
-      </div>
+          ) : null}
+          {state.device.kind === 'impella' ? (
+            <>
+              <span>
+                When a pump is running, red particles converge into its inlet, travel through the
+                cannula, and accelerate outward from its outlet.
+              </span>
+              <span>
+                Path provenance: imaged vessel segments are centerline-derived and peripheral access
+                is an explicit authored boundary. Only the aortic cusps have segmented valve
+                morphology; tricuspid and pulmonic points are route/orifice proxies.
+              </span>
+            </>
+          ) : null}
+        </div>
+      </AnatomyWords>
     </section>
   )
 }
