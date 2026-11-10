@@ -183,15 +183,16 @@ const candidateClinicalSources = [
   {
     id: 'REVIEW-CKRT-CORE-2025',
     claim:
-      'The review describes diffusion, convection, ultrafiltration, adsorption, and continuous kidney-replacement modality concepts.',
+      'The review describes diffusion, convection, ultrafiltration, adsorption, and continuous kidney-replacement modality concepts; when continuous therapy is preferred over intermittent therapy and how modality is chosen; timing of initiation and discontinuation; effluent dose, the gap between prescribed and delivered dose, filtration fraction and blood flow; vascular access; heparin and regional citrate anticoagulation and their complications; drug dosing, nutrition, and proposed CRRT quality indicators.',
     value:
-      'Candidate mechanism source for a non-patient conceptual lab; it supplies no patient-specific prescription or device setting.',
+      'A core-curriculum review for nephrology trainees: it summarizes trials and expert practice and gives no graded recommendations. Its quality benchmarks are proposals the authors say need validation.',
     sourceTitle: 'Continuous Kidney Replacement Therapies: Core Curriculum 2025',
     sourceType: 'peer-reviewed' as const,
     documentVersion: 'Am J Kidney Dis. 2025;85:767–786 · PMID 40072400',
     pageOrSection:
       'DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004',
-    implementationLocation: 'content/learnLessons.ts · Solute and water transport lesson',
+    implementationLocation:
+      'content/learnLessons.ts · lessons 1, 3, 4, 6, 7 and 8 · content/teachingNumbers.ts',
     reviewer: null,
     reviewStatus: PENDING,
   },

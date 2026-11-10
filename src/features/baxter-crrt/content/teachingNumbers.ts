@@ -26,6 +26,23 @@ const CHECK_CRRT_03 = {
   signedOn: null,
 } as const
 
+/** Rows read against the full text of the AJKD Core Curriculum 2025 (REVIEW-CKRT-CORE-2025). */
+const CHECK_AJKD = {
+  checkedOn: '2026-11-09',
+  checkedBy: 'Claude, against the full text of the AJKD Core Curriculum 2025',
+  signedBy: null,
+  signedOn: null,
+} as const
+
+const AJKD = 'REVIEW-CKRT-CORE-2025'
+
+const ajkd = (locator: string): TeachingNumberCitation => ({
+  sourceId: AJKD,
+  year: 2025,
+  grade: null,
+  locator,
+})
+
 const UKKA = 'GUID-UKKA-HYPERKALEMIA-2023'
 const KDIGO_ACUTE_K = 'CONSENSUS-KDIGO-ACUTE-HYPERKALEMIA-2020'
 const EASL = 'GUID-EASL-ALF-2017'
@@ -70,11 +87,12 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
         locator: 'Recommendation 5.1',
       },
       { sourceId: 'RENAL-2009', year: 2009, grade: 'randomized trial', locator: 'Primary outcome' },
+      ajkd('Dose of Solute Clearance With CKRT, p. 777'),
     ],
     note: 'RENAL compared 25 with 40 mL/kg/h and ATN 20 with 35 mL/kg/h; neither found a benefit from the higher dose.',
     ...CHECK,
     checkedBy:
-      'Claude. German–Austrian Rec 5.1 and RENAL from the decision packet; KDIGO 5.8.4 grade as recorded there, not re-read',
+      'Claude. German–Austrian Rec 5.1 and RENAL from the decision packet; KDIGO 5.8.4 grade as recorded there, not re-read. AJKD 2025 added 2026-11-09 from its full text',
   },
   'dose-prescribed': {
     label: 'Prescribed effluent dose that delivers the target',
@@ -102,9 +120,11 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
         grade: null,
         locator: 'Section 3.4.2, Filtration fraction',
       },
+      ajkd('Dose of Solute Clearance With CKRT, p. 778'),
     ],
-    note: 'Other texts teach 20%. Above the ceiling the blood leaving the filter is concentrated enough to clot it.',
+    note: 'Other texts teach 20%; AJKD 2025 gives 20%–25% and says regional citrate is anecdotally reported to tolerate a higher fraction. Above the ceiling the blood leaving the filter is concentrated enough to clot it.',
     ...CHECK,
+    checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
   },
   'postfilter-ica': {
     label: 'Post-filter ionized calcium on regional citrate',
@@ -204,9 +224,11 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
         grade: null,
         locator: 'Anticoagulation, p. 1894',
       },
+      ajkd('Anticoagulation, p. 781'),
     ],
-    note: 'Differs from the 0.25–0.35 mmol/L target band in Acute Nephrology (2015). Teach both.',
+    note: 'Differs from the 0.25–0.35 mmol/L target band in Acute Nephrology (2015). Teach both. AJKD 2025 also gives typically below 0.4 mmol/L.',
     ...CHECK,
+    checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
   },
   'systemic-ica': {
     label: 'Systemic ionized calcium on citrate: the band the calcium infusion is titrated to',
@@ -447,6 +469,146 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     sources: [manual('DEV-PM-008', 'Blood Leak Detector normalization, PDF p. 37')],
     note: 'PDF p. 37 is outside the alarm chapter this record registers; the locator is the real page.',
     ...CHECK,
+  },
+  'oliguria-start': {
+    label: 'Oliguria after which starting CRRT is likely reasonable',
+    value: '48–72 hours or more',
+    appliesTo: 'A patient with AKI who is a candidate for escalation of care.',
+    class: 'expert-reference',
+    sources: [ajkd('Timing of CKRT Initiation and Discontinuation, pp. 776–777')],
+    note: 'Starting earlier gave no benefit in AKIKI, IDEAL-ICU and STARRT-AKI; the single-center ELAIN trial is the exception.',
+    ...CHECK_AJKD,
+  },
+  'krt-aki-mortality': {
+    label: 'Mortality of critically ill patients with AKI who need kidney replacement therapy',
+    value: 'about 50%',
+    class: 'expert-reference',
+    sources: [ajkd('Timing of CKRT Initiation and Discontinuation, p. 777')],
+    ...CHECK_AJKD,
+  },
+  'dose-trial-high': {
+    label: 'Higher effluent dose that gave no benefit in the ATN and RENAL trials',
+    value: '35–40 mL/kg/h',
+    class: 'expert-reference',
+    sources: [ajkd('Dose of Solute Clearance With CKRT, p. 777')],
+    note: 'ATN compared 35 with 20 mL/kg/h and RENAL 40 with 25. The higher doses brought more hypophosphatemia and hypotension.',
+    ...CHECK_AJKD,
+  },
+  'dose-high-lysis': {
+    label: 'Effluent dose that may be needed in rhabdomyolysis or tumor lysis syndrome',
+    value: '40 mL/kg/h or more',
+    class: 'expert-reference',
+    sources: [ajkd('Dose of Solute Clearance With CKRT, p. 778')],
+    note: 'The review advises stepping back toward the standard range once metabolic control is achieved and the underlying process has improved.',
+    ...CHECK_AJKD,
+  },
+  'lactate-endogenous-clearance': {
+    label: 'Endogenous lactate clearance in critical illness (estimate)',
+    value: '750–2,000 mL/min',
+    class: 'physiology',
+    sources: [ajkd('Dose of Solute Clearance With CKRT, p. 778')],
+    note: 'The review’s example of very high-dose CRRT clearance is 50 mL/min, a small fraction of this.',
+    ...CHECK_AJKD,
+  },
+  'kpi-delivered-dose': {
+    label: 'Proposed CRRT quality benchmark: delivered dose as a share of prescribed',
+    value: 'above 80%',
+    class: 'expert-reference',
+    sources: [ajkd('Monitoring CKRT Performance, Figure 3, p. 785')],
+    note: 'Proposed benchmarks; the review says they need prospective validation and adaptation to local practice.',
+    ...CHECK_AJKD,
+  },
+  'kpi-downtime': {
+    label: 'Proposed CRRT quality benchmark: downtime',
+    value: 'below 15% of the prescribed time',
+    class: 'expert-reference',
+    sources: [ajkd('Monitoring CKRT Performance, Figure 3, p. 785')],
+    note: 'Proposed benchmarks; the review says they need prospective validation and adaptation to local practice.',
+    ...CHECK_AJKD,
+  },
+  'kpi-filter-life': {
+    label: 'Proposed CRRT quality benchmark: filter life',
+    value: 'more than 60% of filters lasting over 60 hours',
+    class: 'expert-reference',
+    sources: [ajkd('Monitoring CKRT Performance, Figure 3, p. 785')],
+    note: 'Proposed benchmarks; the review says they need prospective validation and adaptation to local practice.',
+    ...CHECK_AJKD,
+  },
+  'rich-filter-life': {
+    label: 'Filter life gained with regional citrate over systemic heparin in the RICH trial',
+    value: '15 hours longer',
+    class: 'expert-reference',
+    sources: [ajkd('Anticoagulation, p. 781')],
+    note: 'RICH randomized nearly 600 patients; citrate also gave fewer bleeding events, with no significant difference in mortality. The primary paper was not read.',
+    ...CHECK_AJKD,
+  },
+  'no-anticoagulation-centers': {
+    label: 'Share of centers that start CRRT without anticoagulation',
+    value: 'about 33%–50%',
+    class: 'expert-reference',
+    sources: [ajkd('Anticoagulation, p. 781')],
+    note: 'Anticoagulation is added if filters clot early.',
+    ...CHECK_AJKD,
+  },
+  'citrate-lactate-risk': {
+    label: 'Serum lactate and the risk of citrate accumulation',
+    value: 'below 4 mmol/L, low risk; 4–8 mmol/L, intermediate; above 8 mmol/L, high',
+    class: 'expert-reference',
+    sources: [ajkd('Anticoagulation, p. 781')],
+    note: 'Given as a rough guide. Lactate, like citrate, is metabolized mainly by the liver.',
+    ...CHECK_AJKD,
+  },
+  'citrate-blood-flow': {
+    label: 'Blood flow on regional citrate',
+    value: '120–150 mL/min',
+    class: 'expert-reference',
+    sources: [ajkd('Blood Flow, p. 779')],
+    note: 'Lower than the general CRRT range in blood-flow-range: less citrate is needed, which lowers the metabolic load.',
+    ...CHECK_AJKD,
+  },
+  'blood-flow-plateau': {
+    label: 'Blood flow above which filter life gains little',
+    value: 'about 250 mL/min',
+    class: 'expert-reference',
+    sources: [ajkd('Blood Flow, p. 779')],
+    note: 'One trial of 100 patients randomized to 150 or 250 mL/min found no difference in filter life.',
+    ...CHECK_AJKD,
+  },
+  'calcium-ratio-normal': {
+    label: 'Normal total-to-ionized calcium ratio',
+    value: 'about 2',
+    class: 'physiology',
+    sources: [ajkd('Complications of CKRT, p. 783, and Figure 2, p. 784')],
+    note: 'About half of circulating calcium is ionized.',
+    ...CHECK_AJKD,
+  },
+  'hypophosphatemia-onset': {
+    label: 'When hypophosphatemia appears on phosphate-free CRRT solutions',
+    value: 'within about 48 hours',
+    class: 'expert-reference',
+    sources: [ajkd('Complications of CKRT, p. 783')],
+    ...CHECK_AJKD,
+  },
+  'amino-acid-loss': {
+    label: 'Amino acids lost to the CRRT effluent',
+    value: '10–20 g a day',
+    class: 'expert-reference',
+    sources: [ajkd('Nutrition and Physical Rehabilitation, p. 785')],
+    ...CHECK_AJKD,
+  },
+  'nutrition-energy': {
+    label: 'Daily energy target on CRRT',
+    value: '25–35 kcal/kg',
+    class: 'expert-reference',
+    sources: [ajkd('Nutrition and Physical Rehabilitation, p. 785')],
+    ...CHECK_AJKD,
+  },
+  'nutrition-protein': {
+    label: 'Daily protein target on CRRT',
+    value: '1.5–2.5 g/kg',
+    class: 'expert-reference',
+    sources: [ajkd('Nutrition and Physical Rehabilitation, p. 785')],
+    ...CHECK_AJKD,
   },
 })
 

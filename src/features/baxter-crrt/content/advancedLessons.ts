@@ -26,7 +26,10 @@ export const crrtAdvancedTasks: Partial<
         'Build on the blood and effluent paths from earlier lessons. The objective is to distinguish circuit anticoagulation from patient calcium and metabolic effects.',
       teaching: [
         'Regional citrate anticoagulation (RCA) acts in extracorporeal blood. Ionized calcium is the free calcium measured in blood; total calcium also includes bound calcium.',
-        'First follow the normal path, then compare sampling domains and clinical patterns. This is conceptual teaching for an ICU clinician, not training to start or adjust an RCA protocol.',
+        `Why citrate first: in RICH, the largest trial (nearly 600 patients), regional citrate gave ${N('rich-filter-life')} filter life than systemic heparin, with fewer bleeding events and no significant difference in mortality. Heparin is cheap and familiar, but it is not dialyzed, so even heparin run into the prefilter line anticoagulates the patient unless it is reversed with protamine. In practice, ${N('no-anticoagulation-centers')} of centers start CRRT with no anticoagulation and add it only when filters clot early.`,
+        `Liver disease alone is not a contraindication to citrate, given careful monitoring. Lactate is a better guide to the risk of accumulation than liver tests, because the liver metabolizes both: a high lactate from any cause, shock or liver disease, means citrate will be metabolized less well. As a rough guide, lactate ${N('citrate-lactate-risk')} risk of accumulation.`,
+        `Filter life is not only anticoagulation. When filters keep clotting, look at the catheter before the anticoagulant: access dysfunction is a common cause. Keep the filtration fraction down with adequate blood flow or predilution; CVVHD runs the lowest filtration fraction, and observational and quasi-randomized data suggest it may give longer filter life than predilution CVVH. Raising blood flow helps less and less beyond ${N('blood-flow-plateau')}: higher flow brings more pressure alarms, and repeated pump stops can themselves clot the filter. On citrate, run ${N('citrate-blood-flow')}: a lower flow needs less citrate, which lowers the metabolic load, and citrate keeps the filter open at that flow. The proposed quality benchmark is ${N('kpi-filter-life')}.`,
+        'First follow the normal path, then compare sampling domains and clinical patterns.',
       ],
     },
     {
@@ -77,6 +80,7 @@ export const crrtAdvancedTasks: Partial<
       teaching: [
         'Systemic ionized calcium has fallen, the post-filter result is unchanged, and inspection confirms that the separate calcium infusion was interrupted.',
         'The interruption provides patient-side delivery evidence. Review it with the systemic result and clinical condition; changing citrate solely because the patient calcium is low would confuse the two questions. The reviewed local protocol governs any treatment response.',
+        `The mirror image is too much calcium. A high systemic ionized calcium with a high total calcium, and a total-to-ionized ratio close to normal (${N('calcium-ratio-normal')}), is not accumulation: the calcium infusion is running ahead of the losses. Turn the calcium infusion down and leave the citrate where the post-filter result puts it. There is no need to correct total calcium for albumin when you calculate the ratio.`,
       ],
     },
     {
@@ -131,7 +135,7 @@ export const crrtAdvancedTasks: Partial<
           'net-alkali',
           'Citrate load exceeds effluent removal; metabolism is intact.',
           true,
-          `Metabolized citrate becomes bicarbonate. A steady ionized calcium on an unchanged infusion and a ratio that is not ${N('calcium-ratio')} show the citrate is being metabolized, so the alkalosis means more citrate is reaching the patient than the effluent removes. The fix is on that balance: less citrate in or more removed in the effluent, by your unit’s citrate protocol. Look for other causes of alkalosis as well.`,
+          `Metabolized citrate becomes bicarbonate. A steady ionized calcium on an unchanged infusion and a ratio that is not ${N('calcium-ratio')} show the citrate is being metabolized, so the alkalosis means more citrate is reaching the patient than the effluent removes. Three levers correct that balance: lower the blood flow and the citrate rate together, which keeps the circuit anticoagulated while cutting the citrate load; raise the citrate-free dialysate or replacement rate so the effluent carries more citrate away; or lower the bicarbonate in the other solutions. Your unit’s citrate protocol sets the size of each step. Look for other causes of alkalosis as well.`,
         ),
         choice(
           'accumulation-certain',
