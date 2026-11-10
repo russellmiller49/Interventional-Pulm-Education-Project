@@ -458,6 +458,21 @@
     max-width: calc(min(44vh, 24rem) * 4 / 3);
   }
 }
+/*
+ * In the course's two-column scope task the view is also held to the window's height, so on a
+ * 768-pixel-high laptop the goal, the view and the controls under it stay on one screen. The map
+ * follows the view's height, as above.
+ */
+@media (min-width: 1050px) {
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='skill'])
+    .visualWorkspace:not([data-map='none']):not([data-bench='true']),
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='inspection'])
+    .visualWorkspace:not([data-map='none']):not([data-bench='true']) {
+    grid-template-columns:
+      minmax(0, min(61.5%, max(16rem, calc((100dvh - 27rem) * 4 / 3))))
+      minmax(0, 1fr);
+  }
+}
 .mapColumn {
   contain: size;
   align-self: stretch;
