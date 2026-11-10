@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { Html, useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SkeletonUtils } from 'three-stdlib'
@@ -19,6 +19,19 @@ interface CardiacHeartModelProps {
    * more solid and the rest dim, until the list is empty again. Display only; the heart beats on.
    */
   highlightMeshNames?: readonly string[]
+  /**
+   * Name labels pinned to structures: each sits at the centre of the named mesh and turns with
+   * the model. They are DOM text over the canvas, so they stay sharp and can be styled by the
+   * caller through `labelClassName`. Absent or empty, nothing is drawn.
+   */
+  labels?: readonly { readonly meshName: string; readonly text: string }[]
+  labelClassName?: string
+  /**
+   * How far each label is pushed out from the middle of the labelled structures, as a multiple of
+   * its own distance from that middle. The chambers of a heart overlap from any one side, so at 1
+   * the labels sit on top of each other; above 1 they fan out toward the edge of their structure.
+   */
+  labelSpread?: number
 }
 
 const HIGHLIGHT_COLOR = new THREE.Color('#ffd166')
@@ -30,6 +43,9 @@ export function CardiacHeartModel({
   paused = false,
   reducedMotion = false,
   highlightMeshNames,
+  labels,
+  labelClassName,
+  labelSpread = 1,
 }: CardiacHeartModelProps) {
   const emphasisEnabled = Boolean(deviceEmphasis)
   const lvadEmphasis = deviceEmphasis === 'lvad'
@@ -143,6 +159,26 @@ export function CardiacHeartModel({
       }
     })
   }, [highlightKey, root])
+  const labelKey = (labels ?? []).map((label) => `${label.meshName}=${label.text}`).join('|')
+  const pins = useMemo(() => {
+    if (!labelKey) return []
+    root.updateMatrixWorld(true)
+    const box = new THREE.Box3()
+    const centres = labelKey.split('|').flatMap((entry) => {
+      const [meshName, text] = entry.split('=')
+      const mesh = root.getObjectByName(meshName)
+      return mesh
+        ? [{ meshName, text, centre: box.setFromObject(mesh).getCenter(new THREE.Vector3()) }]
+        : []
+    })
+    const middle = centres
+      .reduce((sum, entry) => sum.add(entry.centre), new THREE.Vector3())
+      .divideScalar(Math.max(1, centres.length))
+    return centres.map(({ meshName, text, centre }) => {
+      const spread = centre.clone().sub(middle).multiplyScalar(labelSpread).add(middle)
+      return { meshName, text, position: [spread.x, spread.y, spread.z] as const }
+    })
+  }, [labelKey, labelSpread, root])
   const mixer = useMemo(() => new THREE.AnimationMixer(root), [root])
   const clip = source.animations.find((animation) => animation.name === 'CardiacCycle')
   const playableClip = useMemo(() => {
@@ -206,6 +242,19 @@ export function CardiacHeartModel({
       scale={REALISTIC_HEART_TRANSFORM.scale}
     >
       <primitive object={root} dispose={null} />
+      {pins.map((pin) => (
+        <Html
+          key={pin.meshName}
+          position={pin.position}
+          center
+          zIndexRange={[20, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <span className={labelClassName} data-heart-label={pin.meshName}>
+            {pin.text}
+          </span>
+        </Html>
+      ))}
     </group>
   )
 }

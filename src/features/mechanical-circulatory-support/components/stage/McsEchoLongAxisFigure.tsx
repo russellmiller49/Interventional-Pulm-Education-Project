@@ -113,7 +113,8 @@ export function McsEchoLongAxisFigure() {
         aria-labelledby={`${titleId} ${descId}`}
         className={styles.drawing}
       >
-        <title id={titleId}>Impella CP on a parasternal long-axis view: {active.label}</title>
+        {/* One string: a title with two text children does not hydrate cleanly. */}
+        <title id={titleId}>{`Impella CP on a parasternal long-axis view: ${active.label}`}</title>
         <desc id={descId}>{active.reading}</desc>
         <defs>
           <clipPath id={clipId}>
