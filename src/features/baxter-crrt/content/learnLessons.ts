@@ -208,6 +208,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'FLUID-PM-001',
       'FLUID-PM-002',
       'TEXT-CRRT-NEYRA-2026',
+      'REVIEW-CKRT-CORE-2025',
       'WHITE-2024',
       'GONEUTRAL-2024',
       'SYNTH-LAB-FLUID-001',

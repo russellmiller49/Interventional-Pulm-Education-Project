@@ -58,7 +58,7 @@ describe('an evidence ID that resolves is not thereby a supporting ID', () => {
     expect(crrtSourceSupportsClaim('GUID-RRT-ICU-2026', 'prescribed-versus-delivered')).toBe(true)
 
     // And not for each other's topics.
-    expect(crrtSourceSupportsClaim('REVIEW-CKRT-CORE-2025', 'prescribed-versus-delivered')).toBe(
+    expect(crrtSourceSupportsClaim('TEXT-CRRT-NEYRA-2026', 'solute-transport-mechanisms')).toBe(
       false,
     )
     expect(crrtSourceSupportsClaim('GUID-RRT-ICU-2026', 'solute-transport-mechanisms')).toBe(false)

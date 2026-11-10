@@ -238,11 +238,12 @@
       "edition_year": "2025",
       "publisher": "American Journal of Kidney Diseases",
       "isbn_doi": "10.1053/j.ajkd.2024.09.015",
-      "sha256": null,
+      "sha256": "90fffe974b2de11767e354f5fcdc7ea8084ad79c143cecadfcae425a304d10e6",
       "source_type": "journal",
       "rights_status": "linked-publication-metadata-only",
       "review_status": "sme-review",
-      "verified_on": "2026-07-24"
+      "verified_on": "2026-11-09",
+      "verification_note": "Full text (20 pages, Am J Kidney Dis 2025;85(6):767-786, open access CC BY-NC-ND 4.0) supplied by the owner 2026-11-09 and hashed; it is not stored in the repository or Local-Data. Read in full for the CRRT module: its numbers enter content/teachingNumbers.ts with page locators. The erratum (DOI 10.1053/j.ajkd.2025.06.004) could not be retrieved and has not been read."
     },
     {
       "doc_id": "ICU-ESICM-SHOCK",

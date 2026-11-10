@@ -166,9 +166,24 @@ export type CrrtClaimTopic = (typeof CRRT_CLAIM_TOPICS)[number]
  * support for anything.
  */
 const claimTopicsBySourceId: ReadonlyMap<string, readonly CrrtClaimTopic[]> = new Map([
-  // "The review describes diffusion, convection, ultrafiltration, adsorption, and continuous
-  //  kidney-replacement modality concepts."
-  ['REVIEW-CKRT-CORE-2025', ['solute-transport-mechanisms', 'modality-concepts'] as const],
+  // Read in full 2026-11-09 (AJKD 2025;85:767–786). Its claim now names modality choice, timing of
+  // initiation and discontinuation, prescribed versus delivered dose, access and fluid removal
+  // (pp. 768–780). Its anticoagulation and citrate passages (pp. 781–784) are not mapped to the
+  // citrate topics yet: that would list it under the citrate definitions, an owner decision.
+  [
+    'REVIEW-CKRT-CORE-2025',
+    [
+      'solute-transport-mechanisms',
+      'modality-concepts',
+      'modality-selection',
+      'continuous-therapy-for-instability',
+      'treatment-goals',
+      'delivered-therapy',
+      'prescribed-versus-delivered',
+      'vascular-access',
+      'fluid-removal-tolerance',
+    ] as const,
+  ],
   // "The chapter frames kidney-replacement decisions around patient-specific solute and
   //  volume-control goals, modality logistics, delivered therapy, access, and iterative tolerance
   //  of fluid removal."
