@@ -56,14 +56,12 @@ const MATRIX: readonly Condition[] = [
 const tag = (c: Condition) => `${c.width}×${c.height}, ${c.theme}, ${c.rootText}% root text`
 
 async function prepare(page: Page, condition: Condition, section: string) {
-  // The theme toggle lives in the desktop header: choose the theme there, then resize.
+  // A lesson on a desktop window hides the site menu, and its theme toggle with it. The site theme
+  // follows the system setting when the learner has stored no choice, so set that, then resize.
+  await page.emulateMedia({ colorScheme: condition.theme })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`/en/icu-hemodynamics/learn?activity=${section}`)
   await expect(page.locator('[data-lesson-shell]')).toBeVisible({ timeout: 90_000 })
-  await page.waitForFunction(() => /\b(dark|light)\b/.test(document.documentElement.className))
-  if (!(await page.locator('html').getAttribute('class'))?.split(' ').includes(condition.theme)) {
-    await page.getByRole('button', { name: /Toggle dark mode/i }).click()
-  }
   await expect(page.locator('html')).toHaveClass(new RegExp(`\\b${condition.theme}\\b`))
   await page.setViewportSize({ width: condition.width, height: condition.height })
   if (condition.rootText === 200) {

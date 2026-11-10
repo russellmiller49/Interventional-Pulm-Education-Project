@@ -91,6 +91,7 @@ export function MechanicalVentilationModuleFrame({
         safetyNotice={MECHANICAL_VENTILATION_SAFETY_NOTICE}
         theme="dark"
         activityMode={activityMode}
+        hideSiteHeader
       >
         {locale !== 'en' ? (
           <div className={styles.englishFallback} role="note">

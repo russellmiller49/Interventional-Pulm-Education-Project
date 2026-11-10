@@ -54,9 +54,16 @@ test('on a desktop the text is left of the simulator and each scrolls on its own
     await expect(page.locator('[data-now-footer="pinned"] [data-now-primary]')).toBeInViewport()
     await expect(page.locator('[data-now-primary]')).toHaveCount(1)
     const scrollTop = (pane: typeof text) => pane.evaluate((el) => el.scrollTop)
+    // In a lesson the site menu is hidden, so the panes have the whole window's height. The
+    // first section's opening text still runs past its pane; the Impella section's now fits at
+    // this size and has nothing to scroll. Where the text overflows it is the pane that scrolls;
+    // either way the simulator and the page stay put.
+    const overflows = await text.evaluate((el) => el.scrollHeight > el.clientHeight + 1)
+    if (sectionId === 'mcs-foundations-signals') expect(overflows).toBe(true)
     await page.mouse.move(t.x + t.width / 2, t.y + t.height / 2)
     await page.mouse.wheel(0, 500)
-    await expect.poll(() => scrollTop(text)).toBeGreaterThan(0)
+    if (overflows) await expect.poll(() => scrollTop(text)).toBeGreaterThan(0)
+    else expect(await scrollTop(text)).toBe(0)
     expect(await scrollTop(visual)).toBe(0)
     expect(await page.evaluate(() => scrollY)).toBe(0)
     expect(
