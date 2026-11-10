@@ -9,6 +9,15 @@ stands against them, what was decided on 2026-10-06, and the order of the remain
 Refresh PR state (`gh pr list`) and `origin/main` before acting on any row; an open PR is occupied
 work.
 
+**Infrastructure addendum, 2026-11-10:**
+[Beta launch PR 1 evidence and owner checklist](beta-launch-pr1-2026-11-10.md) independently rechecks
+Endoreels, the current 11 visible hub modules and the feedback/review boundaries. The live beta
+schema matches the expected cumulative SQL, while three migration names/versions are absent
+from history and three earlier migrations use different timestamps. The October migration tasks
+below are historical, not instructions to replay SQL. Production non-admin submission/edit and
+private screenshot retrieval still require explicitly authorized owner-run verification. No
+module's acceptance, readiness or publication stage changes with this infrastructure work.
+
 ## 1. What "finished" means here
 
 Every pack ends the same way: runtime batches 01–04 → one independent, read-only combined
@@ -286,17 +295,17 @@ followed by a re-test of that scope only.
 Acceptance clean → the owner decides the module's fact-level items and walks it → a one-line PR
 sets the module to `ready` with its tester note → deploy → live check → invitation.
 
-Live check, about ten minutes, with a second account that is not an admin. The steps follow
-"Transition to external development beta" in `docs/module-beta-owner-review.md`.
+Run the [owner-run live verification checklist](beta-launch-pr1-2026-11-10.md#owner-run-live-verification-checklist)
+with explicitly authorized, verified, profile-complete non-admin test accounts. It covers all 11
+wrapper routes, complete overall-review submission and same-record editing, two-reviewer
+isolation, an annotated PNG with failed-send/retry, and separate active `site_admin` image access.
+Use synthetic data only. Account creation, live submissions, entitlement changes and cleanup
+need their own owner authorization; this document supplies none. Once a module is marked ready,
+also confirm its ready label and tester note on the deployed hub. The November infrastructure
+pass leaves all 11 modules at `preview`.
 
-1. Export any owner-local notes from the browser first.
-2. Sign up fresh, through email verification and profile completion. Registration changed on
-   2026-10-04 (#328).
-3. The hub shows the module under "Ready for review" with its note.
-4. It opens through the wrapper, and nothing in it fails to load.
-5. One report with an annotated screenshot saves.
-6. As admin, the report and its image appear in `/en/admin/module-feedback`.
-7. The non-admin account cannot open that workspace or the screenshot address.
+Record the deployed SHA and pass/fail/untested evidence. Local preview access, mocked submissions,
+row counts and schema inspection never substitute for a real authenticated non-admin live test.
 
 Feedback rows carry a time, not a build. The table in section 12 records what was deployed when.
 

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { feedbackSchema, isPngScreenshot, maxScreenshotBytes } from '@/features/module-beta/schema'
@@ -76,7 +77,8 @@ export async function POST(request: Request) {
       { error: 'You have sent 30 reports in the past hour. Please try again later.' },
       429,
     )
-  const screenshotPath = bytes ? `${auth.user.id}/${body.id}.png` : null
+  // Each attempt owns its image, so an orphan never blocks a retry's upload.
+  const screenshotPath = bytes ? `${auth.user.id}/${body.id}/${randomUUID()}.png` : null
   if (bytes && screenshotPath) {
     const { error } = await supabaseAdmin.storage
       .from(feedbackBucket)
@@ -87,24 +89,40 @@ export async function POST(request: Request) {
         503,
       )
   }
-  const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
-    id: body.id,
-    user_id: auth.user.id,
-    tester_email: auth.user.email ?? '',
-    module_id: body.moduleId,
-    page_path: body.pagePath,
-    comment: body.comment,
-    selected_text: body.selectedText,
-    screenshot_path: screenshotPath,
-  })
-  if (error) {
-    if (screenshotPath) await supabaseAdmin.storage.from(feedbackBucket).remove([screenshotPath])
-    return feedbackJson(
-      { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
-      503,
-    )
+  try {
+    const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
+      id: body.id,
+      user_id: auth.user.id,
+      tester_email: auth.user.email ?? '',
+      module_id: body.moduleId,
+      page_path: body.pagePath,
+      comment: body.comment,
+      selected_text: body.selectedText,
+      screenshot_path: screenshotPath,
+    })
+    if (!error) return feedbackJson({ id: body.id }, 201)
+  } catch {
+    // A thrown transport error does not establish whether the insert committed.
   }
-  return feedbackJson({ id: body.id }, 201)
+  // Once the insert begins, never delete its image here. Even an empty lookup cannot
+  // rule out a pending commit. Accept private orphans rather than lose referenced images.
+  try {
+    const { data: persisted, error: lookupError } = await supabaseAdmin
+      .from('module_beta_feedback')
+      .select('id,user_id')
+      .eq('id', body.id)
+      .maybeSingle()
+    if (!lookupError && persisted)
+      return persisted.user_id === auth.user.id
+        ? feedbackJson({ id: persisted.id })
+        : feedbackJson({ error: 'Start a new feedback report and try again.' }, 409)
+  } catch {
+    // A lookup failure is also ambiguous; keep the image and let the same report ID retry.
+  }
+  return feedbackJson(
+    { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
+    503,
+  )
 }
 
 export async function GET(request: Request) {
