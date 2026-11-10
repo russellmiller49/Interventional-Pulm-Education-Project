@@ -71,6 +71,15 @@
   gap: 0.75rem;
   min-width: 0;
 }
+/*
+ * A disclosure in the pane is a grid item, and a grid item is as wide as its widest content
+ * unless told otherwise. The circulation map has a minimum drawing width and scrolls inside its
+ * own box; opened in a disclosure on a phone it pushed the whole page 198px sideways instead.
+ */
+.simulator > details {
+  min-width: 0;
+  max-width: 100%;
+}
 
 .surfaces {
   display: grid;

@@ -15,7 +15,12 @@ import {
   isMcsIntroductorySection,
   type McsIntroduction,
 } from './introductorySteps'
-import { mcsTaskPresentation, type McsPresentationKind } from './taskPresentation'
+import {
+  mcsLeadVisual,
+  mcsTaskPresentation,
+  type McsLeadVisual,
+  type McsPresentationKind,
+} from './taskPresentation'
 import { mcsPresentationTitle } from './casePresentation'
 import { MCS_CONTROL_PANEL_SORT, type McsControlPanelSort } from './controlPanelSort'
 import { mcsIncrementForSection, type McsDeviceIncrement } from './deviceIncrements'
@@ -102,6 +107,8 @@ export type McsStageInteraction =
 
 export interface McsStageStep extends StageStepBase<McsStageInteraction> {
   readonly presentation: McsPresentationKind
+  /** The picture the task opens on; never absent (see `mcsLeadVisual`). */
+  readonly leadVisual: McsLeadVisual
   /** Authored setup, never learner evidence. An empty array still requests a fresh baseline. */
   readonly setupOnEntry?: readonly McsAction[]
   /** Surfaces opened when the step is entered; the learner may open the rest. */
@@ -223,6 +230,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       actionLabel,
       interaction,
       presentation: mcsTaskPresentation(sectionId, interaction),
+      leadVisual: mcsLeadVisual(mcsTaskPresentation(sectionId, interaction), interaction),
       gate: 'open',
       surfaces: surfacesFor(phase, spec, contract, onMap),
       stopIds: spec.stopIds,
@@ -379,6 +387,13 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     { kind: 'transfer', transfer },
     contract.completionCondition,
   )
+
+  // A task that leads with the heart and the device opens that view on entry. Done here, after
+  // the steps above have had their surfaces set one by one, so no later edit can drop it.
+  steps.forEach((step, position) => {
+    if (step.leadVisual === 'anatomy' && !step.surfaces.includes('anatomy'))
+      steps[position] = { ...step, surfaces: [...step.surfaces, 'anatomy'] }
+  })
 
   const pairedCase = spec.practicePairing
     ? mcsPracticeScenarios.find((scenario) => scenario.id === spec.practicePairing?.caseId)

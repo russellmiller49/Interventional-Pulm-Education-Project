@@ -1528,6 +1528,20 @@
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
+.anatomyPointed {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  max-width: calc(100% - 1.4rem);
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(255, 209, 102, 0.7);
+  border-radius: 0.5rem;
+  color: #ffe9b0;
+  background: rgba(4, 23, 29, 0.82);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
 .anatomyFlowChip strong {
   color: #7be1d4;
   font-size: 0.75rem;
@@ -1550,6 +1564,48 @@
 }
 .anatomyTextEquivalent strong {
   color: #70d9cd;
+}
+
+/*
+ * The compact card: the three-dimensional view as a task's lead picture.
+ *
+ * Its canvas is sized to the window, not fixed at 610px, so the card, its toolbar and the
+ * readings beside it fit a 720 to 900px tall workspace without scrolling, with room for a clock
+ * bar that wraps to two rows (the LVAD sections). The orientation chips,
+ * the drag hint and Reset share one row, and the written account of the view folds under one
+ * disclosure below the canvas.
+ */
+.anatomyCard[data-compact] > header {
+  min-height: 0;
+  padding: 0.45rem 0.75rem;
+}
+.anatomyCard[data-compact] .anatomyToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+}
+.anatomyCard[data-compact] .anatomyToolRow {
+  flex: 1 1 14rem;
+}
+.anatomyCard[data-compact] .anatomyViewport {
+  height: clamp(13rem, calc(100dvh - 33rem), 34rem);
+  min-height: 0;
+}
+.anatomyWords > summary {
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  color: #d4e9e6;
+  background: #0d3039;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.anatomyWords > summary:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: -3px;
 }
 .webglFallback {
   display: grid;
