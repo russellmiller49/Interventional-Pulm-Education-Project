@@ -4,9 +4,10 @@ Date: 2026-11-10 (America/Los_Angeles). Target merge commit:
 `657186b194ebe278bf5b9d7696e11315475afd80`.
 Source handoff: [beta launch PR 1](beta-launch-pr1-2026-11-10.md).
 
-**Current recommendation: NO-GO / hold for Module Collaborator Recognition.** The target
-deployment has not yet completed, and authenticated production verification is not authorized
-or complete. This is a pending infrastructure decision, not a finding that the repair failed.
+**Current recommendation: NO-GO / hold for Module Collaborator Recognition pending Gate 3.**
+The exact target SHA is deployed successfully and read-only production checks pass. Authenticated
+production verification is not authorized or complete. This is a pending infrastructure
+decision, not a finding that the repair failed.
 No account was selected or used, and no production POST, PATCH, migration, account creation,
 entitlement change, cleanup, merge, deployment action or invitation was performed in this pass.
 
@@ -30,23 +31,24 @@ production environment `8f179798-b586-4013-a0fb-130c9b4eb088`; service
 `Interventional-Pulm-Education-Project`, `4a1754d2-0778-488e-96c7-5ec047b90e6a`.
 Reads used the connected Railway tools. No variable values were requested.
 
-| Item                                  | Observed evidence                                                                                                                                                                                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Target deployment                     | `08d8b84b-bf33-4e4b-96e2-cfa32426bc24`, created 20:09:27.741 UTC; **BUILDING** initially, **DEPLOYING** at 20:24:40.782 UTC; rollout pending at 20:26 UTC.                                                                                                         |
-| Target source                         | Railway metadata reports the exact full target SHA, branch `main`. This proves the queued build source, not yet the serving source.                                                                                                                                |
-| Previously successful serving release | `561529fc-2bce-48e4-9139-3999f85b7eb7`, source `54a02a1a104a552ea66d85d49bfa02af70fec1de`, `SUCCESS`.                                                                                                                                                              |
-| Source/configuration                  | Repository `russellmiller49/Interventional-Pulm-Education-Project`, `main`, `checkSuites: false`; one replica in `us-west2`; no staged changes.                                                                                                                    |
-| Builder evidence                      | Service configuration says `RAILPACK` / V3. This deployment's actual build log says **Nixpacks v1.41.0**, Node 22, `npm install --legacy-peer-deps`, `npm run build`, `npm run start:prod`. Record this distinction; no setting was changed.                       |
-| Build progress                        | Production webpack compilation and TypeScript passed; all 850 static pages generated at 20:20:26 UTC and standalone packaging completed at 20:20:53 UTC. Image export/push completed and rollout began at 20:24:40 UTC; deployment success remains pending.        |
-| Build observations                    | Warnings included dependency deprecations/audit notices, embedded bundle sizes, stale Browserslist data, dynamic dependency extraction and metadataBase fallback to localhost. No failure was reported. These observations are not a dependency or metadata audit. |
-| Runtime before replacement            | Old release logs, 19:09 UTC onward: one `Failed to find Server Action` error event at 19:37:57 UTC (three log lines), preceding this rollout. Do not attribute it to #461. No beta submission/retrieval error was identified in that bounded sample.               |
-| Environment health                    | No warning/critical notifications or failed/crashed deployments in the inspected two-hour window; target rollout still pending.                                                                                                                                    |
-| Aggregate traffic before replacement  | Last-hour Railway snapshot: 283 requests; 222 2xx, 60 3xx, 1 4xx, 0 5xx. This includes the prior release and is not post-release evidence.                                                                                                                         |
-| Resource snapshot before replacement  | Last-hour CPU average 0.00317, max 0.03583; memory current 0.500 GB, max 0.562 GB, 61 samples.                                                                                                                                                                     |
+| Item                                  | Observed evidence                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Target deployment                     | `08d8b84b-bf33-4e4b-96e2-cfa32426bc24`, created 20:09:27.741 UTC; **SUCCESS** at 20:26:45.146 UTC (12:26:45 PST).                                                                                                                                                                                          |
+| Target source                         | Confirmed live: Railway reports exact full SHA `657186b194ebe278bf5b9d7696e11315475afd80`, branch `main`, deployment SUCCESS; environment status lists only this active deployment with one running replica.                                                                                               |
+| Previous release / rollback candidate | `561529fc-2bce-48e4-9139-3999f85b7eb7`, source `54a02a1a104a552ea66d85d49bfa02af70fec1de`; SUCCESS before replacement, REMOVED at 20:26:49 UTC after replacement, still `canRollback: true`.                                                                                                               |
+| Source/configuration                  | Repository `russellmiller49/Interventional-Pulm-Education-Project`, `main`, `checkSuites: false`; one replica in `us-west2`; no staged changes.                                                                                                                                                            |
+| Builder evidence                      | Service configuration says `RAILPACK` / V3. This deployment's actual build log says **Nixpacks v1.41.0**, Node 22, `npm install --legacy-peer-deps`, `npm run build`, `npm run start:prod`. Record this distinction; no setting was changed.                                                               |
+| Build progress                        | Production webpack compilation and TypeScript passed; all 850 static pages generated at 20:20:26 UTC and standalone packaging completed at 20:20:53 UTC. Image export/push completed; rollout began at 20:24:40 UTC and reached SUCCESS at 20:26:45 UTC. The actual Railway production pipeline completed. |
+| Build observations                    | Warnings included dependency deprecations/audit notices, embedded bundle sizes, stale Browserslist data, dynamic dependency extraction and metadataBase fallback to localhost. No failure was reported. These observations are not a dependency or metadata audit.                                         |
+| Runtime before replacement            | Old release logs, 19:09 UTC onward: one `Failed to find Server Action` error event at 19:37:57 UTC (three log lines), preceding this rollout. Do not attribute it to #461. No beta submission/retrieval error was identified in that bounded sample.                                                       |
+| Environment health                    | Target Online / SUCCESS; 1 running, 0 crashed replicas; no pending rollout work, no warning/critical notifications, no failed/crashed deployments in the inspected window.                                                                                                                                 |
+| Aggregate traffic before replacement  | Last-hour Railway snapshot: 283 requests; 222 2xx, 60 3xx, 1 4xx, 0 5xx. This includes the prior release and is not post-release evidence.                                                                                                                                                                 |
+| Resource snapshot before replacement  | Last-hour CPU average 0.00317, max 0.03583; memory current 0.500 GB, max 0.562 GB, 61 samples.                                                                                                                                                                                                             |
 
-Read-only HTTP baseline at **20:17:12–13 UTC (12:17:12–13 PST)**, with no cookies or
-Authorization header. These responses belong to the release serving during the target build;
-repeat them after target `SUCCESS` before crediting them to #461.
+Read-only HTTP checks ran without cookies or an Authorization header twice: baseline at
+**20:17:12–13 UTC (12:17:12–13 PST)** on the preceding release, then **20:29:19–23 UTC
+(12:29:19–23 PST)** after target SUCCESS. All results below passed in both runs. Target source
+and one healthy running replica were confirmed independently with Railway metadata.
 
 | GET request                                                       | Expected                                       | Actual                                               |
 | ----------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------- |
@@ -58,6 +60,9 @@ repeat them after target `SUCCESS` before crediting them to #461.
 | `/api/module-review/mine`                                         | 401 JSON                                       | PASS                                                 |
 | `/api/module-feedback/00000000-0000-4000-8000-000000000001/image` | 401 before record lookup                       | PASS; synthetic sentinel ID                          |
 | `/en/admin/module-feedback`                                       | 307 to login, preserving `next`                | PASS                                                 |
+
+The Railway service domain `/health` also returned **200**, `{"ok":true}` at 20:29:21 UTC,
+corroborating the custom-domain health check.
 
 Every API denial above returned `Cache-Control: private, no-store` and the sign-in-required
 JSON error. No live POST or PATCH was sent, including unauthenticated write probes.
@@ -74,6 +79,22 @@ npx tsx scripts/module-beta/verify-hub-routes.ts --base-url=https://intervention
 
 It checks wrapper 307/login/`next`, real standard-route 200, `X-Frame-Options: SAMEORIGIN`,
 and CSP `frame-ancestors 'self'`. It does not load module assets or authenticate anyone.
+
+Target runtime logs from container start at **20:26:37 UTC** through inspection after rollout
+showed Next.js starting on `0.0.0.0:8080` and reaching Ready. Observed stderr messages were npm
+configuration and metadataBase warnings, not a crash or beta API exception. The metadataBase
+warning resolves social metadata against localhost; no configuration was changed to suppress it.
+
+Deployment-scoped HTTP logs, requested from 20:26:45 UTC and returned through **20:30:38 UTC**,
+contained **122 distinct requests: 92 2xx, 24 3xx, 6 4xx, 0 5xx**, with no upstream errors.
+The two overlapping log batches were deduplicated by timestamp, method, host, path and status;
+neither reached the 500-entry cap. The four beta API requests were the expected signed-out 401s:
+feedback list, review list, own reviews and synthetic image sentinel. The other two 4xx events
+were unrelated `/api/analytics` POST 401s in service traffic; this agent sent only GETs.
+Closing `/health` was still 200 / `{"ok":true}` around 20:30 UTC. Current service resource
+samples were CPU 0 and memory 0.386 GB; the tool's one-hour averages span both releases and are
+not post-release-only measurements. No new target runtime entries appeared during the HTTP
+checks. This is a short read-only smoke window; no successful authenticated submission is claimed.
 
 ## Exact authenticated procedure — prepared, not executed
 
@@ -268,9 +289,10 @@ owner with the failed deployment and sanitized reason; execute no rollback witho
 
 ## Rollback readiness
 
-Candidate revalidated initially: deployment `561529fc-2bce-48e4-9139-3999f85b7eb7`, source
+Candidate revalidated before and after rollout: deployment `561529fc-2bce-48e4-9139-3999f85b7eb7`, source
 `54a02a1a104a552ea66d85d49bfa02af70fec1de`, created 2026-11-10 02:15:16.636 UTC,
-`SUCCESS`, `canRollback: true`, `canRedeploy: true`; configuration snapshot
+`SUCCESS` before replacement, now `REMOVED` with **`canRollback: true`** and
+`canRedeploy: true` after replacement; configuration snapshot
 `561da18a-2366-45b1-bdd2-9381658f7b0b` present in metadata. No rollback/redeploy was executed.
 
 Operator remains Russell Miller or an explicitly named delegate. Intended mechanism remains
@@ -287,20 +309,22 @@ private orphan objects. Cleanup remains a separate authorization.
 
 ## Blockers and decision criteria
 
-1. Target rollout is pending: serving target SHA, completed deployment and target
-   runtime checks remain unconfirmed. Baseline HTTP successes cannot close this blocker.
-2. A/B/C have not been named or authorized; every authenticated case remains **UNTESTED**.
-3. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase.
-   The handoff's migration-ledger discrepancy remains a separate owner disposition, not a new
-   approval gate or evidence of missing live tables: three
-   unrecorded migration effects and differently timestamped earlier entries were documented,
-   with live schema parity at that inspection. This pass did not re-query or modify the schema.
-   **Do not replay missing migrations, mark ledger entries applied or run a blanket push.**
+The deployed-source/build/health/signed-out gate portion is **PASS**. Remaining blockers:
+
+1. A/B/C have not been named or authorized; every authenticated case remains **UNTESTED**.
+2. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase;
+   technical candidate eligibility is confirmed.
+
+The handoff's migration-ledger discrepancy remains a separate owner disposition, not a new
+approval gate or evidence of missing live tables: three unrecorded migration effects and
+differently timestamped earlier entries were documented, with live schema parity at that
+inspection. This pass did not re-query or modify the schema. **Do not replay missing migrations,
+mark ledger entries applied or run a blanket push.**
 
 Issue an infrastructure **GO for proceeding to Module Collaborator Recognition** only after
 the exact deployed SHA/build/runtime checks and all required authorized live cases pass and
 rollback readiness is confirmed. Disclose any unavailable optional expired/revoked-session case
-and record the owner's migration-history disposition separately; ledger repair is not implied. Any real persistence, image or isolation failure is
-**NO-GO**. Pending authorization is **NO-GO / hold**, not an executed-test failure. A GO remains
+and record the owner's migration-history disposition separately; ledger repair is not implied.
+Any real persistence, image or isolation failure is **NO-GO**. Pending authorization is **NO-GO / hold**, not an executed-test failure. A GO remains
 limited to infrastructure and next-phase planning: it does not approve recognition publication,
 module clinical acceptance, readiness changes or gate-4 invitations.
