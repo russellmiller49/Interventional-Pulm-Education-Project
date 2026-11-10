@@ -270,7 +270,7 @@ test('route named boxes stay separate through target, approach, orbit, zoom and 
 }, info) => {
   await page.setViewportSize({ width: 1024, height: 900 })
   await page.goto('/en/ebus-guided/learn?section=eus-b-route-model')
-  // The briefing has no live model; the model opens on the acquisition, the second task.
+  // The route model is the second unit of the EUS-B lesson; nothing live is shown before its lab.
   await expect(page.locator('iframe[title="EBUS workbench"]')).toHaveCount(0)
   const frame = await enterLive(page)
   await expect(page.locator('[data-ebus-flow]')).toHaveAttribute(

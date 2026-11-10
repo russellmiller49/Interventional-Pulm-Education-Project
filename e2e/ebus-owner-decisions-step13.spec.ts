@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { LESSONS } from '../src/features/ebus-guided/content/curriculum'
+import { goToActivity } from './ebus-guided-steps'
+import { CONTENT_LESSONS } from '../src/features/ebus-guided/content/curriculum'
 import { GLOSSARY } from '../src/features/ebus-guided/content/glossary'
 
-const lesson = (id: string) => LESSONS.find((entry) => entry.id === id)!
+// Approved wording belongs to content units; a unit may sit inside another lesson.
+const lesson = (id: string) => CONTENT_LESSONS.find((entry) => entry.id === id)!
 
 for (const condition of [
   { width: 1707, height: 900, rootText: 100, theme: 'light' },
@@ -74,8 +76,9 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  // The contact model is the second unit of the contact lesson; its old address still opens it.
   await page.goto('/en/ebus-guided/learn?section=contact-cutaway-model')
-  await page.locator('[data-now-primary]').click()
+  await goToActivity(page, 'contact-cutaway-model:contact-states')
   const frame = page.frameLocator('iframe[title="EBUS workbench"]')
   const condition = frame.getByLabel('Contact condition')
   await expect(condition).toBeVisible({ timeout: 60_000 })
@@ -145,9 +148,9 @@ test('OD-03 sequence reveal includes approved protected-preparation wording befo
 test('unchanged production H.264 gain example still decodes and produces a genuine held image', async ({
   page,
 }) => {
+  // Gain is the second unit of the depth lesson; its old address still opens that lesson.
   await page.goto('/en/ebus-guided/learn?section=gain-contrast')
-  await page.locator('[data-now-primary]').click()
-  await page.locator('[data-now-primary]').click()
+  await goToActivity(page, 'gain-contrast:detail-comparison')
   const frame = page.frameLocator('iframe[title="EBUS workbench"]')
   const clip = frame.getByLabel('Ultrasound teaching clip')
   await expect

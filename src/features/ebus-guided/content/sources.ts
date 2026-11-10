@@ -66,6 +66,13 @@ export const SOURCES = [
     type: 'Guideline',
   },
   {
+    id: 'jiang2020',
+    title:
+      'Jiang L, et al. Endosonography with lymph node sampling for restaging the mediastinum in lung cancer: systematic review and pooled data analysis. J Thorac Cardiovasc Surg 2020;159:1099-1108',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/31590952/',
+    type: 'Systematic review',
+  },
+  {
     id: 'accp2022',
     title:
       'Douketis JD, et al. Perioperative management of antithrombotic therapy: ACCP clinical practice guideline. Chest 2022;162:e207-e243',

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { LESSONS } from '../content/curriculum'
+import { LESSONS, chapterForLesson } from '../content/curriculum'
 import { activitiesForLesson } from '../content/stage'
 import { NODE_FEATURE_ANNOTATIONS } from '../content/node-feature-annotations.generated'
 import {
@@ -19,8 +19,10 @@ afterEach(cleanup)
 const lesson = LESSONS.find((entry) => entry.id === 'node-characterization')!
 
 describe('lesson 16 uses the owner’s annotated EBUS images', () => {
-  it('is lesson 16 and teaches all six features in its paragraphs', () => {
-    expect(LESSONS.indexOf(lesson)).toBe(15)
+  it('opens the describe-and-plan chapter and teaches all six features in its paragraphs', () => {
+    // Lesson 13 since five lessons were folded into others (2026-11-10); it was lesson 16.
+    expect(LESSONS.indexOf(lesson)).toBe(12)
+    expect(chapterForLesson(lesson.id).lessons[0].id).toBe('node-characterization')
     const text = lesson.paragraphs.join(' ')
     for (const feature of [
       'size',

@@ -170,7 +170,7 @@ describe('the self-paced record', () => {
     render(<CoursePage />)
     expect(document.querySelector('[data-legacy-record-note]')).toBeInTheDocument()
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
-      '0 of 26 lessons reviewed',
+      '0 of ' + LESSONS.length + ' lessons reviewed',
     )
     cleanup()
     render(<LessonHost lesson={LESSONS[1]} />)
@@ -197,7 +197,7 @@ describe('the self-paced record', () => {
     })
     render(<CoursePage />)
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
-      '1 of 26 lessons reviewed · 1 opened',
+      '1 of ' + LESSONS.length + ' lessons reviewed · 1 opened',
     )
     expect(document.querySelector('[data-course-door]')).toHaveTextContent(
       'Continue with ' + LESSONS[0].title,

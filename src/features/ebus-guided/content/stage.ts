@@ -34,6 +34,11 @@ export interface ActivitySpec {
   teaching: TeachingPart[]
   questions: QuestionSlot[]
   task?: 'guided' | 'changed-window'
+  /**
+   * The content unit this step draws on, in a lesson built from two (`Lesson.parts`). Its text,
+   * lab, checks and boundary are that unit's. Absent: the unit with the lesson's own id.
+   */
+  from?: string
   companion?: string
   /** The figure this activity shows when `image` is 'diagram', if not the lesson's own. */
   figure?: Lesson['diagram']
@@ -249,14 +254,27 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     explain(),
     transfer('Review a different apparent size'),
   ],
+  /*
+   * Consolidated lessons (owner decision of 2026-11-10). Each is one lesson with two labs: the
+   * steps marked `from` draw on the unit that used to be a separate lesson. One prediction opens
+   * the lesson and one transfer closes it; the absorbed unit's prediction and transfer repeated
+   * the parent's and stay in its content, unasked.
+   */
   'acoustic-contact': [
     predict('contact-decision', 'Identify the acquisition problem'),
-    {
-      ...brief('contact-example', 'Compare contact and brightness', 'linked', 'demonstration'),
-      companion: 'contact-cutaway-model',
-    },
+    brief('contact-example', 'Compare contact and brightness', 'linked', 'demonstration'),
     acquire('restore-window', 'Restore the acoustic window', 'linked'),
     explain('Compare the acquired images', 'linked'),
+    {
+      ...brief('contact-mechanism', 'Relate the wall, transducer and air gap', 'briefing'),
+      from: 'contact-cutaway-model',
+    },
+    {
+      ...acquire('contact-states', 'Compare the contact conditions', 'linked'),
+      from: 'contact-cutaway-model',
+    },
+    // The one check that reads the learner's own model image: air gap against shadowing reflector.
+    { ...held('Explain the contact comparison', 'linked'), from: 'contact-cutaway-model' },
     transfer('Reassess another window'),
   ],
   'station-seven': [
@@ -291,19 +309,6 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     apply('team-check', 'Agree on the next safe step', 'sequence'),
     transfer('Decide when to pause'),
   ],
-  /*
-   * The model lessons keep the check that reads the learner's own model image; their first check
-   * repeated the lesson before them and is no longer asked (it stays in the lesson's content).
-   */
-  'contact-cutaway-model': [
-    {
-      ...brief('contact-mechanism', 'Relate the wall, transducer and air gap', 'briefing'),
-      companion: 'acoustic-contact',
-    },
-    acquire('contact-states', 'Compare the contact conditions', 'linked'),
-    held('Explain the contact comparison', 'linked'),
-    transfer('Apply the contact principle'),
-  ],
   'image-depth': [
     predict('field-decision', 'Choose the control for the field'),
     brief('depth-example', 'Compare the displayed fields', 'ultrasound', 'demonstration'),
@@ -313,16 +318,23 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     },
     explain('Compare the two recorded fields'),
     transfer('Preserve the anatomy beyond another target'),
-  ],
-  'gain-contrast': [
-    predict('brightness-decision', 'Explain a brightness change'),
-    brief('detail-example', 'Compare brightness and tissue detail', 'ultrasound', 'demonstration'),
+    {
+      ...brief(
+        'detail-example',
+        'Compare brightness and tissue detail',
+        'ultrasound',
+        'demonstration',
+      ),
+      from: 'gain-contrast',
+    },
     {
       ...acquire('detail-comparison', 'Adjust one image control at a time', 'ultrasound'),
       purpose: EXAMPLE_SETTINGS_PURPOSE,
+      from: 'gain-contrast',
     },
-    explain('Compare the retained detail'),
-    transfer('Distinguish poor contact from low gain'),
+    { ...explain('Compare the retained detail'), from: 'gain-contrast' },
+    // Gain against contact: the two are confused at the bedside, so this transfer is kept.
+    { ...transfer('Distinguish poor contact from low gain'), from: 'gain-contrast' },
   ],
   /*
    * No prediction here: the lesson's title names the answer to its first check. The lesson is
@@ -334,15 +346,20 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     explain('Compare the two recordings'),
     transfer('Resolve an uncertain vascular structure'),
   ],
-  'measurement-phantoms': [
-    predict('size-decision', 'Explain a change in apparent size'),
-    brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
-    acquire('phantom-comparison', 'Sweep and measure the elongated shape', 'linked'),
-    explain('Read the dimension in this plane', 'linked'),
-    transfer('Apply the axis limitation to a node'),
-  ],
   capture: [
-    predict('plane-decision', 'Explain the choice of plane'),
+    {
+      ...predict('size-decision', 'Explain a change in apparent size'),
+      from: 'measurement-phantoms',
+    },
+    {
+      ...brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
+      from: 'measurement-phantoms',
+    },
+    {
+      ...acquire('phantom-comparison', 'Sweep and measure the elongated shape', 'linked'),
+      from: 'measurement-phantoms',
+    },
+    { ...explain('Read the dimension in this plane', 'linked'), from: 'measurement-phantoms' },
     brief(
       'capture-context',
       'Choose the image before the measurement',
@@ -446,10 +463,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'eus-b': [
     predict('first-decision', 'Choose the target for a second route'),
-    {
-      ...brief('complementary-route', 'Identify what a second route can add', 'regional'),
-      companion: 'eus-b-route-model',
-    },
+    brief('complementary-route', 'Identify what a second route can add', 'regional'),
     apply(
       'route-coverage',
       'Match the route to the remaining question',
@@ -457,36 +471,31 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       [],
       'regional',
     ),
-    transfer('Identify an unresolved regional gap'),
-  ],
-  'eus-b-route-model': [
-    predict('first-decision', 'Compare two routes to one node'),
     {
       ...brief('route-orientation', 'Compare the approach to the same target', 'briefing'),
-      companion: 'eus-b',
+      from: 'eus-b-route-model',
     },
-    acquire('route-comparison', 'Compare the airway and esophageal routes', 'linked'),
-    explain('Read the route comparison', 'linked'),
-    transfer('Preserve an unexamined region in the plan'),
+    {
+      ...acquire('route-comparison', 'Compare the airway and esophageal routes', 'linked'),
+      from: 'eus-b-route-model',
+    },
+    { ...explain('Read the route comparison', 'linked'), from: 'eus-b-route-model' },
+    transfer('Identify an unresolved regional gap'),
   ],
   'needle-safety': [
     predict('first-decision', 'Decide what to do when the tip is lost'),
-    {
-      ...brief('sampling-states', 'Follow the sampling sequence', 'sampling'),
-      companion: 'needle-assembly-model',
-    },
+    brief('sampling-states', 'Follow the sampling sequence', 'sampling'),
     apply('safe-sequence', 'Link needle actions to current guidance', 'sequence', [], 'sampling'),
-    transfer('Respond to resistance at a calcified target'),
-  ],
-  'needle-assembly-model': [
-    predict('first-decision', 'Decide what to confirm before advancing'),
     {
       ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
-      companion: 'needle-safety',
+      from: 'needle-assembly-model',
     },
-    acquire('needle-states', 'Prepare, pass and withdraw the needle', 'sampling'),
-    explain('Read the live-tip limitation', 'sampling'),
-    transfer('Respond to resistance with the tip visible'),
+    {
+      ...acquire('needle-states', 'Prepare, pass and withdraw the needle', 'sampling'),
+      from: 'needle-assembly-model',
+    },
+    { ...explain('Read the live-tip limitation', 'sampling'), from: 'needle-assembly-model' },
+    transfer('Respond to resistance at a calcified target'),
   ],
   'adequacy-rose': [
     predict('first-decision', 'Separate what ROSE has settled'),
@@ -557,40 +566,51 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
 export function activitiesForLesson(lesson: Lesson): LessonActivity[] {
   const specs = ACTIVITY_FLOWS[lesson.id]
   if (!specs) throw new Error('EBUS lesson has no activity flow: ' + lesson.id)
-  return specs.map((spec, index) => ({
-    ...spec,
-    id: lesson.id + ':' + spec.id,
-    lessonId: lesson.id,
-    contentVersion: 1,
-    objective: lesson.objective,
-    sourceIds: lesson.sources,
-    limitation: lesson.boundary ?? '',
-    purpose:
-      spec.purpose ??
-      (spec.teaching.includes('takeaways') && spec.questions.length
-        ? KEY_POINTS_PURPOSE[spec.kind === 'transfer' ? 'transfer' : 'review']
-        : undefined),
-    /*
-     * A check with the key points beside it, or with a stated purpose, is guided: it used to be
-     * called independent whenever it had questions (EBUS-PRE-REVIEW-04, H). Descriptive only.
-     */
-    support:
-      spec.image === 'demonstration'
-        ? 'worked'
-        : spec.purpose || spec.teaching.includes('takeaways')
-          ? 'guided'
-          : spec.image === 'held' && lesson.lab?.kind === 'model'
+  /** The unit a step draws on: its text, lab, checks, sources and boundary are that unit's. */
+  const unitFor = (spec: ActivitySpec): Lesson => {
+    const id = spec.from ?? lesson.id
+    const unit = (lesson.parts ?? [lesson]).find((part) => part.id === id)
+    if (!unit) throw new Error('EBUS lesson ' + lesson.id + ' has no unit ' + id)
+    return unit
+  }
+  const idOf = (spec: ActivitySpec) => unitFor(spec).id + ':' + spec.id
+  return specs.map((spec, index) => {
+    const unit = unitFor(spec)
+    return {
+      ...spec,
+      id: idOf(spec),
+      lessonId: unit.id,
+      contentVersion: 1,
+      objective: unit.objective,
+      sourceIds: unit.sources,
+      limitation: unit.boundary ?? '',
+      purpose:
+        spec.purpose ??
+        (spec.teaching.includes('takeaways') && spec.questions.length
+          ? KEY_POINTS_PURPOSE[spec.kind === 'transfer' ? 'transfer' : 'review']
+          : undefined),
+      /*
+       * A check with the key points beside it, or with a stated purpose, is guided: it used to be
+       * called independent whenever it had questions (EBUS-PRE-REVIEW-04, H). Descriptive only.
+       */
+      support:
+        spec.image === 'demonstration'
+          ? 'worked'
+          : spec.purpose || spec.teaching.includes('takeaways')
             ? 'guided'
-            : spec.questions.length
-              ? 'independent'
-              : 'guided',
-    completion: { action: spec.interaction, responses: spec.questions },
-    transitions: {
-      next: specs[index + 1] ? lesson.id + ':' + specs[index + 1].id : null,
-      retry: lesson.id + ':' + spec.id,
-      review: 'read-only',
-    },
-  }))
+            : spec.image === 'held' && unit.lab?.kind === 'model'
+              ? 'guided'
+              : spec.questions.length
+                ? 'independent'
+                : 'guided',
+      completion: { action: spec.interaction, responses: spec.questions },
+      transitions: {
+        next: specs[index + 1] ? idOf(specs[index + 1]) : null,
+        retry: idOf(spec),
+        review: 'read-only',
+      },
+    }
+  })
 }
 
 export const flowAuthoring = {

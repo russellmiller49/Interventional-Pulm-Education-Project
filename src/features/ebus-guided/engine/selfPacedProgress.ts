@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS, LESSONS, MERGED_INTO, lessonById } from '../content/curriculum'
 import { STORAGE_KEY as LEGACY_STORAGE_KEY } from './progress'
 
 /**
@@ -76,6 +76,17 @@ export function createEmptyProgress(): CourseProgress {
 
 const EMPTY_PROGRESS = createEmptyProgress()
 const LESSON_IDS = new Set(LESSONS.map((lesson) => lesson.id))
+/** A practice lab is a content unit's recorded-clip lab; two units now sit inside a merged lesson. */
+const PRACTICE_LAB_IDS = new Set(CONTENT_LESSONS.map((lesson) => lesson.id))
+/*
+ * Five lessons were folded into others on 2026-11-10. A record written before that still names
+ * them. Read forward, never rewritten:
+ *  - a folded lesson that was opened or saved for later marks the lesson that now holds it;
+ *  - "reviewed" carries only from the lesson that kept its id. A learner who reviewed just the
+ *    folded half sees the merged lesson as opened, not reviewed: the mark means "reached the end",
+ *    and the merged lesson's end is not where the folded one's was.
+ */
+const forward = (ids: readonly string[]) => ids.map((id) => MERGED_INTO[id] ?? id)
 const PRACTICE_IDS = new Set(PRACTICE_CASES.map((item) => item.id))
 const INTEGRATED_IDS = new Set(FINAL_CASES.map((item) => item.id))
 
@@ -93,16 +104,20 @@ export function parseProgress(serialized: string | null | undefined): CourseProg
     const location = data.lastLocation
     const locationKnown =
       !location ||
-      (location.kind === 'lesson' && LESSON_IDS.has(location.id)) ||
-      (location.kind === 'practice-lab' && LESSON_IDS.has(location.id)) ||
+      (location.kind === 'lesson' && LESSON_IDS.has(MERGED_INTO[location.id] ?? location.id)) ||
+      (location.kind === 'practice-lab' && PRACTICE_LAB_IDS.has(location.id)) ||
       (location.kind === 'practice-case' && PRACTICE_IDS.has(location.id)) ||
       (location.kind === 'integrated-case' && INTEGRATED_IDS.has(location.id))
     return {
       ...data,
-      lastLocation: locationKnown ? location : null,
-      visitedLessonIds: known(data.visitedLessonIds, LESSON_IDS),
+      lastLocation: !locationKnown
+        ? null
+        : location?.kind === 'lesson'
+          ? { kind: 'lesson', id: MERGED_INTO[location.id] ?? location.id }
+          : location,
+      visitedLessonIds: known(forward(data.visitedLessonIds), LESSON_IDS),
       reviewedLessonIds: known(data.reviewedLessonIds, LESSON_IDS),
-      reviewLaterLessonIds: known(data.reviewLaterLessonIds, LESSON_IDS),
+      reviewLaterLessonIds: known(forward(data.reviewLaterLessonIds), LESSON_IDS),
       openedPracticeCaseIds: known(data.openedPracticeCaseIds, PRACTICE_IDS),
       openedIntegratedCaseIds: known(data.openedIntegratedCaseIds, INTEGRATED_IDS),
     }
@@ -194,9 +209,10 @@ export function withReviewLater(
 export function recommendedLesson(progress: CourseProgress) {
   const reviewed = new Set(progress.reviewedLessonIds)
   const last = progress.lastLocation
-  if (last && (last.kind === 'lesson' || last.kind === 'practice-lab') && !reviewed.has(last.id)) {
-    const lesson = LESSONS.find((entry) => entry.id === last.id)
-    if (lesson) return lesson
+  if (last && (last.kind === 'lesson' || last.kind === 'practice-lab')) {
+    // A practice lab is named by its content unit, which may sit inside a merged lesson.
+    const lesson = lessonById(last.id)
+    if (lesson && !reviewed.has(lesson.id)) return lesson
   }
   return LESSONS.find((lesson) => !reviewed.has(lesson.id))
 }

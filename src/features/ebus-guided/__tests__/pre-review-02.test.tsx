@@ -1,8 +1,7 @@
-import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent } from '@testing-library/react'
 
-import { LessonHost } from '../components/LessonHost'
-import { LESSONS } from '../content/curriculum'
-import { activitiesForLesson } from '../content/stage'
+import { CONTENT_LESSONS } from '../content/curriculum'
+import { openUnitAcquisition, unitById } from '../testing/unit-acquisition'
 import { labGoalMet, labGoalRequirements, type Lab } from '../content/types'
 import {
   CONTACT_MODES,
@@ -71,20 +70,10 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-const lessonFor = (id: string) => LESSONS.find((lesson) => lesson.id === id)!
+const lessonFor = unitById
 const gainLesson = lessonFor('gain-contrast')
 const contactLesson = lessonFor('contact-cutaway-model')
-
-/** Open a lesson and continue to its acquisition step. */
-function openAcquisition(lessonId: string) {
-  const lesson = lessonFor(lessonId)
-  render(<LessonHost lesson={lesson} />)
-  const activities = activitiesForLesson(lesson)
-  const target = activities.findIndex((activity) => activity.interaction === 'acquire')
-  for (let step = 0; step < target; step++)
-    fireEvent.click(document.querySelector('[data-now-primary]') as HTMLButtonElement)
-  return lesson
-}
+const openAcquisition = openUnitAcquisition
 
 const recordedFrame = (over: Partial<RecordedFrameSource> = {}): RecordedFrameSource => ({
   type: 'recorded-frame',
@@ -211,7 +200,7 @@ describe('the observation carries which contact condition produced the frame', (
     expect(identity.textContent).toContain('Contact condition: contact with a reflector.')
     // The authored check is untouched; it is the evidence that stops being anonymous.
     expect(contactLesson.observation.prompt).toBe(
-      LESSONS.find((lesson) => lesson.id === 'contact-cutaway-model')!.observation.prompt,
+      lessonFor('contact-cutaway-model').observation.prompt,
     )
   })
 
@@ -297,7 +286,7 @@ describe('the acquisition says what is still open', () => {
   })
 
   it('agrees with the gate for every lab in the course', () => {
-    const labs = LESSONS.flatMap((lesson) => [lesson.lab, lesson.transferLab]).filter(
+    const labs = CONTENT_LESSONS.flatMap((lesson) => [lesson.lab, lesson.transferLab]).filter(
       (lab): lab is Lab => !!lab,
     )
     expect(labs.length).toBeGreaterThan(10)

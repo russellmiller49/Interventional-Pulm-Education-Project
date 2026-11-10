@@ -240,6 +240,35 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     note: 'Transbronchial lung biopsy in the same procedure was the only risk factor for a complication.',
     ...ABSTRACT_ONLY,
   },
+  /* Restaging after induction therapy, added 2026-11-10 with the consolidation (not signed). */
+  'restaging-sensitivity': {
+    label: 'Sensitivity of EBUS-TBNA for mediastinal restaging after induction therapy',
+    value: '65%',
+    appliesTo: 'pooled, 10 studies and 558 patients; negative results confirmed surgically',
+    class: 'consensus',
+    sources: [
+      { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
+    ],
+    note: '95% CI 52 to 76; pooled specificity 99%. Lower than at first staging: a negative restaging result does not exclude persistent nodal disease.',
+    checkedOn: '2026-11-10',
+    checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
+    signedBy: null,
+    signedOn: null,
+  },
+  'restaging-specificity': {
+    label: 'Specificity of EBUS-TBNA for mediastinal restaging after induction therapy',
+    value: '99%',
+    appliesTo: 'pooled, 10 studies and 558 patients',
+    class: 'consensus',
+    sources: [
+      { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
+    ],
+    note: '95% CI 78 to 100.',
+    checkedOn: '2026-11-10',
+    checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
+    signedBy: null,
+    signedOn: null,
+  },
   'pneumothorax-rate': {
     label: 'Pneumothorax after EBUS-TBNA',
     value: '0.53%',

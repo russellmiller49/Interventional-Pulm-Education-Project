@@ -133,21 +133,90 @@ export const HISTORICAL_IMAGE_QUESTIONS = authoredLessons
 export const HISTORICAL_MODEL_QUESTIONS = authoredLessons
   .filter((lesson) => lesson.lab?.kind === 'model')
   .map((lesson) => lesson.question)
+
+/** One authored unit as the course shows it: current check ids and image interpretations. */
+function unit(lessonId: string): Lesson {
+  const lesson = authoredLessons.find((entry) => entry.id === lessonId)
+  if (!lesson) throw new Error('Unknown EBUS lesson: ' + lessonId)
+  if (lesson.lab?.kind === 'model')
+    return {
+      ...lesson,
+      question: { ...lesson.question, id: lesson.question.id + '-application-v2' },
+    }
+  return IMAGE_INTERPRETATIONS[lessonId]
+    ? { ...lesson, observation: IMAGE_INTERPRETATIONS[lessonId] }
+    : lesson
+}
+
+/**
+ * Lessons built from two units (owner decision of 2026-11-10: consolidate). Each kept its parent's
+ * id, so links and saved marks for the parent still resolve; the unit it absorbed is listed in
+ * `MERGED_INTO`. `parts` is the teaching order.
+ */
+const MERGED: Record<
+  string,
+  { title: string; objective: string; minutes: number; parts: string[] }
+> = {
+  'acoustic-contact': {
+    title: 'Acoustic contact and coupling',
+    objective:
+      'Distinguish loss of acoustic contact from an image-brightness problem, and an air gap from a shadowing reflector.',
+    minutes: 13,
+    parts: ['acoustic-contact', 'contact-cutaway-model'],
+  },
+  'image-depth': {
+    title: 'Depth, gain and contrast',
+    objective:
+      'Set depth to frame the target and what lies beyond it, then set gain and contrast without mistaking brightness for tissue detail.',
+    minutes: 12,
+    parts: ['image-depth', 'gain-contrast'],
+  },
+  capture: {
+    title: 'Sweep, freeze and measure',
+    objective:
+      'Sweep through a node before choosing the plane, then freeze, measure and save that image.',
+    minutes: 16,
+    parts: ['measurement-phantoms', 'capture'],
+  },
+  'eus-b': {
+    title: 'Where EUS-B complements EBUS',
+    objective:
+      'Identify the targets an esophageal approach adds, and compare the airway and esophageal windows onto the same node.',
+    minutes: 13,
+    parts: ['eus-b', 'eus-b-route-model'],
+  },
+  'needle-safety': {
+    title: 'The needle: assembly, tip visibility and a safe pass',
+    objective:
+      'Identify the safety checks around a needle pass, and stop advancing when live tip guidance is lost.',
+    minutes: 14,
+    parts: ['needle-safety', 'needle-assembly-model'],
+  },
+}
+/** A unit that used to be a lesson of its own → the lesson that now holds it. */
+export const MERGED_INTO: Record<string, string> = Object.fromEntries(
+  Object.entries(MERGED).flatMap(([id, merge]) =>
+    merge.parts.filter((part) => part !== id).map((part) => [part, id]),
+  ),
+)
+
 function chapter(id: string, title: string, ids: string[]) {
   return {
     id,
     title,
-    lessons: ids.map((lessonId) => {
-      const lesson = authoredLessons.find((entry) => entry.id === lessonId)
-      if (!lesson) throw new Error('Unknown EBUS chapter lesson: ' + lessonId)
-      if (lesson.lab?.kind === 'model')
-        return {
-          ...lesson,
-          question: { ...lesson.question, id: lesson.question.id + '-application-v2' },
-        }
-      return IMAGE_INTERPRETATIONS[lessonId]
-        ? { ...lesson, observation: IMAGE_INTERPRETATIONS[lessonId] }
-        : lesson
+    lessons: ids.map((lessonId): Lesson => {
+      const own = unit(lessonId)
+      const merge = MERGED[lessonId]
+      if (!merge) return own
+      const parts = merge.parts.map(unit)
+      return {
+        ...own,
+        title: merge.title,
+        objective: merge.objective,
+        minutes: merge.minutes,
+        sources: [...new Set(parts.flatMap((part) => part.sources))],
+        parts,
+      }
     }),
   }
 }
@@ -157,13 +226,10 @@ export const CHAPTERS = [
   chapter('contact', 'Understand the scope and establish contact', [
     'scope-orientation',
     'acoustic-contact',
-    'contact-cutaway-model',
   ]),
   chapter('image', 'Obtain and interpret a useful ultrasound image', [
     'image-depth',
-    'gain-contrast',
     'doppler',
-    'measurement-phantoms',
     'capture',
   ]),
   chapter('anatomy', 'Identify anatomical windows and stations', [
@@ -177,11 +243,9 @@ export const CHAPTERS = [
     'node-characterization',
     'systematic-staging',
     'eus-b',
-    'eus-b-route-model',
   ]),
   chapter('sample', 'Sample and preserve useful tissue', [
     'needle-safety',
-    'needle-assembly-model',
     'adequacy-rose',
     'specimen-triage',
   ]),
@@ -191,18 +255,36 @@ export const CHAPTERS = [
     'results-reporting',
   ]),
 ]
+/** The lessons a learner opens, in course order. */
 export const LESSONS: Lesson[] = CHAPTERS.flatMap((entry) => entry.lessons)
+/** The units of one lesson, in teaching order: its parts, or the lesson itself. */
+export function partsOf(lesson: Lesson): Lesson[] {
+  return lesson.parts ?? [lesson]
+}
+/** Every content unit, in course order. A unit keeps its id, lab, checks and boundary. */
+export const CONTENT_LESSONS: Lesson[] = LESSONS.flatMap(partsOf)
+export function contentById(id: string | undefined) {
+  return CONTENT_LESSONS.find((entry) => entry.id === id)
+}
 export function chapterForLesson(id: string) {
   return CHAPTERS.find((entry) => entry.lessons.some((lesson) => lesson.id === id))!
 }
+/** The lesson with this id, or the lesson that now holds the unit with this id. */
 export function lessonById(id: string | undefined) {
-  return LESSONS.find((l) => l.id === id)
+  const target = id !== undefined && MERGED_INTO[id] ? MERGED_INTO[id] : id
+  return LESSONS.find((l) => l.id === target)
+}
+/** "Lesson 7, Sweep, freeze and measure" for a lesson or unit id, from the registry's own order. */
+export function lessonLabel(id: string) {
+  const lesson = lessonById(id)
+  if (!lesson) throw new Error('Unknown EBUS lesson: ' + id)
+  return 'Lesson ' + (LESSONS.indexOf(lesson) + 1) + ', ' + lesson.title
 }
 export function nextLesson(completed: readonly string[]) {
   return LESSONS.find((l) => !completed.includes(l.id))
 }
 export function lessonHref(id: string) {
-  return BASE + '/learn?section=' + encodeURIComponent(id)
+  return BASE + '/learn?section=' + encodeURIComponent(MERGED_INTO[id] ?? id)
 }
 export const COURSE_OBJECTIVES = [
   'Distinguish a diagnostic request from the extent of a staging examination.',

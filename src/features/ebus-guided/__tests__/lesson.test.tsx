@@ -170,6 +170,18 @@ function expectNoGradedWrite() {
  * The lesson order since the 2026-11-10 flow change: a committed prediction, the teaching, the
  * acquisition, the learner's own image with its key points, then one transfer check.
  */
+/**
+ * From the first lab's image screen to the lesson's closing check. The contact lesson holds a
+ * second unit since 2026-11-10: the contact model's briefing, its lab, and one check on that image.
+ */
+function toClosingCheck() {
+  next()
+  expect(heading('Relate the wall, transducer and air gap')).toBeInTheDocument()
+  next()
+  skipAcquisition()
+  expect(heading('Explain the contact comparison')).toBeInTheDocument()
+  next()
+}
 function startLab() {
   render(<LessonHost lesson={coupling} />)
   answer(coupling.question.choices.find((c) => c.correct)!.text)
@@ -223,7 +235,7 @@ it('opens the hint and the explanation before any answer; a later check’s hint
   next()
   next()
   skipAcquisition()
-  next()
+  toClosingCheck()
   expect(heading('Reassess another window')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
   fireEvent.click(screen.getByRole('button', { name: /Review this concept/ }))
@@ -253,8 +265,8 @@ it('holds an image only after a real acquisition; skipping holds nothing, and th
   // The image screen asks nothing: the check that repeated the prediction is no longer shown.
   expect(screen.queryByRole('button', { name: 'Check response' })).not.toBeInTheDocument()
   expect(screen.queryByText(coupling.observation.prompt)).not.toBeInTheDocument()
-  expect(primary()).toHaveTextContent('Continue to Reassess another window')
-  next()
+  expect(primary()).toHaveTextContent('Continue to Relate the wall, transducer and air gap')
+  toClosingCheck()
   answer(coupling.transfer.choices.find((c) => c.unsafe)!.text)
   expect(screen.getByText('Not correct, and unsafe.', { exact: false })).toBeVisible()
   expect(primary()).toBeEnabled()

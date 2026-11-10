@@ -135,9 +135,9 @@ export const prepareLessons: Lesson[] = [
   },
   {
     id: 'preparation',
-    title: 'Preparation and the airway plan',
+    title: 'Preparation, sedation and the airway plan',
     topic: 'Prepare',
-    minutes: 7,
+    minutes: 8,
     objective:
       'Identify unresolved preparation issues that should pause an elective EBUS procedure.',
     recall: 'The clinical question and likely specimen requirements should already be defined.',
@@ -146,6 +146,13 @@ export const prepareLessons: Lesson[] = [
       `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel the sources differ: ACCP 2022 says ${N('clopidogrel-accp')} a procedure, BTS 2013 says ${N('clopidogrel-bts')} a biopsy, and ICS/IAB 2023 allows continuing it for EBUS-TBNA when the risk of thrombosis outweighs the risk of bleeding. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
       `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
       `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
+      /*
+       * Sedation and airway (owner decision of 2026-11-10 to add them). The CHEST 2016 statement is
+       * written from the guideline's first recommendation; its abstract does not list the
+       * recommendations and the full text was not re-read in this round, so the owner checks the
+       * wording before signing. The airway sentences are practice points, not a guideline.
+       */
+      'EBUS-TBNA is done under moderate sedation, deep sedation or general anesthesia; CHEST 2016 suggests that either moderate or deep sedation is acceptable. The choice sets the airway. Under moderate sedation the scope passes the cords with topical anesthesia, and cough and movement limit how long a stable window lasts. A laryngeal mask leaves the whole trachea reachable. An endotracheal tube lies over the upper trachea and can cover the high paratracheal stations, so say before induction which stations must be reached.',
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
     checklist: [
@@ -222,7 +229,7 @@ export const prepareLessons: Lesson[] = [
       'Unresolved readiness issues require a pause.',
       'Know the antiplatelet intervals, and identify any anticoagulant before you start.',
     ],
-    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f'],
+    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f', 'chest2016'],
   },
   {
     id: 'scope-orientation',

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Link } from '@/i18n/navigation'
-import { LESSONS, lessonHref } from '../content/curriculum'
+import { lessonById, lessonHref } from '../content/curriculum'
 import { FINAL_CASES } from '../content/cases'
 import { useCourseProgress } from './useCourseProgress'
 import { EbusModuleFrame } from './ModuleFrame'
@@ -68,14 +68,14 @@ export function IntegratedCasesPage({
                     </p>
                     <p className={styles.muted}>
                       Lessons behind this case:{' '}
-                      {c.lessonIds.map((id, index) => (
-                        <span key={id}>
-                          {index ? ', ' : ''}
-                          <Link href={lessonHref(id)}>
-                            {LESSONS.find((l) => l.id === id)?.title}
-                          </Link>
-                        </span>
-                      ))}
+                      {[...new Set(c.lessonIds.map((id) => lessonById(id)).filter(Boolean))].map(
+                        (lesson, index) => (
+                          <span key={lesson!.id}>
+                            {index ? ', ' : ''}
+                            <Link href={lessonHref(lesson!.id)}>{lesson!.title}</Link>
+                          </span>
+                        ),
+                      )}
                     </p>
                     <button className={styles.secondary} onClick={() => setActive(c.id)}>
                       {opened ? 'Open again' : 'Open case'}

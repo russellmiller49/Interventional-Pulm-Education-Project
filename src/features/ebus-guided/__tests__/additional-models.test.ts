@@ -21,7 +21,7 @@ import {
   type ModelAction,
 } from '@/lib/ebus-model-contract'
 import { EMPTY_EBUS_OBSERVATION, isEbusConfig, isEbusObservation } from '@/lib/ebus-guided-bridge'
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS } from '../content/curriculum'
 import { labGoalMet } from '../content/types'
 const apply = (s: ModelState, ...actions: ModelAction[]) => actions.reduce(modelReducer, s)
 const readyNeedle = () =>
@@ -161,7 +161,7 @@ it('retains the same target across registered route views and represents unsuppo
 })
 it('requires complete, current, unannotated model evidence and accepts not-ready clearing observations', () => {
   for (const pkg of MODEL_PACKAGES) {
-    const lab = LESSONS.find((l) => l.lab?.modelPackage === pkg)!.lab!
+    const lab = CONTENT_LESSONS.find((l) => l.lab?.modelPackage === pkg)!.lab!
     const observation = {
       ...EMPTY_EBUS_OBSERVATION,
       ready: true,

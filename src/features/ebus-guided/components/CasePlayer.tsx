@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type { EbusCase, Question } from '../content/types'
-import { lessonHref, LESSONS } from '../content/curriculum'
+import { lessonById, lessonHref } from '../content/curriculum'
 import { recordLocation } from '../engine/selfPacedProgress'
 import { QuestionBody } from './QuestionBody'
 import { QuestionExplanation } from './QuestionExplanation'
@@ -60,7 +60,8 @@ export function CasePlayer({
   const unsafe = !!q.choices.find((c) => c.id === committed)?.unsafe
   const last = index === item.questions.length - 1
   const lessons = useMemo(
-    () => item.lessonIds.map((id) => LESSONS.find((l) => l.id === id)).filter(Boolean),
+    // A case may name a unit that now sits inside another lesson: show that lesson, once.
+    () => [...new Set(item.lessonIds.map((id) => lessonById(id)).filter(Boolean))],
     [item.lessonIds],
   )
   /*

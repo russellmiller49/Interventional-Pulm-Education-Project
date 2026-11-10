@@ -2,7 +2,7 @@
 import { chromium, expect } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { FINAL_CASES, PRACTICE_CASES } from '../../src/features/ebus-guided/content/cases'
-import { LESSONS } from '../../src/features/ebus-guided/content/curriculum'
+import { LESSONS, partsOf } from '../../src/features/ebus-guided/content/curriculum'
 import {
   activitiesForLesson,
   type LessonActivity,
@@ -53,8 +53,13 @@ async function main() {
       let acquiredPixels: string | undefined
       let acquiredIdentity: string | undefined
       let recordedPixels: string | undefined
+      const firstBriefing = activitiesForLesson(lesson).find((entry) =>
+        entry.teaching.includes('foundation'),
+      )
       for (const activity of activitiesForLesson(lesson)) {
         console.log('TASK', activity.id)
+        // A lesson may hold two content units; a step's text, lab and checks are its own unit's.
+        const unit = partsOf(lesson).find((part) => part.id === activity.lessonId)!
         await expect(page.locator('[data-ebus-flow]')).toHaveAttribute(
           'data-activity-id',
           activity.id,
@@ -62,17 +67,24 @@ async function main() {
         await expect(page.getByRole('heading', { name: activity.title, exact: true })).toBeVisible()
         expect(await page.getByRole('region', { name: 'Steps panel' }).count()).toBe(0)
         if (activity.teaching.includes('foundation')) {
-          await expect(page.getByText(lesson.objective, { exact: false }).first()).toBeVisible()
-          await expect(page.getByText(lesson.recall, { exact: false }).first()).toBeVisible()
-          for (const item of lesson.checklist)
+          // The lesson's first briefing states the lesson's objective; a later one its unit's.
+          await expect(
+            page
+              .getByText(activity.id === firstBriefing?.id ? lesson.objective : unit.objective, {
+                exact: false,
+              })
+              .first(),
+          ).toBeVisible()
+          await expect(page.getByText(unit.recall, { exact: false }).first()).toBeVisible()
+          for (const item of unit.checklist)
             await expect(page.getByText(item, { exact: true })).toBeVisible()
-          for (const paragraph of lesson.paragraphs)
+          for (const paragraph of unit.paragraphs)
             await expect(page.getByText(paragraph, { exact: true })).toBeVisible()
           if (!process.env.EBUS_NO_SHOTS)
             await page.screenshot({ path: `${out}/${lesson.id}-introduction.png`, fullPage: false })
         }
         if (activity.interaction === 'acquire') {
-          const lab = activity.task === 'changed-window' ? lesson.transferLab! : lesson.lab!
+          const lab = activity.task === 'changed-window' ? unit.transferLab! : unit.lab!
           const linkedConsole = lab.kind === 'simulator' && !!lab.linkedLesson
           // The image is the learner's to acquire: the primary control waits for the lab's steps,
           // and leaving without an image is always offered.
@@ -162,20 +174,20 @@ async function main() {
           await expect(primary()).toBeEnabled()
           await expect(primary()).toContainText('without completing this task')
         }
-        if (activity.interaction === 'matching' && lesson.matching) {
-          for (const pair of lesson.matching.pairs)
+        if (activity.interaction === 'matching' && unit.matching) {
+          for (const pair of unit.matching.pairs)
             await page.getByLabel(pair.cue, { exact: true }).selectOption(pair.id)
           await page.getByRole('button', { name: 'Check matches', exact: true }).click()
           await expect(page.locator('[data-task-explanation]')).toHaveText(
-            lesson.matching.explanation,
+            unit.matching.explanation,
           )
         }
-        if (activity.interaction === 'sequence' && lesson.sequence) {
-          for (const step of lesson.sequence.steps)
+        if (activity.interaction === 'sequence' && unit.sequence) {
+          for (const step of unit.sequence.steps)
             await page.getByRole('button', { name: step.text, exact: true }).click()
           await page.getByRole('button', { name: 'Check sequence', exact: true }).click()
           await expect(page.locator('[data-task-explanation]')).toHaveText(
-            lesson.sequence.explanation,
+            unit.sequence.explanation,
           )
         }
         if (activity.image === 'held') {
@@ -188,7 +200,7 @@ async function main() {
             ),
           ).toBe(true)
           const currentObservation = await linkedObservation(page)
-          if (lesson.lab?.kind === 'knobology') {
+          if (unit.lab?.kind === 'knobology') {
             await expect(workbench().locator('[data-recorded-held]')).toBeVisible()
             expect(currentObservation?.recorded?.held).toBe(true)
             expect(currentObservation?.recorded?.frameId).toBe(acquiredIdentity)
@@ -215,11 +227,11 @@ async function main() {
             })
         }
         for (let i = 0; i < activity.questions.length; i++) {
-          const question = lesson[activity.questions[i]]
+          const question = unit[activity.questions[i]]
           const correct = question.choices.find((choice) => choice.correct)!
           const card = page.locator(`[data-question-id="${question.id}"]`)
           await expect(card.locator('legend')).toHaveText(question.prompt)
-          await expect(page.getByText(lesson.worked.reasoning, { exact: true })).toHaveCount(0)
+          await expect(page.getByText(unit.worked.reasoning, { exact: true })).toHaveCount(0)
           // Self-paced: the check is optional, and its explanation opens before any answer.
           await expect(card).toHaveAttribute('data-answered', 'false')
           await expect(card.locator('[data-question-unavailable]')).toHaveCount(0)
@@ -245,7 +257,7 @@ async function main() {
             question.explanation,
           )
           await expect(primary()).not.toContainText('without')
-          if (activity.image === 'held' && lesson.lab?.kind === 'knobology') {
+          if (activity.image === 'held' && unit.lab?.kind === 'knobology') {
             const frame = workbench()
             const before = await frame.locator('[data-recorded-held]').getAttribute('src')
             expect(before).toBe(recordedPixels)
@@ -282,7 +294,8 @@ async function main() {
       results.push({
         lesson: lesson.id,
         activities: activitiesForLesson(lesson).length,
-        retainedPixelsChecked: !!acquiredPixels || lesson.lab?.kind === 'knobology',
+        retainedPixelsChecked:
+          !!acquiredPixels || partsOf(lesson).some((part) => part.lab?.kind === 'knobology'),
       })
       console.log('PASS', lesson.id)
     }

@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/navigation'
-import { LESSONS, lessonHref } from '../content/curriculum'
+import { LESSONS, lessonById, lessonHref } from '../content/curriculum'
 import type { GlossaryEntry } from '../content/glossary'
 import styles from './course.module.css'
 
@@ -31,10 +31,11 @@ export function GlossaryTerms({
       {intro && <p className={styles.muted}>{intro}</p>}
       <ul>
         {entries.map((entry) => {
+          // The lesson that teaches the term, unless the learner is already in it. A unit folded
+          // into another lesson resolves to the lesson that now holds it.
+          const teaching = lessonById(entry.lessonId)
           const lesson =
-            entry.lessonId && entry.lessonId !== currentLessonId
-              ? LESSONS.find((item) => item.id === entry.lessonId)
-              : undefined
+            teaching && teaching.id !== lessonById(currentLessonId)?.id ? teaching : undefined
           return (
             <li key={entry.id}>
               <details data-glossary-term={entry.id}>
