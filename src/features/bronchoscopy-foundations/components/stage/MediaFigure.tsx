@@ -90,8 +90,6 @@ export function mediaDescription(media: MediaRef): string {
   }
 }
 
-export const MEDIA_PENDING_NOTE = 'Teaching media, pending clinical review.'
-
 /**
  * The stills are frames of a recorded bronchoscopy video. The small rectangle in their lower corner
  * is part of that recorded frame, not a control on this page (SUP-13).

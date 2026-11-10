@@ -1797,6 +1797,7 @@ function CompletionCard({
   const integratedCase = CAPSTONE_CASES.find((entry) => entry.pairedSectionId === lesson.sectionId)
   const practiceCase = microCasesForSection(lesson.sectionId)[0]
   const { section } = lesson
+  const next = nextSectionId ? bronchSection(nextSectionId) : null
   return (
     <section
       className={styles.completion}
@@ -1805,29 +1806,20 @@ function CompletionCard({
       aria-label="End of section"
     >
       <p className={styles.kicker}>End of section</p>
-      <p data-completion-reviewed>
-        {reviewed
-          ? 'This section is marked reviewed on this device.'
-          : 'This section is not marked reviewed.'}{' '}
-        The mark is yours to change; it records nothing about your answers.{' '}
-        <button
-          type="button"
-          className={styles.completionLink}
-          data-toggle-reviewed
-          disabled={!hydrated}
-          onClick={() =>
-            writeBronchSelfPacedRecord(
-              withSectionReviewed(readBronchSelfPacedRecord(), lesson.sectionId, !reviewed),
-            )
-          }
-        >
-          {reviewed ? 'Undo: not reviewed yet' : 'Mark as reviewed'}
-        </button>
-      </p>
+      <h3 className={styles.completionTitle} data-completion-title>
+        You have finished section {lesson.index + 1} of {lesson.total}: {lesson.title}.
+      </h3>
+      {next ? (
+        <p data-completion-next>
+          <strong>
+            Next: {next.title} · {next.minutes} min.
+          </strong>{' '}
+          {next.clinicalQuestion}
+        </p>
+      ) : null}
       {movedPast.length > 0 ? (
         <p data-completion-moved-past>
-          You moved on without completing: {movedPast.join('; ')}. Restart the section whenever you
-          want to try them.
+          You skipped: {movedPast.join('; ')}. Restart the section to try them.
         </p>
       ) : null}
       {section.physicalSkillNote ? (
@@ -1873,9 +1865,7 @@ function CompletionCard({
             href={bronchSectionLinkTarget(nextSectionId)}
             data-next-section={nextSectionId}
           >
-            {lesson.steps[0]?.learn
-              ? `Next lesson: ${bronchSection(nextSectionId).title}`
-              : 'Continue to the next section'}
+            Start the next section
           </Link>
         ) : (
           <Link
@@ -1890,6 +1880,22 @@ function CompletionCard({
           Back to the overview
         </Link>
       </div>
+      <p className={styles.completionMark} data-completion-reviewed>
+        {reviewed ? 'Marked as reviewed on the overview.' : 'Not marked as reviewed.'}{' '}
+        <button
+          type="button"
+          className={styles.completionLink}
+          data-toggle-reviewed
+          disabled={!hydrated}
+          onClick={() =>
+            writeBronchSelfPacedRecord(
+              withSectionReviewed(readBronchSelfPacedRecord(), lesson.sectionId, !reviewed),
+            )
+          }
+        >
+          {reviewed ? 'Remove the mark' : 'Mark as reviewed'}
+        </button>
+      </p>
     </section>
   )
 }

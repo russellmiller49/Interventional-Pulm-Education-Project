@@ -46,6 +46,17 @@ export function BronchCourseLayout({
   const id = useId()
   const interactive = presentation === 'skill' || presentation === 'inspection'
   const continuationRef = useRef<HTMLDivElement>(null)
+  const completionRef = useRef<HTMLDivElement>(null)
+  // The section ends at the top of its last screen, not under it. When the card appears the
+  // learner is usually at the bottom, on the button that finished the section: bring the card
+  // into view and move focus to it, so what comes next is the first thing read.
+  const ended = Boolean(completion)
+  useEffect(() => {
+    const card = completionRef.current
+    if (!ended || !card) return
+    card.focus({ preventScroll: true })
+    card.scrollIntoView?.({ block: 'start' })
+  }, [ended])
   // The site navigation wraps under text enlargement. Reserve its actual height
   // for native keyboard scrolling without changing focus or the shared shell.
   useEffect(() => {
@@ -139,6 +150,11 @@ export function BronchCourseLayout({
           <h2 id={`${id}-title`}>{model.heading}</h2>
           <p data-current-instruction>{model.body}</p>
         </div>
+        {completion ? (
+          <div ref={completionRef} tabIndex={-1} className={styles.sectionEnd} data-section-end>
+            {completion}
+          </div>
+        ) : null}
         {interactive ? continuation : null}
         {interactive ? (
           <div className={styles.skillGrid}>
@@ -155,7 +171,6 @@ export function BronchCourseLayout({
             {response}
           </div>
         )}
-        {completion}
         {!interactive ? continuation : null}
       </section>
       <footer className={styles.sources}>{footer}</footer>

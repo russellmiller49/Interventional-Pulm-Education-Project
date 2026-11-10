@@ -121,6 +121,12 @@
 .workspace {
   min-width: 0;
 }
+.sectionEnd {
+  max-width: 65rem;
+  margin: 0 auto 1.5rem;
+  outline: none;
+  scroll-margin-top: var(--bronch-focus-clear-top, 6rem);
+}
 .status {
   padding: 0.8rem 1rem;
   border-left: 3px solid var(--cyan-bright);
