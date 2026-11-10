@@ -20,6 +20,26 @@ export function McsIntroTeaching({
   before: McsSimulationState | null
 }) {
   const [parameter, setParameter] = useState(0)
+  const lvad = state.device.kind === 'lvad' ? state.device : null
+  /** The four quantities a durable LVAD controller displays, in the tour's order. */
+  const controllerTiles = [
+    { label: 'Speed', value: lvad ? String(lvad.speedRpm) : '—', unit: 'rpm' },
+    {
+      label: 'Estimated pump flow',
+      value: (state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(1),
+      unit: 'L/min',
+    },
+    {
+      label: 'Electrical pump power',
+      value: state.metrics.pumpPowerW?.toFixed(1) ?? '—',
+      unit: 'W',
+    },
+    {
+      label: 'Pulsatility index',
+      value: state.metrics.pulsatilityIndex?.toFixed(1) ?? '—',
+      unit: '',
+    },
+  ] as const
   return (
     <section className={styles.block} data-intro-teaching={introduction.id}>
       <p className={styles.kicker}>Concept and guided example</p>
@@ -72,24 +92,57 @@ export function McsIntroTeaching({
       {introduction.id === 'inlet-outlet' ? <McsImpellaEchoPosition /> : null}
       {introduction.visual === 'lvad' ? (
         <div data-controller-tour>
-          <div role="group" aria-label="Controller quantity tour">
-            {[
-              'Speed',
-              'Estimated pump flow',
-              'Electrical pump power',
-              'Pulsatility index',
-              'Patient assessment',
-              'Cardiac power output',
-            ].map((label, index) => (
-              <button
-                type="button"
-                key={label}
-                aria-pressed={parameter === index}
-                onClick={() => setParameter(index)}
-              >
-                {label}
-              </button>
-            ))}
+          {/*
+           * The tour used to be six buttons in a row, with nothing to say which four are on the
+           * controller's display and which two are not. The four displayed quantities are now the
+           * tiles of a drawn controller face, each showing its live value, and the two that come
+           * from the bedside and from a calculation sit beside it under their own heading. Same
+           * six buttons, same names, same order.
+           */}
+          <div
+            className={styles.controllerTour}
+            role="group"
+            aria-label="Controller quantity tour"
+            data-controller-figure
+          >
+            <div className={styles.controller}>
+              <p className={styles.controllerHead}>
+                <span>Controller display</span>
+                <span aria-hidden="true" className={styles.controllerLamp} />
+              </p>
+              <div className={styles.controllerScreen}>
+                {controllerTiles.map((tile, index) => (
+                  <button
+                    type="button"
+                    key={tile.label}
+                    aria-pressed={parameter === index}
+                    aria-labelledby={`mcs-controller-tile-${index}-label`}
+                    aria-describedby={`mcs-controller-tile-${index}-value`}
+                    onClick={() => setParameter(index)}
+                    data-controller-tile={index}
+                  >
+                    <span id={`mcs-controller-tile-${index}-label`}>{tile.label}</span>
+                    <strong id={`mcs-controller-tile-${index}-value`}>
+                      {tile.value} <small>{tile.unit}</small>
+                    </strong>
+                  </button>
+                ))}
+              </div>
+              <p className={styles.controllerFoot}>Driveline to the pump</p>
+            </div>
+            <div className={styles.controllerBeside}>
+              <p>Not on the controller</p>
+              {['Patient assessment', 'Cardiac power output'].map((label, offset) => (
+                <button
+                  type="button"
+                  key={label}
+                  aria-pressed={parameter === controllerTiles.length + offset}
+                  onClick={() => setParameter(controllerTiles.length + offset)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <dl className={styles.definitionList} data-parameter={parameter}>
             {parameter === 0 ? (
