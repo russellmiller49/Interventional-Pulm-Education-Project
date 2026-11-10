@@ -323,6 +323,11 @@ the packets can stay held and labelled.
 | Foundations          | Whether the unreviewed medication-dose guidance (SUP-07) is labelled or withheld.                                                                                                                                                                                          |
 | Not tied to the beta | The Peripheral Imaging teaching CT, the EBUS historical Git object and 94 Foundations media files are publicly retrievable today (public repository, direct-link routes). Inviting fellows does not change that; whether it is acceptable as it stands is a separate call. |
 
+**Note, 2026-11-10.** ECMO-OWNER-12 in the ECMO row is closed by #464. It was a naming error, not a
+disagreement: the 3D scene's `GROIN_VEIN_LEFT` anchor is the patient's right groin, so both figures
+drain the patient's right femoral vein. The owner chose to leave both drawings as they are. The
+row's second item, the Section 1 quantity, is unchanged by this.
+
 ## 10. Baseline reds on `main`
 
 Reproduced on `15c52445` on 2026-10-06 unless marked otherwise.

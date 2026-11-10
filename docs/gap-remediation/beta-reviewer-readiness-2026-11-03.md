@@ -29,6 +29,11 @@ scratchpad and its hand-over is in the side-session notes.
 | ICU Hemodynamics                           | Hold               | HD-05 contradicts its own debrief row (#433); R1 undecided                       |
 | Mechanical Circulatory Support             | Hold               | Shared answer card files the best answer under "do not fit" (SHARED-FEEDBACK-02) |
 
+**Note, 2026-11-10.** The Cardiohelp ECMO row's issue, ECMO-OWNER-12, is closed by #464. It was a
+naming error, not a mismatch: both figures drain the patient's right femoral vein. The row is kept
+as written on 2026-11-03; see the note in the [Cardiohelp ECMO](#cardiohelp-ecmo) section. The
+module's bucket is not re-assessed here.
+
 **Ready to recommend for physician beta: none.** No module meets gates 1 to 4 on record. The
 reasons are below.
 
@@ -290,6 +295,17 @@ None. Every module misses gate 2 on its post-rebuild content and has no recorded
   - The 3D circuit drains from `GROIN_VEIN_LEFT` (`ecmo-circuit/layout.ts:99,126`).
   - The independent review asked for them to be reconciled
     (`fellow-feedback/ecmo/ECMO-FELLOW-03-sanity-review.md`), and neither file has changed since.
+- **Note, 2026-11-10: ECMO-OWNER-12 is closed by #464.** It was a naming error. The two figures
+  never disagreed:
+  - `GROIN_VEIN_LEFT` sits at −x in the patient model's frame. The model lies supine with its head
+    toward −z and its front toward +y, unrotated, so the patient's left is +x and that anchor is
+    the patient's right groin. It was named for the model's x axis, not for the patient.
+  - Both figures drain the patient's right femoral vein and return to the left groin: the vein on
+    VV, the artery with the distal perfusion catheter on VA.
+  - The owner's decision (2026-11-10) was to leave both drawings as they are. #464 renames the
+    anchors by the patient's side and adds a test that holds the two figures to the same groins.
+  - The "Clears with" line below predates this. No figure changes; the items under "Also open",
+    the unsigned rows and Prompt 06 stand as written.
 - **Also open:**
   - Board section 3 names the SHARED-FEEDBACK-02 fix as a precondition of ECMO's Prompt 06. ECMO
     does not use that card, so waiving the precondition is an owner call.

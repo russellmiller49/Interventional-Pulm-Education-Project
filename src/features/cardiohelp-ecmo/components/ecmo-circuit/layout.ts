@@ -88,17 +88,25 @@ export function patientWorldPoint(x: number, y: number, z: number): THREE.Vector
 
 const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
 
-// Patient-local access anchors. The right groin carries the return access:
-// vein for VV, artery (lateral to the vein, per NAVL) for VA.
+// Patient-local access anchors, named by the patient's own side (see
+// PATIENT_LEFT_AXIS: the patient's left is +x, the right is −x). Drainage is
+// from the patient's RIGHT femoral vein. The patient's LEFT groin carries the
+// return access: vein for VV, artery (lateral to the vein, per NAVL) for VA,
+// with the distal perfusion catheter below it. The pressure-zone map draws the
+// same groins in its anterior view.
+//
+// These were GROIN_VEIN_LEFT (−x), GROIN_VEIN_RIGHT and GROIN_ARTERY_RIGHT
+// (+x): left and right of the model's x axis, not of the patient. Only the
+// names changed (ECMO-OWNER-12, 2026-11-10); every coordinate is as it was.
 //
 // The y values are raycast-measured skin-surface heights of the B7 mannequin
 // (build_fidelity_assets.py prints them) plus ~4 mm so the runtime dressing
 // film sits proud of the skin. The previous anchors (y 0.258–0.265) were
 // authored to the old drape-window height, 0.16 m above even the old skin —
 // which is why cannula tips, dressing rings and the DPC visibly floated.
-const GROIN_VEIN_LEFT = patientWorldPoint(-0.135, 0.102, 0.09)
-const GROIN_VEIN_RIGHT = patientWorldPoint(0.135, 0.103, 0.09)
-const GROIN_ARTERY_RIGHT = patientWorldPoint(0.175, 0.068, 0.055)
+const GROIN_VEIN_PATIENT_RIGHT = patientWorldPoint(-0.135, 0.102, 0.09)
+const GROIN_VEIN_PATIENT_LEFT = patientWorldPoint(0.135, 0.103, 0.09)
+const GROIN_ARTERY_PATIENT_LEFT = patientWorldPoint(0.175, 0.068, 0.055)
 const DPC_ENTRY = patientWorldPoint(0.165, 0.075, 0.125)
 
 // Line hubs where cannulas meet circuit tubing, on the near bed edge.
@@ -123,8 +131,8 @@ function curve(points: THREE.Vector3[]): THREE.CatmullRomCurve3 {
 }
 
 export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
-  const drainageInsertion = GROIN_VEIN_LEFT
-  const returnInsertion = supportMode === 'va' ? GROIN_ARTERY_RIGHT : GROIN_VEIN_RIGHT
+  const drainageInsertion = GROIN_VEIN_PATIENT_RIGHT
+  const returnInsertion = supportMode === 'va' ? GROIN_ARTERY_PATIENT_LEFT : GROIN_VEIN_PATIENT_LEFT
 
   // Owner-approved re-route (B7 follow-up): both cannulae used to rise from
   // the groin and cross in an X over the abdomen on their way to the hubs.

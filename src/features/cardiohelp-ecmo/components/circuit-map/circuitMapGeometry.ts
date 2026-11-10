@@ -83,6 +83,10 @@ export interface CircuitMapGeometry {
  * The patient panel is an anterior view: the patient faces the viewer, so the patient's right is the
  * viewer's left. This is the body's drawn midline (the head is centred on it); a site on the
  * patient's right has `x` below it.
+ *
+ * The cannulas follow it too: drainage leaves the patient's right femoral vein (x = 96) and the
+ * return enters the patient's left groin (x = 214 on VV, 244 on VA). The bedside 3D scene uses the
+ * same groins; `circuit-map-laterality.test.tsx` holds the two figures together (ECMO-OWNER-12).
  */
 export const CIRCUIT_MAP_BODY_MIDLINE_X = 164
 
