@@ -6,20 +6,19 @@ Source handoff: [beta launch PR 1](beta-launch-pr1-2026-11-10.md).
 
 **Current recommendation: NO-GO / hold for Module Collaborator Recognition pending Gate 3.**
 The exact target SHA is deployed successfully and read-only production checks pass. Authenticated
-production verification is incomplete. The owner has authorized the bounded synthetic procedure,
-but account identifiers remain placeholders and usable A/B/C sessions are not established.
-This is a pending infrastructure decision, not a finding that the repair failed.
-No account was selected or used, and no production POST, PATCH, migration, account creation,
-entitlement change, cleanup, merge, deployment action or invitation was performed in this pass.
+production verification is in progress with explicitly named, existing A/B/C accounts. A's
+learner save and edit have passed; the remaining authorized cases are pending. Two review POSTs
+have been made, and no feedback POST has yet been sent. No PATCH, migration, account creation,
+entitlement change, cleanup, merge, deployment action or invitation was performed.
 
 ## Four separate approval gates
 
-| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                                                                                                                  |
-| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized.                                                                                          |
-| 3. Synthetic live tests  | **Scope authorized; account mapping pending.** The owner explicitly authorized the bounded synthetic procedure in a follow-up, retaining all exclusions. The A/B/C email/ID fields still contain bracketed placeholders; no actual accounts or usable test-session mapping has been supplied. Do not repeat the scope-approval request or infer identities from existing sessions. |
-| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                                                                                                               |
+| Gate                     | Evidence and boundary for this phase                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Code review           | PR #461 is merged. Its code-review and repair evidence remain in the source handoff. This production check does not supply or retroactively infer a missing independent approval.                                                                                                                                                                           |
+| 2. Merge and deployment  | GitHub confirms the owner merged #461 at 20:09:25 UTC (12:09:25 PST). The resulting merge has parents `54a02a1a104a552ea66d85d49bfa02af70fec1de` and `461855b19a127484b1b3c7495862cd0596b0815d`. Observe the existing automatic rollout only; no additional release action is authorized.                                                                   |
+| 3. Synthetic live tests  | **Authorized and running.** The owner supplied actual A/B/C identifiers and separately signed-in sessions, confirmed A's pre-existing EBUS review was synthetic and could be replaced, and authorized the bounded procedure with all exclusions retained. A/B live admin-list requests return 403. Private account and record identifiers stay outside Git. |
+| 4. Real beta invitations | **Closed.** No invitation or distribution approval is inferred from infrastructure verification. Existing module acceptance/owner gates still apply.                                                                                                                                                                                                        |
 
 The user explicitly prohibited unapproved account creation, production submissions, entitlement
 changes, record cleanup and migrations. The handoff additionally states: “This checklist does
@@ -97,7 +96,7 @@ samples were CPU 0 and memory 0.386 GB; the tool's one-hour averages span both r
 not post-release-only measurements. No new target runtime entries appeared during the HTTP
 checks. This is a short read-only smoke window; no successful authenticated submission is claimed.
 
-## Authorization follow-up and preflight recheck
+## Initial authorization follow-up and preflight recheck
 
 At the follow-up, the owner authorized the four review POSTs affecting two records, one annotated
 PNG/report with a locally blocked send and retry, duplicate replay, B's denied collision, and the
@@ -107,8 +106,8 @@ migrations and invitations remain excluded. This authorization persists; it need
 
 The supplied A/B/C identifiers were still literal bracketed placeholders rather than actual
 emails/IDs. Browser inventory exposed one connected Chrome profile; a mapping to three separate
-A/B/C test sessions was not established. No signed-in account was inspected or used. A concise
-request for actual account identifiers, profile/tab mapping and user-completed sign-in is pending.
+A/B/C test sessions was not established. At that point no signed-in account was inspected or used, and a request for actual account
+identifiers, profile/tab mapping and user-completed sign-in was pending.
 Do not use an existing clinician account or select an account by guesswork.
 
 At **20:33:11 UTC (12:33:11 PST)**, read-only Railway preflight still confirmed deployment
@@ -116,7 +115,60 @@ At **20:33:11 UTC (12:33:11 PST)**, read-only Railway preflight still confirmed 
 zero crashed replicas, no pending rollout or recent failure/notification. The preceding deployment
 remained `canRollback: true`. No synthetic live request was sent and no new test result is claimed.
 
-## Exact authenticated procedure — prepared, not executed
+## Authorized live execution — in progress
+
+The owner subsequently supplied the actual account mapping and confirmed that A's existing EBUS
+review is synthetic and may be replaced. The three named accounts were checked by a narrowly
+scoped query: each exists, is email-verified, non-anonymous, not currently banned and registration-
+complete; A and B have no active `site_admin`, while C does. Dashboard identities were confirmed
+in their separate browser sessions before any production write. A uses `.com`, B uses `.org`
+(the same Railway service and Endoreels backend), and C uses a separate `.com` incognito session.
+This hostname/session distinction is part of the evidence; no cookies or tokens were exported.
+
+| Live case                                                    | Expected                                                      | Actual so far                                                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| A own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS; private, no-store                                                                        |
+| B own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS on `.org`; private, no-store; own list initially empty                                    |
+| A hub / admin workspace                                      | 11 preview cards, no ready/withheld cards; workspace denied   | PASS; admin route ended at `/en/dashboard?required=site_admin`                                 |
+| A learner save                                               | 200, one own row, server identity/profile and all answers     | PASS at 21:39:25 UTC; all expected answers and profile/email checked in a scoped database read |
+| A same-record edit and reload                                | 200, same ID/creation time, later update time, changed answer | PASS at 21:41:58 UTC; one row; all selections/comments restored in the real form after reload  |
+| B educator save / forged-identity replay                     | Two 200 responses affecting B only                            | PENDING                                                                                        |
+| Annotated PNG blocked-send / retry / duplicate / B collision | Local failure, then 201/200, 200 and 409                      | PENDING; synthetic PNG is loaded in A's unsent draft; no feedback POST sent                    |
+| C uncached image retrieval / A/B/signed-out image denial     | 200 PNG / 403 / 403 / 401                                     | PENDING                                                                                        |
+| Direct browser-role table and Storage denial                 | No private rows or image bytes                                | PENDING                                                                                        |
+| Existing expired/revoked admin session                       | Denied, if explicitly available                               | UNTESTED; no such session supplied; no grants changed                                          |
+
+Both accounts opened all 11 real top-level wrappers in browser windows. The expected real inner
+frame and nonempty rendered module DOM were checked, with resource response statuses collected
+from the frame tree. No opaque resource statuses or skipped frames occurred in the captured
+samples. These are landing-frame/asset smoke checks, not full-course, layout or clinical acceptance.
+One asset exception occurred for both accounts: Synchronized Anatomy requested
+`scope_orientation_calibration.json` and received **400**. The current loader explicitly falls
+back to an empty/default calibration on non-success or transport failure
+(`AirwayAnatomyModule.tsx`, `fetchScopeOrientationCalibration`). The viewer did render; this is
+recorded as an optional-asset exception, not silently counted as a clean network result or a
+clinical calibration judgment. No upload, code or calibration change was made.
+
+A discarded nested-wrapper probe was blocked because wrappers intentionally retain the default
+`X-Frame-Options: DENY`; the successful checks used real top-level navigation, without altering
+security settings. Native Chrome control was interrupted by window switches. The owner confirmed
+Chrome was ready, then another focus change occurred during annotation positioning. The tab-
+capture prompt opened accidentally and was canceled; the synthetic fixture was selected with the
+native file picker. No captured tab image was used. Four manual annotations were requested while
+keeping A's draft unsent; subsequent retry/byte checks remain pending.
+
+Private receipts retain account/review IDs, creation/update times and scoped comparison results.
+Current bounded-write count: **2 of 4 review POSTs; 0 feedback POSTs**. Do not restart completed
+A writes or add submissions while resuming the remaining cases.
+
+At **21:51:40 UTC (13:51:40 PST)**, the target remained Online / SUCCESS with 1 running and
+0 crashed replicas, no pending work, failures or warning/critical notifications. No target runtime
+entries appeared since the 21:17 UTC account preflight. Last-hour per-path Railway totals were
+`/api/module-review`: 2 2xx + 2 expected 4xx + 0 5xx; `/api/module-feedback`: 2 expected 4xx,
+0 2xx/5xx. These counts agree with A's two saves and the A/B authorization probes; they are not
+substitutes for the scoped persistence and browser checks above.
+
+## Authorized test procedure and execution requirements
 
 ### Owner authorization and preflight
 
@@ -165,19 +217,19 @@ navigation/visual controls work. Do not submit assessments or save learner progr
 this bounded test. Inspect actual required asset requests, including lazy assets after navigation: no 404/5xx, unauthorized login HTML, frame denial or browser runtime error. A 200
 outer page alone is insufficient. Record module-specific failures without changing module labels.
 
-| Wrapper suffix after `/en/development-beta/` | Expected iframe path                 | Signed-out baseline | A live   | B live   |
-| -------------------------------------------- | ------------------------------------ | ------------------- | -------- | -------- |
-| `ebus-guided`                                | `/en/ebus-guided`                    | PASS                | UNTESTED | UNTESTED |
-| `eus-b-simulator`                            | `/en/eus-b-simulator`                | PASS                | UNTESTED | UNTESTED |
-| `synchronized-anatomy`                       | `/en/learn/anatomy/airway`           | PASS                | UNTESTED | UNTESTED |
-| `branch-tracing`                             | `/en/learn/anatomy/branch-tracing`   | PASS                | UNTESTED | UNTESTED |
-| `peripheral-imaging`                         | `/en/peripheral-imaging`             | PASS                | UNTESTED | UNTESTED |
-| `bronchoscopy-foundations`                   | `/en/bronchoscopy-foundations`       | PASS                | UNTESTED | UNTESTED |
-| `cardiohelp-ecmo`                            | `/en/cardiohelp-ecmo`                | PASS                | UNTESTED | UNTESTED |
-| `baxter-crrt`                                | `/en/baxter-crrt`                    | PASS                | UNTESTED | UNTESTED |
-| `icu-hemodynamics`                           | `/en/icu-hemodynamics`               | PASS                | UNTESTED | UNTESTED |
-| `mechanical-ventilation`                     | `/en/mechanical-ventilation`         | PASS                | UNTESTED | UNTESTED |
-| `mechanical-circulatory-support`             | `/en/mechanical-circulatory-support` | PASS                | UNTESTED | UNTESTED |
+| Wrapper suffix after `/en/development-beta/` | Expected iframe path                 | Signed-out baseline | A live                   | B live                   |
+| -------------------------------------------- | ------------------------------------ | ------------------- | ------------------------ | ------------------------ |
+| `ebus-guided`                                | `/en/ebus-guided`                    | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `eus-b-simulator`                            | `/en/eus-b-simulator`                | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `synchronized-anatomy`                       | `/en/learn/anatomy/airway`           | PASS                | OPEN; optional asset 400 | OPEN; optional asset 400 |
+| `branch-tracing`                             | `/en/learn/anatomy/branch-tracing`   | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `peripheral-imaging`                         | `/en/peripheral-imaging`             | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `bronchoscopy-foundations`                   | `/en/bronchoscopy-foundations`       | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `cardiohelp-ecmo`                            | `/en/cardiohelp-ecmo`                | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `baxter-crrt`                                | `/en/baxter-crrt`                    | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `icu-hemodynamics`                           | `/en/icu-hemodynamics`               | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `mechanical-ventilation`                     | `/en/mechanical-ventilation`         | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
+| `mechanical-circulatory-support`             | `/en/mechanical-circulatory-support` | PASS                | OPEN / RENDER PASS       | OPEN / RENDER PASS       |
 
 ### 2. A: complete learner review and same-record editing
 
@@ -332,9 +384,9 @@ private orphan objects. Cleanup remains a separate authorization.
 
 The deployed-source/build/health/signed-out gate portion is **PASS**. Remaining blockers:
 
-1. The limited procedure is authorized, but actual A/B/C account identifiers and separate ready
-   sessions are missing. The supplied email/ID fields were bracketed placeholders. Every
-   authenticated case remains **UNTESTED**; no test records or test IDs have been created.
+1. The limited procedure and actual accounts are authorized, and A's save/edit passed. The
+   remaining B review/isolation, PNG retry, admin retrieval and direct-access cases are incomplete.
+   A's unsent image draft is awaiting four manual annotations; no feedback record exists yet.
 2. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase;
    technical candidate eligibility is confirmed.
 
