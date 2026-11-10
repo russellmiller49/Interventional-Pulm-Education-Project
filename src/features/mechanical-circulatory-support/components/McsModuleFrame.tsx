@@ -11,16 +11,17 @@ import { mcsModuleNavItems } from './McsModuleNav'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
- * The module frame. The hub and the case surfaces keep the module's light theme; a lesson on the
- * stage runs on the dark palette its device surfaces already use, and the frame's chrome follows
- * it so the header and the workspace read as one surface.
+ * The module frame. The overview and the Learn page are dark, like the lessons they lead into and
+ * like the other four critical care modules (owner, 2026-11-10); they were the one light hub of
+ * the five. The practice workbench and the case surfaces still pass `theme="light"` and move in
+ * their own change.
  */
 export function McsModuleFrame({
   locale,
   activeHref,
   activityMode = false,
   flowing = false,
-  theme = activityMode ? 'dark' : 'light',
+  theme = 'dark',
   children,
 }: {
   locale: string
