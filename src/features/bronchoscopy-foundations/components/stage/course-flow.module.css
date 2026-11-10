@@ -310,6 +310,69 @@
 .sharedAirway figcaption {
   color: var(--muted);
 }
+/* A reading screen with a picture: the text is one column and the figure the other. On a narrow
+ * screen they stack with the figure first, which is also their order in the document. */
+.teachText,
+.teachFigure {
+  display: grid;
+  gap: 1.35rem;
+  min-width: 0;
+}
+.teachText > section {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.teachFigure :global([data-instrument-orientation]) {
+  min-width: 0;
+  background: var(--panel);
+}
+.teachFigure .sharedAirway svg {
+  max-height: min(60vh, 34rem);
+}
+/* A figure is no wider than reads well, and narrower on a short screen, so a 4:3 photograph keeps
+ * its height above the continuation bar on a 768-pixel-high laptop. */
+.teachFigure > *,
+.course[data-course-presentation='illustrated'] .reading > .workspace > * {
+  max-width: min(38rem, max(20rem, calc((100dvh - 23rem) * 1.25)));
+}
+@media (min-width: 1050px) {
+  .reading:has(> .teaching[data-teach-layout='paired']),
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) {
+    max-width: 84rem;
+  }
+  .teaching[data-teach-layout='paired'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-areas: 'text figure';
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  .teachText {
+    grid-area: text;
+  }
+  .teachFigure {
+    grid-area: figure;
+    position: sticky;
+    top: var(--bronch-focus-clear-top, 6rem);
+  }
+  /* The section's own picture arrives in the workspace slot; it takes the same right-hand place. */
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) > * {
+    grid-column: 1;
+  }
+  .course[data-course-presentation='illustrated'] .reading > .workspace {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: var(--bronch-focus-clear-top, 6rem);
+  }
+}
 /* The shared instrument lab draws with the site's theme tokens (HSL triplets read as
    `hsl(var(--token))`). Here they point at this course's dark palette — panel, line, ink, muted and
    the bright cyan — so the lab matches the page whichever theme the site is in. Its two drawings

@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { InstrumentLab } from '@/components/bronchoscopy-instruments/InstrumentLab'
 import { INSTRUMENT_CLIPS } from '@/components/bronchoscopy-instruments/clips'
 import type { InstrumentId } from '@/components/bronchoscopy-instruments/instrument-model'
@@ -9,6 +9,7 @@ import { MonitorPanel } from './MonitorPanel'
 import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
 import { isStillStructureId } from '../../content/media'
+import type { CourseVisual } from '../../content/courseFlow'
 import type { BronchStageLesson, BronchStageStep } from '../../content/stageLessons'
 import type { TourStop } from '../../content/types'
 import { ReadingTheViewTable } from '../ReadingTheViewTable'
@@ -51,144 +52,230 @@ export function BronchCourseTeaching({
   )
   const opening = lesson.steps[0]?.id === step.id
   const rewritten = section.authoringContract === 2
-  return (
-    <div className={styles.teaching} data-course-teaching>
-      {opening ? <SectionHook section={section} /> : null}
-      {step.learn ? (
-        <BronchPilotTeaching unit={step.learn} section={section} hintShown={hintShown} />
-      ) : null}
-      {chunk.visual === 'instrument' ? (
+  // A reading screen sets its picture beside the text: text on the left, the figure on the right,
+  // held in view while the text scrolls. A scope task keeps its teaching in the narrow column beside
+  // the scope, and a screen that shows the section's own media uses the workspace slot instead.
+  const reading = chunk.presentation !== 'skill' && chunk.presentation !== 'inspection'
+  const sectionMedia = chunk.visual === 'section' && step.workspace.kind === 'media'
+  const cards = step.learn && blocks.length ? [] : blocks
+  const figure = courseFigure(chunk.visual)
+  const instrument =
+    chunk.visual === 'instrument' ? (
+      section.id === 'pre-use-check' && !rewritten ? (
         <div className={styles.illustratedPair}>
           <InstrumentOrientation />
-          {section.id === 'pre-use-check' && !rewritten ? (
-            <section>
-              <h3>What each hand does</h3>
-              {fiveControlsLearnInputs()[0].learn!.paragraphs.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </section>
-          ) : null}
+          <section>
+            <h3>What each hand does</h3>
+            {fiveControlsLearnInputs()[0].learn!.paragraphs.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </section>
         </div>
-      ) : null}
-      {chunk.visual === 'tour' ? (
-        <NormalAirwayTour
-          sectionId={section.id}
-          stops={
-            section.tour
-              ? section.tour.filter((stop) => !chunk.tour || chunk.tour.includes(stop.airway))
-              : undefined
-          }
-        />
-      ) : null}
-      {chunk.visual === 'tube-geometry' ? <TubeGeometryFigure /> : null}
-      {chunk.visual === 'two-diameters' ? <TwoDiametersFigure /> : null}
-      {chunk.visual === 'room-setup' ? <RoomSetupFigure /> : null}
-      {chunk.visual === 'survey-video' ? <SurveyVideo /> : null}
-      {chunk.visual === 'obstruction-types' ? <ObstructionTypesFigure /> : null}
-      {chunk.visual === 'tool-states' ? <ToolStatesFigure /> : null}
-      {chunk.visual === 'radiation-safety' ? <RadiationSafetyFigure /> : null}
-      {chunk.visual === 'specimen-containers' ? <SpecimenContainersFigure /> : null}
-      {chunk.visual === 'orientation-compass' ? <OrientationCompass /> : null}
-      {chunk.visual === 'worked-decision' ? (
-        <section className={styles.worked} data-worked-example>
-          <h3>A worked situation</h3>
-          <p>{section.prediction.situation}</p>
-        </section>
-      ) : null}
-      {step.learn && blocks.length ? (
-        // A rewritten section's bench unit shows its block as the unit's own text, in view.
-        rewritten ? null : (
-          <details className={styles.worked} data-extended-technique>
-            <summary>Technique reference for this concept</summary>
-            {blocks.map((block, index) => (
-              <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
-            ))}
-          </details>
-        )
       ) : (
-        blocks.map((block, index) => (
-          <BlockCard
-            key={block.id}
-            block={block}
-            listId={`${id}-${index}`}
-            role={block.kind === 'after-commitment' ? 'mechanism' : 'framing'}
+        <InstrumentOrientation />
+      )
+    ) : null
+  const pictured = cards.filter((block) => block.media)
+  // The tour and the instrument lab lay out their own picture and controls across the full width.
+  const wide = chunk.visual === 'tour' || chunk.visual === 'instrument-lab'
+  const paired =
+    reading &&
+    !sectionMedia &&
+    !wide &&
+    (figure !== null || instrument !== null || pictured.length > 0)
+  const figures = (
+    <>
+      {instrument}
+      {figure}
+    </>
+  )
+  return (
+    <div
+      className={styles.teaching}
+      data-course-teaching
+      data-teach-layout={paired ? 'paired' : undefined}
+    >
+      {paired ? (
+        <aside className={styles.teachFigure} data-teach-figure>
+          {figures}
+          {pictured.map((block) => (
+            <MediaFigure key={block.id} media={block.media!} />
+          ))}
+        </aside>
+      ) : null}
+      <TeachText paired={paired}>
+        {opening ? <SectionHook section={section} /> : null}
+        {step.learn ? (
+          <BronchPilotTeaching unit={step.learn} section={section} hintShown={hintShown} />
+        ) : null}
+        {paired ? null : instrument}
+        {chunk.visual === 'tour' ? (
+          <NormalAirwayTour
+            sectionId={section.id}
+            stops={
+              section.tour
+                ? section.tour.filter((stop) => !chunk.tour || chunk.tour.includes(stop.airway))
+                : undefined
+            }
           />
-        ))
-      )}
-      {/* The lab follows its card: the order is read first, then worked with the hands. */}
-      {chunk.visual === 'instrument-lab' ? <ChannelInstrumentLab /> : null}
-      {chunk.visual === 'baseline' && section.workspace.kind === 'monitor' ? (
-        <section>
-          <h3>Read the channels together</h3>
-          <MonitorPanel readings={section.workspace.readings} caption={section.workspace.caption} />
-        </section>
-      ) : null}
-      {chunk.visual === 'sort-example' && section.act.kind === 'sort' ? (
-        <section className={styles.worked} data-worked-example>
-          <h3>A worked match</h3>
-          <p>{section.act.sort.rows[0].statement}</p>
-          <p>
-            <strong>
-              {sort?.origins.find((origin) => origin.id === sort.rows[0].origin)?.label}
-            </strong>
-          </p>
-          <p>{section.act.sort.rows[0].rationale}</p>
-          <p>Worked teaching example; no learner response is recorded.</p>
-        </section>
-      ) : null}
-      {chunk.visual === 'sequence' && section.act.kind === 'sequence' ? (
-        <section className={styles.worked} data-worked-example>
-          <h3>The sequence, worked through</h3>
-          <ol>
-            {section.act.sequence.steps.map((entry) => (
-              <li key={entry.id}>
-                <strong>{entry.label}.</strong> {entry.detail}
-              </li>
-            ))}
-          </ol>
-          <p>{section.act.sequence.rationale}</p>
-        </section>
-      ) : null}
-      {chunk.anchor && chunk.kind === 'debrief' ? (
-        <section className={styles.worked} data-teaching-block="anchor">
-          <h3>{section.anchor.checklistLabel}</h3>
-          {rewritten ? null : (
-            <>
-              {section.newConcept ? <p data-new-concept>{section.newConcept}</p> : null}
-              <p>{section.anchor.precise}</p>
-              <p>{section.anchor.analogy}</p>
-            </>
-          )}
-          <ul data-hook-checklist>
-            {section.anchor.checklist.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-          <p>
-            <strong>Watch for this error.</strong> {section.harmfulReflex}
-          </p>
-          {section.controlStrip ? <p>{section.controlStrip.sentence}</p> : null}
-        </section>
-      ) : null}
-      {chunk.grammar && section.grammarRowIds.length > 0 ? (
-        <section className={styles.worked} data-teaching-block="grammar">
-          <h3 id={`${id}-grammar`}>Connect the observation to the problem</h3>
-          <ReadingTheViewTable
-            rows={BRONCH_GRAMMAR.filter((row) => section.grammarRowIds.includes(row.id))}
-            labelledBy={`${id}-grammar`}
-          />
-          <p data-grammar-trend-rule>{GRAMMAR_TREND_RULE}</p>
-        </section>
-      ) : null}
-      {chunk.kind === 'debrief' && section.modelBoundary ? (
-        <section className={styles.limit} data-teaching-block="boundary">
-          <h3>What this activity can show</h3>
-          <p>{section.modelBoundary}</p>
-          {section.physicalSkillNote ? <p>{section.physicalSkillNote}</p> : null}
-        </section>
-      ) : null}
+        ) : null}
+        {paired ? null : figure}
+        {chunk.visual === 'worked-decision' ? (
+          <section className={styles.worked} data-worked-example>
+            <h3>A worked situation</h3>
+            <p>{section.prediction.situation}</p>
+          </section>
+        ) : null}
+        {step.learn && blocks.length ? (
+          // A rewritten section's bench unit shows its block as the unit's own text, in view.
+          rewritten ? null : (
+            <details className={styles.worked} data-extended-technique>
+              <summary>Technique reference for this concept</summary>
+              {blocks.map((block, index) => (
+                <BlockCard
+                  key={block.id}
+                  block={block}
+                  listId={`${id}-${index}`}
+                  role="mechanism"
+                />
+              ))}
+            </details>
+          )
+        ) : (
+          blocks.map((block, index) => (
+            <BlockCard
+              key={block.id}
+              block={block}
+              listId={`${id}-${index}`}
+              role={block.kind === 'after-commitment' ? 'mechanism' : 'framing'}
+              hideMedia={paired}
+            />
+          ))
+        )}
+        {/* The lab follows its card: the order is read first, then worked with the hands. */}
+        {chunk.visual === 'instrument-lab' ? <ChannelInstrumentLab /> : null}
+        {chunk.visual === 'baseline' && section.workspace.kind === 'monitor' ? (
+          <section>
+            <h3>Read the channels together</h3>
+            <MonitorPanel
+              readings={section.workspace.readings}
+              caption={section.workspace.caption}
+            />
+          </section>
+        ) : null}
+        {chunk.visual === 'sort-example' && section.act.kind === 'sort' ? (
+          <section className={styles.worked} data-worked-example>
+            <h3>A worked match</h3>
+            <p>{section.act.sort.rows[0].statement}</p>
+            <p>
+              <strong>
+                {sort?.origins.find((origin) => origin.id === sort.rows[0].origin)?.label}
+              </strong>
+            </p>
+            <p>{section.act.sort.rows[0].rationale}</p>
+            <p>Worked teaching example; no learner response is recorded.</p>
+          </section>
+        ) : null}
+        {chunk.visual === 'sequence' && section.act.kind === 'sequence' ? (
+          <section className={styles.worked} data-worked-example>
+            <h3>The sequence, worked through</h3>
+            <ol>
+              {section.act.sequence.steps.map((entry) => (
+                <li key={entry.id}>
+                  <strong>{entry.label}.</strong> {entry.detail}
+                </li>
+              ))}
+            </ol>
+            <p>{section.act.sequence.rationale}</p>
+          </section>
+        ) : null}
+        {chunk.anchor && chunk.kind === 'debrief' ? (
+          <section className={styles.worked} data-teaching-block="anchor">
+            <h3>{section.anchor.checklistLabel}</h3>
+            {rewritten ? null : (
+              <>
+                {section.newConcept ? <p data-new-concept>{section.newConcept}</p> : null}
+                <p>{section.anchor.precise}</p>
+                <p>{section.anchor.analogy}</p>
+              </>
+            )}
+            <ul data-hook-checklist>
+              {section.anchor.checklist.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <p>
+              <strong>Watch for this error.</strong> {section.harmfulReflex}
+            </p>
+            {section.controlStrip ? <p>{section.controlStrip.sentence}</p> : null}
+          </section>
+        ) : null}
+        {chunk.grammar && section.grammarRowIds.length > 0 ? (
+          <section className={styles.worked} data-teaching-block="grammar">
+            <h3 id={`${id}-grammar`}>Connect the observation to the problem</h3>
+            <ReadingTheViewTable
+              rows={BRONCH_GRAMMAR.filter((row) => section.grammarRowIds.includes(row.id))}
+              labelledBy={`${id}-grammar`}
+            />
+            <p data-grammar-trend-rule>{GRAMMAR_TREND_RULE}</p>
+          </section>
+        ) : null}
+        {chunk.kind === 'debrief' && section.modelBoundary ? (
+          <section className={styles.limit} data-teaching-block="boundary">
+            <h3>What this activity can show</h3>
+            <p>{section.modelBoundary}</p>
+            {section.physicalSkillNote ? <p>{section.physicalSkillNote}</p> : null}
+          </section>
+        ) : null}
+      </TeachText>
     </div>
   )
+}
+
+/**
+ * The text of a screen. Beside a figure it is its own column; alone, its cards are the teaching
+ * grid's own children, as they have always been.
+ */
+function TeachText({
+  paired,
+  children,
+}: {
+  readonly paired: boolean
+  readonly children: ReactNode
+}) {
+  return paired ? (
+    <div className={styles.teachText} data-teach-text>
+      {children}
+    </div>
+  ) : (
+    <>{children}</>
+  )
+}
+
+/** The drawn or recorded figure a screen names, if it has one that sits beside the text. */
+function courseFigure(visual: CourseVisual): ReactNode {
+  switch (visual) {
+    case 'tube-geometry':
+      return <TubeGeometryFigure />
+    case 'two-diameters':
+      return <TwoDiametersFigure />
+    case 'room-setup':
+      return <RoomSetupFigure />
+    case 'survey-video':
+      return <SurveyVideo />
+    case 'obstruction-types':
+      return <ObstructionTypesFigure />
+    case 'tool-states':
+      return <ToolStatesFigure />
+    case 'radiation-safety':
+      return <RadiationSafetyFigure />
+    case 'specimen-containers':
+      return <SpecimenContainersFigure />
+    case 'orientation-compass':
+      return <OrientationCompass />
+    default:
+      return null
+  }
 }
 
 /** The section's clinical question and its memory hook, on the opening screen. */
