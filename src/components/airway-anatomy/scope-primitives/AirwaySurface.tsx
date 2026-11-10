@@ -22,6 +22,7 @@ export function AirwaySurface({
   mode,
   dracoDecoderPath,
   mucosaTint,
+  mucosaAnatomy = false,
 }: {
   stlUrl: string | null
   transform: AirwayAnatomyCaseManifest['airwayTransform']
@@ -29,6 +30,12 @@ export function AirwaySurface({
   dracoDecoderPath?: string
   /** A case's own mucosa tones (the dolphin case); omitted, the shared tones. */
   mucosaTint?: MucosaTint
+  /**
+   * Draw the wall's anatomy in `bronch` mode (rings, membranous strip, vessels). Additive: the
+   * geometry must already carry the wall attribute (Bronchoscopy Foundations writes it when its
+   * scene loads); omitted, the surface renders exactly as before.
+   */
+  mucosaAnatomy?: boolean
 }) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
 
@@ -54,7 +61,7 @@ export function AirwaySurface({
   const material = useMemo(
     () =>
       mode === 'bronch'
-        ? createBronchoscopyMaterial(mucosaTint)
+        ? createBronchoscopyMaterial(mucosaTint, mucosaAnatomy ? { anatomy: true } : undefined)
         : new THREE.MeshStandardMaterial({
             color: '#7dd3fc',
             roughness: 0.55,
@@ -64,7 +71,7 @@ export function AirwaySurface({
             opacity: 0.22,
             depthWrite: false,
           }),
-    [mode, mucosaTint],
+    [mode, mucosaAnatomy, mucosaTint],
   )
 
   useEffect(() => {

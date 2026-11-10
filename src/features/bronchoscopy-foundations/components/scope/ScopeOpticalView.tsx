@@ -90,6 +90,7 @@ export function ScopeOpticalView({
             transform={identity}
             mode="bronch"
             dracoDecoderPath={DRACO_DECODER_PATH}
+            mucosaAnatomy
           />
           {view.mode === 'larynx-entry' ? <LarynxLumen assets={assets} state={state} /> : null}
           {view.mode === 'tube' ? <TubeModel assets={assets} state={state} /> : null}
