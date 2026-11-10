@@ -6,10 +6,10 @@ Source handoff: [beta launch PR 1](beta-launch-pr1-2026-11-10.md).
 
 **Current recommendation: NO-GO / hold for Module Collaborator Recognition pending Gate 3.**
 The exact target SHA is deployed successfully and read-only production checks pass. Authenticated
-production verification is in progress with explicitly named, existing A/B/C accounts. A's
-learner save and edit have passed; the remaining authorized cases are pending. Two review POSTs
-have been made, and no feedback POST has yet been sent. No PATCH, migration, account creation,
-entitlement change, cleanup, merge, deployment action or invitation was performed.
+production verification is in progress with explicitly named, existing A/B/C accounts. All
+authorized writes and non-admin/public access checks passed. C's uncached private image retrieval
+is the remaining live case. No PATCH, migration, account creation, entitlement change, cleanup,
+merge, deployment action or invitation was performed.
 
 ## Four separate approval gates
 
@@ -125,18 +125,18 @@ in their separate browser sessions before any production write. A uses `.com`, B
 (the same Railway service and Endoreels backend), and C uses a separate `.com` incognito session.
 This hostname/session distinction is part of the evidence; no cookies or tokens were exported.
 
-| Live case                                                    | Expected                                                      | Actual so far                                                                                  |
-| ------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| A own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS; private, no-store                                                                        |
-| B own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS on `.org`; private, no-store; own list initially empty                                    |
-| A hub / admin workspace                                      | 11 preview cards, no ready/withheld cards; workspace denied   | PASS; admin route ended at `/en/dashboard?required=site_admin`                                 |
-| A learner save                                               | 200, one own row, server identity/profile and all answers     | PASS at 21:39:25 UTC; all expected answers and profile/email checked in a scoped database read |
-| A same-record edit and reload                                | 200, same ID/creation time, later update time, changed answer | PASS at 21:41:58 UTC; one row; all selections/comments restored in the real form after reload  |
-| B educator save / forged-identity replay                     | Two 200 responses affecting B only                            | PENDING                                                                                        |
-| Annotated PNG blocked-send / retry / duplicate / B collision | Local failure, then 201/200, 200 and 409                      | PENDING; synthetic PNG is loaded in A's unsent draft; no feedback POST sent                    |
-| C uncached image retrieval / A/B/signed-out image denial     | 200 PNG / 403 / 403 / 401                                     | PENDING                                                                                        |
-| Direct browser-role table and Storage denial                 | No private rows or image bytes                                | PENDING                                                                                        |
-| Existing expired/revoked admin session                       | Denied, if explicitly available                               | UNTESTED; no such session supplied; no grants changed                                          |
+| Live case                                                    | Expected                                                      | Actual so far                                                                                                          |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| A own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS; private, no-store                                                                                                |
+| B own reviews / admin reviews / admin feedback GET           | 200 / 403 / 403                                               | PASS on `.org`; private, no-store; own list initially empty                                                            |
+| A hub / admin workspace                                      | 11 preview cards, no ready/withheld cards; workspace denied   | PASS; admin route ended at `/en/dashboard?required=site_admin`                                                         |
+| A learner save                                               | 200, one own row, server identity/profile and all answers     | PASS at 21:39:25 UTC; all expected answers and profile/email checked in a scoped database read                         |
+| A same-record edit and reload                                | 200, same ID/creation time, later update time, changed answer | PASS at 21:41:58 UTC; one row; all selections/comments restored in the real form after reload                          |
+| B educator save / forged-identity replay                     | Two 200 responses affecting B only                            | PASS; new B row, three module prompts, reload and same B ID/creation time after the forged replay; A unchanged         |
+| Annotated PNG blocked-send / retry / duplicate / B collision | Local failure, then 201, 200 and 409                          | PASS; four marks and draft preserved, identical UUID/PNG; one report/object, owner/path unchanged                      |
+| C uncached image retrieval / A/B/signed-out image denial     | 200 PNG / 403 / 403 / 401                                     | A/B/signed-out PASS with private, no-store; C uncached read PENDING console focus                                      |
+| Direct browser-role table and Storage denial                 | No private rows or image bytes                                | PASS; A/B valid identities, tables 403/42501, Storage 400/NoSuchKey; anonymous tables 401/42501 and public Storage 400 |
+| Existing expired/revoked admin session                       | Denied, if explicitly available                               | UNTESTED; no such session supplied; no grants changed                                                                  |
 
 Both accounts opened all 11 real top-level wrappers in browser windows. The expected real inner
 frame and nonempty rendered module DOM were checked, with resource response statuses collected
@@ -150,16 +150,33 @@ recorded as an optional-asset exception, not silently counted as a clean network
 clinical calibration judgment. No upload, code or calibration change was made.
 
 A discarded nested-wrapper probe was blocked because wrappers intentionally retain the default
-`X-Frame-Options: DENY`; the successful checks used real top-level navigation, without altering
-security settings. Native Chrome control was interrupted by window switches. The owner confirmed
-Chrome was ready, then another focus change occurred during annotation positioning. The tab-
-capture prompt opened accidentally and was canceled; the synthetic fixture was selected with the
-native file picker. No captured tab image was used. Four manual annotations were requested while
-keeping A's draft unsent; subsequent retry/byte checks remain pending.
+`X-Frame-Options: DENY`; the successful checks used real top-level navigation without altering
+security settings. Native Chrome focus interruptions were handled by verifying the active window
+and using isolated tab control for B. The accidental tab-capture prompt was canceled and the
+synthetic fixture selected through the native file picker. The owner added a box, arrow, drawing
+and text note; all four were visually confirmed and survived Continue testing → Continue feedback.
 
-Private receipts retain account/review IDs, creation/update times and scoped comparison results.
-Current bounded-write count: **2 of 4 review POSTs; 0 feedback POSTs**. Do not restart completed
-A writes or add submissions while resuming the remaining cases.
+A one-shot browser fetch guard blocked the first send before forwarding any production request.
+The UI kept the draft and did not claim it was saved. The real retry returned **201**; the PNG
+(13,822 bytes) and report UUID matched the blocked attempt. A's exact multipart replay returned
+**200**, B's valid same-ID collision returned **409**, and a scoped database/Storage comparison
+confirmed the same A-owned row and path and exactly one private object before/after. The approved
+browser guard was removed by reload after success. This does not simulate a production storage
+outage or a delayed database commit; those remain local regression-test evidence.
+
+B's two **200** review responses affected its one new educator row. A query with A's identifiers
+still returned only B's own review; forged top-level identity, profile and record fields did not
+replace A's row or alter B's server-derived identity/profile. A's update timestamp and edited
+answer remained unchanged. All four review POSTs and all three live feedback POST attempts are
+accounted for; **do not repeat them**. Private receipts retain record IDs, expected/actual statuses,
+image digest, exact path and comparison results outside Git. No records/objects were deleted.
+
+The signed-out synthetic image request returned **401**; the public Storage URL returned **400**.
+A/B image route requests returned **403**. Direct browser-role reads validated each browser token
+against the correct named account (Auth user **200**) and returned **403 / 42501** for both private
+tables and **400 / NoSuchKey** for private Storage. Anonymous table probes returned **401 / 42501**.
+No auth state or tokens were exported. C's dashboard identity was confirmed; a manual console focus
+handoff is pending because the native developer command did not reliably target its window.
 
 At **21:51:40 UTC (13:51:40 PST)**, the target remained Online / SUCCESS with 1 running and
 0 crashed replicas, no pending work, failures or warning/critical notifications. No target runtime
@@ -384,9 +401,8 @@ private orphan objects. Cleanup remains a separate authorization.
 
 The deployed-source/build/health/signed-out gate portion is **PASS**. Remaining blockers:
 
-1. The limited procedure and actual accounts are authorized, and A's save/edit passed. The
-   remaining B review/isolation, PNG retry, admin retrieval and direct-access cases are incomplete.
-   A's unsent image draft is awaiting four manual annotations; no feedback record exists yet.
+1. All approved writes, persistence/isolation and non-admin/public denials passed. C's uncached
+   image retrieval and filtered admin review/report reads still await the console focus handoff.
 2. Owner confirmation of rollback operator/configuration readiness is not recorded in this phase;
    technical candidate eligibility is confirmed.
 
