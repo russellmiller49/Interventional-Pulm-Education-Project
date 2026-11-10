@@ -452,6 +452,82 @@
 ) {
   scroll-padding-bottom: 1rem;
 }
+/* A scope task on a laptop or wider: the text, the goals and the way on are the left column, and
+ * the scope with its controls is the right column, starting at the top of the lesson so the view,
+ * the goal and the controls are on screen together. The document order is unchanged (heading, way
+ * on, scope, text), which is also the order on a narrow screen. */
+@media (min-width: 1050px) {
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection']) .lesson {
+    display: grid;
+    grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+    grid-template-areas:
+      'head work'
+      'bar work'
+      'coach work';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 1.75rem;
+    align-items: start;
+    padding-top: 1rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .taskHeading {
+    grid-area: head;
+    margin-bottom: 0.9rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .taskHeading
+    h2 {
+    font-size: 1.45rem;
+    margin: 0.25rem 0 0.5rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation {
+    grid-area: bar;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    p {
+    text-align: left;
+  }
+  /* Back and the ways on share one wrapping row in the narrow column. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    .actions {
+    justify-content: flex-start;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    .forward {
+    display: contents;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .skillGrid {
+    display: contents;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace {
+    grid-area: work;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .coaching {
+    grid-area: coach;
+    border-left: 0;
+    padding-left: 0;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .sectionEnd {
+    grid-column: 1 / -1;
+  }
+  /* The caption line above the scope already says where the tip is; the row of level names under
+   * it repeats that and costs a row of height above the view. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-spine-strip]) {
+    display: none;
+  }
+}
 @media (max-width: 650px) {
   .lesson {
     padding: 1rem 0.75rem 0;
