@@ -1,7 +1,8 @@
 # Beta launch PR 1 — infrastructure evidence and owner gate
 
 Date: 2026-11-10. Baseline: `54a02a1a104a552ea66d85d49bfa02af70fec1de`.
-Branch: `codex/beta-launch-pr1`. The final commit is the PR head, recorded in the owner handoff.
+Branch: `codex/beta-launch-pr1`, existing PR #461. Independently reviewed head:
+`e2b0b525c929562e6004d4f683ff8245df795f35`. Repair and evidence SHAs are recorded in the PR handoff.
 Refreshed `origin/main` before branching and inspected all 18 open PR titles; none was a beta
 feedback/review infrastructure PR. The adjacent Foundations PRs #394 and #379 concern teaching
 questions and faculty register signatures; their changed-file lists do not overlap this PR.
@@ -11,6 +12,11 @@ metadata do not establish a successful non-admin production submission. No produ
 account creation, migration repair, email, merge or deployment were performed. Module teaching,
 clinical models and publication stages are unchanged. Recognition and outreach are outside this PR.
 
+**Merging PR #461 can trigger production deployment of the changed feedback handler.** Railway's
+production service tracks GitHub `main` with `checkSuites: false`; a merge is a release action,
+even though this task stops at the open PR. The distinct approval gates and rollback plan below
+must be completed before the owner merges.
+
 ## Scope and fixes
 
 The existing beta Jest suite and browser suite were green before edits. New regression cases
@@ -18,12 +24,18 @@ identified two screenshot failure paths: a failed insert followed by failed clea
 image path occupied, preventing retry; an insert whose response is lost can leave a saved report
 whose screenshot the error handler deletes.
 
-Uploads now use a unique path per attempt, while retaining the report ID for idempotency. On an
-insert error, the handler looks up that report ID before cleanup. A saved report owned by the
-requesting account is acknowledged; a losing attempt removes only its own image. If the lookup
-also fails, the handler returns 503 and retains the possibly referenced image. Failed cleanup can
-leave private orphan objects; cleanup of historical orphans is separate owner-authorized work.
-Old stored screenshot paths remain readable. No SQL or storage policy changes are needed.
+Independent review reproduced a third case at the reviewed head: the insert returned a transport
+error, reconciliation found no row, cleanup deleted the image, and the pending insert then committed
+with a missing image. An empty SELECT cannot establish that the insert will never commit.
+
+Uploads retain a unique path per attempt and the report ID remains the idempotency key. **After an
+insert attempt begins, this handler never deletes its screenshot.** This holds for returned errors,
+thrown transport errors, empty/failed/thrown reconciliation lookups and overlapping retries. A
+successful reconciliation can acknowledge only a report owned by the requesting account; another
+account's report returns 409. An unresolved save returns 503 with the draft retained. The winning
+image is preserved, and losing/failed attempts may leave private orphan objects. No automatic
+orphan garbage collection is implemented. Old stored paths remain readable; SQL and storage
+policies are unchanged.
 
 Added handler-composition tests use the real `requireFeedbackUser`, synthetic Auth responses and
 an in-memory query adapter. They cover complete learner and educator forms, server-derived
@@ -31,6 +43,60 @@ identity/profile, stable review ID on edit, two-reviewer isolation, and active/e
 admin screenshot authorization. They do **not** exercise real Auth, PostgREST, storage or SQL
 upserts. Playwright uses local preview access and intercepted feedback/review endpoints; its PNG
 annotation bytes, draft/retry, edit/reload and wrapper assertions are browser evidence only.
+
+## Deployment approvals, release and rollback
+
+Read-only Railway inspection during the repair confirmed project `marvelous-heart`
+(`e251e547-04fc-4d0b-bdc4-a73809b2307b`), production environment
+`8f179798-b586-4013-a0fb-130c9b4eb088`, service `Interventional-Pulm-Education-Project`
+(`4a1754d2-0778-488e-96c7-5ec047b90e6a`). The service source is this repository's `main`, with
+`checkSuites: false`; its live builder is Railpack. No Railway settings were changed. Pushing this
+repair branch does not itself update the configured `main` source.
+
+These are four separate owner decisions; approval at one gate does not approve the next:
+
+| Gate                     | Approval needed                                                                                                                                                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Code review           | Independent re-review of the repaired commit and regression evidence. This approves the code, not a release.                                                                                                                     |
+| 2. Merge and deployment  | Explicit owner approval to merge this PR and deploy the changed handler, after confirming build success and rollback readiness. With the current source settings, merging can begin deployment without waiting for check suites. |
+| 3. Synthetic live tests  | Explicit owner authorization naming the existing non-admin accounts and synthetic review/report/image submissions, plus any cleanup. Deployment approval alone does not authorize these writes.                                  |
+| 4. Real beta invitations | Explicit owner approval after live smoke tests and each module's existing acceptance/readiness gate. Passing infrastructure tests does not approve invitations.                                                                  |
+
+Release operator and rollback operator: **Russell Miller**, or a specifically named operator he
+authorizes before gate 2. Neither operator action is authorized by this document or this task.
+
+1. Record the final independently reviewed PR SHA, confirm no later code changes, and confirm the
+   complete production build succeeds using the repository's `npm run build` pipeline and
+   `tsconfig.build.json`. Record the resulting `main` SHA if the merge method changes it. Local
+   test builds are not evidence that a Railway production build or deployment succeeded.
+2. Immediately before gate 2, recheck the current successful deployment and its rollback eligibility.
+   The candidate found during this repair is **`561529fc-2bce-48e4-9139-3999f85b7eb7`**, source SHA
+   **`54a02a1a104a552ea66d85d49bfa02af70fec1de`**, created **2026-11-10 02:15:16 UTC**, status
+   `SUCCESS`, `canRollback: true`. It is the successful deployment preceding this proposed release;
+   revalidate it if another release occurs first. No rollback was executed.
+3. Before approving release, the operator confirms the intended mechanism in Railway:
+   **Service → Deployments → candidate deployment menu → Rollback → confirm**. Check the retained
+   image and configuration snapshot: Railway rollback restores both the image and custom variables,
+   and older candidates may expire under retention. Do not expose variable values in the record.
+   See [Railway deployment actions](https://docs.railway.com/deployments/deployment-actions#rollback).
+   If the candidate is unavailable or the operator cannot perform rollback, hold the release until
+   an alternative rollback plan is reviewed and approved; do not improvise a redeploy.
+4. Only after gate 2 approval, the owner merges and the operator observes the resulting Railway
+   build and deployment. Confirm the deployed SHA equals the approved source and the service reaches
+   `SUCCESS`; check `/health`, the beta hub's sign-in gate, signed-out feedback/review/image API
+   denial, and the documented read-only route checks. Do not send a live POST at this step.
+5. After gate 3 approval, run the non-admin A/B checklist below with synthetic data only: submission,
+   same-record editing, reviewer isolation, annotated PNG failure/retry, and private admin retrieval.
+   Record the deployed SHA, times, expected/actual statuses and sanitized pass/fail results privately;
+   never include feedback text, email lists, tokens, private object paths or screenshots in public logs.
+6. Monitor Railway service health, request error rates and sanitized feedback API error counts
+   through the smoke-test window. Use aggregate metrics; inspect logs only with redaction and avoid
+   request bodies. Do not infer successful submission from row counts or mocks.
+7. Roll back to the confirmed candidate if new submission/retrieval failures, missing images, access
+   regressions or unhealthy service behavior appear. Record the failed deployment and reason,
+   perform the confirmed rollback, verify the restored source SHA/health/API behavior and document
+   the smoke-test results. A rollback does not delete test rows or orphan images. Hold invitations
+   and gate 4 until the owner accepts the live evidence and each module's gate.
 
 ## Production schema and migration history
 
@@ -105,10 +171,11 @@ module content is synthetic. The separate standard-route test requests the real 
 All 11 stay `preview`. The four withheld catalog entries stay withheld. Signed-out redirects
 alone do not prove that a non-admin can open a module after signing in, or that all assets load.
 
-## Validation and baseline review
+## Initial validation and baseline review (reviewed head)
 
 Commands run from the permanent Codex worktree. Test output is local under `/tmp/beta-pr1-*`;
-only sanitized results are committed here.
+only sanitized results are committed here. This section preserves the initial evidence at
+`e2b0b525`; the independent-review repair validation is recorded separately below.
 
 | Command                                                                                               | Baseline                            | Final                                                                       |
 | ----------------------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
@@ -167,7 +234,7 @@ environment files are part of the PR.
 | Forged account/email/profile/review ID cannot replace server identity  | Passed                                                 | Untested authenticated request                     |
 | Reviewer B cannot read or overwrite A; all-review list admin-only      | Passed                                                 | Untested with two accounts                         |
 | Annotated PNG failure preserves exact bytes and report ID on retry     | Passed in browser; API upload/retry tests passed       | Untested                                           |
-| Upload/insert/cleanup failure; lost insert response; overlapping retry | Passed, synthetic error injection                      | Untested                                           |
+| Upload/insert failure; delayed/lost commit response; overlapping retry | Passed, synthetic error injection; images retained after insert starts | Untested                                           |
 | Expired/revoked/missing admin grant denies image before storage read   | Passed, real auth helper + synthetic entitlement query | Untested authenticated request                     |
 | Current admin can retrieve an uncached PNG                             | Passed, synthetic storage                              | Untested real retrieval                            |
 | Browser roles denied private table/bucket access                       | Live metadata matches intended rules                   | Metadata passed; authenticated HTTP untested       |

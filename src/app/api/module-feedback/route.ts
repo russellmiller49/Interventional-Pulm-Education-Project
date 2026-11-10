@@ -77,8 +77,7 @@ export async function POST(request: Request) {
       { error: 'You have sent 30 reports in the past hour. Please try again later.' },
       429,
     )
-  // Each attempt owns its image. A failed cleanup or overlapping retry must not block a
-  // later upload or let the losing request delete the winning request's screenshot.
+  // Each attempt owns its image, so an orphan never blocks a retry's upload.
   const screenshotPath = bytes ? `${auth.user.id}/${body.id}/${randomUUID()}.png` : null
   if (bytes && screenshotPath) {
     const { error } = await supabaseAdmin.storage
@@ -90,41 +89,40 @@ export async function POST(request: Request) {
         503,
       )
   }
-  const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
-    id: body.id,
-    user_id: auth.user.id,
-    tester_email: auth.user.email ?? '',
-    module_id: body.moduleId,
-    page_path: body.pagePath,
-    comment: body.comment,
-    selected_text: body.selectedText,
-    screenshot_path: screenshotPath,
-  })
-  if (error) {
-    // An insert can commit even when its response is lost. Resolve the report ID before
-    // cleanup; if the lookup also fails, keep the image until a retry can establish state.
+  try {
+    const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
+      id: body.id,
+      user_id: auth.user.id,
+      tester_email: auth.user.email ?? '',
+      module_id: body.moduleId,
+      page_path: body.pagePath,
+      comment: body.comment,
+      selected_text: body.selectedText,
+      screenshot_path: screenshotPath,
+    })
+    if (!error) return feedbackJson({ id: body.id }, 201)
+  } catch {
+    // A thrown transport error does not establish whether the insert committed.
+  }
+  // Once the insert begins, never delete its image here. Even an empty lookup cannot
+  // rule out a pending commit. Accept private orphans rather than lose referenced images.
+  try {
     const { data: persisted, error: lookupError } = await supabaseAdmin
       .from('module_beta_feedback')
-      .select('id,user_id,screenshot_path')
+      .select('id,user_id')
       .eq('id', body.id)
       .maybeSingle()
-    if (!lookupError) {
-      if (screenshotPath && persisted?.screenshot_path !== screenshotPath)
-        await supabaseAdmin.storage
-          .from(feedbackBucket)
-          .remove([screenshotPath])
-          .catch(() => {})
-      if (persisted)
-        return persisted.user_id === auth.user.id
-          ? feedbackJson({ id: persisted.id })
-          : feedbackJson({ error: 'Start a new feedback report and try again.' }, 409)
-    }
-    return feedbackJson(
-      { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
-      503,
-    )
+    if (!lookupError && persisted)
+      return persisted.user_id === auth.user.id
+        ? feedbackJson({ id: persisted.id })
+        : feedbackJson({ error: 'Start a new feedback report and try again.' }, 409)
+  } catch {
+    // A lookup failure is also ambiguous; keep the image and let the same report ID retry.
   }
-  return feedbackJson({ id: body.id }, 201)
+  return feedbackJson(
+    { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
+    503,
+  )
 }
 
 export async function GET(request: Request) {

@@ -116,11 +116,12 @@ while the draft holds a comment, referenced text or an image; an empty dialog th
 closed leaves **Give feedback**. Local owner review keeps unsent drafts in that browser instead;
 see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmation is shown only after the
 server persists the report. Report IDs make retries idempotent, and submissions are limited to
-30 per account per hour. Each screenshot upload attempt has its own private object path. If a
-report insert fails, the API checks whether the report was persisted before removing an image;
-it retains a possibly referenced image when that check is unavailable. Failed cleanup may leave
-private orphan images, but does not block retrying the report. Orphan cleanup requires separate
-owner-authorized work.
+30 per account per hour. Each screenshot upload attempt has its own private object path. Once a
+report insert begins, the handler retains its image even if the insert fails or throws, or a
+subsequent lookup finds no row: the original transaction may still commit later. Reconciliation
+can acknowledge an already saved report owned by the same account, but never authorizes image
+deletion. Retained private orphan images do not block retrying the report; any future cleanup
+requires separate owner-authorized work.
 
 ## Overall review
 

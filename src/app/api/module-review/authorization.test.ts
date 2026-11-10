@@ -35,20 +35,28 @@ const answers = {
 }
 type Row = Record<string, unknown>
 let rows: Row[]
+const frozenNow = '2026-11-10T18:00:00.000Z'
+const expiryPrefix = 'expires_at.is.null,expires_at.gt.'
 
 function signIn(id: string, entitlement?: { status: string; expires_at: string | null }) {
   const filters = new Map<string, unknown>()
+  let expirationCutoff = NaN
   const query: Record<string, jest.Mock> = {
     select: jest.fn(() => query),
     eq: jest.fn((key: string, value: unknown) => {
       filters.set(key, value)
       return query
     }),
-    or: jest.fn(() => query),
+    or: jest.fn((predicate: string) => {
+      expirationCutoff = predicate.startsWith(expiryPrefix)
+        ? Date.parse(predicate.slice(expiryPrefix.length))
+        : NaN
+      return query
+    }),
     maybeSingle: jest.fn(async () => ({
       data:
         entitlement?.status === 'active' &&
-        (!entitlement.expires_at || Date.parse(entitlement.expires_at) > Date.now())
+        (!entitlement.expires_at || Date.parse(entitlement.expires_at) > expirationCutoff)
           ? { entitlement: 'site_admin' }
           : null,
       error: null,
@@ -86,6 +94,7 @@ function post(body: Row = {}) {
 
 beforeEach(() => {
   jest.resetAllMocks()
+  jest.useFakeTimers({ now: Date.parse(frozenNow) })
   rows = []
   from.mockImplementation((table: string) => {
     const filters = new Map<string, unknown>()
@@ -126,6 +135,7 @@ beforeEach(() => {
     return query as never
   })
 })
+afterEach(() => jest.useRealTimers())
 
 it('a verified non-admin saves a complete review, then edits and reloads the same record', async () => {
   const { client } = signIn(reviewerA)
@@ -198,7 +208,9 @@ it('accepts a complete educator review with the current module prompts', async (
 it.each([
   undefined,
   { status: 'inactive', expires_at: null },
-  { status: 'active', expires_at: '2000-01-01T00:00:00Z' },
+  { status: 'revoked', expires_at: null },
+  { status: 'active', expires_at: '2026-11-10T17:59:59.999Z' },
+  { status: 'active', expires_at: frozenNow },
 ])(
   'denies private screenshots without an active, unexpired site_admin grant: %j',
   async (grant) => {
@@ -210,43 +222,45 @@ it.each([
     expect(response.status).toBe(403)
     expect(query.eq).toHaveBeenCalledWith('entitlement', 'site_admin')
     expect(query.eq).toHaveBeenCalledWith('status', 'active')
-    expect(query.or).toHaveBeenCalledWith(
-      expect.stringMatching(/^expires_at.is.null,expires_at.gt./),
-    )
+    expect(query.or).toHaveBeenCalledWith(`${expiryPrefix}${frozenNow}`)
     expect(from).not.toHaveBeenCalled()
     expect(storageFrom).not.toHaveBeenCalled()
   },
 )
 
-it('serves a private uncached PNG only while the admin grant remains current', async () => {
-  signIn(reviewerA, { status: 'active', expires_at: null })
-  from.mockReturnValue({
-    select: () => ({
-      eq: () => ({
-        maybeSingle: async () => ({
-          data: { screenshot_path: 'synthetic/report.png' },
-          error: null,
+it.each([null, '2026-11-10T18:00:00.001Z'])(
+  'serves a private uncached PNG only while the admin grant remains current (expires %s)',
+  async (expires_at) => {
+    const { query } = signIn(reviewerA, { status: 'active', expires_at })
+    from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({
+            data: { screenshot_path: 'synthetic/report.png' },
+            error: null,
+          }),
         }),
       }),
-    }),
-  } as never)
-  const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aE1sAAAAASUVORK5CYII=',
-    'base64',
-  )
-  const download = jest.fn(async () => ({ data: new Blob([png]), error: null }))
-  storageFrom.mockReturnValue({ download } as never)
-  const call = () =>
-    imageGET(new Request('https://site.test'), {
-      params: Promise.resolve({ id: '00000000-0000-4000-8000-000000000003' }),
-    })
-  const response = await call()
-  expect(response.status).toBe(200)
-  expect(response.headers.get('cache-control')).toBe('private, no-store')
-  expect(response.headers.get('content-type')).toBe('image/png')
-  expect(Buffer.from(await response.arrayBuffer())).toEqual(png)
-  expect(download).toHaveBeenCalledWith('synthetic/report.png')
-  signIn(reviewerA, { status: 'revoked', expires_at: null })
-  expect((await call()).status).toBe(403)
-  expect(download).toHaveBeenCalledTimes(1)
-})
+    } as never)
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aE1sAAAAASUVORK5CYII=',
+      'base64',
+    )
+    const download = jest.fn(async () => ({ data: new Blob([png]), error: null }))
+    storageFrom.mockReturnValue({ download } as never)
+    const call = () =>
+      imageGET(new Request('https://site.test'), {
+        params: Promise.resolve({ id: '00000000-0000-4000-8000-000000000003' }),
+      })
+    const response = await call()
+    expect(response.status).toBe(200)
+    expect(query.or).toHaveBeenCalledWith(`${expiryPrefix}${frozenNow}`)
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+    expect(response.headers.get('content-type')).toBe('image/png')
+    expect(Buffer.from(await response.arrayBuffer())).toEqual(png)
+    expect(download).toHaveBeenCalledWith('synthetic/report.png')
+    signIn(reviewerA, { status: 'revoked', expires_at: null })
+    expect((await call()).status).toBe(403)
+    expect(download).toHaveBeenCalledTimes(1)
+  },
+)
