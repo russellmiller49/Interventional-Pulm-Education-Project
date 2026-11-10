@@ -2,6 +2,7 @@ import { RIMS, mappedForks, turnedRim, type FrameLabels, type Sector } from '../
 import {
   LESION_REACH_MM,
   ROUTE_PLAN_PARTS,
+  planPrefilled,
   divisionBearings,
   lesionPathCrossings,
   lesionPathSlices,
@@ -254,5 +255,71 @@ describe('a whole lesion outside the lessons', () => {
     // A plan that asks only for the first two parts ends where the saved step is gone.
     const short = setup('r-apical-anterior', ['lesion', 'segment'])
     expect(settlePlan(short.spec, saved).stage).toBe('done')
+  })
+})
+
+describe('a map the bench has drawn already', () => {
+  const target = targetById('r-apical-anterior')!
+  const trace = traceForTarget('r-apical-anterior')
+  const spec: PlanSpec = {
+    traceId: trace.id,
+    targetId: target.id,
+    parts: ['frame', 'arcs'],
+    prefilled: true,
+  }
+  const reduce = planReducer(trace, target, spec)
+  const start = startPlan(trace, target, spec)
+
+  it('opens on the review with the model’s circle and arcs, and nothing asked', () => {
+    expect(start.stage).toBe('review')
+    expect(planPrefilled(spec, start)).toBe(true)
+    // The same map "Show me" draws at every step.
+    const shown = setup('r-apical-anterior', ['frame', 'arcs'])
+    const byHand = shown.run(
+      shown.start,
+      { type: 'show-frame' },
+      ...mappedForks(trace, target).map(() => ({ type: 'show-arcs' }) as PlanAction),
+    )
+    expect(byHand.stage).toBe('review')
+    expect(start.frame).toEqual(byHand.frame)
+    expect(start.frameTurn).toBe(0)
+    expect(start.arcs.map((a) => [a.placed, a.leadsOn])).toEqual(
+      byHand.arcs.map((a) => [a.placed, a.leadsOn]),
+    )
+    expect(summarizePlan(spec, start)).toEqual({
+      lesion: { asked: false, misses: 0, shown: false },
+      segment: { asked: false, misses: 0, shown: false },
+      frame: { asked: false, misses: 0, shown: false },
+      arcs: { asked: 0, firstTry: 0 },
+    })
+    // It drives on from the review like any map.
+    expect(reduce(start, { type: 'finish' }).stage).toBe('done')
+    // A restart brings the drawn map back.
+    expect(reduce(reduce(start, { type: 'draw-own' }), { type: 'restart' })).toEqual(start)
+  })
+
+  it('can be cleared and drawn by the learner, and is then theirs', () => {
+    const own = reduce(start, { type: 'draw-own' })
+    expect(own.stage).toBe('frame')
+    expect(planPrefilled(spec, own)).toBe(false)
+    expect(own.frame).toEqual({ top: null, right: null, bottom: null, left: null })
+    expect(own.arcs.every((a) => a.placed.length === 0)).toBe(true)
+    expect(own.log.frame.asked).toBe(true)
+    // Once theirs, there is nothing to clear.
+    expect(reduce(own, { type: 'draw-own' })).toBe(own)
+    const drawn = [
+      { type: 'show-frame' },
+      { type: 'show-arcs' },
+      { type: 'show-arcs' },
+      { type: 'show-arcs' },
+    ].reduce((state, action) => reduce(state, action as PlanAction), own)
+    expect(drawn.stage).toBe('review')
+    expect(summarizePlan(spec, drawn).arcs).toEqual({ asked: 3, firstTry: 0 })
+  })
+
+  it('a plan that is not drawn already has nothing to clear', () => {
+    const plain = setup('r-apical-anterior', ['frame', 'arcs'])
+    expect(planPrefilled(plain.spec, plain.start)).toBe(false)
+    expect(plain.run(plain.start, { type: 'draw-own' })).toBe(plain.start)
   })
 })

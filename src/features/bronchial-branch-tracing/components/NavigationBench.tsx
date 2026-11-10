@@ -25,6 +25,7 @@ import {
   astrayView,
   chooseDeclined,
   chooseTaken,
+  flyThroughCard,
   forkPatternSentence,
   identifyInstruction,
   identifyVerdict,
@@ -39,6 +40,7 @@ import {
   openingNumber,
   openingShort,
   packetProse,
+  passingSentence,
 } from '../content/bench-copy'
 import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { displayName } from '../engine/display-text'
@@ -50,6 +52,7 @@ import {
   responsePlane,
 } from '../engine/junction-feedback'
 import {
+  flyingThrough,
   moving as isMoving,
   onwardOption,
   type NavAction,
@@ -108,6 +111,10 @@ import styles from './nav-bench.module.css'
  * forks. It owns only view state: the slice on screen, where the CT is centred, the drive clock.
  */
 const DRIVE_MM_PER_SECOND = 15
+/** Through the central airways the scope does not stop, and moves faster. */
+const CRUISE_MM_PER_SECOND = 20
+/** How long a drive waits for the scope's picture before going on without it. */
+const SCOPE_WAIT_MS = 6000
 /** Set once the learner has closed the primer on this device. */
 export const PRIMER_SEEN_KEY = 'branch-tracing.primer-seen-v1'
 const FORK_FIELD_MIN = 96
@@ -288,19 +295,41 @@ export function NavigationBench({
     [trace, checkpointIndex, astray, phase],
   )
   const travelling = phase === 'drive' || phase === 'astray-in' || phase === 'astray-out'
+  // The fly-through of the central airways: no fork is stopped at until the learner asks, or the
+  // first fork that is chosen at comes up.
+  const flying = flyingThrough(plan, session)
+  const stopAsked = useRef(false)
+  const [stopping, setStopping] = useState(false)
+  useEffect(() => {
+    if (flying) return
+    stopAsked.current = false
+    setStopping(false)
+  }, [flying])
   const { fromArc, toArc } =
     phase === 'drive' || !astrayDrive
       ? drive
       : { fromArc: astrayDrive.fromArc, toArc: astrayDrive.toArc }
+  // The scope does not set off until its picture is drawn: a trip that opens on the fly-through
+  // would otherwise be half flown before there is anything to see. If the picture never comes
+  // (the 3D view failed), the trip goes on without it after a few seconds.
+  const [scopeSettled, setScopeSettled] = useState(false)
+  const onScopeReady = useCallback((ready: boolean) => {
+    if (ready) setScopeSettled(true)
+  }, [])
+  useEffect(() => {
+    const giveUp = window.setTimeout(() => setScopeSettled(true), SCOPE_WAIT_MS)
+    return () => window.clearTimeout(giveUp)
+  }, [])
   const [progress, setProgress] = useState(0)
   useEffect(() => {
-    if (!travelling) return
+    if (!travelling || !scopeSettled) return
     const finishWith =
       phase === 'drive' ? 'arrive' : phase === 'astray-in' ? 'astray-arrive' : 'astray-return'
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const speed = flying ? CRUISE_MM_PER_SECOND : DRIVE_MM_PER_SECOND
     const duration = reduced
       ? 0
-      : Math.max(900, Math.min(3500, (Math.abs(toArc - fromArc) / DRIVE_MM_PER_SECOND) * 1000))
+      : Math.max(flying ? 500 : 900, Math.min(3500, (Math.abs(toArc - fromArc) / speed) * 1000))
     let frame = 0,
       last = 0,
       done = false
@@ -309,7 +338,11 @@ export function NavigationBench({
       if (done) return
       done = true
       setProgress(0)
-      dispatch({ type: finishWith })
+      dispatch(
+        finishWith === 'arrive'
+          ? { type: 'arrive', hold: stopAsked.current }
+          : { type: finishWith },
+      )
     }
     const tick = (now: number) => {
       // A frame's timestamp can be a little earlier than the clock read when the drive began.
@@ -331,7 +364,7 @@ export function NavigationBench({
       cancelAnimationFrame(frame)
       window.clearTimeout(fallback)
     }
-  }, [travelling, phase, fromArc, toArc, dispatch])
+  }, [travelling, phase, fromArc, toArc, dispatch, flying, scopeSettled])
 
   const moving = isMoving(phase)
   const offRoute = phase === 'astray-in' || phase === 'astray' || phase === 'astray-out'
@@ -407,8 +440,12 @@ export function NavigationBench({
   const slice = moving || phase === 'astray' ? tipSlice : current.slice
 
   const chosen = session.choice !== null
+  // On a drive that follows a map the first fork stopped at is the one that gives off the
+  // segment's bronchus, and the learner named that bronchus in planning: an opening labelled with
+  // its name would be the answer. So there, as on a trip that withholds names, an opening is
+  // named once the learner has chosen.
   const named = (opening: OpeningFacts) =>
-    independent
+    independent || map
       ? chosen || over
       : !asksIdentify || Boolean(session.marks[opening.index]?.ok) || chosen
   const identifying = phase === 'identify' ? facts.openings[session.identifyOption] : null
@@ -498,6 +535,10 @@ export function NavigationBench({
                     ? 'done'
                     : 'plain',
             ariaLabel: `Opening ${openingNumber(opening.index)}`,
+            onPick:
+              phase === 'choose' && !session.declined.includes(opening.index)
+                ? () => dispatch({ type: 'choose', option: opening.index })
+                : undefined,
           }
         })
   const basis = cameraBasis(pose.direction, pose.up)
@@ -571,6 +612,7 @@ export function NavigationBench({
           : order.indexOf(phase)
     const index = id === 'drive' ? 3 : order.indexOf(id)
     if (phase === 'drive' && id === 'drive') return 'now'
+    if (flying && id === 'choose') return 'bench'
     if (id === 'match' && session.matchNote === 'optional') return 'optional'
     if (index === at) return 'now'
     if (id !== 'drive' && !planned.steps.includes(id)) return index < at ? 'bench' : 'todo'
@@ -619,8 +661,8 @@ export function NavigationBench({
         help && !(map && pastOstium) ? lesionSentence(target, lesion) : lesionPlaceSentence(target),
       where:
         map && pastOstium
-          ? 'Map panel: the arc that holds the star. Take the opening on that side.'
-          : 'CT panel: follow each lumen with the slider. Lesion slice shows the lesion.',
+          ? 'Map panel: the arc that holds the star. Take the opening on that side: click it in the scope, or its button here.'
+          : 'CT panel: follow each lumen with the slider. Lesion slice shows the lesion. Click the opening in the scope, or its button here.',
       primary: worked
         ? { label: 'Show the choice', onActivate: () => dispatch({ type: 'show-choice' }) }
         : undefined,
@@ -642,7 +684,25 @@ export function NavigationBench({
         icon: <ArrowRight size={16} aria-hidden />,
       },
     }
-  else if (phase === 'drive')
+  else if (phase === 'drive' && flying) {
+    // Where the fly-through ends: the first fork that is chosen at.
+    const stop = plan.stations.find((station, index) => index > session.station && !station.cruise)
+    const stopAt = stop ? forkFacts(trace, stop.checkpointIndex)!.parent.code : target.approachCode
+    now = {
+      kicker: 'Central airways',
+      ...flyThroughCard(stopAt, stopping),
+      status: passingSentence(routeSoFar.map((airway) => airway.code)),
+      secondary: stopping
+        ? undefined
+        : {
+            label: 'Stop at the next fork',
+            onActivate: () => {
+              stopAsked.current = true
+              setStopping(true)
+            },
+          },
+    }
+  } else if (phase === 'drive')
     now = {
       kicker: `${forkCount} · Drive`,
       heading: `Driving into ${openingShort(route, true)}`,
@@ -780,6 +840,7 @@ export function NavigationBench({
               caption={caption}
               phase={phase}
               segmental={pastOstium ? map!.frame.side : undefined}
+              onReady={onScopeReady}
             />
           </div>
           <p className={styles.paneCaption} data-scope-caption>
@@ -1009,7 +1070,9 @@ export function NavigationBench({
         </div>
 
         <div className={styles.detail} style={{ gridArea: 'detail' }} data-bench-detail>
-          {!over && (
+          {/* While the scope flies through, no fork is the learner's to read: the card says what
+              is passing, and the fork's own notes wait for a fork that is stopped at. */}
+          {!over && !flying && (
             <>
               {session.station === 0 && intro && phase !== 'drive' && (
                 <p className={styles.intro} data-bench-intro>

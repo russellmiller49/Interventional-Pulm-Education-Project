@@ -104,16 +104,16 @@ export const betaRollout: BetaRollout = {
     note: {
       audience: 'PCCM and interventional pulmonology fellows and practicing bronchoscopists.',
       summary:
-        "Nine short lessons on reaching a peripheral lesion by Mortimer and Saghaie's simplified branch tracing: plan the route on the CT from the lesion back to its segment, map the segment's ostium and each division to the lesion as nested arcs, then drive the scope with the map beside it, with coronal and sagittal views and backing out of a branch that leads away.",
+        "Seven lessons on reaching a peripheral lesion by Mortimer and Saghaie's simplified branch tracing: plan the route on the CT from the lesion back to its segment, map the segment's ostium and each division to the lesion as nested arcs, then drive the scope with the map beside it, with coronal and sagittal views and backing out of a branch that leads away. The scope flies through the central airways; an optional three-fork check and two refresher lessons cover reading the CT against the scope.",
       estimate: {
-        minutes: 79,
+        minutes: 61,
         basis:
-          "9 lessons, by the module's own count; the 13 practice lesions and the 3-lesion closing set are extra",
+          "7 lessons, by the module's own count; the optional orientation check, the two refreshers, the 13 practice lesions and the 3-lesion closing set are extra",
       },
       lookFor: [
-        'Lesson 1, why the CT looks reversed against the scope view, and whether the orientation reads the way you hold the scope.',
-        'Lessons 3 to 5, planning from the lesion: whether naming the segment, the ostium circle and the arcs read the way you plan a route to a peripheral lesion.',
-        'Lesson 6, a branch that leads away: whether backing out to the last division you are sure of looks and feels like what you do at the scope.',
+        'The orientation check at the start, turning the CT to face the scope at three forks, and whether the orientation reads the way you hold the scope.',
+        'Lessons 1 to 3, planning from the lesion: whether naming the segment, the ostium circle and the arcs read the way you plan a route to a peripheral lesion.',
+        'Lesson 4, the drive: whether flying through the central airways and starting the choices where the segment’s bronchus leaves is where you want the work to begin, and whether backing out of a branch that leads away looks and feels like what you do at the scope.',
         'Whether the lesions in Practice are ones you would plan a navigation route to.',
       ],
       knownLimits: [

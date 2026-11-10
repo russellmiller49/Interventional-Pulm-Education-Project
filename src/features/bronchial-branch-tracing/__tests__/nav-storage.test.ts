@@ -340,7 +340,8 @@ describe('where a trip was left', () => {
     const storage = new MemoryStorage()
     const built = buildTrip(lessonById('drive-with-the-map')!.trips[0], { matchOptional: false })
     const session = startTrip(built.trace, built.target, built.trip)
-    expect(session).toMatchObject({ stage: 'plan', plan: { stage: 'frame' } })
+    // Lesson 6 opens with its map already on the bench, at the review.
+    expect(session).toMatchObject({ stage: 'plan', plan: { stage: 'review' } })
     expect(writeNavEntry('learn:drive-with-the-map', { leg: 0, trip: session }, storage)).toBe(true)
     expect(readNavEntry('learn:drive-with-the-map', storage).entry!.trip).toEqual(session)
   })

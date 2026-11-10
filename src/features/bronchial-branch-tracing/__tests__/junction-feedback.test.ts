@@ -1,6 +1,6 @@
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
 import {
-  NAV_LESSONS,
+  ALL_LESSONS,
   THIN_LUMEN_FORKS,
   buildTrip,
   defaultSteps,
@@ -129,7 +129,7 @@ describe('fork explanations', () => {
         plan: routePlan(trace, { matchOptional }),
         marks: false,
       })),
-      ...NAV_LESSONS.flatMap((lesson) =>
+      ...ALL_LESSONS.flatMap((lesson) =>
         lesson.trips.flatMap((spec) => {
           const { trace, trip } = buildTrip(spec, { matchOptional })
           return trip.nav ? [{ trace, plan: trip.nav, marks: Boolean(spec.identify) }] : []
@@ -148,7 +148,7 @@ describe('fork explanations', () => {
     // The same forks, read off the lessons: in a trip that marks openings, each fork it drives
     // through, with the steps written for it or, where none are, marked if it can be.
     const expected = new Set<string>()
-    for (const lesson of NAV_LESSONS)
+    for (const lesson of ALL_LESSONS)
       for (const spec of lesson.trips) {
         if (!spec.identify || !spec.from) continue
         const trace = traceById(spec.traceId)

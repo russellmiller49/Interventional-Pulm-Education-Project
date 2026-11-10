@@ -37,8 +37,8 @@ export const PRIMER_TITLE = 'What we are doing, and why'
 export const PRIMER: readonly string[] = [
   'A peripheral lesion is reached by taking the right opening at every division: a series of two- and three-way choices. Past the segmental bronchus, no route in this course has more than five of them.',
   'This course plans the route on the CT before the scope moves, by the simplified bronchial branch tracing of Mortimer and Saghaie. Plan: start at the lesion, find the airway that runs into it and follow it back to its segmental bronchus. Map: stand, in your head, at that segment’s ostium and draw the view as a circle with four directions round it; at each division to the lesion, draw each branch as an arc where it leaves, inside the arc before, and star the branch that reaches the lesion.',
-  'Navigate: drive the scope from the trachea. Above the segment you name the airways as you go. Past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
-  'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. The first lesson shows you how to turn the CT to match. After that, turning it on screen is your choice.',
+  'Navigate: the scope flies through the central airways and stops at the fork where the segment’s bronchus leaves. From there the choices are yours, and past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
+  'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. A short check at the start asks you to turn the CT to match at three forks, and two refresher lessons take it slowly. In the course itself, turning the CT on screen is your choice.',
 ]
 
 const SIDE_WORDS: Record<ScreenSide, string> = {
@@ -310,6 +310,29 @@ export function chooseTaken(opening: OpeningFacts, lesion: LesionFacts) {
     headline: `${opening.airway.code} leads toward the lesion.`,
     detail: `${displayName(opening.airway.name)} runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}.`,
   }
+}
+
+// ── The fly-through of the central airways ───────────────────────────────────────────────────
+
+/**
+ * The task card while the scope flies through the airways above the first fork that is chosen
+ * at. `stopAt` is the airway that fork divides; `stopping` once the learner has asked to stop at
+ * the next fork instead.
+ */
+export function flyThroughCard(stopAt: string, stopping: boolean) {
+  return stopping
+    ? {
+        heading: 'Stopping at the next fork',
+        body: 'The scope stops at the next fork it reaches, and you choose from there.',
+      }
+    : {
+        heading: `Flying through to ${stopAt}`,
+        body: `The scope flies through the airways you know and stops in ${stopAt}, where the choices begin.`,
+      }
+}
+/** "Passing: Trachea › RMSB › BI." */
+export function passingSentence(codes: readonly string[]) {
+  return `Passing: ${codes.join(' › ')}.`
 }
 
 // ── Fork facts, arrival, summary ─────────────────────────────────────────────────────────────

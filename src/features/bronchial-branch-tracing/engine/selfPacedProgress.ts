@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NAV_LESSONS } from '../content/nav-lessons'
+import { ALL_LESSONS, NAV_LESSONS } from '../content/nav-lessons'
 
 /**
  * Self-paced course state: where the learner was, which lessons they opened, which they reached
@@ -123,9 +123,12 @@ export const setLessonReviewLater = (id: string, saved: boolean, storage?: Stora
     storage,
   )
 
-/** Resume the last lesson left open, otherwise the first lesson not yet marked reviewed. */
+/**
+ * Resume the last lesson left open (the check and the refreshers included), otherwise the first
+ * course lesson not yet marked reviewed.
+ */
 export function recommendedLesson(record: SelfPacedRecord) {
-  const last = NAV_LESSONS.find((lesson) => lesson.id === record.lastLessonId)
+  const last = ALL_LESSONS.find((lesson) => lesson.id === record.lastLessonId)
   if (last && !record.reviewedLessonIds.includes(last.id))
     return { lesson: last, kind: 'resume' as const }
   const next = NAV_LESSONS.find((lesson) => !record.reviewedLessonIds.includes(lesson.id))

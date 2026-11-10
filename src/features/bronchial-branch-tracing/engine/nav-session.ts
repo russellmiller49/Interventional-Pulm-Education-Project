@@ -32,6 +32,12 @@ import {
  * optional (`matchOptional`): the CT stays however the learner left it, and a check of the match
  * is answered without holding the fork.
  *
+ * A plan can mark its first forks as a fly-through (`cruise`): the scope drives through them
+ * without stopping, asks nothing and logs nothing as asked, and stops at the first fork that is
+ * not marked. The central airways are flown this way on a drive that follows a map: the learner
+ * knows them, and the work begins where the segment's bronchus leaves. A fly-through fork that the
+ * learner asks to stop at (`arrive` with `hold`) is an ordinary fork with its own steps.
+ *
  * Choosing an opening that leads away from the lesion drives the scope into it, one generation,
  * to just short of that branch's own next division (`astray-in`, `astray`). The learner backs out
  * (`astray-out`) to the fork, where that opening is greyed.
@@ -55,6 +61,8 @@ export interface NavStation {
   steps: readonly NavStep[]
   /** The bench demonstrates this fork: "Show me" is the main action for each step. */
   worked?: boolean
+  /** Flown through without stopping, unless the learner asks to stop here. */
+  cruise?: boolean
 }
 export interface NavPlan {
   traceId: string
@@ -128,7 +136,8 @@ export type NavAction =
   | { type: 'choose'; option: number }
   | { type: 'show-choice' }
   | { type: 'drive' }
-  | { type: 'arrive' }
+  /** The scope reaches the next fork. `hold`: stop there even if it is a fly-through fork. */
+  | { type: 'arrive'; hold?: boolean }
   | { type: 'astray-arrive' }
   | { type: 'back-out' }
   | { type: 'astray-return' }
@@ -200,12 +209,25 @@ const hasOnward = (plan: NavPlan, station: number) =>
 export const moving = (phase: NavPhase) =>
   phase === 'drive' || phase === 'astray-in' || phase === 'astray-out'
 
+/** The scope is flying through this fork: it is marked for it and nothing was asked here. */
+export function flyingThrough(plan: NavPlan, state: NavSession): boolean {
+  const entry = state.log[state.station]
+  return (
+    state.phase === 'drive' &&
+    Boolean(plan.stations[state.station]?.cruise) &&
+    !entry?.matchAsked &&
+    !entry?.identifyAsked &&
+    !entry?.chooseAsked
+  )
+}
+
 function enterStation(
   trace: CtTrace,
   plan: NavPlan,
   station: number,
   orientation: CtOrientation,
   log: StationLog[],
+  hold = false,
 ): NavSession {
   const planned = plan.stations[station]
   const checkpoint = trace.checkpoints[planned.checkpointIndex]
@@ -222,6 +244,19 @@ function enterStation(
     declined: [],
     choice: null,
     astray: null,
+  }
+  // A fly-through fork is passed without stopping: the scope takes the route's own branch, and
+  // the fork's log holds nothing asked, so it never counts toward a first-try tally.
+  if (planned.cruise && !hold && hasOnward(plan, station)) {
+    const kept = !match || isAccepted(match, orientation)
+    return {
+      ...base,
+      phase: 'drive',
+      orientation:
+        plan.matchOptional || !match ? orientation : benchOrientation(match, orientation),
+      matchNote: plan.matchOptional ? 'optional' : kept ? 'kept' : 'set',
+      log: withLog(log, station, {}),
+    }
   }
   const asks = planned.steps
   const startLog = withLog(log, station, {
@@ -416,7 +451,14 @@ export function navReducer(trace: CtTrace, plan: NavPlan) {
       case 'arrive': {
         if (state.phase !== 'drive') return state
         if (state.station < plan.stations.length - 1)
-          return enterStation(trace, plan, state.station + 1, state.orientation, state.log)
+          return enterStation(
+            trace,
+            plan,
+            state.station + 1,
+            state.orientation,
+            state.log,
+            Boolean(action.hold),
+          )
         return { ...state, phase: 'arrived' }
       }
     }

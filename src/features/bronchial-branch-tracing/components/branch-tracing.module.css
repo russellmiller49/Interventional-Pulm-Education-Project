@@ -216,6 +216,25 @@
   color: #b3e5e3;
   text-decoration: underline;
 }
+.cruiseChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: 46rem;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.cruiseChoice input {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.22rem;
+}
+.cruiseChoice strong {
+  color: var(--text, #e8f1f2);
+}
 .small {
   color: var(--muted) !important;
   font-size: 0.8rem;

@@ -21,6 +21,8 @@ import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
 import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
 import { ROUTE_PLAN_PARTS, summarizePlan } from '../engine/plan-session'
+import { readPrefs } from '../engine/prefs-storage'
+import { CruiseChoice } from './CruiseChoice'
 import { ModuleFrame } from './ModuleFrame'
 import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
@@ -85,8 +87,8 @@ function LesionPicker({ mode }: { mode: Mode }) {
       <h1>{mode === 'assess' ? 'Three lesions, no hints' : 'Pick a lesion'}</h1>
       <p>
         {mode === 'assess'
-          ? 'Plan each lesion from the lesion back, draw its map, then drive from the trachea. There are no hints: openings are numbered but not named until you have chosen, and a check tells you only whether it fits. A turn into a branch that leads away is counted, and so is backing out of it.'
-          : 'Plan each lesion from the lesion back: find the airway into it, name its segment, draw the ostium circle and the arcs to the lesion. Then drive the scope from the trachea, using your map past the segmental ostium.'}
+          ? 'Plan each lesion from the lesion back, draw its map, then drive: the scope flies through the central airways and the choices begin where the segment’s bronchus leaves. There are no hints: openings are numbered but not named until you have chosen, and a check tells you only whether it fits. A turn into a branch that leads away is counted, and so is backing out of it.'
+          : 'Plan each lesion from the lesion back: find the airway into it, name its segment, draw the ostium circle and the arcs to the lesion. Then drive: the scope flies through the central airways, and from the fork where the segment’s bronchus leaves the choices are yours, with your map past the segmental ostium.'}
       </p>
       <div className={styles.pickerGroups}>
         {groups.map((group) => (
@@ -105,6 +107,7 @@ function LesionPicker({ mode }: { mode: Mode }) {
           </section>
         ))}
       </div>
+      <CruiseChoice />
       {mode === 'practice' && (
         <div className={styles.pickerActions}>
           <button
@@ -126,7 +129,7 @@ function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
     () => ({
       plan: { traceId: trace.id, targetId: target.id, parts: ROUTE_PLAN_PARTS },
       // A whole lesion is driven with its map: no fork waits for the CT to be turned.
-      nav: routePlan(trace, { matchOptional: true }),
+      nav: routePlan(trace, { matchOptional: true, cruise: !readPrefs().everyFork }),
     }),
     [trace, target.id],
   )

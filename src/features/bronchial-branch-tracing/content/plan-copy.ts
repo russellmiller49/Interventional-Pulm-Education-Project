@@ -271,6 +271,13 @@ export function arcsMiss(
 export function reviewSentence(drawn: number, firstTry: number) {
   return `Your map beside the model’s: ${drawn} ${drawn === 1 ? 'division' : 'divisions'}, ${firstTry} drawn right at the first check. Where an arc of yours sits a place to one side of the model’s, both read the same at the scope: the map needs each branch on the right side of its sibling, not an exact angle.`
 }
+/** The review of a map the bench drew, in a lesson that starts at the drive. */
+export function prefilledReview(code: string, divisions: number) {
+  return {
+    heading: 'The map, drawn for you',
+    body: `The ${code} ostium circle and ${divisions === 1 ? 'its one division' : `its ${divisions} divisions`} to the lesion are drawn as the airway model has them, with the star on the branch that reaches the lesion. Drive with this map, or clear it and draw your own.`,
+  }
+}
 export function planSummaryLines(summary: PlanSummary) {
   const lines: string[] = []
   const step = (label: string, part: PlanSummary['lesion']) => {

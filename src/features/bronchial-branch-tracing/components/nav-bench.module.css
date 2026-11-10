@@ -196,6 +196,19 @@
   height: 100%;
   pointer-events: none;
 }
+/* An opening that can be chosen takes a click on its number; the rest of the overlay lets the
+   pointer through. */
+.openingPick {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.openingHit {
+  fill: transparent;
+}
+.openingPick:hover .openingBadge {
+  stroke-width: 1.1;
+  fill: rgba(246, 198, 108, 0.32);
+}
 .compassLetter {
   fill: #ffffff;
   font:

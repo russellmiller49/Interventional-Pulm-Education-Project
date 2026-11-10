@@ -26,6 +26,11 @@ export interface ScopeOpeningLabel extends ScopeOpening {
   caption?: string
   tone: OpeningTone
   ariaLabel: string
+  /**
+   * Set while this opening can be chosen: a click on its number takes it. The picture is one
+   * image to a screen reader, so the task card's own buttons stay the keyboard's way to choose.
+   */
+  onPick?: () => void
 }
 
 /** The patient directions that lie across the scope's view, with where each sits on its rim. */
@@ -130,6 +135,7 @@ export function ScopeView({
   caption,
   phase,
   segmental,
+  onReady,
 }: {
   position: Vec3
   direction: Vec3
@@ -140,9 +146,18 @@ export function ScopeView({
   phase: string
   /** Past the segmental ostium: the rim in the map's words, for this lung. */
   segmental?: 'right' | 'left'
+  /** Told when the airway surface is drawn, and when it is lost. */
+  onReady?: (ready: boolean) => void
 }) {
   const [projected, setProjected] = useState<ProjectedOpening[]>([])
   const [ready, setReady] = useState(false)
+  const reportReady = useCallback(
+    (value: boolean) => {
+      setReady(value)
+      onReady?.(value)
+    },
+    [onReady],
+  )
   // The canvas re-projects whenever this list changes identity, so it is rebuilt only when the
   // anchors themselves change, not on every render of the bench.
   const anchorKey = JSON.stringify(
@@ -177,7 +192,7 @@ export function ScopeView({
         up={up}
         openings={anchors}
         onProject={onProject}
-        onReady={setReady}
+        onReady={reportReady}
       />
       <svg
         className={styles.scopeOverlay}
@@ -212,8 +227,15 @@ export function ScopeView({
               data-scope-opening={opening.text}
               data-opening-tone={opening.tone}
               data-opening-seen={opening.seen}
+              data-opening-pick={opening.onPick ? true : undefined}
+              className={opening.onPick ? styles.openingPick : undefined}
+              onClick={opening.onPick}
               aria-label={opening.ariaLabel}
             >
+              {/* A wider target than the badge: an opening is chosen with one click on it. */}
+              {opening.onPick && (
+                <circle cx={opening.x} cy={opening.y} r="7.5" className={styles.openingHit} />
+              )}
               <circle
                 cx={opening.x}
                 cy={opening.y}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useReducer } from 'react'
 import type { CtNoduleTarget, CtTrace } from '../content/ct-types'
 import { mappedForks } from '../engine/arc-map'
-import type { NavPlan, NavSession } from '../engine/nav-session'
+import { flyingThrough, type NavPlan, type NavSession } from '../engine/nav-session'
 import { readNavEntry, writeNavEntry } from '../engine/nav-storage'
 import { settlePlan, type PlanSession } from '../engine/plan-session'
 import { startTrip, tripReducer, type TripPlan, type TripSession } from '../engine/trip-session'
@@ -54,6 +54,8 @@ function settle(saved: TripSession, plan: TripPlan): TripSession {
       : saved
   const nav = trip.nav
   if (!nav) return trip
+  // A fly-through simply goes on from the fork it had reached.
+  if (plan.nav && flyingThrough(plan.nav, nav)) return trip
   if (nav.phase === 'drive') return { ...trip, nav: { ...nav, phase: 'ready' } }
   if (nav.phase === 'astray-in' || nav.phase === 'astray-out')
     return { ...trip, nav: { ...nav, phase: 'astray' } }

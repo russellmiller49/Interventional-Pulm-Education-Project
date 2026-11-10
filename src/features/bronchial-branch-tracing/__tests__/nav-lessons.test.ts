@@ -12,12 +12,19 @@ import {
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
 import { BASE_PATH, lessonHref } from '../content/module'
 import {
+  ALL_LESSONS,
   CENTRAL_STATIONS,
   LESSON_GROUPS,
   MAP_STEPS,
+  MATCH_REQUIRED_LESSONS,
   MIN_IDENTIFY_AREA_MM2,
   NAV_LESSONS,
+  ORIENTATION_CHECK,
+  ORIENTATION_CHECK_RESULT,
   ORIENTATION_LESSON,
+  REFRESHER_LESSONS,
+  lessonKind,
+  lessonLabel,
   TARGET_FOR_TRACE,
   THIN_LUMEN_FORKS,
   buildTrip,
@@ -46,6 +53,7 @@ import {
   lesionInstruction,
   lesionMiss,
   planSummaryLines,
+  prefilledReview,
   reviewSentence,
   sectorPhrase,
   sectorWords,
@@ -98,11 +106,12 @@ import { CT_TARGETS, CT_TRACES, NATIVE_CT, traceById } from '../geometry/native-
 import { STANDARD_ORIENTATION } from '../geometry/orientation'
 
 /**
- * The lesson registry: nine lessons, each one or more trips that plan on the CT, drive the scope
- * along a real route, or both. These tests hold the registry to the routes and lesions it names and
- * to the words the course may use.
+ * The lesson registry: seven course lessons, an optional orientation check in front of them and
+ * two refresher lessons, each one or more trips that plan on the CT, drive the scope along a real
+ * route, or both. These tests hold the registry to the routes and lesions it names and to the
+ * words the course may use. Every lesson with an address is built and driven here.
  */
-const TRIPS = NAV_LESSONS.flatMap((lesson) =>
+const TRIPS = ALL_LESSONS.flatMap((lesson) =>
   lesson.trips.map((spec, index) => ({
     lesson,
     spec,
@@ -212,12 +221,10 @@ function strings(label: string, value: unknown, skip: readonly string[] = []): [
 }
 
 describe('the registry', () => {
-  test('nine lessons with their own ids, in four groups, about an hour and a quarter in all', () => {
-    expect(NAV_LESSONS).toHaveLength(9)
+  test('seven course lessons, a check before them and two refreshers after, about an hour in all', () => {
+    expect(NAV_LESSONS).toHaveLength(7)
     const ids = NAV_LESSONS.map((lesson) => lesson.id)
     expect(ids).toEqual([
-      'carina-orientation',
-      'two-levels',
       'start-at-the-lesion',
       'stand-at-the-ostium',
       'nested-arcs',
@@ -226,10 +233,18 @@ describe('the registry', () => {
       'turn-back',
       'navigate',
     ])
-    expect(new Set(ids).size).toBe(9)
+    expect(REFRESHER_LESSONS.map((lesson) => lesson.id)).toEqual([
+      'carina-orientation',
+      'two-levels',
+    ])
+    expect(ORIENTATION_CHECK.id).toBe('orientation-check')
+    const every = ALL_LESSONS.map((lesson) => lesson.id)
+    expect(every).toEqual(['orientation-check', ...ids, 'carina-orientation', 'two-levels'])
+    expect(new Set(every).size).toBe(10)
+    // The course's own time: the check and the refreshers are extra, and optional.
     expect(totalMinutes()).toBe(NAV_LESSONS.reduce((sum, lesson) => sum + lesson.minutes, 0))
-    expect(totalMinutes()).toBe(79)
-    for (const lesson of NAV_LESSONS) {
+    expect(totalMinutes()).toBe(61)
+    for (const lesson of ALL_LESSONS) {
       expect(Number.isInteger(lesson.minutes) && lesson.minutes > 0).toBe(true)
       expect(lesson.trips.length).toBeGreaterThan(0)
       for (const text of [lesson.title, lesson.objective, lesson.concept, lesson.closing])
@@ -240,15 +255,16 @@ describe('the registry', () => {
       // The fork patterns of the earlier course are gone from the lesson record.
       expect(Object.keys(lesson)).not.toContain('pattern')
     }
-    // Every group id is a lesson, and every lesson is in exactly one group, in course order.
-    expect(LESSON_GROUPS).toHaveLength(4)
+    // Every group id is a lesson, and every lesson is in exactly one group: the check first, the
+    // course in order, the refreshers last.
+    expect(LESSON_GROUPS).toHaveLength(5)
     const grouped = LESSON_GROUPS.flatMap((group) => group.ids)
-    expect(grouped).toEqual(ids)
+    expect(grouped).toEqual(every)
     for (const group of LESSON_GROUPS) {
       expect(group.label.trim().length).toBeGreaterThan(0)
       expect(group.ids.length).toBeGreaterThan(0)
     }
-    expect(LESSON_GROUPS.map((group) => group.ids.length)).toEqual([2, 3, 2, 2])
+    expect(LESSON_GROUPS.map((group) => group.ids.length)).toEqual([1, 3, 2, 2, 2])
   })
 
   test('lessons are found by id, numbered from one, and each leads to the next', () => {
@@ -261,8 +277,59 @@ describe('the registry', () => {
     expect(lessonById('not-a-lesson')).toBeUndefined()
     expect(lessonById(undefined)).toBeUndefined()
     expect(lessonNumber('not-a-lesson')).toBe(0)
-    // Turning the CT is always asked for in the first lesson.
-    expect(ORIENTATION_LESSON).toBe(NAV_LESSONS[0].id)
+    // The check and the refreshers have addresses, and no number in the course.
+    for (const lesson of [ORIENTATION_CHECK, ...REFRESHER_LESSONS]) {
+      expect(lessonById(lesson.id)).toBe(lesson)
+      expect(lessonNumber(lesson.id)).toBe(0)
+    }
+    expect(NAV_LESSONS.map((lesson) => lessonKind(lesson.id))).toEqual(Array(7).fill('course'))
+    expect(lessonKind('orientation-check')).toBe('check')
+    expect(REFRESHER_LESSONS.map((lesson) => lessonKind(lesson.id))).toEqual([
+      'refresher',
+      'refresher',
+    ])
+    // After the check comes planning; the refreshers lead one to the next, then to planning.
+    expect(lessonAfter('orientation-check')).toBe(NAV_LESSONS[0])
+    expect(lessonAfter('carina-orientation')).toBe(REFRESHER_LESSONS[1])
+    expect(lessonAfter('two-levels')).toBe(NAV_LESSONS[0])
+    expect(lessonLabel(NAV_LESSONS[3])).toBe('Lesson 4 · Drive with the map')
+    expect(lessonLabel(NAV_LESSONS[0], ': ')).toBe('Lesson 1: Start at the lesion')
+    expect(lessonLabel(ORIENTATION_CHECK)).toBe('Orientation check')
+    expect(lessonLabel(REFRESHER_LESSONS[1], ': ')).toBe('Refresher: Two openings, two slices')
+    // Turning the CT is always asked for in the check and in the refresher that teaches it.
+    expect(ORIENTATION_LESSON).toBe(REFRESHER_LESSONS[0].id)
+    expect(MATCH_REQUIRED_LESSONS).toEqual(['carina-orientation', 'orientation-check'])
+  })
+
+  test('the orientation check is three forks that ask only for the CT to be turned, each a different way, with no hints', () => {
+    expect(ORIENTATION_CHECK.unaided).toBe(true)
+    expect(ALL_LESSONS.filter((lesson) => lesson.unaided)).toEqual([ORIENTATION_CHECK])
+    expect(ORIENTATION_CHECK.trips).toHaveLength(3)
+    const moves = ORIENTATION_CHECK.trips.map((spec) => {
+      const { trace, trip } = buildTrip(spec, { matchOptional: false })
+      const nav = trip.nav!
+      expect(trip.plan).toBeNull()
+      expect(nav.stations).toHaveLength(1)
+      expect(nav.stations[0].steps).toEqual(['match'])
+      expect(nav.arrive).toBe(false)
+      const start = startSession(trace, nav)
+      // Each opens in standard axial, waiting for the match, and asks it of the learner.
+      expect(start).toMatchObject({ phase: 'match', matchNote: 'asked' })
+      expect(start.orientation).toEqual(STANDARD_ORIENTATION)
+      expect(start.log[0].matchAsked).toBe(true)
+      const match = stationMatch(trace, nav.stations[0].checkpointIndex)!
+      // One display matches, so the check has one answer.
+      expect(match.accepted).toHaveLength(1)
+      // Nothing in the fork's text says how to turn it.
+      expect(
+        spec.stations![trace.checkpoints[nav.stations[0].checkpointIndex].id].teach,
+      ).toBeUndefined()
+      expect(spec.intro).not.toMatch(/flip|mirror|quarter|clockwise|turn it|rolled/i)
+      return operationsToMatch(match, STANDARD_ORIENTATION)
+    })
+    expect(moves).toEqual([['flip'], ['left'], ['right']])
+    expect(ORIENTATION_CHECK_RESULT.matched).toContain('All three matched at the first check')
+    expect(ORIENTATION_CHECK_RESULT.notYet).toContain('refresher')
   })
 
   test('each step of the method points at a lesson that teaches it, and the change of direction has its own', () => {
@@ -303,15 +370,15 @@ describe('the registry', () => {
     expect(METHOD_STEPS.map((step) => step.lessonId)).not.toContain(DIRECTION_CHANGE.lessonId)
   })
 
-  test('only the first two lessons ask for the openings to be marked; every other drive follows the map', () => {
+  test('only the two refreshers ask for the openings to be marked; every course drive follows the map', () => {
     const marking = new Set<string>()
     for (const { lesson, spec } of TRIPS) {
       if (spec.identify) expect(['carina-orientation', 'two-levels']).toContain(lesson.id)
       const nav = buildTrip(spec, { matchOptional: false }).trip.nav
       for (const station of nav?.stations ?? []) {
         if (station.steps.includes('identify')) marking.add(lesson.id)
-        // Outside the first two lessons, every fork is matched and chosen with the map.
-        if (!['carina-orientation', 'two-levels'].includes(lesson.id))
+        // In the course itself, every fork is matched and chosen with the map.
+        if (lessonKind(lesson.id) === 'course')
           expect([lesson.id, station.steps]).toEqual([lesson.id, MAP_STEPS])
       }
     }
@@ -342,6 +409,7 @@ describe('trips', () => {
           targetId: target!.id,
           parts: spec.plan.parts,
           worked: spec.plan.worked,
+          ...(spec.plan.prefilled ? { prefilled: true } : {}),
         })
         // Parts are asked in the order they are worked, each once.
         expect(spec.plan.parts.length).toBeGreaterThan(0)
@@ -462,8 +530,9 @@ describe('trips', () => {
         if (parts.includes('segment')) expect(plan.segmentChoice).toBe(target!.segment.bronchusCode)
         if (parts.includes('frame')) expect(plan.frameTurn).toBe(0)
         const summary = summarizePlan(trip.plan, plan)
+        // A map the bench drew before the trip began was never asked of the learner.
         expect(summary.arcs.asked).toBe(
-          parts.includes('arcs') ? mappedForks(trace, target!).length : 0,
+          parts.includes('arcs') && !trip.plan.prefilled ? mappedForks(trace, target!).length : 0,
         )
         expect(summary.arcs.firstTry).toBe(0)
         if (parts.includes('arcs'))
@@ -485,6 +554,38 @@ describe('trips', () => {
       if (matchOptional) expect(summary.match.asked).toBe(0)
     },
   )
+
+  test('a drive that follows a map flies through the central airways, up to the first fork a lesson speaks at', () => {
+    const flown = (lessonId: string, trip = 0, options = {}) =>
+      buildTrip(lessonById(lessonId)!.trips[trip], {
+        matchOptional: true,
+        ...options,
+      }).trip.nav!.stations.map((station) => Boolean(station.cruise))
+    // Lesson 6: the trachea, the right main bronchus and the upper lobe bronchus are flown; the
+    // first stop is the trunk that gives off RB1.
+    expect(flown('drive-with-the-map')).toEqual([true, true, true, false, false, false, false])
+    // Lesson 8 has something to say at the left main bronchus, so only the trachea is flown.
+    expect(flown('turn-back')).toEqual([true, false, false, false, false, false, false, false])
+    // The worked trip and the learner's own trip of lesson 9 are flown like any route.
+    expect(flown('navigate', 0).filter(Boolean)).toHaveLength(3)
+    expect(flown('navigate', 1).filter(Boolean)).toHaveLength(4)
+    // Asked for every fork, nothing is flown.
+    expect(flown('drive-with-the-map', 0, { cruise: false }).some(Boolean)).toBe(false)
+    // A drive that reads the CT at each fork has no map to begin at: lessons 1 and 2 stop everywhere.
+    for (const id of ['carina-orientation', 'two-levels'])
+      for (const spec of lessonById(id)!.trips)
+        expect(
+          buildTrip(spec, { matchOptional: true }).trip.nav!.stations.some((s) => s.cruise),
+        ).toBe(false)
+  })
+
+  test('only lesson 6 opens with its map drawn, and it is the map lesson 5 drew', () => {
+    const prefilled = NAV_LESSONS.flatMap((lesson) =>
+      lesson.trips.filter((trip) => trip.plan?.prefilled).map((trip) => [lesson.id, trip.traceId]),
+    )
+    expect(prefilled).toEqual([['drive-with-the-map', 'right-upper-apical']])
+    expect(lessonById('nested-arcs')!.trips[0].traceId).toBe('right-upper-apical')
+  })
 
   test('a trip that names a fork off its route, runs backward, or arrives early does not build', () => {
     const base: NavTripSpec = {
@@ -553,7 +654,7 @@ describe('trips', () => {
   })
 
   test('lesson 1 opens at the carina asking for the flip, then in RB1 asking for one turn left', () => {
-    const lesson = NAV_LESSONS[0]
+    const lesson = REFRESHER_LESSONS[0]
     expect(lesson.id).toBe('carina-orientation')
     expect(lesson.id).toBe(ORIENTATION_LESSON)
     expect(lesson.trips).toHaveLength(2)
@@ -778,7 +879,7 @@ describe('whole routes', () => {
 })
 
 describe('the words the course uses', () => {
-  const lessonStrings = NAV_LESSONS.flatMap((lesson) => [
+  const lessonStrings = ALL_LESSONS.flatMap((lesson) => [
     ...strings(`lesson ${lesson.id}`, {
       title: lesson.title,
       objective: lesson.objective,
@@ -804,6 +905,11 @@ describe('the words the course uses', () => {
     ...strings('METHOD_TIPS', METHOD_TIPS),
     ...strings('DIRECTION_CHANGE', DIRECTION_CHANGE, ['lessonId']),
     ...strings('LESSON_GROUPS', LESSON_GROUPS, ['ids']),
+    ...strings('ORIENTATION_CHECK_RESULT', ORIENTATION_CHECK_RESULT),
+    ...ALL_LESSONS.flatMap((lesson) => [
+      ...strings(`lessonLabel ${lesson.id}`, lessonLabel(lesson)),
+      ...strings(`lessonLabel: ${lesson.id}`, lessonLabel(lesson, ': ')),
+    ]),
     ...strings('naming', { NAMING_KEY, NAMING_USE, SUBSEGMENT_NOTE, SLICE_DIRECTION_NOTE }),
     ...CT_TARGETS.flatMap((target) => strings(`targetNaming ${target.id}`, targetNaming(target))),
   ]
@@ -924,6 +1030,11 @@ describe('the words the course uses', () => {
       add(`${id} reviewSentence`, reviewSentence(mapped.length, mapped.length - 1))
     }
     add('reviewSentence one', reviewSentence(1, 0))
+    for (const divisions of [1, 3]) {
+      const drawn = prefilledReview('RB1', divisions)
+      add(`prefilledReview ${divisions} heading`, drawn.heading)
+      add(`prefilledReview ${divisions} body`, drawn.body)
+    }
     for (const shownStep of [true, false])
       add(
         `planSummaryLines ${shownStep}`,
@@ -958,6 +1069,8 @@ describe('the words the course uses', () => {
     expect(planStrings.length).toBeGreaterThan(1000)
     const lessonText = lessonStrings.map(([, text]) => text)
     expect(lessonText).toContain(NAV_LESSONS[0].trips[0].intro)
+    expect(lessonText).toContain(ORIENTATION_CHECK.trips[2].intro)
+    expect(lessonText).toContain(REFRESHER_LESSONS[0].closing)
     expect(lessonText).toContain(lessonById('start-at-the-lesion')!.trips[0].plan!.teach!.lesion)
     expect(lessonText).toContain(
       lessonById('nested-arcs')!.trips[0].plan!.divisions!['junction-61'],
@@ -1028,7 +1141,7 @@ describe('what a lesson says before the segment is named', () => {
   // Anything on screen while the airway into the lesion is found and the segment is named: the
   // lesson's title, objective and concept (lesson notes), every trip title (subtitle and trip
   // list), and this trip's intro and planning text for those two steps.
-  const shownBeforeNaming = (lesson: (typeof NAV_LESSONS)[number], spec: NavTripSpec) => [
+  const shownBeforeNaming = (lesson: (typeof ALL_LESSONS)[number], spec: NavTripSpec) => [
     lesson.title,
     lesson.objective,
     lesson.concept,
@@ -1039,7 +1152,7 @@ describe('what a lesson says before the segment is named', () => {
   ]
 
   test('no lesson names the segment it asks the learner to name', () => {
-    const asked = NAV_LESSONS.flatMap((lesson) =>
+    const asked = ALL_LESSONS.flatMap((lesson) =>
       lesson.trips
         .filter((spec) => spec.plan?.parts.includes('segment'))
         .map((spec) => ({ lesson, spec })),
