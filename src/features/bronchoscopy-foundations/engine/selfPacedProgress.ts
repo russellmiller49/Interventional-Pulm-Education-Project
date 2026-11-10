@@ -194,3 +194,63 @@ export function availableSurveySnapshot(
 ): BronchInspectionSnapshot | null {
   return record.surveySnapshot
 }
+
+/**
+ * The screen the learner had reached inside each section, so a reload or a return opens there and
+ * not at the section's first screen. It is a place only: the id of a screen, by section. No answer,
+ * attempt or scope position is kept, and the screen opens fresh.
+ *
+ * It has its own key, apart from the record above. The record's shape is strict, so a field added
+ * to it would make a browser still running an earlier bundle discard the whole record.
+ */
+export const BRONCH_PLACE_STORAGE_KEY = 'ip-bronchoscopy-foundations-place-v1'
+
+const placeSchema = z.record(z.string().min(1).max(160), z.string().min(1).max(200))
+
+function readPlaces(): Record<string, string> {
+  const store = storage()
+  if (!store) return {}
+  try {
+    const result = placeSchema.safeParse(
+      JSON.parse(store.getItem(BRONCH_PLACE_STORAGE_KEY) ?? '{}'),
+    )
+    if (!result.success) return {}
+    return Object.fromEntries(
+      Object.entries(result.data).filter(([sectionId]) => isBronchSectionId(sectionId)),
+    )
+  } catch {
+    return {}
+  }
+}
+
+function writePlaces(places: Record<string, string>): boolean {
+  const store = storage()
+  if (!store) return false
+  try {
+    if (Object.keys(places).length === 0) store.removeItem(BRONCH_PLACE_STORAGE_KEY)
+    else store.setItem(BRONCH_PLACE_STORAGE_KEY, JSON.stringify(placeSchema.parse(places)))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** The id of the screen the learner had reached in this section, or null to start at the first. */
+export function readBronchSectionPlace(sectionId: string): string | null {
+  return readPlaces()[sectionId] ?? null
+}
+
+/** Keeps the screen reached in a section; `null` forgets it, so the section opens at its start. */
+export function writeBronchSectionPlace(sectionId: string, stepId: string | null): boolean {
+  if (!isBronchSectionId(sectionId)) return false
+  const places = readPlaces()
+  if ((places[sectionId] ?? null) === stepId) return true
+  if (stepId === null) delete places[sectionId]
+  else places[sectionId] = stepId
+  return writePlaces(places)
+}
+
+/** Forgets the place in every section: the course opens each one at its first screen again. */
+export function clearBronchSectionPlaces(): boolean {
+  return writePlaces({})
+}
