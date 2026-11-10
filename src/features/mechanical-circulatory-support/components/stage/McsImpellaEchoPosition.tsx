@@ -14,6 +14,7 @@ import {
   MCS_ECHO_WORKED_EXAMPLE,
 } from '../../content/impellaEchoPosition'
 import { ReferenceValues } from '../teaching/shared'
+import { McsEchoLongAxisFigure } from './McsEchoLongAxisFigure'
 import { mcsVerdictFrames } from './McsStageHost'
 import styles from './mcs-stage.module.css'
 
@@ -39,6 +40,7 @@ export function McsImpellaEchoPosition() {
         {MCS_ECHO_POSITION.title}
       </h4>
       <p data-echo-views>{MCS_ECHO_POSITION.views}</p>
+      <McsEchoLongAxisFigure />
       <ul data-echo-aligned>
         {MCS_ECHO_POSITION.aligned.map((finding) => (
           <li key={finding}>{finding}</li>

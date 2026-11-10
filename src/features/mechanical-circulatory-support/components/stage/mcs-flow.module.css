@@ -293,6 +293,44 @@
   display: block;
   font-size: 0.75rem;
 }
+/*
+ * Pointing at a reading. The label of a reading taken at a place on the loop is a button: a dotted
+ * underline says it does something, and hovering, focusing or pressing it lights the place on the
+ * map and the heart. The row being pointed at is marked with a filled edge and a tint, and the
+ * line above the readings says where it is in words.
+ */
+.readingsHint {
+  margin: 0.6rem 0 0;
+  color: var(--stage-muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+.readingsHint[data-pointing] {
+  color: #ffd166;
+}
+.readings dt button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: start;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.readings dt button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 3px;
+  border-radius: 0.2rem;
+}
+.readings div[data-pointable] {
+  border-radius: 0 0.4rem 0.4rem 0;
+}
+.readings div[data-pointed] {
+  border-left: 4px solid #ffd166;
+  padding-left: calc(0.75rem - 2px);
+  background: rgba(255, 209, 102, 0.1);
+}
 .tour {
   display: grid;
   gap: 0.75rem;
@@ -676,4 +714,36 @@
     position: sticky;
     top: 6.5rem;
   }
+}
+
+/*
+ * The heart and the device beside the readings.
+ *
+ * Two columns for a task that leads with the three-dimensional view: the view on the left, and
+ * the task's controls, the readings, the monitor and the folded map beside it. These tasks used
+ * to open on a short table of numbers with every picture folded shut. The view scales with its
+ * column, so this starts at a narrower pane than the map's rule above (the map has a minimum
+ * drawing width): it holds on a 1280px-wide window, where the pane is about 46rem.
+ */
+@container mcs-visual (min-width: 44rem) {
+  .visualPane [data-simulator-surfaces][data-anatomy-leads] {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-items: start;
+    gap: 0.75rem 1.25rem;
+  }
+  .visualPane [data-simulator-surfaces][data-anatomy-leads] > * {
+    grid-column: 2;
+  }
+  .visualPane [data-simulator-surfaces][data-anatomy-leads] > [data-surface='anatomy'] {
+    grid-column: 1;
+    grid-row: span 6;
+    position: sticky;
+    top: 6.5rem;
+  }
+}
+/* The leading view's own toggle sits tight above the card it opens. */
+.visualPane [data-surface='anatomy'][data-leading] {
+  display: grid;
+  gap: 0.4rem;
 }
