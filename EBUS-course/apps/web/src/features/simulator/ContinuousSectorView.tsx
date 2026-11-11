@@ -10,9 +10,10 @@ import type { SimulatorProbePose } from './pose';
 import type { SimulatorCaseManifest, SimulatorPreset } from './types';
 import { ImageDiscovery } from '../../guided/ImageDiscovery';
 import { canDiscoverImage, imagePixelAt } from '../../guided/imageDiscoveryPixels';
+import { ARTERY_KEYS, drawPulse, pulseRegion, pulseScale, structureOutline, type PulseRegion } from './sectorOverlays';
 
-export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:LinkedRenderedFrame)=>void;onAction:(name:string,apply:()=>void)=>void;onPick?:(pick:{near:string[];centerKey:string|null;centerLabel:string|null})=>void}}) {
-  const t=useCourseShellText(),canvas=useRef<HTMLCanvasElement>(null),overlay=useRef<HTMLCanvasElement>(null),worker=useRef<Worker|null>(null),sequence=useRef(0),scheduled=useRef<ReturnType<typeof setTimeout>|null>(null);
+export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,compact=false,assessment=false,onEnlarge,onShowAll,selectedPreset,activeStructure,setActiveStructure,guided}:{caseData:SimulatorCaseManifest;volume:AcousticVolume|null;error:string|null;pose:SimulatorProbePose;contactQuality:number;compact?:boolean;assessment?:boolean;onEnlarge?:(()=>void)|null;onShowAll?:(()=>void)|null;selectedPreset:SimulatorPreset|null;activeStructure:string|null;setActiveStructure:(id:string|null)=>void;guided?:{config:EbusWorkbenchConfig;targetKey:string;poseKey:string;onFrame:(frame:LinkedRenderedFrame)=>void;onAction:(name:string,apply:()=>void)=>void;onPick?:(pick:{near:string[];centerKey:string|null;centerLabel:string|null})=>void;outlined?:readonly string[]}}) {
+  const t=useCourseShellText(),canvas=useRef<HTMLCanvasElement>(null),pulse=useRef<HTMLCanvasElement>(null),overlay=useRef<HTMLCanvasElement>(null),worker=useRef<Worker|null>(null),sequence=useRef(0),scheduled=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [controls,setControls]=useState<AcousticControls>({...DEFAULT_ACOUSTIC_CONTROLS,gainDb:guided?.config.initialGain ?? DEFAULT_ACOUSTIC_CONTROLS.gainDb,depthMm:guided?.config.initialDepth ?? caseData.render_defaults.max_depth_mm,sectorAngleDeg:caseData.render_defaults.sector_angle_deg});
   const [frozen,setFrozen]=useState(false),[teaching,setTeaching]=useState(false),[frame,setFrame]=useState<AcousticFrame|null>(null),[renderError,setRenderError]=useState<string|null>(null);
   const [baseline,setBaseline]=useState<{frame:AcousticFrame;id:string}|null>(null);
@@ -51,23 +52,66 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     const element=overlay.current;if(!element||!frame||!volume)return;
     element.width=frame.width;element.height=frame.height;const ctx=element.getContext('2d');if(!ctx)return;
     ctx.clearRect(0,0,frame.width,frame.height);
-    // The advance-and-withdraw task: the node the learner found in the rotation task is outlined so
-    // it can be followed across the image, and a dashed line marks the middle it is brought to.
-    if(guided?.config.linkedVariant==='along-airway'&&!guided.config.demonstration){
-      const targetId=volume.metadata.labels.findIndex(label=>label.key===guided.targetKey),w=frame.width,h=frame.height,ids=frame.labelImage;
-      ctx.strokeStyle='rgba(255,255,147,.85)';ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(w/2,h*.11);ctx.lineTo(w/2,h*.93);ctx.stroke();ctx.setLineDash([]);
-      if(targetId>=3){
-        ctx.fillStyle='rgba(120,230,140,.95)';
-        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;if(ids[i]!==targetId)continue;if(ids[i-1]!==targetId||ids[i+1]!==targetId||ids[i-w]!==targetId||ids[i+w]!==targetId)ctx.fillRect(x-.5,y-.5,2,2);}
-      }
-      return;
+    const w=frame.width,h=frame.height,labels=volume.metadata.labels;
+    if(teaching&&!assessment){
+      const colors=labels.map(label=>label.kind==='node'?[110,210,110]:[80,170,245]);
+      const image=ctx.createImageData(w,h);
+      for(let i=0;i<frame.labelImage.length;i++){const id=frame.labelImage[i];if(id<3)continue;const c=colors[id],p=i*4;image.data[p]=c[0];image.data[p+1]=c[1];image.data[p+2]=c[2];image.data[p+3]=labels[id].key===activeStructure?130:55;}
+      ctx.putImageData(image,0,0);
     }
-    if(!teaching||assessment)return;
-    const colors=volume.metadata.labels.map(label=>label.kind==='node'?[110,210,110]:[80,170,245]);
-    const image=ctx.createImageData(frame.width,frame.height);
-    for(let i=0;i<frame.labelImage.length;i++){const id=frame.labelImage[i];if(id<3)continue;const c=colors[id],p=i*4;image.data[p]=c[0];image.data[p+1]=c[1];image.data[p+2]=c[2];image.data[p+3]=volume.metadata.labels[id].key===activeStructure?130:55;}
-    ctx.putImageData(image,0,0);
-  },[frame,volume,teaching,assessment,activeStructure,guided?.config.linkedVariant,guided?.config.demonstration,guided?.targetKey]);
+    if(!guided||guided.config.demonstration)return;
+    const alongAirway=guided.config.linkedVariant==='along-airway';
+    // The advance-and-withdraw task: a dashed line marks the middle the node is brought to, and the
+    // node found in the rotation task is outlined so it can be followed across the image.
+    if(alongAirway){ctx.strokeStyle='rgba(255,255,147,.85)';ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(w/2,h*.11);ctx.lineTo(w/2,h*.93);ctx.stroke();ctx.setLineDash([]);}
+    // Every structure the learner has already found stays outlined and numbered, in the order it
+    // was found, so it can be followed as the plane moves. Nothing is marked before it is found.
+    const found=guided.outlined??[];
+    const marks=[...found.map((key,index)=>({key,number:index+1})),...(alongAirway&&!found.includes(guided.targetKey)?[{key:guided.targetKey,number:0}]:[])];
+    for(const mark of marks){
+      const id=labels.findIndex(label=>label.key===mark.key);if(id<3)continue;
+      const outline=structureOutline(frame.labelImage,w,h,id);if(!outline)continue;
+      const colour=labels[id].kind==='node'?'rgba(120,230,140,.95)':labels[id].kind==='blood'?'rgba(125,195,255,.95)':'rgba(255,205,125,.95)';
+      ctx.fillStyle=colour;
+      for(const i of outline.edge)ctx.fillRect((i%w)-.5,Math.floor(i/w)-.5,2,2);
+      if(!mark.number)continue;
+      const [ax,ay]=outline.anchor,x=Math.min(w-15,Math.max(15,ax)),y=Math.min(h-15,Math.max(15,ay));
+      ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.fillStyle='rgba(6,22,28,.88)';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=colour;ctx.stroke();
+      ctx.fillStyle='#f4fbfa';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(mark.number),x,y+1);
+    }
+  },[frame,volume,teaching,assessment,activeStructure,guided?.config.linkedVariant,guided?.config.demonstration,guided?.targetKey,guided?.outlined]);
+  // Arterial pulsation, drawn on its own canvas above the frame: each artery in view widens a
+  // little about its own centre with every beat. The frame, its labels and its id are untouched.
+  // Still when the image is held or frozen, when there is no tissue window, and for a viewer who
+  // asks for reduced motion.
+  useEffect(()=>{
+    const element=pulse.current;if(!element)return;
+    const ctx=element.getContext('2d');
+    if(ctx)ctx.clearRect(0,0,element.width,element.height);
+    if(!ctx||!frame||!volume||held||contactQuality<.45)return;
+    if(typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const w=frame.width,h=frame.height;
+    const regions:PulseRegion[]=[];
+    for(const structure of frame.structures){
+      if(!ARTERY_KEYS.includes(volume.metadata.labels[structure.id]?.key))continue;
+      const region=pulseRegion(frame.labelImage,w,h,structure.id);if(region)regions.push(region);
+    }
+    if(!regions.length)return;
+    element.width=w;element.height=h;
+    const image=ctx.createImageData(w,h);
+    let request=0;
+    const draw=(now:number)=>{
+      image.data.fill(0);
+      const scale=pulseScale(now);
+      if(scale>1.0005)for(const region of regions)drawPulse(frame.rgba,frame.labelImage,w,h,region,scale,image.data);
+      ctx.putImageData(image,0,0);
+      element.dataset.pulseScale=scale.toFixed(4);
+      request=window.requestAnimationFrame(draw);
+    };
+    element.dataset.pulseArteries=String(regions.length);
+    request=window.requestAnimationFrame(draw);
+    return()=>{window.cancelAnimationFrame(request);delete element.dataset.pulseArteries;delete element.dataset.pulseScale;};
+  },[frame,volume,held,contactQuality]);
   // A click on the image reports the structure under it and within a few pixels of it, so the
   // lesson can ask the learner to find a structure on ultrasound. Nothing is named on screen here.
   const pickCallback = useRef(guided?.onPick);
@@ -160,7 +204,7 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
       {(!guided || guided.config.controls.includes('freeze')) && <button className="simulator-sector-style-toggle" aria-pressed={frozen} disabled={!allowed('freeze')} onClick={()=>act('freeze',()=>setFrozen(!frozen))}>{t(frozen?'Resume':'Freeze')}</button>}</div>
     </div>
     <div className="simulator-continuous-ultrasound">
-      <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={overlay} aria-hidden="true" style={{pointerEvents:'none'}}/>
+      <canvas ref={canvas} aria-label={t('Grayscale ultrasound image')}/><canvas ref={pulse} aria-hidden="true" data-pulse-layer style={{pointerEvents:'none'}}/><canvas ref={overlay} aria-hidden="true" data-outline-layer style={{pointerEvents:'none'}}/>
       {volume && <ImageDiscovery canvas={canvas} image={frame} labels={volume.metadata.labels} enabled={discover} />}
       {!frame&&<div className="simulator-ultrasound-message" role="status">{t(error??renderError??'Loading acoustic anatomy…')}</div>}
       {frame&&<span data-orientation-dot style={{position:'absolute',width:1,height:1,overflow:'hidden',clipPath:'inset(50%)',whiteSpace:'nowrap'}}>{t('Green orientation dot at the upper right: the proximal (cephalad) side of the image.')}</span>}

@@ -317,6 +317,14 @@ test.describe('structure names on the model', () => {
 })
 
 test.describe('find on ultrasound', () => {
+  /** How many pixels the outline layer over the ultrasound image has drawn. */
+  const outlinedPixels = (f: FrameLocator) =>
+    f.locator('[data-outline-layer]').evaluate((canvas: HTMLCanvasElement) => {
+      const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      let drawn = 0
+      for (let i = 3; i < data.length; i += 4) if (data[i]) drawn += 1
+      return drawn
+    })
   test('the task names its target, a wrong click names what was clicked, and each right click moves to the next target', async ({
     page,
   }) => {
@@ -356,6 +364,9 @@ test.describe('find on ultrasound', () => {
       await expect(feedback).toContainText(`That is the ${LANDMARK_NAMES[wrong]}, not the `)
     await expect(task).toHaveAttribute('data-landmark-target', first)
     expect(await identified(page)).toEqual([])
+    // Nothing is outlined on the image before it has been found, a wrong click included.
+    expect(await outlinedPixels(f)).toBe(0)
+    await expect(f.locator('[data-landmarks-found]')).toHaveCount(0)
     // Each right click is recorded and the task moves on, in the lesson's order.
     for (let count = 0; count < expected.length; count++) {
       const target = expected[count]
@@ -383,8 +394,11 @@ test.describe('find on ultrasound', () => {
     }
     await expect(task).toHaveCount(0)
     await expect(f.locator('[data-landmarks-identified]')).toContainText(
-      'Found on ultrasound: ' + expected.map((id) => LANDMARK_NAMES[id]).join(' · '),
+      'Found on ultrasound: ' +
+        expected.map((id, index) => index + 1 + ' ' + LANDMARK_NAMES[id]).join(' · '),
     )
+    // Each found structure is now outlined and numbered on the image.
+    expect(await outlinedPixels(f)).toBeGreaterThan(0)
     await expect(page.locator('[data-requirement="linked-landmarks"]')).toHaveCount(0)
   })
 })
