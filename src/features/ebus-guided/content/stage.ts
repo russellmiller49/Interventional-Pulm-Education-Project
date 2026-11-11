@@ -373,6 +373,20 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     brief('flow-example', 'Use flow and anatomy together', 'ultrasound', 'demonstration'),
     acquire('flow-comparison', 'Compare grayscale and color recordings', 'ultrasound'),
     explain('Compare the two recordings'),
+    // The owner's patient recording (2026-11-11): the node, the small vessels around it and the
+    // pleura beyond it, read on a paused frame before anything is labelled.
+    {
+      ...decide(
+        'patient-flow',
+        'Read colour flow around a node on a patient recording',
+        ['observation'],
+        'ultrasound',
+        'diagram',
+      ),
+      figure: 'clip-doppler',
+      instruction:
+        'Play the recording, then open the frame with colour flow and answer. Its labels open after you answer.',
+    },
     transfer('Resolve an uncertain vascular structure'),
   ],
   capture: [

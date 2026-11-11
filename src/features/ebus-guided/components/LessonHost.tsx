@@ -38,6 +38,7 @@ import { CaseSpecimens } from './CaseSpecimens'
 import { TroubleshootingFlow } from './TroubleshootingFlow'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
+import { ClipFigure } from './ClipFigure'
 
 /**
  * One lesson, self-paced (EBUS-01, owner decision of 2026-09-14).
@@ -423,6 +424,8 @@ function LessonSession({
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
   /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
   const figure = current.image === 'diagram' ? (current.figure ?? content.diagram) : undefined
+  /** A step that reads a patient recording shows it, whatever lab the lesson ran before it. */
+  const clipStep = figure === 'clip-doppler'
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * A briefing with a live example shows a short lead, then the three views, then the rest of the
@@ -866,9 +869,11 @@ function LessonSession({
               className={styles.taskEvidence}
               hidden={
                 finished ||
-                (runtimeActivity
-                  ? !showRuntime
-                  : !showDemo && !(current.image === 'reference' || !!figure))
+                (clipStep
+                  ? false
+                  : runtimeActivity
+                    ? !showRuntime
+                    : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
               {evidenceKind && evidenceKind !== 'held-missing' && (
@@ -890,7 +895,8 @@ function LessonSession({
                     Go back and acquire one
                   </button>
                 </div>
-              ) : runtimeActivity && runtimeLab ? (
+              ) : runtimeActivity && runtimeLab && !clipStep ? (
+                // A step that reads a patient recording shows that, not the lesson's earlier lab.
                 <Workbench
                   key={runtimeActivity.lessonId + ':' + (runtimeActivity.task ?? 'guided')}
                   lab={runtimeLab}
@@ -928,6 +934,12 @@ function LessonSession({
                 <NodeFeatureAtlas />
               ) : figure === 'node-reading' ? (
                 <NodeFeatureReading />
+              ) : figure === 'clip-doppler' ? (
+                // Labels on its paused frame open once the step's question is answered or explained.
+                <ClipFigure
+                  clip="doppler-node-vessels"
+                  unlocked={!!committed || !!(question && explanationOpen[question.id])}
+                />
               ) : figure === 'station-map' ||
                 figure === 'station-map-n' ||
                 figure === 'station-map-access' ? (
