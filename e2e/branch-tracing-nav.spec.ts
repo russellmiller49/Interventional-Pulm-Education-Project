@@ -761,7 +761,15 @@ test.describe('driving with the map', () => {
     await expect(page.locator('[data-arc-turn]')).not.toHaveAttribute('data-arc-turn', '0')
     await expect(page.locator('[data-map-turn-row]')).toContainText('follows the scope')
     await expect(page.locator('[data-arc-map]')).toBeVisible()
+    // The lesion is not marked on the scope's picture before the end of the airway.
+    await expect(scope(page).locator('[data-scope-lesion]')).toHaveCount(0)
     await showUntil(page, /arrived/)
+    // At the end, a ring says where it lies beyond the wall, and the caption says it is not seen.
+    await expect(scope(page).locator('[data-scope-lesion]')).toHaveCount(1)
+    await expect(scope(page).locator('[data-scope-lesion]')).toContainText('beyond the wall')
+    await expect(page.locator('[data-scope-caption]')).toContainText(
+      'it is not seen from the airway',
+    )
     const closing = await page.locator('[data-bench-closing]').innerText()
     expect(closing).toContain('Branches that led away, driven into: 1; backed out of: 1.')
     expect(closing).not.toMatch(BANNED)

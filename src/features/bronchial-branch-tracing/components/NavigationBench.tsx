@@ -76,6 +76,8 @@ import {
   astrayStop,
   tipSlice as astrayTipSlice,
 } from '../geometry/astray'
+import { falloffMmFor, routeRadiusMm } from '../geometry/airway-radius'
+import type { Vec3 } from '../geometry/coordinates'
 import { AirwayTreeInset } from './AirwayTreeInset'
 import { ArcMap } from './ArcMap'
 import { STAGE_STEPS } from '../content/plan-copy'
@@ -83,6 +85,7 @@ import { operationsToMatch, readMatch, stationMatch } from '../engine/orientatio
 import { lpsToVoxel, targetForTrace } from '../geometry/native-ct'
 import { cameraBasis, lookingDirection } from '../geometry/reference-frames'
 import {
+  arcNearest,
   arcToSlice,
   arrivalPose,
   driveFrom,
@@ -520,45 +523,74 @@ export function NavigationBench({
   ]
 
   // ── What the scope shows ──────────────────────────────────────────────────────────────────
+  // At the end of the airway the lesion is beyond the wall, not in view: a dashed ring says which
+  // way it lies, as a teaching overlay.
+  const lesionCue: ScopeOpeningLabel[] =
+    phase === 'arrived'
+      ? [
+          {
+            id: `${trace.id}:lesion`,
+            anchors: [target.centerLps as Vec3],
+            text: 'Lesion',
+            caption: 'beyond the wall',
+            tone: 'plain',
+            ariaLabel: 'Where the lesion lies, beyond the airway wall',
+            lesion: true,
+          },
+        ]
+      : []
   const openings: ScopeOpeningLabel[] =
-    phase === 'arrived' || offRoute
-      ? []
-      : facts.openings.map((opening) => {
-          const option = checkpoint.decision!.options[opening.index]
-          const fork = checkpoint.decision!.junctionLps
-          const delta = [option.lps[0] - fork[0], option.lps[1] - fork[1], option.lps[2] - fork[2]]
-          const length = Math.hypot(delta[0], delta[1], delta[2]) || 1
-          const at = (mm: number) =>
-            [0, 1, 2].map((axis) => fork[axis] + (delta[axis] / length) * mm) as [
-              number,
-              number,
-              number,
+    phase === 'arrived'
+      ? lesionCue
+      : offRoute
+        ? []
+        : facts.openings.map((opening) => {
+            const option = checkpoint.decision!.options[opening.index]
+            const fork = checkpoint.decision!.junctionLps
+            const delta = [
+              option.lps[0] - fork[0],
+              option.lps[1] - fork[1],
+              option.lps[2] - fork[2],
             ]
-          return {
-            id: `${stationKey}:${opening.index}`,
-            // Deepest first: the number should sit in the opening, not on the spur in front of it.
-            anchors: [at(12), at(9), at(6), at(Math.min(3, length)), at(1.5)],
-            text: openingNumber(opening.index),
-            caption: named(opening) && !opening.repeatedName ? opening.airway.code : undefined,
-            tone: session.declined.includes(opening.index)
-              ? 'declined'
-              : session.choice === opening.index
-                ? 'chosen'
-                : identifying?.index === opening.index
-                  ? 'active'
-                  : session.marks[opening.index]?.ok
-                    ? 'done'
-                    : 'plain',
-            ariaLabel: `Opening ${openingNumber(opening.index)}`,
-            hot: hot === opening.index,
-            onHover: hover(opening.index),
-            onPick:
-              phase === 'choose' && !session.declined.includes(opening.index)
-                ? () => dispatch({ type: 'choose', option: opening.index })
-                : undefined,
-          }
-        })
+            const length = Math.hypot(delta[0], delta[1], delta[2]) || 1
+            const at = (mm: number) =>
+              [0, 1, 2].map((axis) => fork[axis] + (delta[axis] / length) * mm) as [
+                number,
+                number,
+                number,
+              ]
+            return {
+              id: `${stationKey}:${opening.index}`,
+              // Deepest first: the number should sit in the opening, not on the spur in front of it.
+              anchors: [at(12), at(9), at(6), at(Math.min(3, length)), at(1.5)],
+              text: openingNumber(opening.index),
+              caption: named(opening) && !opening.repeatedName ? opening.airway.code : undefined,
+              tone: session.declined.includes(opening.index)
+                ? 'declined'
+                : session.choice === opening.index
+                  ? 'chosen'
+                  : identifying?.index === opening.index
+                    ? 'active'
+                    : session.marks[opening.index]?.ok
+                      ? 'done'
+                      : 'plain',
+              ariaLabel: `Opening ${openingNumber(opening.index)}`,
+              hot: hot === opening.index,
+              onHover: hover(opening.index),
+              onPick:
+                phase === 'choose' && !session.declined.includes(opening.index)
+                  ? () => dispatch({ type: 'choose', option: opening.index })
+                  : undefined,
+            }
+          })
   const basis = cameraBasis(pose.direction, pose.up)
+  // The light's reach follows the width of the airway the scope is in. In a branch that leads
+  // away the scope is one generation on from the nearest point of the route: a little narrower.
+  const falloffMm = falloffMmFor(
+    offRoute
+      ? routeRadiusMm(trace, arcNearest(trace, pose.position)) * 0.8
+      : routeRadiusMm(trace, pose.arc),
+  )
   // How far the map must turn to sit as the scope shows it, read from where the scope is now:
   // the scope rolls as it enters each branch, and a map that is turned to it follows the roll.
   const turnToScope = map
@@ -576,7 +608,7 @@ export function NavigationBench({
           : moving
             ? 'Driving on. The CT follows the tip of the scope.'
             : phase === 'arrived'
-              ? `At the end of ${target.approachCode}, beside the lesion.`
+              ? `At the end of ${target.approachCode}. The ring marks where the lesion lies beyond the wall: it is not seen from the airway.`
               : lookCaption(
                   facts.parent.code,
                   lookKind(pose.direction),
@@ -1137,6 +1169,7 @@ export function NavigationBench({
               phase={phase}
               segmental={pastOstium ? map!.frame.side : undefined}
               onReady={onScopeReady}
+              falloffMm={falloffMm}
             />
             <AirwayTreeInset
               trace={trace}

@@ -247,6 +247,44 @@
   width: 100% !important;
   height: 100% !important;
 }
+/* The rim of the scope's picture falls a little darker, as a lens's does. It sits over the
+   picture and under the letters and numbers. */
+.scopeSquare::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 58%, rgba(2, 6, 9, 0.5) 100%);
+  pointer-events: none;
+}
+/* Where the lesion lies beyond the wall, at the end of the airway: a dashed ring and its name,
+   in the lesion's own colour, never drawn as something seen. */
+.scopeLesionRing {
+  fill: rgba(230, 176, 239, 0.08);
+  stroke: #e6b0ef;
+  stroke-width: 0.7;
+  stroke-dasharray: 2 1.6;
+}
+.scopeLesionName {
+  fill: #f3c8fa;
+  font:
+    700 4px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  paint-order: stroke;
+  stroke: #07151b;
+  stroke-width: 0.8px;
+}
+.scopeLesionNote {
+  fill: #f3c8fa;
+  font:
+    600 3px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  paint-order: stroke;
+  stroke: #07151b;
+  stroke-width: 0.7px;
+}
 .scopeOverlay {
   position: absolute;
   inset: 0;

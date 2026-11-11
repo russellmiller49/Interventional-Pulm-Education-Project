@@ -35,6 +35,11 @@ export interface ScopeOpeningLabel extends ScopeOpening {
   hot?: boolean
   /** The pointer came onto, or left, this opening's number. */
   onHover?: (on: boolean) => void
+  /**
+   * Not an opening: where the lesion lies from the scope, beyond the airway wall. Drawn as a
+   * dashed ring with its name, never as something the scope sees.
+   */
+  lesion?: boolean
 }
 
 /** The patient directions that lie across the scope's view, with where each sits on its rim. */
@@ -140,6 +145,7 @@ export function ScopeView({
   phase,
   segmental,
   onReady,
+  falloffMm,
 }: {
   position: Vec3
   direction: Vec3
@@ -152,6 +158,8 @@ export function ScopeView({
   segmental?: 'right' | 'left'
   /** Told when the airway surface is drawn, and when it is lost. */
   onReady?: (ready: boolean) => void
+  /** How far the scope's light carries here, in millimetres. */
+  falloffMm?: number
 }) {
   const [projected, setProjected] = useState<ProjectedOpening[]>([])
   const [ready, setReady] = useState(false)
@@ -197,6 +205,7 @@ export function ScopeView({
         openings={anchors}
         onProject={onProject}
         onReady={reportReady}
+        falloffMm={falloffMm}
       />
       <svg
         className={styles.scopeOverlay}
@@ -225,59 +234,85 @@ export function ScopeView({
           </text>
         ))}
         {ready &&
-          placed.map((opening) => (
-            <g
-              key={opening.id}
-              data-scope-opening={opening.text}
-              data-opening-tone={opening.tone}
-              data-opening-seen={opening.seen}
-              data-opening-pick={opening.onPick ? true : undefined}
-              data-opening-hot={opening.hot || undefined}
-              className={
-                opening.onPick
-                  ? styles.openingPick
-                  : opening.onHover
-                    ? styles.openingLive
-                    : undefined
-              }
-              onClick={opening.onPick}
-              onPointerEnter={opening.onHover ? () => opening.onHover!(true) : undefined}
-              onPointerLeave={opening.onHover ? () => opening.onHover!(false) : undefined}
-              aria-label={opening.ariaLabel}
-            >
-              {/* A wider target than the badge: an opening is chosen with one click on it. */}
-              {opening.onPick && (
-                <circle cx={opening.x} cy={opening.y} r="7.5" className={styles.openingHit} />
-              )}
-              <circle
-                cx={opening.x}
-                cy={opening.y}
-                r="4.6"
-                className={styles.openingBadge}
-                strokeDasharray={opening.seen ? undefined : '1.2 1'}
-              />
-              <text
-                x={opening.x}
-                y={opening.y}
-                className={styles.openingNumber}
-                textAnchor="middle"
-                dominantBaseline="central"
-              >
-                {opening.text}
-              </text>
-              {opening.caption && (
+          placed.map((opening) =>
+            opening.lesion ? (
+              <g key={opening.id} data-scope-lesion aria-label={opening.ariaLabel}>
+                <circle cx={opening.x} cy={opening.y} r="9" className={styles.scopeLesionRing} />
                 <text
                   x={opening.x}
-                  y={opening.y + 8.2}
-                  className={styles.openingCaption}
+                  y={opening.y}
+                  className={styles.scopeLesionName}
                   textAnchor="middle"
                   dominantBaseline="central"
                 >
-                  {opening.caption}
+                  {opening.text}
                 </text>
-              )}
-            </g>
-          ))}
+                {opening.caption && (
+                  <text
+                    x={opening.x}
+                    y={opening.y + 12.4}
+                    className={styles.scopeLesionNote}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {opening.caption}
+                  </text>
+                )}
+              </g>
+            ) : (
+              <g
+                key={opening.id}
+                data-scope-opening={opening.text}
+                data-opening-tone={opening.tone}
+                data-opening-seen={opening.seen}
+                data-opening-pick={opening.onPick ? true : undefined}
+                data-opening-hot={opening.hot || undefined}
+                className={
+                  opening.onPick
+                    ? styles.openingPick
+                    : opening.onHover
+                      ? styles.openingLive
+                      : undefined
+                }
+                onClick={opening.onPick}
+                onPointerEnter={opening.onHover ? () => opening.onHover!(true) : undefined}
+                onPointerLeave={opening.onHover ? () => opening.onHover!(false) : undefined}
+                aria-label={opening.ariaLabel}
+              >
+                {/* A wider target than the badge: an opening is chosen with one click on it. */}
+                {opening.onPick && (
+                  <circle cx={opening.x} cy={opening.y} r="7.5" className={styles.openingHit} />
+                )}
+                <circle
+                  cx={opening.x}
+                  cy={opening.y}
+                  r="4.6"
+                  className={styles.openingBadge}
+                  strokeDasharray={opening.seen ? undefined : '1.2 1'}
+                />
+                <text
+                  x={opening.x}
+                  y={opening.y}
+                  className={styles.openingNumber}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {opening.text}
+                </text>
+                {opening.caption && (
+                  <text
+                    x={opening.x}
+                    y={opening.y + 8.2}
+                    className={styles.openingCaption}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {opening.caption}
+                  </text>
+                )}
+              </g>
+            ),
+          )}
       </svg>
     </div>
   )

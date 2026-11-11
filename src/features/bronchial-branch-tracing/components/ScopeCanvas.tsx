@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { createBronchoscopyMaterial } from '@/lib/airway-anatomy/airway-render'
+import { createScopeMaterial, setScopeReach } from './scope-material'
 import type { Vec3 } from '../geometry/coordinates'
 import { SCOPE_FOV_DEG } from '../geometry/route-stations'
 import styles from './nav-bench.module.css'
@@ -194,13 +194,26 @@ function OpeningProjector({
  */
 const HEADLIGHT_CONE = 0.7
 
-function Surface({ geometry, direction }: { geometry: THREE.BufferGeometry; direction: Vec3 }) {
+function Surface({
+  geometry,
+  direction,
+  falloffMm,
+}: {
+  geometry: THREE.BufferGeometry
+  direction: Vec3
+  falloffMm: number
+}) {
   const { invalidate } = useThree()
   const material = useMemo(() => {
-    const made = createBronchoscopyMaterial()
+    const made = createScopeMaterial()
     made.uniforms.uHeadlightFalloff.value = HEADLIGHT_CONE
     return made
   }, [])
+  // The light reaches as far as suits the airway the scope is in.
+  useEffect(() => {
+    setScopeReach(material, falloffMm)
+    invalidate()
+  }, [material, falloffMm, invalidate])
   useEffect(() => () => material.dispose(), [material])
   // The light travels with the lens: its cone follows the line of sight.
   useEffect(() => {
@@ -217,10 +230,13 @@ export function ScopeCanvas({
   openings,
   onProject,
   onReady,
+  falloffMm = 23,
 }: {
   position: Vec3
   direction: Vec3
   up: Vec3
+  /** How far the scope's light carries, in millimetres: shorter in a narrower airway. */
+  falloffMm?: number
   /** Openings to place in the view. Pass none while the scope is moving. */
   openings: ScopeOpening[]
   onProject: (results: ProjectedOpening[]) => void
@@ -296,7 +312,7 @@ export function ScopeCanvas({
       >
         <color attach="background" args={['#081118']} />
         {/* No scene lights: the surface's own shader lights it from the lens. */}
-        <Surface geometry={geometry} direction={direction} />
+        <Surface geometry={geometry} direction={direction} falloffMm={falloffMm} />
         <ScopeCamera position={position} direction={direction} up={up} />
         {openings.length > 0 && (
           <OpeningProjector

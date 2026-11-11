@@ -62,6 +62,7 @@ import {
 import { lobeOf } from '../content/targets'
 import { lpsToVoxel } from '../geometry/native-ct'
 import { STANDARD_ORIENTATION, turnCt, type CtOrientation } from '../geometry/orientation'
+import { falloffMmFor, routeRadiusMm } from '../geometry/airway-radius'
 import { stationCamera } from '../geometry/route-stations'
 import { ArcMap } from './ArcMap'
 import { usePrimer } from './NavigationBench'
@@ -888,6 +889,7 @@ export function PlanBench({
                     moving={false}
                     caption={`At the ${target.segment.bronchusCode} ostium, looking in.`}
                     phase="ostium"
+                    falloffMm={falloffMmFor(routeRadiusMm(trace, ostium.arc))}
                     segmental={frame.side}
                   />
                 ) : finished && arcsAsked && !prefilled ? (
