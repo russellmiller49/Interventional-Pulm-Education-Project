@@ -12,6 +12,8 @@
  *   - the task card has one way on, its Continue, pinned to the foot of the text pane;
  *   - a question about a place is asked over the map it is answered on, and the map lights nothing
  *     until it is answered;
+ *   - a section's last task, its case, has no section simulator beside it: the case brings its own
+ *     clock, monitor and controls and takes the task's full width;
  *   - on a desktop the page does not scroll and the two columns scroll on their own (one column,
  *     scrolling as one, when the task body is under 75rem — a narrow window or enlarged text), and
  *     the sources end the text column; below a desktop the page scrolls and the sources end it.
@@ -79,7 +81,7 @@ function primary(): HTMLButtonElement {
 }
 
 /** What is true of every task: where the text, the simulator, the clock and the way on are. */
-function expectTaskLayout(where: string, readingOnly: boolean) {
+function expectTaskLayout(where: string, layout: 'simulator' | 'reading' | 'case') {
   const content = document.querySelector('[data-flow-content]')!
   const text = content.querySelector(':scope > [data-flow-teaching]')!
   const visual = content.querySelector(':scope > [data-flow-visual]')
@@ -98,10 +100,10 @@ function expectTaskLayout(where: string, readingOnly: boolean) {
     fact('clockInText', null),
   )
 
-  if (readingOnly) {
+  if (layout !== 'simulator') {
     expect(fact('visual', visual)).toEqual(fact('visual', null))
     expect(fact('column', activity.getAttribute('data-single-column'))).toEqual(
-      fact('column', 'reading'),
+      fact('column', layout),
     )
   } else {
     expect(fact('visual', visual !== null)).toEqual(fact('visual', true))
@@ -171,7 +173,14 @@ describe('Learn layout: text ahead of the simulator in every task of every secti
     for (let guard = 0; guard < 60; guard += 1) {
       const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
       seen.add(step.id)
-      expectTaskLayout(step.id, step.presentation === 'unloading-comparison')
+      expectTaskLayout(
+        step.id,
+        step.presentation === 'unloading-comparison'
+          ? 'reading'
+          : step.presentation === 'section-case'
+            ? 'case'
+            : 'simulator',
+      )
       if (step.id === last.id) break
       fireEvent.click(primary())
     }

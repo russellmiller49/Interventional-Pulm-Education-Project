@@ -269,9 +269,9 @@ export const betaRollout: BetaRollout = {
       summary:
         'IABP, Impella and durable LVAD support on one simulated circulation, in nine sections: why a normal pressure can mislead, balloon timing, inlet position and suction on an Impella, then speed, resistance and alarms on an LVAD.',
       estimate: {
-        minutes: 101,
+        minutes: 171,
         basis:
-          "9 sections, by the module's own count; the nine practice cases and three closing cases are extra",
+          "9 sections, by the module's own count: about 101 minutes of teaching, and a 10-minute patient case as the last task of Sections 3 to 9; two more practice cases and three closing cases are extra",
       },
       lookFor: [
         'Balloon timing (Section 3): whether early and late inflation and deflation read the way you teach them.',

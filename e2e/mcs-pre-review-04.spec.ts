@@ -321,8 +321,10 @@ test('review all: every optional explanation and reference opened on every step,
   page,
 }) => {
   await openLesson(page, 'mcs-device-selection-integration')
-  for (let step = 1; step <= 6; step += 1) {
-    await expect.poll(() => stepKicker(page)).toMatch(new RegExp(`Task ${step} of 6`))
+  // Six tasks, then the section's case as its seventh, which is read here and not started.
+  const tasks = 7
+  for (let step = 1; step <= tasks; step += 1) {
+    await expect.poll(() => stepKicker(page)).toMatch(new RegExp(`Task ${step} of ${tasks}`))
     // Open every closed disclosure in the lesson, innermost last, until none is left closed.
     for (let pass = 0; pass < 6; pass += 1) {
       const opened = await page.evaluate(() => {
@@ -345,7 +347,7 @@ test('review all: every optional explanation and reference opened on every step,
     // Nothing was answered by reading, and the way on still works.
     expect(await page.locator('[data-mcs-stage] input[type="radio"]:checked').count()).toBe(0)
     await expect(page.locator('[data-now-primary]')).toBeEnabled()
-    if (step < 6) await page.locator('[data-now-primary]').click()
+    if (step < tasks) await page.locator('[data-now-primary]').click()
   }
   await expect(page.locator('[data-section-recap]')).toBeVisible()
   expect(await page.locator('[data-mcs-stage]').innerText()).not.toMatch(SCORE_LANGUAGE)
@@ -697,7 +699,8 @@ test('200% text at 390 px · hub objectives, the recap and the glossary stay ins
 
   await openLesson(page, 'lvad-alarms-emergencies')
   await enlargeText(page)
-  await goToPhase(page, 'Transfer')
+  // The recap closes the section on its last task, the case (ids end in -case).
+  await goToPhase(page, 'Case')
   await expect(page.locator('[data-section-recap]')).toBeVisible()
   const recapOverflow = await page
     .locator('[data-section-recap]')

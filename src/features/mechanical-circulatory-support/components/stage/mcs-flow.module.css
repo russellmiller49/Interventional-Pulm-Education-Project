@@ -747,3 +747,79 @@
   display: grid;
   gap: 0.4rem;
 }
+/* ------------------------------------------------------------------------------------------------
+ * The case as the section's last task (`McsSectionCase`): the case's own clock, then the case
+ * card at the task's full width, with a strip naming the case and its section where the Practice
+ * page has its kicker and title, Exit case beside Reset, and the way back where the worked
+ * explanation ends.
+ * ---------------------------------------------------------------------------------------------- */
+.sectionCase {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+/*
+ * The case card is the Practice card. Its stylesheet's colours come from the module's dark block,
+ * which names this container (`[data-section-case]` in `mechanical-circulatory-support.module.css`),
+ * so the card is the same dark surface here as on the Practice page.
+ */
+/* On a narrow screen the strip takes its own line above Reset and Exit case. */
+.sectionCase > [data-case-workflow] > header {
+  flex-wrap: wrap;
+}
+.caseStrip {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+/* The case's clock sits inside the task card, narrower than the simulator pane's: keep its badge whole. */
+.sectionCase [data-clock-bar] [data-alarm-priority] > :first-child {
+  flex: none;
+  white-space: nowrap;
+}
+.caseHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: none;
+}
+.caseFinished {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--teal);
+  border-radius: 0.75rem;
+  background: var(--teal-soft);
+  color: var(--ink);
+}
+.caseFinished p {
+  margin: 0;
+  font-weight: 650;
+}
+.caseFinished button {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #71e1e5;
+  border-radius: 0.5rem;
+  background: #71e1e5;
+  color: #07191d;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.caseFinished button svg {
+  width: 1rem;
+}
+.sectionCaseMap > summary {
+  cursor: pointer;
+  padding: 0.7rem 0;
+}

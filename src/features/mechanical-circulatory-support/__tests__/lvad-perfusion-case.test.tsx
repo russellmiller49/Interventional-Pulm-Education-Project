@@ -19,6 +19,7 @@ import {
   MCS_LVAD_PERFUSION_SECTION_ID,
 } from '../content/lvadPerfusionCase'
 import { mcsSectionSpec } from '../content/sectionSpecs'
+import { buildMcsStageLesson } from '../content/stageLessons'
 import { mcsStageSources } from '../content/stageSources'
 import { MCS_NUMBERS, type McsNumberId } from '../content/teachingNumbers'
 import { mountSection, setupMcsStage, teardownMcsStage } from '../test-support/mcsStage'
@@ -108,14 +109,13 @@ afterEach(() => {
 })
 
 describe('the LVAD perfusion case, in Section 8', () => {
-  it('opens on the section’s last task, after the recap and before the paired case', () => {
+  it('opens with the section’s closing question, the task before its patient case', () => {
     mountSection(MCS_LVAD_PERFUSION_SECTION_ID, 'transfer')
     const block = document.querySelector<HTMLElement>('[data-lvad-perfusion-case]')!
     expect(block).not.toBeNull()
-    const recap = document.querySelector('[data-section-recap]')!
-    const pairing = document.querySelector('[data-stage-completion]')!
-    expect(recap.compareDocumentPosition(block) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(block.compareDocumentPosition(pairing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const lesson = buildMcsStageLesson(MCS_LVAD_PERFUSION_SECTION_ID)
+    expect(lesson.steps.at(-2)?.interaction.kind).toBe('transfer')
+    expect(lesson.steps.at(-1)?.interaction.kind).toBe('case')
     for (const { item } of MCS_LVAD_PERFUSION_DECISIONS) {
       expect(within(block).getByRole('group', { name: item.stem })).toBeInTheDocument()
     }
@@ -129,7 +129,7 @@ describe('the LVAD perfusion case, in Section 8', () => {
     expect(document.querySelector('[data-lvad-perfusion-case]')).toBeNull()
     cleanup()
     mountSection('lvad-parameters-assessment', 'transfer')
-    expect(document.querySelector('[data-section-recap]')).not.toBeNull()
+    expect(document.querySelector('[data-now-card]')).not.toBeNull()
     expect(document.querySelector('[data-lvad-perfusion-case]')).toBeNull()
   })
 

@@ -97,6 +97,10 @@
  * own dark tokens are a bluer navy than this module's. A lesson is none of the three: its stage
  * sets its palette itself.
  *
+ * A fourth selector covers one card inside a lesson: the case that is a section's last task
+ * (`McsSectionCase`). It is the Practice case card, drawn by this stylesheet, so it takes this
+ * block's values for the stylesheet's literals; nothing else in a lesson's stage matches.
+ *
  * The site's own colour tokens are pinned to their dark values here for the same reason they are
  * pinned to light ones in the light frame: Tailwind-classed blocks inside the hub read them, and
  * a visitor on the site's light mode would otherwise get pale cards with this palette's pale ink.
@@ -104,7 +108,8 @@
 .moduleShell:not([data-activity-mode='true'])
   [data-learning-module-v2-theme-root][data-theme='dark'],
 .moduleShell [data-learning-module-v2-theme-root][data-theme='dark'] [data-mcs-workbench-scope],
-.moduleShell [data-mcs-workbench-scope] [data-learning-module-v2-theme-root][data-theme='dark'] {
+.moduleShell [data-mcs-workbench-scope] [data-learning-module-v2-theme-root][data-theme='dark'],
+.moduleShell [data-section-case] {
   --ink: #eaf4f4;
   --muted: #9fb4b7;
   --line: rgba(163, 206, 209, 0.22);
