@@ -1,0 +1,57 @@
+{
+  "schema": "bronchoscopy_foundations_teaching_stills/v1",
+  "generatedBy": "scripts/bronchoscopy-foundations/render-teaching-stills.mjs",
+  "origin": "Drawn from the teaching airway model. Blood, devices and the scope are authored shapes placed in it. Not photographs.",
+  "width": 1200,
+  "height": 900,
+  "stills": [
+    {
+      "id": "bleeding-blocker",
+      "file": "bleeding-blocker.jpg",
+      "bytes": 56870,
+      "sha256": "a0915d8a9950004818350af745f8ef0e0a1f49364a6dfc40b77e4f47b9d983f6"
+    },
+    {
+      "id": "bleeding-floods-both-lungs",
+      "file": "bleeding-floods-both-lungs.jpg",
+      "bytes": 41456,
+      "sha256": "a922b8fd7f12ad86d70119f94d8cf03eccaf3f93d979bac220ec1f410facb4b3"
+    },
+    {
+      "id": "bleeding-held-in-segment",
+      "file": "bleeding-held-in-segment.jpg",
+      "bytes": 42435,
+      "sha256": "618ee02f50324ac9352f958612d2f8b9c8ca02f3ce4cae7acf19277313000c47"
+    },
+    {
+      "id": "bleeding-scope-at-carina",
+      "file": "bleeding-scope-at-carina.jpg",
+      "bytes": 52338,
+      "sha256": "82e1a087e4977864f37386b158037f8edca6e3066ae56ed6f415cc55f6e83ab8"
+    },
+    {
+      "id": "bleeding-scope-wells-up",
+      "file": "bleeding-scope-wells-up.jpg",
+      "bytes": 35485,
+      "sha256": "50fa892cfdac86ae3fd0262a761c75c8f548d445fedaf33d00a59d40b3b21d6a"
+    },
+    {
+      "id": "bleeding-side-down",
+      "file": "bleeding-side-down.jpg",
+      "bytes": 46073,
+      "sha256": "0a24a2f6c4762eee70ed1a9bc0f70930daf4d1b3f8812b20f56946375fc13ecb"
+    },
+    {
+      "id": "bleeding-tube-in-other-lung",
+      "file": "bleeding-tube-in-other-lung.jpg",
+      "bytes": 56029,
+      "sha256": "d01d8e13f6fb00bdd3a40fae3a677a57fd032e9ce573f3ef5e6358000982fc15"
+    },
+    {
+      "id": "bleeding-wedge-close",
+      "file": "bleeding-wedge-close.jpg",
+      "bytes": 47666,
+      "sha256": "4b5dcd06af06f89a6fb8c773b73f04cac035e47a980d7aa073b13a1fac142abf"
+    }
+  ]
+}

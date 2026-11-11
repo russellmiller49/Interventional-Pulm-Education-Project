@@ -1,6 +1,7 @@
 import type { AirwayLabel } from '../components/scope/types'
 import type { BronchLearnUnit } from './learnUnit'
 import type { BronchSectionId } from './sectionIds'
+import type { TeachingStillId } from './teachingStills'
 
 /** Learn presentation and disclosure are independent of item identity and engine phases. */
 export type CoursePresentation = 'illustrated' | 'skill' | 'inspection' | 'case' | 'report'
@@ -30,6 +31,8 @@ export type CourseVisual =
   | 'orientation-compass'
   /** The shared instrument lab: forceps, brush and needle, each worked from the handle. */
   | 'instrument-lab'
+  /** Pictures drawn from the course's 3D airway, named in the screen's `stills`. */
+  | 'stills'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -46,6 +49,10 @@ export interface CourseChunk {
   readonly act?: string
   /** The stops of the section's labelled tour this screen walks, in the section's order. */
   readonly tour?: readonly AirwayLabel[]
+  /** With `visual: 'stills'`: the pictures beside this screen's text, in order. */
+  readonly stills?: readonly TeachingStillId[]
+  /** A line over those pictures, when the set needs naming. */
+  readonly stillsHeading?: string
 }
 
 const practice = (
@@ -717,26 +724,49 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
   'bleeding-priorities': [
     hook('Blood fills the view'),
     check('check', 'What matters most?'),
-    screen('threat', 'Why a small bleed matters', 'Read why the first moves are what they are.', [
-      'the-threat',
-    ]),
+    screen(
+      'threat',
+      'Why a small bleed matters',
+      'Read why the first moves are what they are.',
+      ['the-threat'],
+      { visual: 'stills', stills: ['bleeding-held-in-segment', 'bleeding-floods-both-lungs'] },
+    ),
     screen(
       'first-moves',
       'The first moves, in order',
       'Learn the card. You will use it on the patient who follows.',
       ['first-moves'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-scope-wells-up', 'bleeding-wedge-close', 'bleeding-side-down'],
+      },
     ),
-    screen('escalation', 'When the first moves fail', 'Read what comes after the card.', [
+    screen(
       'escalation',
-    ]),
+      'When the first moves fail',
+      'Read what comes after the card.',
+      ['escalation'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-scope-at-carina', 'bleeding-blocker', 'bleeding-tube-in-other-lung'],
+      },
+    ),
     practice(
       'One patient, four decisions',
       'case',
       'Read the monitor, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    screen('grade', 'Grade the bleed', 'Four grades, by what it took to stop the bleeding.', [
-      'nashville',
-    ]),
+    screen(
+      'grade',
+      'Grade the bleed',
+      'Four grades, by what it took to stop the bleeding.',
+      ['nashville'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-wedge-close', 'bleeding-blocker', 'bleeding-tube-in-other-lung'],
+        stillsHeading: 'What it took, from least to most',
+      },
+    ),
     check('transfer', 'Grade a different bleed'),
     close(['common-errors']),
   ],

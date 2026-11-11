@@ -191,6 +191,33 @@ The GLBs are self-contained and Draco-compressed with gltf-pipeline 4.3.1 / drac
 compression level 10, position quantization 20 bits and normal quantization 12 bits. Geometry units
 and axes are written directly, avoiding DCC scene scale or an implicit Y-up conversion.
 
+## Teaching stills
+
+`public/bronchoscopy-foundations/renders/` holds pictures drawn from the teaching airway for
+teaching screens that had none, with `renders.json` beside them (size and checksum of each file).
+They are drawings, not photographs: blood, a blocker, a tube and the scope are authored shapes
+placed in `lumen.glb` to show where each one is, and every size and position is a presentation
+choice.
+
+```sh
+node scripts/bronchoscopy-foundations/render-teaching-stills.mjs          # every still
+node scripts/bronchoscopy-foundations/render-teaching-stills.mjs <id> ... # only these
+```
+
+`render-teaching-stills.browser.mts` holds the stills, one entry each in `STILLS`. Two kinds:
+
+- `renderOutside`: the airway tree as pale glass, airways with blood in them solid red, and any
+  device inside. Each wall vertex is given to its nearest centerline, so a still names airways by
+  their graph edge ids.
+- `renderScope`: the view down the scope, with the course's own wall material (rings, pale wall)
+  and blood drawn on the dependent wall. The patient is supine, so that is the posterior wall.
+
+To add a still: add its entry to `STILLS`, run the script, add its caption and description to
+`src/features/bronchoscopy-foundations/content/teachingStills.ts`, and name it in a screen's
+`stills` in `content/courseFlow.ts` with `visual: 'stills'`. `teaching-stills.test.ts` holds the
+folder, the manifest and the course to each other, file for file. First used for the four teaching
+screens of the Bleeding section (2026-11-11).
+
 ## Regeneration and validation
 
 Run from this checkout. Set `BLENDER_EXECUTABLE` to the installed Blender executable.
