@@ -353,7 +353,7 @@ export const routeModel: Lesson = {
       'N1 status changes stage and management; an unexamined hilar or interlobar station is a gap to state and plan for.',
     ],
   ),
-  diagram: 'stations',
+  diagram: 'station-map-access',
   takeaways: [
     'Station identity follows anatomy.',
     'EUS-B and EBUS provide complementary regional access.',

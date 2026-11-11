@@ -3,7 +3,7 @@ import { useState } from 'react'
 import styles from './course.module.css'
 
 /**
- * The course's three drawn schematics. What changed in EBUS-PRE-REVIEW-04, and why:
+ * The course's drawn schematics. What changed in EBUS-PRE-REVIEW-04, and why:
  *
  * - The five-box "clinical question → result" schematic is gone (OV-1, L1-2, L2-8, L25-5). It
  *   was a second course map beside the real seven chapters, it filled the briefing of four
@@ -16,22 +16,19 @@ import styles from './course.module.css'
  * - The caption says what the drawing is and what selecting a name does, in words a learner
  *   uses, and selecting a name really does mark that structure.
  *
- * Nothing is drawn that was not drawn before: no structure is added, moved or named anew. The
- * unlabeled node ovals in the airway drawing stay unlabeled — naming them would be new anatomy.
+ * Nothing is drawn that was not drawn before: no structure is added, moved or named anew.
+ *
+ * The third schematic, an airway with five unlabelled node ovals, was replaced on 2026-11-10 by
+ * the course's nodal map (`StationMap`), which names its stations from the owner's station
+ * records. Two drawings remain here.
  */
-type Kind = 'ultrasound' | 'stations' | 'needle'
+type Kind = 'ultrasound' | 'needle'
 const anchors: Record<Kind, [number, number][]> = {
   ultrasound: [
     [220, 63],
     [108, 87],
     [168, 203],
     [288, 205],
-  ],
-  stations: [
-    [260, 65],
-    [260, 125],
-    [161, 217],
-    [354, 207],
   ],
   needle: [
     [110, 145],
@@ -48,12 +45,6 @@ const badges: Record<Kind, [number, number][]> = {
     [132, 232],
     [352, 190],
   ],
-  stations: [
-    [306, 40],
-    [306, 128],
-    [112, 214],
-    [404, 204],
-  ],
   needle: [
     [110, 104],
     [242, 104],
@@ -63,12 +54,10 @@ const badges: Record<Kind, [number, number][]> = {
 }
 const labels: Record<Kind, string[]> = {
   ultrasound: ['Transducer', 'Airway wall', 'Ultrasound sector', 'Tissue beyond the wall'],
-  stations: ['Trachea', 'Carina', 'Right main bronchus', 'Left main bronchus'],
   needle: ['Scope channel', 'Needle sheath', 'Needle tip', 'Lymph node'],
 }
 const descriptions: Record<Kind, string> = {
   ultrasound: 'Transducer against the airway wall, with a sector extending into adjacent tissue.',
-  stations: 'Trachea dividing into right and left main bronchi, with unlabeled nodes around it.',
   needle: 'Needle and sheath leaving the scope channel toward a lymph node.',
 }
 export function TeachingDiagram({ kind }: { kind: Kind }) {
@@ -97,25 +86,6 @@ export function TeachingDiagram({ kind }: { kind: Kind }) {
             <text x="25" y="38" fill="#a3bec9" fontSize="14">
               Airway lumen
             </text>
-          </>
-        ) : kind === 'stations' ? (
-          <>
-            <path d="M260 24 V125" fill="none" stroke="#947986" strokeWidth="30" />
-            <path
-              d="M260 125 L125 246 M260 125 L409 246"
-              fill="none"
-              stroke="#947986"
-              strokeWidth="30"
-            />
-            {[
-              [218, 80],
-              [304, 80],
-              [257, 182],
-              [170, 209],
-              [357, 207],
-            ].map(([x, y], i) => (
-              <ellipse key={i} cx={x} cy={y} rx="14" ry="21" fill="#b3c28b" />
-            ))}
           </>
         ) : (
           <>

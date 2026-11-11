@@ -98,7 +98,13 @@ export interface Lesson {
    */
   diagram?:
     | 'ultrasound'
-    | 'stations'
+    /**
+     * The course's nodal map (2026-11-10), opening on its station, N-category or access view.
+     * It replaced a drawing of the airway with five unlabelled ovals.
+     */
+    | 'station-map'
+    | 'station-map-n'
+    | 'station-map-access'
     | 'needle'
     | 'specimens'
     | 'troubleshooting'

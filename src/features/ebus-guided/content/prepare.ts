@@ -324,7 +324,7 @@ export const prepareLessons: Lesson[] = [
       ),
       imagePolicy: 'none',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     takeaways: [
       'A sector is a slice through anatomy.',
       'Correlate the ultrasound plane with airway landmarks.',

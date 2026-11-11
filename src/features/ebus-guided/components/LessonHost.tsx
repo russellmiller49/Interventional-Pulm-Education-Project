@@ -27,6 +27,7 @@ import { NodeFeatureAtlas, NodeFeatureReading } from './NodeFeatureFigures'
 import { QuestionBody } from './QuestionBody'
 import { MatchingActivity } from './MatchingActivity'
 import { StationFigure } from './StationFigure'
+import { StationMap } from './StationMap'
 import { SequenceActivity } from './SequenceActivity'
 import { Workbench } from './Workbench'
 import { ExaminationWorkspace } from './ExaminationWorkspace'
@@ -108,10 +109,13 @@ function LessonSession({
   const [finished, setFinished] = useState(false)
   const [holdRequested, setHoldRequested] = useState(false)
   const [continueWhenReady, setContinueWhenReady] = useState(false)
-  const [dialogTrigger, setDialogTrigger] = useState<'outline' | 'help'>('help')
-  const [dialog, setDialog] = useState<'outline' | 'help' | null>(null)
+  const [dialogTrigger, setDialogTrigger] = useState<'outline' | 'help' | 'stations'>('help')
+  const [dialog, setDialog] = useState<'outline' | 'help' | 'stations' | null>(null)
   const helpButton = useRef<HTMLButtonElement>(null)
   const outlineButton = useRef<HTMLButtonElement>(null)
+  // The nodal map is one press away in every lesson (2026-11-10): it is the course's own map of
+  // where each station lies, and the station, staging and sampling lessons all lean on it.
+  const stationsButton = useRef<HTMLButtonElement>(null)
   /*
    * The lesson controls used on most tasks stay in the header; the four used once a lesson at
    * most (save, the two restarts, exit) sit behind "More" (flow review of 2026-11-10: six buttons
@@ -690,6 +694,17 @@ function LessonSession({
                 Course outline
               </button>
               <button
+                ref={stationsButton}
+                className={styles.secondary}
+                data-open-station-map
+                onClick={() => {
+                  setDialogTrigger('stations')
+                  setDialog('stations')
+                }}
+              >
+                Station map
+              </button>
+              <button
                 ref={helpButton}
                 className={styles.secondary}
                 onClick={() => {
@@ -911,6 +926,20 @@ function LessonSession({
                 <NodeFeatureAtlas />
               ) : figure === 'node-reading' ? (
                 <NodeFeatureReading />
+              ) : figure === 'station-map' ||
+                figure === 'station-map-n' ||
+                figure === 'station-map-access' ? (
+                <StationMap
+                  key={content.id + figure}
+                  view={
+                    figure === 'station-map-n'
+                      ? 'n-category'
+                      : figure === 'station-map-access'
+                        ? 'access'
+                        : 'stations'
+                  }
+                  station={content.station}
+                />
               ) : figure ? (
                 <TeachingDiagram kind={figure} />
               ) : null}
@@ -1278,10 +1307,28 @@ function LessonSession({
         <HelpDialog
           open={dialog !== null}
           onClose={() => setDialog(null)}
-          title={dialog === 'outline' ? 'Course outline' : 'Help with this task'}
-          returnFocusTo={dialogTrigger === 'outline' ? outlineButton : helpButton}
+          title={
+            dialog === 'outline'
+              ? 'Course outline'
+              : dialog === 'stations'
+                ? 'Nodal station map'
+                : 'Help with this task'
+          }
+          returnFocusTo={
+            dialogTrigger === 'outline'
+              ? outlineButton
+              : dialogTrigger === 'stations'
+                ? stationsButton
+                : helpButton
+          }
         >
-          {dialog === 'outline' ? (
+          {dialog === 'stations' ? (
+            // Opens on the stations view, not the N categories, so a staging check is not answered
+            // by opening it; the learner can still switch views, as with any reference.
+            <div className={styles.outline} data-station-map-dialog>
+              <StationMap station={content.station} inDialog />
+            </div>
+          ) : dialog === 'outline' ? (
             /*
              * Laid out like the ECMO Sections list (owner request, 2026-11-04): every lesson
              * numbered 01–26 to match "Lesson 12 of 26" in the header, grouped under its chapter,

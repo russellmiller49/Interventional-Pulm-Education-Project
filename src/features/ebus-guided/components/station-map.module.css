@@ -1,0 +1,192 @@
+/* The course's nodal map. Feature-local; colours follow the course shell's tokens. */
+.map {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  container-type: inline-size;
+}
+.map h2 {
+  font-size: 18px;
+  font-weight: 650;
+}
+.caption {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.controls button,
+.stationList button,
+.panel button {
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.8125rem;
+}
+.controls button[aria-pressed='true'],
+.stationList button[aria-pressed='true'] {
+  border-color: var(--cyan-bright);
+  background: var(--panel-3);
+}
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.groupLabel {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+/* The drawing gets the larger share: its labels have to stay readable beside the station's text. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@container (max-width: 620px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.drawing {
+  min-width: 0;
+}
+/* Capped so the drawing, its controls and the station's details share one screen in the dialog. */
+.drawing svg {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  margin-inline: auto;
+  border-radius: 14px;
+}
+.node {
+  cursor: pointer;
+}
+.node ellipse {
+  transition:
+    fill 160ms ease,
+    stroke 160ms ease,
+    stroke-width 160ms ease;
+}
+.node:focus-visible {
+  outline: none;
+}
+.node:focus-visible ellipse {
+  stroke: #ffff93;
+  stroke-width: 3;
+}
+/* The sampling order arrives one category at a time; reduced-motion settings show it at once. */
+@keyframes stationOrderIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.orderBadge {
+  animation: stationOrderIn 320ms ease-out both;
+}
+.orderBadge[data-order='2'] {
+  animation-delay: 700ms;
+}
+.orderBadge[data-order='3'] {
+  animation-delay: 1400ms;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #c7e4e5;
+}
+.stationList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 0.9rem;
+  min-width: 0;
+  container: station-panel / inline-size;
+}
+.panel h3 {
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+.panel dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 12px;
+}
+.panel dt {
+  color: var(--muted);
+}
+.panel dd {
+  margin: 0;
+}
+/* Beside the drawing in a lesson the panel is narrow: put each border's name above its text. */
+@container station-panel (max-width: 330px) {
+  .panel dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .panel dt {
+    margin-top: 6px;
+    font-size: 0.8125rem;
+  }
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fact {
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+.order {
+  border-left: 3px solid var(--cyan);
+  padding: 6px 12px;
+  background: #173a4344;
+  font-size: 0.875rem;
+}
+
+/*
+ * In the course's dialog the map needs room for the drawing and the station's details side by
+ * side, so the details are not below the fold. The shared dialog is 40rem wide; this widens only
+ * the dialog that holds the map.
+ */
+dialog:has(.inDialog) {
+  width: min(66rem, calc(100vw - 2rem));
+  max-width: none;
+}

@@ -387,13 +387,17 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'ct-map': [
     predict('map-decision', 'Identify the basis of a station assignment'),
-    brief(
-      'regional-map',
-      'Relate the target to its anatomical region',
-      'regional',
-      'reference',
-      false,
-    ),
+    // The nodal map itself, opening on station 7; its CT, airway and ultrasound views open from it.
+    {
+      ...brief(
+        'regional-map',
+        'Relate the target to its anatomical region',
+        'regional',
+        'diagram',
+        false,
+      ),
+      figure: 'station-map',
+    },
     demo('section-comparison', 'Compare the model section and ultrasound plane', 'linked'),
     acquire('section-sweep', 'Check landmarks and acquire a section', 'linked'),
     explain('Read the acquired section'),
