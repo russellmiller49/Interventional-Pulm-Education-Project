@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { mucosaVertexShader,mucosaFragmentShader } from '@bronchoscopy-core/mucosa';
+import { MUCOSA_ANATOMY_ATTRIBUTE,MUCOSA_ANATOMY_DEFINE,mucosaVertexShader,mucosaFragmentShader } from '@bronchoscopy-core/mucosa';
+import { airwayWallAttribute } from './airwayWallAttribute';
 import { verticalFov } from '@bronchoscopy-core/frame';
 import { opticalPixelRatio,AdaptiveQuality } from '@bronchoscopy-core/quality';
 import { scopeOrigins,ebusWebToPatient,patientToEbusWeb } from '@bronchoscopy-core/devices';
@@ -76,6 +77,9 @@ function glslFloat(value: number): string {
 function createBronchoscopyMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
+    // The wall shows its anatomy (cartilage rings in front, the membranous wall behind): the
+    // shared shader's opt-in blocks, fed by the per-vertex attribute set on the airway geometry.
+    defines: { [MUCOSA_ANATOMY_DEFINE]: '' },
     uniforms: {
       uHeadlightAxis: { value: new THREE.Vector3(0, 0, -1) },
       uHeadlightFalloff: { value: 0 },
@@ -699,6 +703,10 @@ export function BronchoscopyView({
     );
     geometry.setIndex(assets.airway.triangles.flat());
     geometry.computeVertexNormals();
+    geometry.setAttribute(
+      MUCOSA_ANATOMY_ATTRIBUTE,
+      new THREE.Float32BufferAttribute(airwayWallAttribute(assets.airway.vertices, assets.centerlines), 4),
+    );
     const material = createBronchoscopyMaterial();
     const mesh = new THREE.Mesh(geometry, material);
     // Above the see-through structure points (renderOrder 1) so the faded wall tints them.

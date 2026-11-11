@@ -1,7 +1,11 @@
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { mucosaVertexShader, mucosaFragmentShader } from '../bronchoscopy-core/mucosa'
+import {
+  MUCOSA_ANATOMY_DEFINE,
+  mucosaVertexShader,
+  mucosaFragmentShader,
+} from '../bronchoscopy-core/mucosa'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -92,10 +96,22 @@ export function tintedMucosaFragmentShader(tint?: MucosaTint): string {
   )
 }
 
-export function createBronchoscopyMaterial(tint?: MucosaTint): THREE.ShaderMaterial {
+export interface BronchoscopyMaterialOptions {
+  /**
+   * Draw the wall's anatomy (cartilage rings, membranous posterior strip, vessels). The geometry
+   * must carry `MUCOSA_ANATOMY_ATTRIBUTE`; omitted, the material is the shared one, unchanged.
+   */
+  readonly anatomy?: boolean
+}
+
+export function createBronchoscopyMaterial(
+  tint?: MucosaTint,
+  options?: BronchoscopyMaterialOptions,
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     toneMapped: false,
+    ...(options?.anatomy ? { defines: { [MUCOSA_ANATOMY_DEFINE]: '' } } : {}),
     uniforms: {
       uWallAlpha: { value: 1 },
       uHeadlightAxis: { value: new THREE.Vector3(0, 0, -1) },
