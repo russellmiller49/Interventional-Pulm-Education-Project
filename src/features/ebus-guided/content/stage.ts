@@ -560,6 +560,20 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     predict('first-decision', 'Decide what to do when the tip is lost'),
     brief('sampling-states', 'Follow the sampling sequence', 'sampling'),
     apply('safe-sequence', 'Link needle actions to current guidance', 'sequence', [], 'sampling'),
+    // The owner's patient recording of a pass (2026-11-11): what the needle and the stylet look
+    // like on ultrasound, read on a paused frame before anything is labelled.
+    {
+      ...decide(
+        'needle-on-ultrasound',
+        'Read the needle on a patient recording',
+        ['observation'],
+        'sampling',
+        'diagram',
+      ),
+      figure: 'clip-needle',
+      instruction:
+        'Play the recording, then open the frame early in the pass and answer. Its labels open after you answer.',
+    },
     {
       ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
       from: 'needle-assembly-model',

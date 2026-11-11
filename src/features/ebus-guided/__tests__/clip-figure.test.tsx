@@ -84,9 +84,10 @@ describe('built clips', () => {
       }
     }
     // Marks placed by the course author stay marked as drafts until the owner has checked them.
-    // The Doppler clip's were checked by him on 2026-11-11.
+    // Both clips' marks were checked by him on 2026-11-11.
     expect(Object.fromEntries(TEACHING_CLIPS.map((clip) => [clip.slug, clip.outlines]))).toEqual({
       'doppler-node-vessels': 'owner-checked',
+      'needle-in-node': 'owner-checked',
     })
   })
 
@@ -203,5 +204,67 @@ describe('in the Doppler lesson', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Check response' }))
     expect(labels()).toBeEnabled()
+  })
+})
+
+describe('in the needle lesson', () => {
+  const lesson = lessonById('needle-safety')!
+  const activityId = () =>
+    document.querySelector('[data-ebus-flow]')!.getAttribute('data-activity-id')
+
+  it('says of the needle recording only what the owner said of it', () => {
+    const clip = teachingClip('needle-in-node')!
+    expect(clip.what).toBe(
+      'A patient recording of a 21-gauge needle pass into a station 11L node, with suction. The small picture at the lower right is the white-light view.',
+    )
+    const marks = (id: string) =>
+      clip.stops.find((entry) => entry.id === id)!.marks.map((mark) => mark.kind)
+    expect(marks('stylet')).toEqual(['needle', 'stylet'])
+    expect(marks('needle')).toEqual(['needle'])
+    // The frames are the two he marked on his slides.
+    expect(clip.built.stops.map((frame) => [frame.id, frame.t])).toEqual([
+      ['stylet', 2.2],
+      ['needle', 13.9],
+    ])
+    // A stop's button does not name what the frame shows before the learner has answered.
+    for (const entry of clip.stops) expect(entry.label).not.toMatch(/stylet|needle/i)
+  })
+
+  it('reads the recording after the sequence, before the needle model', () => {
+    const steps = activitiesForLesson(lesson).map((step) => step.id)
+    expect(steps.slice(0, 5)).toEqual([
+      'needle-safety:first-decision',
+      'needle-safety:sampling-states',
+      'needle-safety:safe-sequence',
+      'needle-safety:needle-on-ultrasound',
+      'needle-assembly-model:needle-components',
+    ])
+    const step = activitiesForLesson(lesson)[3]
+    expect(step).toMatchObject({ figure: 'clip-needle', questions: ['observation'] })
+    render(<LessonHost lesson={lesson} />)
+    for (
+      let guard = 0;
+      guard < 8 && activityId() !== 'needle-safety:needle-on-ultrasound';
+      guard++
+    ) {
+      const move =
+        (document.querySelector('[data-skip-task]') as HTMLButtonElement | null) ??
+        (screen.queryByRole('button', { name: /^Continue without/ }) as HTMLButtonElement | null) ??
+        (document.querySelector('[data-now-primary]') as HTMLButtonElement)
+      fireEvent.click(move)
+    }
+    expect(activityId()).toBe('needle-safety:needle-on-ultrasound')
+    expect(document.querySelector('[data-clip="needle-in-node"]')).toBeVisible()
+    fireEvent.click(stop('stylet'))
+    expect(labels()).toBeDisabled()
+    fireEvent.click(screen.getByLabelText('The needle, with the stylet at its tip'))
+    fireEvent.click(screen.getByRole('button', { name: 'Check response' }))
+    fireEvent.click(labels()!)
+    expect(
+      [...document.querySelectorAll('[data-clip-legend] li')].map((li) => li.textContent),
+    ).toEqual([
+      '1Needle: the bright line beside this mark, entering from the side of the dot',
+      '2Stylet at the needle tip',
+    ])
   })
 })

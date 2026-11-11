@@ -60,12 +60,12 @@ export const BUILT_CLIPS: BuiltClip[] = [
     stops: [
       {
         id: 'stylet',
-        t: 1.8,
+        t: 2.2,
         image: '/ebus-guided/clips/needle-in-node-stylet.jpg',
       },
       {
         id: 'needle',
-        t: 2.6,
+        t: 13.9,
         image: '/ebus-guided/clips/needle-in-node-needle.jpg',
       },
     ],

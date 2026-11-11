@@ -9,7 +9,13 @@ import { PracticePage } from '../components/PracticePage'
 import { SequenceActivity } from '../components/SequenceActivity'
 import { ExaminationWorkspace } from '../components/ExaminationWorkspace'
 import { TeachingDiagram } from '../components/Diagram'
-import { CHAPTERS, CONTENT_LESSONS, LESSONS, lessonById } from '../content/curriculum'
+import {
+  CHAPTERS,
+  CONTENT_LESSONS,
+  HISTORICAL_IMAGE_QUESTIONS,
+  LESSONS,
+  lessonById,
+} from '../content/curriculum'
 import { openUnitAcquisition } from '../testing/unit-acquisition'
 import { ACTIVITY_FLOWS, activitiesForLesson } from '../content/stage'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
@@ -526,7 +532,10 @@ describe('wording corrections keep every key (L1-11, L4-5, L20-4)', () => {
   })
   it('L20-4 says what an exposed tip can harm, as the lesson’s own takeaway does', () => {
     const entry = lesson('needle-safety')
-    const keyed = entry.observation.choices.find((choice) => choice.correct)!
+    // The lesson reads a patient recording in this slot since 2026-11-11; the check's wording
+    // is kept in the authored unit, which is where it is read here.
+    const authored = HISTORICAL_IMAGE_QUESTIONS.find((item) => item.id === 'needle-observe')!
+    const keyed = authored.choices.find((choice) => choice.correct)!
     expect(keyed.text).toBe('An exposed tip can harm the patient or the equipment')
     expect(entry.takeaways).toContain('Retraction checks protect the patient and equipment.')
     expect(keyed.id).toBe('b')

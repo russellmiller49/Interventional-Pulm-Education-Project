@@ -430,7 +430,13 @@ function LessonSession({
   /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
   const figure = current.image === 'diagram' ? (current.figure ?? content.diagram) : undefined
   /** A step that reads a patient recording shows it, whatever lab the lesson ran before it. */
-  const clipStep = figure === 'clip-doppler'
+  const clipSlug =
+    figure === 'clip-doppler'
+      ? 'doppler-node-vessels'
+      : figure === 'clip-needle'
+        ? 'needle-in-node'
+        : undefined
+  const clipStep = !!clipSlug
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * A briefing with a live example shows a short lead, then the three views, then the rest of the
@@ -939,10 +945,11 @@ function LessonSession({
                 <NodeFeatureAtlas />
               ) : figure === 'node-reading' ? (
                 <NodeFeatureReading />
-              ) : figure === 'clip-doppler' ? (
+              ) : clipSlug ? (
                 // Labels on its paused frame open once the step's question is answered or explained.
                 <ClipFigure
-                  clip="doppler-node-vessels"
+                  key={clipSlug}
+                  clip={clipSlug}
                   unlocked={!!committed || !!(question && explanationOpen[question.id])}
                 />
               ) : figure === 'station-map' ||
@@ -959,7 +966,7 @@ function LessonSession({
                   }
                   station={content.station}
                 />
-              ) : figure ? (
+              ) : figure === 'ultrasound' || figure === 'needle' ? (
                 <TeachingDiagram kind={figure} />
               ) : null}
             </div>
