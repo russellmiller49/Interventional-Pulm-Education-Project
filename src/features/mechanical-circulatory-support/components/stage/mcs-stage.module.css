@@ -790,6 +790,20 @@
 .readableMap [data-circulation-map] > div:first-of-type {
   min-width: 680px;
 }
+/*
+ * Only the drawing pans. The map is a one-column grid, and the drawing's minimum width used to set
+ * that column, so the caption, the key and the answer rows were laid out as wide as the drawing
+ * and ran past the edge of a narrower pane: in a 545px column at 1600 x 852 each line lost its
+ * last few characters. The column is now the width on screen. The drawing overflows it and pans;
+ * the words wrap to what is visible and stay put while the drawing is panned.
+ */
+.readableMap [data-circulation-map] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.readableMap [data-circulation-map] > :not(div:first-of-type) {
+  position: sticky;
+  left: 0;
+}
 
 .optionalActions {
   display: flex;
