@@ -417,6 +417,8 @@ export interface MapRegion {
   id: string
   /** One generation inside a branch the route does not take, drawn for reference only. */
   reference?: boolean
+  /** The model's own arc for a branch of this division, laid over the learner's for comparison. */
+  ghost?: boolean
   /** Which division of the map this branch comes from, 0 first; null for the ostium itself. */
   level: number | null
   /** The daughter, in the division's own order. */
@@ -438,6 +440,12 @@ export interface MapLevel {
   route: number | null
   /** For each daughter the route does not take, where its own next division would be drawn. */
   references?: readonly (readonly number[])[]
+  /**
+   * The model's angles for this division's branches, drawn as extra arcs in the same parent for
+   * comparison. They take no part in the nesting: the next division is still drawn inside the
+   * learner's own branch.
+   */
+  ghost?: readonly number[]
 }
 
 /** How deep into its parent a branch reaches, as a share of the parent's inner diameter. */
@@ -519,9 +527,36 @@ export function layoutArcMap(levels: readonly MapLevel[]): MapRegion[] {
         })
       }
     })
+    // The model's arcs for this division, cut from the same parent the learner's are.
+    ;(level.ghost ?? []).forEach((angle, k) => {
+      const [ux, uy] = unitAt(angle)
+      const ghostShare = (level.ghost?.length ?? 2) > 2 ? BRANCH_DEPTH.three : BRANCH_DEPTH.two
+      const cutR = r * CUT_SCALE
+      const cutAt = r * (1 - 2 * ghostShare) + cutR
+      const innerAt = r * (1 - ghostShare)
+      regions.push({
+        id: `${index}:g${k}`,
+        level: index,
+        daughter: null,
+        parent: parent!.id,
+        cut: { cx: cx + ux * cutAt, cy: cy + uy * cutAt, r: cutR },
+        inner: { cx: cx + ux * innerAt, cy: cy + uy * innerAt, r: r * ghostShare * 0.92 },
+        onRoute: false,
+        target: false,
+        ghost: true,
+      })
+    })
     parent = next
   })
   return regions
+}
+
+/**
+ * The learner's map with the model's arcs laid over it, division by division: where a learner's
+ * arc and the model's sit a place apart, both are in the picture.
+ */
+export function withGhost(learner: readonly MapLevel[], model: readonly MapLevel[]): MapLevel[] {
+  return learner.map((level, d) => (model[d] ? { ...level, ghost: model[d].angles } : level))
 }
 
 /** The chain of regions from the ostium to a region, outermost first: what clips its arc. */

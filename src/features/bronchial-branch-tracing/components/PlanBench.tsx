@@ -38,6 +38,7 @@ import {
   RIMS,
   gradeArcs,
   gradeFrame,
+  withGhost,
   mappedForks,
   modelMapLevels,
   sectorAngle,
@@ -71,6 +72,7 @@ import {
   type CtOverlayLocator,
   type CtOverlayMark,
   type CtSliderTick,
+  type CtTrailPin,
 } from './TracingCtViewer'
 import { Band } from './Band'
 import { useFillViewport } from './useFillViewport'
@@ -240,6 +242,14 @@ export function PlanBench({
     setTab(plane)
     if (stage !== 'done') dispatch({ type: 'set-view', view: plane, on: true })
   }
+  // No map on the bench yet, and nothing opened beside the CT: the CT has both picture columns.
+  const wide =
+    !(mapReady && frameAsked) && !reconstruction && !(tab === 'scope' && section === 'learn')
+  // The learner's own pins on the CT, dropped while following an airway. Checked by nothing, kept
+  // only while this trip is on screen.
+  const [trail, setTrail] = useState<CtTrailPin[]>([])
+  const dropPin = useCallback((pin: CtTrailPin) => setTrail((all) => [...all.slice(-59), pin]), [])
+  const canPin = !done && stage !== 'lesion' && stage !== 'review' && stage !== 'done'
   const [revealed, setRevealed] = useState(false)
   useEffect(() => setRevealed(false), [viewKey])
 
@@ -324,19 +334,72 @@ export function PlanBench({
   )
   const here = plan.arcs[division]
   const finished = stage === 'review' || stage === 'done'
+  // After a check that did not fit, each drawn branch is marked where it stands: kept, or not
+  // where a branch leaves. Without hints the check says only whether the division fits.
+  const failedGrade =
+    stage === 'arcs' && here.checked && here.placed.length === optionCount && here.leadsOn !== null
+      ? gradeArcs(divisionBearings(trace, target, division, turn), here.placed, here.leadsOn)
+      : null
+  const verdicts =
+    failedGrade && help
+      ? here.placed.map((_, i) =>
+          failedGrade.off.includes(i) ? ('off' as const) : ('kept' as const),
+        )
+      : undefined
   const sideMap = (
     <ArcMap
       rim={rim}
       levels={drawnLevels}
       drawing={
-        stage === 'arcs' ? { placed: here.placed, leadsOn: here.leadsOn, count: optionCount } : null
+        stage === 'arcs'
+          ? { placed: here.placed, leadsOn: here.leadsOn, count: optionCount, verdicts }
+          : null
       }
       focus={stage === 'arcs' ? division : null}
       onPlace={stage === 'arcs' ? (sector) => dispatch({ type: 'place-arc', sector }) : undefined}
       star={finished && arcsAsked}
       label="Your map"
+      rimSlot={
+        stage === 'frame' && !done
+          ? (position) => (
+              <select
+                value={plan.frame[position] ?? ''}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'label-rim',
+                    rim: position,
+                    word: (event.target.value || null) as Anatomical | null,
+                  })
+                }
+                aria-label={`Direction at the ${RIM_LABELS[position].toLowerCase()} of the circle`}
+                data-rim-picker={position}
+              >
+                <option value="">{RIM_LABELS[position]}…</option>
+                {ANATOMICAL.map((word) => (
+                  <option key={word} value={word}>
+                    {ANATOMICAL_LABEL[word]}
+                  </option>
+                ))}
+              </select>
+            )
+          : undefined
+      }
     />
   )
+  // The review: the learner's map, the model's, or the model's laid over the learner's.
+  const [reviewShow, setReviewShow] = useState<'both' | 'mine' | 'model'>('both')
+  const reviewLevels = useMemo(
+    () =>
+      reviewShow === 'model'
+        ? modelLevels
+        : reviewShow === 'mine'
+          ? drawnLevels
+          : withGhost(drawnLevels, modelLevels),
+    [reviewShow, drawnLevels, modelLevels],
+  )
+  // While the airway is traced back from the lesion there is no map to show: the CT takes both
+  // picture columns, and a reconstruction opens beside it on request.
+  const mapShown = mapReady && frameAsked
   const ostium = stationCamera(trace, segmentStart)!
   const canReveal = section === 'learn' && frameAsked && (stage !== 'frame' || worked)
 
@@ -397,7 +460,8 @@ export function PlanBench({
       kicker: kicker(PLAN_PART_TITLES.segment),
       heading: 'Which segmental bronchus does it come from?',
       body: segmentInstruction(),
-      where: 'CT panel: follow the airway back with the slider.',
+      where:
+        'CT panel: follow the airway back with the slider or the wheel. Drag to move the picture; a click pins where you have followed it to.',
       primary: worked
         ? { label: 'Show the segment', onActivate: show({ type: 'show-segment' }) }
         : undefined,
@@ -422,7 +486,7 @@ export function PlanBench({
       kicker: kicker(PLAN_PART_TITLES.frame),
       heading: `Label the ${target.segment.bronchusCode} ostium`,
       body: frameInstruction(target.segment.bronchusCode),
-      where: 'Here: one direction for each place round the circle. Map panel: the circle.',
+      where: 'Map panel: choose a direction at each of the four places on the circle.',
       primary: worked
         ? { label: 'Show the circle', onActivate: show({ type: 'show-frame' }) }
         : {
@@ -467,7 +531,7 @@ export function PlanBench({
       ...(prefilled
         ? prefilledReview(target.segment.bronchusCode, plan.arcs.length)
         : {
-            heading: 'Your map, beside the model’s',
+            heading: 'Your map, with the model’s over it',
             body: reviewSentence(
               plan.arcs.length,
               plan.arcs.filter((a) => a.ok && !a.shown && a.misses === 0).length,
@@ -489,6 +553,7 @@ export function PlanBench({
   // Outside the lessons the views are not a step: they are offered where the circle is labelled.
   const viewsBesideCircle =
     section !== 'learn' && stage === 'frame' && !spec.parts.includes('views')
+  const showIntro = Boolean(intro) && plan.stage === spec.parts[0]
   const partTeach = teach?.[stage as PlanPart]
   const hereTeach = stage === 'arcs' ? divisionTeach?.[division] : undefined
 
@@ -517,7 +582,13 @@ export function PlanBench({
             <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
               <CircleHelp size={15} aria-hidden /> What are we doing?
             </button>
-            <button onClick={onRestart} data-bench-restart>
+            <button
+              onClick={() => {
+                setTrail([])
+                onRestart()
+              }}
+              data-bench-restart
+            >
               <RotateCcw size={15} aria-hidden /> Restart trip
             </button>
             {exit}
@@ -531,163 +602,10 @@ export function PlanBench({
         style={{ height: benchMinHeight, minHeight: benchMinHeight }}
         data-bench
         data-plan-stage={stage}
+        data-plan-wide={wide || undefined}
       >
-        <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Map">
-          <header className={styles.paneHead}>
-            <h2>
-              {tab === 'scope'
-                ? 'Bronchoscope'
-                : reconstruction
-                  ? reconstruction === 'coronal'
-                    ? 'Coronal'
-                    : 'Sagittal'
-                  : 'Map'}
-            </h2>
-            {segmentKnown && !reconstruction && <span>{target.segment.bronchusCode} ostium</span>}
-            <div className={styles.sideTabs} role="group" aria-label="Side panel">
-              <button
-                aria-pressed={tab === 'map'}
-                onClick={() => setTab('map')}
-                data-side-tab="map"
-              >
-                Map
-              </button>
-              <button
-                aria-pressed={tab === 'coronal'}
-                onClick={() => openReconstruction('coronal')}
-                data-side-tab="coronal"
-              >
-                Coronal
-              </button>
-              <button
-                aria-pressed={tab === 'sagittal'}
-                onClick={() => openReconstruction('sagittal')}
-                data-side-tab="sagittal"
-              >
-                Sagittal
-              </button>
-              {canReveal && (
-                <button
-                  aria-pressed={tab === 'scope'}
-                  onClick={() => setTab('scope')}
-                  data-side-tab="scope"
-                >
-                  Ostium view
-                </button>
-              )}
-            </div>
-          </header>
-          {reconstruction ? (
-            <ReferenceCtView
-              plane={reconstruction}
-              index={refPlanes[reconstruction]}
-              onIndexChange={(index) =>
-                setRefPlanes((all) => ({ ...all, [reconstruction]: index }))
-              }
-              axialSlice={current.slice}
-              focus={followed}
-              focusLabel={stage === 'frame' || stage === 'arcs' ? 'division' : 'lesion'}
-              target={{ id: target.id }}
-              onPick={(pick) =>
-                setView({
-                  key: viewKey,
-                  slice: pick.slice,
-                  crop: { center: pick.pixel, size: current.crop.size },
-                })
-              }
-              wheelPlanes={wheelSlices}
-            />
-          ) : (
-            <div className={styles.squareSlot}>
-              {tab === 'scope' && canReveal ? (
-                <ScopeView
-                  position={ostium.position}
-                  direction={ostium.direction}
-                  up={ostium.up}
-                  openings={[]}
-                  moving={false}
-                  caption={`At the ${target.segment.bronchusCode} ostium, looking in.`}
-                  phase="ostium"
-                  segmental={frame.side}
-                />
-              ) : finished && arcsAsked && !prefilled ? (
-                <div className={styles.mapPair} data-map-pair>
-                  <figure>
-                    <ArcMap
-                      rim={rim}
-                      levels={drawnLevels}
-                      star
-                      label="Your map"
-                      variant="compact"
-                    />
-                    <figcaption>Yours</figcaption>
-                  </figure>
-                  <figure>
-                    <ArcMap
-                      rim={rim}
-                      levels={modelLevels}
-                      star
-                      label="Model map"
-                      variant="compact"
-                    />
-                    <figcaption>The model’s</figcaption>
-                  </figure>
-                </div>
-              ) : mapReady && frameAsked ? (
-                sideMap
-              ) : frameAsked || !segmentKnown || stage !== 'done' ? (
-                <p className={styles.mapWaiting} data-map-waiting>
-                  The map starts at the ostium of the lesion’s segmental bronchus. Find the airway
-                  into the lesion and follow it back first.
-                </p>
-              ) : (
-                // A trip that only plans draws no circle: its words are the next lesson's to find.
-                <p className={styles.mapWaiting} data-map-waiting="named">
-                  The map of this route starts at the {target.segment.bronchusCode} ostium, the
-                  bronchus you have just named.
-                </p>
-              )}
-            </div>
-          )}
-          {!reconstruction && (
-            <p className={styles.paneCaption} data-map-caption>
-              {tab === 'scope' && canReveal
-                ? 'The model scope at the ostium. Its rim words are the circle’s; your circle may be turned from it.'
-                : stage === 'arcs'
-                  ? `Division ${division + 1}: the highlighted branch is where it takes place.`
-                  : 'The circle is the view into the ostium; each division is drawn inside the branch before it.'}
-            </p>
-          )}
-        </section>
-
-        <section className={styles.pane} style={{ gridArea: 'ct' }} aria-label="CT">
-          <header className={styles.paneHead}>
-            <h2>CT</h2>
-            <span data-ct-display>
-              {orientation.turns || orientation.reflected ? 'Turned by you' : 'Standard axial'}
-            </span>
-          </header>
-          <TracingCtViewer
-            slice={current.slice}
-            range={range}
-            onSlice={setSlice}
-            orientation={orientation}
-            onTurn={(operation) => setOrientation((o) => turnCt(o, operation))}
-            center={current.crop.center}
-            size={current.crop.size}
-            target={target}
-            showNodule
-            markSlice={stage === 'lesion' && !done ? current.slice : undefined}
-            markLabel={stage === 'lesion' ? 'the airway into the lesion' : undefined}
-            onMark={stage === 'lesion' && !done ? mark : undefined}
-            marks={marks}
-            locators={locators}
-            tip={null}
-            ticks={ticks}
-            wheelSlices={wheelSlices}
-          />
-        </section>
-
+        {/* The text column comes first, in the page and in the tab order: what to do, then the
+            pictures it is done on. */}
         <div className={styles.now} style={{ gridArea: 'now' }}>
           <ol className={styles.loop} aria-label="Plan, map, navigate" data-loop-steps>
             {STAGE_STEPS.filter((step) => step.id !== 'navigate' || drives).map((step) => {
@@ -701,6 +619,28 @@ export function PlanBench({
             })}
           </ol>
           <NowCard model={now}>
+            {/* How to work the step out sits in the card, beside the step: open when it comes,
+                and folded away by whoever has read it. */}
+            {!done && (showIntro || partTeach || hereTeach) && (
+              <details
+                className={styles.teachBox}
+                // Open when the step comes. After a check that did not fit it folds, so what the
+                // check found is in view under the card; it opens again with the next change.
+                open={!(stage === 'arcs' && here.checked)}
+                key={viewKey}
+                data-teach-box
+                // Where the card also holds choices or drawing controls, the text keeps to a few
+                // lines and scrolls, so the controls stay in the window.
+                data-teach-compact={stage === 'arcs' || stage === 'segment' || undefined}
+              >
+                <summary>How to work this out</summary>
+                <div>
+                  {showIntro && <p data-bench-intro>{intro}</p>}
+                  {partTeach && <p data-plan-teach>{partTeach}</p>}
+                  {hereTeach && <p data-division-teach>{hereTeach}</p>}
+                </div>
+              </details>
+            )}
             {stage === 'segment' && !done && (
               <div className={styles.choices} role="group" aria-label="Segmental bronchi">
                 {choices.map((choice) => (
@@ -714,6 +654,20 @@ export function PlanBench({
                 ))}
               </div>
             )}
+            {canPin && trail.length > 0 && (
+              <p className={styles.mapTools} data-trail-tools>
+                <span>
+                  {trail.length === 1 ? '1 pin' : `${trail.length} pins`} on the CT, last on slice{' '}
+                  {trail[trail.length - 1].slice}.
+                </span>
+                <button onClick={() => setSlice(trail[trail.length - 1].slice)} data-trail-go>
+                  Go to it
+                </button>
+                <button onClick={() => setTrail([])} data-trail-clear>
+                  Clear the pins
+                </button>
+              </p>
+            )}
             {stage === 'views' && !done && (
               <p className={styles.mapTools}>
                 <button onClick={() => openReconstruction('coronal')} data-open-view="coronal">
@@ -723,33 +677,6 @@ export function PlanBench({
                   Open the sagittal view
                 </button>
               </p>
-            )}
-            {stage === 'frame' && !done && (
-              <div className={styles.rimPickers} role="group" aria-label="The ostium circle">
-                {RIMS.map((position) => (
-                  <label key={position}>
-                    {RIM_LABELS[position]}
-                    <select
-                      value={plan.frame[position] ?? ''}
-                      onChange={(event) =>
-                        dispatch({
-                          type: 'label-rim',
-                          rim: position,
-                          word: (event.target.value || null) as Anatomical | null,
-                        })
-                      }
-                      data-rim-picker={position}
-                    >
-                      <option value="">Choose…</option>
-                      {ANATOMICAL.map((word) => (
-                        <option key={word} value={word}>
-                          {ANATOMICAL_LABEL[word]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
             )}
             {stage === 'arcs' && !done && (
               <>
@@ -856,21 +783,6 @@ export function PlanBench({
         <div className={styles.detail} style={{ gridArea: 'detail' }} data-bench-detail>
           {!done && (
             <>
-              {intro && plan.stage === spec.parts[0] && (
-                <p className={styles.intro} data-bench-intro>
-                  {intro}
-                </p>
-              )}
-              {partTeach && (
-                <p className={styles.note} data-plan-teach>
-                  {partTeach}
-                </p>
-              )}
-              {hereTeach && (
-                <p className={styles.note} data-division-teach>
-                  {hereTeach}
-                </p>
-              )}
               {viewsBesideCircle && (
                 <div className={styles.note} data-views-note>
                   <p>{viewsInstruction(target.segment.bronchusCode)}</p>
@@ -898,6 +810,190 @@ export function PlanBench({
           )}
           {notes}
         </div>
+
+        {!wide && (
+          <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Map">
+            <header className={styles.paneHead}>
+              <h2>
+                {tab === 'scope'
+                  ? 'Bronchoscope'
+                  : reconstruction
+                    ? reconstruction === 'coronal'
+                      ? 'Coronal'
+                      : 'Sagittal'
+                    : 'Map'}
+              </h2>
+              {segmentKnown && !reconstruction && <span>{target.segment.bronchusCode} ostium</span>}
+              <div className={styles.sideTabs} role="group" aria-label="Side panel">
+                <button
+                  aria-pressed={tab === 'map'}
+                  onClick={() => setTab('map')}
+                  data-side-tab="map"
+                >
+                  {mapShown ? 'Map' : 'CT alone'}
+                </button>
+                <button
+                  aria-pressed={tab === 'coronal'}
+                  onClick={() => openReconstruction('coronal')}
+                  data-side-tab="coronal"
+                >
+                  Coronal
+                </button>
+                <button
+                  aria-pressed={tab === 'sagittal'}
+                  onClick={() => openReconstruction('sagittal')}
+                  data-side-tab="sagittal"
+                >
+                  Sagittal
+                </button>
+                {canReveal && (
+                  <button
+                    aria-pressed={tab === 'scope'}
+                    onClick={() => setTab('scope')}
+                    data-side-tab="scope"
+                  >
+                    Ostium view
+                  </button>
+                )}
+              </div>
+            </header>
+            {reconstruction ? (
+              <ReferenceCtView
+                plane={reconstruction}
+                index={refPlanes[reconstruction]}
+                onIndexChange={(index) =>
+                  setRefPlanes((all) => ({ ...all, [reconstruction]: index }))
+                }
+                axialSlice={current.slice}
+                focus={followed}
+                focusLabel={stage === 'frame' || stage === 'arcs' ? 'division' : 'lesion'}
+                target={{ id: target.id }}
+                onPick={(pick) =>
+                  setView({
+                    key: viewKey,
+                    slice: pick.slice,
+                    crop: { center: pick.pixel, size: current.crop.size },
+                  })
+                }
+                wheelPlanes={wheelSlices}
+              />
+            ) : (
+              <div className={styles.squareSlot}>
+                {tab === 'scope' && canReveal ? (
+                  <ScopeView
+                    position={ostium.position}
+                    direction={ostium.direction}
+                    up={ostium.up}
+                    openings={[]}
+                    moving={false}
+                    caption={`At the ${target.segment.bronchusCode} ostium, looking in.`}
+                    phase="ostium"
+                    segmental={frame.side}
+                  />
+                ) : finished && arcsAsked && !prefilled ? (
+                  // One map: the learner's, with the model's arcs laid over it.
+                  <ArcMap
+                    rim={rim}
+                    levels={reviewLevels}
+                    star
+                    label={
+                      reviewShow === 'model'
+                        ? 'Model map'
+                        : reviewShow === 'mine'
+                          ? 'Your map'
+                          : 'Your map with the model’s over it'
+                    }
+                  />
+                ) : (
+                  sideMap
+                )}
+              </div>
+            )}
+            {!reconstruction &&
+              (tab !== 'scope' && finished && arcsAsked && !prefilled ? (
+                <div className={`${styles.paneCaption} ${styles.reviewLegend}`} data-review-map>
+                  <div className={styles.sideTabs} role="group" aria-label="Which map to show">
+                    {(
+                      [
+                        ['both', 'Both'],
+                        ['mine', 'Yours'],
+                        ['model', 'The model’s'],
+                      ] as const
+                    ).map(([id, label]) => (
+                      <button
+                        key={id}
+                        aria-pressed={reviewShow === id}
+                        onClick={() => setReviewShow(id)}
+                        data-review-show={id}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {reviewShow === 'both' && (
+                    <>
+                      <span>
+                        <i data-line="mine" aria-hidden /> yours
+                      </span>
+                      <span>
+                        <i data-line="model" aria-hidden /> the model’s
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className={styles.paneCaption} data-map-caption>
+                  {tab === 'scope' && canReveal
+                    ? 'The model scope at the ostium. Its rim words are the circle’s; your circle may be turned from it.'
+                    : stage === 'arcs'
+                      ? `Division ${division + 1}: the highlighted branch is where it takes place.`
+                      : stage === 'frame'
+                        ? 'The circle is the view into the ostium. Choose its four directions on it.'
+                        : 'The circle is the view into the ostium; each division is drawn inside the branch before it.'}
+                </p>
+              ))}
+          </section>
+        )}
+
+        <section className={styles.pane} style={{ gridArea: 'ct' }} aria-label="CT">
+          <header className={styles.paneHead}>
+            <h2>CT</h2>
+            <span data-ct-display>
+              {orientation.turns || orientation.reflected ? 'Turned by you' : 'Standard axial'}
+            </span>
+            {wide && (
+              <div className={styles.sideTabs} role="group" aria-label="Open beside the CT">
+                <button onClick={() => openReconstruction('coronal')} data-ct-beside="coronal">
+                  Coronal beside
+                </button>
+                <button onClick={() => openReconstruction('sagittal')} data-ct-beside="sagittal">
+                  Sagittal beside
+                </button>
+              </div>
+            )}
+          </header>
+          <TracingCtViewer
+            slice={current.slice}
+            range={range}
+            onSlice={setSlice}
+            orientation={orientation}
+            onTurn={(operation) => setOrientation((o) => turnCt(o, operation))}
+            center={current.crop.center}
+            size={current.crop.size}
+            target={target}
+            showNodule
+            markSlice={stage === 'lesion' && !done ? current.slice : undefined}
+            markLabel={stage === 'lesion' ? 'the airway into the lesion' : undefined}
+            onMark={stage === 'lesion' && !done ? mark : undefined}
+            marks={marks}
+            locators={locators}
+            tip={null}
+            ticks={ticks}
+            wheelSlices={wheelSlices}
+            trail={trail}
+            onTrail={canPin ? dropPin : undefined}
+          />
+        </section>
       </div>
       <HelpDialog
         open={helpOpen}

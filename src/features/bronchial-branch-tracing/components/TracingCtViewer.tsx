@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import type { CtMark, CtNoduleTarget } from '../content/ct-types'
 import { TARGET_CT_BASE, nativeImageUrl } from '../geometry/native-ct'
 import {
@@ -36,6 +36,11 @@ export interface CtOverlayLocator {
   pixel: [number, number]
   label: string
 }
+/** Where the learner has followed an airway to: their own pin, checked by nothing. */
+export interface CtTrailPin {
+  slice: number
+  pixel: [number, number]
+}
 export interface CtSliderTick {
   slice: number
   label: string
@@ -44,6 +49,10 @@ export interface CtSliderTick {
 
 const OVERLAY_FONT = 3.6
 const PRELOAD_RADIUS = 3
+/** A press that moves less than this is a click; more, and it drags the picture. */
+const DRAG_START_PX = 4
+/** A trail pin shows, dimmed, this many slices either side of its own. */
+const TRAIL_REACH = 3
 const crosshair = ([x, y]: [number, number], reach = 3) =>
   `M${x - reach},${y}h${reach - 1} M${x + 1},${y}h${reach - 1} ` +
   `M${x},${y - reach}v${reach - 1} M${x},${y + 1}v${reach - 1}`
@@ -67,6 +76,8 @@ export function TracingCtViewer({
   ticks,
   wheelSlices,
   onReadyChange,
+  trail,
+  onTrail,
 }: {
   slice: number
   range: readonly [number, number]
@@ -91,10 +102,35 @@ export function TracingCtViewer({
   /** The mouse wheel steps slices over the image (a fixed workspace that does not scroll). */
   wheelSlices: boolean
   onReadyChange?: (ready: boolean) => void
+  /** Pins the learner has dropped while following an airway, on any slice. */
+  trail?: readonly CtTrailPin[]
+  /** A click where nothing is being marked drops a pin there. */
+  onTrail?: (pin: CtTrailPin) => void
 }) {
   const [retry, setRetry] = useState(0)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [magnification, setMagnification] = useState(1)
+  // The picture can be dragged away from where the bench centred it. The offset is kept in native
+  // pixels and belongs to that centre: when the bench moves the field (a new step, a drive), the
+  // picture is centred again.
+  const centreKey = `${center[0].toFixed(2)}:${center[1].toFixed(2)}:${size}`
+  const [panned, setPanned] = useState<{ key: string; pan: [number, number] }>({
+    key: '',
+    pan: [0, 0],
+  })
+  const pan = panned.key === centreKey ? panned.pan : ([0, 0] as [number, number])
+  const view: [number, number] = [
+    Math.max(0, Math.min(511, center[0] + pan[0])),
+    Math.max(0, Math.min(511, center[1] + pan[1])),
+  ]
+  const isPanned = pan[0] !== 0 || pan[1] !== 0
+  const drag = useRef<{
+    pointer: number
+    x: number
+    y: number
+    pan: [number, number]
+    moved: boolean
+  } | null>(null)
   const surface = useRef<HTMLDivElement>(null)
   const clamp = (value: number) => Math.max(range[0], Math.min(range[1], Math.round(value)))
   const url = nativeImageUrl(slice)
@@ -142,12 +178,26 @@ export function TracingCtViewer({
   }, [wheelSlices, range, onSlice])
 
   const field = size / magnification
-  const project = (pixel: readonly number[]) => orientedPixel(pixel, center, field, orientation)
+  const project = (pixel: readonly number[]) => orientedPixel(pixel, view, field, orientation)
   const canMark = Boolean(onMark) && ready && markSlice === slice
+  const canPin = Boolean(onTrail) && ready && !canMark
   function place(point: [number, number]) {
     if (!canMark) return
-    const pixel = nativePixel(point, center, field, orientation)
+    const pixel = nativePixel(point, view, field, orientation)
     if (pixel.every((value) => value >= 0 && value <= 511)) onMark?.({ slice, pixel })
+  }
+  /** A click where nothing is being marked: the learner's own pin, for following an airway. */
+  function pin(point: [number, number]) {
+    if (!canPin) return
+    const pixel = nativePixel(point, view, field, orientation)
+    if (pixel.every((value) => value >= 0 && value <= 511)) onTrail?.({ slice: shownSlice, pixel })
+  }
+  const viewPoint = (event: PointerEvent<SVGSVGElement>): [number, number] => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return [
+      ((event.clientX - rect.left) / rect.width) * 100,
+      ((event.clientY - rect.top) / rect.height) * 100,
+    ]
   }
   function key(event: KeyboardEvent) {
     const move: Record<string, [number, number]> = {
@@ -186,6 +236,13 @@ export function TracingCtViewer({
         .filter((locator) => locator.slice === shownSlice)
         .map((locator) => ({ ...locator, point: project(locator.pixel) }))
         .filter((locator) => inField(locator.point))
+    : []
+  const drawnTrail = ready
+    ? (trail ?? [])
+        .map((entry, index) => ({ ...entry, id: `trail-${index}`, point: project(entry.pixel) }))
+        .filter(
+          (entry) => Math.abs(entry.slice - shownSlice) <= TRAIL_REACH && inField(entry.point),
+        )
     : []
   const placedLabels = placeOverlayLabels(
     [
@@ -230,6 +287,11 @@ export function TracingCtViewer({
             onChange={(e) => setMagnification(Number(e.target.value))}
           />
         </label>
+        {isPanned && (
+          <button onClick={() => setPanned({ key: '', pan: [0, 0] })} data-ct-recentre>
+            Recentre
+          </button>
+        )}
       </div>
       <div className={styles.squareSlot}>
         <div
@@ -241,6 +303,8 @@ export function TracingCtViewer({
           data-requested-slice={slice}
           data-ct-ready={Boolean(ready)}
           data-can-mark={canMark || undefined}
+          data-can-pin={canPin || undefined}
+          data-ct-panned={isPanned || undefined}
         >
           <svg
             viewBox="0 0 100 100"
@@ -249,22 +313,59 @@ export function TracingCtViewer({
               canMark
                 ? `Arrow keys move the cursor and Enter marks ${markLabel ?? 'the lumen'}. `
                 : ''
-            }Page Up and Page Down change the slice.`}
+            }Page Up and Page Down change the slice. Drag to move the picture.`}
             tabIndex={0}
             onKeyDown={key}
             onPointerDown={(event) => {
+              setCursor(viewPoint(event))
+              drag.current = {
+                pointer: event.pointerId,
+                x: event.clientX,
+                y: event.clientY,
+                pan,
+                moved: false,
+              }
+              event.currentTarget.setPointerCapture?.(event.pointerId)
+            }}
+            onPointerMove={(event) => {
+              const held = drag.current
+              if (!held || held.pointer !== event.pointerId) return
+              if (
+                !held.moved &&
+                Math.hypot(event.clientX - held.x, event.clientY - held.y) < DRAG_START_PX
+              )
+                return
+              held.moved = true
+              // The same drag on screen is the same move of the picture however the CT is turned.
               const rect = event.currentTarget.getBoundingClientRect()
-              const point: [number, number] = [
-                ((event.clientX - rect.left) / rect.width) * 100,
-                ((event.clientY - rect.top) / rect.height) * 100,
+              const at = (x: number, y: number): [number, number] => [
+                ((x - rect.left) / rect.width) * 100,
+                ((y - rect.top) / rect.height) * 100,
               ]
-              setCursor(point)
-              place(point)
+              const from = nativePixel(at(held.x, held.y), center, field, orientation)
+              const to = nativePixel(at(event.clientX, event.clientY), center, field, orientation)
+              setPanned({
+                key: centreKey,
+                pan: [held.pan[0] + from[0] - to[0], held.pan[1] + from[1] - to[1]],
+              })
+            }}
+            onPointerUp={(event) => {
+              const held = drag.current
+              drag.current = null
+              event.currentTarget.releasePointerCapture?.(event.pointerId)
+              if (!held || held.pointer !== event.pointerId || held.moved) return
+              // A press that did not drag is a click: a mark where one is asked for, a pin elsewhere.
+              const point = viewPoint(event)
+              if (canMark) place(point)
+              else pin(point)
+            }}
+            onPointerCancel={() => {
+              drag.current = null
             }}
           >
             <rect width="100" height="100" fill="#020507" />
             <g
-              transform={`translate(50 50) ${orientationTransform(orientation)} scale(${100 / field}) translate(${-center[0]} ${-center[1]})`}
+              transform={`translate(50 50) ${orientationTransform(orientation)} scale(${100 / field}) translate(${-view[0]} ${-view[1]})`}
             >
               {shown && (
                 <image
@@ -363,6 +464,22 @@ export function TracingCtViewer({
                 <circle cx={tipPoint[0]} cy={tipPoint[1]} r="1.3" fill="#7fe3ff" />
               </g>
             )}
+            {drawnTrail.map((entry) => (
+              <g
+                key={entry.id}
+                opacity={entry.slice === shownSlice ? 1 : 0.4}
+                data-ct-trail={entry.slice}
+                aria-hidden="true"
+              >
+                <circle
+                  cx={entry.point[0]}
+                  cy={entry.point[1]}
+                  r="1.7"
+                  className={styles.ctTrail}
+                />
+                <circle cx={entry.point[0]} cy={entry.point[1]} r=".45" fill="#9be7c4" />
+              </g>
+            ))}
             {drawnLocators.map((locator) => (
               <path
                 key={locator.id}
