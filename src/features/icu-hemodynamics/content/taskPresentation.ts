@@ -102,7 +102,9 @@ function simulatorPresentation(
     case 'waveform-interpretation':
       return {
         kind: 'waveform-reader',
-        monitor: task === 'prediction' ? 'pac' : 'none',
+        // The walk's instruction compares the live shape with the normal reference, so the live
+        // strip is on screen for it (it was not, until November 2026).
+        monitor: task === 'prediction' || task === 'walk' ? 'pac' : 'none',
         anatomy: task === 'walk' || task === 'prediction' ? 'map' : 'none',
         controls: true,
       }

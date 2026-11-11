@@ -365,6 +365,24 @@ describe('the walk through the four places', () => {
     ])
   })
 
+  it('shows the live strip for the chamber, so there is a live shape to compare', () => {
+    // The instruction says "compare the live shape with the normal reference"; until November
+    // 2026 the walk drew no live monitor at all.
+    const { lesson } = mountSection('waveform-interpretation')
+    expect(hemodynamicsTaskPresentation('waveform-interpretation', lesson.steps[0]).monitor).toBe(
+      'pac',
+    )
+    const strip = () => document.querySelector('[data-flow-visual] [data-monitor-column]')!
+    expect(strip().textContent).toMatch(/PAC · RA/)
+    // Ahead of the catheter map, level with the reference it is compared with.
+    const map = document.querySelector('[data-flow-visual] [data-catheter-map]')
+    if (map)
+      expect(strip().compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    clickPrimary()
+    expect(strip().textContent).toMatch(/PAC · RV/)
+    expect(reference()).toHaveAttribute('data-walk-reference', 'rv')
+  })
+
   it('pins Next stop at the foot of the view on the walk, and only there', () => {
     mountSection('waveform-interpretation')
     const card = document.querySelector('[data-now-card]')!
