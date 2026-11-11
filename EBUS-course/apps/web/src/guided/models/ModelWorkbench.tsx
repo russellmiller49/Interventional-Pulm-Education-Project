@@ -18,19 +18,16 @@ import {
 } from '../../../../../../src/lib/ebus-model-contract'
 import { ModelViewport } from './ModelViewport'
 import { ModelImage } from './ModelImage'
+import { NeedleHandleView, type NeedleHandlePart } from './NeedleHandleView'
+import { NeedleSteps } from './NeedleSteps'
 import './models.css'
 const titles: Record<ModelPackage, string> = {
-  needle: 'Needle assembly and tip visibility',
+  needle: 'One needle pass, by your own hand',
   contact: 'Acoustic-contact cutaway',
   measurement: 'Shape, sweep and measurement',
   routes: 'EBUS and EUS-B route comparison',
 }
 const stepLabels: Record<string, string> = {
-  sheath: 'Adjust the sheath',
-  'live-tip': 'Show the needle tip on the live image',
-  'lost-tip-stop': 'Change the imaging plane, then stop and reassess',
-  'resistance-stop': 'Introduce resistance, then stop and reassess',
-  'protected-removal': 'Retract the needle and remove the assembly',
   'gain-gap': 'With “Air gap” selected, raise gain to 75 or more',
   direct: 'Select “Direct contact”, then “Inspect acoustic path”',
   balloon: 'Select “Fluid-balloon contact”, then inspect',
@@ -49,38 +46,8 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
   const button = (label: string, type: string) => (
     <button onClick={() => act({ type })}>{label}</button>
   )
-  if (s.package === 'needle')
-    return (
-      <>
-        <label>
-          Sheath position{' '}
-          <select
-            aria-label="Sheath position"
-            value={s.sheath}
-            onChange={(e) => act({ type: 'sheath', value: Number(e.target.value) })}
-          >
-            <option value={0}>Initial</option>
-            <option value={1}>Adjusted</option>
-            <option value={2}>Further adjusted</option>
-          </select>
-        </label>
-        {button(s.secured ? 'Release sheath lock' : 'Lock sheath', 'secure')}
-        {button('Advance needle one increment', 'extend')}
-        {button('Retract needle fully', 'retract')}
-        {button(s.live ? 'Freeze reference image' : 'Return to live image', 'live')}
-        {button(s.contact ? 'Lose acoustic contact' : 'Restore acoustic contact', 'contact')}
-        {button('Change imaging plane', 'lost')}
-        {button('Introduce resistance', 'resistance')}
-        {button('Stop and reassess', 'stop')}
-        {button('Restore demonstration window', 'restore')}
-        {button('Remove assembly', 'remove')}
-        <p>
-          Sheath: {s.sheath ? 'adjusted' : 'initial'} · Lock: {s.secured ? 'secured' : 'released'} ·
-          Needle: {s.extension ? 'exposed' : 'retracted'} ·{' '}
-          {s.removed ? 'assembly removed' : 'assembly in channel'}
-        </p>
-      </>
-    )
+  // The needle lab has its own list of steps and controls (`NeedleSteps`).
+  if (s.package === 'needle') return null
   if (s.package === 'contact')
     return (
       <>
@@ -246,7 +213,11 @@ export function ModelWorkbench({
   onObservation: (o: EbusObservation) => void
 }) {
   const pkg = config.modelPackage!
-  const [state, dispatch] = useReducer(modelReducer, pkg, initialModelState)
+  const [state, dispatch] = useReducer(modelReducer, pkg, (name) =>
+    initialModelState(name, { needleMovements: config.needleMovements }),
+  )
+  // The handle part whose control has the focus, lit in the handle strip.
+  const [handleFocus, setHandleFocus] = useState<NeedleHandlePart | ''>('')
   const [rendered, setRendered] = useState(''),
     [error, setError] = useState('')
   const frameId = modelFrameId(state),
@@ -269,8 +240,7 @@ export function ModelWorkbench({
       frameReady: ready,
       actionCount: state.actions,
       lastAction: state.package,
-      frozen:
-        config.locked || ('frozen' in state && state.frozen) || ('live' in state && !state.live),
+      frozen: config.locked || ('frozen' in state && state.frozen),
       measured: state.package === 'measurement' && !!state.record,
       saved: state.package === 'measurement' && !!state.record,
       model: {
@@ -305,6 +275,57 @@ export function ModelWorkbench({
       {error ? (
         <div role="alert">
           {error} <button onClick={() => window.location.reload()}>Retry models</button>
+        </div>
+      ) : state.package === 'needle' ? (
+        /*
+         * The needle lab on one screen (rebuild of 2026-11-11): the handle across the top, the
+         * ultrasound picture and the scope tip under it, and the steps with their controls beside
+         * them. The learner's hand, the tip and the image are all in view at once.
+         */
+        <div className="needle-lab">
+          <div className="needle-stage">
+            <NeedleHandleView state={state} focus={handleFocus} />
+            <ModelImage state={state} reveal={config.reveal} locked={config.locked} dispatch={act} />
+            <ModelViewport
+              state={state}
+              reveal={config.reveal}
+              onRendered={setRendered}
+              onError={onError}
+            />
+          </div>
+          <section className="model-controls needle-panel">
+            <fieldset disabled={config.locked || !rendered}>
+              <legend className="sr-only">{titles[pkg]} controls</legend>
+              <div className="needle-panel-head">
+                {config.locked ? (
+                  <h2>Your image</h2>
+                ) : (
+                  <h2 className="model-steps">
+                    Steps: {state.steps.length} of {MODEL_STEPS[pkg].length} done
+                  </h2>
+                )}
+                <button className="needle-reset" onClick={() => act({ type: 'reset' })}>
+                  Reset activity
+                </button>
+              </div>
+              {!config.locked && (
+                <NeedleSteps
+                  state={state}
+                  act={act}
+                  demonstration={!!config.demonstration}
+                  onFocus={setHandleFocus}
+                />
+              )}
+            </fieldset>
+            {complete && !config.locked && (
+              <p role="status" className="model-feedback">
+                All steps done. Select “Continue with this image” in the lesson.
+              </p>
+            )}
+            {config.locked && (
+              <p>Controls are locked while you answer. You can still turn the model.</p>
+            )}
+          </section>
         </div>
       ) : (
         <>

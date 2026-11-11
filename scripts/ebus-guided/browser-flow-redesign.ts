@@ -87,7 +87,10 @@ async function main() {
         if (activity.interaction === 'acquire') {
           const variant = activity.task ?? 'guided'
           const lab = labForActivity(unit, activity)!
-          const linkedConsole = lab.kind === 'simulator' && !!lab.linkedLesson
+          // The one-screen console: every linked acquisition, and the needle lab.
+          const linkedConsole =
+            (lab.kind === 'simulator' && !!lab.linkedLesson) ||
+            (lab.kind === 'model' && lab.modelPackage === 'needle')
           // The image is the learner's to acquire: the primary control waits for the lab's steps,
           // and leaving without an image is always offered.
           await expect(primary()).toHaveText('Continue with this image')

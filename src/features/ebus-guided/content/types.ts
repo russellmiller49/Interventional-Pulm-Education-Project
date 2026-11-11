@@ -56,6 +56,8 @@ export type LabGoal =
 export interface Lab {
   kind: 'simulator' | 'knobology' | 'model'
   modelPackage?: ModelPackage
+  /** Movements within the node the needle lab asks for, from the teaching-numbers register. */
+  needleMovements?: number
   goal: LabGoal
   presetKey: string
   controls: EbusControl[]
@@ -128,6 +130,8 @@ export interface Lesson {
     | 'clip-doppler'
     /** The same, for a needle pass: the needle and the stylet at its tip. */
     | 'clip-needle'
+    /** After the needle lab: the tip in the image beside the tip turned out of it. */
+    | 'needle-tip'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]

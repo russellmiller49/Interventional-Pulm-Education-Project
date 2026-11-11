@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import {
-  MODEL_GEOMETRY,
-  needleGeometry,
   phantomPlaneReference,
   phantomSections,
   routeDefinition,
@@ -10,6 +8,7 @@ import {
   type ModelState,
   type ModelAction,
 } from '../../../../../../src/lib/ebus-model-contract'
+import { NeedleUltrasound } from './NeedleUltrasound'
 /*
  * Condition-specific captions for the contact schematic (EBUS-PRE-REVIEW-03, L5-3). Each names
  * the modelled origin of the dark band in the state the learner has selected — the same
@@ -204,83 +203,7 @@ export function ModelImage({
       </section>
     )
   }
-  if (s.package === 'needle') {
-    const imageState = s.held ? { ...s, ...s.held } : s
-    const g = needleGeometry(imageState)
-    const d = g.axis,
-      tip = g.tip
-    // Clip the shaft against a finite imaging slab; the true distal endpoint is separately tested.
-    const start = MODEL_GEOMETRY.needle.retractedTip.map(
-      (v, i) => v - d[i] * 30 + d[i] * (imageState.extension + imageState.sheath),
-    )
-    const sampled = Array.from({ length: 301 }, (_, i) =>
-      start.map((v, j) => v + ((tip[j] - v) * i) / 300),
-    ).filter(
-      (p) =>
-        p[1] >= 2 &&
-        Math.abs(Math.sin((imageState.plane * Math.PI) / 180) * (p[0] - g.outlet[0])) <=
-          MODEL_GEOMETRY.needle.sliceHalfThickness,
-    )
-    const line = sampled.map((p) => `${p[0]},${p[1]}`).join(' ')
-    return (
-      <section className="model-image">
-        <h2>Ultrasound schematic · {s.live ? 'Live' : 'Frozen reference'}</h2>
-        <svg
-          viewBox="-30 -2 65 45"
-          role="img"
-          aria-label="Needle and imaging-plane schematic"
-        >
-          <rect x="-30" y="-2" width="65" height="45" fill="#101722" />
-          <path d="M-24 8H30" stroke="#879099" strokeWidth="2" {...name('Airway wall')} />
-          {imageState.contact && (
-            <>
-              <ellipse cx="6" cy="23" rx="10" ry="8" fill="#667381" {...name('Example node')} />
-              <ellipse
-                cx="25"
-                cy="15"
-                rx="4"
-                ry="4"
-                fill="#253749"
-                stroke="#82909e"
-                strokeWidth=".4"
-                {...name('Adjacent vessel')}
-              />
-              {sampled.length > 1 && imageState.extension > 1 && (
-                <polyline
-                  points={line}
-                  stroke="#eef4ff"
-                  fill="none"
-                  strokeWidth=".6"
-                  {...name('Needle intersection with the imaging plane')}
-                />
-              )}{' '}
-              {g.tipVisible && (
-                <circle
-                  cx={tip[0]}
-                  cy={tip[1]}
-                  r=".65"
-                  fill="white"
-                  {...name('Needle tip in the imaging plane')}
-                />
-              )}
-            </>
-          )}
-          {reveal && imageState.extension > 1 && (
-            <text x="-26" y="40" fill="#91efd5" fontSize="2">
-              {g.tipVisible
-                ? 'The distal tip intersects this plane.'
-                : 'The true distal tip is outside this plane.'}
-            </text>
-          )}
-        </svg>
-        {reveal && hover && <p role="tooltip">{hover}</p>}
-        <p className="model-caption">
-          Geometric intersection, not clinical ultrasound. A visible line may be a shaft segment.
-          {!s.live ? ' Frozen reference: it cannot establish current tip guidance.' : ''}
-        </p>
-      </section>
-    )
-  }
+  if (s.package === 'needle') return <NeedleUltrasound state={s} reveal={reveal} locked={locked} />
   const coupled = s.mode !== 'gap',
     brightness = 0.35 + s.gain / 155
   return (

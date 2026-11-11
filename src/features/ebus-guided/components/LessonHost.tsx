@@ -13,7 +13,13 @@ import {
   partsOf,
 } from '../content/curriculum'
 import { activitiesForLesson, labForActivity, type LessonActivity } from '../content/stage'
-import { labGoalMet, labGoalRequirements, type Lesson, type Question } from '../content/types'
+import {
+  labGoalMet,
+  labGoalRequirements,
+  type Lab,
+  type Lesson,
+  type Question,
+} from '../content/types'
 import {
   recordLocation,
   setLessonReviewed,
@@ -39,6 +45,7 @@ import { TroubleshootingFlow } from './TroubleshootingFlow'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
 import { ClipFigure } from './ClipFigure'
+import { NeedleTipFigure } from './NeedleTipFigure'
 
 /**
  * One lesson, self-paced (EBUS-01, owner decision of 2026-09-14).
@@ -86,6 +93,13 @@ const KIND_LABELS: Record<LessonActivity['kind'], string> = {
   record: 'Case record',
 }
 
+/** Labs worked in the one-screen console: every linked acquisition, and the needle lab. */
+function consoleLab(lab: Lab | undefined) {
+  return (
+    (lab?.kind === 'simulator' && !!lab.linkedLesson) ||
+    (lab?.kind === 'model' && lab.modelPackage === 'needle')
+  )
+}
 function LessonSession({
   lesson,
   locale,
@@ -380,14 +394,12 @@ function LessonSession({
   /*
    * A linked acquisition is worked in a console that fits one screen: task, checklist and the
    * Hold button in a strip, the three views under it, nothing to scroll (visual review of
-   * 2026-10-07, item 1). Recorded-clip and model labs keep the reading layout for now.
+   * 2026-10-07, item 1). The needle lab is laid out the same way: its handle, scope tip,
+   * ultrasound picture and steps share one screen. Recorded-clip and the other model labs keep
+   * the reading layout for now.
    */
   const consoleStage =
-    !finished &&
-    !reviewId &&
-    current.interaction === 'acquire' &&
-    runtimeLab?.kind === 'simulator' &&
-    !!runtimeLab.linkedLesson
+    !finished && !reviewId && current.interaction === 'acquire' && consoleLab(runtimeLab)
   useLessonChromeClearance(lessonFlow, lessonChrome, consoleStage)
   useEffect(() => {
     if (!continueWhenReady) return
@@ -436,7 +448,8 @@ function LessonSession({
       : figure === 'clip-needle'
         ? 'needle-in-node'
         : undefined
-  const clipStep = !!clipSlug
+  /** A step with a figure of its own shows that figure, not the lab the lesson ran before it. */
+  const clipStep = !!clipSlug || figure === 'needle-tip'
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * A briefing with a live example shows a short lead, then the three views, then the rest of the
@@ -835,7 +848,12 @@ function LessonSession({
         >
           <div className={styles.taskHeading}>
             <p className={styles.eyebrow} data-activity-kind={current.kind}>
-              {reviewId ? 'Review · Current activity paused' : KIND_LABELS[current.kind]}
+              {reviewId
+                ? 'Review · Current activity paused'
+                : current.kind === 'debrief' && current.image !== 'held'
+                  ? // An explanation read on a figure is not the learner's own image.
+                    'Explanation'
+                  : KIND_LABELS[current.kind]}
             </p>
             <h2 id="ebus-task-title" ref={heading} tabIndex={-1}>
               {finished ? 'Lesson finished' : current.title}
@@ -933,7 +951,7 @@ function LessonSession({
                   demonstration
                   sessionId={sessionId + '-' + content.id + '-demonstration'}
                   onObservation={onObservation}
-                  console={content.lab.kind === 'simulator' && !!content.lab.linkedLesson}
+                  console={consoleLab(content.lab)}
                 />
               ) : current.image === 'reference' && content.station ? (
                 <StationFigure key={content.station} station={content.station} allowSelect />
@@ -966,6 +984,8 @@ function LessonSession({
                   }
                   station={content.station}
                 />
+              ) : figure === 'needle-tip' ? (
+                <NeedleTipFigure />
               ) : figure === 'ultrasound' || figure === 'needle' ? (
                 <TeachingDiagram kind={figure} />
               ) : null}

@@ -530,40 +530,58 @@ describe('the examination record', () => {
   })
 })
 
-/* L21-4: a stop after a plane change answered with the resistance message. */
-describe('the needle model separates a lost plane from resistance', () => {
-  const advanceToLiveTip = () => {
+/*
+ * L21-4: each reason the needle is held gets its own message. The rebuilt lab (2026-11-11) has no
+ * event buttons, so the reasons are the learner's own: the tip turned out of the image, a stop
+ * set too long, an exposed needle at removal.
+ */
+describe('the needle lab says why the needle is held', () => {
+  const inNode = () => {
     let state = initialModelState('needle') as NeedleState
-    state = modelReducer(state, { type: 'sheath', value: 1 }) as NeedleState
-    state = modelReducer(state, { type: 'secure' }) as NeedleState
-    state = modelReducer(state, { type: 'extend' }) as NeedleState
-    expect(state.steps).toContain('live-tip')
+    for (const action of [
+      { type: 'sheath', value: 1 },
+      { type: 'secure' },
+      { type: 'stop', value: 19 },
+      { type: 'needle', value: 19 },
+    ])
+      state = modelReducer(state, action) as NeedleState
+    expect(state.steps).toContain('in-node')
     return state
   }
 
-  it('tells a plane-change stop to restore the view of the tip', () => {
-    const lost = modelReducer(advanceToLiveTip(), { type: 'lost' }) as NeedleState
-    const stopped = modelReducer(lost, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('not identified in the imaging plane')
-    expect(stopped.notice).not.toContain('adding force')
-    expect(stopped.steps).toContain('lost-tip-stop')
-    expect(stopped.stopped).toBe(true)
+  it('tells a lost tip to be brought back by turning the scope, not by advancing', () => {
+    const lost = modelReducer(inNode(), { type: 'rotate', value: 6 }) as NeedleState
+    expect(lost.notice).toContain('The tip has left the image')
+    expect(lost.notice).toContain('turn the scope back')
+    const drawnBack = modelReducer(lost, { type: 'needle', value: 15 }) as NeedleState
+    const pushed = modelReducer(drawnBack, { type: 'needle', value: 19 }) as NeedleState
+    expect(pushed.extension).toBe(15)
+    expect(pushed.notice).toContain('Do not advance')
+    expect(pushed.notice).not.toContain('stop was set too long')
   })
 
-  it('keeps the resistance message for a resistance stop', () => {
-    const resisted = modelReducer(advanceToLiveTip(), { type: 'resistance' }) as NeedleState
-    const stopped = modelReducer(resisted, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('do not overcome resistance by adding force')
-    expect(stopped.steps).toContain('resistance-stop')
+  it('credits the recovery only when the tip returns', () => {
+    const lost = modelReducer(inNode(), { type: 'rotate', value: 6 }) as NeedleState
+    expect(lost.steps).not.toContain('tip-recovered')
+    const back = modelReducer(lost, { type: 'rotate', value: 0 }) as NeedleState
+    expect(back.steps).toContain('tip-recovered')
+    expect(back.notice).toBe('The tip is back in the image.')
   })
 
-  it('names both when both are true', () => {
-    const lost = modelReducer(advanceToLiveTip(), { type: 'lost' }) as NeedleState
-    const both = modelReducer(lost, { type: 'resistance' }) as NeedleState
-    const stopped = modelReducer(both, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('out of the imaging plane')
-    expect(stopped.notice).toContain('adding force')
-    expect(stopped.steps).toEqual(expect.arrayContaining(['lost-tip-stop', 'resistance-stop']))
+  it('names a stop set too long, and never credits it', () => {
+    let state = initialModelState('needle') as NeedleState
+    for (const action of [
+      { type: 'sheath', value: 1 },
+      { type: 'secure' },
+      { type: 'stop', value: 22 },
+    ])
+      state = modelReducer(state, action) as NeedleState
+    expect(state.steps).not.toContain('stop')
+    expect(state.notice).toContain('can pass the far side of the node')
+    const through = modelReducer(state, { type: 'needle', value: 22 }) as NeedleState
+    expect(through.notice).toContain('The stop was set too long')
+    expect(through.notice).not.toContain('The tip has left the image')
+    expect(through.steps).not.toContain('in-node')
   })
 })
 
