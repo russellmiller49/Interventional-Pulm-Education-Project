@@ -146,6 +146,7 @@ export function ScopeView({
   segmental,
   onReady,
   falloffMm,
+  plainRim = false,
 }: {
   position: Vec3
   direction: Vec3
@@ -160,6 +161,8 @@ export function ScopeView({
   onReady?: (ready: boolean) => void
   /** How far the scope's light carries here, in millimetres. */
   falloffMm?: number
+  /** No patient directions on the rim: which way is up is what the learner is working out. */
+  plainRim?: boolean
 }) {
   const [projected, setProjected] = useState<ProjectedOpening[]>([])
   const [ready, setReady] = useState(false)
@@ -178,8 +181,9 @@ export function ScopeView({
   const anchors = useMemo(() => JSON.parse(anchorKey) as ScopeOpening[], [anchorKey])
   const onProject = useCallback((results: ProjectedOpening[]) => setProjected(results), [])
   const compass = useMemo(
-    () => compassLetters(direction, up, lookKind(direction) === 'level', segmental),
-    [direction, up, segmental],
+    () =>
+      plainRim ? [] : compassLetters(direction, up, lookKind(direction) === 'level', segmental),
+    [direction, up, segmental, plainRim],
   )
   const placed = moving
     ? []
@@ -197,6 +201,7 @@ export function ScopeView({
         .map((v) => v.toFixed(3))
         .join(',')}`}
       data-scope-moving={moving || undefined}
+      data-scope-plain-rim={plainRim || undefined}
     >
       <ScopeCanvas
         position={position}

@@ -14,7 +14,9 @@ import {
   totalMinutes,
 } from '../content/nav-lessons'
 import { ASSESS_TARGET_IDS, TARGET_IDS } from '../content/targets'
+import { ROLL_MINUTES, ROLL_OBJECTIVE, ROLL_TITLE } from '../content/roll-copy'
 import { DEMO_LESSON_ID } from '../engine/demo-script'
+import { ROLL_DRILL_ID } from '../engine/roll-drill'
 import { recommendedLesson } from '../engine/selfPacedProgress'
 import { CruiseChoice } from './CruiseChoice'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
@@ -160,6 +162,30 @@ export function BranchTracingOverview() {
               </ol>
             </div>
           ))}
+          {/* Not a lesson group: the drill is beside the course, not one of its lessons. */}
+          <div data-drill>
+            <h3 className={styles.small}>Drill, after the lessons</h3>
+            <ol className={styles.lessonList}>
+              <li>
+                <span className={styles.lessonNumber}>·</span>
+                <div>
+                  <Link href={lessonHref(ROLL_DRILL_ID)}>{ROLL_TITLE}</Link>
+                  <p>{ROLL_OBJECTIVE}</p>
+                </div>
+                <span>
+                  {record.reviewedLessonIds.includes(ROLL_DRILL_ID) ? (
+                    <>
+                      <strong>Reached the end</strong> · about {ROLL_MINUTES} min
+                    </>
+                  ) : record.visitedLessonIds.includes(ROLL_DRILL_ID) ? (
+                    `Opened · about ${ROLL_MINUTES} min`
+                  ) : (
+                    `about ${ROLL_MINUTES} min`
+                  )}
+                </span>
+              </li>
+            </ol>
+          </div>
         </section>
         <div className={styles.introGrid}>
           <section>

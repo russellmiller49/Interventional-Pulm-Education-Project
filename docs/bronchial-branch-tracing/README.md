@@ -211,6 +211,22 @@ Not built: cartilage rings and the folds of the posterior wall. They need the di
    - The number of divisions is shown before the lesion is opened. Say if you would rather it were not.
 4. **The closing set has a summary** on its list once one of its lesions is reached: a row for each of the three, with planning steps, divisions drawn and openings chosen at the first check, and branches that led away.
 
+### Changed on November 10, 2026 (round 6: the scope has rolled), for your read
+
+1. **A drill after the lessons: "The scope has rolled"** (`engine/roll-drill.ts`, `components/RollDrillBench.tsx`, `content/roll-copy.ts`). It drives two routes from the lessons (the RB1 lesion of lessons 3 and 4, and the RB5 lesion of lesson 7), five stops in all. Each route opens at its segmental ostium, where the picture carries the map's directions. From there the scope drives to each division with a fixed roll applied (a quarter turn, a half turn, 135° and 45°, both ways round), stops with a rim that says nothing, and the learner turns the map in 45° steps until it sits as the picture does, checks it, and takes the opening the map marks.
+   - **The check** accepts the map within 45° of the picture. A half turn out and a quarter turn out are named. A half turn out is the one a carina cannot settle: two openings on a line look the same either way up.
+   - **The drive in is the cue.** The roll is applied during the drive, so the picture is seen turning, and "Watch the drive in again" replays it. Replays are counted, not held against the learner.
+   - Along a route the map stays as the learner left it; a new route starts with its map as drawn.
+   - The closing card gives two counts (map turned at the first check, opening taken at the first choice) and leads to Practice. Nothing is saved but that the drill was opened and reached.
+2. **Where it sits.** The hub lists it after the lessons; the last lesson's closing card leads to it; its address is `/learn?lesson=the-scope-has-rolled`. It is not one of the seven numbered lessons, so the course's count and minutes are unchanged.
+3. **Shared pieces.** `rollPose` in `geometry/route-stations.ts` turns the picture about the line of sight and nothing else. `components/useDriveClock.ts` is the drill's drive clock. `geometry/opening-anchors.ts` is where an opening's number is anchored; the navigation bench now uses it too. `ScopeView` takes `plainRim` to leave the rim's directions off.
+
+Not built in this round, and why:
+
+- **The rolled scope as an option on Practice lesions.** The navigation bench says where each opening sits in the view ("upper left"), which way the scope is looking, and what lies toward the lesion, all worked out for the unrolled picture. Under a roll every one of those sentences would be false until it is recomputed, and the "Turn the map to the scope" switch would give the turn away. That is a pass over the bench's sentences of its own, not an option to switch on.
+- **Turning the map by dragging.** The map is turned with the two buttons or the arrow keys.
+- **Taking the drive clock out of the navigation bench and splitting it into panes** (carried from round 3). The drill has its own small bench and clock, so nothing here needed it. It remains a refactor with no change the learner sees.
+
 ## Earlier design records
 
 These describe the course this one replaced and are kept as history: [flow redesign](flow-redesign.md), [its validation](flow-redesign-validation.md), [instructional update](instructional-update.md), [module brief](module-brief.md), [QA report](qa-report.md), [orientation QA](orientation-qa-report.md), [branch-decisions QA](branch-decisions-qa-report.md), [architecture decision](architecture-decision.md), and the screenshots under [review/](review/). The data records still apply: [source and coordinate audit](audit.md), [nomenclature](nomenclature-review.md), [nodule targets](nodule-target-review.md), [clinical review boundary](clinical-review.md), [Slicer export evidence](native-export-review.json).
