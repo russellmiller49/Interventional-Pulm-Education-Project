@@ -334,45 +334,235 @@ def build_accessories():
     print('Built six authored accessory states and device dimensions.')
 
 
-def build_larynx(source):
-    """Author a wall shell around a registered cartilage/ligament reference.
+def organic(vertices, faces, thickness=0.0, levels=2):
+    """Round an authored control mesh: optional wall thickness, then subdivision."""
+    mesh = bpy.data.meshes.new('authored')
+    mesh.from_pydata([tuple(v) for v in vertices], [], [tuple(f) for f in faces])
+    obj = bpy.data.objects.new('authored', mesh)
+    bpy.context.collection.objects.link(obj)
+    if thickness:
+        solid = obj.modifiers.new('Thickness', 'SOLIDIFY')
+        solid.thickness, solid.offset = thickness, 0
+    if levels:
+        obj.modifiers.new('Rounded', 'SUBSURF').levels = levels
+    evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    result = evaluated.to_mesh()
+    bm = bmesh.new()
+    bm.from_mesh(result)
+    bmesh.ops.triangulate(bm, faces=list(bm.faces))
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.verts.index_update()
+    out = ([tuple(v.co) for v in bm.verts], [tuple(v.index for v in f.verts) for f in bm.faces])
+    bm.free()
+    evaluated.to_mesh_clear()
+    bpy.data.objects.remove(obj)
+    return out
 
-    The shell is watertight, with patent luminal end rings. It is display geometry,
+
+def sheet(point, nu, nv):
+    """A grid surface from point(u, v), u and v in 0..1."""
+    vertices = [point(i / (nu - 1), j / (nv - 1)) for j in range(nv) for i in range(nu)]
+    faces = [(j * nu + i, j * nu + i + 1, (j + 1) * nu + i + 1, (j + 1) * nu + i)
+             for j in range(nv - 1) for i in range(nu - 1)]
+    return vertices, faces
+
+
+def tube(points, radii, sides=10, flatten=1.0):
+    """A capped, rounded tube along a polyline, with a radius at each point.
+
+    `flatten` scales the section across the model's long axis, for a bar that is taller than thick.
+    """
+    points = [Vector(p) for p in points]
+    vertices, faces = [], []
+    long_axis = Vector((0, 0, 1))
+    for i, point in enumerate(points):
+        tangent = (points[min(i + 1, len(points) - 1)] - points[max(i - 1, 0)]).normalized()
+        reference = long_axis if abs(tangent.dot(long_axis)) < 0.9 else Vector((0.31, 0.95, 0))
+        side = tangent.cross(reference).normalized()
+        up = side.cross(tangent)
+        for k in range(sides):
+            a = 2 * math.pi * k / sides
+            vertices.append(tuple(point + (side * math.cos(a) * flatten + up * math.sin(a)) * radii[i]))
+    for i in range(len(points) - 1):
+        for k in range(sides):
+            a, b = i * sides + k, i * sides + (k + 1) % sides
+            faces.append((a, b, b + sides, a + sides))
+    for index, flip in ((0, True), (len(points) - 1, False)):
+        centre = len(vertices)
+        vertices.append(tuple(points[index]))
+        for k in range(sides):
+            tri = (index * sides + k, index * sides + (k + 1) % sides, centre)
+            faces.append(tri[::-1] if flip else tri)
+    return organic(vertices, faces, levels=1)
+
+
+def hull(points):
+    """The convex hull of a few points, as a control mesh to round."""
+    bm = bmesh.new()
+    verts = [bm.verts.new(p) for p in points]
+    bmesh.ops.convex_hull(bm, input=verts)
+    bm.verts.index_update()
+    out = ([tuple(v.co) for v in bm.verts], [tuple(v.index for v in f.verts) for f in bm.faces])
+    bm.free()
+    return out
+
+
+def larynx_framework(radii, relief):
+    """The laryngeal skeleton, authored for this model: no supplied mesh is read or reused.
+
+    Coordinates are the larynx model's own: x toward the patient's left, y anterior, z the distance
+    down the scope's path in millimetres (the glottis is at 30, the model's exit at 45). The
+    cartilages are placed round the authored mucosal tube. Their overall proportions were checked
+    against the owner's own head-and-neck CT segmentation (thyroid cartilage about 46 mm wide,
+    cricoid about 35 by 32 mm, hyoid about 41 mm wide); a published larynx model was looked at for
+    the shapes and none of its geometry is used. Presentation values for a teaching model, not
+    measurements of a patient.
+    """
+    def smooth(t):
+        t = max(0.0, min(1.0, t))
+        return t * t * (3 - 2 * t)
+
+    # Thyroid cartilage: two laminae meeting in front at the laryngeal prominence, with the notch
+    # above it; one sheet across both sides, creased on the midline.
+    def thyroid_edge(u):
+        # The upper border climbs from the notch to the superior tubercle and runs back to the horn;
+        # the lower border dips at the inferior tubercle.
+        top = 21.0 - 10.5 * smooth(u / 0.24) + 1.4 * smooth((u - 0.4) / 0.5)
+        bottom = 38.0 + 1.8 * math.exp(-((u - 0.62) / 0.16) ** 2) - 1.2 * math.exp(-((u - 0.25) / 0.18) ** 2)
+        return top, bottom
+
+    def thyroid_point(w, v):
+        u = abs(w)
+        top, bottom = thyroid_edge(u)
+        depth = top + (bottom - top) * v
+        prominence = 1.6 * math.exp(-(u / 0.16) ** 2) * math.exp(-((depth - 25) / 6) ** 2)
+        x = 21.8 * u ** 0.8 * (1 + 0.05 * math.sin(math.pi * v))
+        return (math.copysign(x, w) if u > 1e-9 else 0.0, 13.0 - 25.5 * u ** 1.12 + prominence, depth)
+
+    thyroid = [organic(*sheet(lambda a, b: thyroid_point(2 * a - 1, b), 33, 13), thickness=2.4, levels=2)]
+    back = thyroid_point(1, 0.5)
+    for sign in (1, -1):
+        x, y = sign * back[0], back[1]
+        thyroid.append(tube([(x, y + 1.0, 16), (x + sign * 0.4, y - 0.8, 9), (x, y - 2.2, 3), (x - sign * 1.2, y - 2.8, -0.5)],
+                            [2.0, 1.7, 1.4, 1.2]))
+        thyroid.append(tube([(x, y + 1.0, 36.5), (x - sign * 2.4, y + 1.6, 41.5), (x - sign * 7.8, y + 3.6, 45.0)],
+                            [2.0, 1.8, 1.7]))
+
+    # Cricoid: a signet ring, a low arch in front and a tall lamina behind.
+    def cricoid_ring(theta):
+        behind = smooth((-math.sin(theta) - 0.1) / 0.7)
+        wall = 3.0 + 1.2 * behind
+        ix, iy = 8.6 * math.cos(theta), -0.5 + 9.2 * math.sin(theta)
+        ox, oy = (8.6 + wall) * math.cos(theta), -0.5 + (9.2 + wall) * math.sin(theta)
+        top, bottom = 42.5 - 15.0 * behind, 48.5 + 0.8 * behind
+        return [(ix, iy, top), (ox, oy, top), (ox, oy, bottom), (ix, iy, bottom)]
+
+    count = 48
+    ring_vertices, ring_faces = [], []
+    for i in range(count):
+        ring_vertices.extend(cricoid_ring(2 * math.pi * i / count))
+    for i in range(count):
+        for k in range(4):
+            a, b = i * 4 + k, i * 4 + (k + 1) % 4
+            c, d = ((i + 1) % count) * 4 + (k + 1) % 4, ((i + 1) % count) * 4 + k
+            ring_faces.append((d, c, b, a))
+    cricoid = organic(ring_vertices, ring_faces, levels=2)
+
+    # Arytenoids: a pyramid on each shoulder of the cricoid lamina, vocal process forward,
+    # muscular process out to the side, with the corniculate cartilage on its apex.
+    arytenoids = {}
+    for side, sign in (('L', 1), ('R', -1)):
+        body = organic(*hull([(sign * 3.6, -4.6, 29.6), (sign * 10.4, -9.6, 28.4), (sign * 3.4, -11.2, 27.8),
+                              (sign * 4.6, -10.0, 16.8), (sign * 7.4, -7.4, 27.0), (sign * 6.2, -11.6, 24.5),
+                              (sign * 3.2, -9.2, 22)]), levels=2)
+        tip = primitive_mesh('sphere', (sign * 4.2, -10.6, 15.8), (1.4, 1.5, 1.7))
+        arytenoids[side] = [body, tip]
+
+    # Epiglottis: a leaf standing on its stalk inside the thyroid angle, lying on the front wall of
+    # the vestibule and rising above the inlet behind the hyoid. Its edges turn backward.
+    def front_wall(depth):
+        return radii(max(depth, 0))[1] - relief(math.pi / 2, max(depth, 0))
+
+    def epiglottis_point(a, b):
+        w = 2 * a - 1
+        depth = 24 - 37 * b
+        lean = 0.02 * depth * depth if depth < 0 else 0.0
+        centre = front_wall(depth) + 1.3 - lean
+        # A narrow stalk inside the thyroid angle, widening only above the cartilage's upper border.
+        half = 1.3 + 7.9 * smooth((b - 0.14) / 0.42) * (1 - 0.4 * smooth((b - 0.72) / 0.28))
+        return (w * half, centre - 4.4 * w * w * (half / 9.2), depth)
+
+    epiglottis = organic(*sheet(epiglottis_point, 13, 25), thickness=1.8, levels=2)
+
+    # Hyoid: a flattened body in front, the greater horns running back, the lesser horns on the joins.
+    arc = [math.radians(48 + 84 * i / 10) for i in range(11)]
+    bar = [(17.5 * math.cos(a), -1.0 + 17.5 * math.sin(a), -4.5) for a in arc]
+    hyoid = [tube(bar, [2.6, 3.3] + [3.9] * 7 + [3.3, 2.6], sides=12, flatten=0.5)]
+    for sign in (1, -1):
+        start = (sign * abs(bar[0][0]), bar[0][1], -4.5)
+        hyoid.append(tube([start, (sign * 16.0, 6.5, -5.0), (sign * 19.6, -3.0, -6.0), (sign * 21.4, -12.0, -7.0),
+                           (sign * 21.8, -15.5, -7.6)], [2.5, 2.3, 1.9, 1.6, 1.9], sides=12, flatten=0.65))
+        hyoid.append(tube([start, (sign * 12.8, 11.2, -8.6), (sign * 12.2, 10.0, -11.2)], [1.5, 1.2, 0.6]))
+
+    # The first tracheal rings below the cricoid: C-shaped, open behind.
+    rings = []
+    for depth in (52.6, 57.6, 62.6):
+        angles = [math.radians(-52 + 284 * i / 24) for i in range(25)]
+        rings.append(tube([(8.6 * math.cos(a), -0.3 + 8.6 * math.sin(a), depth) for a in angles],
+                          [2.0] * 25, flatten=0.5))
+
+    # The tracheal wall the rings sit on, for the outside view only: the scope view draws the
+    # case's own trachea below the model's exit.
+    def trachea(a, b):
+        radius = 6.9 + 0.6 * smooth(b / 0.4)
+        return (radius * math.cos(2 * math.pi * a), -0.3 * b + radius * math.sin(2 * math.pi * a), 45 + 21 * b)
+
+    # Membranes: the thyrohyoid membrane hanging from the hyoid to the thyroid cartilage's upper
+    # border, and the median cricothyroid ligament between that cartilage and the cricoid arch.
+    def thyrohyoid(a, b):
+        w = 2 * a - 1
+        u = abs(w)
+        if u < 0.42:
+            angle = math.radians(90 - 100 * w)
+            upper = (17.5 * math.cos(angle), -1.0 + 17.5 * math.sin(angle), -2.2)
+        else:
+            t = (u - 0.42) / 0.58
+            sign = 1 if w > 0 else -1
+            upper = (sign * (11.7 + 8.6 * t), 12.0 - 25.0 * t ** 1.1, -2.6 - 3.2 * t)
+        lower = thyroid_point(w, 0.0)
+        # It bows a little forward over the fat in front of the epiglottis.
+        bow = 1.0 * math.sin(math.pi * b) * (1 - u) ** 2
+        return tuple(upper[k] + (lower[k] - upper[k]) * b + (bow if k == 1 else 0) for k in range(3))
+
+    def cricothyroid(a, b):
+        w = (2 * a - 1) * 0.3
+        upper = thyroid_point(w, 1.0)
+        theta = math.radians(90 - 110 * w)
+        lower = (11.4 * math.cos(theta), -0.5 + 12.0 * math.sin(theta), 42.6)
+        return tuple(upper[k] + (lower[k] - upper[k]) * b for k in range(3))
+
+    return {
+        'UA_thyroid': thyroid,
+        'UA_cricoid': [cricoid],
+        'UA_arytenoid_L': arytenoids['L'],
+        'UA_arytenoid_R': arytenoids['R'],
+        'UA_epiglottis': [epiglottis],
+        'UA_hyoid': hyoid,
+        'UA_tracheal_rings': rings,
+        'UA_trachea_wall': [organic(*sheet(trachea, 33, 8), levels=1)],
+        'UA_thyrohyoid_membrane': [organic(*sheet(thyrohyoid, 25, 5), levels=1)],
+        'UA_cricothyroid_ligament': [organic(*sheet(cricothyroid, 9, 4), levels=1)],
+    }
+
+
+def build_larynx():
+    """Author the model larynx: mucosal wall, folds and the laryngeal skeleton round them.
+
+    Every mesh is authored here. No supplied model is read.
+    The wall shells are watertight, with patent luminal end rings. They are display geometry,
     not an air-volume collider; the existing engine scripts glottic passage.
     Source-inlet preservation is enforced; the junction remains explicitly pending.
     """
-    source_doc, access = read_glb(source)
-    flattened = {}
-
-    def visit(index, parent):
-        node = source_doc['nodes'][index]
-        if 'matrix' in node:
-            values = node['matrix']
-            local = Matrix([values[i::4] for i in range(4)])
-        else:
-            q = node.get('rotation', [0, 0, 0, 1])
-            local = Matrix.LocRotScale(Vector(node.get('translation', [0, 0, 0])),
-                                       Quaternion((q[3], *q[:3])), Vector(node.get('scale', [1, 1, 1])))
-        world = parent @ local
-        if 'mesh' in node:
-            pieces = []
-            for primitive in source_doc['meshes'][node['mesh']]['primitives']:
-                verts = [tuple(world @ Vector(p)) for p in access(primitive['attributes']['POSITION'])]
-                indices = [p[0] for p in access(primitive['indices'])]
-                pieces.append((verts, list(zip(indices[::3], indices[1::3], indices[2::3]))))
-            flattened[node['name']] = join_meshes(node['name'], pieces)
-        for child in node.get('children', []):
-            visit(child, world)
-
-    for index in source_doc['scenes'][source_doc.get('scene', 0)]['nodes']:
-        visit(index, Matrix.Identity(4))
-    vocal = flattened['Vocal_Ligament']['vertices'] + flattened['Vical_Ligament01']['vertices']
-    center = sum((Vector(v) for v in vocal), Vector()) / len(vocal)
-    cricoid = flattened['Cricoid_cartilage']['vertices']
-    epiglottis = flattened['Epoglottis']['vertices']
-    scales = [18 / (max(p[0] for p in cricoid) - min(p[0] for p in cricoid)),
-              25 / (max(p[1] for p in epiglottis) - center.y),
-              16 / (max(p[2] for p in cricoid) - min(p[2] for p in cricoid))]
     # Use the engine's two-millimetre proximal tangent, avoiding rounded 0.01 mm samples.
     root = Vector(next(n for n in GRAPH['graph']['nodes'] if n['id'] == 0)['lps'])
     points = [Vector(p) for p in next(e for e in GRAPH['graph']['edges'] if e['id'] == 0)['pointsLps']]
@@ -389,10 +579,6 @@ def build_larynx(source):
 
     def to_lps(p):
         return tuple(root + left * p[0] + anterior * p[1] + forward * (p[2] - 45))
-
-    def register(p):
-        return ((p[0] - center.x) * scales[0], (p[2] - center.z) * scales[2],
-                30 - (p[1] - center.y) * scales[1])
 
     stations = [(0, 12, 11), (10, 10.5, 10), (22, 9.2, 9), (30, 8.4, 8.1),
                 (36, 6.8, 6.8), (45, 6.11, 6.11)]
@@ -577,17 +763,16 @@ def build_larynx(source):
                 obj['morph'] = morph
                 obj['extras'] = {'morphStates': {'abducted': 0, 'narrowing': 0.5, 'adducted': 1}}
             objects.append(obj)
-    reused = {'Epoglottis': 'UA_epiglottis', 'Left_Arytenoid_cartilage': 'UA_arytenoid_L',
-              'Right_Arytenoid_cartilage': 'UA_arytenoid_R'}
-    for old, new in reused.items():
-        src = flattened[old]
-        objects.append(join_meshes(new, [([register(p) for p in src['vertices']], src['faces'])],
-                                  extras={'origin': 'registered cartilage reference; authored mucosal appearance'}))
-    # Cartilage and ligament framework is optional and hidden by the eventual scene by default.
-    skeleton = [([register(p) for p in obj['vertices']], obj['faces']) for name, obj in flattened.items()
-                if name not in reused and name != 'Trachea']
-    objects.append(join_meshes('UA_skeleton', skeleton, color=[0.67, 0.77, 0.76, 1],
-                               extras={'defaultVisible': False, 'origin': 'registered cartilage and ligament reference'}))
+    # The laryngeal skeleton. The scope view hides it; the outside view draws it.
+    looks = {'UA_thyroid': [0.86, 0.84, 0.74, 1], 'UA_cricoid': [0.86, 0.84, 0.74, 1],
+             'UA_arytenoid_L': [0.86, 0.84, 0.74, 1], 'UA_arytenoid_R': [0.86, 0.84, 0.74, 1],
+             'UA_epiglottis': [0.9, 0.8, 0.56, 1], 'UA_hyoid': [0.92, 0.89, 0.8, 1],
+             'UA_tracheal_rings': [0.86, 0.84, 0.74, 1], 'UA_trachea_wall': [0.8, 0.5, 0.45, 1],
+             'UA_thyrohyoid_membrane': [0.8, 0.62, 0.55, 1], 'UA_cricothyroid_ligament': [0.8, 0.62, 0.55, 1]}
+    for name, pieces in larynx_framework(radii, relief).items():
+        objects.append(join_meshes(name, pieces, color=looks[name],
+                                   extras={'defaultVisible': False, 'structure': 'laryngeal framework',
+                                           'origin': 'authored for this model'}))
     for obj in objects:
         obj['vertices'] = [to_lps(p) for p in obj['vertices']]
         if obj.get('morph'):
@@ -600,9 +785,11 @@ def build_larynx(source):
               'numberClass': 'authored-for-simulation', 'authoredDate': '2026-11-11',
               'pathLps': [list(to_lps((0, 0, i * 0.5))) for i in range(91)], 'glottisMm': 30, 'exitMm': 45,
               'exitRingLps': ring, 'frameLps': {'forward': list(forward), 'left': list(left), 'anterior': list(anterior)},
-              'sourceSha256': hashlib.sha256(Path(source).read_bytes()).hexdigest(),
-              'registration': {'method': 'Authored nonrigid reference placement: paired vocal-ligament centroid at the 30 mm glottis, cricoid reference 18 mm lateral by 16 mm anteroposterior, epiglottis superior edge at 5 mm.',
-                               'sourceVocalCentroid': list(center), 'sourceToModelAxisScales': scales},
+              'skeleton': {'origin': 'Authored for this model. No supplied mesh is read or reused.',
+                           'proportions': "Checked against the owner's head-and-neck CT segmentation: thyroid cartilage about 46 mm wide, hyoid about 41 mm wide. The cricoid is sized to this model's airway.",
+                           'nodes': ['UA_thyroid', 'UA_cricoid', 'UA_arytenoid_L', 'UA_arytenoid_R', 'UA_epiglottis',
+                                     'UA_hyoid', 'UA_tracheal_rings', 'UA_trachea_wall', 'UA_thyrohyoid_membrane',
+                                     'UA_cricothyroid_ligament']},
               'authoredParameters': {'radialSegments': 96, 'longitudinalSpacingMm': 0.5, 'wallThicknessMm': 0.75,
                                      'lumenStationsMm': stations,
                                      'trueFolds': 'Rounded bands lofted from the anterior commissure to the vocal process; triangular glottis, free edge at 30 mm.',
@@ -625,7 +812,6 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--part', required=True, choices=['lumen', 'accessories', 'larynx'])
     p.add_argument('--source-lumen', type=Path)
-    p.add_argument('--source-larynx', type=Path)
     args = p.parse_args(sys.argv[sys.argv.index('--') + 1:])
     CACHE.mkdir(parents=True, exist_ok=True)
     if args.part == 'lumen':
@@ -635,6 +821,4 @@ if __name__ == '__main__':
     elif args.part == 'accessories':
         build_accessories()
     elif args.part == 'larynx':
-        if not args.source_larynx:
-            p.error('--source-larynx is required; the reference is read-only')
-        build_larynx(args.source_larynx)
+        build_larynx()
