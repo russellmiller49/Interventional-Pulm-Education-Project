@@ -10,6 +10,7 @@ import {
   commitChoice,
   currentStepId,
   installDom,
+  leaveTask,
   mountSection,
 } from '../test-support/stageHarness'
 
@@ -57,18 +58,35 @@ afterEach(() => {
 })
 
 describe('which steps name a section figure', () => {
-  it('is every task of the opening section, and no step of any other', () => {
+  it('is every task of the opening section, and the flow section’s reading, questions and Explain cards', () => {
     for (const sectionId of hemodynamicsSectionIds) {
       const lesson = hemodynamicsStageLesson(sectionId)
       for (const step of lesson.steps) {
         const { figure: named } = hemodynamicsTaskPresentation(sectionId, step)
-        expect(named).toBe(sectionId === 'why-measure' ? 'pac-parts' : 'none')
+        const kind = step.interaction.kind
+        const expected =
+          sectionId === 'why-measure'
+            ? 'pac-parts'
+            : sectionId === 'thermodilution-series' &&
+                (kind === 'read' || kind === 'prediction' || kind === 'explain')
+              ? 'td-curve'
+              : 'none'
+        expect({ step: step.id, named }).toEqual({ step: step.id, named: expected })
       }
     }
     // The opening section has no case, so every one of its tasks has the drawing.
     expect(
       hemodynamicsStageLesson('why-measure').steps.some((step) => step.interaction.kind === 'case'),
     ).toBe(false)
+    // In the flow section: not the series the learner judges, the Fick reading, the comparison of
+    // the two methods or the case, each of which has its own screen.
+    expect(
+      hemodynamicsStageLesson('thermodilution-series')
+        .steps.filter(
+          (step) => hemodynamicsTaskPresentation('thermodilution-series', step).figure === 'none',
+        )
+        .map((step) => step.interaction.kind),
+    ).toEqual(['simulator-task', 'observe', 'disagreement', 'case'])
   })
 })
 
@@ -130,6 +148,63 @@ describe('the opening section on the stage', () => {
     )!
     fireEvent.click(show)
     expect(functions()).toBe('shown')
+  })
+})
+
+describe('the flow section on the stage', () => {
+  const curve = () => document.querySelector<HTMLElement>('[data-section-figure="td-curve"]')
+
+  it('keeps the reference curve beside both pages of its first task, its parts named', () => {
+    mountSection('thermodilution-series')
+    // Page one names the parts of the raw record in words; the curve is beside it.
+    expect(document.querySelector('[data-reading-part="td-method"]')).not.toBeNull()
+    expect(curve()!.closest('[data-flow-visual]')).not.toBeNull()
+    expect(document.querySelector('[data-single-column]')).toBeNull()
+    const names = [...curve()!.querySelectorAll('[data-curve-names] text')].map((text) =>
+      text.textContent?.trim(),
+    )
+    expect(names).toEqual(['baseline', 'onset', 'peak change', 'decay back toward baseline'])
+    // The caption is the method's own sentence about the raw record.
+    expect(curve()!.querySelector('[data-curve-record]')).toHaveTextContent(
+      /stable baseline, an onset, a peak change away from baseline, a decay back toward baseline/,
+    )
+
+    // Page two used to hold the only drawing. It now points at the one beside it.
+    clickPrimary()
+    expect(document.querySelector('[data-reading-part="td-curve"]')).not.toBeNull()
+    expect(curve()).not.toBeNull()
+    expect(
+      document.querySelectorAll('[data-now-card] svg[class*="thermoTrialCurve"]'),
+    ).toHaveLength(0)
+    expect(document.querySelector('[data-now-card] [data-figure-pointer]')).toHaveTextContent(
+      'The reference curve is the drawing of the raw record',
+    )
+  })
+
+  it('shows the same curve beside the section’s questions and Explain cards, and nowhere else', () => {
+    const { lesson } = mountSection('thermodilution-series')
+    const seen: Record<string, boolean> = {}
+    for (let guard = 0; guard < 40; guard += 1) {
+      const id = currentStepId()!
+      seen[id] = seen[id] ?? curve() !== null
+      if (id === lesson.steps.at(-1)!.id) break
+      leaveTask()
+    }
+    for (const step of lesson.steps) {
+      const kind = step.interaction.kind
+      expect({ step: step.id, curve: seen[step.id] }).toEqual({
+        step: step.id,
+        curve: kind === 'read' || kind === 'prediction' || kind === 'explain',
+      })
+    }
+  })
+
+  it('does not name the parts on a learner’s own trial: reading them off it is the task', () => {
+    const { lesson } = mountSection('thermodilution-series')
+    const series = lesson.steps.find((step) => step.interaction.kind === 'simulator-task')!
+    for (let guard = 0; currentStepId() !== series.id && guard < 20; guard += 1) leaveTask()
+    expect(currentStepId()).toBe(series.id)
+    expect(document.querySelector('[data-curve-names]')).toBeNull()
   })
 })
 

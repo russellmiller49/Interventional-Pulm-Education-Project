@@ -46,9 +46,12 @@ export function flowReadingTitle(part: FlowReadingPart): string {
 export function FlowPrerequisite({
   part,
   state,
+  figureBeside = false,
 }: {
   readonly part: FlowReadingPart
   readonly state: HemodynamicSimulationState
+  /** The section's reference curve is in the visual column, so the text only points at it. */
+  readonly figureBeside?: boolean
 }) {
   const method = requireCardiacOutputMethod('thermodilution')
   if (part.startsWith('metric:'))
@@ -98,7 +101,11 @@ export function FlowPrerequisite({
             Read temperature change over time before judging the calculated flow. This is a worked
             observation; viewing it does not review or accept a trial in your ledger.
           </p>
-          {state.thermodilutionTrials[0] ? (
+          {figureBeside ? (
+            <p data-figure-pointer>
+              The reference curve is the drawing of the raw record, with its parts named.
+            </p>
+          ) : state.thermodilutionTrials[0] ? (
             <ThermodilutionCurveFigure trial={state.thermodilutionTrials[0]} />
           ) : null}
           <dl className={styles.stopFacts}>

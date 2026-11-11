@@ -84,7 +84,7 @@ import {
 } from '../catheter-map/CatheterMap'
 import { useHemodynamicsSelfPacedRecord } from '../useHemodynamicsSelfPacedRecord'
 import { HemodynamicsExplanation, HemodynamicsQuestionBlock } from './HemodynamicsQuestion'
-import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
+import { HemodynamicsSectionFigureView, sectionFigureShows } from './HemodynamicsSectionFigureView'
 import { HemodynamicsSimulatorPane, simulatorPaneShows } from './HemodynamicsSimulatorPane'
 import { HemodynamicsSourceList } from './HemodynamicsSourceList'
 import { HemodynamicsStoryProblems } from './HemodynamicsStoryProblems'
@@ -1592,22 +1592,25 @@ function HemodynamicsStageSession({
     })
   /*
    * The section's drawing, where the step names one (`presentation.figure`). On a question that
-   * has not been answered it keeps its parts' names and holds back what each measures.
+   * has not been answered the catheter's parts keep their names and hold back what each measures.
+   * A reading part keeps the drawing beside it; a case has its own screen.
    */
   const figureAnswered =
     interaction.kind === 'sort' ? Boolean(commitments.sort) || commitments.sortShown : revealOpen
-  const sectionFigure =
-    !readingOnly && presentation.figure === 'pac-parts' ? (
-      <div className={flowStyles.sectionFigure} data-section-figure={presentation.figure}>
-        <PacComponentSchematic functions={figureAnswered} />
-      </div>
-    ) : null
+  const figureShown = !onCaseStep && sectionFigureShows(presentation.figure, state)
+  const sectionFigure = figureShown ? (
+    <HemodynamicsSectionFigureView
+      figure={presentation.figure}
+      state={state}
+      answered={figureAnswered}
+    />
+  ) : null
   const visual =
-    !readingOnly && (simulatorShown || questionFigure || sectionFigure) ? (
+    sectionFigure || (!readingOnly && (simulatorShown || questionFigure)) ? (
       <>
         {sectionFigure}
-        {simulatorShown ? simulator : null}
-        {questionFigure}
+        {!readingOnly && simulatorShown ? simulator : null}
+        {!readingOnly ? questionFigure : null}
       </>
     ) : null
 
@@ -1668,7 +1671,12 @@ function HemodynamicsStageSession({
                 />
               ) : null
             ) : readingPart ? (
-              <FlowPrerequisite key={readingPart} part={readingPart} state={state} />
+              <FlowPrerequisite
+                key={readingPart}
+                part={readingPart}
+                state={state}
+                figureBeside={figureShown}
+              />
             ) : (
               <>
                 {presentation.kind === 'case' && activeIndex === 0 ? (

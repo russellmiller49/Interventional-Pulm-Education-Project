@@ -5876,6 +5876,12 @@
   border-radius: 0.6rem;
   background: #07171d;
 }
+/* The names of the reference curve's parts, on the drawing (`named`). */
+.thermoCurveNames text {
+  fill: #d7e8ea;
+  font-size: 9px;
+  font-weight: 700;
+}
 
 .curveFeatureList {
   container-type: inline-size;

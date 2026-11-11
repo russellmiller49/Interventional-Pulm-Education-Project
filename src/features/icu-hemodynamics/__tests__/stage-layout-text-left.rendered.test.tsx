@@ -103,9 +103,10 @@ describe('Learn layout: text ahead of the visual in every task of every section'
   })
 
   it('gives a reading-only step one column at a reading measure', () => {
-    // The flow section opens on a reading part. (The opening section is no longer reading only:
-    // it keeps the catheter drawing beside its text; see `section-figure.test.tsx`.)
-    mountSection('thermodilution-series')
+    // The derived-values section opens on a reading part with no drawing of its own. (The opening
+    // section and the flow section are no longer reading only: each keeps a drawing beside its
+    // text; see `section-figure.test.tsx`.)
+    mountSection('derived-hemodynamics')
     expect(document.querySelector('[data-flow-visual]')).toBeNull()
     expect(document.querySelector('[data-single-column]')).toHaveAttribute(
       'data-single-column',
