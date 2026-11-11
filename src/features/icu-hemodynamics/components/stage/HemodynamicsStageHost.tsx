@@ -114,7 +114,12 @@ import { useHemodynamicsStageSession } from './useHemodynamicsStageSession'
 import styles from './hemodynamics-stage.module.css'
 import flowStyles from './hemodynamics-flow.module.css'
 import { HemodynamicsTaskDrafts } from './HemodynamicsTaskDrafts'
-import { FlowPrerequisite, flowReadingParts, flowReadingTitle } from './FlowPrerequisite'
+import {
+  FlowPrerequisite,
+  flowReadingParts,
+  flowReadingTitle,
+  flowTrailingParts,
+} from './FlowPrerequisite'
 import { hemodynamicsTaskPresentation } from '../../content/taskPresentation'
 
 /**
@@ -333,7 +338,20 @@ function HemodynamicsStageSession({
   const readingParts = flowReadingParts(sectionId, interaction.kind, activeStep.ordinal)
   const [readingPositions, setReadingPositions] = useState<Record<string, number>>({})
   const readingIndex = readingPositions[activeStep.id] ?? 0
-  const readingPart = lookingBack ? undefined : readingParts[readingIndex]
+  /*
+   * A task's positions: its leading pages, then its own content, then any trailing pages. The flow
+   * section's Explain task gives its explanation first and then reads the rest of the method a
+   * page at a time (`flowTrailingParts`).
+   */
+  const trailingParts = flowTrailingParts(sectionId, interaction.kind, activeStep.phase)
+  const trailingIndex = readingIndex - readingParts.length - 1
+  const readingPart = lookingBack
+    ? undefined
+    : readingIndex < readingParts.length
+      ? readingParts[readingIndex]
+      : trailingIndex >= 0
+        ? trailingParts[trailingIndex]
+        : undefined
   /*
    * The derived-values reading can compare its worked episode with one that is missing body size.
    * The choice is held here, per page, so the drawing beside the text shows the same episode.
@@ -879,6 +897,34 @@ function HemodynamicsStageSession({
           }
         : {}),
     }
+    if (readingPart && trailingIndex >= 0) {
+      const lastPage = trailingIndex >= trailingParts.length - 1
+      return {
+        ...base,
+        kicker: `${stepPosition} · The method ${trailingIndex + 1} of ${trailingParts.length}`,
+        heading: flowReadingTitle(readingPart),
+        body: 'The rest of the method, a part at a time, with the reference curve beside it.',
+        primary: lastPage
+          ? moveOn(activeStep.actionLabel)
+          : {
+              label: 'Next page',
+              onActivate: () =>
+                setReadingPositions((current) => ({
+                  ...current,
+                  [activeStep.id]: readingIndex + 1,
+                })),
+              icon: <ArrowRight aria-hidden="true" />,
+            },
+        secondary: {
+          label: 'Back to the explanation',
+          onActivate: () =>
+            setReadingPositions((current) => ({
+              ...current,
+              [activeStep.id]: readingParts.length,
+            })),
+        },
+      }
+    }
     if (readingPart)
       return {
         ...base,
@@ -1038,6 +1084,21 @@ function HemodynamicsStageSession({
               secondary: showWhereAction,
             }
       case 'explain':
+        // Pages follow this card: the way on reads them, and the task can still be left from here.
+        if (trailingParts.length > 0)
+          return {
+            ...base,
+            primary: {
+              label: `Read on: the method, ${trailingParts.length} pages`,
+              onActivate: () =>
+                setReadingPositions((current) => ({
+                  ...current,
+                  [activeStep.id]: readingParts.length + 1,
+                })),
+              icon: <ArrowRight aria-hidden="true" />,
+            },
+            secondary: { ...moveOn(activeStep.actionLabel), label: 'Continue without these pages' },
+          }
         return { ...base, primary: moveOn(activeStep.actionLabel) }
       case 'recognition-practice':
         return {

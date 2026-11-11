@@ -12,6 +12,13 @@ import {
 } from '../../content/derivedFigure'
 import { requireDerivedMeasurementEpisode } from '../../content/derivedMeasurementEpisodes'
 import { requireCardiacOutputMethod } from '../../content/cardiacOutputMethods'
+import {
+  CARDIAC_OUTPUT_METHOD_SECTION_HEADINGS,
+  CardiacOutputMethodPageSurface,
+  CardiacOutputMethodSection,
+  CardiacOutputOpenQuestions,
+  type CardiacOutputMethodSectionId,
+} from '../CardiacOutputMethodModel'
 import { requireCardiacOutputParameter } from '../../content/cardiacOutputSourceBoundaries'
 import { evaluateDerivedMetric, derivedResultStatusLabels } from '../../engine/derivedEvaluation'
 import type { HemodynamicSimulationState } from '../../engine/types'
@@ -22,8 +29,60 @@ import styles from './hemodynamics-stage.module.css'
 export type FlowReadingPart =
   | 'td-method'
   | 'td-curve'
+  | MethodReadingPart
   | `fick:${string}`
   | `metric:${DerivedMetricId}`
+
+/**
+ * Pages that read the thermodilution method a part at a time, with the reference curve beside
+ * them (owner, 2026-11-11). These eight headings used to be shown only inside the section's
+ * Explain card, about 1,500 words under the explanation of a question. Two pages come before the
+ * section's questions, because its tasks ask the learner to apply them: how the method breaks
+ * down, and when to repeat or withhold. Three come after the explanation.
+ */
+type MethodReadingPart = 'td-breakdown' | 'td-decide' | 'td-values' | 'td-calculation' | 'td-limits'
+
+const METHOD_PAGES: Readonly<
+  Record<
+    MethodReadingPart,
+    {
+      readonly title: string
+      readonly sections: readonly CardiacOutputMethodSectionId[]
+      readonly openQuestions?: boolean
+    }
+  >
+> = {
+  'td-breakdown': { title: 'How thermodilution breaks down', sections: ['breakdown'] },
+  'td-decide': { title: 'When to repeat, and when to withhold', sections: ['repeat', 'withhold'] },
+  'td-values': { title: 'Where every value came from', sections: ['provenance'] },
+  'td-calculation': {
+    title: 'How the calculation runs, and what repeating it shows',
+    sections: ['calculation', 'repeatability'],
+  },
+  'td-limits': {
+    title: 'Sources, and where the methods are uncertain',
+    sections: ['sources'],
+    openQuestions: true,
+  },
+}
+
+const isMethodPage = (part: FlowReadingPart): part is MethodReadingPart => part in METHOD_PAGES
+
+/** The method parts each page reads, so the card can say where each is read instead. */
+export const THERMODILUTION_PAGES_BEFORE_QUESTIONS: readonly MethodReadingPart[] = [
+  'td-breakdown',
+  'td-decide',
+]
+export const THERMODILUTION_PAGES_AFTER_EXPLANATION: readonly MethodReadingPart[] = [
+  'td-values',
+  'td-calculation',
+  'td-limits',
+]
+export function methodSectionsOn(
+  pages: readonly MethodReadingPart[],
+): readonly CardiacOutputMethodSectionId[] {
+  return pages.flatMap((page) => METHOD_PAGES[page].sections)
+}
 
 /** Local reading positions do not alter any existing task, phase or assessment identity. */
 export function flowReadingParts(
@@ -31,7 +90,8 @@ export function flowReadingParts(
   taskKind: string,
   ordinal: number,
 ): readonly FlowReadingPart[] {
-  if (section === 'thermodilution-series' && ordinal === 1) return ['td-method', 'td-curve']
+  if (section === 'thermodilution-series' && ordinal === 1)
+    return ['td-method', 'td-curve', ...THERMODILUTION_PAGES_BEFORE_QUESTIONS]
   if (section === 'thermodilution-series' && taskKind === 'observe')
     return FICK_EPISODES.map((episode) => `fick:${episode.id}` as const)
   if (section === 'derived-hemodynamics' && ordinal === 1)
@@ -39,7 +99,22 @@ export function flowReadingParts(
   return []
 }
 
+/**
+ * Pages read after a task's own content rather than before it. The flow section's Explain task
+ * gives its explanation first, then reads the rest of the method a page at a time.
+ */
+export function flowTrailingParts(
+  section: string,
+  taskKind: string,
+  phase: string,
+): readonly FlowReadingPart[] {
+  if (section === 'thermodilution-series' && taskKind === 'explain' && phase === 'explain')
+    return THERMODILUTION_PAGES_AFTER_EXPLANATION
+  return []
+}
+
 export function flowReadingTitle(part: FlowReadingPart): string {
+  if (isMethodPage(part)) return METHOD_PAGES[part].title
   if (part === 'td-method') return 'What thermodilution acquires'
   if (part === 'td-curve') return 'Read the raw temperature curve'
   if (part.startsWith('fick:'))
@@ -67,6 +142,32 @@ export function FlowPrerequisite({
   readonly onComparisonEpisode?: (on: boolean) => void
 }) {
   const method = requireCardiacOutputMethod('thermodilution')
+  if (isMethodPage(part)) {
+    const page = METHOD_PAGES[part]
+    return (
+      <section className={styles.teachingCard} data-reading-part={part}>
+        {page.sections.map((section) => (
+          <div key={section} data-method-section={section}>
+            {/* A page of one part is headed by the task card; a page of two names each. */}
+            {page.sections.length > 1 || page.openQuestions ? (
+              <h3>{CARDIAC_OUTPUT_METHOD_SECTION_HEADINGS[section]}</h3>
+            ) : null}
+            <CardiacOutputMethodPageSurface>
+              <CardiacOutputMethodSection method={method} section={section} />
+            </CardiacOutputMethodPageSurface>
+          </div>
+        ))}
+        {page.openQuestions ? (
+          <div data-method-open-questions>
+            <h3>Where the methods are uncertain</h3>
+            <CardiacOutputMethodPageSurface>
+              <CardiacOutputOpenQuestions />
+            </CardiacOutputMethodPageSurface>
+          </div>
+        ) : null}
+      </section>
+    )
+  }
   if (part.startsWith('metric:'))
     return (
       <MetricReading

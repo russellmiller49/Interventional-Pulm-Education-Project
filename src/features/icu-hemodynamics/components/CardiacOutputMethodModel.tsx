@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 
 import {
   cardiacOutputInputStatusLabels,
@@ -67,26 +67,49 @@ function ProvenanceChip({
   )
 }
 
-function MethodDetail({
+/** The parts of a method's account, in the order the card prints them. */
+export type CardiacOutputMethodSectionId =
+  | 'provenance'
+  | 'calculation'
+  | 'acquisition'
+  | 'quality'
+  | 'repeatability'
+  | 'breakdown'
+  | 'repeat'
+  | 'withhold'
+  | 'sources'
+
+export const CARDIAC_OUTPUT_METHOD_SECTION_HEADINGS: Readonly<
+  Record<CardiacOutputMethodSectionId, string>
+> = {
+  provenance: 'Where every value came from',
+  calculation: 'How the calculation runs',
+  acquisition: 'Acquisition sequence',
+  quality: 'Quality checks before the number is used',
+  repeatability: 'What repeating it does and does not show',
+  breakdown: 'How it breaks down',
+  repeat: 'Repeat the acquisition when',
+  withhold: 'Withhold the result when',
+  sources: 'Sources',
+}
+
+/**
+ * One part of a method's account, without its heading.
+ *
+ * The card prints all nine under their headings. The lesson also reads some of them a page at a
+ * time, with the thermodilution curve beside them (`FlowPrerequisite`); both draw from here, so a
+ * page and the card cannot say different things.
+ */
+export function CardiacOutputMethodSection({
   method,
-  shownEarlier,
+  section,
 }: {
   readonly method: CardiacOutputMethod
-  /** Where the learner has already read this method's sequence and quality checks. */
-  readonly shownEarlier?: string
+  readonly section: CardiacOutputMethodSectionId
 }) {
-  const acquisitionSequence = (
-    <ol className={styles.measurementTeachingSteps}>
-      {method.acquisitionSequence.map((step) => (
-        <li key={step.order}>
-          <strong>{step.whatYouDo}</strong> {step.whatItEstablishes}
-        </li>
-      ))}
-    </ol>
-  )
-  const qualityChecks = (
+  const checks = (list: CardiacOutputMethod['qualityChecks']) => (
     <dl className={styles.curveFeatureList}>
-      {method.qualityChecks.map((check) => (
+      {list.map((check) => (
         <div key={check.id}>
           <dt>{check.label}</dt>
           <dd>
@@ -96,6 +119,160 @@ function MethodDetail({
       ))}
     </dl>
   )
+  const lines = (list: readonly string[]) => (
+    <ul className={styles.measurementTeachingAudit}>
+      {list.map((line) => (
+        <li key={line}>{line}</li>
+      ))}
+    </ul>
+  )
+  switch (section) {
+    case 'provenance':
+      return (
+        <dl className={styles.methodProvenanceTable}>
+          {method.inputs.map((input) => (
+            <div key={input.id}>
+              <dt>
+                {input.label}
+                {input.unit ? ` (${input.unit})` : ''}
+              </dt>
+              <dd>
+                <ProvenanceChip status={input.status} />
+              </dd>
+              <dd>
+                {input.whatItIs} {input.howItGoesWrong}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )
+    case 'calculation':
+      return (
+        <ol className={styles.measurementTeachingSteps}>
+          {method.calculationAccount.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ol>
+      )
+    case 'acquisition':
+      return (
+        <ol className={styles.measurementTeachingSteps}>
+          {method.acquisitionSequence.map((step) => (
+            <li key={step.order}>
+              <strong>{step.whatYouDo}</strong> {step.whatItEstablishes}
+            </li>
+          ))}
+        </ol>
+      )
+    case 'quality':
+      return checks(method.qualityChecks)
+    case 'repeatability':
+      return checks(method.repeatabilityChecks)
+    case 'breakdown':
+      return (
+        <dl className={styles.curveFeatureList}>
+          {method.failureModes.map((mode) => (
+            <div key={mode.id}>
+              <dt>{mode.label}</dt>
+              <dd>
+                {mode.mechanism} {mode.effectOnResult}{' '}
+                {mode.visibleInAcquisition
+                  ? 'Visible from the acquisition itself.'
+                  : 'Not visible from the acquisition alone.'}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )
+    case 'repeat':
+      return lines(method.repeatWhen)
+    case 'withhold':
+      return lines(method.withholdWhen)
+    case 'sources':
+      return (
+        <ul className={styles.measurementTeachingAudit}>
+          {method.evidenceIds.map((evidenceId) => {
+            const source = hemodynamicsSourceById.get(evidenceId)
+            return (
+              <li key={evidenceId}>
+                {source
+                  ? `${hemodynamicsSourceClassLabel(source)}: ${source.citation}`
+                  : evidenceId}
+              </li>
+            )
+          })}
+          {method.sourceLimitations.map((limitation) => (
+            <li key={limitation}>{limitation}</li>
+          ))}
+        </ul>
+      )
+  }
+}
+
+/** Where the methods are uncertain: common to all three, printed after the method's card. */
+export function CardiacOutputOpenQuestions() {
+  return (
+    <>
+      {cardiacOutputOpenMethodQuestions.map((question) => (
+        <p key={question.id} className={styles.openQuestionCard}>
+          <strong>{question.question}</strong> {question.whyItIsOpen} {question.whatThisModuleDoes}
+        </p>
+      ))}
+    </>
+  )
+}
+
+/**
+ * The light card a part of the method sits on when it is read as a page of its own. The lists were
+ * drawn for the light card the Explain card puts them on; on the page's dark card they are unreadable.
+ */
+export function CardiacOutputMethodPageSurface({ children }: { readonly children: ReactNode }) {
+  return (
+    <div className={styles.methodPageSurface} data-method-surface>
+      {children}
+    </div>
+  )
+}
+
+/** Where a part of the account is read instead of in the card ("from task 1"). */
+export type CardiacOutputMethodElsewhere = Partial<Record<CardiacOutputMethodSectionId, string>>
+
+function MethodDetail({
+  method,
+  elsewhere = {},
+}: {
+  readonly method: CardiacOutputMethod
+  /**
+   * Parts the lesson reads on a page of their own. Each is a closed heading here that says where,
+   * and opens in place: nothing is removed from the card.
+   */
+  readonly elsewhere?: CardiacOutputMethodElsewhere
+}) {
+  const part = (section: CardiacOutputMethodSectionId) => {
+    const heading = CARDIAC_OUTPUT_METHOD_SECTION_HEADINGS[section]
+    const where = elsewhere[section]
+    const content = <CardiacOutputMethodSection method={method} section={section} />
+    return where ? (
+      <details
+        className={styles.repeatedPart}
+        data-stage-collapsed
+        data-repeated-part={where}
+        data-method-section={section}
+      >
+        <summary>
+          {heading} · {where}
+        </summary>
+        {content}
+      </details>
+    ) : (
+      <>
+        <h4 className={styles.thermoTrialQuality} data-method-section={section}>
+          <span>{heading}</span>
+        </h4>
+        {content}
+      </>
+    )
+  }
   return (
     <div className={styles.measurementTeachingCard}>
       <h3>{method.name}</h3>
@@ -124,121 +301,24 @@ function MethodDetail({
         )}
       </dl>
 
-      <h4 className={styles.thermoTrialQuality}>
-        <span>Where every value came from</span>
-      </h4>
-      <dl className={styles.methodProvenanceTable}>
-        {method.inputs.map((input) => (
-          <div key={input.id}>
-            <dt>
-              {input.label}
-              {input.unit ? ` (${input.unit})` : ''}
-            </dt>
-            <dd>
-              <ProvenanceChip status={input.status} />
-            </dd>
-            <dd>
-              {input.whatItIs} {input.howItGoesWrong}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      {part('provenance')}
+      {part('calculation')}
+      {part('acquisition')}
+      {part('quality')}
+      {part('repeatability')}
+      {part('breakdown')}
 
-      <h4 className={styles.thermoTrialQuality}>
-        <span>How the calculation runs</span>
-      </h4>
-      <ol className={styles.measurementTeachingSteps}>
-        {method.calculationAccount.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ol>
-
-      {shownEarlier ? (
+      {elsewhere.repeat || elsewhere.withhold ? (
         <>
-          <details
-            className={styles.repeatedPart}
-            data-stage-collapsed
-            data-repeated-part={shownEarlier}
-          >
-            <summary>Acquisition sequence · {shownEarlier}</summary>
-            {acquisitionSequence}
-          </details>
-          <details
-            className={styles.repeatedPart}
-            data-stage-collapsed
-            data-repeated-part={shownEarlier}
-          >
-            <summary>Quality checks before the number is used · {shownEarlier}</summary>
-            {qualityChecks}
-          </details>
+          {part('repeat')}
+          {part('withhold')}
         </>
       ) : (
-        <>
-          <h4 className={styles.thermoTrialQuality}>
-            <span>Acquisition sequence</span>
-          </h4>
-          {acquisitionSequence}
-
-          <h4 className={styles.thermoTrialQuality}>
-            <span>Quality checks before the number is used</span>
-          </h4>
-          {qualityChecks}
-        </>
+        <div className={styles.scenarioSideBySide}>
+          <div>{part('repeat')}</div>
+          <div>{part('withhold')}</div>
+        </div>
       )}
-
-      <h4 className={styles.thermoTrialQuality}>
-        <span>What repeating it does and does not show</span>
-      </h4>
-      <dl className={styles.curveFeatureList}>
-        {method.repeatabilityChecks.map((check) => (
-          <div key={check.id}>
-            <dt>{check.label}</dt>
-            <dd>
-              {check.whatToLookFor} {check.whenItIsNotMet}
-            </dd>
-          </div>
-        ))}
-      </dl>
-
-      <h4 className={styles.thermoTrialQuality}>
-        <span>How it breaks down</span>
-      </h4>
-      <dl className={styles.curveFeatureList}>
-        {method.failureModes.map((mode) => (
-          <div key={mode.id}>
-            <dt>{mode.label}</dt>
-            <dd>
-              {mode.mechanism} {mode.effectOnResult}{' '}
-              {mode.visibleInAcquisition
-                ? 'Visible from the acquisition itself.'
-                : 'Not visible from the acquisition alone.'}
-            </dd>
-          </div>
-        ))}
-      </dl>
-
-      <div className={styles.scenarioSideBySide}>
-        <div>
-          <h4 className={styles.thermoTrialQuality}>
-            <span>Repeat the acquisition when</span>
-          </h4>
-          <ul className={styles.measurementTeachingAudit}>
-            {method.repeatWhen.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className={styles.thermoTrialQuality}>
-            <span>Withhold the result when</span>
-          </h4>
-          <ul className={styles.measurementTeachingAudit}>
-            {method.withholdWhen.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
 
       <p className={styles.measurementTeachingCallout}>
         <strong>Role of the other method.</strong> {method.alternateMethodRole}
@@ -247,22 +327,7 @@ function MethodDetail({
         <strong>Interpretation boundary.</strong> {method.interpretationBoundary}
       </p>
 
-      <h4 className={styles.thermoTrialQuality}>
-        <span>Sources</span>
-      </h4>
-      <ul className={styles.measurementTeachingAudit}>
-        {method.evidenceIds.map((evidenceId) => {
-          const source = hemodynamicsSourceById.get(evidenceId)
-          return (
-            <li key={evidenceId}>
-              {source ? `${hemodynamicsSourceClassLabel(source)}: ${source.citation}` : evidenceId}
-            </li>
-          )
-        })}
-        {method.sourceLimitations.map((limitation) => (
-          <li key={limitation}>{limitation}</li>
-        ))}
-      </ul>
+      {part('sources')}
     </div>
   )
 }
@@ -365,16 +430,21 @@ function ProvenanceCommitment({
 export function CardiacOutputMethodModel({
   provenanceResolved = false,
   onProvenanceResolved,
-  shownEarlier,
+  shownElsewhere,
 }: {
   readonly provenanceResolved?: boolean
   readonly onProvenanceResolved?: () => void
   /**
-   * One method whose acquisition sequence and quality checks the learner has already read, and
-   * where ("from task 1"). The lesson's first task reads them for thermodilution, and its Explain
-   * card printed them again; with this they are closed headings on that method's tab only.
+   * One method whose account the lesson reads partly on pages of its own, and where each part is
+   * ("from task 1", "on the pages after this card"). Those parts are closed headings on that
+   * method's tab only; the other methods' are not read elsewhere and stay open. `openQuestions`
+   * does the same for "Where the methods are uncertain".
    */
-  readonly shownEarlier?: { readonly methodId: CardiacOutputMethodId; readonly where: string }
+  readonly shownElsewhere?: {
+    readonly methodId: CardiacOutputMethodId
+    readonly sections: CardiacOutputMethodElsewhere
+    readonly openQuestions?: string
+  }
 }) {
   const headingId = useId()
   const [selectedId, setSelectedId] = useState<CardiacOutputMethodId>('thermodilution')
@@ -411,7 +481,7 @@ export function CardiacOutputMethodModel({
       <p className="sr-only">{cardiacOutputMethodTextEquivalent(selected)}</p>
       <MethodDetail
         method={selected}
-        shownEarlier={selected.id === shownEarlier?.methodId ? shownEarlier.where : undefined}
+        elsewhere={selected.id === shownElsewhere?.methodId ? shownElsewhere.sections : undefined}
       />
 
       <ProvenanceCommitment
@@ -419,14 +489,22 @@ export function CardiacOutputMethodModel({
         onResolved={() => onProvenanceResolved?.()}
       />
 
-      <div className={styles.measurementTeachingCard}>
-        <h3>Where the methods are uncertain</h3>
-        {cardiacOutputOpenMethodQuestions.map((question) => (
-          <p key={question.id} className={styles.openQuestionCard}>
-            <strong>{question.question}</strong> {question.whyItIsOpen}{' '}
-            {question.whatThisModuleDoes}
-          </p>
-        ))}
+      <div className={styles.measurementTeachingCard} data-method-open-questions>
+        {shownElsewhere?.openQuestions ? (
+          <details
+            className={styles.repeatedPart}
+            data-stage-collapsed
+            data-repeated-part={shownElsewhere.openQuestions}
+          >
+            <summary>Where the methods are uncertain · {shownElsewhere.openQuestions}</summary>
+            <CardiacOutputOpenQuestions />
+          </details>
+        ) : (
+          <>
+            <h3>Where the methods are uncertain</h3>
+            <CardiacOutputOpenQuestions />
+          </>
+        )}
       </div>
     </section>
   )

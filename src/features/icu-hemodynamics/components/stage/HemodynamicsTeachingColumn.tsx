@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useId, useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { useStageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -29,7 +29,10 @@ import {
 } from '../../content/signalGrammar'
 import type { HemodynamicsStageLesson, HemodynamicsStageStep } from '../../content/stageLessons'
 import { HEMODYNAMICS_NUMBERS } from '../../content/teachingNumbers'
-import { CardiacOutputMethodModel } from '../CardiacOutputMethodModel'
+import {
+  CardiacOutputMethodModel,
+  type CardiacOutputMethodSectionId,
+} from '../CardiacOutputMethodModel'
 import { FickMethodWorkbench } from '../FickMethodWorkbench'
 import {
   HemodynamicsReferenceValues,
@@ -43,6 +46,11 @@ import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
 import type { HemodynamicSimulationState } from '../../engine/types'
 
+import {
+  THERMODILUTION_PAGES_AFTER_EXPLANATION,
+  THERMODILUTION_PAGES_BEFORE_QUESTIONS,
+  methodSectionsOn,
+} from './FlowPrerequisite'
 import { IntroductoryTeaching } from './IntroductoryTeaching'
 import styles from './hemodynamics-stage.module.css'
 
@@ -119,7 +127,11 @@ export function HemodynamicsTeachingColumn({
   const earlierPages =
     explaining && lesson.sectionId === 'thermodilution-series'
       ? {
-          method: `from task ${lesson.steps[0].ordinal}`,
+          method: thermodilutionReadElsewhere(
+            `from task ${lesson.steps[0].ordinal}`,
+            // Only the Explain task reads on after its explanation.
+            step.phase === 'explain' ? 'on the pages after this card' : undefined,
+          ),
           fick: fickPages ? `shown on task ${fickPages.ordinal}` : undefined,
         }
       : undefined
@@ -337,6 +349,27 @@ export function HemodynamicsTeachingColumn({
   )
 }
 
+/**
+ * Where the flow section reads each part of the thermodilution method instead of in the Explain
+ * card: the first task's pages (the sequence and quality checks it always read, and the two pages
+ * that now come before the questions), and the pages after the explanation.
+ */
+function thermodilutionReadElsewhere(
+  firstTask: string,
+  afterExplanation: string | undefined,
+): NonNullable<ComponentProps<typeof CardiacOutputMethodModel>['shownElsewhere']> {
+  const sections: Partial<Record<CardiacOutputMethodSectionId, string>> = {
+    acquisition: firstTask,
+    quality: firstTask,
+  }
+  for (const section of methodSectionsOn(THERMODILUTION_PAGES_BEFORE_QUESTIONS))
+    sections[section] = firstTask
+  if (afterExplanation)
+    for (const section of methodSectionsOn(THERMODILUTION_PAGES_AFTER_EXPLANATION))
+      sections[section] = afterExplanation
+  return { methodId: 'thermodilution', sections, openQuestions: afterExplanation }
+}
+
 /** The headings the introductory teaching carries, for where it is folded as already shown. */
 const INTRO_TEACHING_HEADINGS: Readonly<Record<string, string>> = {
   'rv-pa': 'Right ventricle versus pulmonary artery',
@@ -396,7 +429,10 @@ function DeeperReference({
    * reads the thermodilution sequence and quality checks, and the Observe task reads the six Fick
    * episodes one page at a time (`flowReadingParts`).
    */
-  readonly earlierPages?: { readonly method?: string; readonly fick?: string }
+  readonly earlierPages?: {
+    readonly method?: ComponentProps<typeof CardiacOutputMethodModel>['shownElsewhere']
+    readonly fick?: string
+  }
 }) {
   switch (lesson.sectionId) {
     case 'pressure-system':
@@ -558,11 +594,7 @@ function DeeperReference({
             <div data-teaching-block="method-model">
               <CardiacOutputMethodModel
                 provenanceResolved={provenanceResolved}
-                shownEarlier={
-                  earlierPages?.method
-                    ? { methodId: 'thermodilution', where: earlierPages.method }
-                    : undefined
-                }
+                shownElsewhere={earlierPages?.method}
               />
             </div>
           </ReferenceBlock>

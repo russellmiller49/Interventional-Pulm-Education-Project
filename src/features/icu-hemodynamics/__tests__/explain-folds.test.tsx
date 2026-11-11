@@ -1,10 +1,20 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 
-import { CardiacOutputMethodModel } from '../components/CardiacOutputMethodModel'
+import {
+  CardiacOutputMethodModel,
+  CardiacOutputMethodSection,
+} from '../components/CardiacOutputMethodModel'
+import { requireCardiacOutputMethod } from '../content/cardiacOutputMethods'
 import { FickMethodWorkbench } from '../components/FickMethodWorkbench'
 import { hemodynamicsSectionIds } from '../content/sectionSpecs'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
-import { currentStepId, installDom, leaveTask, mountSection } from '../test-support/stageHarness'
+import {
+  clickPrimary,
+  currentStepId,
+  installDom,
+  leaveTask,
+  mountSection,
+} from '../test-support/stageHarness'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -62,6 +72,17 @@ function openStep(sectionId: string, stepId: string) {
   expect(currentStepId()).toBe(stepId)
 }
 
+/**
+ * A block's body words, without headings. A part's heading is a summary where it is folded and a
+ * heading where it is open, and a summary also says where the part is read, so headings differ
+ * between two cards whose content is the same.
+ */
+function ownWords(block: Element): number {
+  const copy = block.cloneNode(true) as Element
+  copy.querySelectorAll('summary, h3, h4').forEach((heading) => heading.remove())
+  return (copy.textContent ?? '').trim().split(/\s+/).length
+}
+
 /** The teaching blocks on the card: name, and whether each sits under a closed heading. */
 function blocks() {
   return [...document.querySelectorAll<HTMLElement>('[data-now-card] [data-teaching-block]')]
@@ -71,7 +92,7 @@ function blocks() {
       const repeat = block.closest('[data-repeated-block]')
       return {
         name: block.getAttribute('data-teaching-block')!,
-        words: (block.textContent ?? '').trim().split(/\s+/).length,
+        words: ownWords(block),
         folded: fold !== null && !fold.open,
         heading: fold?.querySelector('summary')?.textContent ?? null,
         repeat: repeat?.getAttribute('data-repeated-block') ?? null,
@@ -204,35 +225,150 @@ describe('E. the flow section’s Explain card does not reprint its reading page
     expect(comparison.closest('details')).toBeNull()
   })
 
-  it('E2: folds the thermodilution sequence and quality checks, on that method’s tab only', () => {
+  it('E2 and E3: every part of the thermodilution method says where it is read, on that tab only', () => {
     openStep('thermodilution-series', first.id)
     expect(part('method-model').map((fold) => fold.heading)).toEqual([
+      'Where every value came from · on the pages after this card',
+      'How the calculation runs · on the pages after this card',
       'Acquisition sequence · from task 1',
       'Quality checks before the number is used · from task 1',
+      'What repeating it does and does not show · on the pages after this card',
+      'How it breaks down · from task 1',
+      'Repeat the acquisition when · from task 1',
+      'Withhold the result when · from task 1',
+      'Sources · on the pages after this card',
+      'Where the methods are uncertain · on the pages after this card',
     ])
     for (const fold of part('method-model')) expect(fold.open).toBe(false)
-    // The headings that are new on this card stay open.
-    const method = document.querySelector('[data-now-card] [data-teaching-block="method-model"]')!
-    const open = [...method.querySelectorAll('h4')]
-      .filter((heading) => heading.closest('details') === null)
-      .map((heading) => heading.textContent?.trim())
-    expect(open).toEqual(
-      expect.arrayContaining([
-        'Where every value came from',
-        'How the calculation runs',
-        'How it breaks down',
-        'Withhold the result when',
-      ]),
-    )
+    // Each closed heading still holds its content.
+    for (const fold of part('method-model')) expect(fold.words).toBeGreaterThan(20)
 
-    // Another method's sequence and checks were not read on task 1: nothing folds there.
+    // Another method's account is read nowhere else: nothing folds on its tab.
+    const method = document.querySelector('[data-now-card] [data-teaching-block="method-model"]')!
     const tabs = [...method.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
     fireEvent.click(tabs.find((tab) => tab.getAttribute('aria-selected') === 'false')!)
-    expect(part('method-model')).toHaveLength(0)
+    expect(part('method-model').map((fold) => fold.heading.replace(/ · .*/, ''))).toEqual([
+      'Where the methods are uncertain',
+    ])
     expect(
       [...method.querySelectorAll('h4')].map((heading) => heading.textContent?.trim()),
     ).toEqual(
-      expect.arrayContaining(['Acquisition sequence', 'Quality checks before the number is used']),
+      expect.arrayContaining([
+        'Acquisition sequence',
+        'How it breaks down',
+        'Withhold the result when',
+        'Sources',
+      ]),
+    )
+  })
+
+  it('E3a: reads how the method breaks down, and when to repeat or withhold, before the questions', () => {
+    mountSection('thermodilution-series')
+    const titles: string[] = []
+    const kickers: string[] = []
+    for (let guard = 0; guard < 8; guard += 1) {
+      const page = document.querySelector('[data-now-card] [data-reading-part]')
+      if (!page) break
+      titles.push(document.querySelector('[data-now-card] h2')!.textContent!)
+      kickers.push(
+        document.querySelector('[data-now-card]')!.textContent!.match(/Introduction \d of \d/)![0],
+      )
+      // The reference curve is beside every page.
+      expect(
+        document.querySelector('[data-flow-visual] [data-section-figure="td-curve"]'),
+      ).not.toBeNull()
+      clickPrimary()
+    }
+    expect(titles).toEqual([
+      'What thermodilution acquires',
+      'Read the raw temperature curve',
+      'How thermodilution breaks down',
+      'When to repeat, and when to withhold',
+    ])
+    expect(kickers.at(-1)).toBe('Introduction 4 of 4')
+    // Still the first task, and the questions come after it.
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    expect(lesson.steps[0].ordinal).toBeLessThan(lesson.steps[lesson.predictionStepIndex].ordinal)
+  })
+
+  it('E3a: the page is the card’s own account of that part', () => {
+    mountSection('thermodilution-series')
+    clickPrimary()
+    clickPrimary()
+    const page = document.querySelector('[data-now-card] [data-reading-part="td-breakdown"]')!
+    const { container } = render(
+      <CardiacOutputMethodSection
+        method={requireCardiacOutputMethod('thermodilution')}
+        section="breakdown"
+      />,
+    )
+    expect(page.textContent).toBe(container.textContent)
+    expect(page.textContent!.trim().split(/\s+/).length).toBeGreaterThan(200)
+    // The lists were drawn for a light card; on the page's dark card they could not be read.
+    const lists = page.querySelectorAll('dl, ul, ol')
+    expect(lists.length).toBeGreaterThan(0)
+    lists.forEach((list) => expect(list.closest('[data-method-surface]')).not.toBeNull())
+  })
+
+  it('E3b: the Explain task gives its explanation first, then reads on a page at a time', () => {
+    openStep('thermodilution-series', first.id)
+    const primary = () =>
+      document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-primary]')!
+    const secondary = () =>
+      document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-secondary]')!
+    // The card itself: the explanation is on it, and the way on reads the pages.
+    expect(document.querySelector('[data-now-card] [data-explain-recap]')).not.toBeNull()
+    expect(primary()).toHaveTextContent('Read on: the method, 3 pages')
+    expect(secondary()).toHaveTextContent('Continue without these pages')
+
+    const titles: string[] = []
+    fireEvent.click(primary())
+    for (let guard = 0; guard < 5; guard += 1) {
+      if (currentStepId() !== first.id) break
+      const page = document.querySelector('[data-now-card] [data-reading-part]')
+      if (!page) break
+      titles.push(document.querySelector('[data-now-card] h2')!.textContent!)
+      expect(document.querySelector('[data-now-card]')!.textContent).toMatch(
+        new RegExp(`The method ${titles.length} of 3`),
+      )
+      expect(
+        document.querySelector('[data-flow-visual] [data-section-figure="td-curve"]'),
+      ).not.toBeNull()
+      expect(document.querySelector('[data-now-card] [data-explain-recap]')).toBeNull()
+      fireEvent.click(primary())
+    }
+    expect(titles).toEqual([
+      'Where every value came from',
+      'How the calculation runs, and what repeating it shows',
+      'Sources, and where the methods are uncertain',
+    ])
+    // The last page's way on is the task's own: it leaves for the next task.
+    expect(currentStepId()).toBe(lesson.steps[lesson.steps.indexOf(first) + 1].id)
+  })
+
+  it('E3b: the pages can be skipped, and left for the explanation again', () => {
+    openStep('thermodilution-series', first.id)
+    fireEvent.click(
+      document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-primary]')!,
+    )
+    expect(document.querySelector('[data-now-card] [data-reading-part="td-values"]')).not.toBeNull()
+    const back = [...document.querySelectorAll<HTMLButtonElement>('[data-now-card] button')].find(
+      (button) => button.textContent?.trim() === 'Back to the explanation',
+    )!
+    fireEvent.click(back)
+    expect(document.querySelector('[data-now-card] [data-explain-recap]')).not.toBeNull()
+    const skip = [...document.querySelectorAll<HTMLButtonElement>('[data-now-card] button')].find(
+      (button) => button.textContent?.trim() === 'Continue without these pages',
+    )!
+    fireEvent.click(skip)
+    expect(currentStepId()).toBe(lesson.steps[lesson.steps.indexOf(first) + 1].id)
+  })
+
+  it('E3b: "What carried over" has no pages of its own', () => {
+    const [, second] = explainSteps('thermodilution-series')
+    openStep('thermodilution-series', second.id)
+    expect(document.querySelector('[data-now-card] [data-now-primary]')).not.toHaveTextContent(
+      'Read on',
     )
   })
 
