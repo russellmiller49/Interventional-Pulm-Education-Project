@@ -108,6 +108,31 @@ describe('lumen wall attribute', () => {
     expect(read(values, 1).ring).toBe(0)
   })
 
+  it('keeps a plain first stretch free of rings while the wall cue stays, for the subglottis', () => {
+    // The patient's left wall at 5, 17 and 30 mm down an airway whose first 12 mm are plain.
+    const wall = [
+      [8, 0, -5],
+      [8, 0, -17],
+      [8, 0, -30],
+    ]
+    const plain = computeLumenWallAttribute(wall.flat(), [straight({ plainStartMm: 12 })])
+    const usual = computeLumenWallAttribute(wall.flat(), [straight()])
+    const [top, rising, below] = wall.map((_, i) => read(plain, i))
+    // No rings inside the cricoid; they come in over the next 10 mm and are full below that.
+    expect(top.ring).toBe(0)
+    expect(rising.ring).toBeGreaterThan(0)
+    expect(rising.ring).toBeLessThan(read(usual, 1).ring)
+    expect(below.ring).toBeCloseTo(read(usual, 2).ring, 5)
+    // The cue itself (the length of the first two numbers) is untouched, so vessels still draw.
+    for (let vertex = 0; vertex < wall.length; vertex += 1) {
+      expect(Math.hypot(read(plain, vertex).cos, read(plain, vertex).sin)).toBeCloseTo(
+        Math.hypot(read(usual, vertex).cos, read(usual, vertex).sin),
+        5,
+      )
+      expect(read(plain, vertex).count).toBeCloseTo(read(usual, vertex).count, 5)
+    }
+  })
+
   it('smooths a kinked centerline without moving its ends', () => {
     const kinked: Vec3[] = [
       [0, 0, 0],
