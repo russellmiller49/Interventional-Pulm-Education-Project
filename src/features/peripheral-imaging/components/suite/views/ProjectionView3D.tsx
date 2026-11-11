@@ -1,5 +1,5 @@
 'use client'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { useMemo } from 'react'
 import { LESION_RADIUS, SHAFT_RADIUS, type Point3 } from '../../../lib/physics'
 import { add, detectorPoint, projectionMarkers, scale, type SuiteFrame } from '../suiteModel'

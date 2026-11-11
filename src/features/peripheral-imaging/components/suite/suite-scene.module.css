@@ -1110,3 +1110,46 @@
   padding-inline: 0;
   color: inherit;
 }
+
+/* Display aids under the current image: a toggle and, when it is on, what its colours mean. */
+.imageAids {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  /* After the caption where the figure orders its caption under the image. */
+  order: 2;
+}
+.imageAids button {
+  justify-self: start;
+  min-height: 2rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid rgba(163, 206, 209, 0.45);
+  border-radius: 0.4rem;
+  background: rgba(8, 28, 34, 0.9);
+  color: #eaf4f4;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.imageAids button[aria-pressed='true'] {
+  border-color: #7df0d8;
+  background: #12404a;
+}
+.imageAids button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.imageAids p {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.boneBehind {
+  color: #f0bd72;
+  font-weight: 600;
+}
+.boneFront {
+  color: #8fc4f5;
+  font-weight: 600;
+}

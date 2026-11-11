@@ -1,6 +1,6 @@
 'use client'
 import { useMemo } from 'react'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { fieldGeometry, type SuiteFrame } from '../suiteModel'
 import { Quad } from '../SceneGeometry'
 import { FIELD_CONTEXT, projectToDetector } from '../../../lib/physics'

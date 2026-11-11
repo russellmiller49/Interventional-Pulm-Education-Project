@@ -84,6 +84,12 @@ import {
 } from '../catheter-map/CatheterMap'
 import { useHemodynamicsSelfPacedRecord } from '../useHemodynamicsSelfPacedRecord'
 import { HemodynamicsExplanation, HemodynamicsQuestionBlock } from './HemodynamicsQuestion'
+import { HemodynamicsSectionFigureView, sectionFigureShows } from './HemodynamicsSectionFigureView'
+import {
+  DERIVED_READING_COMPARISON_EPISODE_ID,
+  DERIVED_READING_EPISODE_ID,
+  derivedFigureMetricId,
+} from '../../content/derivedFigure'
 import { HemodynamicsSimulatorPane, simulatorPaneShows } from './HemodynamicsSimulatorPane'
 import { HemodynamicsSourceList } from './HemodynamicsSourceList'
 import { HemodynamicsStoryProblems } from './HemodynamicsStoryProblems'
@@ -328,6 +334,13 @@ function HemodynamicsStageSession({
   const [readingPositions, setReadingPositions] = useState<Record<string, number>>({})
   const readingIndex = readingPositions[activeStep.id] ?? 0
   const readingPart = lookingBack ? undefined : readingParts[readingIndex]
+  /*
+   * The derived-values reading can compare its worked episode with one that is missing body size.
+   * The choice is held here, per page, so the drawing beside the text shows the same episode.
+   */
+  const [comparisonEpisodeFor, setComparisonEpisodeFor] = useState<string | null>(null)
+  const comparisonEpisode =
+    readingPart !== undefined && comparisonEpisodeFor === `${activeStep.id}:${readingPart}`
   const [taskBaselines, setTaskBaselines] = useState<Record<string, HemodynamicSimulationState>>({})
   const performedNow = simulationWorkPerformed(
     activeStep,
@@ -1589,11 +1602,42 @@ function HemodynamicsStageSession({
       baseline: taskBaselines[activeStep.id],
       hasWorkbench: extraSurface !== null,
     })
+  /*
+   * The section's drawing, where the step names one (`presentation.figure`). On a question that
+   * has not been answered the catheter's parts keep their names and hold back what each measures.
+   * A reading part keeps the drawing beside it; a case has its own screen.
+   */
+  const figureAnswered =
+    interaction.kind === 'sort' ? Boolean(commitments.sort) || commitments.sortShown : revealOpen
+  const figureShown = !onCaseStep && sectionFigureShows(presentation.figure, state)
+  const sectionFigure = figureShown ? (
+    <div className={flowStyles.sectionFigure} data-section-figure={presentation.figure}>
+      <HemodynamicsSectionFigureView
+        figure={presentation.figure}
+        state={state}
+        answered={figureAnswered}
+        derived={
+          presentation.figure === 'derived-value'
+            ? {
+                metricId: derivedFigureMetricId(activeStep.phase, readingPart),
+                // Numbers only beside the page that reads the same worked episode.
+                episodeId: readingPart?.startsWith('metric:')
+                  ? comparisonEpisode
+                    ? DERIVED_READING_COMPARISON_EPISODE_ID
+                    : DERIVED_READING_EPISODE_ID
+                  : undefined,
+              }
+            : undefined
+        }
+      />
+    </div>
+  ) : null
   const visual =
-    !readingOnly && (simulatorShown || questionFigure) ? (
+    sectionFigure || (!readingOnly && (simulatorShown || questionFigure)) ? (
       <>
-        {simulatorShown ? simulator : null}
-        {questionFigure}
+        {sectionFigure}
+        {!readingOnly && simulatorShown ? simulator : null}
+        {!readingOnly ? questionFigure : null}
       </>
     ) : null
 
@@ -1654,7 +1698,16 @@ function HemodynamicsStageSession({
                 />
               ) : null
             ) : readingPart ? (
-              <FlowPrerequisite key={readingPart} part={readingPart} state={state} />
+              <FlowPrerequisite
+                key={readingPart}
+                part={readingPart}
+                state={state}
+                figureBeside={figureShown}
+                comparisonEpisode={comparisonEpisode}
+                onComparisonEpisode={(on) =>
+                  setComparisonEpisodeFor(on ? `${activeStep.id}:${readingPart}` : null)
+                }
+              />
             ) : (
               <>
                 {presentation.kind === 'case' && activeIndex === 0 ? (

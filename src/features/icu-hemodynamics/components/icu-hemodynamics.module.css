@@ -5889,6 +5889,145 @@
   border-radius: 0.6rem;
   background: #07171d;
 }
+/* The names of the reference curve's parts, on the drawing (`named`). */
+.thermoCurveNames text {
+  fill: #d7e8ea;
+  font-size: 9px;
+  font-weight: 700;
+}
+/*
+ * One calculated value, drawn top to bottom in the lesson's visual column: its inputs, the formula,
+ * the result. Where the worked episode fills it in, an input's edge says where it came from, and
+ * so do its words: measured is a solid teal edge, calculated a dashed one, an input the formula
+ * cannot use a dotted red one. Drawn without numbers, every input has the same plain edge.
+ */
+.derivedValueFigure {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.75rem;
+  color: #eaf4f4;
+  background: rgba(255, 255, 255, 0.03);
+}
+.derivedValueFigure figcaption {
+  margin-bottom: 0.2rem;
+  line-height: 1.4;
+}
+.derivedValueStage {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.derivedValueInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.derivedValueInputs li {
+  display: grid;
+  gap: 0.15rem;
+  align-content: start;
+  padding: 0.55rem 0.65rem;
+  border: 2px solid rgba(163, 206, 209, 0.45);
+  border-radius: 0.6rem;
+  background: #10262b;
+  line-height: 1.4;
+}
+.derivedValueInputs li[data-provenance='measured'] {
+  border-color: #36c3ca;
+}
+.derivedValueInputs li[data-provenance='calculated'] {
+  border-style: dashed;
+  border-color: #ffbf62;
+}
+.derivedValueInputs li[data-usable='false'] {
+  border-style: dotted;
+  border-color: #ff6b73;
+}
+.derivedValueInputs li span {
+  font-size: 0.95rem;
+}
+.derivedValueInputs li small {
+  color: #9fb4b7;
+  font-size: 0.8rem;
+}
+.derivedValueArrow {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 1.1rem;
+  line-height: 1;
+  text-align: center;
+}
+.derivedValueFormula {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.6rem;
+  background: #07171d;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+.derivedValueGradient {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.derivedValueResult {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #76d69b;
+  border-radius: 0.6rem;
+  background: #10262b;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.derivedValueResult[data-derived-result='available-with-caution'] {
+  border-style: dashed;
+  border-color: #ffbf62;
+}
+.derivedValueResult[data-derived-result='withheld'] {
+  border-style: dotted;
+  border-color: #ff6b73;
+}
+.derivedValueResult[data-derived-result='not-shown'] {
+  border-color: rgba(163, 206, 209, 0.45);
+}
+.derivedValueNote {
+  margin: 0.2rem 0 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* The flow section's reference curve in the lesson's visual column: the drawing, then its parts in words. */
+.thermoReferenceFigure {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+.thermoReferenceFigure figcaption {
+  display: grid;
+  gap: 0.35rem;
+  line-height: 1.5;
+}
+.thermoReferenceFigure figcaption span {
+  color: #9fb4b7;
+  font-size: 0.9rem;
+}
 
 .curveFeatureList {
   container-type: inline-size;

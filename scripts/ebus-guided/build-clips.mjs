@@ -1,0 +1,183 @@
+#!/usr/bin/env node
+/**
+ * Builds the patient EBUS clips used by EBUS Guided (the Doppler and needle lessons).
+ *
+ * Source: the owner's recordings, which are not in Git. Read them in place:
+ *
+ *   node scripts/ebus-guided/build-clips.mjs \
+ *     "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/ebus-guided-clips"
+ *
+ * Writes:
+ *   public/ebus-guided/clips/<slug>.mp4            re-encoded: no audio, no container metadata
+ *   public/ebus-guided/clips/<slug>-<stop>.jpg     the still frames the lessons pause on
+ *   src/features/ebus-guided/content/clips.generated.ts
+ *
+ * Nothing is cropped or drawn on: the picture is the recording's own, at the size stated below.
+ * What each clip is, and the outlines drawn over its stills, live in `content/clips.ts`.
+ * Every frame has to be checked for patient text before a clip is published; the processor's own
+ * labels (depth scale, colour scale, "DIA"/"MEDIA", the orientation dot) are the only text seen.
+ */
+import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+
+const DEFAULT_SOURCE =
+  '/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/raw-assets/ebus-guided-clips'
+const source = process.argv[2] ?? DEFAULT_SOURCE
+const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..')
+const outDir = path.join(root, 'public/ebus-guided/clips')
+const outData = path.join(root, 'src/features/ebus-guided/content/clips.generated.ts')
+
+/**
+ * Source file → slug, output size and the frames a lesson pauses on (seconds into the clip).
+ * A stop's id is stable: the outlines in `content/clips.ts` are keyed by it.
+ */
+const CLIPS = [
+  {
+    file: 'Doppler.mp4',
+    slug: 'doppler-node-vessels',
+    // The source is 720 x 480 with non-square pixels (109:120): 654 x 480 as it is displayed.
+    width: 654,
+    height: 480,
+    fps: 30,
+    crf: 23,
+    stops: [
+      { id: 'quiet', t: 3.5 },
+      // The two frames the owner outlined the node on (2026-11-11).
+      { id: 'flow', t: 1.1 },
+      { id: 'late', t: 8.2 },
+    ],
+  },
+  {
+    file: 'Needle puncture.mp4',
+    slug: 'needle-in-node',
+    width: 1280,
+    height: 720,
+    fps: 30,
+    crf: 24,
+    stops: [
+      { id: 'stylet', t: 1.8 },
+      { id: 'needle', t: 2.6 },
+    ],
+  },
+]
+
+const ffmpeg = (args) => execFileSync('ffmpeg', ['-loglevel', 'error', '-y', ...args])
+const probe = (file, entries) =>
+  execFileSync(
+    'ffprobe',
+    ['-v', 'error', '-show_entries', entries, '-of', 'default=nw=1:nk=1', file],
+    { encoding: 'utf8' },
+  ).trim()
+
+if (!existsSync(source)) {
+  console.error('Source folder not found: ' + source)
+  process.exit(1)
+}
+mkdirSync(outDir, { recursive: true })
+const built = []
+for (const clip of CLIPS) {
+  const input = path.join(source, clip.file)
+  if (!existsSync(input)) {
+    console.error('Missing source clip: ' + input)
+    process.exit(1)
+  }
+  const output = path.join(outDir, clip.slug + '.mp4')
+  ffmpeg([
+    '-i',
+    input,
+    '-an',
+    '-map_metadata',
+    '-1',
+    '-map_chapters',
+    '-1',
+    '-vf',
+    `scale=${clip.width}:${clip.height}:flags=lanczos,setsar=1,fps=${clip.fps}`,
+    '-c:v',
+    'libx264',
+    '-preset',
+    'slow',
+    '-crf',
+    String(clip.crf),
+    '-pix_fmt',
+    'yuv420p',
+    '-movflags',
+    '+faststart',
+    // A fixed encoder tag and no creation time, so a rebuild from the same source is identical.
+    '-fflags',
+    '+bitexact',
+    '-flags:v',
+    '+bitexact',
+    output,
+  ])
+  for (const stop of clip.stops)
+    ffmpeg([
+      '-ss',
+      String(stop.t),
+      '-i',
+      output,
+      '-frames:v',
+      '1',
+      '-q:v',
+      '3',
+      path.join(outDir, `${clip.slug}-${stop.id}.jpg`),
+    ])
+  const tags = probe(output, 'format_tags')
+  if (/creation_time|location|make|model|artist|title/i.test(tags)) {
+    console.error('Container metadata survived in ' + output + ': ' + tags)
+    process.exit(1)
+  }
+  if (probe(output, 'stream=codec_type').includes('audio')) {
+    console.error('An audio stream survived in ' + output)
+    process.exit(1)
+  }
+  built.push({
+    slug: clip.slug,
+    src: `/ebus-guided/clips/${clip.slug}.mp4`,
+    width: clip.width,
+    height: clip.height,
+    fps: clip.fps,
+    durationS: Number(Number(probe(output, 'format=duration')).toFixed(2)),
+    bytes: readFileSync(output).length,
+    sourceSha256: createHash('sha256').update(readFileSync(input)).digest('hex'),
+    stops: clip.stops.map((stop) => ({
+      id: stop.id,
+      t: stop.t,
+      image: `/ebus-guided/clips/${clip.slug}-${stop.id}.jpg`,
+    })),
+  })
+  console.log(
+    clip.slug,
+    built.at(-1).durationS + ' s',
+    Math.round(built.at(-1).bytes / 1024) + ' kB',
+  )
+}
+
+const body = `/**
+ * GENERATED by scripts/ebus-guided/build-clips.mjs. Do not edit by hand.
+ * The patient EBUS clips as built for the web: size, length and the frames a lesson pauses on.
+ */
+export interface BuiltClipStop {
+  id: string
+  /** Seconds into the clip. */
+  t: number
+  image: string
+}
+export interface BuiltClip {
+  slug: string
+  src: string
+  width: number
+  height: number
+  fps: number
+  durationS: number
+  bytes: number
+  /** SHA-256 of the owner's source recording this was built from. */
+  sourceSha256: string
+  stops: BuiltClipStop[]
+}
+export const BUILT_CLIPS: BuiltClip[] = ${JSON.stringify(built, null, 2)}
+`
+writeFileSync(outData, body)
+execFileSync('npx', ['prettier', '--write', outData], { cwd: root, stdio: 'ignore' })
+console.log('Wrote ' + path.relative(root, outData))

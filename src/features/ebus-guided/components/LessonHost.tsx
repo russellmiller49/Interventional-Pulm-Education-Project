@@ -12,7 +12,7 @@ import {
   lessonHref,
   partsOf,
 } from '../content/curriculum'
-import { activitiesForLesson, type LessonActivity } from '../content/stage'
+import { activitiesForLesson, labForActivity, type LessonActivity } from '../content/stage'
 import { labGoalMet, labGoalRequirements, type Lesson, type Question } from '../content/types'
 import {
   recordLocation,
@@ -38,6 +38,7 @@ import { CaseSpecimens } from './CaseSpecimens'
 import { TroubleshootingFlow } from './TroubleshootingFlow'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
+import { ClipFigure } from './ClipFigure'
 
 /**
  * One lesson, self-paced (EBUS-01, owner decision of 2026-09-14).
@@ -183,10 +184,15 @@ function LessonSession({
     .slice(runStart, position + 1)
     .findLast((activity) => activity.interaction === 'acquire')
   const runtimeUnit = runtimeActivity ? unitOf(runtimeActivity) : unitOf(active)
-  const runtimeLab =
-    runtimeActivity?.task && runtimeActivity.task !== 'guided'
-      ? runtimeUnit.transferLab
-      : runtimeUnit.lab
+  const runtimeLab = labForActivity(runtimeUnit, runtimeActivity)
+  /*
+   * One workbench session per lab. A unit's second station is a guided task like its first, so
+   * the task alone cannot tell the two labs apart: without this the second lab would inherit the
+   * first one's found landmarks and sweep.
+   */
+  const runtimeLabKey = runtimeActivity?.secondLab
+    ? 'second-station'
+    : (runtimeActivity?.task ?? 'guided')
   const questionPosition = questionPositions[current.id] ?? 0
   const hasTask = TASK_INTERACTIONS.includes(current.interaction)
   const taskOutcome = taskOutcomes[current.id]
@@ -423,6 +429,8 @@ function LessonSession({
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
   /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
   const figure = current.image === 'diagram' ? (current.figure ?? content.diagram) : undefined
+  /** A step that reads a patient recording shows it, whatever lab the lesson ran before it. */
+  const clipStep = figure === 'clip-doppler'
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * A briefing with a live example shows a short lead, then the three views, then the rest of the
@@ -866,9 +874,11 @@ function LessonSession({
               className={styles.taskEvidence}
               hidden={
                 finished ||
-                (runtimeActivity
-                  ? !showRuntime
-                  : !showDemo && !(current.image === 'reference' || !!figure))
+                (clipStep
+                  ? false
+                  : runtimeActivity
+                    ? !showRuntime
+                    : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
               {evidenceKind && evidenceKind !== 'held-missing' && (
@@ -890,9 +900,10 @@ function LessonSession({
                     Go back and acquire one
                   </button>
                 </div>
-              ) : runtimeActivity && runtimeLab ? (
+              ) : runtimeActivity && runtimeLab && !clipStep ? (
+                // A step that reads a patient recording shows that, not the lesson's earlier lab.
                 <Workbench
-                  key={runtimeActivity.lessonId + ':' + (runtimeActivity.task ?? 'guided')}
+                  key={runtimeActivity.lessonId + ':' + runtimeLabKey}
                   lab={runtimeLab}
                   locked={
                     !!reviewId || holdRequested || active.interaction !== 'acquire' || finished
@@ -902,7 +913,7 @@ function LessonSession({
                     sessionId +
                     '-' +
                     (units.length > 1 ? runtimeActivity.lessonId + '-' : '') +
-                    (runtimeActivity.task ?? 'guided')
+                    runtimeLabKey
                   }
                   onObservation={onObservation}
                   console={consoleStage}
@@ -928,6 +939,12 @@ function LessonSession({
                 <NodeFeatureAtlas />
               ) : figure === 'node-reading' ? (
                 <NodeFeatureReading />
+              ) : figure === 'clip-doppler' ? (
+                // Labels on its paused frame open once the step's question is answered or explained.
+                <ClipFigure
+                  clip="doppler-node-vessels"
+                  unlocked={!!committed || !!(question && explanationOpen[question.id])}
+                />
               ) : figure === 'station-map' ||
                 figure === 'station-map-n' ||
                 figure === 'station-map-access' ? (

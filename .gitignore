@@ -168,6 +168,7 @@ Thumbs.db
 !public/module-assets/v1/pleural-ultrasound/video/*.mp4
 !public/airway-lesson/airway-survey-cropped.mp4
 !public/bronchoscopy-instruments/clips/*.mp4
+!public/ebus-guided/clips/*.mp4
 *.avi
 *.mov
 *.wmv

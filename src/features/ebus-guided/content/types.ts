@@ -124,6 +124,8 @@ export interface Lesson {
     /** Lesson 16: the six sonographic features on real EBUS images, and reading them. */
     | 'node-features'
     | 'node-reading'
+    /** A patient recording read on its paused frames (2026-11-11): colour Doppler around a node. */
+    | 'clip-doppler'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]

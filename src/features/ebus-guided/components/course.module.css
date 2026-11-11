@@ -276,6 +276,51 @@
   border-radius: 9px;
   background: #000;
 }
+/* A station still with the owner's outlines drawn over it, numbered, and named in a list below. */
+.stillFrame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+.figure .stillOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.stillLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.stillLegend li {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+/* The number that is on the image, in the outline's own colour. */
+.stillLegend li span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: 2px solid #7dc3ff;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.stillLegend li[data-kind='node'] span {
+  border-color: #78e68c;
+}
+.stillLegend li[data-kind='lung'] span {
+  border-color: #ffcd7d;
+}
 .diagramLabels {
   display: flex;
   flex-wrap: wrap;

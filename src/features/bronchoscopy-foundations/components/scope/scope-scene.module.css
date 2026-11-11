@@ -538,6 +538,67 @@
   font-weight: 600;
   cursor: pointer;
 }
+/* Turning the outside model of the larynx: a drag layer over the picture, and view buttons. */
+.outsideTurn {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+}
+.outsideTurn:active {
+  cursor: grabbing;
+}
+.turnHint {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  left: 0.65rem;
+  top: 2.2rem;
+  color: #c2d4e5;
+  font-size: 0.7rem;
+  pointer-events: none;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #07111cc9;
+}
+@media (hover: hover) and (pointer: fine) {
+  .turnHint {
+    display: block;
+  }
+}
+.turnButtons {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  max-width: calc(100% - 0.8rem);
+}
+.turnButtons button {
+  min-height: 32px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #45616d;
+  border-radius: 0.4rem;
+  color: #d6e6ee;
+  background: rgba(13, 31, 42, 0.9);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.turnButtons button[aria-pressed='true'] {
+  border-color: #68d7c9;
+  color: #fff;
+}
+.turnButtons button:hover {
+  border-color: #68d7c9;
+}
+.turnButtons button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
 .positionNote {
   position: absolute;
   z-index: 2;

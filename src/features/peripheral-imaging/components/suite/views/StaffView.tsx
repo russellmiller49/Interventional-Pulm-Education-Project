@@ -1,8 +1,9 @@
 'use client'
 import { useMemo } from 'react'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { staff } from '../staffModel'
 import { Quad } from '../SceneGeometry'
+import { StaffFigure } from '../StaffFigure'
 import { add } from '../suiteModel'
 import type { SuiteInputs, SuiteLayer } from '../types'
 import styles from '../suite-scene.module.css'
@@ -55,32 +56,19 @@ export function StaffView({
         </group>
       )}
       {layers.includes('staff') && (
-        <group position={model.position}>
-          <mesh position={[0, 1390, 0]}>
-            <sphereGeometry args={[95, 20, 16]} />
-            <meshStandardMaterial color="#d9bfa0" />
-          </mesh>
-          <mesh position={[0, 1040, 0]}>
-            <cylinderGeometry args={[135, 170, 500, 20]} />
-            <meshStandardMaterial color="#6ca0ac" />
-          </mesh>
-          {[-80, 80].map((x) => (
-            <mesh key={x} position={[x, 400, 0]}>
-              <cylinderGeometry args={[45, 40, 800, 12]} />
-              <meshStandardMaterial color="#617582" />
-            </mesh>
-          ))}
+        <>
+          <StaffFigure position={model.position} facing={[0, model.floorY, 0]} />
           <Line
             points={[
-              [0, 5, 0],
-              [-model.position[0], 5, -model.position[2]],
+              [model.position[0], model.floorY + 5, model.position[2]],
+              [0, model.floorY + 5, 0],
             ]}
             color="#9fbcbf"
             dashed
             dashSize={75}
             gapSize={35}
           />
-        </group>
+        </>
       )}
       <mesh position={add([0, model.floorY, 0], [0, 3, 0])} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[40, 24]} />
