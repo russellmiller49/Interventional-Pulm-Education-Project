@@ -94,6 +94,12 @@ export const SOURCES = [
     type: 'Registry',
   },
   {
+    id: 'olympus-uc180f',
+    title: 'Olympus BF-UC180F ultrasound bronchoscope: specifications',
+    url: 'https://medical.olympusamerica.com/products/bf-uc180f-ebus-bronchoscope',
+    type: 'Manufacturer source',
+  },
+  {
     id: 'olympus-uc190f',
     title: 'Olympus BF-UC190F ultrasound bronchoscope: product brochure (2021)',
     url: '',

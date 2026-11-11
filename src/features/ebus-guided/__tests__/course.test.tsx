@@ -62,10 +62,11 @@ function reachFirstCheck() {
   return false
 }
 it('defines the full curriculum, unique decisions, sources, meaningful activities and current preset keys', () => {
-  // 26 content units in 21 lessons: five units were folded into the lesson before or after them
-  // (consolidation of 2026-11-10). A unit keeps its id, lab, checks and sources.
-  expect(LESSONS).toHaveLength(21)
-  expect(CONTENT_LESSONS).toHaveLength(26)
+  // 27 content units in 22 lessons: five units were folded into the lesson before or after them
+  // (consolidation of 2026-11-10), and the scope lesson was added. A unit keeps its id, lab,
+  // checks and sources.
+  expect(LESSONS).toHaveLength(22)
+  expect(CONTENT_LESSONS).toHaveLength(27)
   expect(Object.keys(MERGED_INTO).sort()).toEqual([
     'contact-cutaway-model',
     'eus-b-route-model',
@@ -89,7 +90,21 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
     for (const c of q.choices) expect(c.rationale.length).toBeGreaterThan(15)
   }
   for (const unit of CONTENT_LESSONS) {
-    expect([unit.lab, unit.sequence, unit.matching].filter(Boolean)).toHaveLength(1)
+    /*
+     * A unit has one piece of work: a lab the learner acquires an image in, or a matching or
+     * ordering task. A unit with a task may also show a lab, but only as an ungated live example
+     * beside its teaching (the scope lesson), never as a second thing to complete.
+     */
+    expect([unit.sequence, unit.matching].filter(Boolean).length).toBeLessThanOrEqual(1)
+    expect(!!unit.lab || !!unit.sequence || !!unit.matching).toBe(true)
+    const steps = activitiesForLesson(lessonById(unit.id)!).filter(
+      (activity) => activity.lessonId === unit.id,
+    )
+    const acquires = steps.some((activity) => activity.interaction === 'acquire')
+    if (unit.sequence || unit.matching) expect(acquires).toBe(false)
+    else expect(acquires).toBe(true)
+    if (unit.lab && !acquires)
+      expect(steps.some((activity) => activity.image === 'demonstration')).toBe(true)
     expect(unit.sources.every((id) => SOURCES.some((s) => s.id === id))).toBe(true)
     if (unit.lab?.kind === 'simulator')
       expect(manifest.presets.some((p) => p.preset_key === unit.lab!.presetKey)).toBe(true)

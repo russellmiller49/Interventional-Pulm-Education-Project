@@ -247,6 +247,21 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     apply('information-needs', 'State the information needed', 'matching'),
     transfer('Consider a different diagnostic request'),
   ],
+  /*
+   * The scope itself (added 2026-11-10). The live example is ungated: the unit teaches what the
+   * oblique lens and the tip-mounted transducer mean for driving, and its task is the matching.
+   */
+  'ebus-scope': [
+    predict('first-decision', 'Decide why the tip missed'),
+    {
+      ...brief('scope-tip', 'See what the tip sees', 'linked', 'demonstration'),
+      // Says which control to move and what to watch, since this lab is the lesson's point.
+      instruction:
+        'Read the lead, then move Tip flexion both ways in the lab under it and watch the white-light view and the ultrasound image trade places. The detail continues below the lab.',
+    },
+    apply('tip-parts', 'Match each part of the tip to what it does', 'matching'),
+    transfer('Keep the image or the airway view'),
+  ],
   'scope-orientation': [
     predict('plane-interpretation', 'Interpret a change in plane'),
     brief('distal-scope', 'Relate the scope to the ultrasound plane', 'linked', 'demonstration'),

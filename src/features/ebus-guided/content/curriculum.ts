@@ -8,6 +8,7 @@ import { locateLessons } from './locate'
 import { planLessons } from './plan'
 import { sampleLessons } from './sample'
 import { completeLessons } from './complete'
+import { scopeLesson } from './scope'
 export const BASE = '/ebus-guided'
 export const RELEASE = 'unlisted-preview'
 export const TOPICS: Topic[] = ['Prepare', 'Optimize', 'Locate', 'Plan', 'Sample', 'Complete']
@@ -115,6 +116,7 @@ export const coupling: Lesson = {
 }
 const authoredLessons: Lesson[] = [
   ...prepareLessons,
+  scopeLesson,
   coupling,
   contactModel,
   ...optimizeLessons,
@@ -224,6 +226,7 @@ function chapter(id: string, title: string, ids: string[]) {
 export const CHAPTERS = [
   chapter('prepare', 'Define the examination and prepare', ['clinical-question', 'preparation']),
   chapter('contact', 'Understand the scope and establish contact', [
+    'ebus-scope',
     'scope-orientation',
     'acoustic-contact',
   ]),

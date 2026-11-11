@@ -232,9 +232,11 @@ describe('lesson numbers a learner reads', () => {
 
   it('counts lessons and minutes from the merged registry on the hub', () => {
     render(<CoursePage />)
+    // 22 lessons from 27 units: the five merges, plus the scope lesson added after them.
+    expect(LESSONS).toHaveLength(22)
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
-      '0 of 21 lessons reviewed',
+      '0 of 22 lessons reviewed',
     )
-    expect(CONTENT_LESSONS).toHaveLength(26)
+    expect(CONTENT_LESSONS).toHaveLength(27)
   })
 })
