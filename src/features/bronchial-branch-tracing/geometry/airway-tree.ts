@@ -3,7 +3,7 @@ import type { Vec3 } from './coordinates'
 import offRoute from './off-route-children.json'
 import routes from './paired-routes.json'
 import { pairedPath } from './paired-scope'
-import { arcNearest, sampleRoute } from './route-stations'
+import { arcNearest, forkArc, sampleRoute } from './route-stations'
 
 /**
  * The airway tree as a small frontal picture, for "where is the scope": every airway the routes
@@ -24,6 +24,9 @@ const pathOf = (points: readonly (readonly number[])[]) =>
       return `${i ? 'L' : 'M'}${fmt(x)} ${fmt(y)}`
     })
     .join(' ')
+
+/** A line through patient-space points, as an SVG path in the picture's frame. */
+export const treePath = (points: readonly (readonly number[])[]) => pathOf(points)
 
 const radii = offRoute.radii as Record<string, number>
 
@@ -73,4 +76,22 @@ export function routeSoFar(trace: CtTrace, position: Vec3): { d: string; arc: nu
   const arc = arcNearest(trace, position)
   const covered = points.filter((_, i) => arcs[i] <= arc)
   return { d: pathOf([...covered, sampleRoute(trace, arc)]), arc }
+}
+
+/** The five lobar bronchi, by the code the routes give them. */
+const LOBAR_BRONCHI: readonly string[] = ['RUL', 'RML', 'RLL', 'LUL', 'LLL']
+
+/**
+ * The route from the top of the trachea to the end of the lobar bronchus, as a path: which lobe a
+ * lesion is in, and nothing past it. Two lesions in one lobe draw the same line, so the picture
+ * says no more than the lobe's name does.
+ */
+export function lobarRoute(trace: CtTrace): string {
+  const index = trace.checkpoints.findIndex((checkpoint) =>
+    LOBAR_BRONCHI.includes(checkpoint.decision?.parent.airway.code ?? ''),
+  )
+  const arc = index < 0 ? null : forkArc(trace, index)
+  if (arc === null) throw new Error(`Route ${trace.id} passes no lobar bronchus`)
+  const { points, arcs } = pairedPath(trace)
+  return pathOf([...points.filter((_, i) => arcs[i] <= arc), sampleRoute(trace, arc)])
 }

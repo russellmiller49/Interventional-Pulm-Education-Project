@@ -1,4 +1,5 @@
-import { TREE_BOX, TREE_BRANCHES, routeSoFar, treePoint } from '../geometry/airway-tree'
+import { TARGET_IDS, lobeOf, targetById, traceForTarget } from '../content/targets'
+import { TREE_BOX, TREE_BRANCHES, lobarRoute, routeSoFar, treePoint } from '../geometry/airway-tree'
 import { CT_TRACES, traceById } from '../geometry/native-ct'
 import { pairedPath } from '../geometry/paired-scope'
 import { sampleRoute, stationCamera } from '../geometry/route-stations'
@@ -69,5 +70,31 @@ describe('the airway tree picture', () => {
     const atCarina = routeSoFar(trace, first.position)
     expect(atCarina.arc).toBeLessThan(total - 20)
     expect(atCarina.d.length).toBeLessThan(routeSoFar(trace, sampleRoute(trace, total)).d.length)
+  })
+})
+
+/** The lesion list's thumbnail: the way to the lobe, and nothing a lobe's name does not say. */
+describe('the way to a lesion’s lobe', () => {
+  const lines = TARGET_IDS.map((id) => ({
+    id,
+    lobe: lobeOf(targetById(id)!),
+    d: lobarRoute(traceForTarget(id)),
+  }))
+
+  it('is the same line for every lesion in a lobe, so it cannot tell two of them apart', () => {
+    const byLobe = new Map<string, Set<string>>()
+    for (const { lobe, d } of lines) byLobe.set(lobe, (byLobe.get(lobe) ?? new Set()).add(d))
+    expect([...byLobe.keys()]).toHaveLength(5)
+    for (const [lobe, drawn] of byLobe) expect([lobe, drawn.size]).toEqual([lobe, 1])
+    // Five lobes, five different lines.
+    expect(new Set(lines.map((line) => line.d)).size).toBe(5)
+  })
+
+  it('stops well short of the lesion', () => {
+    for (const { id, d } of lines) {
+      const whole = routeSoFar(traceForTarget(id), targetById(id)!.centerLps).d
+      expect(d.startsWith('M')).toBe(true)
+      expect(d.length).toBeLessThan(whole.length * 0.9)
+    }
   })
 })

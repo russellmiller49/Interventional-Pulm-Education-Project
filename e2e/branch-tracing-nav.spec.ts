@@ -897,6 +897,89 @@ test.describe('the orientation check and the refreshers', () => {
   })
 })
 
+test.describe('the method demonstrated', () => {
+  test('the hub offers it, it plays on the real bench, and it asks and saves nothing', async ({
+    page,
+  }) => {
+    test.setTimeout(180000)
+    // A first visit: the primer has not been seen, and it must not open over the demonstration.
+    await page.goto(BASE)
+    const poster = page.locator('[data-method-poster]')
+    await expect(poster).toBeVisible()
+    // The poster's map draws itself to the last division, then carries the star.
+    await expect(poster.locator('[data-arc-star]')).toHaveCount(1, { timeout: 15000 })
+    await poster.locator('[data-watch-method]').click()
+    await expect(page).toHaveURL(/lesson=watch-the-method/)
+    const demo = page.locator('[data-demo]')
+    await expect(demo).toBeVisible()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Watch the method')
+    // It plays by itself; paused, it is stepped.
+    await expect(page.locator('[data-demo-play]')).toHaveAttribute('aria-pressed', 'true')
+    await page.locator('[data-demo-play]').click()
+    await expect(page.locator('[data-demo-play]')).toHaveAttribute('aria-pressed', 'false')
+    await expect(demo).toHaveAttribute('data-demo-step', 'lesion')
+    await expectStage(page, 'plan:lesion')
+    await expect(page.locator('[data-demo-back]')).toBeDisabled()
+    // The task column is the narration; the bench's own card and its two header actions are gone,
+    // and the pictures cannot be worked.
+    await expect(now(page)).toBeHidden()
+    await expect(page.locator('[data-bench-help], [data-bench-restart]')).toHaveCount(0)
+    for (const pane of await page.locator('[data-bench] > section').all())
+      await expect(pane).toHaveAttribute('inert', '')
+    const next = page.locator('[data-demo-next]')
+    await next.click()
+    await expect(demo).toHaveAttribute('data-demo-step', 'airway')
+    await expectStage(page, 'plan:segment')
+    await next.click()
+    await expectStage(page, 'plan:frame')
+    await expect(page.locator('[data-demo-caption]')).toContainText('It is LB3')
+    await next.click()
+    await expectStage(page, 'plan:arcs:0')
+    // Back lands exactly where the step before began.
+    await page.locator('[data-demo-back]').click()
+    await expectStage(page, 'plan:frame')
+    await expect(demo).toHaveAttribute('data-demo-step', 'segment')
+    // On through the map to the drive: the scope flies in by itself and stops at a fork.
+    for (const stage of [
+      'plan:arcs:0',
+      'plan:arcs:1',
+      'plan:arcs:2',
+      'plan:arcs:3',
+      'plan:review',
+    ]) {
+      await next.click()
+      await expectStage(page, stage)
+    }
+    await expect(page.locator('[data-arc-map] [data-arc-star]').first()).toBeVisible()
+    await next.click()
+    await expect(demo).toHaveAttribute('data-demo-step', 'fly')
+    await expect(shell(page)).toHaveAttribute('data-stage', '3:choose', { timeout: 60000 })
+    await expect(demo).not.toHaveAttribute('data-demo-busy', 'true')
+    // The bench chose and drove on: the first division of the map, at the LB3 ostium.
+    await next.click()
+    await expect(shell(page)).toHaveAttribute('data-stage', '4:choose', { timeout: 60000 })
+    await expect(page.locator('[data-demo-caption]')).toContainText('the map takes over')
+    expect(await demo.innerText()).not.toMatch(BANNED)
+    // Nothing was saved: no place, no result, and the primer is still to be seen.
+    expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([])
+    await expect(page.locator('[data-demo-start]')).toHaveAttribute(
+      'href',
+      /lesson=start-at-the-lesion/,
+    )
+  })
+
+  test('the primer leads to it', async ({ page }) => {
+    await page.goto(`${BASE}/learn?lesson=start-at-the-lesion`)
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('[data-watch-method]')).toHaveAttribute(
+      'href',
+      /lesson=watch-the-method/,
+    )
+  })
+})
+
 test.describe('whole lesions', () => {
   test('Practice plans, maps and drives a lesion from the trachea', async ({ page }) => {
     test.setTimeout(180000)
@@ -928,6 +1011,81 @@ test.describe('whole lesions', () => {
     expect(closing).toContain('teaching simulator')
     expect(closing).toMatch(/Divisions drawn right at the first check: \d+ of 2/)
     expect(closing).not.toMatch(BANNED)
+    // The drive is read back under the map: the route on the tree and a line for each fork
+    // where an opening was chosen, with the same mark on the map's own divisions.
+    const replay = page.locator('[data-route-replay]')
+    await expect(replay).toBeVisible()
+    await expect(replay.locator('[data-replay-route]')).toHaveCount(1)
+    await expect(replay.locator('[data-replay-row]')).toHaveCount(3)
+    await expect(replay.locator('[data-replay-row]').last()).toContainText('Division 2 (RB8)')
+    await expect(page.locator('[data-arc-map] [data-arc-replay]')).toHaveCount(2)
+    expect(await replay.innerText()).not.toMatch(BANNED)
+    // Reaching the lesion is kept on this device, and the lesion list says so.
+    const kept = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('branch-tracing.results-v1') ?? 'null'),
+    )
+    expect(Object.keys(kept.results)).toEqual(['practice:r-anterior-basal'])
+    expect(kept.results['practice:r-anterior-basal'].runs).toBe(1)
+    // A reload on the closing screen does not count the lesion a second time.
+    await page.reload()
+    await expect(page.locator('[data-route-replay]')).toBeVisible()
+    expect(
+      await page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem('branch-tracing.results-v1')!).results[
+            'practice:r-anterior-basal'
+          ].runs,
+      ),
+    ).toBe(1)
+    await page.goto(`${BASE}/practice`)
+    const card = page.locator('[data-lesion="r-anterior-basal"]')
+    await expect(card).toHaveAttribute('data-lesion-state', /reached|first/)
+    await expect(card.locator('[data-lesion-result]')).toContainText('Reached.')
+    await expect(card.locator('[data-lesion-divisions]')).toHaveText(
+      '2 divisions past the segmental ostium',
+    )
+    await expect(page.locator('[data-lesion="l-superior"]')).toHaveAttribute(
+      'data-lesion-state',
+      'new',
+    )
+    // The list still names no segment, and its pictures stop at the lobar bronchus.
+    await expect(page.locator('[data-lesion-thumb-route]')).toHaveCount(13)
+    const list = await page.locator('[data-lesion-picker]').innerText()
+    expect(list).not.toMatch(/RS\d|RB\d|LS\d|LB\d/)
+    expect(list).not.toMatch(BANNED)
+    // Practice says nothing on the closing set's list: that one keeps its own record.
+    await page.goto(`${BASE}/assess`)
+    await expect(page.locator('[data-lesion]')).toHaveCount(3)
+    await expect(page.locator('[data-closing-set]')).toHaveCount(0)
+    await page.evaluate(() => {
+      const step = { asked: true, misses: 0, shown: false }
+      localStorage.setItem(
+        'branch-tracing.results-v1',
+        JSON.stringify({
+          version: 1,
+          results: {
+            'assess:r-anterior-basal': {
+              reachedAt: '2026-11-10T12:00:00.000Z',
+              runs: 1,
+              plan: { lesion: step, segment: step, frame: step, arcs: { asked: 2, firstTry: 1 } },
+              drive: { choose: { asked: 3, firstTry: 2 }, wrongTurns: 1, backedOut: 1 },
+            },
+          },
+        }),
+      )
+    })
+    await page.reload()
+    const summary = page.locator('[data-closing-set]')
+    await expect(summary).toContainText('1 of 3 lesions reached')
+    await expect(summary.locator('[data-closing-row]')).toHaveCount(3)
+    const reached = summary.locator('[data-closing-row="r-anterior-basal"]')
+    await expect(reached).toHaveAttribute('data-reached', 'true')
+    await expect(reached).toContainText('3 of 3')
+    await expect(reached).toContainText('1 of 2')
+    await expect(reached).toContainText('2 of 3')
+    await expect(reached).toContainText('1 entered, 1 backed out of')
+    await expect(summary.locator('[data-closing-row][data-reached="false"]')).toHaveCount(2)
+    expect(await summary.innerText()).not.toMatch(BANNED)
   })
 
   test('the closing set gives no hints and withholds names until the learner has chosen', async ({

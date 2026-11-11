@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { TripPlan } from '../engine/trip-session'
-import { Link, useRouter } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
 import { TEACHING_SIMULATOR_STATEMENT, summaryLines } from '../content/bench-copy'
 import { NAMING_KEY, NAMING_USE, SLICE_DIRECTION_NOTE, targetNaming } from '../content/course-guide'
 import type { CtNoduleTarget } from '../content/ct-types'
@@ -14,15 +14,15 @@ import {
   lobeOf,
   targetById,
   targetLabel,
-  targetsByLobe,
   traceForTarget,
 } from '../content/targets'
 import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
-import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import { navKey } from '../engine/nav-storage'
 import { ROUTE_PLAN_PARTS, summarizePlan } from '../engine/plan-session'
 import { readPrefs } from '../engine/prefs-storage'
-import { CruiseChoice } from './CruiseChoice'
+import { recordResult, resultOf } from '../engine/results-storage'
+import { LesionPicker } from './LesionPicker'
 import { ModuleFrame } from './ModuleFrame'
 import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
@@ -63,66 +63,6 @@ export function NavRouteHost({ mode, requestedTarget }: { mode: Mode; requestedT
   )
 }
 
-function LesionPicker({ mode }: { mode: Mode }) {
-  const router = useRouter()
-  const groups = targetsByLobe()
-    .map((group) => ({
-      ...group,
-      targets:
-        mode === 'assess'
-          ? group.targets.filter((target) => ASSESS_TARGET_IDS.includes(target.id))
-          : group.targets,
-    }))
-    .filter((group) => group.targets.length)
-  const open = (id: string) => {
-    // A route already driven to its lesion starts again from the trachea.
-    const key = navKey(mode, id)
-    const saved = readNavEntry(key).entry
-    if (saved && tripOver(saved.trip)) writeNavEntry(key, null)
-    router.push(`${BASE_PATH}/${mode}?lesion=${id}`)
-  }
-  const ids = groups.flatMap((group) => group.targets.map((target) => target.id))
-  return (
-    <main className={styles.picker} data-lesion-picker={mode}>
-      <h1>{mode === 'assess' ? 'Three lesions, no hints' : 'Pick a lesion'}</h1>
-      <p>
-        {mode === 'assess'
-          ? 'Plan each lesion from the lesion back, draw its map, then drive: the scope flies through the central airways and the choices begin where the segment’s bronchus leaves. There are no hints: openings are numbered but not named until you have chosen, and a check tells you only whether it fits. A turn into a branch that leads away is counted, and so is backing out of it.'
-          : 'Plan each lesion from the lesion back: find the airway into it, name its segment, draw the ostium circle and the arcs to the lesion. Then drive: the scope flies through the central airways, and from the fork where the segment’s bronchus leaves the choices are yours, with your map past the segmental ostium.'}
-      </p>
-      <div className={styles.pickerGroups}>
-        {groups.map((group) => (
-          <section key={group.lobe} className={styles.pickerGroup}>
-            <h2>{group.lobe}</h2>
-            <ul>
-              {group.targets.map((target) => (
-                <li key={target.id}>
-                  <button onClick={() => open(target.id)} data-lesion={target.id}>
-                    Lesion on slice {target.slice}
-                    <small>{group.lobe}</small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      <CruiseChoice />
-      {mode === 'practice' && (
-        <div className={styles.pickerActions}>
-          <button
-            onClick={() => open(ids[Math.floor(Math.random() * ids.length)])}
-            data-lesion-surprise
-          >
-            Surprise me
-          </button>
-        </div>
-      )}
-      <p className={styles.boundary}>{TEACHING_SIMULATOR_STATEMENT}</p>
-    </main>
-  )
-}
-
 function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
   const trace = useMemo(() => traceForTarget(target.id), [target.id])
   const trip: TripPlan = useMemo(
@@ -135,6 +75,23 @@ function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
   )
   const storageKey = navKey(mode, target.id)
   const [session, dispatch] = useTrip(trace, target, trip, storageKey, 0)
+  // Reaching the lesion is recorded once, when it happens: a trip opened already at its end (a
+  // reload on the closing screen) was recorded when it got there.
+  const over = tripOver(session)
+  const wasOver = useRef(over)
+  useEffect(() => {
+    if (over && !wasOver.current)
+      recordResult(
+        storageKey,
+        resultOf(
+          session.plan ? summarizePlan(trip.plan!, session.plan) : null,
+          session.nav ? summarize(session.nav) : null,
+        ),
+      )
+    wasOver.current = over
+    // The summaries are read at the moment the trip ends; nothing changes them afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [over, storageKey])
   const forkNames = trip.nav!.stations.map(
     (station) => trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
   )

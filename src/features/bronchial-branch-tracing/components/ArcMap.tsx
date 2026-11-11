@@ -61,6 +61,11 @@ export interface ArcMapProps {
   rimSlot?: (position: Rim) => ReactNode
   /** The turn is following something that moves (the scope, mid-drive): keep close behind it. */
   following?: boolean
+  /**
+   * At arrival, how the choice at each division went, by division: the opening toward the lesion
+   * was the first choice, a later one, or shown. Drawn as a mark beside the division's number.
+   */
+  marks?: readonly ('first' | 'later' | 'shown' | null)[]
 }
 
 const unit = (angle: number): [number, number] => {
@@ -102,6 +107,7 @@ export function ArcMap({
   variant = 'large',
   rimSlot,
   following = false,
+  marks,
 }: ArcMapProps) {
   const uid = useId().replace(/:/g, '')
   const all: MapLevel[] = [
@@ -193,18 +199,33 @@ export function ArcMap({
           {all.map((_, level) => {
             const at = divisionHome(regions, level)
             if (!at) return null
+            const size = Math.max(textSize, at.inner.r * 0.28)
+            const mark = marks?.[level]
             return (
-              <text
-                key={`n${level}`}
-                className={`${styles.arcNumber} ${styles.arcUpright}`}
-                x={fmt(at.inner.cx)}
-                y={fmt(at.inner.cy)}
-                fontSize={fmt(Math.max(textSize, at.inner.r * 0.28))}
-                style={upright}
-                data-arc-division={level + 1}
-              >
-                {level + 1}
-              </text>
+              <g key={`n${level}`}>
+                <text
+                  className={`${styles.arcNumber} ${styles.arcUpright}`}
+                  x={fmt(at.inner.cx)}
+                  y={fmt(at.inner.cy)}
+                  fontSize={fmt(size)}
+                  style={upright}
+                  data-arc-division={level + 1}
+                >
+                  {level + 1}
+                </text>
+                {mark && (
+                  <text
+                    className={`${styles.arcReplayMark} ${styles.arcUpright}`}
+                    x={fmt(at.inner.cx)}
+                    y={fmt(at.inner.cy - size * 0.95)}
+                    fontSize={fmt(size * 0.7)}
+                    style={upright}
+                    data-arc-replay={mark}
+                  >
+                    {mark === 'first' ? '✓' : mark === 'later' ? '↩' : '→'}
+                  </text>
+                )}
+              </g>
             )
           })}
           {drawing &&

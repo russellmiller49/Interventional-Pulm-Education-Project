@@ -1,5 +1,8 @@
 'use client'
 
+import { Link } from '@/i18n/navigation'
+import { lessonHref } from '../content/module'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, CircleHelp, RotateCcw } from 'lucide-react'
 import {
@@ -143,6 +146,11 @@ export interface PlanBenchProps {
   notes?: ReactNode
   exit: ReactNode
   onRestart: () => void
+  /**
+   * The bench is being demonstrated: this takes the text column's place, the pictures cannot be
+   * worked, and the header offers only the way out.
+   */
+  narration?: ReactNode
 }
 
 type SideTab = 'map' | 'scope' | ReferencePlane
@@ -167,6 +175,7 @@ export function PlanBench({
   notes,
   exit,
   onRestart,
+  narration,
 }: PlanBenchProps) {
   const forks = useMemo(() => mappedForks(trace, target), [trace, target])
   const frame = planFrame(trace, target)!
@@ -254,7 +263,7 @@ export function PlanBench({
   const [revealed, setRevealed] = useState(false)
   useEffect(() => setRevealed(false), [viewKey])
 
-  const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
+  const [helpOpen, setHelpOpen, closeHelp] = usePrimer(!narration)
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
   useStageFocus(
@@ -580,18 +589,22 @@ export function PlanBench({
               stage !== 'segment' && <li data-route-chip="done">{target.segment.bronchusCode}</li>}
           </ol>
           <div className={styles.benchActions}>
-            <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
-              <CircleHelp size={15} aria-hidden /> What are we doing?
-            </button>
-            <button
-              onClick={() => {
-                setTrail([])
-                onRestart()
-              }}
-              data-bench-restart
-            >
-              <RotateCcw size={15} aria-hidden /> Restart trip
-            </button>
+            {!narration && (
+              <>
+                <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
+                  <CircleHelp size={15} aria-hidden /> What are we doing?
+                </button>
+                <button
+                  onClick={() => {
+                    setTrail([])
+                    onRestart()
+                  }}
+                  data-bench-restart
+                >
+                  <RotateCcw size={15} aria-hidden /> Restart trip
+                </button>
+              </>
+            )}
             {exit}
           </div>
         </div>
@@ -604,7 +617,9 @@ export function PlanBench({
         data-bench
         data-plan-stage={stage}
         data-plan-wide={wide || undefined}
+        data-bench-narrated={narration ? true : undefined}
       >
+        {narration && <div className={styles.narration}>{narration}</div>}
         {/* The text column comes first, in the page and in the tab order: what to do, then the
             pictures it is done on. */}
         <div className={styles.now} style={{ gridArea: 'now' }}>
@@ -813,7 +828,12 @@ export function PlanBench({
         </div>
 
         {!wide && (
-          <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Map">
+          <section
+            className={styles.pane}
+            style={{ gridArea: 'scope' }}
+            aria-label="Map"
+            inert={Boolean(narration)}
+          >
             <header className={styles.paneHead}>
               <h2>
                 {tab === 'scope'
@@ -957,7 +977,12 @@ export function PlanBench({
           </section>
         )}
 
-        <section className={styles.pane} style={{ gridArea: 'ct' }} aria-label="CT">
+        <section
+          className={styles.pane}
+          style={{ gridArea: 'ct' }}
+          aria-label="CT"
+          inert={Boolean(narration)}
+        >
           <header className={styles.paneHead}>
             <h2>CT</h2>
             <span data-ct-display>
@@ -1003,6 +1028,11 @@ export function PlanBench({
         title={PRIMER_TITLE}
         returnFocusTo={helpButton}
       >
+        <p>
+          <Link href={lessonHref(DEMO_LESSON_ID)} data-watch-method>
+            Watch the method demonstrated, about 2 minutes
+          </Link>
+        </p>
         {PRIMER.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}

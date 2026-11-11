@@ -1,5 +1,8 @@
 'use client'
 
+import { Link } from '@/i18n/navigation'
+import { lessonHref } from '../content/module'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
 import {
   useCallback,
   useEffect,
@@ -60,6 +63,7 @@ import {
   type NavPlan,
   type NavSession,
 } from '../engine/nav-session'
+import { replayMarks, replayRows } from '../engine/route-replay'
 import {
   mapTurnToScope,
   type Anatomical,
@@ -80,6 +84,7 @@ import { falloffMmFor, routeRadiusMm } from '../geometry/airway-radius'
 import type { Vec3 } from '../geometry/coordinates'
 import { AirwayTreeInset } from './AirwayTreeInset'
 import { ArcMap } from './ArcMap'
+import { RouteReplay } from './RouteReplay'
 import { STAGE_STEPS } from '../content/plan-copy'
 import { operationsToMatch, readMatch, stationMatch } from '../engine/orientation-match'
 import { lpsToVoxel, targetForTrace } from '../geometry/native-ct'
@@ -182,6 +187,11 @@ export interface BenchProps {
   map?: TripMap | null
   /** Restart the whole trip, planning included. */
   onRestart?: () => void
+  /**
+   * The bench is being demonstrated: this takes the text column's place, the pictures cannot be
+   * worked, and the header offers only the way out.
+   */
+  narration?: ReactNode
 }
 export interface TripMap {
   rim: Record<Rim, Anatomical | null>
@@ -209,6 +219,7 @@ export function NavigationBench({
   exit,
   map = null,
   onRestart,
+  narration,
 }: BenchProps) {
   const target = targetForTrace(trace)
   const planned = plan.stations[session.station]
@@ -233,6 +244,12 @@ export function NavigationBench({
   const pastOstium = Boolean(map) && map!.forks.length > 0 && checkpointIndex >= map!.forks[0]
   const mapFocus = over || mapDivision < 0 ? null : mapDivision
   const [mapTurned, setMapTurned] = useState(false)
+  // At arrival the drive is read back beside the map: each fork's choice, and the branches that
+  // led away. Nothing of it shows before the scope has arrived.
+  const replay = useMemo(
+    () => (map && phase === 'arrived' ? replayRows(plan, session, map.forks) : []),
+    [map, phase, plan, session],
+  )
   // The opening the pointer or the keyboard is on, in any pane: its number lights in the scope,
   // on the CT, on its button and in the fork's table. The map's arcs are not linked this way:
   // which arc is which opening is the question the learner is answering.
@@ -271,7 +288,7 @@ export function NavigationBench({
       })),
     [viewKey, freshFocus],
   )
-  const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
+  const [helpOpen, setHelpOpen, closeHelp] = usePrimer(!narration)
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
   useStageFocus(
@@ -887,12 +904,19 @@ export function NavigationBench({
             {showLesion && <li data-route-chip="lesion">Lesion · {target.segment.code}</li>}
           </ol>
           <div className={styles.benchActions}>
-            <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
-              <CircleHelp size={15} aria-hidden /> What are we doing?
-            </button>
-            <button onClick={onRestart ?? (() => dispatch({ type: 'restart' }))} data-bench-restart>
-              <RotateCcw size={15} aria-hidden /> Restart trip
-            </button>
+            {!narration && (
+              <>
+                <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
+                  <CircleHelp size={15} aria-hidden /> What are we doing?
+                </button>
+                <button
+                  onClick={onRestart ?? (() => dispatch({ type: 'restart' }))}
+                  data-bench-restart
+                >
+                  <RotateCcw size={15} aria-hidden /> Restart trip
+                </button>
+              </>
+            )}
             {exit}
           </div>
         </div>
@@ -904,7 +928,9 @@ export function NavigationBench({
         style={{ height: benchMinHeight, minHeight: benchMinHeight }}
         data-bench
         data-bench-phase={phase}
+        data-bench-narrated={narration ? true : undefined}
       >
+        {narration && <div className={styles.narration}>{narration}</div>}
         {/* The text column comes first, in the page and in the tab order: what to do, then the
             pictures it is done on. */}
         <div className={styles.now} style={{ gridArea: 'now' }}>
@@ -1153,7 +1179,12 @@ export function NavigationBench({
           {notes}
         </div>
 
-        <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Bronchoscope">
+        <section
+          className={styles.pane}
+          style={{ gridArea: 'scope' }}
+          aria-label="Bronchoscope"
+          inert={Boolean(narration)}
+        >
           <header className={styles.paneHead}>
             <h2>Bronchoscope</h2>
             <span>{over && phase === 'arrived' ? target.approachCode : facts.parent.code}</span>
@@ -1187,6 +1218,7 @@ export function NavigationBench({
           style={{ gridArea: 'ct' }}
           aria-label={centre === 'map' ? 'Your map' : 'CT'}
           data-centre-pane={centre}
+          inert={Boolean(narration)}
         >
           <header className={styles.paneHead}>
             <h2>{CENTRE_TITLE[centre]}</h2>
@@ -1259,9 +1291,15 @@ export function NavigationBench({
                   rotation={mapTurned ? turnToScope.angle : 0}
                   following={mapTurned && moving}
                   label="Your map"
+                  marks={replay.length ? replayMarks(replay, map.forks.length) : undefined}
                 />
               </div>
-              <div className={`${styles.paneCaption} ${styles.mapTurnRow}`} data-map-turn-row>
+              {replay.length > 0 && <RouteReplay trace={trace} target={target} rows={replay} />}
+              <div
+                className={`${styles.paneCaption} ${styles.mapTurnRow}`}
+                data-map-turn-row
+                style={replay.length ? { display: 'none' } : undefined}
+              >
                 <button
                   role="switch"
                   aria-checked={mapTurned}
@@ -1310,6 +1348,11 @@ export function NavigationBench({
         title={PRIMER_TITLE}
         returnFocusTo={helpButton}
       >
+        <p>
+          <Link href={lessonHref(DEMO_LESSON_ID)} data-watch-method>
+            Watch the method demonstrated, about 2 minutes
+          </Link>
+        </p>
         {PRIMER.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
@@ -1336,8 +1379,10 @@ const CENTRE_TITLE: Record<CentreTab, string> = {
  * The primer opens by itself the first time a bench is used on this device, and from the header
  * button afterwards. A bench mounts after hydration, so storage can be read here.
  */
-export function usePrimer() {
+export function usePrimer(auto = true) {
   const [open, setOpen] = useState(() => {
+    // A bench that is being demonstrated never opens the primer over the demonstration.
+    if (!auto) return false
     try {
       return window.localStorage.getItem(PRIMER_SEEN_KEY) === null
     } catch {

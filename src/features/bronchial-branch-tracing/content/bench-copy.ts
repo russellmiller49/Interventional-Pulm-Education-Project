@@ -1,3 +1,5 @@
+import type { ReplayRow } from '../engine/route-replay'
+import { everyStepFirst, type TripResult } from '../engine/results-storage'
 import type { CtNoduleTarget } from './ct-types'
 import { displayName } from '../engine/display-text'
 import {
@@ -387,4 +389,55 @@ export function summaryLines(summary: NavSummary, forkNames: string[]) {
       `The fork that took longest: ${forkNames[summary.slowest.station] ?? 'one fork'}, ${summary.slowest.tries} tries.`,
     )
   return lines
+}
+
+// ── The lesion list ──────────────────────────────────────────────────────────────────────────
+
+export const divisionsLine = (divisions: number) =>
+  `${divisions} ${divisions === 1 ? 'division' : 'divisions'} past the segmental ostium`
+
+/** "2 of 3": how many of the planning steps asked landed at their first check. */
+export function planStepsFirst(plan: NonNullable<TripResult['plan']>) {
+  const steps = [plan.lesion, plan.segment, plan.frame].filter((s) => s.asked)
+  return { asked: steps.length, firstTry: steps.filter((s) => !s.misses && !s.shown).length }
+}
+
+/**
+ * The line under a lesion on the list: not opened, left part-way, or reached, with how much of
+ * the last run landed at its first check. The counts are the closing-set table's own.
+ */
+export function lesionStateLine(result: TripResult | null, started: boolean): string {
+  if (!result) return started ? 'Started, not yet reached.' : 'Not yet opened.'
+  const times = result.runs > 1 ? ` ${result.runs} times` : ''
+  if (everyStepFirst(result)) return `Reached${times}. Last time, every step at its first check.`
+  const parts: string[] = []
+  const tally = (label: string, part: { asked: number; firstTry: number }) => {
+    if (part.asked) parts.push(`${label} ${part.firstTry} of ${part.asked}`)
+  }
+  if (result.plan) {
+    tally('planning steps', planStepsFirst(result.plan))
+    tally('divisions drawn', result.plan.arcs)
+  }
+  if (result.drive) {
+    tally('openings chosen', result.drive.choose)
+    if (result.drive.wrongTurns)
+      parts.push(
+        `${result.drive.wrongTurns} ${result.drive.wrongTurns === 1 ? 'branch' : 'branches'} that led away entered`,
+      )
+  }
+  return `Reached${times}. Last time, at the first check: ${parts.join('; ')}.`
+}
+
+// ── The route read back at arrival ───────────────────────────────────────────────────────────
+
+/** One fork of the drive, read back: what was chosen first, and how the scope went on. */
+export function replayLine(row: ReplayRow, airway: string): string {
+  const where = row.division === null ? airway : `Division ${row.division + 1} (${airway})`
+  if (row.result === 'shown') return `${where}: the opening toward the lesion was shown.`
+  if (row.result === 'first') return `${where}: the opening toward the lesion, first choice.`
+  const entered = row.away.map((option) => openingNumber(option))
+  const first = entered.length
+    ? `opening ${entered.join(' and ')} first, which led away; backed out`
+    : 'an opening that leads away first'
+  return `${where}: ${first}, then the opening toward the lesion.`
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, GitBranch } from 'lucide-react'
+import { ArrowRight, GitBranch, Play } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { PRIMER, PRIMER_TITLE, TEACHING_SIMULATOR_STATEMENT } from '../content/bench-copy'
 import { METHOD_STEPS, NAMING_KEY, NAMING_USE } from '../content/course-guide'
@@ -14,12 +14,16 @@ import {
   totalMinutes,
 } from '../content/nav-lessons'
 import { ASSESS_TARGET_IDS, TARGET_IDS } from '../content/targets'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
 import { recommendedLesson } from '../engine/selfPacedProgress'
 import { CruiseChoice } from './CruiseChoice'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
+// Kept last: the poster draws with the bench's map, and the bench's stylesheet has to load
+// after the frame's.
+import { MethodPoster } from './MethodPoster'
 
 const HERO_TRACE = 'middle-lobe-caudal'
 
@@ -60,6 +64,13 @@ export function BranchTracingOverview() {
                     : `${recommendation.kind === 'resume' ? 'Resume' : 'Continue'}: ${door.title}`}
               <ArrowRight size={18} aria-hidden />
             </Link>
+            <Link
+              className={`${styles.posterLink} ${styles.watchFirst}`}
+              href={lessonHref(DEMO_LESSON_ID)}
+              data-watch-method
+            >
+              <Play size={15} aria-hidden /> Watch the method first, about 2 minutes
+            </Link>
             {ready && firstVisit && (
               <p className={styles.small} data-skip-check>
                 Three forks, about {ORIENTATION_CHECK.minutes} minutes: turn the CT to face the way
@@ -76,7 +87,10 @@ export function BranchTracingOverview() {
               <strong>Names:</strong> {NAMING_KEY} {NAMING_USE}
             </p>
           </div>
-          <TargetCtPreview traceId={HERO_TRACE} />
+          <div className={styles.heroSide}>
+            <TargetCtPreview traceId={HERO_TRACE} />
+            <MethodPoster />
+          </div>
         </header>
         {status === 'unavailable' && (
           <p className={styles.notice} role="status">

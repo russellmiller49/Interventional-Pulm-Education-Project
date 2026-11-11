@@ -231,12 +231,14 @@ describe('storage boundary', () => {
       )
   it('no course source writes the shared activity envelope, imports the legacy readers, or writes storage outside the declared owners', () => {
     // Each file that writes to this device, and the one key it writes: the course place, the
-    // place within a trip, and whether the bench's primer has been seen. Nothing else is stored.
+    // place within a trip, whether the bench's primer has been seen, how the drive runs, and what
+    // happened the last time each whole lesion was reached. Nothing else is stored.
     const writers: Record<string, string> = {
       'engine/selfPacedProgress.ts': 'SELF_PACED_STORAGE_KEY',
       'engine/nav-storage.ts': 'NAV_STORAGE_KEY',
       'components/NavigationBench.tsx': 'PRIMER_SEEN_KEY',
       'engine/prefs-storage.ts': 'PREFS_STORAGE_KEY',
+      'engine/results-storage.ts': 'RESULTS_STORAGE_KEY',
     }
     const files = sourceFiles(featureRoot)
     expect(files.length).toBeGreaterThan(20)
@@ -263,11 +265,12 @@ describe('storage boundary', () => {
       keys.push(text.match(new RegExp(`export const ${writers[rel]} = '([^']+)'`))![1])
     }
     expect(found.sort()).toEqual(Object.keys(writers).sort())
-    // Four keys, each the module's own.
+    // Five keys, each the module's own.
     expect(keys.sort()).toEqual([
       'branch-tracing.nav-v2',
       'branch-tracing.prefs-v1',
       'branch-tracing.primer-seen-v1',
+      'branch-tracing.results-v1',
       'branch-tracing.self-paced-v1',
     ])
     expect(keys).toContain(NAV_STORAGE_KEY)
