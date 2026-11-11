@@ -243,8 +243,20 @@ function AmplificationComparison() {
   )
 }
 
-export function FickMethodWorkbench() {
+export function FickMethodWorkbench({
+  episodesShownEarlier,
+}: {
+  /**
+   * Where the learner has already read the six episodes one page at a time ("shown on task 4").
+   * The lesson's Explain card printed all six again in full; with this they are one closed
+   * heading that opens in place, and the comparison after them, which is new, stays open.
+   */
+  readonly episodesShownEarlier?: string
+} = {}) {
   const headingId = useId()
+  const episodes = FICK_EPISODES.map((episode) => (
+    <FickEpisodeCard key={episode.id} episode={episode} />
+  ))
   return (
     <section className={styles.fickWorkbench} aria-labelledby={headingId}>
       <h2 id={headingId}>Fick: trace every input before you use the number</h2>
@@ -254,9 +266,20 @@ export function FickMethodWorkbench() {
         produces a flow or says why it will not. {ASSUMED_EQUATION_QUALIFIER}{' '}
         {BINDING_CONSTANT_QUALIFIER}
       </p>
-      {FICK_EPISODES.map((episode) => (
-        <FickEpisodeCard key={episode.id} episode={episode} />
-      ))}
+      {episodesShownEarlier ? (
+        <details
+          className={styles.repeatedPart}
+          data-stage-collapsed
+          data-repeated-part={episodesShownEarlier}
+        >
+          <summary>
+            The {FICK_EPISODES.length} episodes, in full · {episodesShownEarlier}
+          </summary>
+          {episodes}
+        </details>
+      ) : (
+        episodes
+      )}
       <AmplificationComparison />
     </section>
   )

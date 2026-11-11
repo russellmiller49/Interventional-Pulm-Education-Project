@@ -1,5 +1,7 @@
-import { cleanup } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 
+import { CardiacOutputMethodModel } from '../components/CardiacOutputMethodModel'
+import { FickMethodWorkbench } from '../components/FickMethodWorkbench'
 import { hemodynamicsSectionIds } from '../content/sectionSpecs'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
 import { currentStepId, installDom, leaveTask, mountSection } from '../test-support/stageHarness'
@@ -27,7 +29,7 @@ jest.mock('@/i18n/navigation', () => ({
  * Measured on screen, the module's seventeen Explain cards held about 26,000 of its 36,900
  * task-card words (counting what is drawn, not the text equivalents a screen reader gets). Each
  * section has two, the Explain task and "What carried over", and the second printed the first
- * one's pattern table, control list and whole reference again, word for word. Three folds, none
+ * one's pattern table, control list and whole reference again, word for word. Four folds, none
  * of which removes a sentence:
  *
  *   A. on "What carried over", a block shown on the section's Explain task is a closed heading
@@ -35,6 +37,8 @@ jest.mock('@/i18n/navigation', () => ({
  *   B. Section 3's Explain card no longer reprints the teaching of the task before it;
  *   C. the shock profiles and the validity sequence each have one home (Sections 8 and 2), and
  *      Section 9 shows them as closed headings.
+ *   E. the flow section's Explain card does not reprint the reading pages of its tasks 1 and 4
+ *      (E1 the six Fick episodes, E2 the thermodilution sequence and quality checks).
  *
  * After: about 25,300 words on screen, 32% fewer, every block one press away.
  */
@@ -116,18 +120,16 @@ describe('A. "What carried over" folds what the Explain task showed', () => {
 })
 
 describe('the first Explain card of a section still shows its reference open', () => {
-  it.each([
-    'pressure-system',
-    'waveform-components',
-    'thermodilution-series',
-    'derived-hemodynamics',
-  ])('%s folds nothing', (sectionId) => {
-    openStep(sectionId, explainSteps(sectionId)[0].id)
-    expect(document.querySelector('[data-repeated-block]')).toBeNull()
-    const shown = blocks().filter((block) => block.name !== 'boundary')
-    expect(shown.length).toBeGreaterThanOrEqual(3)
-    for (const block of shown) expect(block.folded).toBe(false)
-  })
+  it.each(['pressure-system', 'waveform-components', 'derived-hemodynamics'])(
+    '%s folds nothing',
+    (sectionId) => {
+      openStep(sectionId, explainSteps(sectionId)[0].id)
+      expect(document.querySelector('[data-repeated-block]')).toBeNull()
+      const shown = blocks().filter((block) => block.name !== 'boundary')
+      expect(shown.length).toBeGreaterThanOrEqual(3)
+      for (const block of shown) expect(block.folded).toBe(false)
+    },
+  )
 })
 
 describe('B. Section 3’s Explain card does not reprint the task before it', () => {
@@ -160,6 +162,89 @@ describe('B. Section 3’s Explain card does not reprint the task before it', ()
     openStep('waveform-interpretation', reading.id)
     const teaching = document.querySelector('[data-now-card] [data-current-teaching="rv-pa"]')!
     expect(teaching.closest('details')).toBeNull()
+  })
+})
+
+describe('E. the flow section’s Explain card does not reprint its reading pages', () => {
+  const lesson = hemodynamicsStageLesson('thermodilution-series')
+  const [first] = explainSteps('thermodilution-series')
+  const fickPages = lesson.steps.find((step) => step.interaction.kind === 'observe')!
+  const part = (block: string) =>
+    [
+      ...document.querySelectorAll<HTMLDetailsElement>(
+        `[data-now-card] [data-teaching-block="${block}"] details[data-repeated-part]`,
+      ),
+    ].map((fold) => ({
+      open: fold.open,
+      heading: fold.querySelector('summary')!.textContent!.replace(/\s+/g, ' ').trim(),
+      words: (fold.textContent ?? '').trim().split(/\s+/).length,
+    }))
+
+  it('reads the Fick episodes on the Observe task and the method on the first task', () => {
+    // The pages the Explain card would otherwise print again.
+    expect(fickPages.ordinal).toBeLessThan(first.ordinal)
+    expect(lesson.steps[0].interaction.kind).toBe('read')
+  })
+
+  it('E1: folds the six Fick episodes and keeps the comparison after them open', () => {
+    openStep('thermodilution-series', first.id)
+    const folds = part('fick-episodes')
+    expect(folds).toHaveLength(1)
+    expect(folds[0].open).toBe(false)
+    expect(folds[0].heading).toBe(`The 6 episodes, in full · shown on task ${fickPages.ordinal}`)
+    // Still there, in full: six episode cards inside the fold.
+    const block = document.querySelector('[data-now-card] [data-teaching-block="fick-episodes"]')!
+    expect(block.querySelectorAll('details[data-repeated-part] > article')).toHaveLength(6)
+    expect(folds[0].words).toBeGreaterThan(1500)
+    // The comparison is new on this card, so it is not inside the fold.
+    const comparison = [...block.querySelectorAll('h3')].find((heading) =>
+      /same input error does not always matter/.test(heading.textContent ?? ''),
+    )!
+    expect(comparison).toBeDefined()
+    expect(comparison.closest('details')).toBeNull()
+  })
+
+  it('E2: folds the thermodilution sequence and quality checks, on that method’s tab only', () => {
+    openStep('thermodilution-series', first.id)
+    expect(part('method-model').map((fold) => fold.heading)).toEqual([
+      'Acquisition sequence · from task 1',
+      'Quality checks before the number is used · from task 1',
+    ])
+    for (const fold of part('method-model')) expect(fold.open).toBe(false)
+    // The headings that are new on this card stay open.
+    const method = document.querySelector('[data-now-card] [data-teaching-block="method-model"]')!
+    const open = [...method.querySelectorAll('h4')]
+      .filter((heading) => heading.closest('details') === null)
+      .map((heading) => heading.textContent?.trim())
+    expect(open).toEqual(
+      expect.arrayContaining([
+        'Where every value came from',
+        'How the calculation runs',
+        'How it breaks down',
+        'Withhold the result when',
+      ]),
+    )
+
+    // Another method's sequence and checks were not read on task 1: nothing folds there.
+    const tabs = [...method.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+    fireEvent.click(tabs.find((tab) => tab.getAttribute('aria-selected') === 'false')!)
+    expect(part('method-model')).toHaveLength(0)
+    expect(
+      [...method.querySelectorAll('h4')].map((heading) => heading.textContent?.trim()),
+    ).toEqual(
+      expect.arrayContaining(['Acquisition sequence', 'Quality checks before the number is used']),
+    )
+  })
+
+  it('folds nothing of the kind outside the lesson stage', () => {
+    // The components keep their full form wherever no earlier page has shown the content.
+    const { container } = render(
+      <>
+        <FickMethodWorkbench />
+        <CardiacOutputMethodModel />
+      </>,
+    )
+    expect(container.querySelector('details[data-repeated-part]')).toBeNull()
   })
 })
 

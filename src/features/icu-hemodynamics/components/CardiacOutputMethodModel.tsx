@@ -67,7 +67,35 @@ function ProvenanceChip({
   )
 }
 
-function MethodDetail({ method }: { readonly method: CardiacOutputMethod }) {
+function MethodDetail({
+  method,
+  shownEarlier,
+}: {
+  readonly method: CardiacOutputMethod
+  /** Where the learner has already read this method's sequence and quality checks. */
+  readonly shownEarlier?: string
+}) {
+  const acquisitionSequence = (
+    <ol className={styles.measurementTeachingSteps}>
+      {method.acquisitionSequence.map((step) => (
+        <li key={step.order}>
+          <strong>{step.whatYouDo}</strong> {step.whatItEstablishes}
+        </li>
+      ))}
+    </ol>
+  )
+  const qualityChecks = (
+    <dl className={styles.curveFeatureList}>
+      {method.qualityChecks.map((check) => (
+        <div key={check.id}>
+          <dt>{check.label}</dt>
+          <dd>
+            {check.whatToLookFor} {check.whenItIsNotMet}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
   return (
     <div className={styles.measurementTeachingCard}>
       <h3>{method.name}</h3>
@@ -125,30 +153,38 @@ function MethodDetail({ method }: { readonly method: CardiacOutputMethod }) {
         ))}
       </ol>
 
-      <h4 className={styles.thermoTrialQuality}>
-        <span>Acquisition sequence</span>
-      </h4>
-      <ol className={styles.measurementTeachingSteps}>
-        {method.acquisitionSequence.map((step) => (
-          <li key={step.order}>
-            <strong>{step.whatYouDo}</strong> {step.whatItEstablishes}
-          </li>
-        ))}
-      </ol>
+      {shownEarlier ? (
+        <>
+          <details
+            className={styles.repeatedPart}
+            data-stage-collapsed
+            data-repeated-part={shownEarlier}
+          >
+            <summary>Acquisition sequence · {shownEarlier}</summary>
+            {acquisitionSequence}
+          </details>
+          <details
+            className={styles.repeatedPart}
+            data-stage-collapsed
+            data-repeated-part={shownEarlier}
+          >
+            <summary>Quality checks before the number is used · {shownEarlier}</summary>
+            {qualityChecks}
+          </details>
+        </>
+      ) : (
+        <>
+          <h4 className={styles.thermoTrialQuality}>
+            <span>Acquisition sequence</span>
+          </h4>
+          {acquisitionSequence}
 
-      <h4 className={styles.thermoTrialQuality}>
-        <span>Quality checks before the number is used</span>
-      </h4>
-      <dl className={styles.curveFeatureList}>
-        {method.qualityChecks.map((check) => (
-          <div key={check.id}>
-            <dt>{check.label}</dt>
-            <dd>
-              {check.whatToLookFor} {check.whenItIsNotMet}
-            </dd>
-          </div>
-        ))}
-      </dl>
+          <h4 className={styles.thermoTrialQuality}>
+            <span>Quality checks before the number is used</span>
+          </h4>
+          {qualityChecks}
+        </>
+      )}
 
       <h4 className={styles.thermoTrialQuality}>
         <span>What repeating it does and does not show</span>
@@ -329,9 +365,16 @@ function ProvenanceCommitment({
 export function CardiacOutputMethodModel({
   provenanceResolved = false,
   onProvenanceResolved,
+  shownEarlier,
 }: {
   readonly provenanceResolved?: boolean
   readonly onProvenanceResolved?: () => void
+  /**
+   * One method whose acquisition sequence and quality checks the learner has already read, and
+   * where ("from task 1"). The lesson's first task reads them for thermodilution, and its Explain
+   * card printed them again; with this they are closed headings on that method's tab only.
+   */
+  readonly shownEarlier?: { readonly methodId: CardiacOutputMethodId; readonly where: string }
 }) {
   const headingId = useId()
   const [selectedId, setSelectedId] = useState<CardiacOutputMethodId>('thermodilution')
@@ -366,7 +409,10 @@ export function CardiacOutputMethodModel({
       </div>
 
       <p className="sr-only">{cardiacOutputMethodTextEquivalent(selected)}</p>
-      <MethodDetail method={selected} />
+      <MethodDetail
+        method={selected}
+        shownEarlier={selected.id === shownEarlier?.methodId ? shownEarlier.where : undefined}
+      />
 
       <ProvenanceCommitment
         resolved={provenanceResolved}

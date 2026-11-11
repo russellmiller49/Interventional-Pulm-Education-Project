@@ -114,6 +114,15 @@ export function HemodynamicsTeachingColumn({
     explaining && firstExplain && firstExplain.id !== step.id
       ? `shown on task ${firstExplain.ordinal}`
       : undefined
+  // The flow section's Explain card: its method block and its Fick block reprint reading pages.
+  const fickPages = lesson.steps.find((candidate) => candidate.interaction.kind === 'observe')
+  const earlierPages =
+    explaining && lesson.sectionId === 'thermodilution-series'
+      ? {
+          method: `from task ${lesson.steps[0].ordinal}`,
+          fick: fickPages ? `shown on task ${fickPages.ordinal}` : undefined,
+        }
+      : undefined
   const teachingShownOn =
     explaining && step.teaching && step.teaching !== 'attempt'
       ? lesson.steps.find(
@@ -311,6 +320,7 @@ export function HemodynamicsTeachingColumn({
               lesson={lesson}
               provenanceResolved={provenanceResolved}
               repeat={shownOn}
+              earlierPages={earlierPages}
             />
           ) : null}
 
@@ -374,12 +384,19 @@ function DeeperReference({
   provenanceResolved,
   prebrief = false,
   repeat,
+  earlierPages,
 }: {
   readonly lesson: HemodynamicsStageLesson
   readonly provenanceResolved: boolean
   readonly prebrief?: boolean
   /** Where the learner has already had this section's reference ("shown on task 5"). */
   readonly repeat?: string
+  /**
+   * The flow section's reading pages, where its Explain card would reprint them: the first task
+   * reads the thermodilution sequence and quality checks, and the Observe task reads the six Fick
+   * episodes one page at a time (`flowReadingParts`).
+   */
+  readonly earlierPages?: { readonly method?: string; readonly fick?: string }
 }) {
   switch (lesson.sectionId) {
     case 'pressure-system':
@@ -539,12 +556,19 @@ function DeeperReference({
           </ReferenceBlock>
           <ReferenceBlock heading="The three ways to a flow number" repeat={repeat}>
             <div data-teaching-block="method-model">
-              <CardiacOutputMethodModel provenanceResolved={provenanceResolved} />
+              <CardiacOutputMethodModel
+                provenanceResolved={provenanceResolved}
+                shownEarlier={
+                  earlierPages?.method
+                    ? { methodId: 'thermodilution', where: earlierPages.method }
+                    : undefined
+                }
+              />
             </div>
           </ReferenceBlock>
           <ReferenceBlock heading="Fick, input by input" repeat={repeat}>
             <div data-teaching-block="fick-episodes">
-              <FickMethodWorkbench />
+              <FickMethodWorkbench episodesShownEarlier={earlierPages?.fick} />
             </div>
           </ReferenceBlock>
           <ReferenceBlock heading="Vary the technique yourself" repeat={repeat}>
