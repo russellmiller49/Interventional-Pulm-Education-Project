@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cleanup, fireEvent } from '@testing-library/react'
 
+import { derivedFigureMetricId } from '../content/derivedFigure'
 import { hemodynamicsSectionIds } from '../content/sectionSpecs'
+import { hemodynamicsStageItems } from '../content/stageItems'
 import { hemodynamicsStageLesson } from '../content/stageLessons'
 import { hemodynamicsTaskPresentation } from '../content/taskPresentation'
 import {
@@ -58,7 +60,7 @@ afterEach(() => {
 })
 
 describe('which steps name a section figure', () => {
-  it('is every task of the opening section, and the flow section’s reading, questions and Explain cards', () => {
+  it('is every task of the opening section, and the reading, questions and Explain cards of the flow and derived-values sections', () => {
     for (const sectionId of hemodynamicsSectionIds) {
       const lesson = hemodynamicsStageLesson(sectionId)
       for (const step of lesson.steps) {
@@ -70,7 +72,10 @@ describe('which steps name a section figure', () => {
             : sectionId === 'thermodilution-series' &&
                 (kind === 'read' || kind === 'prediction' || kind === 'explain')
               ? 'td-curve'
-              : 'none'
+              : sectionId === 'derived-hemodynamics' &&
+                  (kind === 'provenance-drill' || kind === 'prediction' || kind === 'explain')
+                ? 'derived-value'
+                : 'none'
         expect({ step: step.id, named }).toEqual({ step: step.id, named: expected })
       }
     }
@@ -205,6 +210,96 @@ describe('the flow section on the stage', () => {
     for (let guard = 0; currentStepId() !== series.id && guard < 20; guard += 1) leaveTask()
     expect(currentStepId()).toBe(series.id)
     expect(document.querySelector('[data-curve-names]')).toBeNull()
+  })
+})
+
+describe('the derived-values section on the stage', () => {
+  const drawing = () => document.querySelector<HTMLElement>('[data-derived-figure]')
+  const inputs = () =>
+    [...drawing()!.querySelectorAll<HTMLElement>('[data-derived-input]')].map((input) => ({
+      id: input.getAttribute('data-derived-input'),
+      usable: input.getAttribute('data-usable'),
+      text: input.textContent,
+    }))
+
+  it('names the value each task is about', () => {
+    expect(derivedFigureMetricId('recognize', 'metric:pulmonaryVascularResistance')).toBe(
+      'pulmonaryVascularResistance',
+    )
+    // The first question and its explanation are about SVR; the new patient's are about PPV.
+    expect(derivedFigureMetricId('predict', undefined)).toBe('systemicVascularResistance')
+    expect(derivedFigureMetricId('explain', undefined)).toBe('systemicVascularResistance')
+    expect(derivedFigureMetricId('transfer', undefined)).toBe('pulsePressureVariationPercent')
+    // Held to the questions themselves, so a rewritten question cannot leave the wrong drawing.
+    const items = hemodynamicsStageItems['derived-hemodynamics']
+    expect(items.prediction.stem).toMatch(/^SVR is calculated/)
+    expect(items.transfer.stem).toMatch(/calculate PPV/)
+  })
+
+  it('draws the value the page reads, from the same worked episode, and follows the page', () => {
+    mountSection('derived-hemodynamics')
+    expect(drawing()!.closest('[data-flow-visual]')).not.toBeNull()
+    expect(drawing()).toHaveAttribute('data-derived-figure', 'cardiacIndexLMinM2')
+    expect(drawing()).toHaveAttribute('data-derived-values', 'shown')
+    expect(inputs().map((input) => input.id)).toEqual(['cardiacOutputLMin', 'bodySurfaceAreaM2'])
+    expect(drawing()!.querySelector('[data-derived-formula]')).toHaveTextContent('CI = CO / BSA')
+    // The drawing's result is the card's result.
+    const cardResult = document.querySelector('[data-now-card] [data-metric-result] strong')!
+    expect(drawing()!.querySelector('[data-derived-result] strong')).toHaveTextContent(
+      cardResult.textContent!,
+    )
+    expect(drawing()!.querySelector('[data-derived-result]')).toHaveAttribute(
+      'data-derived-result',
+      'available-with-caution',
+    )
+
+    // The next page is the next value.
+    clickPrimary()
+    expect(drawing()).toHaveAttribute('data-derived-figure', 'strokeVolumeMl')
+  })
+
+  it('follows the reading’s switch to the episode with no height or weight', () => {
+    mountSection('derived-hemodynamics')
+    const compare = document.querySelector<HTMLInputElement>(
+      '[data-now-card] [data-metric-reading] input[type="checkbox"]',
+    )!
+    fireEvent.click(compare)
+    expect(document.querySelector('[data-now-card] [data-metric-result]')).toHaveAttribute(
+      'data-metric-result',
+      'withheld',
+    )
+    expect(drawing()!.querySelector('[data-derived-result]')).toHaveAttribute(
+      'data-derived-result',
+      'withheld',
+    )
+    expect(drawing()!.querySelector('[data-derived-result]')).toHaveTextContent('Result withheld')
+    const surface = inputs().find((input) => input.id === 'bodySurfaceAreaM2')!
+    expect(surface.usable).toBe('false')
+    expect(surface.text).toMatch(/Missing/)
+    // The switch belongs to the page it was set on.
+    clickPrimary()
+    expect(drawing()!.querySelector('[data-derived-result]')).not.toHaveAttribute(
+      'data-derived-result',
+      'withheld',
+    )
+  })
+
+  it('draws the structure and no numbers beside a question, before and after it is answered', () => {
+    const { lesson } = mountSection('derived-hemodynamics')
+    const question = lesson.steps[lesson.predictionStepIndex]
+    for (let guard = 0; currentStepId() !== question.id && guard < 30; guard += 1) leaveTask()
+    expect(currentStepId()).toBe(question.id)
+    expect(drawing()).toHaveAttribute('data-derived-figure', 'systemicVascularResistance')
+    expect(drawing()).toHaveAttribute('data-derived-values', 'structure')
+    expect(inputs().map((input) => input.id)).toEqual(['mapMmHg', 'rapMmHg', 'cardiacOutputLMin'])
+    expect(drawing()!.querySelector('[data-derived-input-value]')).toBeNull()
+    expect(drawing()!.textContent).not.toMatch(/\d+ (mmHg|L\/min)/)
+    expect(drawing()!.querySelector('[data-derived-result]')).toHaveAttribute(
+      'data-derived-result',
+      'not-shown',
+    )
+    commitChoice(/Withhold SVR/)
+    expect(drawing()).toHaveAttribute('data-derived-values', 'structure')
   })
 })
 

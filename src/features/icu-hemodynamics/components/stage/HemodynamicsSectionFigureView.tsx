@@ -1,8 +1,10 @@
 'use client'
 
 import { requireCardiacOutputMethod } from '../../content/cardiacOutputMethods'
+import type { DerivedMetricId } from '../../content/derivedMetrics'
 import type { HemodynamicsSectionFigure } from '../../content/taskPresentation'
 import type { HemodynamicSimulationState } from '../../engine/types'
+import { DerivedValueFigure } from '../DerivedValueFigure'
 import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
 import { ThermodilutionCurveFigure } from '../ThermodilutionTrialReview'
 import styles from '../icu-hemodynamics.module.css'
@@ -12,7 +14,7 @@ export function sectionFigureShows(
   figure: HemodynamicsSectionFigure,
   state: HemodynamicSimulationState,
 ): boolean {
-  if (figure === 'pac-parts') return true
+  if (figure === 'pac-parts' || figure === 'derived-value') return true
   if (figure === 'td-curve') return state.thermodilutionTrials.length > 0
   return false
 }
@@ -34,13 +36,20 @@ export function HemodynamicsSectionFigureView({
   figure,
   state,
   answered,
+  derived,
 }: {
   readonly figure: HemodynamicsSectionFigure
   readonly state: HemodynamicSimulationState
   readonly answered: boolean
+  /** For `derived-value`: the value to draw, and the worked episode whose numbers fill it, if any. */
+  readonly derived?: { readonly metricId: DerivedMetricId; readonly episodeId?: string }
 }) {
   if (!sectionFigureShows(figure, state)) return null
   if (figure === 'pac-parts') return <PacComponentSchematic functions={answered} />
+  if (figure === 'derived-value')
+    return derived ? (
+      <DerivedValueFigure metricId={derived.metricId} episodeId={derived.episodeId} />
+    ) : null
   const method = requireCardiacOutputMethod('thermodilution')
   return (
     <figure className={styles.thermoReferenceFigure} data-reference-curve>

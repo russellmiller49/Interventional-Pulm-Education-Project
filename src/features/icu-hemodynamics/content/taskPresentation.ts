@@ -21,8 +21,12 @@ export type HemodynamicsPresentationKind =
  * section's reading, its two questions and its two Explain cards described a temperature curve in
  * words (baseline, onset, peak, decay) with no curve beside them; the one drawing sat inside the
  * second page of the first task, its marks unnamed.
+ *
+ * `derived-value` is one calculated value drawn as what goes into it, its formula and what comes
+ * out (`DerivedValueFigure`). The derived-values section had no drawing at all: its reading, its
+ * two questions and its two Explain cards were text about equations.
  */
-export type HemodynamicsSectionFigure = 'none' | 'pac-parts' | 'td-curve'
+export type HemodynamicsSectionFigure = 'none' | 'pac-parts' | 'td-curve' | 'derived-value'
 
 export interface HemodynamicsTaskPresentation {
   readonly kind: HemodynamicsPresentationKind
@@ -52,6 +56,12 @@ function sectionFigure(
     (task === 'read' || task === 'prediction' || task === 'explain')
   )
     return 'td-curve'
+  // Not the workbenches, which lay out their own inputs and results.
+  if (
+    section === 'derived-hemodynamics' &&
+    (task === 'provenance-drill' || task === 'prediction' || task === 'explain')
+  )
+    return 'derived-value'
   return 'none'
 }
 
