@@ -874,6 +874,8 @@ export function LinkedModelView(props: Props) {
         render()
       },
       onEngagement: setEngaged,
+      // The camera buttons overlay the canvas inside this stage.
+      surface: element.closest<HTMLElement>('.linked-stage'),
     })
     controller.current = {
       update,
