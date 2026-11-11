@@ -1,7 +1,8 @@
 import {
   LINKED_LANDMARKS,
   LANDMARK_NAMES,
-  LANDMARK_HINTS,
+  linkedLandmarkHint,
+  linkedLandmarkName,
   STRUCTURE_FEATURES,
   structureDisplayName,
 } from '../../../../../src/lib/ebus-linked-contract'
@@ -955,16 +956,18 @@ export function LinkedModelView(props: Props) {
       onEvidence({
         identifiedStructures: [...new Set([...(evidence.identifiedStructures ?? []), landmarkTarget])],
       })
-      setLandmarkFeedback('Correct: that is the ' + LANDMARK_NAMES[landmarkTarget] + '.')
+      setLandmarkFeedback(
+        'Correct: that is the ' + linkedLandmarkName(config.linkedLesson, landmarkTarget) + '.',
+      )
       return
     }
     setLandmarkFeedback(
       (pick.centerName
         ? 'That is the ' + pick.centerName + ', not the '
         : 'That is tissue with no named structure in it, not the ') +
-        LANDMARK_NAMES[landmarkTarget] +
+        linkedLandmarkName(config.linkedLesson, landmarkTarget) +
         '. ' +
-        LANDMARK_HINTS[landmarkTarget],
+        linkedLandmarkHint(config.linkedLesson, landmarkTarget),
     )
     // Only a new click is an answer; the task and evidence are read as they are at that click.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1091,7 +1094,9 @@ export function LinkedModelView(props: Props) {
       {!models && !error && !concealed && <p role="status">Checking and loading teaching models…</p>}
       {identifying && !config.locked && landmarkTarget && (
         <div className="linked-landmark-task" data-landmark-target={landmarkTarget}>
-          <h3>Find the {LANDMARK_NAMES[landmarkTarget]} on the ultrasound</h3>
+          <h3>
+            Find the {linkedLandmarkName(config.linkedLesson, landmarkTarget)} on the ultrasound
+          </h3>
           <p>Rotate the scope until it is in the image, then click it.</p>
           {landmarkFeedback && (
             <p role="status" data-landmark-feedback>
@@ -1120,7 +1125,8 @@ export function LinkedModelView(props: Props) {
       )}
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
         <p role="status" data-landmarks-identified className="linked-task-line">
-          Found on ultrasound: {landmarkIds.map((id) => LANDMARK_NAMES[id]).join(' · ')}
+          Found on ultrasound:{' '}
+          {landmarkIds.map((id) => linkedLandmarkName(config.linkedLesson, id)).join(' · ')}
           .{' '}
           {/* The line names the step the lesson is actually waiting for (owner feedback of
               2026-10-12): this lesson asks for the model section, not a sweep. */}

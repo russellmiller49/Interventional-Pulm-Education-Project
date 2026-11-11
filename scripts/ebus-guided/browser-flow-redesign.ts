@@ -5,6 +5,7 @@ import { FINAL_CASES, PRACTICE_CASES } from '../../src/features/ebus-guided/cont
 import { LESSONS, partsOf } from '../../src/features/ebus-guided/content/curriculum'
 import {
   activitiesForLesson,
+  labForActivity,
   type LessonActivity,
 } from '../../src/features/ebus-guided/content/stage'
 import { labGoalMet } from '../../src/features/ebus-guided/content/types'
@@ -85,7 +86,7 @@ async function main() {
         }
         if (activity.interaction === 'acquire') {
           const variant = activity.task ?? 'guided'
-          const lab = variant === 'guided' ? unit.lab! : unit.transferLab!
+          const lab = labForActivity(unit, activity)!
           const linkedConsole = lab.kind === 'simulator' && !!lab.linkedLesson
           // The image is the learner's to acquire: the primary control waits for the lab's steps,
           // and leaving without an image is always offered.

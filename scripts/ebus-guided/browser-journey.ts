@@ -10,6 +10,7 @@ import { FINAL_CASES } from '../../src/features/ebus-guided/content/cases'
 import { LESSONS, lessonHref, partsOf } from '../../src/features/ebus-guided/content/curriculum'
 import {
   activitiesForLesson,
+  labForActivity,
   type LessonActivity,
 } from '../../src/features/ebus-guided/content/stage'
 import {
@@ -70,7 +71,7 @@ async function performActivity(page: Page, lesson: Lesson, activity: LessonActiv
   const unit = partsOf(lesson).find((part) => part.id === activity.lessonId)!
   if (activity.interaction === 'acquire') {
     const variant = activity.task ?? 'guided'
-    const lab = variant === 'guided' ? unit.lab! : unit.transferLab!
+    const lab = labForActivity(unit, activity)!
     const frame = page.frameLocator(WORKBENCH)
     await expect(primary(page)).toBeDisabled()
     if (lab.linkedLesson) await performLinked(page, lab.linkedLesson, variant)
@@ -90,7 +91,7 @@ async function performActivity(page: Page, lesson: Lesson, activity: LessonActiv
       })
       .toBe(true)
     await page.screenshot({
-      path: out + '/lab-' + lesson.id + (variant === 'guided' ? '' : '-' + variant) + '.png',
+      path: out + '/lab-' + activity.id.replace(':', '-') + '.png',
     })
   }
   if (activity.interaction === 'record') await performRecord(page, activity)

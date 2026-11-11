@@ -320,7 +320,7 @@ export const locateLessons: Lesson[] = [
     id: 'left-paratracheal',
     title: 'Left paratracheal stations: 2L and 4L',
     topic: 'Locate',
-    minutes: 8,
+    minutes: 11,
     objective:
       'Identify the left paratracheal window using the aortic arch and left pulmonary artery.',
     recall: 'The side boundary of stations 2 and 4 follows the left lateral tracheal wall.',
@@ -354,14 +354,26 @@ export const locateLessons: Lesson[] = [
         'That is the upper boundary of 4L, separating it from 2L.',
       ],
     ),
+    // Linked labs since 2026-11-10: 4L between its two vascular boundaries, then 2L above the arch.
     lab: {
       kind: 'simulator',
+      linkedLesson: 'left-paratracheal',
       goal: 'scan',
       presetKey: 'station_4l_node_a::default',
       controls: ['roll'],
-      initialRoll: 55,
+      initialRoll: 85,
       instruction:
-        'Use Anatomy to inspect the left paratracheal target and adjacent vessels. Return to Ultrasound and adjust Scope rotation to bring the target into the sector.',
+        'Rotate the scope to find, in turn, the aortic arch, the left main pulmonary artery and the 4L node, and click each on the ultrasound image. Then sweep through the node and finish with it in view.',
+    },
+    transferLab: {
+      kind: 'simulator',
+      linkedLesson: 'left-upper-paratracheal',
+      goal: 'scan',
+      presetKey: 'station_2l_node_a::default',
+      controls: ['roll'],
+      initialRoll: 85,
+      instruction:
+        'The scope is now higher in the trachea. Find the aortic arch and click it, then find the 2L node and click it. Sweep through the node and finish with it in view.',
     },
     observation: q(
       'left-observe',
@@ -407,7 +419,7 @@ export const locateLessons: Lesson[] = [
     id: 'hilar-interlobar',
     title: 'Hilar and interlobar stations',
     topic: 'Locate',
-    minutes: 7,
+    minutes: 9,
     objective: 'Distinguish hilar from interlobar compartments using bronchial landmarks.',
     recall: 'Medial subcarinal nodes remain station 7; mainstem adjacency alone is insufficient.',
     concept: 'Follow the bronchial branching level',
@@ -443,6 +455,17 @@ export const locateLessons: Lesson[] = [
       ],
       'The named lobar branches distinguish these interlobar compartments.',
     ),
+    // One interlobar station on ultrasound (2026-11-10), after the matching that names them.
+    lab: {
+      kind: 'simulator',
+      linkedLesson: 'interlobar',
+      goal: 'scan',
+      presetKey: 'station_11ri_node_a::default',
+      controls: ['roll'],
+      initialRoll: 85,
+      instruction:
+        'The scope is in the right lower airway at the level of 11Ri. Rotate it to find the 11Ri node on the ultrasound image and click it. Then sweep through the node and finish with it in view.',
+    },
     observation: q(
       'hilar-observe',
       'What information made these interlobar assignments possible?',
@@ -478,6 +501,6 @@ export const locateLessons: Lesson[] = [
       'Branching landmarks distinguish interlobar stations.',
       'An accessible node is not necessarily a mediastinal node.',
     ],
-    sources: ['atlas', 'iaslc9'],
+    sources: ['atlas', 'iaslc9', 'simulation'],
   },
 ]
