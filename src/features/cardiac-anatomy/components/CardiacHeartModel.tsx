@@ -19,6 +19,8 @@ interface CardiacHeartModelProps {
    * more solid and the rest dim, until the list is empty again. Display only; the heart beats on.
    */
   highlightMeshNames?: readonly string[]
+  /** The light a highlighted structure takes. Yellow unless the caller's own marks are yellow. */
+  highlightColor?: string
   /**
    * Name labels pinned to structures: each sits at the centre of the named mesh and turns with
    * the model. They are DOM text over the canvas, so they stay sharp and can be styled by the
@@ -43,6 +45,7 @@ export function CardiacHeartModel({
   paused = false,
   reducedMotion = false,
   highlightMeshNames,
+  highlightColor,
   labels,
   labelClassName,
   labelSpread = 1,
@@ -132,6 +135,7 @@ export function CardiacHeartModel({
    */
   const highlightKey = (highlightMeshNames ?? []).join('|')
   useEffect(() => {
+    const highlight = highlightColor ? new THREE.Color(highlightColor) : HIGHLIGHT_COLOR
     const wanted = new Set(highlightKey ? highlightKey.split('|') : [])
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return
@@ -149,7 +153,7 @@ export function CardiacHeartModel({
           material.emissiveIntensity = base.emissiveIntensity
         } else if (wanted.has(object.name)) {
           material.opacity = Math.max(base.opacity, 0.78)
-          material.emissive.copy(HIGHLIGHT_COLOR)
+          material.emissive.copy(highlight)
           material.emissiveIntensity = 0.6
         } else {
           material.opacity = base.opacity * 0.55
@@ -158,7 +162,7 @@ export function CardiacHeartModel({
         }
       }
     })
-  }, [highlightKey, root])
+  }, [highlightColor, highlightKey, root])
   const labelKey = (labels ?? []).map((label) => `${label.meshName}=${label.text}`).join('|')
   const pins = useMemo(() => {
     if (!labelKey) return []
