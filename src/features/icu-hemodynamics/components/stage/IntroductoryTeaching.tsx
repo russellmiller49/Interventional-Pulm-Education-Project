@@ -14,9 +14,12 @@ import styles from './hemodynamics-stage.module.css'
 export function IntroductoryTeaching({
   topic,
   state,
+  figureBeside = false,
 }: {
   readonly topic: IntroTeaching
   readonly state: HemodynamicSimulationState
+  /** The section's drawing is in the visual column (the lesson stage), so the text only points at it. */
+  readonly figureBeside?: boolean
 }) {
   switch (topic) {
     case 'orientation':
@@ -36,7 +39,13 @@ export function IntroductoryTeaching({
               </div>
             ))}
           </dl>
-          <PacComponentSchematic />
+          {figureBeside ? (
+            <p data-figure-pointer>
+              The drawing of the catheter shows where each of these is taken from.
+            </p>
+          ) : (
+            <PacComponentSchematic />
+          )}
           <h4>Worked example · pressure and flow</h4>
           <p>
             Two illustrative patients have the same valid arterial mean pressure of 60 mmHg.

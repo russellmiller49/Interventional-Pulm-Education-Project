@@ -103,7 +103,9 @@ describe('Learn layout: text ahead of the visual in every task of every section'
   })
 
   it('gives a reading-only step one column at a reading measure', () => {
-    mountSection('why-measure')
+    // The flow section opens on a reading part. (The opening section is no longer reading only:
+    // it keeps the catheter drawing beside its text; see `section-figure.test.tsx`.)
+    mountSection('thermodilution-series')
     expect(document.querySelector('[data-flow-visual]')).toBeNull()
     expect(document.querySelector('[data-single-column]')).toHaveAttribute(
       'data-single-column',
@@ -206,6 +208,7 @@ describe('Learn layout: an empty simulator is no visual', () => {
       monitor: 'none',
       anatomy: 'none',
       controls: true,
+      figure: 'none',
     } as const
     render(
       <HemodynamicsSimulatorPane

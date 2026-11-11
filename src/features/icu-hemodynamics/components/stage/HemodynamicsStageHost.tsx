@@ -84,6 +84,7 @@ import {
 } from '../catheter-map/CatheterMap'
 import { useHemodynamicsSelfPacedRecord } from '../useHemodynamicsSelfPacedRecord'
 import { HemodynamicsExplanation, HemodynamicsQuestionBlock } from './HemodynamicsQuestion'
+import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
 import { HemodynamicsSimulatorPane, simulatorPaneShows } from './HemodynamicsSimulatorPane'
 import { HemodynamicsSourceList } from './HemodynamicsSourceList'
 import { HemodynamicsStoryProblems } from './HemodynamicsStoryProblems'
@@ -1589,9 +1590,22 @@ function HemodynamicsStageSession({
       baseline: taskBaselines[activeStep.id],
       hasWorkbench: extraSurface !== null,
     })
+  /*
+   * The section's drawing, where the step names one (`presentation.figure`). On a question that
+   * has not been answered it keeps its parts' names and holds back what each measures.
+   */
+  const figureAnswered =
+    interaction.kind === 'sort' ? Boolean(commitments.sort) || commitments.sortShown : revealOpen
+  const sectionFigure =
+    !readingOnly && presentation.figure === 'pac-parts' ? (
+      <div className={flowStyles.sectionFigure} data-section-figure={presentation.figure}>
+        <PacComponentSchematic functions={figureAnswered} />
+      </div>
+    ) : null
   const visual =
-    !readingOnly && (simulatorShown || questionFigure) ? (
+    !readingOnly && (simulatorShown || questionFigure || sectionFigure) ? (
       <>
+        {sectionFigure}
         {simulatorShown ? simulator : null}
         {questionFigure}
       </>

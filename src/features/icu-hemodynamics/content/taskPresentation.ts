@@ -10,11 +10,21 @@ export type HemodynamicsPresentationKind =
   | 'calculation-lab'
   | 'case'
 
+/**
+ * A drawing the section keeps beside its text, where the step has no simulator of its own.
+ *
+ * `pac-parts` is the catheter with its four parts marked (`PacComponentSchematic`). Walked on
+ * screen in November 2026, the opening section was a single centred text column on all six tasks,
+ * with this drawing below the fold of the first one and nowhere on the other five.
+ */
+export type HemodynamicsSectionFigure = 'none' | 'pac-parts'
+
 export interface HemodynamicsTaskPresentation {
   readonly kind: HemodynamicsPresentationKind
   readonly monitor: 'none' | 'pac' | 'arterial' | 'all'
   readonly anatomy: 'none' | 'map' | 'paired' | 'optional'
   readonly controls: boolean
+  readonly figure: HemodynamicsSectionFigure
 }
 
 /** Presentation only: no title matching, state construction, dispatch, or progression. */
@@ -22,6 +32,15 @@ export function hemodynamicsTaskPresentation(
   section: HemodynamicsSectionId,
   step: Pick<HemodynamicsStageStep, 'surface' | 'interaction' | 'teaching' | 'anatomy'>,
 ): HemodynamicsTaskPresentation {
+  const figure: HemodynamicsSectionFigure =
+    section === 'why-measure' && step.interaction.kind !== 'case' ? 'pac-parts' : 'none'
+  return { ...simulatorPresentation(section, step), figure }
+}
+
+function simulatorPresentation(
+  section: HemodynamicsSectionId,
+  step: Pick<HemodynamicsStageStep, 'surface' | 'interaction' | 'teaching' | 'anatomy'>,
+): Omit<HemodynamicsTaskPresentation, 'figure'> {
   const task = step.interaction.kind
   const reading = task === 'read' || task === 'explain'
   // A section's last task is its case, which brings its own monitor and workspace.
