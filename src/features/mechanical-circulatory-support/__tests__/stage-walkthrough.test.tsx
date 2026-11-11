@@ -138,7 +138,13 @@ describe('the stage: one progression per section', () => {
       expect(currentStepId()).toBe(`${sectionId}-observe`)
       const table = document.querySelector('[data-before-after]')
       expect(table).toBeInTheDocument()
-      expect(table?.querySelectorAll('tbody tr')).toHaveLength(
+      // The three-device table has no signal rows; elsewhere every observed signal has one row,
+      // under "Named in this task" or "Other readings".
+      expect(
+        table?.querySelectorAll(
+          sectionId === 'mcs-foundations-mechanisms' ? 'tbody tr' : 'tbody tr[data-signal]',
+        ),
+      ).toHaveLength(
         sectionId === 'mcs-foundations-mechanisms' ? 4 : lesson.contract.observedSignals.length,
       )
       for (const cell of table?.querySelectorAll('tbody td') ?? []) {

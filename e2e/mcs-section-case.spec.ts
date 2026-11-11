@@ -31,6 +31,12 @@ async function openCaseTask(page: Page, sectionId: string) {
   await page.goto(`/en/mechanical-circulatory-support/learn?lesson=${sectionId}&phase=transfer`)
   await expect(card(page)).toBeVisible({ timeout: 60_000 })
   await expect(primary(page)).toHaveText(/Continue to the case/)
+  // The button is in the server's markup before React has attached to it, and a click in that
+  // gap is lost (a dev server makes the gap long). Wait until React owns the button.
+  await page.waitForFunction(() => {
+    const button = document.querySelector('[data-now-card] [data-now-primary]')
+    return button !== null && Object.keys(button).some((key) => key.startsWith('__reactProps'))
+  })
   await primary(page).click()
   await expect(primary(page)).toHaveText(/Start the case/)
 }
