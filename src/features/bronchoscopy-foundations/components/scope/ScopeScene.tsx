@@ -37,6 +37,15 @@ import {
 } from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
 import { HeadDragLayer, headDragHint } from './HeadDragLayer'
+import { OutsideTurnLayer } from './OutsideTurnLayer'
+import {
+  LARYNX_ORBIT_PRESETS,
+  LARYNX_ORBIT_START,
+  larynxOrbitDescription,
+  turnLarynxOrbit,
+  type LarynxOrbit,
+  type LarynxOutsideLook,
+} from './larynxOutsideView'
 import styles from './scope-scene.module.css'
 
 type SceneStatus = 'loading' | 'ready' | 'failed'
@@ -145,6 +154,9 @@ export default function ScopeScene(props: SceneProps) {
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
   const [opticalSize, setOpticalSize] = useState({ width: 320, height: 240 })
+  // Where the learner has turned the outside model of the larynx to.
+  const [larynxOrbit, setLarynxOrbit] = useState<LarynxOrbit>(LARYNX_ORBIT_START)
+  const [larynxLook, setLarynxLook] = useState<LarynxOutsideLook>('solid')
   useEffect(() => {
     onStatus(status)
   }, [status, onStatus])
@@ -478,9 +490,17 @@ export default function ScopeScene(props: SceneProps) {
                       ? 'Tube cutaway: the scope inside the tube'
                       : props.positionView
                         ? 'Outside view from the front: the airway tree with the scope in it, and the tip marked'
-                        : 'Outside view: the scope in the airway'
+                        : view.mode === 'larynx-entry'
+                          ? larynxLook === 'inside'
+                            ? `Outside view of the larynx ${larynxOrbitDescription(larynxOrbit)}: the hyoid, the thyroid and cricoid cartilages drawn see-through, with the vocal folds and the scope inside them`
+                            : `Outside view of the larynx ${larynxOrbitDescription(larynxOrbit)}: the hyoid, the thyroid and cricoid cartilages and the first tracheal rings, with the scope passing down inside them and its tip marked`
+                          : 'Outside view: the scope in the airway'
                 }
                 data-control-closeups={detailedBench ? 'true' : undefined}
+                data-larynx-look={view.mode === 'larynx-entry' ? larynxLook : undefined}
+                data-larynx-yaw={
+                  view.mode === 'larynx-entry' ? Math.round(larynxOrbit.yawDeg) : undefined
+                }
               >
                 {detailedBench ? (
                   <>
@@ -542,11 +562,32 @@ export default function ScopeScene(props: SceneProps) {
                   <>
                     <View className={styles.observerViewport} index={2}>
                       <PerspectiveCamera makeDefault near={0.05} far={1400} fov={48} />
-                      <ObserverView assets={assets} props={props} />
+                      <ObserverView
+                        assets={assets}
+                        props={props}
+                        larynxOrbit={larynxOrbit}
+                        larynxLook={larynxLook}
+                      />
                     </View>
+                    {view.mode === 'larynx-entry' ? (
+                      <OutsideTurnLayer
+                        onTurn={(dx, dy) =>
+                          setLarynxOrbit((orbit) => turnLarynxOrbit(orbit, dx, dy))
+                        }
+                      />
+                    ) : null}
                     <span className={styles.viewHeading}>
-                      {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'}
+                      {view.mode === 'tube'
+                        ? 'Tube cutaway'
+                        : view.mode === 'larynx-entry'
+                          ? `Outside view · ${larynxOrbitDescription(larynxOrbit)}`
+                          : 'Outside view'}
                     </span>
+                    {view.mode === 'larynx-entry' ? (
+                      <span className={styles.turnHint}>
+                        Drag to turn the model. The yellow dot is the tip.
+                      </span>
+                    ) : null}
                     {props.positionView ? (
                       <span className={styles.positionNote} data-position-note>
                         From the front: the patient’s right is on the left. The yellow dot is the
@@ -555,6 +596,33 @@ export default function ScopeScene(props: SceneProps) {
                     ) : null}
                   </>
                 )}
+              </div>
+            ) : null}
+            {observer && view.mode === 'larynx-entry' ? (
+              // Outside the picture's own element, so each button is a button to every reader.
+              <div className={styles.turnButtons} role="group" aria-label="Outside view">
+                <button
+                  type="button"
+                  onClick={() => setLarynxLook((look) => (look === 'solid' ? 'inside' : 'solid'))}
+                  aria-pressed={larynxLook === 'inside'}
+                  data-larynx-see-inside
+                >
+                  See inside
+                </button>
+                {LARYNX_ORBIT_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setLarynxOrbit(preset.orbit)}
+                    aria-pressed={
+                      larynxOrbit.yawDeg === preset.orbit.yawDeg &&
+                      larynxOrbit.pitchDeg === preset.orbit.pitchDeg
+                    }
+                    data-larynx-view={preset.id}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
             ) : null}
             {props.positionView && props.onShowMap ? (

@@ -14,6 +14,7 @@ import {
 import {
   MUCOSA_ANATOMY_ATTRIBUTE,
   MUCOSA_ANATOMY_DEFINE,
+  MUCOSA_PALE_WALL_DEFINE,
   mucosaFragmentShader,
   mucosaVertexShader,
 } from './mucosa'
@@ -22,6 +23,12 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 /** What a compiler sees when `MUCOSA_ANATOMY` is not defined: every such block removed. */
 const withoutAnatomy = (source: string) =>
   source.replace(/^#ifdef MUCOSA_ANATOMY\n[\s\S]*?^#endif\n/gm, '')
+
+/** What a compiler sees when `MUCOSA_PALE_WALL` is not defined: each such block's `#else` branch. */
+const withoutPaleWall = (source: string) =>
+  source
+    .replace(/^  #ifdef MUCOSA_PALE_WALL\n[\s\S]*?^  #else\n([\s\S]*?)^  #endif\n/gm, '$1')
+    .replace(/^#ifdef MUCOSA_ANATOMY\n#endif\n/gm, '')
 
 describe('shared mucosa shader', () => {
   it('is the shared shader, character for character, when the anatomy define is absent', () => {
@@ -62,5 +69,28 @@ describe('shared mucosa shader', () => {
     expect(anatomy.defines).toHaveProperty(MUCOSA_ANATOMY_DEFINE)
     expect(anatomy.fragmentShader).toBe(mucosaFragmentShader)
     for (const material of [shared, tinted, anatomy]) material.dispose()
+  })
+
+  it('is the anatomy shader, character for character, when the pale wall is not asked for', () => {
+    // The anatomy shader as the EBUS white-light view was merged with it. Bronchoscopy
+    // Foundations' paler wall is a second opt-in; a change to this hash changes the EBUS picture.
+    expect(sha256(withoutPaleWall(mucosaFragmentShader))).toBe(
+      '70d9aee4cc273cd59f22a6d409b4bd253c4116e48a944ff24f9b40f12f25e1c9',
+    )
+    expect(mucosaVertexShader).not.toContain(MUCOSA_PALE_WALL_DEFINE)
+    // Every pale-wall directive is nested and indented, so the anatomy blocks still strip whole.
+    expect(withoutAnatomy(mucosaFragmentShader)).not.toContain(MUCOSA_PALE_WALL_DEFINE)
+    expect(mucosaFragmentShader).not.toMatch(/^#ifdef MUCOSA_PALE_WALL/m)
+  })
+
+  it('defines the pale wall only with the anatomy, and only when asked', () => {
+    const anatomy = createBronchoscopyMaterial(undefined, { anatomy: true })
+    expect(anatomy.defines).not.toHaveProperty(MUCOSA_PALE_WALL_DEFINE)
+    const pale = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
+    expect(pale.defines).toHaveProperty(MUCOSA_ANATOMY_DEFINE)
+    expect(pale.defines).toHaveProperty(MUCOSA_PALE_WALL_DEFINE)
+    const alone = createBronchoscopyMaterial(undefined, { paleWall: true })
+    expect(alone.defines ?? {}).not.toHaveProperty(MUCOSA_PALE_WALL_DEFINE)
+    for (const material of [anatomy, pale, alone]) material.dispose()
   })
 })

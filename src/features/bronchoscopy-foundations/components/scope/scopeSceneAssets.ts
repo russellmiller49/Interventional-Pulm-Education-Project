@@ -3,6 +3,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { loadAirwayStlGeometry } from '@/lib/airway-anatomy/airway-render'
 import { TEACHING_LUMEN_URL } from '../../engine/scope/scopeCase'
 import { loadStageScopeCase, DRACO_DECODER_PATH } from '../stage/scopeCaseLoader'
+import { applyLumenWallAttribute } from './lumenWallAttributes'
 import type { ScopeMode, AnatomyProfileId } from './types'
 
 const base = '/bronchoscopy-foundations/anatomy'
@@ -65,6 +66,9 @@ export async function loadSceneAssets(
       ).map(async (path) => [path, await loadScopeModel(path)] as const),
     ),
   ])
+  // Where each wall vertex sits on its airway, for the rings and the membranous wall. Written
+  // once onto the shared geometry, before the surface that reads it is drawn.
+  applyLumenWallAttribute(lumen, scopeCase)
   return { scopeCase, lumen, models: new Map(extras) }
 }
 export type ScopeSceneAssets = Awaited<ReturnType<typeof loadSceneAssets>>

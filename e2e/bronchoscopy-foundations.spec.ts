@@ -209,7 +209,10 @@ for (const viewport of [
             for (let y = Math.floor(info.height * 0.2); y < info.height * 0.8; y++) {
               for (let x = Math.floor(info.width * 0.2); x < info.width * 0.8; x++) {
                 const at = (y * info.width + x) * info.channels
-                if (data[at] > 40 && data[at] > data[at + 1] * 1.15) tissue++
+                // Lit tissue: bright enough, and warmer than neutral. Since the wall took the
+                // pale warm colour of the course's real stills its red stands only a little
+                // above its green, so the margin is small. Black and neutral grey do not pass.
+                if (data[at] > 40 && data[at] > data[at + 1] * 1.06) tissue++
                 count++
               }
             }

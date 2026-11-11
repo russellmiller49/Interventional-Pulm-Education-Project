@@ -3,7 +3,7 @@
   "units": "mm",
   "coordinateSystem": "LPS",
   "numberClass": "authored-for-simulation",
-  "authoredDate": "2026-09-11",
+  "authoredDate": "2026-11-11",
   "pathLps": [
     [-12.084437370300293, -203.19287109375, -16.34524917602539],
     [-12.044054985046387, -202.94427490234375, -16.777191162109375],
@@ -202,11 +202,21 @@
     "left": [0.9967331290245056, -0.04028605669736862, 0.07000046968460083],
     "anterior": [0.0, -0.8667147755622864, -0.49880415201187134]
   },
-  "sourceSha256": "6d0ac49a61286fc704eb767882526faf6f62dbaef26999e43842d21df9b33f41",
-  "registration": {
-    "method": "Authored nonrigid reference placement: paired vocal-ligament centroid at the 30 mm glottis, cricoid reference 18 mm lateral by 16 mm anteroposterior, epiglottis superior edge at 5 mm.",
-    "sourceVocalCentroid": [-0.0011079388204962015, 0.4810560643672943, 0.25779980421066284],
-    "sourceToModelAxisScales": [78.16910640530564, 73.48523678393113, 84.86939806331104]
+  "skeleton": {
+    "origin": "Authored for this model. No supplied mesh is read or reused.",
+    "proportions": "Checked against the owner's head-and-neck CT segmentation: thyroid cartilage about 46 mm wide, hyoid about 41 mm wide. The cricoid is sized to this model's airway.",
+    "nodes": [
+      "UA_thyroid",
+      "UA_cricoid",
+      "UA_arytenoid_L",
+      "UA_arytenoid_R",
+      "UA_epiglottis",
+      "UA_hyoid",
+      "UA_tracheal_rings",
+      "UA_trachea_wall",
+      "UA_thyrohyoid_membrane",
+      "UA_cricothyroid_ligament"
+    ]
   },
   "authoredParameters": {
     "radialSegments": 96,
@@ -220,9 +230,9 @@
       [36, 6.8, 6.8],
       [45, 6.11, 6.11]
     ],
-    "trueFoldThicknessMm": 1.6,
-    "falseFoldThicknessMm": 2.4,
-    "falseFoldsMm": 25,
+    "trueFolds": "Rounded bands lofted from the anterior commissure to the vocal process; triangular glottis, free edge at 30 mm.",
+    "falseFolds": "Rounded bands above the true folds, free edge at 24.2 mm.",
+    "mucosalRelief": "Arytenoid mounds with corniculate tubercles, aryepiglottic ridges with cuneiform tubercles and an epiglottic tubercle, moulded into the luminal face of the wall.",
     "subglottisStartMm": 32,
     "morphWeights": [0, 0.5, 1]
   },

@@ -1,5 +1,6 @@
 'use client'
 
+import { createBronchoscopyMaterial } from '@/lib/airway-anatomy/airway-render'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
@@ -13,6 +14,7 @@ import type { ScopeSceneAssets } from './scopeSceneAssets'
 import { drawnCordWeight } from './scopeSceneModel'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
 import { LARYNX_GLOTTIS_MM, TUBE_START_MM, TUBE_TIP_MM } from '../../engine/scope/scopeScripts'
+import type { LarynxOutsideLook } from './larynxOutsideView'
 import { createScopeState } from '../../engine/scope/scopeReducer'
 
 export function modelQuaternion(state: ScopeState) {
@@ -62,30 +64,128 @@ export function BenchTarget({ view }: Pick<ScopePaneProps, 'view'>) {
   )
 }
 
+/**
+ * How each part of the model larynx is drawn from outside.
+ *
+ * `inside`: the cartilages as pale glass, the mucosa as a thin pink skin inside them, the true
+ * folds and the hyoid solid, so the scope and the folds it is passing are seen through everything
+ * round them. `order` draws the inner layers first, so each layer tints the ones inside it.
+ * `solid`: every part opaque in its own tissue colour, as the larynx is built.
+ */
+interface OutsideLook {
+  readonly color: string
+  readonly opacity: number
+  readonly roughness: number
+  readonly order: number
+}
+const MUCOSA_SKIN: OutsideLook = { color: '#e0958c', opacity: 0.3, roughness: 0.5, order: 1 }
+const FALSE_FOLD: OutsideLook = { color: '#d9827b', opacity: 0.5, roughness: 0.5, order: 1 }
+const HYALINE: OutsideLook = { color: '#d3e6ee', opacity: 0.3, roughness: 0.3, order: 3 }
+const MEMBRANE: OutsideLook = { color: '#f0d6c8', opacity: 0.08, roughness: 0.6, order: 5 }
+const LARYNX_INSIDE_LOOK: Readonly<Record<string, OutsideLook>> = {
+  UA_lumen: MUCOSA_SKIN,
+  UA_subglottis: MUCOSA_SKIN,
+  UA_trachea_wall: MUCOSA_SKIN,
+  UA_fold_false_L: FALSE_FOLD,
+  UA_fold_false_R: FALSE_FOLD,
+  UA_fold_true_L: { color: '#ffffff', opacity: 1, roughness: 0.35, order: 0 },
+  UA_fold_true_R: { color: '#ffffff', opacity: 1, roughness: 0.35, order: 0 },
+  UA_arytenoid_L: { ...HYALINE, opacity: 0.75, order: 2 },
+  UA_arytenoid_R: { ...HYALINE, opacity: 0.75, order: 2 },
+  UA_epiglottis: { color: '#ecd9a0', opacity: 0.4, roughness: 0.4, order: 2 },
+  UA_cricoid: { ...HYALINE, opacity: 0.42 },
+  UA_tracheal_rings: { ...HYALINE, opacity: 0.55 },
+  UA_thyroid: { ...HYALINE, order: 4 },
+  UA_hyoid: { color: '#efe6cc', opacity: 1, roughness: 0.55, order: 0 },
+  UA_thyrohyoid_membrane: MEMBRANE,
+  UA_cricothyroid_ligament: { ...MEMBRANE, opacity: 0.2 },
+}
+const SOLID_MUCOSA: OutsideLook = { color: '#d68c82', opacity: 1, roughness: 0.5, order: 0 }
+const SOLID_HYALINE: OutsideLook = { color: '#c6d8de', opacity: 1, roughness: 0.42, order: 0 }
+const SOLID_MEMBRANE: OutsideLook = { color: '#e9dfd2', opacity: 1, roughness: 0.7, order: 0 }
+const LARYNX_SOLID_LOOK: Readonly<Record<string, OutsideLook>> = {
+  UA_fold_true_L: { color: '#ffffff', opacity: 1, roughness: 0.35, order: 0 },
+  UA_fold_true_R: { color: '#ffffff', opacity: 1, roughness: 0.35, order: 0 },
+  UA_arytenoid_L: SOLID_HYALINE,
+  UA_arytenoid_R: SOLID_HYALINE,
+  UA_cricoid: SOLID_HYALINE,
+  UA_tracheal_rings: SOLID_HYALINE,
+  UA_thyroid: SOLID_HYALINE,
+  UA_epiglottis: { color: '#e0cc8e', opacity: 1, roughness: 0.45, order: 0 },
+  UA_hyoid: { color: '#efe6cc', opacity: 1, roughness: 0.55, order: 0 },
+  UA_thyrohyoid_membrane: SOLID_MEMBRANE,
+  UA_cricothyroid_ligament: SOLID_MEMBRANE,
+}
+/** The mucosa the scope sees. Every other part is the framework under it, drawn only from outside. */
+const LARYNX_MUCOSA = /^UA_(lumen|subglottis|fold_)/
+
 export function LarynxLumen({
   assets,
   state,
-  outside = false,
+  outside,
 }: {
   assets: ScopeSceneAssets
   state: ScopeState
-  outside?: boolean
+  /** Drawn from outside, and how; left out, the larynx is drawn as the scope sees it. */
+  outside?: LarynxOutsideLook
 }) {
   const source = assets.models.get('larynx/larynx-lumen.glb')!.scene
   const model = useMemo(() => {
     const copy = source.clone(true)
     copy.traverse((node) => {
       if (!(node instanceof THREE.Mesh)) return
-      if (node.name === 'UA_skeleton') node.visible = false
-      const original = Array.isArray(node.material) ? node.material[0] : node.material
-      const material = original.clone() as THREE.MeshStandardMaterial
-      material.side = THREE.DoubleSide
-      if (outside && (node.name === 'UA_lumen' || node.name === 'UA_subglottis')) {
-        material.transparent = true
-        material.opacity = 0.15
-        material.depthWrite = false
+      const trueFold = node.name.startsWith('UA_fold_true')
+      if (outside) {
+        const look =
+          outside === 'solid'
+            ? (LARYNX_SOLID_LOOK[node.name] ?? SOLID_MUCOSA)
+            : (LARYNX_INSIDE_LOOK[node.name] ?? MUCOSA_SKIN)
+        const solid = look.opacity >= 1
+        node.renderOrder = look.order
+        node.material = new THREE.MeshPhysicalMaterial({
+          color: look.color,
+          // A true fold carries its own colour, pearly at the free edge and pink at the wall.
+          vertexColors: trueFold,
+          roughness: look.roughness,
+          clearcoat: 0.35,
+          clearcoatRoughness: 0.4,
+          side: THREE.DoubleSide,
+          transparent: !solid,
+          opacity: look.opacity,
+          // A see-through layer must not hide what lies inside it.
+          depthWrite: solid,
+        })
+        return
       }
-      node.material = material
+      if (!LARYNX_MUCOSA.test(node.name)) {
+        // From the scope the framework is under the mucosa: the wall's own relief shows the
+        // arytenoid mounds and the epiglottic tubercle. The cartilages are for the outside view.
+        node.visible = false
+        return
+      }
+      if (trueFold) {
+        // The true folds: pearly white and wet, against the pink of everything round them. A
+        // standard material, because the folds open and close by a morph target.
+        node.material = new THREE.MeshPhysicalMaterial({
+          // The model gives each fold its colour: pearly at the free edge, pink toward the wall.
+          color: '#ffffff',
+          vertexColors: true,
+          // Lit by the headlight alone they went grey; a fold is the brightest thing in the view.
+          emissive: '#5e4d3c',
+          roughness: 0.3,
+          clearcoat: 0.6,
+          clearcoatRoughness: 0.25,
+          side: THREE.DoubleSide,
+        })
+        return
+      }
+      // Seen from the scope, the larynx's wall, the false folds, the epiglottis and the arytenoids
+      // are one continuous mucosa, the same tissue as the trachea below: the same colour, vessels
+      // and sheen, with no rings (none of them carries a ring attribute). As flat colours they
+      // were separate cut-out shapes, and a wall was one blank colour when the tip turned to it.
+      const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
+      mucosa.side = THREE.DoubleSide
+      node.material = mucosa
     })
     return copy
   }, [source, outside])
@@ -274,7 +374,14 @@ export function HandleModel({ assets, state }: { assets: ScopeSceneAssets; state
 }
 
 /** The visible shaft ends at the engine's tip; the distal bend follows its optical axis. */
-export function AuthoredShaft({ state }: { state: ScopeState }) {
+export function AuthoredShaft({
+  state,
+  color = '#27313e',
+}: {
+  state: ScopeState
+  /** A lighter shaft where it must be picked out through other things. */
+  color?: string
+}) {
   const geometry = useMemo(() => {
     if (!state.pose) return null
     const pose = state.pose
@@ -292,7 +399,43 @@ export function AuthoredShaft({ state }: { state: ScopeState }) {
   useEffect(() => () => geometry?.dispose(), [geometry])
   return geometry ? (
     <mesh geometry={geometry}>
-      <meshStandardMaterial color="#27313e" roughness={0.45} />
+      <meshStandardMaterial color={color} roughness={0.45} />
     </mesh>
   ) : null
+}
+
+/**
+ * The scope where something solid hides it: the same shaft, drawn pale and see-through only where
+ * it lies behind what is in front, with its tip marked. In the outside view of the larynx the
+ * scope is inside the cartilages for the whole of the step.
+ */
+export function HiddenScopeTrace({ state }: { state: ScopeState }) {
+  const geometry = useMemo(() => {
+    if (!state.pose) return null
+    const pose = state.pose
+    const curve = new THREE.LineCurve3(
+      new THREE.Vector3(...plus(pose.tipLps, times(pose.tangentLps, -35))),
+      new THREE.Vector3(...pose.tipLps),
+    )
+    return new THREE.TubeGeometry(curve, 8, state.inputs.scopeOdMm / 2, 16, false)
+  }, [state.pose, state.inputs.scopeOdMm])
+  useEffect(() => () => geometry?.dispose(), [geometry])
+  if (!geometry || !state.pose) return null
+  return (
+    <>
+      <mesh geometry={geometry} renderOrder={15}>
+        <meshBasicMaterial
+          color="#a9dcff"
+          transparent
+          opacity={0.5}
+          depthFunc={THREE.GreaterDepth}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh position={state.pose.tipLps} renderOrder={20} data-position-tip>
+        <sphereGeometry args={[1.5, 20, 14]} />
+        <meshBasicMaterial color="#ffd166" depthTest={false} />
+      </mesh>
+    </>
+  )
 }

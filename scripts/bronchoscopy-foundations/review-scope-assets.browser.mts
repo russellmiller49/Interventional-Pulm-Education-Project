@@ -281,8 +281,10 @@ larynxScene.add(fillLight)
 const folds = ['L', 'R'].map(
   (side) => larynx.scene.getObjectByName(`UA_fold_true_${side}`) as THREE.Mesh,
 )
-const framework = larynx.scene.getObjectByName('UA_skeleton')!
-framework.visible = false
+// The mucosa the scope sees. Every other node is the laryngeal framework, drawn only from outside.
+const LARYNX_MUCOSA = /^UA_(lumen|subglottis|fold_)/
+assert(larynx.scene.getObjectByName('UA_thyroid'), 'Missing the authored thyroid cartilage')
+assert(larynx.scene.getObjectByName('UA_cricoid'), 'Missing the authored cricoid cartilage')
 const larynxForward = new THREE.Vector3(...larynxData.frameLps.forward)
 const larynxLeft = new THREE.Vector3(...larynxData.frameLps.left)
 const larynxAnterior = new THREE.Vector3(...larynxData.frameLps.anterior)
@@ -321,7 +323,7 @@ function renderLarynx(weight: number, exterior = false) {
     if (o instanceof THREE.Mesh)
       o.visible = exterior
         ? !['UA_lumen', 'UA_subglottis'].includes(o.name)
-        : o.name !== 'UA_skeleton'
+        : LARYNX_MUCOSA.test(o.name)
   })
   camera.position.copy(larynxRoot).addScaledVector(larynxForward, -30)
   if (exterior) camera.position.addScaledVector(larynxLeft, 65).addScaledVector(larynxAnterior, 45)

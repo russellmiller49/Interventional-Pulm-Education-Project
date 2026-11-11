@@ -59,15 +59,36 @@ procedural tissue appearance is an authored rendering aid, not a mucosal finding
 
 ## Larynx and junction
 
-`larynx/larynx-lumen.glb` contains `UA_lumen`, `UA_subglottis`, `UA_epiglottis`, paired true and false
-folds, paired arytenoids and the optional `UA_skeleton`. The supplied cartilage/ligament GLB is
-read without modification. Its epiglottis and arytenoids are reused with authored registration;
-the remaining framework is grouped under `UA_skeleton` with `extras.defaultVisible: false`.
+`larynx/larynx-lumen.glb` contains the mucosa the scope sees (`UA_lumen`, `UA_subglottis`, paired
+true and false folds) and the laryngeal framework round it, drawn only in the outside view:
+`UA_hyoid`, `UA_thyroid`, `UA_cricoid`, `UA_arytenoid_L`/`_R`, `UA_epiglottis`,
+`UA_tracheal_rings`, `UA_trachea_wall`, `UA_thyrohyoid_membrane` and `UA_cricothyroid_ligament`,
+each with `extras.defaultVisible: false`.
 
-Registration places the source vocal-ligament centroid at the authored 30 mm glottis plane, scales
-the cricoid reference to 18 mm lateral by 16 mm anteroposterior, and places the superior epiglottis
-edge at path distance 5 mm. These are model choices, not anatomical measurements or patient
-registration. The JSON records the source hash, registration, basis and cross-section stations.
+Every mesh is authored by `larynx_framework` and `build_larynx` in the build script. No supplied
+model is read. Until 2026-11-11 the cartilages were taken from a third-party model (the University
+of Dundee's "Anatomy of the larynx", CC BY-SA 4.0); they were replaced with original geometry so the
+asset carries no share-alike terms. That model was looked at for the shapes, and the framework's
+overall proportions were checked against the owner's own head-and-neck CT segmentation (thyroid
+cartilage about 46 mm wide, hyoid about 41 mm wide); the cricoid is sized to this model's airway.
+The CT and its segmentation stay in the local authoring data and are not in this repository.
+
+The mucosal surface was re-authored on 2026-11-11 for a more real picture from the scope, at the
+owner's request. The true folds are rounded bands lofted from the anterior commissure to the vocal
+process, so the glottis is a triangle with its apex in front; they carry a vertex colour, pearly at
+the free edge and the mucosa's pink toward the wall, and their `adduct` target brings the free edge
+to the midline. The false folds are thicker rounded bands above and just outside them, melting into
+the wall at their ends. The luminal face of `UA_lumen` and `UA_subglottis` carries a moulded relief:
+two arytenoid mounds with corniculate tubercles and the interarytenoid notch between them, an
+aryepiglottic ridge with a cuneiform tubercle on each side, and an epiglottic tubercle in front.
+From the scope the scene hides every framework node, since they lie under that mucosa. Every shape
+and size here is a presentation choice for this teaching model, not an anatomical measurement.
+
+The outside view draws the whole model as a shaded 3D model that the learner turns by dragging or
+with the Front, Side, Back and Above buttons (`larynxOutsideView.ts`, `OutsideTurnLayer.tsx`). It
+has two looks: solid, in tissue colours, and "See inside", with the cartilages and the wall as
+glass so the folds and the scope show. In both, the scope is traced pale where something solid
+hides it and its tip is marked with the yellow dot.
 
 The mucosal lining is authored around that framework. `UA_lumen` and `UA_subglottis` are watertight
 **wall shells with patent luminal end rings**, rather than air-volume collision meshes capped
@@ -135,14 +156,14 @@ trimming parameters and camera settings; measured build results are explicitly i
 
 ## Provenance and budgets
 
-| Files                                                                   | Origin / provenance class                                                             | Rights and review                                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| graph.json                                                              | Existing graph derived from case-001; unchanged                                       | Owner confirmation and clinical review pending                            |
-| lumen.glb                                                               | Reviewed case-001 lumen; source-derived surface with authored distal caps             | Source rights, de-identification confirmation and clinical review pending |
-| larynx-lumen.glb, larynx.json                                           | Supplied cartilage/ligament model plus authored mucosal walls, folds and registration | Source rights and clinical review pending                                 |
-| devices.json, accessories.glb                                           | Authored teaching geometry and dimensions                                             | Owner rights confirmation and clinical review pending                     |
-| handle.glb, scope-tip.glb, bench.glb, findings.glb, teaching-props.json | New Blender-authored teaching props; no product or patient reference implied          | Owner rights confirmation and clinical review pending                     |
-| Review PNGs and JSON                                                    | Generated views and technical measurements of these assets                            | Inherit the underlying assets' pending status                             |
+| Files                                                                   | Origin / provenance class                                                    | Rights and review                                                         |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| graph.json                                                              | Existing graph derived from case-001; unchanged                              | Owner confirmation and clinical review pending                            |
+| lumen.glb                                                               | Reviewed case-001 lumen; source-derived surface with authored distal caps    | Source rights, de-identification confirmation and clinical review pending |
+| larynx-lumen.glb, larynx.json                                           | Authored mucosal walls, folds and laryngeal framework; no supplied model     | Owner rights confirmation and clinical review pending                     |
+| devices.json, accessories.glb                                           | Authored teaching geometry and dimensions                                    | Owner rights confirmation and clinical review pending                     |
+| handle.glb, scope-tip.glb, bench.glb, findings.glb, teaching-props.json | New Blender-authored teaching props; no product or patient reference implied | Owner rights confirmation and clinical review pending                     |
+| Review PNGs and JSON                                                    | Generated views and technical measurements of these assets                   | Inherit the underlying assets' pending status                             |
 
 Every file is individually inventoried in `manifest.json` with bytes, SHA-256, provenance, origin,
 rights/permission status, de-identification status, reviewer, review date, profile, camera frame and
@@ -153,8 +174,8 @@ No source rights holder, reviewer identity or publication authorization has been
 | ---------------------- | ------------: | ----------------: |
 | graph.json             |        71,449 | Included in total |
 | lumen.glb              |       489,888 |         3,000,000 |
-| larynx-lumen.glb       |       221,064 |         1,500,000 |
-| larynx.json            |        14,386 | Included in total |
+| larynx-lumen.glb       |       270,392 |         1,500,000 |
+| larynx.json            |        14,694 | Included in total |
 | accessories.glb        |        50,464 |           450,000 |
 | devices.json           |         3,041 | Included in total |
 | handle.glb             |        12,160 |           500,000 |
@@ -162,9 +183,9 @@ No source rights holder, reviewer identity or publication authorization has been
 | bench.glb              |        10,160 |           100,000 |
 | findings.glb           |         8,632 |           100,000 |
 | teaching-props.json    |           674 | Included in total |
-| Review images and JSON |     1,181,798 | Included in total |
-| Manifest               |        33,400 | Included in total |
-| **All anatomy files**  | **2,104,172** |     **8,000,000** |
+| Review images and JSON |     1,119,302 | Included in total |
+| Manifest               |        36,722 | Included in total |
+| **All anatomy files**  | **2,311,234** |     **8,000,000** |
 
 The GLBs are self-contained and Draco-compressed with gltf-pipeline 4.3.1 / draco3d 1.5.7,
 compression level 10, position quantization 20 bits and normal quantization 12 bits. Geometry units
@@ -172,8 +193,7 @@ and axes are written directly, avoiding DCC scene scale or an implicit Y-up conv
 
 ## Regeneration and validation
 
-Run from this checkout. Set `BLENDER_EXECUTABLE` to the installed Blender executable and
-`SCOPE_LARYNX_REFERENCE` to the read-only `anatomy_assets/Larynx.glb` in the primary checkout.
+Run from this checkout. Set `BLENDER_EXECUTABLE` to the installed Blender executable.
 The reviewed source GLB is available in this task's branch at the path shown below. Raw source
 assets and any open Slicer scene remain untouched. Intermediates go only to
 `artifacts/scope-assets/`; do not commit that cache.
@@ -188,7 +208,7 @@ node scripts/bronchoscopy-foundations/compress-scope-assets.mjs lumen
 # Larynx plus path, then the six accessory states and device JSON.
 "$BLENDER_EXECUTABLE" --background --factory-startup --python-exit-code 1 \
   --python scripts/bronchoscopy-foundations/build-scope-assets.py -- \
-  --part larynx --source-larynx "$SCOPE_LARYNX_REFERENCE"
+  --part larynx
 "$BLENDER_EXECUTABLE" --background --factory-startup --python-exit-code 1 \
   --python scripts/bronchoscopy-foundations/build-scope-assets.py -- --part accessories
 node scripts/bronchoscopy-foundations/compress-scope-assets.mjs larynx accessories
