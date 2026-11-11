@@ -18,6 +18,11 @@ export const LINKED_LESSONS = [
   'ct-map',
   'station-seven',
   'right-paratracheal',
+  // Station scans added 2026-11-10: 4L and 2L in the left paratracheal lesson, 11Ri in the
+  // hilar and interlobar lesson. Each is a lab of its own, with its own preset and landmarks.
+  'left-paratracheal',
+  'left-upper-paratracheal',
+  'interlobar',
 ] as const
 export type LinkedLesson = (typeof LINKED_LESSONS)[number]
 export type LinkedApproach = 'rms' | 'lms' | 'default'
@@ -156,6 +161,22 @@ export const LINKED_LANDMARKS: Record<LinkedLesson, readonly string[]> = {
   'ct-map': ['station_7', 'pulmonary_artery'],
   'station-seven': ['station_7', 'pulmonary_artery', 'esophagus'],
   'right-paratracheal': ['superior_vena_cava', 'azygous', 'station_4r'],
+  // 4L between its two vascular boundaries; 2L above the arch; 11Ri by itself, because the
+  // vessels beside it are too small in this model's plane to ask for.
+  'left-paratracheal': ['aorta', 'pulmonary_artery', 'station_4l'],
+  'left-upper-paratracheal': ['aorta', 'station_2l'],
+  interlobar: ['station_11ri'],
+}
+/** The station preset each linked lab scans from. */
+export const LINKED_PRESETS: Record<LinkedLesson, string> = {
+  'scope-orientation': 'station_7_node_a::rms',
+  'acoustic-contact': 'station_7_node_a::rms',
+  'ct-map': 'station_7_node_a::rms',
+  'station-seven': 'station_7_node_a::rms',
+  'right-paratracheal': 'station_4r_node_a::default',
+  'left-paratracheal': 'station_4l_node_a::default',
+  'left-upper-paratracheal': 'station_2l_node_a::default',
+  interlobar: 'station_11ri_node_a::default',
 }
 export const LANDMARK_NAMES: Record<string, string> = {
   transducer_face: 'transducer surface',
@@ -167,6 +188,9 @@ export const LANDMARK_NAMES: Record<string, string> = {
   left_brachiocephalic_vein: 'left brachiocephalic vein',
   station_7: 'subcarinal node (station 7)',
   station_4r: 'right lower paratracheal node (4R)',
+  station_4l: 'left lower paratracheal node (4L)',
+  station_2l: 'left upper paratracheal node (2L)',
+  station_11ri: 'right interlobar node (11Ri)',
   pulmonary_artery: 'pulmonary artery',
   esophagus: 'esophagus',
   left_atrium: 'left atrium',
@@ -219,6 +243,47 @@ export const LANDMARK_HINTS: Record<string, string> = {
     'It is the large echo-free vein in front of the right paratracheal space, to the patient’s right of the trachea.',
   left_brachiocephalic_vein:
     'Follow the vein crossing anterior to the upper trachea toward the superior vena cava. The brachiocephalic arterial trunk is a different structure.',
+}
+/**
+ * Hints that depend on the station being scanned. The pulmonary artery beside 4L is the left
+ * main pulmonary artery below the node, not the vessel in front of the subcarinal space, and the
+ * aorta at these levels is the arch. Each is the lesson's own boundary statement.
+ */
+export const LANDMARK_HINTS_BY_LESSON: Partial<Record<LinkedLesson, Record<string, string>>> = {
+  'left-paratracheal': {
+    aorta:
+      'The aortic arch is the large echo-free vessel in this window. Its superior border is the upper limit of 4L.',
+    pulmonary_artery:
+      'The left main pulmonary artery is the other echo-free vessel, below the arch. Its upper rim is the lower limit of 4L.',
+    station_4l:
+      'It lies left of the trachea, below the superior border of the aortic arch and above the left main pulmonary artery.',
+  },
+  'left-upper-paratracheal': {
+    aorta:
+      'The aortic arch is the large echo-free vessel in this window. Its superior border separates 2L from 4L.',
+    station_2l: 'It lies left of the trachea, above the superior border of the aortic arch.',
+  },
+  interlobar: {
+    station_11ri:
+      'It lies against the airway wall between the middle- and lower-lobe bronchi. Rotate until a small rounded structure with tissue echoes comes into the image.',
+  },
+}
+/**
+ * Names that depend on the station being scanned: beside 2L and 4L the aorta in the window is
+ * the arch, and the pulmonary artery beside 4L is the left main pulmonary artery. The lessons
+ * name them that way, so the task bar does too.
+ */
+export const LANDMARK_NAMES_BY_LESSON: Partial<Record<LinkedLesson, Record<string, string>>> = {
+  'left-paratracheal': { aorta: 'aortic arch', pulmonary_artery: 'left main pulmonary artery' },
+  'left-upper-paratracheal': { aorta: 'aortic arch' },
+}
+/** The name of a structure the learner is asked to find in a given lab. */
+export function linkedLandmarkName(lesson: LinkedLesson | undefined, id: string) {
+  return (lesson && LANDMARK_NAMES_BY_LESSON[lesson]?.[id]) ?? LANDMARK_NAMES[id]
+}
+/** The hint for a structure in a given lab: the lab's own where it has one. */
+export function linkedLandmarkHint(lesson: LinkedLesson | undefined, id: string) {
+  return (lesson && LANDMARK_HINTS_BY_LESSON[lesson]?.[id]) ?? LANDMARK_HINTS[id]
 }
 /** Feature descriptions give a text alternative to inspecting an unnamed mesh. */
 export const STRUCTURE_FEATURES: Record<string, string> = {
@@ -311,6 +376,13 @@ export function linkedSetup(lesson: LinkedLesson, variant: LinkedVariant) {
       presetKey:
         lesson === 'right-paratracheal' ? 'station_4r_node_a::default' : 'station_7_node_a::rms',
     }
+  // The 2026-11-10 station scans have one position each: the preset, as it is.
+  if (
+    lesson === 'left-paratracheal' ||
+    lesson === 'left-upper-paratracheal' ||
+    lesson === 'interlobar'
+  )
+    return { offsetMm: 0, initialRoll: 85, presetKey: LINKED_PRESETS[lesson] }
   const changed = variant === 'changed-window'
   return {
     offsetMm: changed ? 3 : 0,

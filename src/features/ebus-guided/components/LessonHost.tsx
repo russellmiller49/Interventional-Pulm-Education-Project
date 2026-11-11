@@ -12,7 +12,7 @@ import {
   lessonHref,
   partsOf,
 } from '../content/curriculum'
-import { activitiesForLesson, type LessonActivity } from '../content/stage'
+import { activitiesForLesson, labForActivity, type LessonActivity } from '../content/stage'
 import { labGoalMet, labGoalRequirements, type Lesson, type Question } from '../content/types'
 import {
   recordLocation,
@@ -183,10 +183,15 @@ function LessonSession({
     .slice(runStart, position + 1)
     .findLast((activity) => activity.interaction === 'acquire')
   const runtimeUnit = runtimeActivity ? unitOf(runtimeActivity) : unitOf(active)
-  const runtimeLab =
-    runtimeActivity?.task && runtimeActivity.task !== 'guided'
-      ? runtimeUnit.transferLab
-      : runtimeUnit.lab
+  const runtimeLab = labForActivity(runtimeUnit, runtimeActivity)
+  /*
+   * One workbench session per lab. A unit's second station is a guided task like its first, so
+   * the task alone cannot tell the two labs apart: without this the second lab would inherit the
+   * first one's found landmarks and sweep.
+   */
+  const runtimeLabKey = runtimeActivity?.secondLab
+    ? 'second-station'
+    : (runtimeActivity?.task ?? 'guided')
   const questionPosition = questionPositions[current.id] ?? 0
   const hasTask = TASK_INTERACTIONS.includes(current.interaction)
   const taskOutcome = taskOutcomes[current.id]
@@ -892,7 +897,7 @@ function LessonSession({
                 </div>
               ) : runtimeActivity && runtimeLab ? (
                 <Workbench
-                  key={runtimeActivity.lessonId + ':' + (runtimeActivity.task ?? 'guided')}
+                  key={runtimeActivity.lessonId + ':' + runtimeLabKey}
                   lab={runtimeLab}
                   locked={
                     !!reviewId || holdRequested || active.interaction !== 'acquire' || finished
@@ -902,7 +907,7 @@ function LessonSession({
                     sessionId +
                     '-' +
                     (units.length > 1 ? runtimeActivity.lessonId + '-' : '') +
-                    (runtimeActivity.task ?? 'guided')
+                    runtimeLabKey
                   }
                   onObservation={onObservation}
                   console={consoleStage}

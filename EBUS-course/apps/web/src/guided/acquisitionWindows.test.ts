@@ -25,6 +25,7 @@ import {
   sampleLinkedSweep,
   LINKED_ALONG_AIRWAY,
   LINKED_LANDMARKS,
+  LINKED_PRESETS,
   linkedLateralPosition,
   linkedSetup,
   type LinkedLesson,
@@ -99,6 +100,10 @@ describe('every structure a lesson asks the learner to find is reachable on ultr
       'changed-window',
       linkedSetup('right-paratracheal', 'changed-window').presetKey,
     ],
+    // The station scans of 2026-11-10, each from its own preset.
+    ['left-paratracheal', 'guided', LINKED_PRESETS['left-paratracheal']],
+    ['left-upper-paratracheal', 'guided', LINKED_PRESETS['left-upper-paratracheal']],
+    ['interlobar', 'guided', LINKED_PRESETS.interlobar],
   ]
   it.each(cases)('%s (%s) from %s', (lesson, variant, key) => {
     const preset = manifest.presets.find((p) => p.preset_key === key)!
@@ -187,5 +192,48 @@ describe('the advance-and-withdraw task on the real model', () => {
       if (linkedLateralPosition(at(offset).lateral) === 'centre') centred.push(offset)
     expect(centred.length).toBeGreaterThanOrEqual(4)
     expect(Math.max(...centred)).toBeLessThan(startOffsetMm)
+  })
+})
+
+describe('the 4L, 2L and 11Ri scans on the real model', () => {
+  const labs = ['left-paratracheal', 'left-upper-paratracheal', 'interlobar'] as const
+  it.each(labs)('%s: a rotation sweep from the preset crosses the node with contact', (lesson) => {
+    const setup = linkedSetup(lesson, 'guided')
+    expect(setup).toMatchObject({ offsetMm: 0, presetKey: LINKED_PRESETS[lesson] })
+    const preset = manifest.presets.find((p) => p.preset_key === setup.presetKey)!
+    // The node the sweep is about is the lab's last landmark.
+    const landmarks = LINKED_LANDMARKS[lesson]
+    expect(landmarks[landmarks.length - 1]).toBe(preset.station_key)
+    const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+    let sweep = emptyLinkedSweep()
+    const seenAt: number[] = []
+    for (let roll = 90; roll >= -90; roll -= 5) {
+      const pose = clampPosePositionInsideChannel(
+        computeSimulatorPose(line, preset.centerline_s_mm, roll, preset),
+        channel,
+        0.2,
+      )
+      const contact = contactQualityForPose(pose, channel)
+      expect(contact).toBeGreaterThan(0.45)
+      const frame = renderAcousticFrame(
+        volume,
+        acousticPoseFromScope(pose),
+        { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contact },
+        192,
+        192,
+        80,
+        100,
+      )
+      const visible = frame.structures.some(
+        (s) => volume.metadata.labels[s.id].key === preset.station_key,
+      )
+      if (visible) seenAt.push(roll)
+      sweep = sampleLinkedSweep(sweep, { roll, visible, contact, frameId: lesson + ':' + roll })
+    }
+    expect(sweep.phase).toBe('complete')
+    // The node is in the plane over a real arc, not at one rotation only.
+    expect(Math.max(...seenAt) - Math.min(...seenAt)).toBeGreaterThanOrEqual(20)
+    // The lab opens away from the node, so finding it takes a rotation.
+    expect(seenAt).not.toContain(setup.initialRoll)
   })
 })
