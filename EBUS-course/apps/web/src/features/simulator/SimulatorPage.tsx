@@ -2146,7 +2146,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
         })()}
       </fieldset>;
     const sector = <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
-      guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply), onPick: config.linkedLesson && !config.locked && !config.demonstration && !config.reveal ? onUltrasoundPick : undefined }} />;
+      guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply), onPick: config.linkedLesson && !config.locked && !config.demonstration && !config.reveal ? onUltrasoundPick : undefined, outlined: config.linkedLesson && !config.demonstration ? linkedEvidence.identifiedStructures : undefined }} />;
     const chooseApproach = (approach: 'rms'|'lms') => {
       if (config.locked || config.linkedLesson !== 'station-seven' || config.linkedVariant === 'changed-window') return;
       const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
