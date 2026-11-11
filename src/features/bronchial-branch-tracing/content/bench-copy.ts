@@ -36,9 +36,9 @@ export const TEACHING_SIMULATOR_STATEMENT =
 export const PRIMER_TITLE = 'What we are doing, and why'
 export const PRIMER: readonly string[] = [
   'A peripheral lesion is reached by taking the right opening at every division: a series of two- and three-way choices. Past the segmental bronchus, no route in this course has more than five of them.',
-  'This course plans the route on the CT before the scope moves, by the simplified bronchial branch tracing of Mortimer and Saghaie. Plan: start at the lesion, find the airway that runs into it and follow it back to its segmental bronchus. Map: stand, in your head, at that segment’s ostium and draw the view as a circle with four directions round it; at each division to the lesion, draw each branch as an arc where it leaves, inside the arc before, and star the branch that reaches the lesion.',
-  'Navigate: the scope flies through the central airways and stops at the fork where the segment’s bronchus leaves. From there the choices are yours, and past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
-  'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. A short check at the start asks you to turn the CT to match at three forks, and two refresher lessons take it slowly. In the course itself, turning the CT on screen is your choice.',
+  'The route is planned on the CT before the scope moves, by the simplified bronchial branch tracing of Mortimer and Saghaie. Plan: start at the lesion, find the airway that runs into it and follow it back to its segmental bronchus. Map: draw the view into that segment’s ostium as a circle with four directions round it; at each division to the lesion, draw each branch as an arc where it leaves, inside the arc before, and star the branch that reaches the lesion.',
+  'Navigate: the scope flies through the central airways and stops at the fork where the segment’s bronchus leaves. Past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
+  'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. A short check at the start asks you to turn the CT to match at three forks, with two refresher lessons behind it. In the course itself, turning the CT on screen is your choice.',
 ]
 
 const SIDE_WORDS: Record<ScreenSide, string> = {
@@ -126,7 +126,7 @@ export function matchNoteSentence(
 ) {
   const display = orientationName(orientation).toLowerCase()
   if (note === 'optional')
-    return `Turning the CT is your choice now: it is shown ${display}. Read the letters on its edges against the scope’s, or turn it with the CT controls and check the match.`
+    return `Turning the CT is your choice: it is shown ${display}. Read its edge letters against the scope’s, or turn it and check.`
   // An oblique look has no exact match: say so, and say what the display does agree on.
   if (oblique)
     return `The scope is looking at an angle to both of the CT’s axes here, so no turn of the CT puts every letter where the scope has it. The CT is shown in the closest display: ${display}.`

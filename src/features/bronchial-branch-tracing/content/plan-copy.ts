@@ -135,7 +135,7 @@ export function segmentMiss(choice: SegmentChoice, help: boolean) {
   return {
     headline: `Not ${choice.code}.`,
     detail: help
-      ? 'Follow the airway back again from the lesion, one slice at a time. The segmental bronchus is the largest airway on the way that still supplies this segment alone; beyond it the airway joins the lobar bronchus or a trunk it shares with other segments.'
+      ? 'Follow the airway back again from the lesion, one slice at a time. The segmental bronchus is the largest airway on the way that still supplies this segment alone.'
       : 'Follow the airway back again from the lesion.',
   }
 }
@@ -167,7 +167,7 @@ export function frameFound(turn: number) {
     detail:
       turn === 0
         ? 'Your circle is held the way the model scope holds it.'
-        : 'Your circle is turned from the way the model scope holds it, which is fine: the scope can be held either way. The map is drawn on your circle.',
+        : 'Your circle is turned from the way the model scope holds it, which is fine. The map is drawn on your circle.',
   }
 }
 export function frameMiss(
@@ -269,7 +269,7 @@ export function arcsMiss(
 // ── Review and summary ────────────────────────────────────────────────────────────────────────
 
 export function reviewSentence(drawn: number, firstTry: number) {
-  return `Your map beside the model’s: ${drawn} ${drawn === 1 ? 'division' : 'divisions'}, ${firstTry} drawn right at the first check. Where an arc of yours sits a place to one side of the model’s, both read the same at the scope: the map needs each branch on the right side of its sibling, not an exact angle.`
+  return `${drawn} ${drawn === 1 ? 'division' : 'divisions'}, ${firstTry} drawn right at the first check. An arc a place to one side of the model’s reads the same at the scope: each branch must be on the right side of its sibling, not at an exact angle.`
 }
 /** The review of a map the bench drew, in a lesson that starts at the drive. */
 export function prefilledReview(code: string, divisions: number) {

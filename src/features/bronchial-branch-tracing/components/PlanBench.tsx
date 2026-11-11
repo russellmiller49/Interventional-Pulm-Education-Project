@@ -461,7 +461,7 @@ export function PlanBench({
       heading: 'Which segmental bronchus does it come from?',
       body: segmentInstruction(),
       where:
-        'CT panel: follow the airway back with the slider or the wheel. Drag to move the picture; a click pins where you have followed it to.',
+        'CT panel: scroll with the slider or the wheel, drag to move the picture, click to pin where you have followed the airway to.',
       primary: worked
         ? { label: 'Show the segment', onActivate: show({ type: 'show-segment' }) }
         : undefined,
@@ -486,7 +486,7 @@ export function PlanBench({
       kicker: kicker(PLAN_PART_TITLES.frame),
       heading: `Label the ${target.segment.bronchusCode} ostium`,
       body: frameInstruction(target.segment.bronchusCode),
-      where: 'Map panel: choose a direction at each of the four places on the circle.',
+      where: 'Map panel: the four places on the circle.',
       primary: worked
         ? { label: 'Show the circle', onActivate: show({ type: 'show-frame' }) }
         : {

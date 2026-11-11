@@ -303,7 +303,7 @@ describe('match', () => {
           const text = sentence(matchNoteSentence('optional', orientation, firstFork, oblique))
           // The same at every fork, oblique or not: the CT was left as the learner had it.
           expect(text).toBe(
-            `Turning the CT is your choice now: it is shown ${orientationName(orientation).toLowerCase()}. Read the letters on its edges against the scope’s, or turn it with the CT controls and check the match.`,
+            `Turning the CT is your choice: it is shown ${orientationName(orientation).toLowerCase()}. Read its edge letters against the scope’s, or turn it and check.`,
           )
           expect(text).not.toMatch(/has been turned|last fork|no turn of the CT/)
         }
