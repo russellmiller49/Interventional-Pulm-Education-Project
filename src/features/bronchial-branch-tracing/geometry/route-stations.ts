@@ -327,3 +327,15 @@ export function blendPose(
   const up = onSight < 0.98 ? unit(blended, along.up) : scopeUp(preset, direction)
   return { arc: along.arc, position: along.position, direction, up }
 }
+
+/**
+ * The same look with the scope rolled about its own line of sight, so the picture turns clockwise
+ * by `degrees` as the operator sees it. Nothing else changes: the scope is where it was and looks
+ * where it looked. A bronchoscope is rolled all the time; the airway does not turn with it.
+ */
+export function rollPose<T extends ScopePose>(pose: T, degrees: number): T {
+  const { right, up } = cameraBasis(pose.direction, pose.up)
+  const a = (degrees * Math.PI) / 180
+  const rolled = [0, 1, 2].map((i) => up[i] * Math.cos(a) - right[i] * Math.sin(a)) as Vec3
+  return { ...pose, up: rolled }
+}

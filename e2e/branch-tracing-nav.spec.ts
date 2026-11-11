@@ -980,6 +980,113 @@ test.describe('the method demonstrated', () => {
   })
 })
 
+test.describe('the scope has rolled', () => {
+  test('the map is turned to a rolled picture, a half turn out is named, and the drill is driven to its end', async ({
+    page,
+  }) => {
+    test.setTimeout(240000)
+    await primerSeen(page)
+    await page.setViewportSize({ width: 1600, height: 905 })
+    await page.goto(BASE)
+    const row = page.locator('[data-drill]')
+    await expect(row).toContainText('about 6 min')
+    await row.getByRole('link', { name: 'The scope has rolled' }).click()
+    await expect(page).toHaveURL(/lesson=the-scope-has-rolled/)
+    await expect(scope(page)).toHaveAttribute('data-scope-ready', 'true', { timeout: 30000 })
+    const readout = page.locator('[data-map-turn-readout]')
+    const left = page.locator('[data-map-turn-left]')
+    const right = page.locator('[data-map-turn-right]')
+    const waitFor = (value: string) =>
+      expect(shell(page)).toHaveAttribute('data-stage', value, { timeout: 30000 })
+
+    // At the ostium the picture carries the map's directions and nothing can be turned.
+    await expectStage(page, 'roll:0:start')
+    await expect(scope(page)).not.toHaveAttribute('data-scope-plain-rim', 'true')
+    await expect(left).toBeDisabled()
+    await expect(readout).toHaveText('The map sits as it was drawn.')
+    await nowButton(page, 'Drive in').click()
+    await waitFor('roll:0:turn')
+    // Arrived rolled: the rim says nothing, the openings are numbered, the map can be turned.
+    await expect(scope(page)).toHaveAttribute('data-scope-plain-rim', 'true')
+    await expect(scope(page).locator('[data-scope-opening]')).toHaveCount(2)
+    await expect(page.locator('[data-arc-rim]')).toHaveCount(4)
+    // The whole bench is on one screen, turn buttons included.
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+    ).toBeLessThanOrEqual(1)
+    const buttons = (await right.boundingBox())!
+    expect(buttons.y + buttons.height).toBeLessThanOrEqual(905.5)
+
+    // A half turn out: the carina lines up, so it is named, and the drill does not go on.
+    for (let i = 0; i < 6; i++) await right.click()
+    await expect(readout).toHaveText('Map turned 90° counterclockwise.')
+    await expect(page.locator('[data-arc-turn]')).toHaveAttribute('data-arc-turn', '270')
+    await nowButton(page, 'Check the map').click()
+    await expect(feedback(page)).toContainText('A half turn out.')
+    await expectStage(page, 'roll:0:turn')
+    // A quarter turn out is named too, and turning clears the last answer.
+    await left.click()
+    await expect(feedback(page)).not.toContainText('A half turn out.')
+    await left.click()
+    await expect(readout).toHaveText('Map turned a half turn.')
+    await nowButton(page, 'Check the map').click()
+    await expect(feedback(page)).toContainText('A quarter turn out.')
+    // The arrow keys turn the map as the buttons do.
+    await left.focus()
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ArrowLeft')
+    await expect(readout).toHaveText('Map turned 90° clockwise.')
+    await nowButton(page, 'Check the map').click()
+    await expectStage(page, 'roll:0:choose')
+    await expect(feedback(page)).toContainText('The map sits as the picture does.')
+    await expect(left).toBeDisabled()
+    // The opening that leads away is refused; the map's opening is taken on the picture itself.
+    await page.locator('[data-choice="2"]').click()
+    await expect(feedback(page)).toContainText('That opening leads away.')
+    await expect(page.locator('[data-choice="2"]')).toBeDisabled()
+    await scope(page).locator('[data-scope-opening="1"]').click()
+    await expectStage(page, 'roll:0:ready')
+
+    // On the same route the map stays as it was held, and the drive in can be watched again.
+    await nowButton(page, 'Drive on').click()
+    await waitFor('roll:1:turn')
+    await expect(readout).toHaveText('Map turned 90° clockwise.')
+    await page.locator('[data-roll-replay]').click()
+    await expectStage(page, 'roll:1:drive')
+    await waitFor('roll:1:turn')
+    await nowButton(page, 'Show me').click()
+    await expectStage(page, 'roll:1:choose')
+    await expect(feedback(page)).toContainText('The map has been turned for you.')
+    await nowButton(page, 'Show me').click()
+    // A new route opens at its own ostium with its own map, unturned.
+    await nowButton(page, 'On to the next route').click()
+    await expectStage(page, 'roll:2:start')
+    await expect(readout).toHaveText('The map sits as it was drawn.')
+    await expect(scope(page)).not.toHaveAttribute('data-scope-plain-rim', 'true')
+    await nowButton(page, 'Drive in').click()
+    for (const fork of [2, 3, 4]) {
+      await waitFor(`roll:${fork}:turn`)
+      await nowButton(page, 'Show me').click()
+      await nowButton(page, 'Show me').click()
+      await expectStage(page, `roll:${fork}:ready`)
+      await nowButton(page, fork === 4 ? 'Finish' : 'Drive on').click()
+    }
+    await expectStage(page, 'roll:4:done')
+    const closing = await page.locator('[data-bench-closing]').innerText()
+    expect(closing).toContain('Map turned to the picture at the first check: 0 of 5.')
+    expect(closing).toContain('Opening taken at the first choice: 0 of 5.')
+    expect(closing).toContain('teaching simulator')
+    expect(await page.locator('[data-bench]').innerText()).not.toMatch(BANNED)
+    // It leads on to Practice, and the course's front page says it was reached.
+    await expect(now(page).getByRole('link', { name: 'Practice: pick a lesion' })).toHaveAttribute(
+      'href',
+      /\/practice$/,
+    )
+    await page.goto(BASE)
+    await expect(page.locator('[data-drill]')).toContainText('Reached the end')
+  })
+})
+
 test.describe('whole lesions', () => {
   test('Practice plans, maps and drives a lesion from the trachea', async ({ page }) => {
     test.setTimeout(180000)
