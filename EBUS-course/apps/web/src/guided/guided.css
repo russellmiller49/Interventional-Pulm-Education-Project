@@ -654,6 +654,44 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/*
+ * A workbench too narrow to hold the controls beside the recording (a phone). The controls
+ * column used to drop below both stacked images, which left the depth slider about 800 px from
+ * the image it changes. Here the image controls sit directly under the current recording, the
+ * previous recording follows them for comparison, and the display and playback buttons come
+ * last. The order is visual only; the document and keyboard order are those of the wide layout.
+ *
+ * 43em is where `.recorded-workspace` wraps (26em + 17em), measured on the workbench itself so
+ * that enlarged text moves the two together. Wider workbenches are untouched.
+ */
+.guided-recording {
+  container: recorded-workbench / inline-size;
+}
+@container recorded-workbench (max-width: 43em) {
+  .recorded-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .recorded-images,
+  .recorded-controls {
+    display: contents;
+  }
+  .recorded-workspace .recorded-current,
+  .recorded-workspace .recorded-baseline,
+  .recorded-workspace .recorded-controls > * {
+    margin-block: 0;
+  }
+  .recorded-controls > fieldset {
+    order: 1;
+  }
+  .recorded-workspace .recorded-baseline {
+    order: 2;
+  }
+  .recorded-controls > :not(fieldset) {
+    order: 3;
+  }
+}
 .guided-workbench fieldset[hidden] {
   display: none;
 }
