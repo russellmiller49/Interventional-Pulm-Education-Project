@@ -1092,7 +1092,7 @@ test.describe('whole lesions', () => {
     test.setTimeout(180000)
     await primerSeen(page)
     await page.goto(`${BASE}/practice`)
-    await expect(page.locator('[data-lesion]')).toHaveCount(13)
+    await expect(page.locator('[data-lesion]')).toHaveCount(18)
     await expect(page.locator('[data-lesion-picker]')).toContainText('teaching simulator')
     expect(await page.locator('[data-lesion-picker]').innerText()).not.toMatch(/RS8|RB8/)
     await page.locator('[data-lesion="r-anterior-basal"]').click()
@@ -1156,7 +1156,7 @@ test.describe('whole lesions', () => {
       'new',
     )
     // The list still names no segment, and its pictures stop at the lobar bronchus.
-    await expect(page.locator('[data-lesion-thumb-route]')).toHaveCount(13)
+    await expect(page.locator('[data-lesion-thumb-route]')).toHaveCount(18)
     const list = await page.locator('[data-lesion-picker]').innerText()
     expect(list).not.toMatch(/RS\d|RB\d|LS\d|LB\d/)
     expect(list).not.toMatch(BANNED)

@@ -231,13 +231,93 @@
         "planes": [353, 390],
         "frame": [43, 29]
       }
+    },
+    {
+      "id": "r-posterior",
+      "origin": [131, 342],
+      "size": [38, 43],
+      "slices": [433, 461],
+      "coronal": {
+        "path": "patches/r-posterior/coronal.png",
+        "planes": [342, 384],
+        "frame": [38, 29]
+      },
+      "sagittal": {
+        "path": "patches/r-posterior/sagittal.png",
+        "planes": [131, 168],
+        "frame": [43, 29]
+      }
+    },
+    {
+      "id": "r-superior",
+      "origin": [128, 359],
+      "size": [38, 43],
+      "slices": [296, 324],
+      "coronal": {
+        "path": "patches/r-superior/coronal.png",
+        "planes": [359, 401],
+        "frame": [38, 29]
+      },
+      "sagittal": {
+        "path": "patches/r-superior/sagittal.png",
+        "planes": [128, 165],
+        "frame": [43, 29]
+      }
+    },
+    {
+      "id": "l-superior-lingula",
+      "origin": [381, 235],
+      "size": [38, 43],
+      "slices": [363, 391],
+      "coronal": {
+        "path": "patches/l-superior-lingula/coronal.png",
+        "planes": [235, 277],
+        "frame": [38, 29]
+      },
+      "sagittal": {
+        "path": "patches/l-superior-lingula/sagittal.png",
+        "planes": [381, 418],
+        "frame": [43, 29]
+      }
+    },
+    {
+      "id": "l-posterior-basal",
+      "origin": [343, 362],
+      "size": [38, 43],
+      "slices": [254, 282],
+      "coronal": {
+        "path": "patches/l-posterior-basal/coronal.png",
+        "planes": [362, 404],
+        "frame": [38, 29]
+      },
+      "sagittal": {
+        "path": "patches/l-posterior-basal/sagittal.png",
+        "planes": [343, 380],
+        "frame": [43, 29]
+      }
+    },
+    {
+      "id": "r-lateral-basal",
+      "origin": [107, 350],
+      "size": [38, 43],
+      "slices": [245, 273],
+      "coronal": {
+        "path": "patches/r-lateral-basal/coronal.png",
+        "planes": [350, 392],
+        "frame": [38, 29]
+      },
+      "sagittal": {
+        "path": "patches/r-lateral-basal/sagittal.png",
+        "planes": [107, 144],
+        "frame": [43, 29]
+      }
     }
   ],
   "totals": {
     "coronalBytes": 17697288,
     "sagittalBytes": 17778071,
-    "patchBytes": 356860,
-    "totalBytes": 35832219
+    "patchBytes": 495792,
+    "totalBytes": 35971151
   },
   "files": [
     {
@@ -3564,6 +3644,56 @@
       "path": "patches/l-lateral-basal/sagittal.png",
       "bytes": 13429,
       "sha256": "d6e895b79bcd16ba88e8fd6b4d06d653486fc1e528d205f7574fa081c822ae9d"
+    },
+    {
+      "path": "patches/r-posterior/coronal.png",
+      "bytes": 14380,
+      "sha256": "9c0ffd8290b9eb2533f103fc6ff10fb5d460d0fa1395024ecbe150e20b9b3c6e"
+    },
+    {
+      "path": "patches/r-posterior/sagittal.png",
+      "bytes": 14209,
+      "sha256": "dc3546c12bc9e531d34b6196bcd4aa12f765039719ab2a0377826d2cf985e92d"
+    },
+    {
+      "path": "patches/r-superior/coronal.png",
+      "bytes": 14030,
+      "sha256": "d9214aa25bbdaab0b66f66fc67848647996d346a3006dd9e61a38db36e5c4c09"
+    },
+    {
+      "path": "patches/r-superior/sagittal.png",
+      "bytes": 13781,
+      "sha256": "0080fd533380fc7c05f4daa527f977cf496e240cd2bc959abfdf6140230649c7"
+    },
+    {
+      "path": "patches/l-superior-lingula/coronal.png",
+      "bytes": 13525,
+      "sha256": "d908cb73caa7a060c36b3e614378199c23739062af6a90c50aeea40c240ead18"
+    },
+    {
+      "path": "patches/l-superior-lingula/sagittal.png",
+      "bytes": 13250,
+      "sha256": "08da6c319f22766f4635552d3a8e1014ec36bdbb4be8676578482f620ae7687c"
+    },
+    {
+      "path": "patches/l-posterior-basal/coronal.png",
+      "bytes": 14026,
+      "sha256": "8d333f7b2000bda16b9db1a4c3a8b05d0ba57bf0eab42c6b86e1e8e0f3232471"
+    },
+    {
+      "path": "patches/l-posterior-basal/sagittal.png",
+      "bytes": 13698,
+      "sha256": "fe4c9c021482bd702a47e0ae059921245abcffebb1128a60bf4328bfa2f8a91a"
+    },
+    {
+      "path": "patches/r-lateral-basal/coronal.png",
+      "bytes": 14183,
+      "sha256": "a24a372e3b7d5c880b97bb9856f42712f8615463fa361ccd97038aa886f1b6ec"
+    },
+    {
+      "path": "patches/r-lateral-basal/sagittal.png",
+      "bytes": 13850,
+      "sha256": "3f2f8781708cf195d270693edd070239ff8706ec15bf3319d8b8ce14e1dff64c"
     }
   ]
 }

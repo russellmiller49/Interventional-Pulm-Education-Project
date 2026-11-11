@@ -139,7 +139,7 @@ describe('air masks', () => {
 
   test('the shipped mask equals what the build script produces from the PNGs', () => {
     const built = script.buildPlanes()
-    expect(Object.keys(built)).toHaveLength(84)
+    expect(Object.keys(built)).toHaveLength(99)
     expect(Object.keys(airPlanes.planes).sort()).toEqual(Object.keys(built).sort())
     for (const [slice, plane] of Object.entries(built))
       expect([slice, (airPlanes.planes as Record<string, RawPlane>)[slice]]).toEqual([slice, plane])
@@ -180,9 +180,9 @@ describe('air masks', () => {
   })
 
   test('every opening of every division of every route has a mask on its response plane', () => {
-    expect(CT_TRACES).toHaveLength(17)
-    expect(OPENINGS).toHaveLength(257)
-    expect(UNIQUE_OPENINGS).toHaveLength(115)
+    expect(CT_TRACES).toHaveLength(22)
+    expect(OPENINGS).toHaveLength(329)
+    expect(UNIQUE_OPENINGS).toHaveLength(143)
     for (const o of OPENINGS)
       expect([o.trace.id, o.key, Boolean(airPlane(o.plane.slice))]).toEqual([
         o.trace.id,
@@ -291,7 +291,7 @@ describe('verdict on the real response planes', () => {
 
   test('wherever an opening has air under its locator, a mark in that air is in its lumen', () => {
     const withAir = UNIQUE_OPENINGS.filter((o) => optionHasVerdict(o.trace, o.index, o.option))
-    expect(withAir).toHaveLength(111)
+    expect(withAir).toHaveLength(139)
     for (const o of withAir) {
       const plane = airPlane(o.plane.slice)!
       const lumen = nearestAir(plane, o.plane.pixel, LOCATOR_SNAP_MM)!

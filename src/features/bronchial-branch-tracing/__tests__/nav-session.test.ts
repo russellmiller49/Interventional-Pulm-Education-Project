@@ -147,18 +147,26 @@ describe('starting a trip', () => {
 
   test('a fork is matchable when one display matches, or two that differ along the line of sight', () => {
     expect(matchable(null)).toBe(false)
-    const counts = new Map<number, boolean>()
+    // By how many displays match, and whether the look is oblique: every fork of every route.
+    const kinds = new Map<string, boolean>()
     for (const trace of CT_TRACES)
       trace.checkpoints.forEach((checkpoint, index) => {
         if (!checkpoint.decision) return
         const match = stationMatch(trace, index)!
-        counts.set(match.accepted.length, matchable(match))
+        const kind = `${match.accepted.length}${match.oblique ? ' oblique' : ''}`
+        // The same kind of fork is always answered the same way.
+        if (kinds.has(kind)) expect([kind, matchable(match)]).toEqual([kind, kinds.get(kind)])
+        kinds.set(kind, matchable(match))
+        expect(matchable(match)).toBe(match.accepted.length <= 2 && !match.oblique)
       })
-    expect([...counts].sort((a, b) => a[0] - b[0])).toEqual([
-      [1, true],
-      [2, true],
-      [4, false],
-    ])
+    // One or two matching displays are asked for, unless the look is oblique; four never are.
+    expect(kinds.get('1')).toBe(true)
+    expect(kinds.get('2')).toBe(true)
+    for (const [kind, asked] of kinds)
+      if (kind.startsWith('4') || kind.endsWith('oblique'))
+        expect([kind, asked]).toEqual([kind, false])
+    // Every fork with four matching displays is an oblique look; some oblique looks have fewer.
+    expect([...kinds.keys()].filter((kind) => kind.startsWith('4'))).toEqual(['4 oblique'])
   })
 })
 

@@ -42,8 +42,8 @@ const byCode = (facts: ForkFacts, code: string) =>
 const sliceOf = (z: number) => Math.round((z - NATIVE_CT.origin[2]) / NATIVE_CT.spacing[2])
 
 describe('at every fork of every route', () => {
-  test('there are facts for each of the 128 stations, one opening per daughter, one of them the route’s', () => {
-    expect(STATIONS).toHaveLength(128)
+  test('there are facts for each of the 164 stations, one opening per daughter, one of them the route’s', () => {
+    expect(STATIONS).toHaveLength(164)
     for (const { trace, index, id, facts } of STATIONS) {
       const where = `${trace.id} ${id}`
       const decision = trace.checkpoints[index].decision!
@@ -160,7 +160,7 @@ describe('at every fork of every route', () => {
       })
       expect(strip(facts)).toEqual(strip(first.get(id)!))
     }
-    expect(first.size).toBe(57)
+    expect(first.size).toBe(71)
   })
 })
 

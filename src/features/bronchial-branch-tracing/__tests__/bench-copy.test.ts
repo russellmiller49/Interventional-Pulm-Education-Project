@@ -156,8 +156,8 @@ test('every function the bench can call is exercised below', () => {
     'replayLine',
     'summaryLines',
   ])
-  expect(STATIONS).toHaveLength(128)
-  expect(OPENINGS).toHaveLength(257)
+  expect(STATIONS).toHaveLength(164)
+  expect(OPENINGS).toHaveLength(329)
 })
 
 describe('naming an opening', () => {
@@ -822,7 +822,7 @@ describe('fork facts, arrival and the summary', () => {
       )
       expect(gapMm).toBeGreaterThan(0)
     }
-    expect(CT_TARGETS).toHaveLength(13)
+    expect(CT_TARGETS).toHaveLength(18)
   })
 
   test('the summary gives one line for each step that was asked, and none for a step that was not', () => {
