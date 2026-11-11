@@ -170,8 +170,58 @@
   min-height: 2.9rem;
 }
 
+/* Where the scope is, on the whole tree: a small picture in the corner of the scope pane, clear
+   of the round view. */
+.treeInset {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: clamp(78px, 19%, 124px);
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #06121ae6;
+  pointer-events: none;
+}
+.treeInset svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.treeBranch {
+  fill: none;
+  stroke: #6f8a93;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.treeRoute {
+  fill: none;
+  stroke: #7fe3ff;
+  stroke-width: 2.4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.treeTipHalo {
+  fill: #06121a;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.treeTip {
+  fill: #f6c66c;
+}
+.treeSide {
+  fill: #cfe0e4;
+  font:
+    700 20px ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
 /* A slot that gives its child the largest square that fits. */
 .squareSlot {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
@@ -203,6 +253,32 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+/* The same opening, lit wherever it shows: the pointer on its number in the scope, on its marker
+   on the CT, on its button or on its row lights all four. */
+.openingLive {
+  pointer-events: auto;
+}
+.scopeOverlay g[data-opening-hot] .openingBadge {
+  stroke: #ffffff;
+  stroke-width: 1.3;
+  fill: rgba(246, 198, 108, 0.45);
+}
+.ctLocatorRing {
+  fill: transparent;
+  stroke: none;
+}
+g[data-locator-hot] .ctLocatorRing {
+  fill: rgba(246, 198, 108, 0.22);
+  stroke: #ffffff;
+  stroke-width: 0.5;
+}
+.choices button[data-choice-hot] {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(246, 198, 108, 0.55);
+}
+.forkCard tr[data-row-hot] {
+  background: rgba(246, 198, 108, 0.14);
 }
 /* An opening that can be chosen takes a click on its number; the rest of the overlay lets the
    pointer through. */
@@ -376,6 +452,57 @@
   stroke: #9be7c4;
   stroke-width: 0.45;
   paint-order: stroke;
+}
+/* A turn or a flip of the CT is a movement about the middle of the picture. */
+.ctTurnLeft,
+.ctTurnRight,
+.ctTurnFlip {
+  transform-origin: 0px 0px;
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+.ctTurnLeft {
+  animation-name: ctTurnLeft;
+}
+.ctTurnRight {
+  animation-name: ctTurnRight;
+}
+.ctTurnFlip {
+  animation-name: ctTurnFlip;
+}
+@keyframes ctTurnLeft {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-90deg);
+  }
+}
+@keyframes ctTurnRight {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+@keyframes ctTurnFlip {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(-1);
+  }
+}
+.ctOverlay,
+.ctSquare > span {
+  transition: opacity 0.15s;
+}
+.ctSquare[data-ct-turning] .ctOverlay,
+.ctSquare[data-ct-turning] > span {
+  opacity: 0;
+  transition: none;
 }
 .ctMark {
   stroke: #81f1ed;
@@ -890,6 +1017,37 @@
   background: #0d1c24;
   box-shadow: 0 0 0 2px #d9e6ea;
 }
+/* The map's turn to the scope and its zoom into a division are movements, not jumps. The origin
+   is the centre of the picture, which is the map's own origin. */
+.arcStage {
+  transform-origin: 0px 0px;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.arcUpright {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.arcRim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.arcRim .arcRimWord {
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.arcRim .arcRimSlot {
+  pointer-events: auto;
+}
+/* While the scope is moving the map follows it closely instead of easing after it. */
+.arcMap[data-arc-following] .arcStage,
+.arcMap[data-arc-following] .arcUpright,
+.arcMap[data-arc-following] .arcRim,
+.arcMap[data-arc-following] .arcRimWord {
+  transition-duration: 0.12s;
+  transition-timing-function: linear;
+}
 .arcOstium {
   fill: #0d1c24;
   stroke: #d9e6ea;
@@ -1142,6 +1300,54 @@
 .sideTabs button[aria-pressed='true'] {
   border-color: var(--cyan-bright);
   color: var(--cyan-bright);
+}
+/* Turning the map to the scope: a switch that can be seen, with what it does beside it. */
+.mapTurnRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.8rem;
+}
+.mapTurnSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 32px;
+  padding: 2px 12px 2px 6px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mapTurnSwitch > span {
+  position: relative;
+  width: 2rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: #2a3f47;
+  transition: background-color 0.2s;
+}
+.mapTurnSwitch > span::after {
+  content: '';
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: #cfe0e4;
+  transition: transform 0.2s;
+}
+.mapTurnSwitch[aria-checked='true'] {
+  border-color: var(--cyan-bright);
+  color: var(--cyan-bright);
+}
+.mapTurnSwitch[aria-checked='true'] > span {
+  background: #1f7f8f;
+}
+.mapTurnSwitch[aria-checked='true'] > span::after {
+  transform: translateX(0.9rem);
+  background: #ffffff;
 }
 .mapTools {
   display: flex;

@@ -76,9 +76,10 @@ import {
   astrayStop,
   tipSlice as astrayTipSlice,
 } from '../geometry/astray'
+import { AirwayTreeInset } from './AirwayTreeInset'
 import { ArcMap } from './ArcMap'
 import { STAGE_STEPS } from '../content/plan-copy'
-import { readMatch, stationMatch } from '../engine/orientation-match'
+import { operationsToMatch, readMatch, stationMatch } from '../engine/orientation-match'
 import { lpsToVoxel, targetForTrace } from '../geometry/native-ct'
 import { cameraBasis, lookingDirection } from '../geometry/reference-frames'
 import {
@@ -113,6 +114,8 @@ import styles from './nav-bench.module.css'
 const DRIVE_MM_PER_SECOND = 15
 /** Through the central airways the scope does not stop, and moves faster. */
 const CRUISE_MM_PER_SECOND = 20
+/** Between the turns of a match that is shown: long enough for each to be seen. */
+const SHOW_TURN_MS = 600
 /** How long a drive waits for the scope's picture before going on without it. */
 const SCOPE_WAIT_MS = 6000
 /** Set once the learner has closed the primer on this device. */
@@ -227,6 +230,10 @@ export function NavigationBench({
   const pastOstium = Boolean(map) && map!.forks.length > 0 && checkpointIndex >= map!.forks[0]
   const mapFocus = over || mapDivision < 0 ? null : mapDivision
   const [mapTurned, setMapTurned] = useState(false)
+  // The opening the pointer or the keyboard is on, in any pane: its number lights in the scope,
+  // on the CT, on its button and in the fork's table. The map's arcs are not linked this way:
+  // which arc is which opening is the question the learner is answering.
+  const [hotOpening, setHotOpening] = useState<{ key: string; index: number } | null>(null)
   // Past the segmental ostium the middle pane shows the map, beside the scope; the CT is a tab
   // away. A tab the learner picks holds until the next fork.
   const [centreChoice, setCentreChoice] = useState<{ key: string; tab: CentreTab } | null>(null)
@@ -237,9 +244,6 @@ export function NavigationBench({
       sagittal: referenceIndexFor('sagittal', at),
     }
   })
-  const turnToScope = map
-    ? mapTurnToScope(map.frame, map.turn, camera.basis)
-    : { angle: 0, reliable: true }
 
   // ── View state: the slice on screen and where the CT is centred ───────────────────────────
   // A new fork opens on its own slice and arrival opens on the lesion's; nothing else resets
@@ -469,6 +473,15 @@ export function NavigationBench({
         ]
       : [],
   )
+  const hot = hotOpening?.key === stationKey ? hotOpening.index : null
+  const hover = (index: number) => (on: boolean) =>
+    setHotOpening((current) =>
+      on
+        ? { key: stationKey, index }
+        : current?.key === stationKey && current.index === index
+          ? null
+          : current,
+    )
   // Where the bench letters the openings itself, their model centres are shown on the CT.
   const locators: CtOverlayLocator[] =
     !asksIdentify && !independent && !moving && !over
@@ -478,6 +491,8 @@ export function NavigationBench({
           pixel: (responseLumen(trace, checkpointIndex, opening.index) ?? planes[opening.index])
             .pixel,
           label: openingNumber(opening.index),
+          hot: hot === opening.index,
+          onHover: hover(opening.index),
         }))
       : []
   const ticks: CtSliderTick[] = [
@@ -535,6 +550,8 @@ export function NavigationBench({
                     ? 'done'
                     : 'plain',
             ariaLabel: `Opening ${openingNumber(opening.index)}`,
+            hot: hot === opening.index,
+            onHover: hover(opening.index),
             onPick:
               phase === 'choose' && !session.declined.includes(opening.index)
                 ? () => dispatch({ type: 'choose', option: opening.index })
@@ -542,6 +559,11 @@ export function NavigationBench({
           }
         })
   const basis = cameraBasis(pose.direction, pose.up)
+  // How far the map must turn to sit as the scope shows it, read from where the scope is now:
+  // the scope rolls as it enters each branch, and a map that is turned to it follows the roll.
+  const turnToScope = map
+    ? mapTurnToScope(map.frame, map.turn, basis)
+    : { angle: 0, reliable: true }
   const topName = nearestAxisName(basis.up)
   const astrayOpening = astray !== null ? facts.openings[astray] : null
   const caption =
@@ -563,6 +585,27 @@ export function NavigationBench({
                 )
 
   // ── Actions ───────────────────────────────────────────────────────────────────────────────
+  // Showing the match plays it: each flip or quarter turn is made in turn, so the learner sees
+  // what was done to the CT and not only where it ended. With reduced motion it is set at once.
+  const showing = useRef<number[]>([])
+  useEffect(
+    () => () => {
+      showing.current.forEach((timer) => window.clearTimeout(timer))
+    },
+    [],
+  )
+  const showMatch = () => {
+    const steps = operationsToMatch(match, session.orientation)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced || steps.length === 0) return dispatch({ type: 'show-match' })
+    showing.current.forEach((timer) => window.clearTimeout(timer))
+    showing.current = [
+      ...steps.map((operation, i) =>
+        window.setTimeout(() => dispatch({ type: 'turn', operation }), i * SHOW_TURN_MS),
+      ),
+      window.setTimeout(() => dispatch({ type: 'show-match' }), steps.length * SHOW_TURN_MS),
+    ]
+  }
   const reading = readMatch(match, session.orientation)
   const mark = useCallback((value: CtMark) => dispatch({ type: 'mark', mark: value }), [dispatch])
   const showMark = () => {
@@ -628,11 +671,11 @@ export function NavigationBench({
       body: 'Put R, L, A and P on the same sides of the CT as they are in the scope.',
       where: 'CT panel: Rotate left, Rotate right, Flip.',
       primary: worked
-        ? { label: 'Show the match', onActivate: () => dispatch({ type: 'show-match' }) }
+        ? { label: 'Show the match', onActivate: showMatch }
         : { label: 'Check the match', onActivate: () => dispatch({ type: 'check-match' }) },
       secondary: worked
         ? { label: 'Check my own', onActivate: () => dispatch({ type: 'check-match' }) }
-        : { label: 'Show me', onActivate: () => dispatch({ type: 'show-match' }) },
+        : { label: 'Show me', onActivate: showMatch },
     }
   else if (phase === 'identify' && identifying) {
     const onSlice = slice === identifying.slice
@@ -870,6 +913,11 @@ export function NavigationBench({
                       key={opening.index}
                       onClick={() => dispatch({ type: 'choose', option: opening.index })}
                       disabled={declined}
+                      onPointerEnter={() => hover(opening.index)(true)}
+                      onPointerLeave={() => hover(opening.index)(false)}
+                      onFocus={() => hover(opening.index)(true)}
+                      onBlur={() => hover(opening.index)(false)}
+                      data-choice-hot={hot === opening.index || undefined}
                       data-choice={openingNumber(opening.index)}
                       data-choice-declined={declined || undefined}
                     >
@@ -999,7 +1047,12 @@ export function NavigationBench({
                   </thead>
                   <tbody>
                     {facts.openings.map((opening) => (
-                      <tr key={opening.index}>
+                      <tr
+                        key={opening.index}
+                        onPointerEnter={() => hover(opening.index)(true)}
+                        onPointerLeave={() => hover(opening.index)(false)}
+                        data-row-hot={hot === opening.index || undefined}
+                      >
                         <th scope="row">{openingName(opening, named(opening))}</th>
                         <td>{opening.side}</td>
                         <td>{openingLevelSentence(opening)}</td>
@@ -1069,6 +1122,11 @@ export function NavigationBench({
               phase={phase}
               segmental={pastOstium ? map!.frame.side : undefined}
               onReady={onScopeReady}
+            />
+            <AirwayTreeInset
+              trace={trace}
+              position={pose.position}
+              where={over && phase === 'arrived' ? target.approachCode : facts.parent.code}
             />
           </div>
           <p className={styles.paneCaption} data-scope-caption>
@@ -1151,19 +1209,29 @@ export function NavigationBench({
                   focus={mapFocus}
                   star
                   rotation={mapTurned ? turnToScope.angle : 0}
+                  following={mapTurned && moving}
                   label="Your map"
                 />
               </div>
-              <label className={styles.paneCaption} data-map-turn-row>
-                <input
-                  type="checkbox"
-                  checked={mapTurned}
-                  onChange={(event) => setMapTurned(event.target.checked)}
+              <div className={`${styles.paneCaption} ${styles.mapTurnRow}`} data-map-turn-row>
+                <button
+                  role="switch"
+                  aria-checked={mapTurned}
+                  className={styles.mapTurnSwitch}
+                  onClick={() => setMapTurned((value) => !value)}
                   data-map-turn
-                />{' '}
-                Turn the map to the scope
-                {mapTurned && !turnToScope.reliable && ' (approximate here)'}
-              </label>
+                >
+                  <span aria-hidden="true" />
+                  Turn the map to the scope
+                </button>
+                <span>
+                  {mapTurned
+                    ? turnToScope.reliable
+                      ? 'The map sits as the scope shows it, and follows the scope as it rolls.'
+                      : 'The scope looks along this branch, so the turn is approximate here.'
+                    : 'The map sits as you drew it. Turn it here, or in your head.'}
+                </span>
+              </div>
             </>
           ) : (
             <TracingCtViewer
