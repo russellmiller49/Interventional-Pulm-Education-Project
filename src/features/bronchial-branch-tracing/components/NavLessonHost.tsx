@@ -24,6 +24,7 @@ import {
   type NavLesson,
 } from '../content/nav-lessons'
 import { planSummaryLines } from '../content/plan-copy'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
 import { summarize } from '../engine/nav-session'
 import {
   navKey,
@@ -41,18 +42,28 @@ import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
 import { useTrip } from './useTrip'
 import styles from './nav-bench.module.css'
+// Kept below the module frame: the frame's stylesheet has to load before the bench's, which
+// overrides it at equal weight, and a file that brings in the bench first reverses the two.
+import { DemoPlayer } from './DemoPlayer'
 
 export function NavLessonHost({ requestedId }: { requestedId?: string }) {
   const lesson = lessonById(requestedId) ?? NAV_LESSONS[0]
   const hydrated = useHydrated()
+  // The demonstration has the Learn address of a lesson, but it is watched, not worked: it has
+  // no place to save and is not one of the lessons.
+  const demo = requestedId === DEMO_LESSON_ID
   return (
     <ModuleFrame section="learn" activity>
       {hydrated ? (
-        <LessonTrips key={lesson.id} lesson={lesson} />
+        demo ? (
+          <DemoPlayer />
+        ) : (
+          <LessonTrips key={lesson.id} lesson={lesson} />
+        )
       ) : (
         <section aria-busy="true">
           <p role="status" style={{ padding: '1rem' }}>
-            Loading {lessonLabel(lesson, ': ')}…
+            Loading {demo ? 'the demonstration' : lessonLabel(lesson, ': ')}…
           </p>
         </section>
       )}

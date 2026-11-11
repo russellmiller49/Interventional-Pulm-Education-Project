@@ -111,6 +111,50 @@
   gap: 4rem;
   padding: 2rem 0 2.5rem;
 }
+/* The hero's pictures: the lesion on its CT, and the map that reaches it. */
+.heroSide {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+}
+.methodPoster {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+}
+.methodPoster figcaption {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.methodPoster figcaption strong {
+  color: inherit;
+  font-size: 1rem;
+  color: #e7f1f3;
+}
+.posterLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #a5e9e7;
+  border-radius: 9px;
+  color: #a5e9e7;
+  font-weight: 700;
+  text-decoration: none;
+}
+/* Beside the way in: the demonstration, for a learner who would rather see it once first. */
+.watchFirst {
+  margin: 0.5rem 0 1rem 0.6rem;
+  vertical-align: top;
+  padding-block: 0.7rem;
+}
 .hero h1 {
   font-size: clamp(2.1rem, 4vw, 3.5rem);
   line-height: 1.08;

@@ -623,6 +623,8 @@ describe('the closing summary', () => {
         chooseShown: false,
         wrongTurns: 1,
         backedOut: 1,
+        // The opening driven into that led away, for the route read back at arrival.
+        away: [1 - route],
       },
       {
         matchAsked: false,

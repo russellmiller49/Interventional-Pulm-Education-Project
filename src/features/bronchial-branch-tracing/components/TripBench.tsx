@@ -48,6 +48,8 @@ export interface TripBenchProps {
   }
   notes?: ReactNode
   exit: ReactNode
+  /** The trip is being demonstrated: see the benches' `narration`. */
+  narration?: ReactNode
 }
 
 /**
@@ -140,6 +142,7 @@ export function TripBench(props: TripBenchProps) {
         notes={props.notes}
         exit={props.exit}
         onRestart={restart}
+        narration={props.narration}
       />
     )
   if (!session.nav || !trip.nav) throw new Error(`Trip on ${trace.id} has nothing to show`)
@@ -161,6 +164,7 @@ export function TripBench(props: TripBenchProps) {
       exit={props.exit}
       map={map}
       onRestart={restart}
+      narration={props.narration}
     />
   )
 }

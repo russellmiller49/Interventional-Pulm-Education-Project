@@ -84,6 +84,7 @@ const navSchema = z
             chooseShown: z.boolean(),
             wrongTurns: count,
             backedOut: count,
+            away: z.array(option).max(5).optional(),
           })
           .strict(),
       )

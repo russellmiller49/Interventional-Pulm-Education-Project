@@ -96,6 +96,8 @@ export interface StationLog {
   /** Openings driven into that lead away from the lesion, and how many were backed out of. */
   wrongTurns: number
   backedOut: number
+  /** The openings driven into that led away, in the order entered. Absent in older records. */
+  away?: number[]
 }
 /**
  * How the CT came to face the scope here: asked of the learner, already so, turned by the bench,
@@ -415,7 +417,11 @@ export function navReducer(trace: CtTrace, plan: NavPlan) {
             ...state,
             phase: 'astray-in',
             astray: action.option,
-            log: log({ chooseMisses: here.chooseMisses + 1, wrongTurns: here.wrongTurns + 1 }),
+            log: log({
+              chooseMisses: here.chooseMisses + 1,
+              wrongTurns: here.wrongTurns + 1,
+              away: [...(here.away ?? []), action.option],
+            }),
           }
         return {
           ...state,

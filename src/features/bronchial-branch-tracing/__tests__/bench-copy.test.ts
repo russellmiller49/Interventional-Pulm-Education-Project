@@ -26,6 +26,10 @@ import {
   packetProse,
   passingSentence,
   summaryLines,
+  divisionsLine,
+  lesionStateLine,
+  planStepsFirst,
+  replayLine,
 } from '../content/bench-copy'
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
 import type { CtTrace } from '../content/ct-types'
@@ -129,12 +133,14 @@ test('every function the bench can call is exercised below', () => {
     'astrayView',
     'chooseDeclined',
     'chooseTaken',
+    'divisionsLine',
     'flyThroughCard',
     'forkPatternSentence',
     'identifyInstruction',
     'identifyVerdict',
     'lesionPlaceSentence',
     'lesionSentence',
+    'lesionStateLine',
     'lookCaption',
     'matchNoteSentence',
     'matchVerdict',
@@ -146,6 +152,8 @@ test('every function the bench can call is exercised below', () => {
     'openingShort',
     'packetProse',
     'passingSentence',
+    'planStepsFirst',
+    'replayLine',
     'summaryLines',
   ])
   expect(STATIONS).toHaveLength(128)
@@ -875,6 +883,78 @@ describe('fork facts, arrival and the summary', () => {
     // A fork whose name is not known is still mentioned.
     expect(summaryLines({ ...summary, slowest: { station: 5, tries: 2 } }, names).at(-1)).toBe(
       'The fork that took longest: one fork, 2 tries.',
+    )
+  })
+})
+
+describe('the lesion list and the route read back', () => {
+  const step = (misses = 0, shown = false, asked = true) => ({ asked, misses, shown })
+  const clean = {
+    plan: { lesion: step(), segment: step(), frame: step(), arcs: { asked: 3, firstTry: 3 } },
+    drive: { choose: { asked: 4, firstTry: 4 }, wrongTurns: 0, backedOut: 0 },
+  }
+  const rough = {
+    plan: {
+      lesion: step(0, true),
+      segment: step(2),
+      frame: step(0, false, false),
+      arcs: { asked: 3, firstTry: 1 },
+    },
+    drive: { choose: { asked: 4, firstTry: 3 }, wrongTurns: 1, backedOut: 1 },
+  }
+
+  test('a lesion says how long its map is, with one division in the singular', () => {
+    expect(sentence(divisionsLine(1))).toBe('1 division past the segmental ostium')
+    expect(sentence(divisionsLine(4))).toBe('4 divisions past the segmental ostium')
+  })
+
+  test('a lesion not opened, left part-way, and reached each say so', () => {
+    expect(sentence(lesionStateLine(null, false))).toBe('Not yet opened.')
+    expect(sentence(lesionStateLine(null, true))).toBe('Started, not yet reached.')
+    expect(sentence(lesionStateLine({ ...clean, runs: 1, reachedAt: 'x' }, true))).toBe(
+      'Reached. Last time, every step at its first check.',
+    )
+    expect(sentence(lesionStateLine({ ...rough, runs: 3, reachedAt: 'x' }, false))).toBe(
+      'Reached 3 times. Last time, at the first check: planning steps 0 of 2; divisions drawn 1 of 3; openings chosen 3 of 4; 1 branch that led away entered.',
+    )
+    // A trip that only drove says nothing of planning, and two branches are plural.
+    expect(
+      sentence(
+        lesionStateLine(
+          { plan: null, drive: { ...rough.drive, wrongTurns: 2 }, runs: 1, reachedAt: 'x' },
+          false,
+        ),
+      ),
+    ).toBe(
+      'Reached. Last time, at the first check: openings chosen 3 of 4; 2 branches that led away entered.',
+    )
+  })
+
+  test('the planning steps are counted over the ones asked', () => {
+    expect(planStepsFirst(clean.plan)).toEqual({ asked: 3, firstTry: 3 })
+    expect(planStepsFirst(rough.plan)).toEqual({ asked: 2, firstTry: 0 })
+  })
+
+  test('each fork of the drive is read back as what was chosen first', () => {
+    const row = { station: 4, checkpointIndex: 4, refused: 0 }
+    expect(sentence(replayLine({ ...row, division: 1, result: 'first', away: [] }, 'RB1'))).toBe(
+      'Division 2 (RB1): the opening toward the lesion, first choice.',
+    )
+    expect(sentence(replayLine({ ...row, division: null, result: 'shown', away: [] }, 'RUL'))).toBe(
+      'RUL: the opening toward the lesion was shown.',
+    )
+    expect(sentence(replayLine({ ...row, division: 0, result: 'later', away: [1] }, 'RB1'))).toBe(
+      'Division 1 (RB1): opening 2 first, which led away; backed out, then the opening toward the lesion.',
+    )
+    expect(
+      sentence(replayLine({ ...row, division: 0, result: 'later', away: [2, 0] }, 'RB8')),
+    ).toBe(
+      'Division 1 (RB8): opening 3 and 1 first, which led away; backed out, then the opening toward the lesion.',
+    )
+    expect(
+      sentence(replayLine({ ...row, division: 2, result: 'later', away: [], refused: 1 }, 'RB1b')),
+    ).toBe(
+      'Division 3 (RB1b): an opening that leads away first, then the opening toward the lesion.',
     )
   })
 })
