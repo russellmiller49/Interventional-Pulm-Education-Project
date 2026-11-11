@@ -293,7 +293,11 @@ export function ImpellaSuctionPurgeRvPanel({
         </section>
       </PanelSection>
 
-      <PanelSection title="Right-sided filling, and the ratio that will not report it" id="rv-papi">
+      <PanelSection
+        title="Right-sided filling, and the ratio that will not report it"
+        id="rv-papi"
+        foldedNote={`Right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg · pulsatility ratio ${reading(metrics.papi, 1)}`}
+      >
         <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Right atrial pressure"
@@ -329,7 +333,7 @@ export function ImpellaSuctionPurgeRvPanel({
         </TextEquivalent>
       </PanelSection>
 
-      <PanelSection title="Active alarms" id="rv-alarms">
+      <PanelSection title="Active alarms" id="rv-alarms" foldedNote={`${alarmSentence(alarms)}.`}>
         <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
