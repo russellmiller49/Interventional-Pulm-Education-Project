@@ -184,7 +184,9 @@ function LessonSession({
     .findLast((activity) => activity.interaction === 'acquire')
   const runtimeUnit = runtimeActivity ? unitOf(runtimeActivity) : unitOf(active)
   const runtimeLab =
-    runtimeActivity?.task === 'changed-window' ? runtimeUnit.transferLab : runtimeUnit.lab
+    runtimeActivity?.task && runtimeActivity.task !== 'guided'
+      ? runtimeUnit.transferLab
+      : runtimeUnit.lab
   const questionPosition = questionPositions[current.id] ?? 0
   const hasTask = TASK_INTERACTIONS.includes(current.interaction)
   const taskOutcome = taskOutcomes[current.id]

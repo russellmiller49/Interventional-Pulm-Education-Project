@@ -23,7 +23,9 @@ import type {
 import {
   emptyLinkedSweep,
   sampleLinkedSweep,
+  LINKED_ALONG_AIRWAY,
   LINKED_LANDMARKS,
+  linkedLateralPosition,
   linkedSetup,
   type LinkedLesson,
   type LinkedVariant,
@@ -128,5 +130,62 @@ describe('every structure a lesson asks the learner to find is reachable on ultr
     // A structure the learner must click needs a patch they can hit: at least 1% of the image.
     for (const id of LINKED_LANDMARKS[lesson])
       expect([id, (best.get(id) ?? 0) >= 192 * 192 * 0.01]).toEqual([id, true])
+  })
+})
+
+describe('the advance-and-withdraw task on the real model', () => {
+  const setup = linkedSetup('scope-orientation', 'along-airway')
+  const preset = manifest.presets.find((p) => p.preset_key === setup.presetKey)!
+  const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+  const targetId = volume.metadata.labels.findIndex((label) => label.key === preset.station_key)
+  /** The same reading the workbench reports: the mean column of the node's own pixels. */
+  const at = (offsetMm: number) => {
+    const pose = clampPosePositionInsideChannel(
+      computeSimulatorPose(line, preset.centerline_s_mm + offsetMm, setup.initialRoll, preset),
+      channel,
+      0.2,
+    )
+    const contact = contactQualityForPose(pose, channel)
+    const frame = renderAcousticFrame(
+      volume,
+      acousticPoseFromScope(pose),
+      { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contact },
+      192,
+      192,
+      80,
+      100,
+    )
+    let sum = 0
+    let count = 0
+    for (let i = 0; i < frame.labelImage.length; i++)
+      if (frame.labelImage[i] === targetId) {
+        sum += i % frame.width
+        count += 1
+      }
+    return { contact, lateral: count >= 10 ? (sum / count + 0.5) / frame.width : null }
+  }
+  const { startOffsetMm, minOffsetMm, maxOffsetMm } = LINKED_ALONG_AIRWAY
+  it('starts with the node on the dot side, in a tissue window', () => {
+    expect(targetId).toBeGreaterThanOrEqual(3)
+    const start = at(startOffsetMm)
+    expect(start.contact).toBeGreaterThanOrEqual(0.45)
+    expect(linkedLateralPosition(start.lateral)).toBe('right')
+  })
+  it('slides the node toward the dot as the scope advances, and keeps contact across the range', () => {
+    const offsets = []
+    for (let offset = minOffsetMm; offset <= maxOffsetMm; offset += 2) offsets.push(offset)
+    const readings = offsets.map(at)
+    for (const reading of readings) expect(reading.contact).toBeGreaterThanOrEqual(0.45)
+    const laterals = readings.map((reading) => reading.lateral!)
+    for (let i = 1; i < laterals.length; i++) expect(laterals[i]).toBeGreaterThan(laterals[i - 1])
+    // The other end of the range is past the middle: the learner can overshoot and come back.
+    expect(linkedLateralPosition(laterals[0])).toBe('left')
+  })
+  it('reaches the middle within the range, by withdrawing from the start', () => {
+    const centred = []
+    for (let offset = minOffsetMm; offset <= maxOffsetMm; offset += 1)
+      if (linkedLateralPosition(at(offset).lateral) === 'centre') centred.push(offset)
+    expect(centred.length).toBeGreaterThanOrEqual(4)
+    expect(Math.max(...centred)).toBeLessThan(startOffsetMm)
   })
 })

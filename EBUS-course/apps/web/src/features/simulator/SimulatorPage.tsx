@@ -1,4 +1,4 @@
-import { LINKED_TASK_VERSION, LANDMARK_NAMES, structureDisplayName, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
+import { LINKED_TASK_VERSION, LINKED_ALONG_AIRWAY, LINKED_AIRWAY_VIEW, LANDMARK_NAMES, structureDisplayName, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
 import { LinkedModelView } from '../../guided/LinkedModelView';
 import { opticalRay } from '../../guided/linkedModels';
 import * as THREE from 'three';
@@ -1620,6 +1620,13 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     const hit = raycaster.intersectObject(channelRaycastMesh, false)[0];
     return { distance: hit ? hit.distance : null, contactClearanceMm: calibration.contact_min_distance_mm ?? null, fovDeg: calibration.fov_deg, obliqueDeg: calibration.optical_axis_offset_deg };
   }, [guided, pose, channelRaycastMesh, caseData]);
+  // The airway-view task: once the learner has flexed the tip and the lens looks along the airway,
+  // that is recorded for the session. Read from the same optical ray the caption reports.
+  const opticalWallMm = opticalWallDistanceMm?.distance ?? null;
+  useEffect(() => {
+    if (!guided || guided.config.linkedVariant !== 'airway-view' || guided.config.demonstration || guided.config.locked || linkedEvidence.airwayViewed) return;
+    if (opticalWallMm !== null && opticalWallMm >= LINKED_AIRWAY_VIEW.lumenMinMm && guidedActions.current.used.includes('flexion')) setLinkedEvidence(previous => previous.airwayViewed ? previous : { ...previous, airwayViewed: true });
+  }, [guided, opticalWallMm, linkedEvidence.airwayViewed, flexionDeg]);
   useEffect(() => {
     if (!guided) return;
     const matching = guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey;
@@ -1631,6 +1638,8 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       frameReady: matching,
       contactQuality: sectorContactQuality,
       targetVisible: guidedFrame.targetVisible,
+      targetLateral: matching && guidedFrame.targetVisible && typeof guidedFrame.targetLateral === 'number' ? guidedFrame.targetLateral : undefined,
+      opticalWallMm: opticalWallMm ?? undefined,
       roll: rollTrimDeg, flexion: flexionDeg, depth: guidedFrame.depth,
       gain: guidedFrame.gain, frozen: guidedFrame.frozen,
       linked: linkedLesson ? {
@@ -1645,7 +1654,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
         } : undefined,
       } : undefined,
     });
-  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg, linkedEvidence, sMm, selectedPreset]);
+  }, [guided, assets, pose, acoustic.volume, guidedFrame, guidedPoseKey, sectorContactQuality, rollTrimDeg, flexionDeg, linkedEvidence, sMm, selectedPreset, opticalWallMm]);
 
   const hasCurrentSnapshot = Boolean(selectedPreset && snapshot?.preset_key === selectedPreset.preset_key);
   const atSnapshotPose = Boolean(
@@ -2127,7 +2136,14 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     const scopeControls = <fieldset hidden={config.locked} disabled={config.locked}><legend>Scope controls</legend>
         {config.controls.includes('roll') && <label>Scope rotation <output>{Math.round(rollTrimDeg)}°</output><input aria-label="Scope rotation" type="range" min="-90" max="90" step="1" value={rollTrimDeg} disabled={!can('roll')} onChange={e => guidedAction('roll', () => setRollTrimDeg(Number(e.target.value)))} /></label>}
         {config.controls.includes('flexion') && <label>Tip flexion <output>{Math.round(flexionDeg)}°</output><input aria-label="Tip flexion" type="range" min="-30" max="60" value={flexionDeg} disabled={!can('flexion')} onChange={e => guidedAction('flexion', () => setFlexionDeg(Number(e.target.value)))} /></label>}
-        {config.controls.includes('advance') && <div className="guided-tabs"><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v - 1)))}>Withdraw</button><button disabled={!can('advance')} onClick={() => guidedAction('advance', () => setSMm(v => constrainAdvance(v,v + 1)))}>Advance</button></div>}
+        {config.controls.includes('advance') && (() => {
+          // Along the airway, in millimetres from where this task started: left withdraws, right
+          // advances. The range is an authored window about the station preset.
+          const stationMm = caseData.presets.find(p => p.preset_key === config.presetKey)?.centerline_s_mm ?? sMm;
+          const startMm = stationMm + (config.linkedLesson ? linkedSetup(config.linkedLesson, config.linkedVariant ?? 'guided').offsetMm : 0);
+          const moved = Math.round(sMm - startMm);
+          return <label>Scope position <output data-scope-position={moved}>{moved === 0 ? 'at the start' : moved > 0 ? `${moved} mm advanced` : `${-moved} mm withdrawn`}</output><input aria-label="Scope position: left withdraws, right advances" type="range" min={Math.round(stationMm + LINKED_ALONG_AIRWAY.minOffsetMm)} max={Math.round(stationMm + LINKED_ALONG_AIRWAY.maxOffsetMm)} step="1" value={Math.round(sMm)} disabled={!can('advance')} onChange={e => guidedAction('advance', () => { const requested = Number(e.target.value); setSMm(v => constrainAdvance(v, requested)); })} /><span className="guided-range-ends" aria-hidden="true"><span>Withdraw</span><span>Advance</span></span></label>;
+        })()}
       </fieldset>;
     const sector = <ContinuousSectorView caseData={caseData} volume={acoustic.volume} error={acoustic.error} pose={pose} contactQuality={sectorContactQuality} compact assessment={!config.reveal} selectedPreset={null} activeStructure={null} setActiveStructure={() => undefined}
       guided={{ config, targetKey: selectedPreset?.station_key ?? '', poseKey: guidedPoseKey, onFrame: onGuidedFrame, onAction: (name, apply) => guidedAction(name, apply), onPick: config.linkedLesson && !config.locked && !config.demonstration && !config.reveal ? onUltrasoundPick : undefined }} />;
@@ -2139,20 +2155,25 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       setSelectedKey(preset.preset_key); setLineIndex(preset.line_index); setSMm(preset.centerline_s_mm); setRollTrimDeg(config.initialRoll); setFlexionDeg(0);
       onLinkedEvidence({ approach });
     };
-    return <div className={config.linkedLesson ? 'guided-workbench guided-workbench--console' : 'guided-workbench'}>
+    return <div className={config.linkedLesson ? 'guided-workbench guided-workbench--console' : 'guided-workbench'} data-optical-wall-mm={opticalWallDistanceMm?.distance != null ? opticalWallDistanceMm.distance.toFixed(1) : undefined} data-contact-quality={sectorContactQuality.toFixed(2)}>
       <h2 className={config.linkedLesson ? 'guided-visually-hidden' : undefined}>EBUS workbench</h2>
       {!config.linkedLesson && <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>}
       {config.linkedLesson && config.linkedVariant === 'changed-window' && <p className="guided-label linked-task-line">The scope has moved to a new position in the same airway. Find the landmarks and sweep through the node again from here.</p>}
       {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} controls={<>{scopeControls}{!config.locked && !config.demonstration && <button className="linked-reset" onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}</>} bronchoscopy={assets ? <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={NO_BRONCH_STRUCTURES} /></div> : undefined} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
         ultrasoundPick={ultrasoundPick}
-        targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey}
+        targetVisible={guidedFrame.targetVisible} targetLateral={guidedFrame.targetLateral} opticalWallMm={opticalWallMm} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey}
         targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The node (${label})` : 'The node'; })()}
         onDemo={action => {
         if (!config.demonstration) return;
         if (action === 'roll') setRollTrimDeg(v => v === 25 ? 0 : 25);
         else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
-        else { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
+        else if (action === 'advance' || action === 'reset') {
+          // Advance 8 mm and back; Reset returns the scope to the station as well.
+          const stationMm = caseData.presets.find(p => p.preset_key === config.presetKey)?.centerline_s_mm;
+          if (stationMm !== undefined) setSMm(v => action === 'advance' && Math.abs(v - stationMm) < 0.5 ? constrainAdvance(v, stationMm + 8) : stationMm);
+          if (action === 'reset') { setRollTrimDeg(config.initialRoll); setFlexionDeg(0); }
+        }
       }} />}
       {/* The image and the controls that drive it sit side by side at laptop widths and stack
           again when the column is narrow (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L14-2). */}

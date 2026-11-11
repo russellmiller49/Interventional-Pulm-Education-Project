@@ -1,6 +1,16 @@
 /** Guided-only acquisition rules. Numeric limits are authored exercise tolerances, not clinical thresholds. */
 export const LINKED_TASK_VERSION = 2 as const
-export const LINKED_VARIANTS = ['guided', 'changed-window'] as const
+/**
+ * `along-airway` (2026-11-10) is the advance-and-withdraw task: the scope starts past the node at
+ * a rotation that holds the node in plane, and the learner slides the plane along the airway
+ * until the node sits in the middle of the image. It asks for no landmark click and no sweep.
+ *
+ * `airway-view` (2026-11-10) is the scope lesson's task on the forward-oblique lens: flex the tip
+ * down until the lens looks along the airway (the airway ahead sits in the middle of the
+ * white-light view and there is no ultrasound image), then up until the lens is on the wall and
+ * tissue echoes return.
+ */
+export const LINKED_VARIANTS = ['guided', 'changed-window', 'along-airway', 'airway-view'] as const
 export type LinkedVariant = (typeof LINKED_VARIANTS)[number]
 export const LINKED_LESSONS = [
   'scope-orientation',
@@ -44,6 +54,12 @@ export interface LinkedRenderedFrame {
   poseKey: string
   frameId: string
   renderSequence: number
+  /**
+   * Where the target sits across the image, 0 (image left, the tip side) to 1 (image right, the
+   * side of the orientation dot); null when it is not in the image. Read from the rendered
+   * frame's own label image, never from the pose.
+   */
+  targetLateral?: number | null
   pose?: LinkedFrameSource['pose']
   settings?: LinkedFrameSource['settings']
   baselineFrameId?: string
@@ -229,7 +245,72 @@ export const STRUCTURE_FEATURES: Record<string, string> = {
   aorta:
     'The large arterial structure forming an arch on the patient’s left and continuing posteriorly.',
 }
+/**
+ * The advance-and-withdraw task. Authored exercise tolerances for one anatomy model, not clinical
+ * thresholds: how far past the node the scope starts, how far it may travel, and how close to
+ * the middle of the image the node has to finish. Measured on the station 7 preset from the
+ * right main bronchus (2026-11-10): the node's mean column runs from 0.38 of the image width at
+ * 10 mm withdrawn to 0.65 at 14 mm advanced, and sits within 0.05 of the middle from about 6 mm
+ * withdrawn to 1 mm advanced. Further back than 10 mm the scope is in the trachea and the
+ * transducer is off the wall.
+ */
+export const LINKED_ALONG_AIRWAY = {
+  /** Start this far advanced past the station preset: the node sits toward the dot side. */
+  startOffsetMm: 12,
+  /** How far the scope may be withdrawn from the station preset while keeping wall contact. */
+  minOffsetMm: -10,
+  /** How far the scope may be advanced past the station preset. */
+  maxOffsetMm: 14,
+  /** The rotation that holds the node in plane while the scope moves along the airway. */
+  roll: 0,
+  /** Half-width of "the middle of the image", as a fraction of the image width. */
+  centreHalfWidth: 0.05,
+} as const
+/** Left of the middle, in it, or right of it; `out` when the target is not in the image. */
+export type LinkedLateralPosition = 'out' | 'left' | 'centre' | 'right'
+export function linkedLateralPosition(lateral: number | null | undefined): LinkedLateralPosition {
+  if (typeof lateral !== 'number' || !Number.isFinite(lateral)) return 'out'
+  const offset = lateral - 0.5
+  if (Math.abs(offset) <= LINKED_ALONG_AIRWAY.centreHalfWidth + 1e-9) return 'centre'
+  return offset < 0 ? 'left' : 'right'
+}
+/**
+ * The airway-view task. Authored exercise tolerances for one anatomy model, not clinical
+ * thresholds. They are distances from the lens to the first airway wall along the optical axis,
+ * measured at the station 7 preset from the right main bronchus with no rotation (2026-11-10):
+ * 21 mm at 25° of downward flexion, 14 mm at 10° down, 9 mm with the tip straight, 5.5 mm at 10°
+ * up and 3 to 4 mm from 20° up. Contact returns from about 10° up.
+ */
+export const LINKED_AIRWAY_VIEW = {
+  /** At or beyond this the lens is looking along the airway. */
+  lumenMinMm: 14,
+  /** At or within this the lens is on the wall the transducer faces. */
+  wallMaxMm: 6,
+  /** Contact index needed for tissue echoes when the tip is back on the wall. */
+  minContact: 0.8,
+} as const
+export type LinkedOpticView = 'lumen' | 'wall' | 'between'
+/** What the white-light view is of: the airway ahead, the wall with an image, or neither yet. */
+export function linkedOpticView(
+  opticalWallMm: number | null | undefined,
+  contact: number,
+): LinkedOpticView {
+  if (typeof opticalWallMm !== 'number' || !Number.isFinite(opticalWallMm)) return 'between'
+  if (opticalWallMm >= LINKED_AIRWAY_VIEW.lumenMinMm) return 'lumen'
+  if (opticalWallMm <= LINKED_AIRWAY_VIEW.wallMaxMm && contact >= LINKED_AIRWAY_VIEW.minContact)
+    return 'wall'
+  return 'between'
+}
 export function linkedSetup(lesson: LinkedLesson, variant: LinkedVariant) {
+  if (variant === 'airway-view')
+    return { offsetMm: 0, initialRoll: 0, presetKey: 'station_7_node_a::rms' }
+  if (variant === 'along-airway')
+    return {
+      offsetMm: LINKED_ALONG_AIRWAY.startOffsetMm,
+      initialRoll: LINKED_ALONG_AIRWAY.roll,
+      presetKey:
+        lesson === 'right-paratracheal' ? 'station_4r_node_a::default' : 'station_7_node_a::rms',
+    }
   const changed = variant === 'changed-window'
   return {
     offsetMm: changed ? 3 : 0,

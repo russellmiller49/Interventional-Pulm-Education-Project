@@ -35,7 +35,7 @@ import {
 } from './structureCallouts'
 import { compassDirections, fitSphereDistance } from './observerCamera'
 import { attachObserverControls, OBSERVER_CAPTION } from './observerControls'
-import { describeLinkedSweep } from './sweepStatus'
+import { describeAirwayView, describeAlongAirway, describeLinkedSweep } from './sweepStatus'
 import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from './stageLook'
 
 type Mode = 'scope' | 'anatomy' | 'section'
@@ -61,7 +61,11 @@ interface Props {
   evidence: EbusLinkedEvidence
   onEvidence: (value: Partial<EbusLinkedEvidence>) => void
   onApproach: (approach: 'rms' | 'lms') => void
-  onDemo: (action: 'roll' | 'flexion' | 'reset') => void
+  onDemo: (action: 'roll' | 'flexion' | 'advance' | 'reset') => void
+  /** Where the target sits across the current frame, 0 (image left) to 1; null when not seen. */
+  targetLateral?: number | null
+  /** Lens to the first airway wall along the optical axis, in millimetres; null with no hit. */
+  opticalWallMm?: number | null
   /** Current rendered frame: whether the model target is in this plane (EBUS-PRE-REVIEW-03). */
   targetVisible?: boolean
   frameReady?: boolean
@@ -176,7 +180,12 @@ export function LinkedModelView(props: Props) {
    */
   const modelBlind = false
   const candidates = modelBlind ? unnamedCandidates : options
-  const landmarkIds = config.linkedLesson ? LINKED_LANDMARKS[config.linkedLesson] : []
+  // The advance-and-withdraw task asks for a position in the image, not a landmark or a sweep.
+  const alongAirway = config.linkedVariant === 'along-airway'
+  // The scope lesson's task asks for two white-light views in turn, not a landmark or a sweep.
+  const airwayView = config.linkedVariant === 'airway-view'
+  const landmarkIds =
+    config.linkedLesson && !alongAirway && !airwayView ? LINKED_LANDMARKS[config.linkedLesson] : []
   const landmarkTarget = landmarkIds.find((id) => !evidence.identifiedStructures?.includes(id))
   const host = useRef<HTMLDivElement>(null)
   const controller = useRef<Controller | null>(null)
@@ -1037,6 +1046,8 @@ export function LinkedModelView(props: Props) {
     config.linkedLesson !== 'acoustic-contact' &&
     // The CT-map lesson asks for the model section, not a sweep; its task line says so.
     config.linkedLesson !== 'ct-map' &&
+    !alongAirway &&
+    !airwayView &&
     !config.locked
       ? describeLinkedSweep({
           sweep,
@@ -1044,6 +1055,24 @@ export function LinkedModelView(props: Props) {
           frameReady: !!props.frameReady,
           contact: props.contactQuality,
           targetName: props.targetName ?? 'The model target',
+        })
+      : null
+  const alongStatus =
+    identifying && alongAirway && !config.locked
+      ? describeAlongAirway({
+          targetLateral: props.targetVisible ? props.targetLateral : null,
+          frameReady: !!props.frameReady,
+          contact: props.contactQuality,
+          targetName: props.targetName ?? 'The model target',
+        })
+      : null
+  const airwayStatus =
+    identifying && airwayView && !config.locked
+      ? describeAirwayView({
+          opticalWallMm: props.opticalWallMm,
+          contact: props.contactQuality,
+          airwayViewed: !!evidence.airwayViewed,
+          frameReady: !!props.frameReady,
         })
       : null
   return (
@@ -1069,6 +1098,24 @@ export function LinkedModelView(props: Props) {
               {landmarkFeedback}
             </p>
           )}
+        </div>
+      )}
+      {identifying && !config.locked && alongAirway && (
+        <div className="linked-landmark-task" data-along-airway-task>
+          <h3>Bring the node to the middle of the image</h3>
+          <p>
+            The node is outlined and the dashed line marks the middle. Advance or withdraw the
+            scope; the rotation stays where it is.
+          </p>
+        </div>
+      )}
+      {identifying && !config.locked && airwayView && (
+        <div className="linked-landmark-task" data-airway-view-task>
+          <h3>Flex down, then up</h3>
+          <p>
+            Flex the tip down until the airway ahead sits in the middle of the white-light view,
+            then up until the wall fills it and tissue echoes return.
+          </p>
         </div>
       )}
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
@@ -1102,10 +1149,11 @@ export function LinkedModelView(props: Props) {
       {config.demonstration && (
         <div className="linked-demo">
           <strong>Try it</strong>
-          <span>Rotate or flex the scope and watch all three views change together.</span>
+          <span>Rotate, flex or advance the scope and watch all three views change together.</span>
           <div className="guided-tabs">
             <button onClick={() => props.onDemo('roll')}>Rotate the scope</button>
             <button onClick={() => props.onDemo('flexion')}>Flex the tip</button>
+            <button onClick={() => props.onDemo('advance')}>Advance the scope</button>
             <button onClick={() => props.onDemo('reset')}>Reset</button>
           </div>
         </div>
@@ -1224,6 +1272,34 @@ export function LinkedModelView(props: Props) {
               {sweepStatus.progress.minSpanDeg}°
             </p>
           )}
+        </div>
+      )}
+      {alongStatus && (
+        <div
+          className="linked-sweep"
+          data-along-airway-state={alongStatus.state}
+          data-target-lateral={
+            props.targetVisible && typeof props.targetLateral === 'number'
+              ? props.targetLateral.toFixed(3)
+              : ''
+          }
+        >
+          <div role="status">
+            <strong>{alongStatus.heading}</strong>
+            <p data-along-airway-next>{alongStatus.next}</p>
+          </div>
+        </div>
+      )}
+      {airwayStatus && (
+        <div
+          className="linked-sweep"
+          data-airway-view-state={airwayStatus.state}
+          data-airway-viewed={String(!!evidence.airwayViewed)}
+        >
+          <div role="status">
+            <strong>{airwayStatus.heading}</strong>
+            <p data-airway-view-next>{airwayStatus.next}</p>
+          </div>
         </div>
       )}
       {!concealed && (

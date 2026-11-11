@@ -768,6 +768,13 @@ body,
   flex: 1 1 220px;
   margin: 0;
 }
+/* The two ends of the scope-position slider, named under it: left withdraws, right advances. */
+.guided-range-ends {
+  display: flex;
+  justify-content: space-between;
+  font: 600 13px/1.2 system-ui, sans-serif;
+  color: #9fb6bd;
+}
 @media (max-width: 1000px) {
   .linked-trio {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

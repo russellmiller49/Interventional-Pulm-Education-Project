@@ -686,6 +686,7 @@ test.describe('sweep state', () => {
     await expect(f.locator('.linked-demo').getByRole('button')).toHaveText([
       'Rotate the scope',
       'Flex the tip',
+      'Advance the scope',
       'Reset',
     ])
     await expect(f.getByRole('button', { name: 'Reset acquisition' })).toHaveCount(0)

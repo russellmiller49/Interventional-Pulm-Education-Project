@@ -8,6 +8,8 @@ import type { EbusControl, EbusObservation, EbusLinkedLesson } from '@/lib/ebus-
 import {
   LINKED_LANDMARKS,
   LINKED_TASK_VERSION,
+  linkedLateralPosition,
+  linkedOpticView,
   linkedTaskId,
   type LinkedVariant,
 } from '@/lib/ebus-linked-contract'
@@ -39,7 +41,18 @@ export interface Question {
    */
   namesContactMode?: ContactMode
 }
-export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture' | 'model'
+export type LabGoal =
+  | 'scan'
+  /** Advance or withdraw until the node sits in the middle of the image (2026-11-10). */
+  | 'centre'
+  /** Look along the airway, then flex up onto the wall until tissue echoes return (2026-11-10). */
+  | 'airway-view'
+  | 'coupling'
+  | 'depth'
+  | 'gain'
+  | 'doppler'
+  | 'capture'
+  | 'model'
 export interface Lab {
   kind: 'simulator' | 'knobology' | 'model'
   modelPackage?: ModelPackage
@@ -202,13 +215,18 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
         source.settings.contactQuality === state.contactQuality,
       text: 'Wait for the ultrasound image to finish updating.',
     })
-    list.push({
-      id: 'linked-landmarks',
-      met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
-        linked?.identifiedStructures?.includes(id),
-      ),
-      text: 'Find and click the structure the task bar names on the ultrasound image.',
-    })
+    // The advance-and-withdraw task asks for a position in the image, and the airway-view task
+    // for two white-light views in turn: neither asks for a landmark or a sweep.
+    const alongAirway = lab.linkedVariant === 'along-airway' || lab.linkedVariant === 'airway-view'
+    if (!alongAirway)
+      list.push({
+        id: 'linked-landmarks',
+        met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
+          linked?.identifiedStructures?.includes(id),
+        ),
+        text: 'Find and click the structure the task bar names on the ultrasound image.',
+      })
+    if (alongAirway) return [...list, ...goalRequirements(lab, state)]
     if (lab.linkedLesson === 'ct-map')
       list.push({
         id: 'linked-section',
@@ -236,6 +254,11 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
       })
     }
   }
+  return [...list, ...goalRequirements(lab, state)]
+}
+/** What the lab's own goal adds to the list, after the loading and linked-evidence items. */
+function goalRequirements(lab: Lab, state: EbusObservation): LabRequirement[] {
+  const list: LabRequirement[] = []
   switch (lab.goal) {
     case 'model':
       list.push({
@@ -257,6 +280,37 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
         met: state.targetVisible && state.contactQuality >= 0.45,
         text: 'Finish with the node in the ultrasound image.',
       })
+      break
+    case 'centre':
+      list.push(
+        {
+          id: 'centre-moved',
+          met: state.usedControls.includes('advance'),
+          text: 'Advance or withdraw the scope with the Scope position slider.',
+        },
+        {
+          id: 'centre-position',
+          met:
+            state.targetVisible &&
+            state.contactQuality >= 0.45 &&
+            linkedLateralPosition(state.targetLateral) === 'centre',
+          text: 'Finish with the node in the middle of the ultrasound image.',
+        },
+      )
+      break
+    case 'airway-view':
+      list.push(
+        {
+          id: 'airway-seen',
+          met: !!state.linked?.airwayViewed,
+          text: 'Flex the tip down until the airway ahead sits in the middle of the white-light view.',
+        },
+        {
+          id: 'airway-wall',
+          met: linkedOpticView(state.opticalWallMm, state.contactQuality) === 'wall',
+          text: 'Finish with the tip flexed up onto the wall and tissue echoes in the image.',
+        },
+      )
       break
     case 'coupling':
       list.push(
