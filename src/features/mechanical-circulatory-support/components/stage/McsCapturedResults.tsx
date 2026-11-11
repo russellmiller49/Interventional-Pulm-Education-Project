@@ -1,11 +1,12 @@
 import { mcsDeviceNaming } from '../../content/deviceNaming'
+import { mcsOrderObservedSignals } from '../../content/observeFocus'
 import type { McsObservedSignal } from '../../content/sectionLearningContracts'
 import {
   mcsConfigurationLabel,
   mcsObservedDirection,
   type McsDeviceComparison,
 } from '../../engine/learningSession'
-import type { McsDeviceKind, McsSimulationState } from '../../engine/types'
+import type { McsDerivedMetrics, McsDeviceKind, McsSimulationState } from '../../engine/types'
 import styles from './mcs-stage.module.css'
 
 export type McsComparisonRecords = Partial<Record<McsDeviceKind, McsDeviceComparison>>
@@ -172,12 +173,18 @@ export function McsCapturedResults({
   signals,
   inspectOnly = false,
   providedExample = false,
+  focus,
 }: {
   before: McsSimulationState | null
   after: McsSimulationState
   signals: readonly McsObservedSignal[]
   inspectOnly?: boolean
   providedExample?: boolean
+  /**
+   * The readings the task's instruction names (`mcsObserveFocus`). They are listed first under
+   * their own heading and never dimmed, moved or not; absent, the table is in authored order.
+   */
+  focus?: readonly (keyof McsDerivedMetrics)[]
 }) {
   const format = (value: number | boolean | null | undefined, digits: number) =>
     value == null
@@ -187,6 +194,41 @@ export function McsCapturedResults({
           ? 'yes'
           : 'no'
         : value.toFixed(digits)
+  const groups = mcsOrderObservedSignals(signals, focus ?? [])
+  const row = (signal: McsObservedSignal, named: boolean) => {
+    const first = before?.metrics[signal.key]
+    const last = after.metrics[signal.key]
+    const noStream = signal.key === 'deviceFlowLMin' && after.device.kind === 'iabp'
+    const direction =
+      !noStream && typeof first === 'number' && typeof last === 'number'
+        ? mcsObservedDirection(first, last, signal.digits)
+        : undefined
+    return (
+      <tr
+        key={signal.key}
+        data-signal={signal.key}
+        data-level={signal.level}
+        data-changed={direction === undefined ? undefined : direction !== 'unchanged'}
+        data-named={named || undefined}
+      >
+        <th scope="row">
+          {signal.label}{' '}
+          <small>
+            {signal.unit} · {signal.level}
+          </small>
+        </th>
+        <td>{noStream ? 'No separate stream' : format(first, signal.digits)}</td>
+        <td>{noStream ? 'No separate stream' : format(last, signal.digits)}</td>
+        <td data-change>
+          {noStream
+            ? 'Not a pump-flow measurement'
+            : typeof first === 'number' && typeof last === 'number'
+              ? `${mcsObservedDirection(first, last, signal.digits)} (${(last - first).toFixed(signal.digits)} ${signal.unit === '%' ? 'percentage points' : signal.unit})`
+              : '—'}
+        </td>
+      </tr>
+    )
+  }
   return (
     <div className={styles.block} data-captured-results>
       <p>
@@ -201,7 +243,7 @@ export function McsCapturedResults({
         </p>
       ) : null}
       <div className={styles.tableScroll}>
-        <table className={styles.grammar} data-before-after>
+        <table className={`${styles.grammar} ${styles.capturedTable}`} data-before-after>
           <caption>
             {providedExample ? 'Worked example readings' : 'Readings before and after'}
           </caption>
@@ -213,41 +255,30 @@ export function McsCapturedResults({
               <th scope="col">Change</th>
             </tr>
           </thead>
-          <tbody>
-            {signals.map((signal) => {
-              const first = before?.metrics[signal.key]
-              const last = after.metrics[signal.key]
-              const noStream = signal.key === 'deviceFlowLMin' && after.device.kind === 'iabp'
-              const direction =
-                !noStream && typeof first === 'number' && typeof last === 'number'
-                  ? mcsObservedDirection(first, last, signal.digits)
-                  : undefined
-              return (
-                <tr
-                  key={signal.key}
-                  data-signal={signal.key}
-                  data-level={signal.level}
-                  data-changed={direction === undefined ? undefined : direction !== 'unchanged'}
-                >
-                  <th scope="row">
-                    {signal.label}{' '}
-                    <small>
-                      {signal.unit} · {signal.level}
-                    </small>
+          {focus?.length ? (
+            <>
+              <tbody data-named-readings>
+                <tr data-group-heading>
+                  <th colSpan={4} scope="rowgroup">
+                    Named in this task
                   </th>
-                  <td>{noStream ? 'No separate stream' : format(first, signal.digits)}</td>
-                  <td>{noStream ? 'No separate stream' : format(last, signal.digits)}</td>
-                  <td>
-                    {noStream
-                      ? 'Not a pump-flow measurement'
-                      : typeof first === 'number' && typeof last === 'number'
-                        ? `${mcsObservedDirection(first, last, signal.digits)} (${(last - first).toFixed(signal.digits)} ${signal.unit === '%' ? 'percentage points' : signal.unit})`
-                        : '—'}
-                  </td>
                 </tr>
-              )
-            })}
-          </tbody>
+                {groups.named.map((signal) => row(signal, true))}
+              </tbody>
+              {groups.others.length ? (
+                <tbody data-other-readings>
+                  <tr data-group-heading>
+                    <th colSpan={4} scope="rowgroup">
+                      Other readings
+                    </th>
+                  </tr>
+                  {groups.others.map((signal) => row(signal, false))}
+                </tbody>
+              ) : null}
+            </>
+          ) : (
+            <tbody>{signals.map((signal) => row(signal, false))}</tbody>
+          )}
         </table>
       </div>
     </div>

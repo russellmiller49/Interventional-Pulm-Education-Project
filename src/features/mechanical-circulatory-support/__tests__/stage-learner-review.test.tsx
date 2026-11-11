@@ -180,7 +180,7 @@ describe('the card keeps its promises', () => {
       'Change',
     ])
     // Every row is a captured reading, and says whether it moved.
-    const rows = [...table.querySelectorAll('tbody tr')]
+    const rows = [...table.querySelectorAll('tbody tr[data-signal]')]
     expect(rows.length).toBeGreaterThan(0)
     for (const row of rows) {
       expect(row.getAttribute('data-changed')).toMatch(/^(true|false)$/)

@@ -733,6 +733,13 @@
   display: block;
   font-weight: normal;
 }
+/* A learner's own run, in the task card: the four columns fit the card and the last one wraps. */
+.tableScroll table.capturedTable {
+  min-width: 0;
+}
+.tableScroll table.capturedTable :is(th, td) {
+  padding-inline: 0.3rem;
+}
 .definitionList {
   display: grid;
   gap: 0.4rem;

@@ -37,6 +37,7 @@ import { mcsExplainReflection } from '../../content/explainReflections'
 import { mcsStepHint } from '../../content/stepHints'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
 import { MCS_LVAD_PERFUSION_SECTION_ID } from '../../content/lvadPerfusionCase'
+import { mcsObserveFocus, mcsOrderObservedSignals } from '../../content/observeFocus'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
 import { mcsPathway } from '../../content/pathwayResolver'
 import { mcsSpineStop, MCS_SUPPORT_SPINE, type McsSpineStopId } from '../../content/supportSpine'
@@ -652,6 +653,21 @@ function McsStageSession({
     completionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
   }, [completionFocusRequest])
 
+  /*
+   * On an Observe task the live readings beside the picture carry the comparison too: the readings
+   * the instruction names are marked, and each reading says where it stood before the change. Not
+   * where nothing was changed (an inspection, or three devices compared with each other), and not
+   * before a run has been captured.
+   */
+  const observing = activeStep.interaction.kind === 'observe'
+  const observedFrom =
+    observing &&
+    lesson.contract.actionMode !== 'inspect-only' &&
+    sectionId !== 'mcs-foundations-mechanisms' &&
+    (reviewSnapshot || progression.capturedAfter)
+      ? beforeMetrics
+      : null
+
   const openSurfaces = useMemo(
     () =>
       new Set<McsStageSurfaceId>(progression.surfacesByStepId[activeStep.id] ?? defaultSurfaces),
@@ -1178,6 +1194,7 @@ function McsStageSession({
                   after={after}
                   signals={interaction.signals}
                   inspectOnly={lesson.contract.actionMode === 'inspect-only'}
+                  focus={mcsObserveFocus(sectionId)}
                 />
               )}
               {choiceFieldset(
@@ -1258,8 +1275,12 @@ function McsStageSession({
                   <th scope="col">Now</th>
                 </tr>
               </thead>
-              <tbody>
-                {interaction.signals.map((signal) => {
+              {(() => {
+                const groups = mcsOrderObservedSignals(
+                  interaction.signals,
+                  mcsObserveFocus(sectionId),
+                )
+                const row = (signal: (typeof interaction.signals)[number], named: boolean) => {
                   const before = beforeMetrics?.[signal.key] ?? null
                   const now = state.metrics[signal.key]
                   const format = (value: number | boolean | null) =>
@@ -1287,17 +1308,45 @@ function McsStageSession({
                       data-signal={signal.key}
                       data-level={signal.level}
                       data-changed={direction === undefined ? undefined : changed}
+                      data-named={named || undefined}
                     >
                       <th scope="row">
                         {signal.label}
                         {signal.unit ? <small> {signal.unit}</small> : null}
                       </th>
                       <td>{format(before)}</td>
-                      <td data-direction={direction}>{format(now)}</td>
+                      <td data-direction={direction}>
+                        {format(now)}
+                        {named && direction === 'flat' ? <small> unchanged</small> : null}
+                      </td>
                     </tr>
                   )
-                })}
-              </tbody>
+                }
+                // The readings the instruction names come first, under their own heading, and are
+                // never dimmed: one of them is often named because it does not move.
+                return (
+                  <>
+                    <tbody data-named-readings>
+                      <tr data-group-heading>
+                        <th colSpan={3} scope="rowgroup">
+                          Named in this task
+                        </th>
+                      </tr>
+                      {groups.named.map((signal) => row(signal, true))}
+                    </tbody>
+                    {groups.others.length ? (
+                      <tbody data-other-readings>
+                        <tr data-group-heading>
+                          <th colSpan={3} scope="rowgroup">
+                            Other readings
+                          </th>
+                        </tr>
+                        {groups.others.map((signal) => row(signal, false))}
+                      </tbody>
+                    ) : null}
+                  </>
+                )
+              })()}
             </table>
           </>
         )
@@ -1636,6 +1685,8 @@ function McsStageSession({
       }}
       stepKey={activeStep.id}
       pointed={pointedAt?.stepId === activeStep.id ? pointedAt.place : null}
+      readingsFocus={observing ? mcsObserveFocus(sectionId) : undefined}
+      readingsBefore={observedFrom}
       // A lit place is a hint. While a place on the map is the question, the readings do not point.
       onPoint={
         identifyOnMap && committedChoiceId === null

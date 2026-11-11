@@ -221,6 +221,10 @@
 .flow table[data-before-after] :is(thead th, td) {
   white-space: nowrap;
 }
+/* The change, in words and a figure, may break between the two so the table fits a narrow card. */
+.flow table[data-before-after] td[data-change] {
+  white-space: normal;
+}
 /* Before and after: the rows that moved are lit, the rest recede (ECMO, tester 2026-10-14). */
 .flow tr[data-changed='true'] > * {
   color: #ffd27a;
@@ -228,6 +232,26 @@
 }
 .flow tr[data-changed='false'] > * {
   opacity: 0.62;
+}
+/*
+ * The readings the task's instruction names: listed first under their own heading, and never
+ * dimmed. One of them is often named because it does not move.
+ */
+.flow tr[data-named][data-changed='false'] > * {
+  opacity: 1;
+}
+.flow tr[data-named] > th:first-child {
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+  padding-left: 0.5rem;
+}
+.flow tr[data-group-heading] > th {
+  padding-top: 0.6rem;
+  border-bottom: 0;
+  color: var(--stage-muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .presentation {
   display: grid;
@@ -325,6 +349,30 @@
 }
 .readings div[data-pointable] {
   border-radius: 0 0.4rem 0.4rem 0;
+}
+/*
+ * An Observe task: the readings its instruction names carry a filled edge and the words "Named in
+ * this task"; a reading that moved says where it stood, in the colour the table lights its moved
+ * rows in. Declared before the pointed rule, so a reading being pointed at still reads as pointed.
+ */
+.readings div[data-named] {
+  border-left: 4px solid var(--cyan-bright, #71e1e5);
+  padding-left: calc(0.75rem - 2px);
+  border-radius: 0 0.4rem 0.4rem 0;
+  background: rgba(113, 225, 229, 0.08);
+}
+.readings small[data-reading-was] {
+  color: var(--stage-muted, #9fb4b7);
+}
+.readings small[data-reading-was='increased'],
+.readings small[data-reading-was='decreased'] {
+  color: #ffd27a;
+  font-weight: 700;
+}
+.readings small[data-reading-named] {
+  margin-top: 0.15rem;
+  color: var(--cyan-bright, #71e1e5);
+  font-weight: 700;
 }
 .readings div[data-pointed] {
   border-left: 4px solid #ffd166;

@@ -8,7 +8,7 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import type { McsLearnControlId } from '../../content/learnControls'
 import type { McsMonitorTargetId } from '../../content/primarySurfaces'
 import type { McsStageLesson, McsStageSurfaceId } from '../../content/stageLessons'
-import type { McsAction, McsSimulationState } from '../../engine/types'
+import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../../engine/types'
 import {
   CirculationMap,
   type CirculationMapAnswer,
@@ -60,6 +60,8 @@ export function McsSimulatorPane({
   stepKey,
   pointed = null,
   onPoint,
+  readingsFocus,
+  readingsBefore = null,
 }: {
   readonly presentation: McsPresentationKind
   /** The picture this task opens on (see `mcsLeadVisual`). */
@@ -95,6 +97,9 @@ export function McsSimulatorPane({
    */
   readonly pointed?: McsPointedPlace | null
   readonly onPoint?: (place: McsPointedPlace | null) => void
+  /** On an Observe task: the readings its instruction names, and the values before the change. */
+  readonly readingsFocus?: readonly (keyof McsDerivedMetrics)[]
+  readonly readingsBefore?: McsDerivedMetrics | null
 }) {
   const monitorTarget: McsMonitorTargetId | undefined =
     lesson.contract.primarySurface === 'monitor'
@@ -237,6 +242,8 @@ export function McsSimulatorPane({
           withholdFlow={flowAccountWithheld}
           pointed={pointed}
           onPoint={onPoint}
+          focus={readingsFocus}
+          before={readingsBefore}
         />
       ) : null}
       {/*
