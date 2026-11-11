@@ -97,16 +97,24 @@
 
 .bench {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) clamp(320px, 27vw, 430px);
+  /* The text column is on the left, as in the other modules: the task, then the pictures. */
+  grid-template-columns: clamp(320px, 27vw, 430px) minmax(0, 1fr) minmax(0, 1fr);
   /* A task card taller than the window scrolls inside its column; the pictures never move. */
   grid-template-rows: minmax(0, max-content) minmax(0, 1fr);
   grid-template-areas:
-    'scope ct now'
-    'scope ct detail';
+    'now scope ct'
+    'detail scope ct';
   gap: 0.55rem;
   height: 100%;
   min-height: 0;
   padding: 0.55rem;
+}
+/* While the airway is traced back from the lesion there is no map yet: the CT has both picture
+   columns to itself. */
+.bench[data-plan-wide] {
+  grid-template-areas:
+    'now ct ct'
+    'detail ct ct';
 }
 .pane {
   display: flex;
@@ -351,6 +359,23 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+}
+/* The picture is dragged to move it; where a mark is asked for, the pointer says so. */
+.ctSquare svg {
+  cursor: grab;
+}
+.ctSquare svg:active {
+  cursor: grabbing;
+}
+.ctSquare[data-can-mark] svg {
+  cursor: crosshair;
+}
+/* The learner's own pin where they have followed an airway to. */
+.ctTrail {
+  fill: none;
+  stroke: #9be7c4;
+  stroke-width: 0.45;
+  paint-order: stroke;
 }
 .ctMark {
   stroke: #81f1ed;
@@ -806,6 +831,13 @@
   .detail {
     overflow: visible;
   }
+  .bench[data-plan-wide] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'now'
+      'ct'
+      'detail';
+  }
 }
 @media (max-width: 639px) {
   .bench {
@@ -882,6 +914,35 @@
   stroke-dasharray: none;
   stroke-width: 2.6px;
 }
+/* The model's arc laid over the learner's in the review: a fine dashed line, never the route. */
+.arc[data-arc-ghost] {
+  stroke: #7fe3ff;
+  stroke-width: 1.4px;
+  stroke-dasharray: 3 3;
+  opacity: 0.9;
+}
+/* After a check that did not fit: a branch that is where one leaves, and one that is not. */
+.arc[data-arc-pending][data-arc-verdict='kept'] {
+  stroke: #91d8b1;
+  stroke-dasharray: none;
+}
+.arc[data-arc-pending][data-arc-verdict='off'] {
+  stroke: #e9a39a;
+  stroke-dasharray: 2 4;
+}
+.arcVerdict {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.arcVerdict[data-arc-verdict-mark='kept'] {
+  fill: #91d8b1;
+}
+.arcVerdict[data-arc-verdict-mark='off'] {
+  fill: #e9a39a;
+}
 .arcHome {
   fill: #2b8a9c33;
   stroke: none;
@@ -930,27 +991,26 @@
   pointer-events: none;
   white-space: nowrap;
 }
+/* A direction is chosen on the circle itself, at the place it belongs to. */
+.arcRimSlot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.arcRimSlot select {
+  min-height: 34px;
+  max-width: 8.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-color: #f6c66c;
+  background: #0b1f26;
+}
 .arcMap[data-arc-map-variant='compact'] .arcRimWord {
   font-size: 0.66rem;
   padding: 0 0.25rem;
 }
 
 /* Plan stage: map controls in the task card. */
-.rimPickers {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.4rem 0.6rem;
-  margin: 0.4rem 0 0;
-}
-.rimPickers label {
-  display: grid;
-  gap: 0.15rem;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-.rimPickers select {
-  min-height: 34px;
-}
 .sectorGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1000,6 +1060,57 @@
   width: 100%;
   padding: 0.6rem;
 }
+/* The review: one map, the learner's with the model's laid over it, and which to look at. */
+.reviewLegend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.9rem;
+}
+.reviewLegend .sideTabs {
+  margin-left: 0;
+}
+.reviewLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.reviewLegend i {
+  display: inline-block;
+  width: 1.5rem;
+  border-top: 2px solid #e8f2f4;
+}
+.reviewLegend i[data-line='model'] {
+  border-top: 2px dashed #7fe3ff;
+}
+/* How to work a step out, in the task card: open, and out of the way once read. */
+.teachBox {
+  margin: 0.5rem 0 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #14252c;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.teachBox summary {
+  padding: 0.35rem 0.6rem;
+  color: var(--cyan-bright);
+  font-weight: 700;
+  cursor: pointer;
+}
+.teachBox > div {
+  max-height: 13.5rem;
+  overflow-y: auto;
+  padding: 0 0.6rem 0.5rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.teachBox p {
+  margin: 0;
+}
+.teachBox[data-teach-compact] > div {
+  max-height: 6.4rem;
+}
 .mapPair .arcMap[data-arc-map-variant='compact'] {
   max-height: none;
 }
@@ -1037,6 +1148,10 @@
   flex-wrap: wrap;
   gap: 0.2rem 0.8rem;
 }
+.mapTools span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
 .mapTools button {
   min-height: 0;
   padding: 0;
@@ -1066,14 +1181,6 @@
   bottom: -2.25rem;
   background: #12313a;
   color: var(--cyan-bright);
-}
-.mapWaiting {
-  max-width: 22rem;
-  margin: 0;
-  padding: 1rem;
-  color: var(--muted);
-  font-size: 0.86rem;
-  text-align: center;
 }
 /* A generation inside a branch the route does not take: faint, for recognising a wrong turn. */
 .arc[data-arc-reference] {

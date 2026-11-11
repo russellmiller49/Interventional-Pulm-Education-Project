@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import { goToActivity } from './ebus-guided-steps'
 
 // Local production build only; no login, backend writes, stored answers or completion seeds.
 const routes = {
@@ -285,7 +286,10 @@ test('EBUS keeps recorded comparisons, freeze/calipers/save and self-paced unava
   page,
 }, info) => {
   const frame = () => page.frameLocator('iframe[title="EBUS workbench"]')
-  await page.goto('/en/ebus-guided/learn?section=gain-contrast')
+  // The gain teaching screen, with its live example, is partway into the depth-and-gain lesson:
+  // a lesson opens on its prediction, and gain is the lesson's second unit (2026-11-10).
+  await page.goto('/en/ebus-guided/learn?section=image-depth')
+  await goToActivity(page, 'gain-contrast:detail-example')
   const baseline = frame().locator('[data-recorded-baseline]')
   await expect(baseline).toBeVisible()
   const retained = await baseline.getAttribute('src')
@@ -309,7 +313,9 @@ test('EBUS keeps recorded comparisons, freeze/calipers/save and self-paced unava
   await doppler.press('Space')
   await expect(doppler).toHaveAttribute('aria-pressed', pressed === 'true' ? 'false' : 'true')
 
+  // The capture teaching screen follows the phantom unit in the same lesson.
   await page.goto('/en/ebus-guided/learn?section=capture')
+  await goToActivity(page, 'capture:capture-context')
   await frame().getByRole('button', { name: 'Freeze image', exact: true }).click()
   await expect(frame().getByRole('button', { name: 'Play clip', exact: true })).toBeDisabled()
   const save = frame().getByRole('button', { name: 'Save image', exact: true })
@@ -326,9 +332,10 @@ test('EBUS keeps recorded comparisons, freeze/calipers/save and self-paced unava
   ).toBeVisible()
   await page.screenshot({ path: info.outputPath('capture.png') })
 
-  await page.goto(routes.ebus)
-  await page.locator('[data-now-primary]').click() // prediction
-  await page.locator('[data-now-primary]').click() // continue without answering
+  // A check that reads the learner's own image cannot be answered when the lab was skipped. The
+  // contact model's check is the one of that kind left in a lesson (flow change of 2026-11-10).
+  await page.goto('/en/ebus-guided/learn?section=acoustic-contact')
+  await goToActivity(page, 'contact-cutaway-model:contact-states')
   await page.getByRole('button', { name: 'Continue without an image', exact: true }).click()
   const radios = page.getByRole('radio')
   expect(await radios.count()).toBeGreaterThan(0)
@@ -344,8 +351,9 @@ test('EBUS keeps recorded comparisons, freeze/calipers/save and self-paced unava
   await page.getByRole('button', { name: 'Show explanation', exact: true }).click()
   await page.locator('[data-now-primary]').click()
   await page.reload()
+  // A reload starts the lesson again from its first screen, the prediction.
   await expect(
-    page.getByRole('heading', { name: 'Compare the displayed fields', exact: true }),
+    page.getByRole('heading', { name: 'Identify the acquisition problem', exact: true }),
   ).toBeVisible()
 })
 

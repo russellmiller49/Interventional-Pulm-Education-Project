@@ -81,7 +81,9 @@ describe('critical-care shared shell convergence', () => {
     )
   })
 
-  it('keeps the MCS compatibility frame on the light V2 shell', () => {
+  // Dark since 2026-11-10 (owner): the MCS overview and Learn page match the lessons they lead
+  // into and the other four critical care modules. It was the one light hub of the five.
+  it('keeps the MCS compatibility frame on the dark V2 shell', () => {
     const { container } = render(
       <McsModuleFrame locale="en" activeHref="/mechanical-circulatory-support/learn">
         <div>Existing MCS engine</div>
@@ -90,7 +92,7 @@ describe('critical-care shared shell convergence', () => {
 
     expect(container.querySelector('[data-learning-module-v2-theme-root]')).toHaveAttribute(
       'data-theme',
-      'light',
+      'dark',
     )
     expect(screen.getByText('Mechanical Circulatory Support')).toBeInTheDocument()
     expect(screen.getByText('IABP, Impella, and durable LVAD device labs')).toBeInTheDocument()

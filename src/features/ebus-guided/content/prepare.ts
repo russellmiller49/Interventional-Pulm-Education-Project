@@ -17,6 +17,12 @@ export const prepareLessons: Lesson[] = [
       'Linear EBUS places an ultrasound transducer beside the airway and displays a needle in its imaging plane. EBUS-TBNA can obtain material for diagnosis and nodal staging. Radial EBUS, used to localize peripheral lesions, serves a different procedural role.',
       'A diagnostic procedure asks what the lesion is. A staging procedure asks where tumor has spread. A malignant sample from one accessible node may answer the first question while leaving other relevant stations unexamined. State both questions when both affect care.',
       'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
+      /*
+       * The N categories, where the course first leans on them (flow review of 2026-11-10: they
+       * were tested in lessons 1, 12 and 15 and taught in the staging lesson). TNM ninth edition
+       * keeps these definitions; the staging lesson adds the N2a/N2b split and the sampling order.
+       */
+      'In lung cancer the nodal extent is the N category, counted from the side of the primary: ipsilateral hilar and intrapulmonary nodes are N1, ipsilateral mediastinal and subcarinal nodes are N2, and contralateral mediastinal or hilar nodes, or any supraclavicular or scalene node, are N3. A staging examination therefore has to look at both sides of the mediastinum.',
     ],
     checklist: [
       'Name the decision the result will change.',
@@ -125,13 +131,13 @@ export const prepareLessons: Lesson[] = [
       'A positive sample and a complete examination answer different questions.',
       'Plan tissue handling before the first pass.',
     ],
-    sources: ['ers2026', 'chest2024', 'ics2023'],
+    sources: ['ers2026', 'chest2024', 'ics2023', 'iaslc9'],
   },
   {
     id: 'preparation',
-    title: 'Preparation and the airway plan',
+    title: 'Preparation, sedation and the airway plan',
     topic: 'Prepare',
-    minutes: 7,
+    minutes: 8,
     objective:
       'Identify unresolved preparation issues that should pause an elective EBUS procedure.',
     recall: 'The clinical question and likely specimen requirements should already be defined.',
@@ -140,6 +146,14 @@ export const prepareLessons: Lesson[] = [
       `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel the sources differ: ACCP 2022 says ${N('clopidogrel-accp')} a procedure, BTS 2013 says ${N('clopidogrel-bts')} a biopsy, and ICS/IAB 2023 allows continuing it for EBUS-TBNA when the risk of thrombosis outweighs the risk of bleeding. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
       `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
       `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
+      /*
+       * Sedation and airway (owner decision of 2026-11-10 to add them). The owner verified the CHEST
+       * 2016 sedation statement on 2026-11-10. The airway sentences are practice points, not a
+       * guideline; by his direction of the same day they describe laryngeal-mask and
+       * endotracheal-tube access as depending on device position and on what the procedure
+       * requires, not as absolute.
+       */
+      'EBUS-TBNA is done under moderate sedation, deep sedation or general anesthesia; CHEST 2016 suggests that either moderate or deep sedation is acceptable. The choice shapes the airway plan. Under moderate sedation the scope passes the cords with topical anesthesia, and cough and movement can limit how long a stable window lasts. With a laryngeal mask or an endotracheal tube, which stations can be reached depends on where the device sits and on what the procedure requires: a laryngeal mask generally leaves more of the upper trachea accessible, while an endotracheal tube may overlie the high paratracheal stations unless it is positioned to expose them. Say before induction which stations must be reached, so the airway can be chosen and positioned for them.',
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
     checklist: [
@@ -216,7 +230,7 @@ export const prepareLessons: Lesson[] = [
       'Unresolved readiness issues require a pause.',
       'Know the antiplatelet intervals, and identify any anticoagulant before you start.',
     ],
-    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f'],
+    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f', 'chest2016'],
   },
   {
     id: 'scope-orientation',

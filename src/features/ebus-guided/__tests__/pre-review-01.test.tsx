@@ -12,8 +12,9 @@ import { SequenceActivity } from '../components/SequenceActivity'
 import { QuestionExplanation } from '../components/QuestionExplanation'
 import { useLessonChromeClearance } from '../components/useLessonChromeClearance'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
-import { LESSONS } from '../content/curriculum'
+import { LESSONS, lessonById } from '../content/curriculum'
 import { activitiesForLesson } from '../content/stage'
+import { openUnitAcquisition, unitById } from '../testing/unit-acquisition'
 import { taskErrors, newExamination } from '../engine/examination'
 import { MODEL_WINDOW_CASE, EXAMINATION_CASE } from '../content/examination-cases'
 import { initialModelState, modelReducer, type NeedleState } from '@/lib/ebus-model-contract'
@@ -287,8 +288,12 @@ describe('evidence identity', () => {
     // The first check on this lesson's held activity is the authored air-gap scenario (L5-1):
     // it declares no retained-acquisition policy, so it is not a reading of whatever the learner
     // holds. Driven with a real acquisition in the browser; here the wording rule is pinned.
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    const held = activitiesForLesson(lesson).find((activity) => activity.image === 'held')!
+    // The contact model is the second unit of the contact lesson since 2026-11-10.
+    const lesson = unitById('contact-cutaway-model')
+    const held = activitiesForLesson(lessonById('contact-cutaway-model')!).find(
+      (activity) => activity.image === 'held' && activity.lessonId === lesson.id,
+    )!
+    expect(held.questions).toEqual(['observation'])
     expect(held.instruction).toContain('This is the image you continued with')
     expect(lesson.question.imagePolicy).not.toBe('retained-acquisition')
     expect(lesson.observation.imagePolicy).toBe('retained-acquisition')
@@ -297,15 +302,16 @@ describe('evidence identity', () => {
   it('names what the pane beside the task is, and never calls a reference an acquisition', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'ct-map')!
     render(<LessonHost lesson={lesson} />)
+    // The prediction comes first and shows no figure; the briefing after it shows the reference.
+    expect(document.querySelector('[data-evidence-identity]')).toBeNull()
+    fireEvent.click(document.querySelector('[data-now-primary]')!)
     const identity = document.querySelector('[data-evidence-identity]')!
     expect(identity).toHaveAttribute('data-evidence-identity', 'supplied')
     expect(identity.textContent).toBe('Reference figure.')
   })
 
   it('says a live workbench is holding nothing yet', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!)
+    openUnitAcquisition('contact-cutaway-model')
     expect(document.querySelector('[data-evidence-identity]')).toHaveAttribute(
       'data-evidence-identity',
       'live',
@@ -313,9 +319,7 @@ describe('evidence identity', () => {
   })
 
   it('does not claim a held image when the acquisition was skipped', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!) // the acquisition
+    openUnitAcquisition('contact-cutaway-model')
     fireEvent.click(screen.getByRole('button', { name: 'Continue without an image' }))
     expect(document.querySelector('[data-evidence-identity]')).toHaveAttribute(
       'data-evidence-identity',
@@ -408,6 +412,7 @@ describe('the skip is available but not the brightest thing on the screen', () =
   it('steps back while a task is open, and leads only when the primary cannot', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'clinical-question')!
     render(<LessonHost lesson={lesson} />)
+    fireEvent.click(document.querySelector('[data-now-primary]')!) // past the prediction
     fireEvent.click(document.querySelector('[data-now-primary]')!) // into the matching task
     const advance = document.querySelector('[data-now-primary]')!
     expect(advance.textContent).toContain('without completing this task')
@@ -416,9 +421,7 @@ describe('the skip is available but not the brightest thing on the screen', () =
   })
 
   it('keeps the hold as the filled button while it is disabled, and the skip a text link', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!)
+    openUnitAcquisition('contact-cutaway-model')
     const hold = document.querySelector('[data-now-primary]')!
     expect(hold).toBeDisabled()
     expect(hold).toHaveAttribute('data-prominent')

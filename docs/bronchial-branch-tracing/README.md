@@ -10,13 +10,15 @@ A lesion trip has three stages.
 
 1. **Plan, from the lesion back** (`engine/plan-session.ts`).
    - _The airway into the lesion._ The learner clicks the airway that runs into the lesion. It counts within 3 mm of the route's own centreline over the last 20 mm before the lesion, in three dimensions, so an airway that runs along the slice counts all along it (`lesionVerdict`).
+   - _The CT while tracing._ Until the map is on the bench the CT has both picture columns (`data-plan-wide`), and a coronal or sagittal reconstruction opens beside it on request. The picture is dragged to move it (a press that drags marks nothing; **Recentre** puts it back), and once the airway into the lesion is found a click drops the learner's own pin where they have followed it to. Pins show dimmed three slices either side, are checked by nothing and are not saved.
    - _Its segment._ The learner names the segmental bronchus from that lobe's segmental bronchi (`segmentChoices`).
    - _Views._ Turning or flipping the CT, and the coronal and sagittal reconstructions, are offered and never checked. In the lessons that teach them this is a step of its own. In Practice and the closing set it is not a step (`ROUTE_PLAN_PARTS`): the paper's pairing for the segment and the two open-view links sit beside the ostium circle. A place saved on the old step opens on the circle (`settlePlan`).
    - Until the segment is named, nothing on screen names it: the title, the route strip and the lesion picker give the lobe and slice only, and the map waits. A trip that does not ask for the circle draws none, so `start-at-the-lesion` never shows the circle `stand-at-the-ostium` asks for, and the lesion pictured on the hub is named by its lobe. In Learn, a lesson that asks for the segment names only the lobe in its title, objective, concept, trip titles and intro (`__tests__/nav-lessons.test.ts`).
 2. **Map** (`engine/arc-map.ts`).
    - _The ostium circle._ The learner labels the four rim positions of the view into the segment's ostium with superior, inferior, medial, lateral, anterior or posterior. Any roll of the right arrangement is accepted; a mirror image is refused (`gradeFrame`). A rim position between two directions accepts either word.
    - _The divisions._ At each division from the ostium to the lesion the learner draws each branch as an arc on one of eight sides of the current branch and marks the branch that goes on. A drawn branch counts when it is within 67.5° (the same or a neighbouring side) of where that branch leaves _relative to its siblings_, read in the ostium frame; drawn branches are matched to daughters by the closest overall fit (`gradeArcs`). The next division is drawn inside the marked branch.
-   - _Review._ The learner's map beside the model's, with the star on the branch that reaches the lesion.
+   - _Review._ One map: the learner's, with the model's arcs laid over it as dashed lines (`withGhost`, `ghost` on a map level), and a choice of Both, Yours or The model's. The star is on the branch that reaches the lesion.
+   - _On the map itself._ The four directions are chosen in controls that sit on the circle (`rimSlot` on `ArcMap`). After a check of a division that does not fit, each drawn branch is marked where it stands, kept or not where a branch leaves, by a mark and a line style; without hints the check says only whether the division fits.
 3. **Navigate** (`engine/nav-session.ts`, the scope-first bench).
    - **The central airways are flown through** (`cruise` on a station, `cruiseCount` in `content/nav-lessons.ts`, `flyingThrough` in `engine/nav-session.ts`). On a drive that follows a map, every fork above the one that gives off the lesion's segmental bronchus is passed without stopping: nothing is asked there and nothing is logged as asked, so first-try counts cover only the forks chosen at. The card names what is passing and offers **Stop at the next fork**, which makes that fork an ordinary one. A lesson stops earlier at any fork it has something to say at (lesson 6, the left main bronchus). The drive waits for the scope's picture before it sets off. **Choose at every fork from the trachea** on the hub and the lesion lists turns the fly-through off (`engine/prefs-storage.ts`, key `branch-tracing.prefs-v1`).
    - Every fork stopped at is chosen at, by its button or by a click on its number in the scope; no fork asks for its openings to be marked (the two refreshers still mark them). On a drive that follows a map an opening is named once the learner has chosen: the first fork stopped at gives off the bronchus the learner named in planning, so its name on an opening would be the answer.
@@ -160,6 +162,18 @@ The plan came from a review of the module for third-year fellows and attendings,
 3. **The course is seven lessons, 61 minutes.** Lesson numbers moved down by two; the beta hub card (`src/features/module-beta/rollout.ts`) says so. Lesson 4 is counted at 6 minutes, down from 9, because its map is already drawn.
 4. **The orientation check** routes to the refresher only when a fork did not match at the first check on that visit; a reload in the middle of it counts the earlier forks as not matched.
 5. **The primer** (hub and the "What are we doing?" dialog) now describes the fly-through and the check.
+
+### Changed on November 10, 2026 (round 2), for your read
+
+1. **The text column is on the left** in both benches, first in the page and in the tab order.
+2. **How to work a step out sits in the task card**, open when the step comes, in place of the notes that sat under the card and below the fold. Where the card also holds choices or drawing controls it keeps to a few lines and scrolls, and it folds after a check of a division that did not fit, so what the check found is in view.
+3. **The CT has both picture columns while the airway is traced**, about 675 px square at 1600×905 against 565. The two "the map starts at…" sentences that filled the empty map pane are gone.
+4. **Drag to move the CT, click to pin.** A mark is now placed when the pointer is released without dragging, not when it is pressed.
+5. **The four directions are chosen on the circle**; the four dropdowns left the task card.
+6. **A division that does not fit is marked on the map**, branch by branch, where hints are on.
+7. **The review is one map** with the model's arcs over the learner's. The two small maps side by side, and their colliding labels, are gone.
+
+Not done in this round: the cut of about a third of the task-column text. It changes what every lesson says, so it is left for a pass of its own that you can read sentence by sentence.
 
 ## Earlier design records
 

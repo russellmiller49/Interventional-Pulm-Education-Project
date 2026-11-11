@@ -443,10 +443,47 @@ test.describe('planning from the lesion', () => {
     await page.locator('[data-bench-restart]').click()
     await expectStage(page, 'plan:lesion')
     await expect(page.locator('[data-arc-rim]')).toHaveCount(0)
-    await expect(page.locator('[data-map-waiting]')).toBeVisible()
+    // With no map to show, the CT has both picture columns to itself.
+    await expect(page.locator('[data-bench]')).toHaveAttribute('data-plan-wide', 'true')
+    await expect(page.locator('[data-arc-map]')).toHaveCount(0)
     await showUntil(page, /^plan:done/)
     await expect(page.locator('[data-arc-rim]')).toHaveCount(0)
-    await expect(page.locator('[data-map-waiting="named"]')).toContainText('RB1 ostium')
+    await expect(page.locator('[data-arc-map]')).toHaveCount(0)
+  })
+
+  test('tracing the airway: the picture is dragged, a press that drags marks nothing, and a click pins', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=start-at-the-lesion')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, 'plan:lesion')
+    const box = (await ct(page).boundingBox())!
+    const at = (fx: number, fy: number) =>
+      [box.x + box.width * fx, box.y + box.height * fy] as const
+    // A drag moves the picture and is not a mark on the airway.
+    await page.mouse.move(...at(0.3, 0.3))
+    await page.mouse.down()
+    await page.mouse.move(...at(0.45, 0.4), { steps: 6 })
+    await page.mouse.up()
+    await expect(ct(page)).toHaveAttribute('data-ct-panned', 'true')
+    await expectStage(page, 'plan:lesion')
+    await expect(feedback(page)).toBeEmpty()
+    await page.locator('[data-ct-recentre]').click()
+    await expect(ct(page)).not.toHaveAttribute('data-ct-panned', 'true')
+    await expect(page.locator('[data-ct-recentre]')).toHaveCount(0)
+    // Once the airway is found, a click pins where it has been followed to; nothing checks a pin.
+    await nowButton(page, 'Show me').click()
+    await expectStage(page, 'plan:segment')
+    await expect(ct(page)).toHaveAttribute('data-can-pin', 'true')
+    await expect(page.locator('[data-trail-tools]')).toHaveCount(0)
+    await page.mouse.click(...at(0.3, 0.3))
+    await expect(page.locator('[data-ct-trail]')).toHaveCount(1)
+    await expect(page.locator('[data-trail-tools]')).toContainText('1 pin on the CT')
+    await expectStage(page, 'plan:segment')
+    await page.mouse.click(...at(0.6, 0.6))
+    await expect(page.locator('[data-trail-tools]')).toContainText('2 pins on the CT')
+    await page.locator('[data-trail-clear]').click()
+    await expect(page.locator('[data-ct-trail]')).toHaveCount(0)
   })
 
   test('the segment stays unnamed until the learner names it', async ({ page }) => {
@@ -455,7 +492,8 @@ test.describe('planning from the lesion', () => {
     await expectStage(page, 'plan:lesion')
     const bench = page.locator('[data-lesson-shell]')
     expect(await bench.innerText()).not.toMatch(/LS6|LB6|superior segment/)
-    await expect(page.locator('[data-map-waiting]')).toBeVisible()
+    await expect(page.locator('[data-bench]')).toHaveAttribute('data-plan-wide', 'true')
+    await expect(page.locator('[data-arc-map]')).toHaveCount(0)
     await expect(page.locator('[data-route-chip="lesion"]')).toHaveText('Lesion · Left lower lobe')
     // A click on lung beside the airway is not it, and help says which way the airway lies.
     await goToSlice(page, 369)
@@ -527,11 +565,25 @@ test.describe('planning from the lesion', () => {
     await nowButton(page, 'Check the branches').click()
     await expectStage(page, 'plan:arcs:1')
     await expect(feedback(page)).toContainText('drawn where it leaves')
+    // Each drawn branch is marked on the map where it stands, by a mark and a line style.
+    await expect(page.locator('[data-arc-map] [data-arc-verdict]')).toHaveCount(2)
+    await expect(page.locator('[data-arc-map] [data-arc-verdict-mark]')).toHaveCount(2)
     await page.locator('[data-remove-branch="1"]').click()
+    await expect(page.locator('[data-arc-map] [data-arc-verdict-mark]')).toHaveCount(0)
     await expect(page.locator('[data-placed-branch]')).toHaveCount(1)
     await showUntil(page, /^plan:review$/)
-    await expect(page.locator('[data-map-pair] [data-arc-map]')).toHaveCount(2)
-    await expect(page.locator('[data-map-pair] [data-arc-star]')).toHaveCount(2)
+    // The review is one map: the learner's, with the model's arcs laid over it.
+    const reviewMap = page.locator('[data-arc-map]')
+    await expect(reviewMap).toHaveCount(1)
+    await expect(reviewMap.locator('[data-arc-star]')).toHaveCount(1)
+    await expect(reviewMap.locator('[data-arc-ghost]')).toHaveCount(6)
+    await expect(page.locator('[data-review-map]')).toContainText('the model’s')
+    await page.locator('[data-review-show="mine"]').click()
+    await expect(reviewMap.locator('[data-arc-ghost]')).toHaveCount(0)
+    await expect(reviewMap).toHaveAttribute('data-arc-map', 'Your map')
+    await page.locator('[data-review-show="model"]').click()
+    await expect(reviewMap).toHaveAttribute('data-arc-map', 'Model map')
+    await expect(reviewMap.locator('[data-arc-star]')).toHaveCount(1)
     await expect(now(page)).toContainText('3 divisions')
     expect(await page.locator('[data-lesson-shell]').innerText()).not.toMatch(BANNED)
   })
@@ -949,6 +1001,22 @@ test.describe('one screen', () => {
       await showUntil(page, /^0:ready$/)
       await check('drive')
 
+      // Tracing the airway back: the CT alone, across both picture columns.
+      await page.goto(`${BASE}/learn?lesson=start-at-the-lesion`)
+      await page.locator('[data-bench-restart]').click()
+      await expectStage(page, 'plan:lesion')
+      await pageFits('wide-ct')
+      await inside('wide-ct: CT', ct(page))
+      await inside('wide-ct: slice slider', page.getByLabel('CT slice'))
+      const wideCt = (await ct(page).boundingBox())!
+      expect(Math.abs(wideCt.width - wideCt.height), 'wide-ct: CT is square').toBeLessThan(2)
+      expect(wideCt.width, 'wide-ct: CT size').toBeGreaterThanOrEqual(600)
+      // Naming the segment: the choices and the way on stay in the window under the teaching text.
+      await nowButton(page, 'Show me').click()
+      await expectStage(page, 'plan:segment')
+      await pageFits('segment')
+      await inside('segment: choices', page.locator('[data-segment-choice]'))
+
       // The planning bench: the map, the CT and the task.
       await page.goto(`${BASE}/learn?lesson=nested-arcs`)
       await page.locator('[data-bench-restart]').click()
@@ -996,6 +1064,10 @@ test.describe('one screen', () => {
     await expect(page.getByRole('navigation', { name: 'Branch tracing sections' })).toBeHidden()
     const shellTop = (await shell(page).boundingBox())!.y
     expect(shellTop).toBeLessThan(2)
+    // The text column is on the left of the pictures.
+    const nowLeft = (await now(page).boundingBox())!.x
+    const mapLeft = (await page.locator('[data-arc-map]').boundingBox())!.x
+    expect(nowLeft).toBeLessThan(mapLeft)
     // The bench's own bar is the way out.
     await page.getByRole('link', { name: 'Course overview' }).click()
     await expect(page.locator('#site-header')).toBeVisible()

@@ -1,12 +1,20 @@
 /**
- * The four model-lab lessons, walked on the real lesson page (self-paced course, EBUS-01).
+ * The four model labs, walked on the real lesson page (self-paced course, EBUS-01).
  *
- * Each lesson is: a briefing (text and a diagram, no live model), the acquisition (the one place
- * the model workbench is live), a held-image activity with two checks, and a transfer check.
+ * Each model is the second unit of a lesson since the consolidation of 2026-11-10 (the phantom is
+ * the first unit of its lesson). A model unit is: a briefing (text and a diagram, no live model),
+ * the acquisition (the one place the model workbench is live), and the held image, shown with
+ * nothing asked except for the contact model's one check. The lesson then runs on to its own
+ * closing check.
  */
 import { chromium, expect } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { LESSONS } from '../../src/features/ebus-guided/content/curriculum'
+import {
+  CONTENT_LESSONS,
+  LESSONS,
+  lessonById,
+  partsOf,
+} from '../../src/features/ebus-guided/content/curriculum'
 import { activitiesForLesson } from '../../src/features/ebus-guided/content/stage'
 import { labGoalRequirements } from '../../src/features/ebus-guided/content/types'
 import { PROGRESS_STORAGE_KEY } from '../../src/features/ebus-guided/engine/selfPacedProgress'
@@ -52,24 +60,63 @@ async function main() {
     await expect(flow()).toHaveAttribute('data-activity-id', activity.id, { timeout: 60000 })
     await expect(title()).toHaveText(activity.title)
   }
-  const modelLessons = LESSONS.filter((l) => l.lab?.modelPackage)
+  /**
+   * Continue to a step of the open lesson. A lab on the way is left without an image; the model
+   * units sit inside a lesson that may have another lab before them (consolidation of 2026-11-10).
+   */
+  const toActivity = async (activity: { id: string; title: string }) => {
+    for (let guard = 0; guard < 20; guard++) {
+      if ((await flow().getAttribute('data-activity-id')) === activity.id) break
+      const skip = page.locator('[data-skip-acquisition]')
+      await ((await skip.count()) ? skip : primary()).click()
+    }
+    await onActivity(activity)
+  }
+  /** The steps of the holding lesson that belong to one model unit. */
+  const stepsOf = (unit: (typeof CONTENT_LESSONS)[number]) => {
+    const lesson = lessonById(unit.id)!
+    const activities = activitiesForLesson(lesson)
+    const own = activities.filter((a) => a.lessonId === unit.id)
+    return { lesson, activities, own }
+  }
+  const modelUnits = CONTENT_LESSONS.filter((l) => l.lab?.modelPackage)
   try {
-    expect(modelLessons).toHaveLength(4)
-    for (const lesson of modelLessons) {
-      const pkg = lesson.lab!.modelPackage!,
+    expect(modelUnits).toHaveLength(4)
+    for (const unit of modelUnits) {
+      const pkg = unit.lab!.modelPackage!,
         frame = page.frameLocator('iframe[title="EBUS workbench"]'),
-        [briefing, acquisition, held, transfer] = activitiesForLesson(lesson)
+        { lesson, activities, own } = stepsOf(unit),
+        // Flow of 2026-11-10: the model's image is shown with nothing asked, except the contact
+        // model, which keeps one check on the learner's own image. A unit's own prediction is
+        // asked only where it opens the lesson (the phantom).
+        prediction = own.find((a) => a.kind === 'prediction'),
+        briefing = own.find((a) => a.kind === 'briefing')!,
+        acquisition = own.find((a) => a.interaction === 'acquire')!,
+        held = own.find((a) => a.image === 'held')!,
+        after = activities[activities.indexOf(held) + 1],
+        closing = activities.at(-1)!,
+        closingUnit = partsOf(lesson).find((part) => part.id === closing.lessonId)!
       const modelFrame = frame.locator('[data-model-frame]')
       const readout = frame.locator('[data-model-reference-readout]')
       const selector = frame.getByLabel('Find a structure in the model', { exact: true })
       const stepsText = (done: number) => `Steps: ${done} of ${MODEL_STEPS[pkg].length} done`
-      const unmetStep = labGoalRequirements(lesson.lab!, EMPTY_EBUS_OBSERVATION).find(
+      const unmetStep = labGoalRequirements(unit.lab!, EMPTY_EBUS_OBSERVATION).find(
         (r) => r.id === 'model-steps',
       )!.text
 
       // The briefing is text and a diagram. No live model is embedded before the acquisition.
       await page.goto(base + '/en/ebus-guided/learn?section=' + lesson.id)
-      await onActivity(briefing)
+      if (prediction) {
+        // The commitment comes before any teaching, figure or model.
+        await onActivity(prediction)
+        await expect(workbench()).toHaveCount(0)
+        await expect(page.locator('[data-evidence-identity]')).toHaveCount(0)
+        await answer(unit.question)
+        await expect(primary()).toHaveText('Continue to ' + briefing.title)
+        await next()
+      }
+      // The model unit's briefing: straight after the prediction, or after the lesson's first unit.
+      await toActivity(briefing)
       await expect(page.locator('[data-evidence-identity="supplied"]')).toBeVisible()
       await expect(workbench()).toHaveCount(0)
       await expect(primary()).toHaveText('Continue to ' + acquisition.title)
@@ -154,68 +201,81 @@ async function main() {
       await expect(frame.locator('.model-controls h2')).toHaveText('Your image')
       await expect(frame.locator('.model-steps')).toHaveCount(0)
       await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
-      await expect(frame.locator('.model-image [role=tooltip]')).toHaveCount(0)
-      if (pkg === 'measurement') await expect(readout).toHaveCount(0)
       await page.screenshot({ path: `${out}/${pkg}-observe.png` })
-      await expect(primary()).toHaveText('Continue without answering')
-      await answer(lesson.question)
-      await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
-      // A response opens the model's own reference for the held plane.
-      if (pkg === 'measurement') {
-        await expect(readout).toBeVisible()
-        await expect(readout).toContainText('short axis 16.0 phantom mm')
-        await expect(frame.locator('[data-model-reference]')).toHaveCount(1)
+      if (held.questions.length) {
+        // A check on the learner's own image: nothing is revealed before a response.
+        await expect(frame.locator('.model-image [role=tooltip]')).toHaveCount(0)
+        await expect(primary()).toHaveText('Continue without answering')
+        await expect(card(unit.observation)).toBeVisible()
+        await answer(unit.observation)
+        await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
+        // The held contact state has a reflector, which the list names only once a response is in.
+        // The reveal reaches the lab as a message, so the list is polled rather than read once.
+        if (pkg === 'contact')
+          await expect
+            .poll(async () =>
+              (await selector.locator('option').allInnerTexts()).filter((label) =>
+                CONCEALED.test(label),
+              ),
+            )
+            .toHaveLength(1)
+      } else {
+        // Nothing is asked here, so the model's own reference for the held plane is shown at once.
+        await expect(page.locator('[data-question-id]')).toHaveCount(0)
+        if (pkg === 'measurement') {
+          await expect(readout).toBeVisible()
+          await expect(readout).toContainText('short axis 16.0 phantom mm')
+          await expect(frame.locator('[data-model-reference]')).toHaveCount(1)
+        }
+        if (pkg === 'routes') {
+          // Unsupported final state still retains a visible anatomy view, with no invented route arrow.
+          await expect(
+            frame.getByText('No supported orientation preset for this selection.', { exact: true }),
+          ).toBeVisible()
+        }
       }
+      // What the structure list names once the held image is revealed (after the response, or at
+      // once where nothing is asked).
       const revealedOptions = await selector.locator('option').allInnerTexts()
-      // The held contact state has a reflector, which the list names only once a response is in.
-      if (pkg === 'contact')
-        expect(revealedOptions.filter((label) => CONCEALED.test(label))).toHaveLength(1)
-      if (pkg === 'routes') {
-        // Unsupported final state still retains a visible anatomy view, with no invented route arrow.
-        await expect(
-          frame.getByText('No supported orientation preset for this selection.', { exact: true }),
-        ).toBeVisible()
-      }
       await page.screenshot({ path: `${out}/${pkg}-explain.png` })
-      await expect(primary()).toHaveText('Next check')
-      await next()
-      // The second check reads the held image, so it is open only because the image is held.
-      await expect(card(lesson.observation)).toBeVisible()
-      if (pkg === 'measurement') await expect(readout).toHaveCount(0)
-      await answer(lesson.observation)
-      await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
-      await expect(primary()).toHaveText('Continue to ' + transfer.title)
+      await expect(primary()).toHaveText('Continue to ' + after.title)
       await next()
 
-      await onActivity(transfer)
-      if (pkg === 'needle') {
+      // The rest of the lesson, to its closing check (the lesson's own, not the model unit's).
+      await toActivity(closing)
+      const closingCheck = closingUnit.transfer
+      const unsafe = closingCheck.choices.find((c) => c.unsafe)
+      if (pkg === 'needle' && unsafe) {
         // An unsafe response is named as unsafe and can be tried again; nothing is blocked.
-        const unsafe = lesson.transfer.choices.find((c) => c.unsafe)!
-        await respond(lesson.transfer, unsafe.text)
-        await expect(card(lesson.transfer)).toContainText(
+        await respond(closingCheck, unsafe.text)
+        await expect(card(closingCheck)).toContainText(
           'Unsafe — this would put a real patient at risk',
         )
         await expect(primary()).toBeEnabled()
-        await card(lesson.transfer).getByRole('button', { name: 'Try again', exact: true }).click()
+        await card(closingCheck).getByRole('button', { name: 'Try again', exact: true }).click()
       }
-      await answer(lesson.transfer)
+      await answer(closingCheck)
       await expect(primary()).toHaveText('Finish lesson')
       await next()
       await expect(title()).toHaveText('Lesson finished')
       const summary = page.locator('[data-session-summary]')
       await expect(summary).toContainText(briefing.title + ': Read')
       await expect(summary).toContainText(acquisition.title + ': Image acquired')
-      await expect(summary).toContainText(held.title + ': Both checks answered')
-      await expect(summary).toContainText(transfer.title + ': Check answered')
+      if (prediction) await expect(summary).toContainText(prediction.title + ': Check answered')
+      await expect(summary).toContainText(
+        held.title + (held.questions.length ? ': Check answered' : ': Read'),
+      )
+      await expect(summary).toContainText(closing.title + ': Check answered')
       results.push({
         lesson: lesson.id,
+        unit: unit.id,
         package: pkg,
         frameId: id,
         hover: discovered,
         concealed: true,
         structures: {
           beforeSteps: concealedOptions.slice(1),
-          heldAfterResponse: revealedOptions.slice(1),
+          heldRevealed: revealedOptions.slice(1),
         },
         completed: true,
       })
@@ -228,9 +288,9 @@ async function main() {
       }),
       [PROGRESS_STORAGE_KEY, LEGACY_STORAGE_KEY],
     )
-    expect([...stored.record.reviewedLessonIds].sort()).toEqual(
-      modelLessons.map((l) => l.id).sort(),
-    )
+    // The four lessons that hold a model unit are the ones reviewed.
+    const holders = modelUnits.map((unit) => lessonById(unit.id)!)
+    expect([...stored.record.reviewedLessonIds].sort()).toEqual(holders.map((l) => l.id).sort())
     expect(Object.keys(stored.record).sort()).toEqual(
       [
         'lastLocation',
@@ -246,16 +306,14 @@ async function main() {
     expect(stored.legacy).toBeNull()
     // A reload starts the lesson from its first task and keeps the reviewed marks.
     await page.reload()
-    await onActivity(activitiesForLesson(modelLessons.at(-1)!)[0])
+    await onActivity(activitiesForLesson(holders.at(-1)!)[0])
     await expect(page.locator('[data-lesson-chrome]')).toContainText(
       `4 of ${LESSONS.length} lessons reviewed`,
     )
 
-    const last = LESSONS.find((l) => l.lab?.modelPackage === 'measurement')!
-    await page.goto(base + '/en/ebus-guided/learn?section=' + last.id)
-    await onActivity(activitiesForLesson(last)[0])
-    await next()
-    await onActivity(activitiesForLesson(last)[1])
+    const phantom = stepsOf(modelUnits.find((unit) => unit.lab?.modelPackage === 'measurement')!)
+    await page.goto(base + '/en/ebus-guided/learn?section=' + phantom.lesson.id)
+    await toActivity(phantom.own.find((a) => a.interaction === 'acquire')!)
     await page.setViewportSize({ width: 900, height: 1050 })
     const frame = page.frameLocator('iframe[title="EBUS workbench"]')
     await expect(frame.locator('.model-viewport canvas')).toBeVisible({ timeout: 60000 })
@@ -269,11 +327,10 @@ async function main() {
     await page.setViewportSize({ width: 1500, height: 1050 })
     // A failed new model must not yield a held image.
     await page.route('**/guided-v2/*.glb*', (route) => route.abort())
-    const contact = LESSONS.find((l) => l.id === 'contact-cutaway-model')!
-    await page.goto(base + '/en/ebus-guided/learn?section=' + contact.id)
-    await onActivity(activitiesForLesson(contact)[0])
-    await next()
-    await onActivity(activitiesForLesson(contact)[1])
+    // The old address of the contact model opens the lesson that now holds it.
+    const contact = stepsOf(modelUnits.find((unit) => unit.id === 'contact-cutaway-model')!)
+    await page.goto(base + '/en/ebus-guided/learn?section=contact-cutaway-model')
+    await toActivity(contact.own.find((a) => a.interaction === 'acquire')!)
     await expect(frame.getByRole('alert')).toContainText('could not', { timeout: 60000 })
     await expect(primary()).toHaveText('Continue with this image')
     await expect(primary()).toBeDisabled()

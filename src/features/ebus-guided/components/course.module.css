@@ -78,7 +78,7 @@
 .eyebrow {
   color: var(--cyan-bright);
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.16em;
   font-weight: 700;
 }
@@ -243,7 +243,7 @@
 }
 .sources {
   color: var(--stage-muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 10px 14px;
 }
 .sources summary {
@@ -288,7 +288,7 @@
   border-radius: 8px;
   padding: 7px 10px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 .diagramLabels button[aria-pressed='true'] {
   border-color: var(--cyan-bright);
@@ -345,7 +345,7 @@
 }
 .context {
   padding: 8px 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--stage-muted);
   display: flex;
   flex-wrap: wrap;
@@ -380,6 +380,39 @@
   .embed iframe {
     height: 710px;
   }
+}
+/*
+ * Motion (flow review of 2026-11-10): the course changed state with no transition anywhere. A
+ * verdict, an explanation, a revealed answer and a new task now fade in over 180 ms, and buttons
+ * ease their colour. The rule below this one turns all of it off for reduced-motion settings.
+ */
+@keyframes ebusFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.moduleShell [data-answer-verdict],
+.moduleShell [data-explanation-reveal],
+.moduleShell [data-task-explanation],
+.moduleShell [data-task-reference],
+.moduleShell [data-session-summary],
+.moduleShell [data-lesson-more]:not([hidden]),
+.moduleShell [data-question-hint] {
+  animation: ebusFadeIn 180ms ease-out both;
+}
+.moduleShell button,
+.moduleShell a,
+.moduleShell label {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
   .moduleShell * {
@@ -500,7 +533,7 @@
   font-weight: 700;
 }
 .flowHeader .eyebrow {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.07em;
 }
 .flowHeader nav {
@@ -510,7 +543,33 @@
 }
 .flowHeader button,
 .flowHeader a {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
+}
+.moreMenu {
+  position: relative;
+  display: inline-flex;
+}
+.moreList {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 6px;
+  min-width: 11.5rem;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.moreList[hidden] {
+  display: none;
+}
+.moreList > * {
+  justify-content: flex-start;
+  width: 100%;
+  white-space: nowrap;
 }
 .flowProgress {
   display: flex;
@@ -518,7 +577,7 @@
   flex-wrap: wrap;
   gap: 12px;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   padding-bottom: 12px;
 }
 .flowProgress progress {
@@ -561,7 +620,7 @@
 }
 /* What the pane beside the task actually holds (EBUS-PRE-REVIEW-01, part C). */
 .evidenceIdentity {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--stage-muted);
   border-left: 3px solid var(--line);
   padding: 4px 0 4px 10px;
@@ -613,8 +672,38 @@
   grid-column: 1 / -1;
   justify-self: start;
 }
+/*
+ * Short lead above the live example, the rest of the reading under it (flow review of 2026-11-10).
+ * The lead is one column at a readable measure; the detail keeps the text-and-worked-example pair.
+ */
+.taskComposition[data-stacked] .taskContent[data-lead] {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 96ch;
+  gap: 4px;
+}
+.taskComposition[data-stacked] .taskContent[data-lead] p {
+  margin-bottom: 6px;
+}
+.taskMore {
+  order: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  column-gap: 24px;
+  row-gap: 16px;
+  align-items: start;
+  padding-top: 6px;
+}
+.taskMore h3 {
+  font-size: 1.06rem;
+  font-weight: 700;
+}
+.taskMore p {
+  margin-bottom: 10px;
+}
 @media (max-width: 900px) {
-  .taskComposition[data-stacked] .taskContent {
+  .taskComposition[data-stacked] .taskContent,
+  .taskMore {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -700,7 +789,7 @@
 }
 .flowFooter {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   padding: 12px;
 }
 .outline {
@@ -721,12 +810,12 @@
 }
 .outlineIntro small {
   color: var(--muted, #9eb3bd);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 .outline h3 {
   margin: 0 0 6px;
   color: #6ed7cd;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -766,7 +855,7 @@
 }
 .outlineLesson > span:first-child {
   color: #75d4cb;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 850;
   text-align: center;
 }
@@ -776,7 +865,7 @@
 }
 .outlineLesson small {
   color: #9eb3bd;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 .outlineLesson[aria-current] {
   border-color: #69cfc5;
@@ -799,7 +888,7 @@
 }
 .outlineTasks button > span:first-child {
   color: #75d4cb;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 .outlineTasks button[aria-current] {
@@ -853,7 +942,7 @@
   gap: 16px;
   border-bottom: 1px solid var(--line);
   padding: 8px 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 .flowNav a {
   padding: 6px 4px;
@@ -865,7 +954,7 @@
 .flowNav span {
   margin-left: auto;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 .examination {
   min-width: 0;
@@ -1285,13 +1374,12 @@
   .taskSurface[data-console] .taskHeading [data-task-instruction] {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
+    /* Two lines, always readable: one line cut the sentence short and opened only on hover,
+       which a keyboard cannot do (flow review of 2026-11-10). */
+    -webkit-line-clamp: 2;
     overflow: hidden;
     font-size: 0.86rem;
     margin: 0;
-  }
-  .taskSurface[data-console] .taskHeading [data-task-instruction]:hover {
-    -webkit-line-clamp: unset;
   }
   .taskSurface[data-console] .taskHeading [data-activity-purpose] {
     display: none;
@@ -1307,7 +1395,7 @@
   .taskSurface[data-console] .taskAdvance .advanceNote {
     min-height: 0;
     text-align: right;
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
   }
   .taskSurface[data-console] .taskComposition {
     grid-column: 1 / -1;
@@ -1361,7 +1449,7 @@
     padding: 1px 9px;
     border: 1px solid var(--line);
     border-radius: 999px;
-    font-size: 0.76rem;
+    font-size: 0.8125rem;
     white-space: nowrap;
   }
   /* Still announced, and still the marker the browser specs wait on; the pane badges say it. */
@@ -1379,11 +1467,16 @@
   .taskSurface[data-console] .embed {
     min-height: 0;
   }
+  /*
+   * The strip above the frame (task counter, heading, two-line instruction, the to-do row) measures
+   * 214 px at 1440x900, not the 9rem first reserved, so the frame ran 50 to 70 px past the bottom
+   * of the screen and its control row was cut off (flow review of 2026-11-10).
+   */
   .embed iframe[data-console] {
     height: max(
-      480px,
+      470px,
       calc(
-        100dvh - var(--ebus-focus-clear-top, calc(var(--site-header-height, 5rem) + 1rem)) - 9rem
+        100dvh - var(--ebus-focus-clear-top, calc(var(--site-header-height, 5rem) + 1rem)) - 14rem
       )
     );
   }
@@ -1440,7 +1533,7 @@
   border-radius: 999px;
   background: var(--cyan-bright);
   color: #082129;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 /* The console image is wide and short, so it runs the full width under the introduction. */

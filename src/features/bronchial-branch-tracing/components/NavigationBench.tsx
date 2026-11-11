@@ -825,141 +825,8 @@ export function NavigationBench({
         data-bench
         data-bench-phase={phase}
       >
-        <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Bronchoscope">
-          <header className={styles.paneHead}>
-            <h2>Bronchoscope</h2>
-            <span>{over && phase === 'arrived' ? target.approachCode : facts.parent.code}</span>
-          </header>
-          <div className={styles.squareSlot}>
-            <ScopeView
-              position={pose.position}
-              direction={pose.direction}
-              up={pose.up}
-              openings={openings}
-              moving={moving}
-              caption={caption}
-              phase={phase}
-              segmental={pastOstium ? map!.frame.side : undefined}
-              onReady={onScopeReady}
-            />
-          </div>
-          <p className={styles.paneCaption} data-scope-caption>
-            {caption}
-          </p>
-        </section>
-
-        <section
-          className={styles.pane}
-          style={{ gridArea: 'ct' }}
-          aria-label={centre === 'map' ? 'Your map' : 'CT'}
-          data-centre-pane={centre}
-        >
-          <header className={styles.paneHead}>
-            <h2>{CENTRE_TITLE[centre]}</h2>
-            <div className={styles.sideTabs} role="group" aria-label="Middle panel">
-              {CENTRE_TABS.filter((tab) => tab.id !== 'map' || map).map((tab) => (
-                <button
-                  key={tab.id}
-                  aria-pressed={centre === tab.id}
-                  onClick={() => setCentreChoice({ key: stationKey, tab: tab.id })}
-                  data-centre-tab={tab.id}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {centre === 'ct' && <span data-ct-display>{orientationSummary(session)}</span>}
-            {centre === 'ct' && session.matchNote === 'optional' && !moving && !over && (
-              <button
-                className={styles.lesionToggle}
-                onClick={() => dispatch({ type: 'check-match' })}
-                data-ct-check-turn
-              >
-                Check my turn
-              </button>
-            )}
-            {centre === 'ct' && showLesion && (
-              <button
-                className={styles.lesionToggle}
-                aria-pressed={current.focus === 'lesion'}
-                disabled={moving || over}
-                onClick={() =>
-                  setView(
-                    current.focus === 'lesion'
-                      ? { key: viewKey, slice: facts.forkSlice, focus: 'fork' }
-                      : { key: viewKey, slice: target.slice, focus: 'lesion' },
-                  )
-                }
-                data-ct-lesion-toggle
-              >
-                {current.focus === 'lesion' ? 'Back to the fork' : 'Lesion slice'}
-              </button>
-            )}
-          </header>
-          {reconstruction ? (
-            <ReferenceCtView
-              plane={reconstruction}
-              index={refPlanes[reconstruction]}
-              onIndexChange={(index) =>
-                setRefPlanes((all) => ({ ...all, [reconstruction]: index }))
-              }
-              axialSlice={slice}
-              focus={over ? undefined : { slice: tip.slice, pixel: tip.pixel }}
-              focusLabel="scope tip"
-              target={showLesion ? { id: target.id } : undefined}
-              onPick={(pick) => {
-                // A point picked on the reconstruction opens the axial CT there.
-                setView({ key: viewKey, slice: pick.slice, focus: current.focus })
-                setCentreChoice({ key: stationKey, tab: 'ct' })
-              }}
-              wheelPlanes={wheelSlices}
-            />
-          ) : centre === 'map' && map ? (
-            <>
-              <div className={styles.squareSlot}>
-                <ArcMap
-                  rim={map.rim}
-                  levels={map.levels}
-                  focus={mapFocus}
-                  star
-                  rotation={mapTurned ? turnToScope.angle : 0}
-                  label="Your map"
-                />
-              </div>
-              <label className={styles.paneCaption} data-map-turn-row>
-                <input
-                  type="checkbox"
-                  checked={mapTurned}
-                  onChange={(event) => setMapTurned(event.target.checked)}
-                  data-map-turn
-                />{' '}
-                Turn the map to the scope
-                {mapTurned && !turnToScope.reliable && ' (approximate here)'}
-              </label>
-            </>
-          ) : (
-            <TracingCtViewer
-              slice={slice}
-              range={trace.range}
-              onSlice={setSlice}
-              orientation={session.orientation}
-              onTurn={moving ? undefined : (operation) => dispatch({ type: 'turn', operation })}
-              center={crop.center}
-              size={crop.size}
-              target={target}
-              showNodule={showLesion}
-              markSlice={identifying ? identifying.slice : undefined}
-              markLabel={identifying ? `opening ${openingNumber(identifying.index)}` : undefined}
-              onMark={identifying ? mark : undefined}
-              marks={marks}
-              locators={locators}
-              tip={over ? null : tip}
-              ticks={ticks}
-              wheelSlices={wheelSlices}
-            />
-          )}
-        </section>
-
+        {/* The text column comes first, in the page and in the tab order: what to do, then the
+            pictures it is done on. */}
         <div className={styles.now} style={{ gridArea: 'now' }}>
           {map && (
             <ol className={styles.stageStrip} aria-label="Plan, map, navigate" data-stage-steps>
@@ -1185,6 +1052,141 @@ export function NavigationBench({
           )}
           {notes}
         </div>
+
+        <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Bronchoscope">
+          <header className={styles.paneHead}>
+            <h2>Bronchoscope</h2>
+            <span>{over && phase === 'arrived' ? target.approachCode : facts.parent.code}</span>
+          </header>
+          <div className={styles.squareSlot}>
+            <ScopeView
+              position={pose.position}
+              direction={pose.direction}
+              up={pose.up}
+              openings={openings}
+              moving={moving}
+              caption={caption}
+              phase={phase}
+              segmental={pastOstium ? map!.frame.side : undefined}
+              onReady={onScopeReady}
+            />
+          </div>
+          <p className={styles.paneCaption} data-scope-caption>
+            {caption}
+          </p>
+        </section>
+
+        <section
+          className={styles.pane}
+          style={{ gridArea: 'ct' }}
+          aria-label={centre === 'map' ? 'Your map' : 'CT'}
+          data-centre-pane={centre}
+        >
+          <header className={styles.paneHead}>
+            <h2>{CENTRE_TITLE[centre]}</h2>
+            <div className={styles.sideTabs} role="group" aria-label="Middle panel">
+              {CENTRE_TABS.filter((tab) => tab.id !== 'map' || map).map((tab) => (
+                <button
+                  key={tab.id}
+                  aria-pressed={centre === tab.id}
+                  onClick={() => setCentreChoice({ key: stationKey, tab: tab.id })}
+                  data-centre-tab={tab.id}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {centre === 'ct' && <span data-ct-display>{orientationSummary(session)}</span>}
+            {centre === 'ct' && session.matchNote === 'optional' && !moving && !over && (
+              <button
+                className={styles.lesionToggle}
+                onClick={() => dispatch({ type: 'check-match' })}
+                data-ct-check-turn
+              >
+                Check my turn
+              </button>
+            )}
+            {centre === 'ct' && showLesion && (
+              <button
+                className={styles.lesionToggle}
+                aria-pressed={current.focus === 'lesion'}
+                disabled={moving || over}
+                onClick={() =>
+                  setView(
+                    current.focus === 'lesion'
+                      ? { key: viewKey, slice: facts.forkSlice, focus: 'fork' }
+                      : { key: viewKey, slice: target.slice, focus: 'lesion' },
+                  )
+                }
+                data-ct-lesion-toggle
+              >
+                {current.focus === 'lesion' ? 'Back to the fork' : 'Lesion slice'}
+              </button>
+            )}
+          </header>
+          {reconstruction ? (
+            <ReferenceCtView
+              plane={reconstruction}
+              index={refPlanes[reconstruction]}
+              onIndexChange={(index) =>
+                setRefPlanes((all) => ({ ...all, [reconstruction]: index }))
+              }
+              axialSlice={slice}
+              focus={over ? undefined : { slice: tip.slice, pixel: tip.pixel }}
+              focusLabel="scope tip"
+              target={showLesion ? { id: target.id } : undefined}
+              onPick={(pick) => {
+                // A point picked on the reconstruction opens the axial CT there.
+                setView({ key: viewKey, slice: pick.slice, focus: current.focus })
+                setCentreChoice({ key: stationKey, tab: 'ct' })
+              }}
+              wheelPlanes={wheelSlices}
+            />
+          ) : centre === 'map' && map ? (
+            <>
+              <div className={styles.squareSlot}>
+                <ArcMap
+                  rim={map.rim}
+                  levels={map.levels}
+                  focus={mapFocus}
+                  star
+                  rotation={mapTurned ? turnToScope.angle : 0}
+                  label="Your map"
+                />
+              </div>
+              <label className={styles.paneCaption} data-map-turn-row>
+                <input
+                  type="checkbox"
+                  checked={mapTurned}
+                  onChange={(event) => setMapTurned(event.target.checked)}
+                  data-map-turn
+                />{' '}
+                Turn the map to the scope
+                {mapTurned && !turnToScope.reliable && ' (approximate here)'}
+              </label>
+            </>
+          ) : (
+            <TracingCtViewer
+              slice={slice}
+              range={trace.range}
+              onSlice={setSlice}
+              orientation={session.orientation}
+              onTurn={moving ? undefined : (operation) => dispatch({ type: 'turn', operation })}
+              center={crop.center}
+              size={crop.size}
+              target={target}
+              showNodule={showLesion}
+              markSlice={identifying ? identifying.slice : undefined}
+              markLabel={identifying ? `opening ${openingNumber(identifying.index)}` : undefined}
+              onMark={identifying ? mark : undefined}
+              marks={marks}
+              locators={locators}
+              tip={over ? null : tip}
+              ticks={ticks}
+              wheelSlices={wheelSlices}
+            />
+          )}
+        </section>
       </div>
       <HelpDialog
         open={helpOpen}

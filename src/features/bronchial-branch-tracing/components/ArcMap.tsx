@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 import {
   RIMS,
   SECTORS,
@@ -30,6 +30,11 @@ export interface ArcMapDrawing {
   leadsOn: number | null
   /** How many branches this division has. */
   count: number
+  /**
+   * After a check that did not fit: for each drawn branch, whether it is where a branch leaves
+   * ('kept') or not ('off'). Shown on the arc itself, by a mark and a line style, not colour alone.
+   */
+  verdicts?: readonly ('kept' | 'off')[]
 }
 export interface ArcMapProps {
   /** The words round the circle, where the learner (or the model) put them. */
@@ -49,6 +54,11 @@ export interface ArcMapProps {
   /** Accessible name: "Your map" / "Model map". */
   label: string
   variant?: 'large' | 'compact'
+  /**
+   * A control at each rim position in place of its word: the four directions are chosen on the
+   * circle itself, where they belong.
+   */
+  rimSlot?: (position: Rim) => ReactNode
 }
 
 const unit = (angle: number): [number, number] => {
@@ -73,6 +83,7 @@ export function ArcMap({
   star = false,
   label,
   variant = 'large',
+  rimSlot,
 }: ArcMapProps) {
   const uid = useId().replace(/:/g, '')
   const all: MapLevel[] = [
@@ -133,7 +144,9 @@ export function ArcMap({
           )}
           {regions.map((region) => {
             if (!region.cut || !region.parent) return null
-            const pending = drawingLevel !== null && region.level === drawingLevel
+            const pending = drawingLevel !== null && region.level === drawingLevel && !region.ghost
+            const verdict =
+              pending && region.daughter !== null ? drawing?.verdicts?.[region.daughter] : undefined
             return (
               <circle
                 key={region.id}
@@ -146,6 +159,8 @@ export function ArcMap({
                 data-arc-route={region.onRoute || undefined}
                 data-arc-pending={pending || undefined}
                 data-arc-reference={region.reference || undefined}
+                data-arc-ghost={region.ghost || undefined}
+                data-arc-verdict={verdict}
                 data-arc-in-home={homeChain?.has(region.parent) || undefined}
               />
             )
@@ -170,19 +185,35 @@ export function ArcMap({
           })}
           {drawing &&
             regions
-              .filter((r) => r.level === drawingLevel && !r.reference)
-              .map((region) => (
-                <text
-                  key={`b${region.id}`}
-                  className={styles.arcBranchNumber}
-                  x={fmt(region.inner.cx)}
-                  y={fmt(region.inner.cy)}
-                  fontSize={fmt(Math.max(textSize, region.inner.r * 0.5))}
-                  data-arc-branch={region.daughter! + 1}
-                >
-                  {region.daughter! + 1}
-                </text>
-              ))}
+              .filter((r) => r.level === drawingLevel && !r.reference && !r.ghost)
+              .map((region) => {
+                const verdict = drawing.verdicts?.[region.daughter!]
+                const size = Math.max(textSize, region.inner.r * 0.5)
+                return (
+                  <g key={`b${region.id}`}>
+                    <text
+                      className={styles.arcBranchNumber}
+                      x={fmt(region.inner.cx)}
+                      y={fmt(region.inner.cy)}
+                      fontSize={fmt(size)}
+                      data-arc-branch={region.daughter! + 1}
+                    >
+                      {region.daughter! + 1}
+                    </text>
+                    {verdict && (
+                      <text
+                        className={styles.arcVerdict}
+                        x={fmt(region.inner.cx + size * 0.75)}
+                        y={fmt(region.inner.cy - size * 0.45)}
+                        fontSize={fmt(size * 0.62)}
+                        data-arc-verdict-mark={verdict}
+                      >
+                        {verdict === 'kept' ? '✓' : '✕'}
+                      </text>
+                    )}
+                  </g>
+                )
+              })}
           {star && target && (
             <text
               className={styles.arcStar}
@@ -222,6 +253,18 @@ export function ArcMap({
       {RIMS.map((position) => {
         const [x, y] = unit(sectorAngle(rimSector[position]) + rotation)
         const word = rim[position]
+        if (rimSlot)
+          return (
+            <span
+              key={position}
+              className={styles.arcRimSlot}
+              // Just inside the rim, so a control at the left or right is not cut by the pane.
+              style={{ left: `${50 + 31 * x}%`, top: `${50 + 33 * y}%` }}
+              data-arc-rim-slot={position}
+            >
+              {rimSlot(position)}
+            </span>
+          )
         return (
           <span
             key={position}

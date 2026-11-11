@@ -6,6 +6,7 @@ import {
   gradeArcs,
   gradeFrame,
   layoutArcMap,
+  withGhost,
   lungSide,
   mapTurnToScope,
   mappedForks,
@@ -322,3 +323,42 @@ describe('turning the map to the scope', () => {
 /** The rim positions, for exhaustiveness. */
 const _rims: Rim[] = ['top', 'right', 'bottom', 'left']
 void _rims
+
+describe('the model’s arcs laid over the learner’s map', () => {
+  const learner = [
+    { angles: [270, 90], route: 0 },
+    { angles: [0, 180], route: 1 },
+  ]
+  const model = [
+    { angles: [255, 80], route: 0 },
+    { angles: [20, 200], route: 1 },
+  ]
+
+  it('adds the model’s angles to each division and leaves the learner’s own untouched', () => {
+    const both = withGhost(learner, model)
+    expect(both.map((level) => level.angles)).toEqual(learner.map((level) => level.angles))
+    expect(both.map((level) => level.route)).toEqual([0, 1])
+    expect(both.map((level) => level.ghost)).toEqual([
+      [255, 80],
+      [20, 200],
+    ])
+    // A division the model does not have is left as the learner drew it.
+    expect(withGhost(learner, model.slice(0, 1))[1]).toBe(learner[1])
+  })
+
+  it('draws them as extra arcs in the same parent, and changes nothing of the nesting', () => {
+    const plain = layoutArcMap(learner)
+    const overlaid = layoutArcMap(withGhost(learner, model))
+    const ghosts = overlaid.filter((region) => region.ghost)
+    expect(ghosts.map((region) => region.id)).toEqual(['0:g0', '0:g1', '1:g0', '1:g1'])
+    for (const ghost of ghosts) {
+      expect([ghost.onRoute, ghost.target, ghost.daughter]).toEqual([false, false, null])
+      expect(ghost.cut).not.toBeNull()
+    }
+    // The first division's are cut from the ostium; the second's from the learner's route branch.
+    expect(ghosts.slice(0, 2).map((region) => region.parent)).toEqual(['ostium', 'ostium'])
+    expect(ghosts.slice(2).map((region) => region.parent)).toEqual(['0:0', '0:0'])
+    // Without them the picture is exactly the learner's map.
+    expect(overlaid.filter((region) => !region.ghost)).toEqual(plain)
+  })
+})

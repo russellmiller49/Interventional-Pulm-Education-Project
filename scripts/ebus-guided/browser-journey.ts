@@ -7,7 +7,7 @@
 import { chromium, expect, type Page } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { FINAL_CASES } from '../../src/features/ebus-guided/content/cases'
-import { LESSONS, lessonHref } from '../../src/features/ebus-guided/content/curriculum'
+import { LESSONS, lessonHref, partsOf } from '../../src/features/ebus-guided/content/curriculum'
 import {
   activitiesForLesson,
   type LessonActivity,
@@ -51,9 +51,11 @@ async function answer(page: Page, question: Question) {
 /** Perform one activity the way a learner would, then continue. */
 async function performActivity(page: Page, lesson: Lesson, activity: LessonActivity) {
   await expect(page.locator('[data-ebus-flow]')).toHaveAttribute('data-activity-id', activity.id)
+  // A lesson may hold two content units; a step's lab, task and checks are its own unit's.
+  const unit = partsOf(lesson).find((part) => part.id === activity.lessonId)!
   if (activity.interaction === 'acquire') {
     const changed = activity.task === 'changed-window'
-    const lab = changed ? lesson.transferLab! : lesson.lab!
+    const lab = changed ? unit.transferLab! : unit.lab!
     const frame = page.frameLocator(WORKBENCH)
     await expect(primary(page)).toBeDisabled()
     if (lab.linkedLesson) await performLinked(page, lab.linkedLesson, changed)
@@ -77,18 +79,18 @@ async function performActivity(page: Page, lesson: Lesson, activity: LessonActiv
     })
   }
   if (activity.interaction === 'record') await performRecord(page, activity)
-  if (activity.interaction === 'matching' && lesson.matching) {
-    for (const pair of lesson.matching.pairs)
+  if (activity.interaction === 'matching' && unit.matching) {
+    for (const pair of unit.matching.pairs)
       await page.getByLabel(pair.cue, { exact: true }).selectOption(pair.id)
     await page.getByRole('button', { name: 'Check matches', exact: true }).click()
   }
-  if (activity.interaction === 'sequence' && lesson.sequence) {
-    for (const step of lesson.sequence.steps)
+  if (activity.interaction === 'sequence' && unit.sequence) {
+    for (const step of unit.sequence.steps)
       await page.getByRole('button', { name: step.text, exact: true }).click()
     await page.getByRole('button', { name: 'Check sequence', exact: true }).click()
   }
   for (const [index, slot] of activity.questions.entries()) {
-    await answer(page, lesson[slot])
+    await answer(page, unit[slot])
     if (index < activity.questions.length - 1) await primary(page).click()
   }
   await expect(primary(page)).toBeEnabled()

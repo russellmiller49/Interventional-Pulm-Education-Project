@@ -4,7 +4,14 @@ import { Link } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
 import { CONTACT_MODE_LABELS } from '@/lib/ebus-model-contract'
-import { BASE, CHAPTERS, LESSONS, chapterForLesson, lessonHref } from '../content/curriculum'
+import {
+  BASE,
+  CHAPTERS,
+  LESSONS,
+  chapterForLesson,
+  lessonHref,
+  partsOf,
+} from '../content/curriculum'
 import { activitiesForLesson, type LessonActivity } from '../content/stage'
 import { labGoalMet, labGoalRequirements, type Lesson, type Question } from '../content/types'
 import {
@@ -66,6 +73,8 @@ const TASK_INTERACTIONS = ['matching', 'sequence', 'record']
  * the lesson's key points now says it is guided practice instead of looking like an examination.
  */
 const KIND_LABELS: Record<LessonActivity['kind'], string> = {
+  prediction: 'Predict first',
+  debrief: 'Your image',
   briefing: 'Teaching',
   demonstration: 'Worked example',
   application: 'Guided task',
@@ -103,6 +112,31 @@ function LessonSession({
   const [dialog, setDialog] = useState<'outline' | 'help' | null>(null)
   const helpButton = useRef<HTMLButtonElement>(null)
   const outlineButton = useRef<HTMLButtonElement>(null)
+  /*
+   * The lesson controls used on most tasks stay in the header; the four used once a lesson at
+   * most (save, the two restarts, exit) sit behind "More" (flow review of 2026-11-10: six buttons
+   * above every task). Outside press or Escape closes it; Escape returns focus to the button.
+   */
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreMenu = useRef<HTMLDivElement>(null)
+  const moreButton = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!moreOpen) return
+    const onPointer = (event: PointerEvent) => {
+      if (!moreMenu.current?.contains(event.target as Node)) setMoreOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMoreOpen(false)
+      moreButton.current?.focus()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [moreOpen])
   const outlineList = useRef<HTMLDivElement>(null)
   // On opening the outline, the current lesson is brought to the middle of the list (as in ECMO).
   useEffect(() => {
@@ -120,16 +154,39 @@ function LessonSession({
   const position = activities.findIndex((activity) => activity.id === activeId)
   const current = activities.find((activity) => activity.id === (reviewId ?? activeId))!
   const active = activities[position]
+  /*
+   * The content unit behind a step (consolidation of 2026-11-10). Most lessons are one unit; five
+   * hold a second that used to be a lesson of its own, with its own lab, checks and boundary.
+   * Everything a step shows or checks is read from its unit; the lesson keeps identity, order
+   * and the saved marks.
+   */
+  const units = useMemo(() => partsOf(lesson), [lesson])
+  const unitOf = (activity: LessonActivity) =>
+    units.find((unit) => unit.id === activity.lessonId) ?? lesson
+  const content = unitOf(current)
+  // A lesson built from two units states its own objective once, on its first briefing.
+  const firstBriefingId = activities.find((activity) =>
+    activity.teaching.includes('foundation'),
+  )?.id
+  /*
+   * The acquisition in force is the last one in the unbroken run of the active unit's steps. A
+   * lesson with two labs must not carry the first lab's workbench into the second unit's
+   * briefing, or back into a closing check that belongs to the first unit.
+   */
+  let runStart = position
+  while (runStart > 0 && activities[runStart - 1].lessonId === active.lessonId) runStart -= 1
   const runtimeActivity = activities
-    .slice(0, position + 1)
+    .slice(runStart, position + 1)
     .findLast((activity) => activity.interaction === 'acquire')
-  const runtimeLab = runtimeActivity?.task === 'changed-window' ? lesson.transferLab : lesson.lab
+  const runtimeUnit = runtimeActivity ? unitOf(runtimeActivity) : unitOf(active)
+  const runtimeLab =
+    runtimeActivity?.task === 'changed-window' ? runtimeUnit.transferLab : runtimeUnit.lab
   const questionPosition = questionPositions[current.id] ?? 0
   const hasTask = TASK_INTERACTIONS.includes(current.interaction)
   const taskOutcome = taskOutcomes[current.id]
   const taskOpen = hasTask && !taskOutcome
   const questionSlot = taskOpen ? undefined : current.questions[questionPosition]
-  const question = questionSlot ? lesson[questionSlot] : undefined
+  const question = questionSlot ? content[questionSlot] : undefined
   const committed = question ? answers[question.id] : undefined
   const lastQuestion = !question || questionPosition >= current.questions.length - 1
   const missingImage =
@@ -170,7 +227,13 @@ function LessonSession({
   const following = LESSONS[lessonIndex + 1]
   const reviewed = progress.reviewedLessonIds.includes(lesson.id)
   const savedForLater = progress.reviewLaterLessonIds.includes(lesson.id)
-  const foundation = activities.find((activity) => activity.teaching.includes('foundation'))
+  // The teaching a check's hint can reopen: this unit's own briefing, once it has been shown.
+  const foundation = activities
+    .slice(0, position)
+    .findLast(
+      (activity) =>
+        activity.teaching.includes('foundation') && activity.lessonId === current.lessonId,
+    )
   useEffect(() => {
     recordLocation({ kind: 'lesson', id: lesson.id })
   }, [lesson.id])
@@ -353,8 +416,14 @@ function LessonSession({
   }, [holdRequested, current, observation, labDone])
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
   /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
-  const figure = current.image === 'diagram' ? (current.figure ?? lesson.diagram) : undefined
+  const figure = current.image === 'diagram' ? (current.figure ?? content.diagram) : undefined
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
+  /*
+   * A briefing with a live example shows a short lead, then the three views, then the rest of the
+   * reading (flow review of 2026-11-10). With all of the text above it the example started below
+   * the bottom of a 900 px screen, and a learner read 250 words before finding there was one.
+   */
+  const leadOnly = showDemo && !finished && current.teaching.includes('foundation')
   /*
    * What the evidence beside the task actually is (EBUS-PRE-REVIEW-01: L3-8, L5-1, L9-4, L11-5).
    *
@@ -418,8 +487,10 @@ function LessonSession({
     !!heldContactMode &&
     !!namedContactMode &&
     heldContactMode !== namedContactMode
+  // A debrief has no check to wait for: the learner's image is shown with its structures named.
   const reveal =
-    current.image === 'held' && (!!committed || !!(question && explanationOpen[question.id]))
+    current.image === 'held' &&
+    (current.kind === 'debrief' || !!committed || !!(question && explanationOpen[question.id]))
   const instruction =
     current.interaction === 'acquire'
       ? (runtimeLab?.instruction ?? current.instruction)
@@ -432,7 +503,9 @@ function LessonSession({
          * relationship is corrected.
          */
         evidenceKind === 'held-missing'
-        ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
+        ? current.questions.length
+          ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
+          : 'No image of yours is held for this task. Go back to the acquisition to hold one, or continue.'
         : question?.id === 'cutaway-observe'
           ? 'Compare the air-gap and reflector states you inspected in the echo schematic. Your held image stays as you acquired it; this comparison does not depend on which contact condition you held.'
           : heldConditionDiffers
@@ -456,7 +529,7 @@ function LessonSession({
   function activityStatus(activity: LessonActivity, index: number): string {
     if (!finished && index > position) return 'Not yet reached'
     if (!finished && index === position && !reviewId) return 'Current task'
-    const checks = activity.questions.map((slot) => lesson[slot])
+    const checks = activity.questions.map((slot) => unitOf(activity)[slot])
     const answered = checks.filter((item) => answers[item.id]).length
     const checkStatus = !checks.length
       ? ''
@@ -500,13 +573,14 @@ function LessonSession({
           <strong>From this lesson:</strong> {question.hint}
         </p>
       ) : (
-        <p>{lesson.recall}</p>
+        <p>{content.recall}</p>
       )}
       <ul>
-        {lesson.checklist.map((item) => (
+        {content.checklist.map((item) => (
           <li key={item}>{item}</li>
         ))}
       </ul>
+      {/* A prediction comes before the teaching, so there is no earlier concept to reopen. */}
       {foundation && !reviewId && (
         <p>
           <button
@@ -519,6 +593,54 @@ function LessonSession({
         </p>
       )}
     </>
+  )
+
+  const recallAndRefreshers = (
+    <>
+      <p>
+        <strong>Recall.</strong> {content.recall}
+      </p>
+      {content.refreshers?.length ? (
+        <p className={styles.refreshers} data-refreshers>
+          Optional refreshers in separate courses (each opens in a new tab; nothing here requires
+          them):{' '}
+          {content.refreshers.map((item, index) => (
+            <span key={item.href}>
+              {index ? ' · ' : ''}
+              <Link href={item.href} target="_blank" rel="noopener">
+                {item.label}
+              </Link>{' '}
+              ({item.course})
+            </span>
+          ))}
+        </p>
+      ) : null}
+    </>
+  )
+  const checklistAndTerms = (
+    <>
+      <ul>
+        {content.checklist.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      {/* First-use definitions from the course's own teaching (NAV-3, L1-4, L15-4). */}
+      <GlossaryTerms
+        entries={glossaryForLesson(content.id)}
+        heading="Terms used in this lesson"
+        intro="Open a term for its definition, source and limits. The full course glossary is under Help."
+        currentLessonId={lesson.id}
+      />
+    </>
+  )
+  const workedExample = (
+    <section className={styles.workedExample}>
+      <h3>Worked example</h3>
+      <p>{content.worked.context}</p>
+      <p>
+        <strong>Reasoning.</strong> {content.worked.reasoning}
+      </p>
+    </section>
   )
 
   return (
@@ -577,33 +699,64 @@ function LessonSession({
               >
                 Help
               </button>
-              <button
-                className={styles.secondary}
-                aria-pressed={savedForLater}
-                onClick={() => setLessonReviewLater(lesson.id, !savedForLater)}
-              >
-                {savedForLater ? 'Saved for later' : 'Save for later'}
-              </button>
-              <button className={styles.secondary} onClick={onRestart}>
-                Restart lesson
-              </button>
-              {/* The course's first lesson, at its first task. In the first lesson it restarts it. */}
-              {lessonIndex <= 0 ? (
-                <button className={styles.secondary} onClick={onRestart} data-restart-course>
-                  Restart course
-                </button>
-              ) : (
-                <Link
+              <div className={styles.moreMenu} ref={moreMenu}>
+                <button
+                  ref={moreButton}
                   className={styles.secondary}
-                  href={lessonHref(LESSONS[0].id)}
-                  data-restart-course
+                  aria-expanded={moreOpen}
+                  aria-controls="ebus-lesson-more"
+                  onClick={() => setMoreOpen((open) => !open)}
                 >
-                  Restart course
-                </Link>
-              )}
-              <Link className={styles.secondary} href={BASE}>
-                Exit lesson
-              </Link>
+                  More
+                </button>
+                <div
+                  id="ebus-lesson-more"
+                  className={styles.moreList}
+                  hidden={!moreOpen}
+                  data-lesson-more
+                >
+                  <button
+                    className={styles.secondary}
+                    aria-pressed={savedForLater}
+                    onClick={() => setLessonReviewLater(lesson.id, !savedForLater)}
+                  >
+                    {savedForLater ? 'Saved for later' : 'Save for later'}
+                  </button>
+                  <button
+                    className={styles.secondary}
+                    onClick={() => {
+                      setMoreOpen(false)
+                      onRestart()
+                    }}
+                  >
+                    Restart lesson
+                  </button>
+                  {/* The course's first lesson, at its first task. In the first lesson it restarts it. */}
+                  {lessonIndex <= 0 ? (
+                    <button
+                      className={styles.secondary}
+                      onClick={() => {
+                        setMoreOpen(false)
+                        onRestart()
+                      }}
+                      data-restart-course
+                    >
+                      Restart course
+                    </button>
+                  ) : (
+                    <Link
+                      className={styles.secondary}
+                      href={lessonHref(LESSONS[0].id)}
+                      data-restart-course
+                    >
+                      Restart course
+                    </Link>
+                  )}
+                  <Link className={styles.secondary} href={BASE}>
+                    Exit lesson
+                  </Link>
+                </div>
+              </div>
             </nav>
           </header>
           <div className={styles.flowProgress}>
@@ -663,7 +816,7 @@ function LessonSession({
               }
             >
               {finished
-                ? 'This lesson is now marked reviewed in this browser. Reviewed means you reached the end of the lesson, whether you completed, skipped or only read its tasks; the list below shows which, for this session only. It does not grade your answers and is not a record of procedural competence.'
+                ? 'This lesson is now marked reviewed in this browser. Reviewed means you reached the end of the lesson, whether you completed, skipped or only read its tasks; the list below shows which, for this session only.'
                 : reviewId
                   ? 'Read the earlier task without repeating its actions. Your current acquisition remains paused.'
                   : instruction}
@@ -722,29 +875,34 @@ function LessonSession({
                 </div>
               ) : runtimeActivity && runtimeLab ? (
                 <Workbench
-                  key={runtimeActivity.task ?? 'guided'}
+                  key={runtimeActivity.lessonId + ':' + (runtimeActivity.task ?? 'guided')}
                   lab={runtimeLab}
                   locked={
                     !!reviewId || holdRequested || active.interaction !== 'acquire' || finished
                   }
                   reveal={reveal && !reviewId}
-                  sessionId={sessionId + '-' + (runtimeActivity.task ?? 'guided')}
+                  sessionId={
+                    sessionId +
+                    '-' +
+                    (units.length > 1 ? runtimeActivity.lessonId + '-' : '') +
+                    (runtimeActivity.task ?? 'guided')
+                  }
                   onObservation={onObservation}
                   console={consoleStage}
                 />
-              ) : showDemo && lesson.lab ? (
+              ) : showDemo && content.lab ? (
                 <Workbench
-                  key="demonstration"
-                  lab={lesson.lab}
+                  key={content.id + ':demonstration'}
+                  lab={content.lab}
                   locked={false}
                   reveal
                   demonstration
-                  sessionId={sessionId + '-demonstration'}
+                  sessionId={sessionId + '-' + content.id + '-demonstration'}
                   onObservation={onObservation}
-                  console={lesson.lab.kind === 'simulator' && !!lesson.lab.linkedLesson}
+                  console={content.lab.kind === 'simulator' && !!content.lab.linkedLesson}
                 />
-              ) : current.image === 'reference' && lesson.station ? (
-                <StationFigure key={lesson.station} station={lesson.station} allowSelect />
+              ) : current.image === 'reference' && content.station ? (
+                <StationFigure key={content.station} station={content.station} allowSelect />
               ) : figure === 'specimens' ? (
                 <CaseSpecimens />
               ) : figure === 'troubleshooting' ? (
@@ -757,7 +915,7 @@ function LessonSession({
                 <TeachingDiagram kind={figure} />
               ) : null}
             </div>
-            <div className={styles.taskContent}>
+            <div className={styles.taskContent} data-lead={leadOnly || undefined}>
               {finished && (
                 <section className={styles.lessonTeaching} data-session-summary>
                   <h3>What you did in this session</h3>
@@ -803,54 +961,21 @@ function LessonSession({
               {!finished && current.teaching.includes('foundation') && (
                 <div className={styles.lessonTeaching}>
                   <p>
-                    <strong>Clinical objective.</strong> {lesson.objective}
+                    <strong>Clinical objective.</strong>{' '}
+                    {current.id === firstBriefingId ? lesson.objective : content.objective}
                   </p>
-                  <p>
-                    <strong>Recall.</strong> {lesson.recall}
-                  </p>
-                  {lesson.refreshers?.length ? (
-                    <p className={styles.refreshers} data-refreshers>
-                      Optional refreshers in separate courses, also in development (each opens in a
-                      new tab; nothing here requires them):{' '}
-                      {lesson.refreshers.map((item, index) => (
-                        <span key={item.href}>
-                          {index ? ' · ' : ''}
-                          <Link href={item.href} target="_blank" rel="noopener">
-                            {item.label}
-                          </Link>{' '}
-                          ({item.course})
-                        </span>
-                      ))}
-                    </p>
-                  ) : null}
-                  <h3>{lesson.concept}</h3>
+                  {!leadOnly && recallAndRefreshers}
+                  <h3>{content.concept}</h3>
                   {current.note && <p className={styles.notice}>{current.note}</p>}
-                  {lesson.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                  <ul>
-                    {lesson.checklist.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  {/* First-use definitions from the course's own teaching (NAV-3, L1-4, L15-4). */}
-                  <GlossaryTerms
-                    entries={glossaryForLesson(lesson.id)}
-                    heading="Terms used in this lesson"
-                    intro="Open a term for its definition, source and limits. The full course glossary is under Help."
-                    currentLessonId={lesson.id}
-                  />
+                  {(leadOnly ? content.paragraphs.slice(0, 1) : content.paragraphs).map(
+                    (paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ),
+                  )}
+                  {!leadOnly && checklistAndTerms}
                 </div>
               )}
-              {!finished && current.teaching.includes('worked') && (
-                <section className={styles.workedExample}>
-                  <h3>Worked example</h3>
-                  <p>{lesson.worked.context}</p>
-                  <p>
-                    <strong>Reasoning.</strong> {lesson.worked.reasoning}
-                  </p>
-                </section>
-              )}
+              {!finished && !leadOnly && current.teaching.includes('worked') && workedExample}
               {!finished && current.recordTask && current.caseData && (
                 <ExaminationWorkspace
                   key={current.id}
@@ -879,14 +1004,14 @@ function LessonSession({
                         ? 'You opened the answer to this task. '
                         : ''}
                     {current.interaction === 'matching'
-                      ? lesson.matching?.explanation
-                      : lesson.sequence?.explanation}
+                      ? content.matching?.explanation
+                      : content.sequence?.explanation}
                   </p>
                 )}
               {!finished &&
                 taskOutcome === 'shown' &&
                 current.interaction === 'matching' &&
-                lesson.matching && (
+                content.matching && (
                   <section
                     className={styles.sequence}
                     aria-label="The matches"
@@ -894,7 +1019,7 @@ function LessonSession({
                   >
                     <h3>The matches</h3>
                     <dl>
-                      {lesson.matching.pairs.map((pair) => (
+                      {content.matching.pairs.map((pair) => (
                         <div key={pair.id} className={styles.sequence}>
                           <dt>
                             <strong>{pair.cue}</strong>
@@ -908,7 +1033,7 @@ function LessonSession({
               {!finished &&
                 taskOutcome === 'shown' &&
                 current.interaction === 'sequence' &&
-                lesson.sequence && (
+                content.sequence && (
                   <section
                     className={styles.sequence}
                     aria-label="The sequence"
@@ -916,7 +1041,7 @@ function LessonSession({
                   >
                     <h3>The sequence</h3>
                     <ol style={{ listStylePosition: 'inside' }}>
-                      {lesson.sequence.steps.map((step) => (
+                      {content.sequence.steps.map((step) => (
                         <li key={step.id}>{step.text}</li>
                       ))}
                     </ol>
@@ -924,9 +1049,9 @@ function LessonSession({
                 )}
               {!finished && taskOpen && !reviewId && (
                 <>
-                  {current.interaction === 'matching' && lesson.matching && (
+                  {current.interaction === 'matching' && content.matching && (
                     <MatchingActivity
-                      activity={lesson.matching}
+                      activity={content.matching}
                       onComplete={() =>
                         setTaskOutcomes((outcomes) => ({ ...outcomes, [current.id]: 'completed' }))
                       }
@@ -935,9 +1060,9 @@ function LessonSession({
                       }
                     />
                   )}
-                  {current.interaction === 'sequence' && lesson.sequence && (
+                  {current.interaction === 'sequence' && content.sequence && (
                     <SequenceActivity
-                      sequence={lesson.sequence}
+                      sequence={content.sequence}
                       onComplete={() =>
                         setTaskOutcomes((outcomes) => ({ ...outcomes, [current.id]: 'completed' }))
                       }
@@ -1041,16 +1166,16 @@ function LessonSession({
                 <section className={styles.lessonTeaching}>
                   <h3>Carry this into the next examination</h3>
                   <ul>
-                    {lesson.takeaways.map((item) => (
+                    {content.takeaways.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </section>
               )}
               {!finished &&
-                lesson.boundary &&
+                content.boundary &&
                 (current.interaction === 'acquire' || current.image === 'held') && (
-                  <p className={styles.muted}>{lesson.boundary}</p>
+                  <p className={styles.muted}>{content.boundary}</p>
                 )}
               {current.companion && (
                 <Link className={styles.secondary} href={lessonHref(current.companion)}>
@@ -1058,6 +1183,19 @@ function LessonSession({
                 </Link>
               )}
             </div>
+            {leadOnly && (
+              <div className={styles.taskMore} data-teaching-more>
+                <div className={styles.lessonTeaching}>
+                  <h3>In more detail</h3>
+                  {content.paragraphs.slice(1).map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  {recallAndRefreshers}
+                  {checklistAndTerms}
+                </div>
+                {current.teaching.includes('worked') && workedExample}
+              </div>
+            )}
           </div>
           <footer className={styles.taskAdvance}>
             <button
@@ -1119,7 +1257,12 @@ function LessonSession({
              * neither control moves when readiness changes.
              */}
             <p role="status" className={styles.advanceNote} data-advance-note>
-              {primaryDisabled ? disabledReason : ''}
+              {/*
+               * In the console the outstanding steps are listed right beside this button, so
+               * repeating the first of them here said the same thing twice (flow review of
+               * 2026-11-10). The note still explains a button that is waiting on something else.
+               */}
+              {primaryDisabled && !(consoleStage && labOutstanding.length) ? disabledReason : ''}
             </p>
           </footer>
         </section>
@@ -1235,7 +1378,7 @@ function LessonSession({
                 try again, or continue without answering. Restart begins a new acquisition. Exit
                 keeps your place; the unfinished lesson starts over when reopened.
               </p>
-              {lesson.boundary && <p>{lesson.boundary}</p>}
+              {content.boundary && <p>{content.boundary}</p>}
               <GlossaryTerms
                 entries={GLOSSARY}
                 heading="Course glossary"

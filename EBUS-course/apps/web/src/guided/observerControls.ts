@@ -29,7 +29,16 @@ export function attachObserverControls(
   orbit: OrbitControls,
   camera: THREE.PerspectiveCamera,
   element: HTMLCanvasElement,
-  hooks: { render: () => void; reset: () => void; onEngagement?: (engaged: boolean) => void },
+  hooks: {
+    render: () => void
+    reset: () => void
+    onEngagement?: (engaged: boolean) => void
+    /**
+     * The pane the view is drawn in, when its own controls are laid over the canvas. While the
+     * view is engaged, a wheel that lands on that overlay still belongs to the view.
+     */
+    surface?: HTMLElement | null
+  },
 ): ObserverControlsHandle {
   let engaged = false
   element.tabIndex = 0
@@ -145,6 +154,22 @@ export function attachObserverControls(
   const browserWheel = (event: WheelEvent) => {
     if (event.ctrlKey || event.metaKey) event.stopImmediatePropagation()
   }
+  /*
+   * An engaged view owns the wheel across its whole pane, not only where the canvas shows through
+   * (2026-11-10). The camera buttons are laid over the canvas, and engaging adds "Release wheel
+   * control" to them: on a short screen that row covers the middle of the model, so the wheel
+   * landed on the buttons, the camera did not move and the page scrolled. Over the canvas itself
+   * OrbitControls already zooms and prevents the scroll; this covers the overlay. Released, the
+   * pane scrolls the page as before, and the browser's own zoom gesture is never intercepted.
+   */
+  const surface = hooks.surface ?? null
+  const overlayWheel = (event: WheelEvent) => {
+    if (!engaged || event.ctrlKey || event.metaKey) return
+    if (element.contains(event.target as Node)) return
+    event.preventDefault()
+    if (event.deltaY) zoom(event.deltaY < 0 ? 1.1 : 1 / 1.1)
+  }
+  surface?.addEventListener('wheel', overlayWheel, { passive: false })
   element.addEventListener('wheel', browserWheel, { capture: true, passive: true })
   element.addEventListener('pointerdown', down)
   element.addEventListener('pointerup', up)
@@ -162,6 +187,7 @@ export function attachObserverControls(
     orbit: orbitBy,
     tilt,
     dispose() {
+      surface?.removeEventListener('wheel', overlayWheel)
       element.removeEventListener('wheel', browserWheel, true)
       element.removeEventListener('pointerdown', down)
       element.removeEventListener('pointerup', up)
