@@ -6,6 +6,10 @@ import {
   requireDerivedMetric,
   type DerivedMetricId,
 } from '../../content/derivedMetrics'
+import {
+  DERIVED_READING_COMPARISON_EPISODE_ID,
+  DERIVED_READING_EPISODE_ID,
+} from '../../content/derivedFigure'
 import { requireDerivedMeasurementEpisode } from '../../content/derivedMeasurementEpisodes'
 import { requireCardiacOutputMethod } from '../../content/cardiacOutputMethods'
 import { requireCardiacOutputParameter } from '../../content/cardiacOutputSourceBoundaries'
@@ -46,13 +50,31 @@ export function flowReadingTitle(part: FlowReadingPart): string {
 export function FlowPrerequisite({
   part,
   state,
+  figureBeside = false,
+  comparisonEpisode,
+  onComparisonEpisode,
 }: {
   readonly part: FlowReadingPart
   readonly state: HemodynamicSimulationState
+  /** The section's reference curve is in the visual column, so the text only points at it. */
+  readonly figureBeside?: boolean
+  /**
+   * The derived-values reading's "compare the episode with missing height and weight" switch,
+   * held by the stage so the drawing beside the text shows the same episode. Absent, the reading
+   * keeps the switch itself.
+   */
+  readonly comparisonEpisode?: boolean
+  readonly onComparisonEpisode?: (on: boolean) => void
 }) {
   const method = requireCardiacOutputMethod('thermodilution')
   if (part.startsWith('metric:'))
-    return <MetricReading metricId={part.slice(7) as DerivedMetricId} />
+    return (
+      <MetricReading
+        metricId={part.slice(7) as DerivedMetricId}
+        comparisonEpisode={comparisonEpisode}
+        onComparisonEpisode={onComparisonEpisode}
+      />
+    )
   if (part.startsWith('fick:'))
     return (
       <section className={styles.teachingCard}>
@@ -98,7 +120,11 @@ export function FlowPrerequisite({
             Read temperature change over time before judging the calculated flow. This is a worked
             observation; viewing it does not review or accept a trial in your ledger.
           </p>
-          {state.thermodilutionTrials[0] ? (
+          {figureBeside ? (
+            <p data-figure-pointer>
+              The reference curve is the drawing of the raw record, with its parts named.
+            </p>
+          ) : state.thermodilutionTrials[0] ? (
             <ThermodilutionCurveFigure trial={state.thermodilutionTrials[0]} />
           ) : null}
           <dl className={styles.stopFacts}>
@@ -117,12 +143,22 @@ export function FlowPrerequisite({
   )
 }
 
-function MetricReading({ metricId }: { readonly metricId: DerivedMetricId }) {
-  const [questionable, setQuestionable] = useState(false)
+function MetricReading({
+  metricId,
+  comparisonEpisode,
+  onComparisonEpisode,
+}: {
+  readonly metricId: DerivedMetricId
+  readonly comparisonEpisode?: boolean
+  readonly onComparisonEpisode?: (on: boolean) => void
+}) {
+  const [ownChoice, setOwnChoice] = useState(false)
+  const questionable = comparisonEpisode ?? ownChoice
+  const setQuestionable = onComparisonEpisode ?? setOwnChoice
   const metric = requireDerivedMetric(metricId)
   // Existing ungraded episodes; neither is a keyed prediction or transfer specimen.
   const episode = requireDerivedMeasurementEpisode(
-    questionable ? 'ep-missing-bsa' : 'ep-assumed-vo2',
+    questionable ? DERIVED_READING_COMPARISON_EPISODE_ID : DERIVED_READING_EPISODE_ID,
   )
   const result = evaluateDerivedMetric(metricId, episode, episode.flowResults[0] ?? null)
   return (

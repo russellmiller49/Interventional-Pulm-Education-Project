@@ -584,6 +584,18 @@
 }
 
 /*
+ * Beside a drawing rather than a simulator, the text is the larger part of the task: the two share
+ * the width, so the reading column is not the narrow one a monitor leaves it.
+ */
+@container hemo-activity (min-width: 75rem) {
+  .flow[data-lesson-shell][data-presentation]
+    .activity
+    > [data-flow-content][data-has-visual]:has(> [data-flow-visual] > [data-section-figure]) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/*
  * The integration section's all-channel monitor and its tools side by side once the visual pane is
  * wide enough, so a control and the tracings it changes fit the pane together: the five channels
  * alone are about 690 px tall, and stacked, a tool under them was out of the pane at 900 px. The
@@ -616,4 +628,15 @@
  */
 .activity [data-dynamic-response-comparison] {
   max-width: 1046px;
+}
+
+/*
+ * A section's drawing in the visual column (`presentation.figure`): the catheter and its parts
+ * beside the opening section's text. It keeps the drawing's own reading width and stays at the top
+ * of the pane.
+ */
+.sectionFigure {
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: auto;
 }
