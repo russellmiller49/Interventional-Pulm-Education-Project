@@ -111,6 +111,13 @@ export interface Lesson {
   sources: string[]
   /** A real limit of this lesson's model that a learner could trip on. Most lessons have none. */
   boundary?: string
+  /**
+   * The content units a lesson is built from, in teaching order (consolidation of 2026-11-10).
+   * Five lessons hold a second unit that used to be a lesson of its own: each step of the lesson
+   * says which unit it draws on (`ActivitySpec.from`), and the unit keeps its own id, lab, checks
+   * and boundary. Absent on a lesson that is a single unit.
+   */
+  parts?: Lesson[]
 }
 export interface EbusCase {
   id: string

@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { LESSONS } from '../src/features/ebus-guided/content/curriculum'
+import { goToActivity } from './ebus-guided-steps'
+import { CONTENT_LESSONS } from '../src/features/ebus-guided/content/curriculum'
 import { GLOSSARY } from '../src/features/ebus-guided/content/glossary'
 
-const lesson = (id: string) => LESSONS.find((entry) => entry.id === id)!
+// Approved wording belongs to content units; a unit may sit inside another lesson.
+const lesson = (id: string) => CONTENT_LESSONS.find((entry) => entry.id === id)!
 
 for (const condition of [
   { width: 1707, height: 900, rootText: 100, theme: 'light' },
@@ -29,6 +31,8 @@ for (const condition of [
     for (const id of ['preparation', 'scope-orientation', 'results-reporting']) {
       await page.goto(`/en/ebus-guided/learn?section=${id}`)
       await expect(page.locator('html')).toHaveClass(new RegExp(condition.theme))
+      // Each of these lessons opens on its prediction; the teaching is the next screen.
+      await page.locator('[data-now-primary]').click()
       const copy = lesson(id).paragraphs.find((text) =>
         /Patients should fast|Image right is toward the patient’s head|recommends against routine/.test(
           text,
@@ -72,8 +76,9 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  // The contact model is the second unit of the contact lesson; its old address still opens it.
   await page.goto('/en/ebus-guided/learn?section=contact-cutaway-model')
-  await page.locator('[data-now-primary]').click()
+  await goToActivity(page, 'contact-cutaway-model:contact-states')
   const frame = page.frameLocator('iframe[title="EBUS workbench"]')
   const condition = frame.getByLabel('Contact condition')
   await expect(condition).toBeVisible({ timeout: 60_000 })
@@ -87,7 +92,7 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
   await condition.selectOption('gap')
   await page.getByRole('button', { name: 'Continue with this image', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toContainText('air gap')
-  await page.locator('[data-now-primary]').click()
+  // The check on the learner's own model image is the first one on this screen (2026-11-10).
   const question = page.locator('[data-question-id="cutaway-observe"]')
   await expect(question).toContainText(lesson('contact-cutaway-model').observation.prompt)
   await expect(page.locator('[data-task-instruction]')).toContainText(
@@ -120,6 +125,7 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
     }),
   ).toBeChecked()
   await page.screenshot({ path: test.info().outputPath('held-gap-mechanism-comparison.png') })
+  await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toHaveCount(0)
   await page.reload()
@@ -130,7 +136,8 @@ test('OD-03 sequence reveal includes approved protected-preparation wording befo
   page,
 }) => {
   await page.goto('/en/ebus-guided/learn?section=needle-safety')
-  await page.locator('[data-now-primary]').click()
+  await page.locator('[data-now-primary]').click() // prediction → briefing
+  await page.locator('[data-now-primary]').click() // briefing → sequence
   await page.getByRole('button', { name: 'Show the sequence', exact: true }).click()
   await expect(
     page.getByText(lesson('needle-safety').sequence!.explanation, { exact: false }),
@@ -141,9 +148,9 @@ test('OD-03 sequence reveal includes approved protected-preparation wording befo
 test('unchanged production H.264 gain example still decodes and produces a genuine held image', async ({
   page,
 }) => {
+  // Gain is the second unit of the depth lesson; its old address still opens that lesson.
   await page.goto('/en/ebus-guided/learn?section=gain-contrast')
-  await page.locator('[data-now-primary]').click()
-  await page.locator('[data-now-primary]').click()
+  await goToActivity(page, 'gain-contrast:detail-comparison')
   const frame = page.frameLocator('iframe[title="EBUS workbench"]')
   const clip = frame.getByLabel('Ultrasound teaching clip')
   await expect

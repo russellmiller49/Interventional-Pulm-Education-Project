@@ -4,7 +4,7 @@ import { GlossaryTerms } from '../components/Glossary'
 import { SequenceActivity } from '../components/SequenceActivity'
 import { SourceList } from '../components/SourceList'
 import { QuestionBody } from '../components/QuestionBody'
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS } from '../content/curriculum'
 import { GLOSSARY } from '../content/glossary'
 import { SOURCE_CHECK_DATE, SOURCES } from '../content/sources'
 
@@ -14,7 +14,8 @@ jest.mock('@/i18n/navigation', () => ({
   ),
 }))
 
-const lesson = (id: string) => LESSONS.find((entry) => entry.id === id)!
+// Approved wording belongs to content units; the contact model now sits inside lesson 4.
+const lesson = (id: string) => CONTENT_LESSONS.find((entry) => entry.id === id)!
 
 describe('Step 13: approved wording with bounded source and behavior scope', () => {
   it('OD-01 compares mechanisms with the same identity, key and held-image policy', () => {

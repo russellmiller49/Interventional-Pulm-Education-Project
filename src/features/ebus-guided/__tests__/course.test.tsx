@@ -1,7 +1,14 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { CHAPTERS, LESSONS } from '../content/curriculum'
+import {
+  CHAPTERS,
+  LESSONS,
+  CONTENT_LESSONS,
+  MERGED_INTO,
+  lessonById,
+  partsOf,
+} from '../content/curriculum'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
 import { SOURCES } from '../content/sources'
 import { activitiesForLesson } from '../content/stage'
@@ -55,11 +62,25 @@ function reachFirstCheck() {
   return false
 }
 it('defines the full curriculum, unique decisions, sources, meaningful activities and current preset keys', () => {
-  expect(LESSONS).toHaveLength(26)
+  // 26 content units in 21 lessons: five units were folded into the lesson before or after them
+  // (consolidation of 2026-11-10). A unit keeps its id, lab, checks and sources.
+  expect(LESSONS).toHaveLength(21)
+  expect(CONTENT_LESSONS).toHaveLength(26)
+  expect(Object.keys(MERGED_INTO).sort()).toEqual([
+    'contact-cutaway-model',
+    'eus-b-route-model',
+    'gain-contrast',
+    'measurement-phantoms',
+    'needle-assembly-model',
+  ])
+  for (const [unit, holder] of Object.entries(MERGED_INTO)) {
+    expect(lessonById(unit)!.id).toBe(holder)
+    expect(partsOf(lessonById(unit)!).map((part) => part.id)).toContain(unit)
+  }
   expect(FINAL_CASES).toHaveLength(8)
-  const ids = LESSONS.map((l) => l.id)
+  const ids = CONTENT_LESSONS.map((l) => l.id)
   expect(new Set(ids).size).toBe(ids.length)
-  const questions = LESSONS.flatMap((l) => [l.question, l.observation, l.transfer]).concat(
+  const questions = CONTENT_LESSONS.flatMap((l) => [l.question, l.observation, l.transfer]).concat(
     [...FINAL_CASES, ...PRACTICE_CASES].flatMap((c) => c.questions),
   )
   expect(new Set(questions.map((q) => q.id)).size).toBe(questions.length)
@@ -67,21 +88,45 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
     expect(q.choices.filter((c) => c.correct)).toHaveLength(1)
     for (const c of q.choices) expect(c.rationale.length).toBeGreaterThan(15)
   }
+  for (const unit of CONTENT_LESSONS) {
+    expect([unit.lab, unit.sequence, unit.matching].filter(Boolean)).toHaveLength(1)
+    expect(unit.sources.every((id) => SOURCES.some((s) => s.id === id))).toBe(true)
+    if (unit.lab?.kind === 'simulator')
+      expect(manifest.presets.some((p) => p.preset_key === unit.lab!.presetKey)).toBe(true)
+  }
   for (const lesson of LESSONS) {
-    expect([lesson.lab, lesson.sequence, lesson.matching].filter(Boolean)).toHaveLength(1)
     expect(lesson.sources.every((id) => SOURCES.some((s) => s.id === id))).toBe(true)
+    // A merged lesson is as long as its units' steps warrant, not the sum of two lessons.
+    if (lesson.parts)
+      expect(lesson.minutes).toBeLessThan(
+        lesson.parts.reduce((total, part) => total + part.minutes, 0),
+      )
     const activities = activitiesForLesson({ ...lesson })
-    expect(activities.flatMap((activity) => activity.questions).sort()).toEqual([
-      'observation',
-      'question',
+    /*
+     * Flow change of 2026-11-10: a lesson asks each of its checks at most once, always ends on
+     * the transfer, and no longer asks a middle check that repeats its first one.
+     */
+    // A check is a unit's question, observation or transfer; a lesson of two units may ask each
+    // unit's transfer, never the same check twice.
+    const asked = activities.flatMap((activity) =>
+      activity.questions.map((slot) => activity.lessonId + ':' + slot),
+    )
+    expect(new Set(asked).size).toBe(asked.length)
+    expect(asked.some((check) => check.endsWith(':transfer'))).toBe(true)
+    expect(activities.findLast((activity) => activity.questions.length)!.questions).toEqual([
       'transfer',
     ])
+    // A prediction is the lesson's first screen: no teaching is shown before the commitment.
+    const prediction = activities.findIndex((activity) => activity.kind === 'prediction')
+    expect(prediction).toBeLessThanOrEqual(0)
+    if (prediction === 0) {
+      expect(activities[0].teaching).toEqual([])
+      expect(activities[0].image).toBe('none')
+    }
     expect(activities.some((activity) => activity.teaching.includes('foundation'))).toBe(true)
     expect(activities.some((activity) => activity.teaching.includes('worked'))).toBe(true)
     expect(activities.some((activity) => activity.teaching.includes('takeaways'))).toBe(true)
     expect(new Set(activities.map((activity) => activity.id)).size).toBe(activities.length)
-    if (lesson.lab?.kind === 'simulator')
-      expect(manifest.presets.some((p) => p.preset_key === lesson.lab!.presetKey)).toBe(true)
   }
   for (const c of [...FINAL_CASES, ...PRACTICE_CASES])
     expect(c.lessonIds.every((id) => ids.includes(id))).toBe(true)
@@ -99,23 +144,29 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
   'renders authored teaching for %s and opens the first check’s explanation before any answer, storing only the location',
   (_, lesson) => {
     render(<LessonHost lesson={lesson} />)
-    expect(screen.getByText(lesson.objective, { exact: false })).toBeVisible()
-    for (const paragraph of lesson.paragraphs) expect(screen.getByText(paragraph)).toBeVisible()
     const activities = activitiesForLesson(lesson)
-    const worked = activities.find(
-      (activity) => activity.interaction === 'read' && activity.teaching.includes('worked'),
-    )
-    if (worked && activities.indexOf(worked) === 0)
-      expect(screen.getByText(lesson.worked.reasoning, { exact: false })).toBeVisible()
+    // The first briefing states the lesson's objective and teaches from its own content unit.
+    const briefing = activities.find((activity) => activity.kind === 'briefing')!
+    const unit = partsOf(lesson).find((part) => part.id === briefing.lessonId)!
+    const teachingIsOnScreen = () => {
+      expect(screen.getByText(lesson.objective, { exact: false })).toBeVisible()
+      for (const paragraph of unit.paragraphs) expect(screen.getByText(paragraph)).toBeVisible()
+      if (briefing.teaching.includes('worked'))
+        expect(screen.getByText(unit.worked.reasoning, { exact: false })).toBeVisible()
+    }
+    const predicts = activities[0].kind === 'prediction'
+    if (predicts) {
+      // The commitment comes first: none of the teaching, and no worked example, is shown yet.
+      expect(screen.queryByText(unit.paragraphs[0])).not.toBeInTheDocument()
+      expect(screen.queryByText(unit.worked.reasoning, { exact: false })).not.toBeInTheDocument()
+    } else teachingIsOnScreen()
     expect(reachFirstCheck()).toBe(true)
     const questionId = document
       .querySelector('[data-question-id]')!
       .getAttribute('data-question-id')
     // Lesson 16's first check is its image-reading task, one question per annotated image.
     const question = [
-      lesson.question,
-      lesson.observation,
-      lesson.transfer,
+      ...partsOf(lesson).flatMap((part) => [part.question, part.observation, part.transfer]),
       ...READING_ITEMS.map((item) => item.question),
     ].find((item) => item.id === questionId)!
     expect(explanation()).toBeNull()
@@ -134,8 +185,20 @@ it.each(LESSONS.map((l) => [l.id, l] as const))(
     expect(saved.progress.visitedLessonIds).toEqual([lesson.id])
     expect(saved.progress.reviewedLessonIds).toEqual([])
     expect(Object.keys(localStorage)).toEqual([PROGRESS_STORAGE_KEY])
+    if (predicts) {
+      next()
+      teachingIsOnScreen()
+    }
   },
 )
+it('names the two lessons that open on their teaching instead of a prediction', () => {
+  // Doppler's title names its first answer; the six-features lesson commits image by image.
+  expect(
+    LESSONS.filter((lesson) => activitiesForLesson(lesson)[0].kind !== 'prediction').map(
+      (lesson) => lesson.id,
+    ),
+  ).toEqual(['doppler', 'node-characterization'])
+})
 it('explains an unsafe practice response immediately, allows retry and moving on, and stores no answer', () => {
   const item = PRACTICE_CASES.find((c) => c.id === 'practice-handoff')!
   const exit = jest.fn()

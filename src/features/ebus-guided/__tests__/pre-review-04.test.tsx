@@ -9,7 +9,8 @@ import { PracticePage } from '../components/PracticePage'
 import { SequenceActivity } from '../components/SequenceActivity'
 import { ExaminationWorkspace } from '../components/ExaminationWorkspace'
 import { TeachingDiagram } from '../components/Diagram'
-import { CHAPTERS, LESSONS } from '../content/curriculum'
+import { CHAPTERS, CONTENT_LESSONS, LESSONS, lessonById } from '../content/curriculum'
+import { openUnitAcquisition } from '../testing/unit-acquisition'
 import { ACTIVITY_FLOWS, activitiesForLesson } from '../content/stage'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import {
@@ -150,7 +151,12 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-const lesson = (id: string) => LESSONS.find((entry) => entry.id === id)!
+/*
+ * A content unit by id, and the lesson a learner opens to reach it. They are the same object for
+ * sixteen lessons; five lessons hold a second unit that used to be a lesson (2026-11-10).
+ */
+const lesson = (id: string) => CONTENT_LESSONS.find((entry) => entry.id === id)!
+const host = (id: string) => lessonById(id)!
 const primary = () => document.querySelector('[data-now-primary]') as HTMLButtonElement
 const next = () => fireEvent.click(primary())
 
@@ -159,7 +165,9 @@ const next = () => fireEvent.click(primary())
 describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L25-5)', () => {
   it('records the registry this batch was built against', () => {
     expect(CHAPTERS).toHaveLength(7)
-    expect(LESSONS).toHaveLength(26)
+    // 21 lessons a learner opens, built from the 26 content units this batch was written against.
+    expect(LESSONS).toHaveLength(21)
+    expect(CONTENT_LESSONS).toHaveLength(26)
   })
 
   it('lists the chapters once on the Overview, under a picture of the lab', () => {
@@ -189,7 +197,7 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
       'results-reporting',
     ]) {
       expect(lesson(id).diagram).toBeUndefined()
-      expect(activitiesForLesson(lesson(id))[0].image).toBe('none')
+      expect(activitiesForLesson(host(id))[0].image).toBe('none')
     }
   })
 
@@ -219,7 +227,7 @@ describe('reviewed is a navigation mark (NAV-1)', () => {
   })
 
   it('marks a lesson reviewed at its end whatever was skipped, says so, and can be undone', () => {
-    render(<LessonHost lesson={lesson('clinical-question')} />)
+    render(<LessonHost lesson={host('clinical-question')} />)
     // Continue past every task and check without doing any of them.
     for (let step = 0; step < 10 && !document.querySelector('[data-session-summary]'); step++)
       next()
@@ -238,7 +246,8 @@ describe('reviewed is a navigation mark (NAV-1)', () => {
 
 /** Every learner-facing string the course content carries, for provenance checks. */
 const corpus = [
-  ...LESSONS.flatMap((entry) => [
+  ...LESSONS.flatMap((entry) => [entry.title, entry.objective]),
+  ...CONTENT_LESSONS.flatMap((entry) => [
     entry.title,
     entry.objective,
     entry.recall,
@@ -380,16 +389,19 @@ describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () =>
   // OD-12 supersedes the original course-sentences-only exclusion. The original entries
   // above retain their exact provenance contract; external expansions are tested in Step 13.
   it('brings the staging terms to lesson 1, before lesson 17 teaches them, with a link forward', () => {
-    render(<LessonHost lesson={lesson('clinical-question')} />)
+    render(<LessonHost lesson={host('clinical-question')} />)
+    next() // prediction → briefing
     const terms = document.querySelector('[data-glossary]')!
     expect(within(terms as HTMLElement).getByText('N category (N1, N2, N3)')).toBeInTheDocument()
     expect(within(terms as HTMLElement).getByText('Examination record')).toBeInTheDocument()
     expect(within(terms as HTMLElement).getByText('EBUS-TBNA')).toBeInTheDocument()
+    // The link's number follows the registry: lesson 14 since the consolidation, 17 before it.
+    const staging = LESSONS.findIndex((entry) => entry.id === 'systematic-staging')
     const forward = within(terms as HTMLElement).getByRole('link', {
-      name: 'Full teaching: Lesson 17 · Systematic staging and TNM ninth edition',
+      name: `Full teaching: Lesson ${staging + 1} · Systematic staging and TNM ninth edition`,
     })
     expect(forward).toHaveAttribute('href', '/ebus-guided/learn?section=systematic-staging')
-    expect(LESSONS.findIndex((entry) => entry.id === 'systematic-staging')).toBe(16)
+    expect(staging).toBe(13)
   })
 
   it('offers the N categories where lesson 15 first assesses them, and never where a lesson teaches the term itself', () => {
@@ -407,7 +419,7 @@ describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () =>
   })
 
   it('opens the whole glossary from Help', () => {
-    render(<LessonHost lesson={lesson('image-depth')} />)
+    render(<LessonHost lesson={host('image-depth')} />)
     fireEvent.click(screen.getByRole('button', { name: 'Help' }))
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByRole('heading', { name: 'Course glossary' })).toBeInTheDocument()
@@ -419,7 +431,8 @@ describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () =>
 
 describe('refreshers and tool links say where they go (L1-3, part D)', () => {
   it('links the CT-orientation recall to existing open refreshers in a new tab, optionally', () => {
-    render(<LessonHost lesson={lesson('clinical-question')} />)
+    render(<LessonHost lesson={host('clinical-question')} />)
+    next() // prediction → briefing
     const refreshers = document.querySelector('[data-refreshers]') as HTMLElement
     expect(refreshers).toHaveTextContent('nothing here requires them')
     const links = within(refreshers).getAllByRole('link')
@@ -446,7 +459,7 @@ describe('refreshers and tool links say where they go (L1-3, part D)', () => {
 
 describe('activity titles describe the actual task (L15-3, L16-3, L20-5, L23-4)', () => {
   const titled = (lessonId: string, activityId: string) =>
-    activitiesForLesson(lesson(lessonId)).find((a) => a.id === lessonId + ':' + activityId)!
+    activitiesForLesson(host(lessonId)).find((a) => a.id === lessonId + ':' + activityId)!
   it.each([
     [
       'hilar-interlobar',
@@ -467,13 +480,8 @@ describe('activity titles describe the actual task (L15-3, L16-3, L20-5, L23-4)'
       'Discuss granulomas when microbiology was not sent',
       'questions',
     ],
-    [
-      'needle-assembly-model',
-      'apply-another-situation',
-      'Respond to resistance with the tip visible',
-      'questions',
-    ],
-    ['ct-map', 'review-acquisition', 'Identify what determines a station name', 'questions'],
+    // Since the 2026-11-10 flow change this step shows the learner's image and asks nothing.
+    ['ct-map', 'review-acquisition', 'Read the acquired section', 'read'],
   ])('%s %s', (lessonId, activityId, expected, interaction) => {
     const activity = titled(lessonId, activityId)
     expect(activity.title).toBe(expected)
@@ -481,6 +489,8 @@ describe('activity titles describe the actual task (L15-3, L16-3, L20-5, L23-4)'
     expect(activity.interaction).toBe(interaction)
   })
   it('keeps the checks those titles sit over', () => {
+    // The needle model's own transfer repeated the needle lesson's and is no longer asked since
+    // the two became one lesson; its text stays in the unit.
     expect(lesson('needle-safety').transfer.prompt).toMatch(/calcified target resists needle entry/)
     expect(lesson('specimen-triage').transfer.prompt).toMatch(/no microbiology was sent/)
     expect(lesson('needle-assembly-model').transfer.prompt).toMatch(
@@ -528,9 +538,8 @@ describe('the hint helps with the check on screen (L1-9)', () => {
       const hint = lesson('clinical-question')[q].hint!
       expect(lesson('clinical-question').paragraphs.join(' ')).toContain(hint)
     }
-    render(<LessonHost lesson={lesson('clinical-question')} />)
-    next() // briefing → matching
-    next() // skip matching; its first check appears
+    render(<LessonHost lesson={host('clinical-question')} />)
+    // The lesson's first check is its first screen (the prediction).
     fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
     const hint = document.querySelector('[data-question-hint]') as HTMLElement
     expect(hint).toHaveTextContent(
@@ -555,11 +564,10 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
         }
   })
   it('names the activity in learner words, and keeps the key points and limits on screen', () => {
-    render(<LessonHost lesson={lesson('clinical-question')} />)
+    render(<LessonHost lesson={host('clinical-question')} />)
+    next() // prediction → briefing
     next() // briefing → matching
-    next() // leave the matching task
-    next() // past its first check
-    next() // past its second check, to the transfer
+    next() // leave the matching task, to the transfer
     expect(document.querySelector('[data-activity-kind="transfer"]')).toHaveTextContent(
       'Guided practice · new situation',
     )
@@ -573,13 +581,13 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
   })
   it('explains the scaffolding on L6-3, L12-2, L17-3 and L23-2 without changing the task', () => {
     const find = (lessonId: string, id: string) =>
-      activitiesForLesson(lesson(lessonId)).find((a) => a.id === lessonId + ':' + id)!
+      activitiesForLesson(host(lessonId)).find((a) => a.id === lessonId + ':' + id)!
     expect(find('image-depth', 'depth-comparison').purpose).toMatch(
       /^Stop on the settings the instruction names/,
     )
-    expect(find('station-seven', 'station-decision').purpose).toMatch(
-      /The stem names the node’s compartment/,
-    )
+    // Asked as a prediction now; a note saying what it asks would give the answer away.
+    expect(find('station-seven', 'station-decision').kind).toBe('prediction')
+    expect(find('station-seven', 'station-decision').purpose).toBeUndefined()
     expect(find('systematic-staging', 'sampling-order').purpose).toMatch(
       /each step names that target’s N category/,
     )
@@ -636,7 +644,8 @@ describe('Try it yourself is the learner’s choice and changes nothing that is 
 
 describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
   it('says once, beside the demonstration, what records and what does not', () => {
-    render(<LessonHost lesson={lesson('acoustic-contact')} />)
+    render(<LessonHost lesson={host('acoustic-contact')} />)
+    next() // prediction → briefing with the demonstration
     expect(document.querySelector('[data-evidence-identity="demonstration"]')).toHaveTextContent(
       'Try the controls. Nothing on this screen is scored.',
     )
@@ -646,14 +655,13 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
     'held %s: OD-01 compares mechanisms and preserves the learner frame',
     (mode) => {
       workbenchEmitters['Complete the contact model'] = () => contactObservation(mode)
-      render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
-      next() // demonstration → acquisition
+      openUnitAcquisition('contact-cutaway-model')
       fireEvent.click(screen.getByText('Complete the contact model'))
       next() // hold
       expect(document.querySelector('[data-evidence-identity="held"]')).toHaveTextContent(
         'Contact condition: ' + CONTACT_MODE_LABELS[mode] + '.',
       )
-      next() // past the first check (a described situation)
+      // The check on the learner's own model image is the first one on this screen now.
       const check = document.querySelector('[data-question-id]')!
       expect(check.getAttribute('data-question-id')).toBe('cutaway-observe')
       expect(check).toHaveTextContent(
@@ -678,9 +686,8 @@ describe('internal labels become learner language without losing what they said 
     [false, 'Recorded teaching example · Selected depth 4 cm'],
   ])('capture record, example described: %s', (withExample, expected) => {
     workbenchEmitters['Capture'] = recordedCapture(withExample)
-    render(<LessonHost lesson={lesson('capture')} />)
-    next() // briefing
-    next() // plane decision
+    // The capture lab follows the phantom unit in the same lesson.
+    openUnitAcquisition('capture')
     fireEvent.click(screen.getByText('Capture'))
     next() // hold (acknowledged: recorded.held)
     const card = document.querySelector('[data-capture-example]')!
@@ -733,7 +740,8 @@ describe('source-bound figures (L22-6, L24-2)', () => {
   })
 
   it('renders the flow beside the lesson 24 briefing, and the safety paragraph stays in the lesson text', () => {
-    render(<LessonHost lesson={lesson('difficult-acquisition')} />)
+    render(<LessonHost lesson={host('difficult-acquisition')} />)
+    next() // prediction → briefing
     const flow = document.querySelector('[data-troubleshooting-flow]') as HTMLElement
     expect(
       within(flow)
@@ -744,7 +752,8 @@ describe('source-bound figures (L22-6, L24-2)', () => {
   })
 
   it('the running-case specimen figure shows only what the case supplies', () => {
-    render(<LessonHost lesson={lesson('adequacy-rose')} />)
+    render(<LessonHost lesson={host('adequacy-rose')} />)
+    next() // prediction → briefing
     const figure = document.querySelector('[data-case-specimens]') as HTMLElement
     for (const specimen of EXAMINATION_CASE.specimens)
       expect(figure.querySelector('[data-case-specimen="' + specimen.id + '"]')).not.toBeNull()
@@ -809,7 +818,7 @@ describe('repeated practice says what changes, and keeps its own evidence (L12-7
     ['station-seven', 'changed-position'],
     ['right-paratracheal', 'right-changed'],
   ])('%s %s', (lessonId, id) => {
-    const activity = activitiesForLesson(lesson(lessonId)).find(
+    const activity = activitiesForLesson(host(lessonId)).find(
       (entry) => entry.id === lessonId + ':' + id,
     )!
     expect(activity.purpose).toMatch(/^Same node, new scope position\./)

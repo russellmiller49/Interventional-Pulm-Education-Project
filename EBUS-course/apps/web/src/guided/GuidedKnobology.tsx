@@ -70,7 +70,9 @@ function exampleSentence(example: RecordedExampleSource): string {
     example.control === 'flow'
       ? 'a flow-mode recording'
       : `${example.control} example ${example.index} of ${example.levels}`
-  return `Depth ${example.depthCm} cm · ${varied} · clip ${example.segmentId}, ${example.startSeconds.toFixed(1)}–${example.endSeconds.toFixed(1)} s of ${example.file}`
+  // The clip's file name and time window stay in the frame's provenance; a learner reads what
+  // the recording shows, not where it is stored (flow review of 2026-11-10).
+  return `Depth ${example.depthCm} cm · ${varied}`
 }
 
 export function GuidedKnobology({
@@ -541,8 +543,8 @@ export function GuidedKnobology({
                 {baseline.source.example
                   ? exampleSentence(baseline.source.example)
                   : 'Selected depth ' + baseline.source.settings.depthMm / 10 + ' cm'}
-                {baseline.source.settings.doppler ? ' · Color Doppler' : ' · Grayscale'}. These
-                pixels stay fixed until you keep a new comparison.
+                {baseline.source.settings.doppler ? ' · Color Doppler' : ' · Grayscale'}. It
+                stays here until you keep a new one.
               </figcaption>
             </figure>
           )}
@@ -724,11 +726,8 @@ export function GuidedKnobology({
             </button>
           )}
           <p className="guided-label">
-            Each control selects a recorded example, and each recording varies one control at a
-            time: a gain example holds whatever contrast it was recorded with, and the level you
-            select for the other control does not change it. Combined settings are not a continuous
-            ultrasound simulation. Example numbers and caliper positions are educational; no
-            clinical measurement is reported.
+            Each recording changes one control at a time, so moving a second control shows that
+            control’s own recording.
           </p>
         </div>
       </div>

@@ -32,6 +32,8 @@ for (const condition of [
       if (condition.rootText === 200) {
         await page.evaluate(() => (document.documentElement.style.fontSize = '200%'))
       }
+      // The lesson opens on its prediction, then the teaching, then this task (2026-11-10).
+      await page.locator('[data-now-primary]').click()
       await page.locator('[data-now-primary]').click()
       const reveal = page.getByRole('button', { name: task.button, exact: true })
       await reveal.press('Enter')
@@ -54,11 +56,12 @@ for (const condition of [
       await assertReference()
       await expect(page.locator('[data-now-primary]')).toBeEnabled()
       await page.locator('[data-now-primary]').click()
-      await page.locator('[data-now-primary]').click()
       await page.getByRole('button', { name: 'Back', exact: true }).click()
       await assertReference()
       await reference.screenshot({ path: test.info().outputPath('revealed-reference.png') })
+      await page.getByRole('button', { name: 'More', exact: true }).click()
       await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
+      await page.locator('[data-now-primary]').click()
       await page.locator('[data-now-primary]').click()
       await expect(reference).toHaveCount(0)
       await expect(page.getByRole('button', { name: task.button, exact: true })).toBeEnabled()
