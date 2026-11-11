@@ -1049,7 +1049,7 @@ for (const [layout, viewport] of [
   ['desktop', { width: 1440, height: 1000 }],
   ['mobile', { width: 390, height: 844 }],
 ] as const) {
-  test(`revision details on ${layout} keep the module and review controls available`, async ({
+  test(`unversioned modules on ${layout} keep feedback and review controls available`, async ({
     page,
     context,
   }, testInfo) => {
@@ -1100,69 +1100,41 @@ for (const [layout, viewport] of [
     const crrt = page.getByRole('article').filter({
       has: page.getByRole('heading', { name: 'Baxter CRRT', exact: true }),
     })
-    const untracked = page.getByRole('article').filter({
-      has: page.getByRole('heading', { name: 'EBUS: Guided Course', exact: true }),
-    })
-    await expect(untracked.getByText('Version history not yet available')).toBeVisible()
-    await expect(untracked.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
-    await expect(crrt.getByText('Beta v0.1')).toBeVisible()
-    await expect(crrt.getByRole('link', { name: 'Edit', exact: true })).toHaveAttribute(
-      'href',
-      '/en/development-beta/baxter-crrt?review=1',
-    )
-    await crrt.getByRole('button', { name: 'What’s changed' }).click()
-    const hubDialog = page.getByRole('dialog', { name: 'What’s changed' })
-    await expect(hubDialog.getByText(/expanded the lessons on when to use CRRT/i)).toBeVisible()
-    await expect(hubDialog.getByText(/re-review recommended/i)).toBeVisible()
-    const changelog = await hubDialog.innerText()
-    await page.screenshot({
-      path: testInfo.outputPath(`revision-hub-${layout}.png`),
+    await expect(crrt.getByText('Version history not yet available')).toBeVisible()
+    await expect(crrt.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
+    const editLink = crrt.getByRole('link', { name: 'Edit', exact: true })
+    await expect(editLink).toHaveAttribute('href', '/en/development-beta/baxter-crrt?review=1')
+    await crrt.screenshot({
+      path: testInfo.outputPath(`unversioned-hub-${layout}.png`),
       animations: 'disabled',
     })
 
-    const popup = page.waitForEvent('popup')
-    await hubDialog.getByRole('link', { name: /Prescription and dosing/ }).click()
-    const wrapper = await popup
-    await wrapper.setViewportSize(viewport)
-    const frame = wrapper.locator('iframe')
-    const toolbar = wrapper.locator('header').filter({ hasText: 'Beta testing' })
-    await expect(frame).toHaveAttribute(
-      'src',
-      '/en/baxter-crrt/learn?lesson=crrt-prescription-dosing',
-    )
-    await expect(
-      frame.contentFrame().locator('[data-foundation-lesson="crrt-prescription-dosing"]'),
-    ).toBeVisible()
-    await expect(toolbar.getByText('Beta v0.1')).toBeVisible()
-    expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(96)
-    const editReview = toolbar.getByRole('button', { name: 'Edit overall review' })
-    await expect(editReview).toBeInViewport()
-    await wrapper.screenshot({
-      path: testInfo.outputPath(`revision-toolbar-${layout}.png`),
-      animations: 'disabled',
-    })
-    await editReview.click()
-    const review = wrapper.getByRole('dialog', { name: 'Overall review' })
+    // An unapproved section ID cannot select an alternate route.
+    await page.goto('/en/development-beta/baxter-crrt?review=1&section=crrt-prescription-dosing')
+    const frame = page.locator('iframe')
+    const toolbar = page.locator('header').filter({ hasText: 'Beta testing' })
+    await expect(frame).toHaveAttribute('src', '/en/baxter-crrt')
+    await expect(frame.contentFrame().getByRole('heading', { level: 1 })).toBeVisible()
+    const review = page.getByRole('dialog', { name: 'Overall review' })
     await expect(review.getByRole('textbox', { name: /worked best/i })).toHaveValue('The cases')
     await review.getByRole('button', { name: 'Close dialog' }).click()
+    await expect(toolbar.getByText('Version history not yet available')).toBeVisible()
+    await expect(toolbar.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
+    expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(96)
+    await expect(toolbar.getByRole('button', { name: 'Edit overall review' })).toBeInViewport()
+    await page.screenshot({
+      path: testInfo.outputPath(`unversioned-toolbar-${layout}.png`),
+      animations: 'disabled',
+    })
+
     await toolbar.getByRole('button', { name: 'Give feedback', exact: true }).click()
-    const feedback = wrapper.getByRole('dialog', { name: /feedback/i })
-    await expect(feedback.getByText(/Page: .*lesson=crrt-prescription-dosing/)).toBeVisible()
-    await feedback
-      .getByRole('textbox', { name: 'What should we know?' })
-      .fill('Review the dosing lesson.')
+    const feedback = page.getByRole('dialog', { name: /feedback/i })
+    await expect(feedback.getByText('Page: /en/baxter-crrt')).toBeVisible()
+    await feedback.getByRole('textbox', { name: 'What should we know?' }).fill('Review this page.')
     await feedback.getByRole('button', { name: 'Close dialog' }).click()
-    await toolbar.getByRole('button', { name: 'What’s changed' }).click()
-    const wrapperDialog = wrapper.getByRole('dialog', { name: 'What’s changed' })
-    expect(await wrapperDialog.innerText()).toBe(changelog)
-    const bounds = await wrapperDialog.boundingBox()
-    expect(bounds?.x).toBeGreaterThanOrEqual(0)
-    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width)
-    await wrapper.keyboard.press('Escape')
-    await expect(toolbar.getByRole('button', { name: 'What’s changed' })).toBeFocused()
     await toolbar.getByRole('button', { name: 'Continue feedback' }).click()
     await expect(feedback.getByRole('textbox', { name: 'What should we know?' })).toHaveValue(
-      'Review the dosing lesson.',
+      'Review this page.',
     )
   })
 }

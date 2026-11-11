@@ -20,22 +20,16 @@ available, so the current tab keeps its place and any unsent draft. A section li
 current module. Historical module snapshots are outside V1. Keep links to the same section ID
 consistent across revisions and remove a path when the navigation no longer supports it.
 
-### Initial baseline proposed for approval
+### Establishing module baselines
 
-Baxter CRRT **Beta v0.1** (`baxter-crrt-1`) starts reviewer tracking with the CRRT content
-present at `a2760cfa35c45e2b51d65f816bdc4499f69f1667`. Its notes describe the four expanded
-lessons in [PR #460](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/460)
-and the liver failure case clarification in
-[PR #463](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/463).
-The scope of the teaching changes warrants re-review. The label is proposed for the start of
-tracking, and its release date is unset pending a verified release.
+V1 starts with an empty registry. After the relevant module changes have merged, identify the
+content intended for beta testing and record the exact source revision in the baseline PR.
+Ask the owner to explicitly approve the module version, changelog, and section links before
+adding the entry. Each module can establish its baseline separately.
 
-The CRRT content constant `1.1.0-sme-review.1` identifies a curriculum and progress format.
-The teaching changes above landed while that constant stayed fixed. The ICU Hemodynamics and
-MCS `1.0.0-preview.1` constants also serve internal content and model uses. EBUS has case
-content versions, and other modules use internal engine, dataset or review-round identifiers.
-These identifiers cannot establish what an earlier tester saw. Every other beta module starts
-with an empty history.
+Internal content versions, simulator builds, review-round labels and deployment dates do not
+establish a beta baseline or tell us what an earlier tester saw. A content merge or deployment
+alone does not advance the reviewer-facing version.
 
 ## Proposed V2 attribution and storage
 

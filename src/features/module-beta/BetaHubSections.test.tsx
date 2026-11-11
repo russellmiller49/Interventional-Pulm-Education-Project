@@ -4,6 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { BetaHubSections } from './BetaHubSections'
 import { betaModules } from './catalog'
 import { betaRollout, hubBetaModules, type BetaRollout } from './rollout'
+import { betaRevisionHistory } from './revisions'
+import { revisionFixture } from './test-support/revisionFixture'
+
+jest.mock('./revisions', () => {
+  const actual = jest.requireActual<typeof import('./revisions')>('./revisions')
+  return { ...actual, betaRevisionHistory: jest.fn(actual.betaRevisionHistory) }
+})
 
 const allPreview = Object.fromEntries(
   betaModules.map((entry) => [entry.id, { stage: 'preview' }]),
@@ -72,27 +79,46 @@ describe('hub module sections', () => {
     }
   })
 
-  it('shows the tracked changelog, the neutral state, and only visible modules', async () => {
-    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
-    const crrt = screen.getByRole('heading', { name: 'Baxter CRRT' }).closest('article')!
-    const ebus = screen.getByRole('heading', { name: 'EBUS: Guided Course' }).closest('article')!
-    expect(within(crrt).getByText('Beta v0.1')).toBeVisible()
-    expect(within(ebus).getByText('Version history not yet available')).toBeVisible()
-    expect(within(ebus).queryByRole('button', { name: 'What’s changed' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Dolphin Bronchoscopy' })).not.toBeInTheDocument()
-
-    const trigger = within(crrt).getByRole('button', { name: 'What’s changed' })
-    await userEvent.click(trigger)
-    const dialog = within(screen.getByRole('dialog', { name: 'What’s changed' }))
-    expect(dialog.getByText(/expanded the lessons on when to use CRRT/i)).toBeVisible()
-    expect(dialog.getByText('Clinical or educational re-review recommended')).toBeVisible()
-    expect(dialog.getByRole('link', { name: /CRRT-03 practice case/ })).toHaveAttribute(
-      'href',
-      '/en/development-beta/baxter-crrt?section=crrt-03',
+  it('shows fixture history, the neutral state, and only visible modules', async () => {
+    const actual = jest.requireActual<typeof import('./revisions')>('./revisions')
+    const withheldFixture = {
+      ...revisionFixture,
+      moduleId: 'dolphin-bronchoscopy',
+      revisionId: 'test-withheld-first',
+    } as const
+    await jest.mocked(betaRevisionHistory).withImplementation(
+      (id) => actual.betaRevisionHistory(id, [revisionFixture, withheldFixture]),
+      async () => {
+        render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+        const crrt = screen.getByRole('heading', { name: 'Baxter CRRT' }).closest('article')!
+        const ebus = screen
+          .getByRole('heading', { name: 'EBUS: Guided Course' })
+          .closest('article')!
+        expect(within(crrt).getByText(revisionFixture.displayVersion)).toBeVisible()
+        expect(within(ebus).getByText('Version history not yet available')).toBeVisible()
+        expect(
+          screen.queryByRole('heading', { name: 'Dolphin Bronchoscopy' }),
+        ).not.toBeInTheDocument()
+        const trigger = screen.getByRole('button', { name: 'What’s changed' })
+        expect(crrt).toContainElement(trigger)
+        await userEvent.click(trigger)
+        const dialog = within(screen.getByRole('dialog', { name: 'What’s changed' }))
+        expect(dialog.getByText(revisionFixture.changelog[0])).toBeVisible()
+        expect(dialog.getByText('Jan 15, 2026')).toHaveAttribute(
+          'datetime',
+          revisionFixture.releasedOn,
+        )
+        expect(dialog.getByText('Clinical or educational re-review recommended')).toBeVisible()
+        expect(dialog.getByRole('link', { name: /Prescription and dosing/ })).toHaveAttribute(
+          'href',
+          '/en/development-beta/baxter-crrt?section=crrt-prescription-dosing',
+        )
+        expect(dialog.getByText('Example without a navigation target')).toBeVisible()
+        expect(dialog.getAllByRole('link')).toHaveLength(1)
+        await userEvent.keyboard('{Escape}')
+        expect(trigger).toHaveFocus()
+      },
     )
-    expect(dialog.getByText('educational').closest('p')?.querySelector('time')).toBeNull()
-    await userEvent.keyboard('{Escape}')
-    expect(trigger).toHaveFocus()
   })
 
   it('has no ready section while nothing is ready', () => {

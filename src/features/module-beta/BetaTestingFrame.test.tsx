@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { BetaTestingFrame } from './BetaTestingFrame'
 import { betaModuleById } from './catalog'
 import { feedbackMode } from './config'
+import { revisionFixture } from './test-support/revisionFixture'
 import {
   beginOwnerDraftSave,
   deleteOwnerDraft,
@@ -293,6 +294,28 @@ const feedbackButton = () => screen.getByRole('button', { name: /^(Give|Continue
 const commentBox = () => screen.getByLabelText('What should we know?')
 const referenceBox = () => screen.getByLabelText(/Text or section/)
 const closed = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+it('opens the fixture changelog from the wrapper toolbar without changing the framed page', async () => {
+  const user = userEvent.setup()
+  const { container } = render(
+    <BetaTestingFrame
+      moduleEntry={betaModuleById(revisionFixture.moduleId)!}
+      locale="en"
+      revisions={[revisionFixture]}
+    />,
+  )
+  expect(screen.getByText(revisionFixture.displayVersion)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'What’s changed' }))
+  const dialog = within(screen.getByRole('dialog', { name: 'What’s changed' }))
+  expect(dialog.getByText(revisionFixture.changelog[0])).toBeVisible()
+  expect(dialog.getByRole('link', { name: /Prescription and dosing/ })).toHaveAttribute(
+    'target',
+    '_blank',
+  )
+  await user.keyboard('{Escape}')
+  expect(container.querySelector('iframe')).toHaveAttribute('src', '/en/baxter-crrt')
+  expect(feedbackButton()).toBeVisible()
+})
 
 describe('truthful pending-draft label', () => {
   it('returns to Give feedback after an empty open and close, by button or Escape', async () => {

@@ -1,19 +1,19 @@
-import {
-  isBaxterCrrtLearnerCaseId,
-  isBaxterCrrtLearnerLessonId,
-} from '@/features/baxter-crrt/content/learnerRegistry'
+import { isBaxterCrrtLearnerLessonId } from '@/features/baxter-crrt/content/learnerRegistry'
 import { betaModuleById, betaModuleReviewPath } from './catalog'
 import { betaModuleRevisions, betaRevisionHistory, betaRevisionSectionPath } from './revisions'
+import { revisionFixture } from './test-support/revisionFixture'
 
 const categories = ['clinical', 'educational', 'simulation', 'usability', 'technical']
 
-it('registers unique revision IDs, module sequences and display versions with complete changelogs', () => {
+it.each([
+  ['approved registry', betaModuleRevisions],
+  ['test fixture', [revisionFixture]],
+] as const)('checks identities, ordering keys and changelogs in the %s', (_, revisions) => {
   const revisionIds = new Set()
   const versionKeys = new Set()
   const sequenceKeys = new Set()
   const sectionPaths = new Map<string, string | undefined>()
-  expect(betaModuleRevisions.length).toBeGreaterThan(0)
-  for (const revision of betaModuleRevisions) {
+  for (const revision of revisions) {
     const { moduleId, revisionId, sequence, displayVersion, releasedOn } = revision
     const entry = betaModuleById(moduleId)
     expect(entry).toBeDefined()
@@ -54,7 +54,7 @@ it('registers unique revision IDs, module sequences and display versions with co
 })
 
 it('orders revisions by explicit sequence, independently for each module', () => {
-  const first = betaRevisionHistory('baxter-crrt').at(-1)!
+  const first = revisionFixture
   const second = {
     ...first,
     revisionId: 'test-crrt-next',
@@ -74,25 +74,16 @@ it('orders revisions by explicit sequence, independently for each module', () =>
   expect(registry).toEqual([first, anotherModule, second])
 })
 
-it('resolves CRRT change links against existing Learn and Practice navigation', () => {
-  const revisions = betaRevisionHistory('baxter-crrt')
-  const sections = revisions[0]?.affectedSections ?? []
-  expect(sections).toHaveLength(5)
-  for (const { id } of sections) {
-    const path = betaRevisionSectionPath(revisions, id)
-    const url = new URL(path!, 'https://module.invalid')
-    if (url.pathname === '/baxter-crrt/learn') {
-      expect(url.searchParams.get('lesson')).toBe(id)
-      expect(isBaxterCrrtLearnerLessonId(id)).toBe(true)
-    } else {
-      expect(url.pathname).toBe('/baxter-crrt/practice')
-      expect(url.searchParams.get('case')?.toLowerCase()).toBe(id)
-      expect(isBaxterCrrtLearnerCaseId(url.searchParams.get('case')!)).toBe(true)
-    }
-  }
+it('resolves a section only when the module has a revision with a supported path', () => {
+  const revisions = betaRevisionHistory('baxter-crrt', [revisionFixture])
+  const id = 'crrt-prescription-dosing'
+  const path = betaRevisionSectionPath(revisions, id)
+  expect(path).toBe('/baxter-crrt/learn?lesson=crrt-prescription-dosing')
+  expect(isBaxterCrrtLearnerLessonId(id)).toBe(true)
+  expect(betaRevisionSectionPath(revisions, 'example-section')).toBeUndefined()
   expect(betaRevisionSectionPath(revisions, '/admin/modules')).toBeUndefined()
+  expect(betaRevisionSectionPath(revisions, [id, 'example-section'])).toBeUndefined()
   expect(
-    betaRevisionSectionPath(revisions, ['crrt-03', 'crrt-indications-modality']),
+    betaRevisionSectionPath(betaRevisionHistory('ebus-guided', [revisionFixture]), id),
   ).toBeUndefined()
-  expect(betaRevisionSectionPath(betaRevisionHistory('ebus-guided'), 'crrt-03')).toBeUndefined()
 })

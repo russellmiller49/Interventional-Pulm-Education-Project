@@ -30,48 +30,8 @@ export interface BetaModuleRevision {
   readonly rereviewRecommended: boolean
 }
 
-// Add a row only through an explicit revision approval. See docs/module-beta-versioning.md.
-export const betaModuleRevisions: readonly BetaModuleRevision[] = [
-  {
-    moduleId: 'baxter-crrt',
-    revisionId: 'baxter-crrt-1',
-    sequence: 1,
-    displayVersion: 'Beta v0.1',
-    category: 'educational',
-    changelog: [
-      'Expanded the lessons on when to use CRRT, how to prescribe the dose, how to choose and monitor anticoagulation, and when to transition off CRRT.',
-      'The liver failure practice case now states the signs of shock in the case stem and explains how hemodynamic instability affects modality choice.',
-    ],
-    affectedSections: [
-      {
-        id: 'crrt-indications-modality',
-        title: 'Indications and modality choice',
-        path: '/baxter-crrt/learn?lesson=crrt-indications-modality',
-      },
-      {
-        id: 'crrt-prescription-dosing',
-        title: 'Prescription and dosing',
-        path: '/baxter-crrt/learn?lesson=crrt-prescription-dosing',
-      },
-      {
-        id: 'crrt-anticoagulation',
-        title: 'Anticoagulation',
-        path: '/baxter-crrt/learn?lesson=crrt-anticoagulation',
-      },
-      {
-        id: 'crrt-fluid-liberation',
-        title: 'Fluid management and liberation',
-        path: '/baxter-crrt/learn?lesson=crrt-fluid-liberation',
-      },
-      {
-        id: 'crrt-03',
-        title: 'CRRT-03 practice case',
-        path: '/baxter-crrt/practice?case=CRRT-03',
-      },
-    ],
-    rereviewRecommended: true,
-  },
-]
+// The owner approves each module baseline against the content intended for beta testing.
+export const betaModuleRevisions: readonly BetaModuleRevision[] = []
 
 export function betaRevisionHistory(
   moduleId: BetaModule['id'],
