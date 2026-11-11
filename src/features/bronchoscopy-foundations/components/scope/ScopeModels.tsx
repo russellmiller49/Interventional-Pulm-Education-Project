@@ -1,5 +1,6 @@
 'use client'
 
+import { createBronchoscopyMaterial } from '@/lib/airway-anatomy/airway-render'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
@@ -77,10 +78,20 @@ export function LarynxLumen({
     copy.traverse((node) => {
       if (!(node instanceof THREE.Mesh)) return
       if (node.name === 'UA_skeleton') node.visible = false
+      const wall = node.name === 'UA_lumen' || node.name === 'UA_subglottis'
+      if (wall && !outside) {
+        // Seen from the scope, the larynx's own wall is the same tissue as the trachea below it:
+        // the same colour, vessels and sheen, with no rings (it carries no ring attribute). As a
+        // plain flat pink it was one blank colour whenever the tip was turned to it.
+        const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true })
+        mucosa.side = THREE.DoubleSide
+        node.material = mucosa
+        return
+      }
       const original = Array.isArray(node.material) ? node.material[0] : node.material
       const material = original.clone() as THREE.MeshStandardMaterial
       material.side = THREE.DoubleSide
-      if (outside && (node.name === 'UA_lumen' || node.name === 'UA_subglottis')) {
+      if (outside && wall) {
         material.transparent = true
         material.opacity = 0.15
         material.depthWrite = false

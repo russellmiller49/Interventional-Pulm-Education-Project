@@ -30,7 +30,17 @@ export interface LumenWallAirway {
   /** The wall cue at the airway's two ends, 0 to 1; it runs evenly between them. */
   readonly cueStart: number
   readonly cueEnd: number
+  /**
+   * A first stretch of the airway with no rings and no membranous strip: none up to this distance
+   * from its start, rising to full over the next `PLAIN_START_RISE_MM`. The trachea has one, for
+   * the subglottis: the cricoid is a complete ring, with no open back. The wall there keeps its
+   * vessels and its sheen, so a tip bent at it still has something to read.
+   */
+  readonly plainStartMm?: number
 }
+
+/** How far the rings take to come in after an airway's plain first stretch. */
+const PLAIN_START_RISE_MM = 10
 
 export interface LumenWallOptions {
   /** Anatomical posterior in the lumen's coordinates. LPS: +Y. */
@@ -366,6 +376,7 @@ export function computeLumenWallAttribute(
     let cosine = 0
     let sine = 0
     let cue = 0
+    let rings = 0
     let ringCount = 0
     let posteriorAcross = 0
     let disagreement = 0
@@ -391,6 +402,15 @@ export function computeLumenWallAttribute(
         weight *
         (airway.cueStart +
           (airway.cueEnd - airway.cueStart) * (total > 1e-6 ? distance / total : 0))
+      rings +=
+        weight *
+        (airway.plainStartMm === undefined
+          ? 1
+          : smoothstep(
+              airway.plainStartMm,
+              airway.plainStartMm + PLAIN_START_RISE_MM,
+              segmentArc[segment] + t,
+            ))
       ringCount += weight * count
       if (index !== best) disagreement += weight * smoothstep(0.2, 0.8, Math.abs(count - ownCount))
     }
@@ -400,7 +420,10 @@ export function computeLumenWallAttribute(
     out[v * 4] = (cosine / length) * cue
     out[v * 4 + 1] = (sine / length) * cue
     out[v * 4 + 2] =
-      cue * smoothstep(0.25, 0.55, posteriorAcross / weightSum) * Math.max(0, 1 - disagreement)
+      cue *
+      (rings / weightSum) *
+      smoothstep(0.25, 0.55, posteriorAcross / weightSum) *
+      Math.max(0, 1 - disagreement)
     out[v * 4 + 3] = ringCount / weightSum
   }
   return out
@@ -413,6 +436,11 @@ const TRACHEAL_RING_PITCH_MM = 5
 const BRONCHIAL_RING_PITCH_MM = 3.4
 /** Past the central airways the rings break into plates: the cue is gone this far along. */
 const LOBAR_FADE_MM = 18
+/**
+ * The top of the model's trachea is the subglottis, inside the cricoid. The C-shaped rings and the
+ * membranous strip start below it. A presentation value for this model, not a measurement.
+ */
+const SUBGLOTTIS_PLAIN_MM = 12
 
 /** The teaching case's airways, with where the wall cue is full and where it fades out. */
 export function teachingLumenAirways(scopeCase: ScopeCase): LumenWallAirway[] {
@@ -435,6 +463,7 @@ export function teachingLumenAirways(scopeCase: ScopeCase): LumenWallAirway[] {
       ringPitchMm: label === 'TR' ? TRACHEAL_RING_PITCH_MM : BRONCHIAL_RING_PITCH_MM,
       cueStart: central ? 1 : cueStart,
       cueEnd,
+      ...(label === 'TR' ? { plainStartMm: SUBGLOTTIS_PLAIN_MM } : {}),
     })
     for (const child of children) visit(child, cueEnd)
   }
