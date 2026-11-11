@@ -26,10 +26,17 @@ describe('the scope picture is built on the shared mucosa shader', () => {
 
   // A change to the shared shader is allowed; it has to be looked at in this module's picture.
   // After looking (lesson 4, a subsegmental fork and the arrival), update the hash.
+  //
+  // The shared shader also holds opt-in blocks (`#ifdef MUCOSA_ANATOMY`, the cartilage rings a
+  // viewer can ask for). This picture does not define it, so those blocks compile out: what is
+  // pinned is the shader as this picture compiles it, with them removed.
   test('the shared shader is the one this picture was tuned against', () => {
-    expect(createHash('sha256').update(mucosaFragmentShader).digest('hex')).toBe(
+    const compiled = mucosaFragmentShader.replace(/^#ifdef MUCOSA_ANATOMY\n[\s\S]*?^#endif\n/gm, '')
+    expect(createHash('sha256').update(compiled).digest('hex')).toBe(
       '28c654488f6ec59c6dd9dc5d3edf55fb3697ac7218176160015efc076beb08f2',
     )
+    // And this picture never opts in.
+    expect(createScopeMaterial().defines ?? {}).not.toHaveProperty('MUCOSA_ANATOMY')
   })
 
   test('the reach of the light and the vessel lines are added, and nothing else is removed', () => {
