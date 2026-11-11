@@ -469,14 +469,64 @@
   :global([data-module='bronchoscopy-foundations'][data-course-presentation='inspection'])
     .visualWorkspace:not([data-map='none']):not([data-bench='true']) {
     grid-template-columns:
-      minmax(0, min(61.5%, max(16rem, calc((100dvh - 27rem) * 4 / 3))))
+      minmax(0, min(61.5%, max(16rem, calc((100dvh - 29rem) * 4 / 3))))
+      minmax(0, 1fr);
+  }
+  /* The same hold for the outside 3D view, which sits beside the scope view inside one frame. */
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='skill'])
+    .visualWorkspace[data-position-view='true']
+    .views[data-observer='true'],
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='inspection'])
+    .visualWorkspace[data-position-view='true']
+    .views[data-observer='true'] {
+    grid-template-columns:
+      minmax(0, min(61.5%, max(16rem, calc((100dvh - 29rem) * 4 / 3))))
       minmax(0, 1fr);
   }
 }
 .mapColumn {
+  position: relative;
   contain: size;
   align-self: stretch;
   min-height: 12rem;
+}
+/* The switch between the flat map and the outside 3D view, in the corner of whichever is showing.
+ * It costs no row of height above the view. On a narrow pane the tabs above the view do this. */
+.viewSwitch {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 2;
+  min-height: 32px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #45616d;
+  border-radius: 0.4rem;
+  color: #d6e6ee;
+  background: rgba(13, 31, 42, 0.9);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.positionNote {
+  position: absolute;
+  z-index: 2;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.5rem;
+  color: #c2d4e5;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  pointer-events: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #07111cc9;
+}
+.viewSwitch:hover {
+  border-color: #68d7c9;
+}
+.viewSwitch:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }
 .mapColumn > :global([data-airway-map]) {
   box-sizing: border-box;
@@ -531,6 +581,9 @@
   .visualWorkspace[data-visual-tab='scope'] .mapColumn {
     display: none;
   }
+  .viewSwitch {
+    display: none;
+  }
   /* On its own tab the map takes its natural height again. */
   .mapColumn {
     contain: none;
@@ -557,6 +610,10 @@
   .views[data-observer='true'] .observerViewport {
     height: auto;
     aspect-ratio: 16 / 7;
+  }
+  /* The whole tree needs more height than a cutaway does. */
+  .visualWorkspace[data-position-view='true'] .views[data-observer='true'] .observerViewport {
+    aspect-ratio: 16 / 10;
   }
 }
 

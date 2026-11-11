@@ -527,6 +527,32 @@
     :global([data-spine-strip]) {
     display: none;
   }
+  /* The opening-names switch shares the caption's line, at its right end, and does not take a row
+   * of its own. That row is what keeps the controls on screen at 768 pixels high once the scope
+   * prints a message under the view. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(:global([data-location-caption])) {
+    position: relative;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(:global([data-location-caption]))
+    > :global([data-reference-labels-control]) {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(> :global([data-reference-labels-control]))
+    :global([data-location-caption]) {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    margin: 0;
+    padding-right: 13rem;
+  }
 }
 @media (max-width: 650px) {
   .lesson {
