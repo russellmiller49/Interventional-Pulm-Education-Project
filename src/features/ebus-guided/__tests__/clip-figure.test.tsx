@@ -232,11 +232,14 @@ describe('in the needle lesson', () => {
 
   it('reads the recording after the sequence, before the needle model', () => {
     const steps = activitiesForLesson(lesson).map((step) => step.id)
-    expect(steps.slice(0, 5)).toEqual([
+    expect(steps.slice(0, 8)).toEqual([
       'needle-safety:first-decision',
       'needle-safety:sampling-states',
       'needle-safety:safe-sequence',
       'needle-safety:needle-on-ultrasound',
+      'needle-technique:next-pass',
+      'needle-technique:technique-choices',
+      'needle-technique:technique-match',
       'needle-assembly-model:needle-components',
     ])
     const step = activitiesForLesson(lesson)[3]

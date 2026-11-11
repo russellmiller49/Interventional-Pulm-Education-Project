@@ -574,6 +574,21 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       instruction:
         'Play the recording, then open the frame early in the pass and answer. Its labels open after you answer.',
     },
+    // Needle technique within the node (2026-11-11): a decision first, then which choices are the
+    // operator's, then matching a situation to the change. The decision is asked before its
+    // teaching, as a check and not a second "predict first": one prediction opens a lesson.
+    {
+      ...decide('next-pass', 'Decide what to change on the next pass', ['question'], 'sampling'),
+      from: 'needle-technique',
+    },
+    {
+      ...brief('technique-choices', 'Know which choices are yours', 'briefing', 'none'),
+      from: 'needle-technique',
+    },
+    {
+      ...apply('technique-match', 'Match the situation to the change', 'matching', [], 'sampling'),
+      from: 'needle-technique',
+    },
     {
       ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
       from: 'needle-assembly-model',

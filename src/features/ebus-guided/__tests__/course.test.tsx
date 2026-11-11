@@ -66,13 +66,14 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   // (consolidation of 2026-11-10), and the scope lesson was added. A unit keeps its id, lab,
   // checks and sources.
   expect(LESSONS).toHaveLength(22)
-  expect(CONTENT_LESSONS).toHaveLength(27)
+  expect(CONTENT_LESSONS).toHaveLength(28)
   expect(Object.keys(MERGED_INTO).sort()).toEqual([
     'contact-cutaway-model',
     'eus-b-route-model',
     'gain-contrast',
     'measurement-phantoms',
     'needle-assembly-model',
+    'needle-technique',
   ])
   for (const [unit, holder] of Object.entries(MERGED_INTO)) {
     expect(lessonById(unit)!.id).toBe(holder)

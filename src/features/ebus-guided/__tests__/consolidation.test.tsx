@@ -76,7 +76,7 @@ function goTo(id: string) {
 describe('merged lessons', () => {
   const merged = LESSONS.filter((lesson) => lesson.parts)
 
-  it('are five lessons of two units each, and every step names a unit the lesson holds', () => {
+  it('are five lessons of two units each (three in the needle lesson), and every step names a unit the lesson holds', () => {
     expect(merged.map((lesson) => lesson.id)).toEqual([
       'acoustic-contact',
       'image-depth',
@@ -86,7 +86,8 @@ describe('merged lessons', () => {
     ])
     for (const lesson of merged) {
       const units = partsOf(lesson).map((unit) => unit.id)
-      expect(units).toHaveLength(2)
+      // Needle technique within the node was folded into the needle lesson on 2026-11-11.
+      expect(units).toHaveLength(lesson.id === 'needle-safety' ? 3 : 2)
       expect(units).toContain(lesson.id)
       const activities = activitiesForLesson(lesson)
       // Both units are taught, each with its own briefing and its own lab or task.
@@ -237,6 +238,6 @@ describe('lesson numbers a learner reads', () => {
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
       '0 of 22 lessons reviewed',
     )
-    expect(CONTENT_LESSONS).toHaveLength(27)
+    expect(CONTENT_LESSONS).toHaveLength(28)
   })
 })

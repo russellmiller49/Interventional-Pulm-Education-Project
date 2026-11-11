@@ -105,6 +105,43 @@ export const SOURCES = [
     url: '',
     type: 'Manufacturer source',
   },
+  // Needle technique within the node (2026-11-11): the trials behind "the stylet and suction are
+  // choices", read from their abstracts on PubMed on that date.
+  {
+    id: 'scholten2017',
+    title:
+      'Scholten EL, et al. Stylet use does not improve diagnostic outcomes in EBUS-TBNA: a randomized clinical trial. Chest 2017;151:636-642',
+    url: 'https://doi.org/10.1016/j.chest.2016.10.005',
+    type: 'Randomized trial',
+  },
+  {
+    id: 'lin2018',
+    title:
+      'Lin X, et al. Randomized controlled trial to evaluate the utility of suction and inner-stylet of EBUS-TBNA for mediastinal and hilar lymphadenopathy. BMC Pulm Med 2018;18:192',
+    url: 'https://doi.org/10.1186/s12890-018-0751-0',
+    type: 'Randomized trial',
+  },
+  {
+    id: 'kassirian2022',
+    title:
+      'Kassirian S, et al. Rapid on-site evaluation in capillary pull versus suction biopsy technique with EBUS-TBNA. J Bronchology Interv Pulmonol 2022;29:48-53',
+    url: 'https://doi.org/10.1097/LBR.0000000000000776',
+    type: 'Randomized trial',
+  },
+  {
+    id: 'he2020',
+    title:
+      'He X, et al. Slow-pull capillary technique versus suction technique in EBUS-TBNA for hilar and mediastinal lymph node enlargement. Ther Adv Respir Dis 2020;14:1753466620907037',
+    url: 'https://doi.org/10.1177/1753466620907037',
+    type: 'Cohort study',
+  },
+  {
+    id: 'mizumori2023',
+    title:
+      'Mizumori Y, et al. Comparison of the harvest volume between maneuvers of EBUS-TBNA including the "cross-fanning technique". Medicine (Baltimore) 2023;102:e33105',
+    url: 'https://doi.org/10.1097/MD.0000000000033105',
+    type: 'Bench study',
+  },
   {
     id: 'simulation',
     title: 'Course-authored anatomy, exercises and acquisition targets',

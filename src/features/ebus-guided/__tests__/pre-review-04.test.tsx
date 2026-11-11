@@ -174,7 +174,7 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
     // 22 lessons a learner opens: the 26 content units this batch was written against, five of
     // them folded into others, plus the scope lesson added on 2026-11-10.
     expect(LESSONS).toHaveLength(22)
-    expect(CONTENT_LESSONS).toHaveLength(27)
+    expect(CONTENT_LESSONS).toHaveLength(28)
   })
 
   it('lists the chapters once on the Overview, under a picture of the lab', () => {
