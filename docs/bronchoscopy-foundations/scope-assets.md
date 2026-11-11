@@ -64,6 +64,18 @@ folds, paired arytenoids and the optional `UA_skeleton`. The supplied cartilage/
 read without modification. Its epiglottis and arytenoids are reused with authored registration;
 the remaining framework is grouped under `UA_skeleton` with `extras.defaultVisible: false`.
 
+The mucosal surface was re-authored on 2026-11-11 for a more real picture from the scope, at the
+owner's request. The true folds are rounded bands lofted from the anterior commissure to the vocal
+process, so the glottis is a triangle with its apex in front; they carry a vertex colour, pearly at
+the free edge and the mucosa's pink toward the wall, and their `adduct` target brings the free edge
+to the midline. The false folds are thicker rounded bands above and just outside them, melting into
+the wall at their ends. The luminal face of `UA_lumen` and `UA_subglottis` carries a moulded relief:
+two arytenoid mounds with corniculate tubercles and the interarytenoid notch between them, an
+aryepiglottic ridge with a cuneiform tubercle on each side, and an epiglottic tubercle in front.
+From the scope the scene hides the three cartilage nodes and `UA_skeleton`, since they lie under
+that mucosa; the outside cutaway shows them. Every shape and size here is a presentation choice for
+this teaching model.
+
 Registration places the source vocal-ligament centroid at the authored 30 mm glottis plane, scales
 the cricoid reference to 18 mm lateral by 16 mm anteroposterior, and places the superior epiglottis
 edge at path distance 5 mm. These are model choices, not anatomical measurements or patient
@@ -153,8 +165,8 @@ No source rights holder, reviewer identity or publication authorization has been
 | ---------------------- | ------------: | ----------------: |
 | graph.json             |        71,449 | Included in total |
 | lumen.glb              |       489,888 |         3,000,000 |
-| larynx-lumen.glb       |       221,064 |         1,500,000 |
-| larynx.json            |        14,386 | Included in total |
+| larynx-lumen.glb       |       270,392 |         1,500,000 |
+| larynx.json            |        14,694 | Included in total |
 | accessories.glb        |        50,464 |           450,000 |
 | devices.json           |         3,041 | Included in total |
 | handle.glb             |        12,160 |           500,000 |
@@ -162,9 +174,9 @@ No source rights holder, reviewer identity or publication authorization has been
 | bench.glb              |        10,160 |           100,000 |
 | findings.glb           |         8,632 |           100,000 |
 | teaching-props.json    |           674 | Included in total |
-| Review images and JSON |     1,181,798 | Included in total |
-| Manifest               |        33,400 | Included in total |
-| **All anatomy files**  | **2,104,172** |     **8,000,000** |
+| Review images and JSON |     1,119,302 | Included in total |
+| Manifest               |        36,722 | Included in total |
+| **All anatomy files**  | **2,311,234** |     **8,000,000** |
 
 The GLBs are self-contained and Draco-compressed with gltf-pipeline 4.3.1 / draco3d 1.5.7,
 compression level 10, position quantization 20 bits and normal quantization 12 bits. Geometry units

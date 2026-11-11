@@ -1,9 +1,9 @@
 {
   "schema": "bronchoscopy_foundations_device_review/v1",
   "foldChecks": [
-    { "weight": 0, "midGlottisGapMm": 6.044995107543059 },
-    { "weight": 0.5, "midGlottisGapMm": 3.0224955173228523 },
-    { "weight": 1, "midGlottisGapMm": -0.000004072897354490124 }
+    { "weight": 0, "midGlottisGapMm": 4.931419221576363 },
+    { "weight": 0.5, "midGlottisGapMm": 2.465706150317132 },
+    { "weight": 1, "midGlottisGapMm": -0.000006920942098531668 }
   ],
   "pathLengthMm": 45.00000831042319,
   "maxPathSpacingMm": 0.5000080551923538,
@@ -65,6 +65,6 @@
     }
   ],
   "accessoriesSha256": "d0c579febb0b317d48cbcf280b2a9f61de6888c7327762c8602249be21bb9ed0",
-  "larynxSha256": "fc707d8f8fe17c7e4050cfce361dca20f432c5ad87a36ea322d61b5e017a5afb",
-  "larynxPathSha256": "ca82ec35dd6266a85bad961f34160faeac2f96de0b245eb08360aa2233ff269a"
+  "larynxSha256": "ad4cdecb0f9e5bd6357ad21d281907b17260b29e737a3d1c5b6e17889b7275b0",
+  "larynxPathSha256": "7fda9972b8d4a465103ec72c0445233a44efcd5d66786ab162e744f23e306c01"
 }

@@ -101,11 +101,18 @@ const LARYNX_CUTAWAY_LOOK: Readonly<Record<string, { color: string; roughness: n
   UA_fold_true_R: { color: '#f1e7d6', roughness: 0.35 },
   UA_fold_false_L: { color: '#d08a80', roughness: 0.5 },
   UA_fold_false_R: { color: '#d08a80', roughness: 0.5 },
-  UA_epiglottis: { color: '#e2b3a0', roughness: 0.45 },
-  UA_arytenoid_L: { color: '#d99a8c', roughness: 0.5 },
-  UA_arytenoid_R: { color: '#d99a8c', roughness: 0.5 },
+  UA_epiglottis: { color: '#e6d9b8', roughness: 0.55 },
+  UA_arytenoid_L: { color: '#cdd9d6', roughness: 0.6 },
+  UA_arytenoid_R: { color: '#cdd9d6', roughness: 0.6 },
   UA_skeleton: { color: '#cdd9d6', roughness: 0.6 },
 }
+/** The parts that are cartilage: hidden under the mucosa from the scope, shown in the cutaway. */
+const LARYNX_CARTILAGES: ReadonlySet<string> = new Set([
+  'UA_skeleton',
+  'UA_epiglottis',
+  'UA_arytenoid_L',
+  'UA_arytenoid_R',
+])
 
 export function LarynxLumen({
   assets,
@@ -127,14 +134,18 @@ export function LarynxLumen({
         // cartilages are shown here and only here.
         const look = LARYNX_CUTAWAY_LOOK[node.name] ?? LARYNX_CUTAWAY_LOOK.UA_lumen
         node.material = new THREE.MeshStandardMaterial({
-          color: look.color,
+          // A true fold carries its own colour, pearly at the free edge and pink at the wall.
+          color: trueFold ? '#ffffff' : look.color,
+          vertexColors: trueFold,
           roughness: look.roughness,
           side: THREE.DoubleSide,
           clippingPlanes: [LARYNX_CUT],
         })
         return
       }
-      if (node.name === 'UA_skeleton') {
+      if (LARYNX_CARTILAGES.has(node.name)) {
+        // From the scope the cartilages are under the mucosa: the wall's own relief shows the
+        // arytenoid mounds and the epiglottic tubercle. The bare cartilages are for the cutaway.
         node.visible = false
         return
       }
@@ -142,9 +153,11 @@ export function LarynxLumen({
         // The true folds: pearly white and wet, against the pink of everything round them. A
         // standard material, because the folds open and close by a morph target.
         node.material = new THREE.MeshPhysicalMaterial({
-          color: '#f6eede',
+          // The model gives each fold its colour: pearly at the free edge, pink toward the wall.
+          color: '#ffffff',
+          vertexColors: true,
           // Lit by the headlight alone they went grey; a fold is the brightest thing in the view.
-          emissive: '#5a5045',
+          emissive: '#5e4d3c',
           roughness: 0.3,
           clearcoat: 0.6,
           clearcoatRoughness: 0.25,
