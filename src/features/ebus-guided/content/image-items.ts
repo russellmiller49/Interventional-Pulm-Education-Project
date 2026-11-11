@@ -41,24 +41,27 @@ export const IMAGE_INTERPRETATIONS: Record<string, Question> = {
     ),
     imagePolicy: 'retained-acquisition',
   },
+  // Asked on the owner's patient recording, on its paused frame (2026-11-11). What the signals
+  // are is his reading of his own recording. It replaced a check on the phantom recordings
+  // (`doppler-observe-v2`) that no step had asked since the lesson flow was shortened.
   doppler: {
     ...question(
-      'doppler-observe-v2',
-      'Compare the grayscale and color recordings. Which statement can be supported by the added color display?',
+      'doppler-patient-flow',
+      'On the frame with colour flow, colour appears at the margin of the node and on the bright line beyond it. What are these signals?',
       [
-        'The color represents detected flow in this recording and must be interpreted with the surrounding anatomy',
-        'Identify where the color appears, then reconcile it with the anatomy before choosing a needle path.',
+        'Small vessels around the node, including one at the pleural line',
+        'The colour signals are small vessels surrounding the node. The bright line deep to the node is pleura, and the signal on it is a small vessel, probably a collateral. Look for vessels at the margins of a target and beyond it, not only in front of it.',
       ],
       [
-        'Only the colored pixels need to be excluded from a planned needle path',
-        'Vascular assessment includes the complete path and anatomy; detected color does not map every vessel.',
+        'Flow within the node, which classifies it as malignant',
+        'The signals lie at the margin of the node and beyond it, not within it, and colour flow is not pathology.',
       ],
       [
-        'A dark structure outside the color display has been shown to be avascular',
-        'Flow may go undetected because of settings, angle, slow flow or poor contact.',
+        'Flash artefact from scope movement, which can be ignored',
+        'Movement artefact fills the box briefly and follows the motion. These signals return in the same places from frame to frame, and each one marks a vessel the path has to account for.',
       ],
     ),
-    imagePolicy: 'retained-acquisition',
+    imagePolicy: 'none',
   },
   capture: {
     ...question(
