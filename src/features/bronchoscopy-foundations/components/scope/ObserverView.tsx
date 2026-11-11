@@ -14,6 +14,7 @@ import {
   AuthoredShaft,
   DistalScope,
   HandleModel,
+  LARYNX_OUTSIDE_VIEW,
   LarynxLumen,
   NamedModel,
   PracticeTarget,
@@ -83,7 +84,7 @@ export function ObserverView({
   const center: Vec3 = bench
     ? [8, 0, 15]
     : larynx
-      ? [-10, -192, -30]
+      ? LARYNX_OUTSIDE_VIEW.center
       : tube
         ? sampleEdgePose(assets.scopeCase.index.edgesById.get(0)!, 52).point
         : accessory
@@ -92,7 +93,7 @@ export function ObserverView({
   const offset: Vec3 = bench
     ? [125, 60, -145]
     : larynx
-      ? [75, -30, 20]
+      ? LARYNX_OUTSIDE_VIEW.offset
       : tube
         ? [35, -80, 30]
         : accessory
@@ -100,7 +101,7 @@ export function ObserverView({
           : position
             ? [0, -262, 6]
             : [0, -310, 10]
-  const up: Vec3 = bench ? [0, 1, 0] : [0, 0, 1]
+  const up: Vec3 = bench ? [0, 1, 0] : larynx ? LARYNX_OUTSIDE_VIEW.up : [0, 0, 1]
   return (
     <>
       <color attach="background" args={['#0e1b28']} />
@@ -108,7 +109,13 @@ export function ObserverView({
         center={center}
         offset={offset}
         up={up}
-        fit={position ? { halfWidthMm: 128, halfHeightMm: 118 } : undefined}
+        fit={
+          position
+            ? { halfWidthMm: 128, halfHeightMm: 118 }
+            : larynx
+              ? { halfWidthMm: 30, halfHeightMm: 40 }
+              : undefined
+        }
       />
       <ambientLight intensity={1.7} />
       <directionalLight position={plus(center, [30, -60, 70])} intensity={3} />

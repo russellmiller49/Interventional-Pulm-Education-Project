@@ -8,6 +8,7 @@ import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 import { plus, times } from '@/lib/bronchoscopy-core/frame'
 import deviceData from '../../../../../public/bronchoscopy-foundations/anatomy/devices/devices.json'
+import larynxData from '../../../../../public/bronchoscopy-foundations/anatomy/larynx/larynx.json'
 import propData from '../../../../../public/bronchoscopy-foundations/anatomy/devices/teaching-props.json'
 import type { ScopePaneProps, ScopeState } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
@@ -63,6 +64,49 @@ export function BenchTarget({ view }: Pick<ScopePaneProps, 'view'>) {
   )
 }
 
+/** The model larynx's own frame and midline, from its authored path. */
+const LARYNX_LEFT = new THREE.Vector3(...(larynxData.frameLps.left as Vec3))
+const LARYNX_ANTERIOR = new THREE.Vector3(...(larynxData.frameLps.anterior as Vec3))
+const LARYNX_DOWN = new THREE.Vector3(...(larynxData.frameLps.forward as Vec3))
+const larynxPathPoint = (mm: number) =>
+  new THREE.Vector3(
+    ...(larynxData.pathLps[
+      Math.round((mm / larynxData.exitMm) * (larynxData.pathLps.length - 1))
+    ] as Vec3),
+  )
+/**
+ * The outside view cuts the larynx down the middle and looks at the patient's right half from the
+ * patient's left: the standard sagittal picture, with the scope lying in the cut.
+ */
+const LARYNX_CUT = new THREE.Plane().setFromNormalAndCoplanarPoint(
+  LARYNX_LEFT.clone().negate(),
+  larynxPathPoint(larynxData.glottisMm),
+)
+/** Where the outside view looks, and from where, in the larynx's own frame. */
+export const LARYNX_OUTSIDE_VIEW = {
+  center: larynxPathPoint(24).toArray() as Vec3,
+  offset: LARYNX_LEFT.clone()
+    .multiplyScalar(100)
+    .addScaledVector(LARYNX_ANTERIOR, 26)
+    .addScaledVector(LARYNX_DOWN, -8)
+    .toArray() as Vec3,
+  up: LARYNX_DOWN.clone().negate().toArray() as Vec3,
+}
+
+/** What each part of the larynx is drawn as in the cutaway: tissue, fold or cartilage. */
+const LARYNX_CUTAWAY_LOOK: Readonly<Record<string, { color: string; roughness: number }>> = {
+  UA_lumen: { color: '#cf9488', roughness: 0.5 },
+  UA_subglottis: { color: '#cf9488', roughness: 0.5 },
+  UA_fold_true_L: { color: '#f1e7d6', roughness: 0.35 },
+  UA_fold_true_R: { color: '#f1e7d6', roughness: 0.35 },
+  UA_fold_false_L: { color: '#d08a80', roughness: 0.5 },
+  UA_fold_false_R: { color: '#d08a80', roughness: 0.5 },
+  UA_epiglottis: { color: '#e2b3a0', roughness: 0.45 },
+  UA_arytenoid_L: { color: '#d99a8c', roughness: 0.5 },
+  UA_arytenoid_R: { color: '#d99a8c', roughness: 0.5 },
+  UA_skeleton: { color: '#cdd9d6', roughness: 0.6 },
+}
+
 export function LarynxLumen({
   assets,
   state,
@@ -77,26 +121,44 @@ export function LarynxLumen({
     const copy = source.clone(true)
     copy.traverse((node) => {
       if (!(node instanceof THREE.Mesh)) return
-      if (node.name === 'UA_skeleton') node.visible = false
-      const wall = node.name === 'UA_lumen' || node.name === 'UA_subglottis'
-      if (wall && !outside) {
-        // Seen from the scope, the larynx's own wall is the same tissue as the trachea below it:
-        // the same colour, vessels and sheen, with no rings (it carries no ring attribute). As a
-        // plain flat pink it was one blank colour whenever the tip was turned to it.
-        const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true })
-        mucosa.side = THREE.DoubleSide
-        node.material = mucosa
+      const trueFold = node.name.startsWith('UA_fold_true')
+      if (outside) {
+        // The cutaway: every part solid, in its own tissue colour, cut on the midline. The
+        // cartilages are shown here and only here.
+        const look = LARYNX_CUTAWAY_LOOK[node.name] ?? LARYNX_CUTAWAY_LOOK.UA_lumen
+        node.material = new THREE.MeshStandardMaterial({
+          color: look.color,
+          roughness: look.roughness,
+          side: THREE.DoubleSide,
+          clippingPlanes: [LARYNX_CUT],
+        })
         return
       }
-      const original = Array.isArray(node.material) ? node.material[0] : node.material
-      const material = original.clone() as THREE.MeshStandardMaterial
-      material.side = THREE.DoubleSide
-      if (outside && wall) {
-        material.transparent = true
-        material.opacity = 0.15
-        material.depthWrite = false
+      if (node.name === 'UA_skeleton') {
+        node.visible = false
+        return
       }
-      node.material = material
+      if (trueFold) {
+        // The true folds: pearly white and wet, against the pink of everything round them. A
+        // standard material, because the folds open and close by a morph target.
+        node.material = new THREE.MeshPhysicalMaterial({
+          color: '#f6eede',
+          // Lit by the headlight alone they went grey; a fold is the brightest thing in the view.
+          emissive: '#5a5045',
+          roughness: 0.3,
+          clearcoat: 0.6,
+          clearcoatRoughness: 0.25,
+          side: THREE.DoubleSide,
+        })
+        return
+      }
+      // Seen from the scope, the larynx's wall, the false folds, the epiglottis and the arytenoids
+      // are one continuous mucosa, the same tissue as the trachea below: the same colour, vessels
+      // and sheen, with no rings (none of them carries a ring attribute). As flat colours they
+      // were separate cut-out shapes, and a wall was one blank colour when the tip turned to it.
+      const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true })
+      mucosa.side = THREE.DoubleSide
+      node.material = mucosa
     })
     return copy
   }, [source, outside])
