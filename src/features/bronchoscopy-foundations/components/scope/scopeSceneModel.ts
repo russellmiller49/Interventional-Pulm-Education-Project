@@ -12,6 +12,21 @@ export const CORD_MORPH_WEIGHT: Readonly<Record<CordsState, number>> = {
 }
 
 /**
+ * How far the model's true folds are drawn closed.
+ *
+ * Once the scope is through the glottis the folds close onto it, not through it. Drawn fully
+ * closed, they met across the scope's own position: a tip just below the glottis sat inside them
+ * and the scope view was one blank colour for as long as they stayed shut (owner, 2026-11-10). With
+ * the scope through, they are drawn no further closed than the narrowed position, which leaves the
+ * scope its place between them. The folds' state itself, and everything the goals read, is
+ * unchanged: this is the drawing only.
+ */
+export function drawnCordWeight(cords: CordsState, scopeThroughGlottis: boolean): number {
+  const weight = CORD_MORPH_WEIGHT[cords]
+  return scopeThroughGlottis ? Math.min(weight, CORD_MORPH_WEIGHT.narrowing) : weight
+}
+
+/**
  * The patient's front and left, as the teaching model's coordinates carry them (LPS: +x left,
  * +y posterior), placed on the rim of the round image through the frame the scope view draws
  * (fellow walkthrough A24). They move when the control section turns because the image does; they
