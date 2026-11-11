@@ -72,7 +72,7 @@ test('patient directions project to [right, down] on the screen', () => {
 
 test('an axis along the line of sight is reported as such and never given a screen arrow', () => {
   expect(AXIS_IN_PLANE_THRESHOLD).toBe(0.3)
-  expect(stations).toHaveLength(128)
+  expect(stations).toHaveLength(164)
   for (const { camera } of stations) {
     const { inPlane, alongView } = patientAxesInView(camera.basis)
     expect(inPlane.length + alongView.length * 2).toBe(6)

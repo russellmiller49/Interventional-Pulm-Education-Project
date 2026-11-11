@@ -160,9 +160,9 @@ describe('the rule, on synthetic frames', () => {
 })
 
 describe('at every fork of every route', () => {
-  test('each of the 128 stations has a match: one to four displays, the best among them', () => {
-    expect(CT_TRACES).toHaveLength(17)
-    expect(STATIONS).toHaveLength(128)
+  test('each of the 164 stations has a match: one to four displays, the best among them', () => {
+    expect(CT_TRACES).toHaveLength(22)
+    expect(STATIONS).toHaveLength(164)
     let plain = 0
     for (const { trace, index, id, match } of STATIONS) {
       const where = `${trace.id} ${id}`
@@ -231,7 +231,7 @@ describe('at every fork of every route', () => {
     expect(lb6.bookAccepted).toBe(false)
   })
 
-  test('the summary the report script prints: 128 stations, the book’s display matches at 100, 42 accept more than one', () => {
+  test('the summary the report script prints: 164 stations, the book’s display matches at 125, 53 accept more than one', () => {
     // npx tsx scripts/branch-tracing/orientation-match-report.ts --summary
     const stations = STATIONS.length
     const bookMatches = STATIONS.filter(({ match }) => match.bookAccepted).length
@@ -239,7 +239,7 @@ describe('at every fork of every route', () => {
     expect(
       `${stations} stations: the book's regional display matches at ${bookMatches}, differs at ${stations - bookMatches}; ${twoWay} accept more than one display.`,
     ).toBe(
-      "128 stations: the book's regional display matches at 100, differs at 28; 42 accept more than one display.",
+      "164 stations: the book's regional display matches at 125, differs at 39; 53 accept more than one display.",
     )
   })
 

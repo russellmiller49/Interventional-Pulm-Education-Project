@@ -1185,6 +1185,353 @@
           "shortName": "Lateral basal"
         }
       ]
+    },
+    {
+      "id": "right-upper-posterior",
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [386, 452],
+      "cropCenter": [167.624, 341.3843],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 393,
+        "pixel": [194.228, 313.9195],
+        "sourceEdgeId": 12,
+        "airway": {
+          "code": "RB2",
+          "name": "Right posterior segmental bronchus",
+          "shortName": "Posterior"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 392,
+          "pixel": [192.1136, 319.9553],
+          "lps": [-49.702, -153.5611, -172.7019],
+          "sourceHu": -962,
+          "sourceEdgeId": 12,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 407,
+          "pixel": [170.0728, 339.294],
+          "lps": [-64.898, -140.2279, -164.9077],
+          "sourceHu": -1021,
+          "sourceEdgeId": 55,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 442,
+          "pixel": [152.3657, 356.116],
+          "lps": [-77.1062, -128.63, -147.602],
+          "sourceHu": -1014,
+          "sourceEdgeId": 111,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-51.114187346490134, -150.19345758607741, -170.7220152324771],
+      "scopeDirectionLps": [-0.6335429671713357, 0.6834892307724956, 0.3625821012760588],
+      "airwayPath": [
+        { "code": "RB2", "name": "Right posterior segmental bronchus", "shortName": "Posterior" }
+      ]
+    },
+    {
+      "id": "right-lower-superior",
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [296, 316],
+      "cropCenter": [174.3603, 351.0279],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 303,
+        "pixel": [197.5099, 318.6381],
+        "sourceEdgeId": 17,
+        "airway": {
+          "code": "RB6",
+          "name": "Right superior segmental bronchus",
+          "shortName": "Superior"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 308,
+          "pixel": [197.0756, 324.3531],
+          "lps": [-46.2809, -150.529, -214.2562],
+          "sourceHu": -944,
+          "sourceEdgeId": 17,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 304,
+          "pixel": [182.2048, 346.1168],
+          "lps": [-56.5336, -135.524, -216.6356],
+          "sourceHu": -986,
+          "sourceEdgeId": 78,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 303,
+          "pixel": [156.7444, 368.4348],
+          "lps": [-74.0873, -120.1367, -216.9129],
+          "sourceHu": -975,
+          "sourceEdgeId": 150,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-47.58556926186801, -146.5712345144192, -214.57422393911204],
+      "scopeDirectionLps": [-0.8028876560525146, 0.5802219213223648, -0.13679888075376398],
+      "airwayPath": [
+        { "code": "RB6", "name": "Right superior segmental bronchus", "shortName": "Superior" }
+      ]
+    },
+    {
+      "id": "left-lingula-superior",
+      "preset": "mirror",
+      "region": "Lingula",
+      "range": [328, 382],
+      "cropCenter": [376.8884, 265.9526],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 333,
+        "pixel": [344.1195, 282.9093],
+        "sourceEdgeId": 42,
+        "airway": {
+          "code": "LB4",
+          "name": "Left superior lingular segmental bronchus",
+          "shortName": "Superior lingular"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 337,
+          "pixel": [348.813, 279.5186],
+          "lps": [58.3349, -181.4403, -200.0476],
+          "sourceHu": -1024,
+          "sourceEdgeId": 42,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 337,
+          "pixel": [373.9347, 266.5911],
+          "lps": [75.6552, -190.3532, -199.8817],
+          "sourceHu": -1003,
+          "sourceEdgeId": 166,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 367,
+          "pixel": [396.148, 256.4801],
+          "lps": [90.9702, -197.3243, -184.9178],
+          "sourceHu": -853,
+          "sourceEdgeId": 258,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [60.162173623927, -183.98915334861735, -199.9937297646504],
+      "scopeDirectionLps": [0.6216144005347919, -0.7821584309698956, -0.04270510403315125],
+      "airwayPath": [
+        {
+          "code": "LB4",
+          "name": "Left superior lingular segmental bronchus",
+          "shortName": "Superior lingular"
+        }
+      ]
+    },
+    {
+      "id": "left-lower-posterior-basal",
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [260, 290],
+      "cropCenter": [345.1691, 351.9588],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 285,
+        "pixel": [336.9142, 320.5299],
+        "sourceEdgeId": 25,
+        "airway": {
+          "code": "LB10",
+          "name": "Left posterior basal segmental bronchus",
+          "shortName": "Posterior basal"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 280,
+          "pixel": [334.2571, 325.0607],
+          "lps": [48.2993, -150.0411, -228.5042],
+          "sourceHu": -1009,
+          "sourceEdgeId": 25,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 267,
+          "pixel": [344.3506, 348.9794],
+          "lps": [55.2583, -133.5503, -235.0546],
+          "sourceHu": -955,
+          "sourceEdgeId": 53,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 271,
+          "pixel": [357.4289, 377.1065],
+          "lps": [64.2752, -114.158, -233.0362],
+          "sourceHu": -941,
+          "sourceEdgeId": 107,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [48.49261109171576, -148.03415169670697, -231.63345911764276],
+      "scopeDirectionLps": [0.5466973212088673, 0.7248270027307687, -0.41922291814186285],
+      "airwayPath": [
+        {
+          "code": "LB10",
+          "name": "Left posterior basal segmental bronchus",
+          "shortName": "Posterior basal"
+        }
+      ]
+    },
+    {
+      "id": "right-lower-lateral-basal",
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [247, 270],
+      "cropCenter": [157.9217, 350.4249],
+      "cropSize": 190,
+      "anchor": {
+        "slice": 265,
+        "pixel": [185.0299, 326.0063],
+        "sourceEdgeId": 137,
+        "airway": {
+          "code": "RB9",
+          "name": "Right lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      },
+      "checkpoints": [
+        {
+          "id": "point-1",
+          "slice": 263,
+          "pixel": [179.2202, 327.187],
+          "lps": [-58.5913, -148.5751, -237.1466],
+          "sourceHu": -1024,
+          "sourceEdgeId": 137,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Proximal"
+        },
+        {
+          "id": "point-2",
+          "slice": 254,
+          "pixel": [160.3196, 349.1134],
+          "lps": [-71.6224, -133.4579, -241.4896],
+          "sourceHu": -987,
+          "sourceEdgeId": 223,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Midportion"
+        },
+        {
+          "id": "point-3",
+          "slice": 259,
+          "pixel": [132.7564, 367.4122],
+          "lps": [-90.6259, -120.8418, -239.0268],
+          "sourceHu": -941,
+          "sourceEdgeId": 325,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Distal"
+        }
+      ],
+      "scopePositionLps": [-61.63362677954077, -146.97635515043814, -238.97455853523786],
+      "scopeDirectionLps": [-0.7051995982455311, 0.5683955762041083, -0.4238159926028527],
+      "airwayPath": [
+        {
+          "code": "RB9",
+          "name": "Right lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      ]
     }
   ],
   "assets": [

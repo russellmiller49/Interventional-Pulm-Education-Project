@@ -53,6 +53,12 @@ const FRAMES: Record<string, Words> = {
   LB5: ['anterior', 'medial', 'posterior', 'lateral'],
   LB6: ['superior', 'lateral', 'inferior', 'medial'],
   LB9: ['anterior', 'medial', 'posterior', 'lateral'],
+  // Added November 2026 with the five lesions in segments that had none.
+  RB2: ['superior', 'medial', 'inferior', 'lateral'],
+  RB6: ['superior', 'medial', 'inferior', 'lateral'],
+  RB9: ['anterior', 'superior', 'posterior', 'inferior'],
+  LB4: ['superior', 'anterior', 'inferior', 'posterior'],
+  LB10: ['anterior', 'medial', 'posterior', 'lateral'],
 }
 const rimText = (frame: OstiumFrame) =>
   RIMS.map((rim) => frame.rim[rim].word + (frame.rim[rim].also ? `/${frame.rim[rim].also}` : ''))
@@ -92,6 +98,11 @@ describe('the ostium circle', () => {
       'l-inferior-lingula': 4,
       'l-superior': 5,
       'l-lateral-basal': 1,
+      'r-posterior': 3,
+      'r-superior': 3,
+      'r-lateral-basal': 2,
+      'l-superior-lingula': 3,
+      'l-posterior-basal': 2,
     })
   })
 
@@ -151,7 +162,7 @@ describe('where each branch is drawn', () => {
               if (a !== b) expect(angleGap(a.angle, b.angle)).toBeGreaterThan(90)
         divisions++
       }
-    expect(divisions).toBe(45)
+    expect(divisions).toBe(58)
   })
 
   it('draws RB1’s first division with RB1b anterior and RB1a posterior', () => {

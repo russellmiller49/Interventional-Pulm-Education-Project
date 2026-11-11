@@ -62,7 +62,7 @@ The source export is unchanged: `geometry/branch-decisions.json` (17 routes, 128
 
 - **Scope roll** (`scopeUp`). Looking down an airway: anterior at the top. Looking along a horizontal bronchus: the head at the top. Looking up an airway inside an upper lobe: the lateral chest wall at the bottom, which is how Kurimoto and Morita display the right upper lobe and the left upper division; looking up anywhere else: anterior at the top.
 - **Where the scope waits** (`stationCamera`). 8 mm short of the fork, aimed between the openings. Farther back (to 20 mm) when a wide airway would put the openings at the rim, and nearer when the fork before is closer than 8 mm: it always stays inside the parent airway.
-- **The ostium frame** (`ostiumFrame`). The station camera at the segment's first division, its up, right, down and left named by the nearest anatomical direction; a second direction within 0.15 makes the position a combination. At RB1 this is medial up, posterior right, lateral down, anterior left: Mortimer and Saghaie's Figure 1E–F. The frames of all ten segments the lesions use are pinned in `__tests__/arc-map.test.ts` and were read before any text was written about them.
+- **The ostium frame** (`ostiumFrame`). The station camera at the segment's first division, its up, right, down and left named by the nearest anatomical direction; a second direction within 0.15 makes the position a combination. At RB1 this is medial up, posterior right, lateral down, anterior left: Mortimer and Saghaie's Figure 1E–F. The frames of all fifteen segments the lesions use are pinned in `__tests__/arc-map.test.ts`. The first ten were read before any text was written about them; the five added in November 2026 (RB2, RB6, RB9, LB4, LB10) are pinned as the geometry gives them and no lesson text is written about them.
 - **Where a branch is drawn** (`branchBearings`). Each daughter's direction 6 mm along its centreline, minus the mean of its siblings, laid across the ostium frame. No mapped division has a branch whose separation lies mostly along the view (the smallest in-view share is 0.44, at `junction-71`).
 - **What matches** (`matchOrientation`). A patient axis counts when at least half of it lies across the scope's line of sight. A display matches when every such axis points the same way on both pictures.
 - **Where a daughter is identified** (`responsePlane`, lessons 1–2). On the export's own response plane, except the tracheal bifurcation, identified on slice 372 (`RESPONSE_PLANE_OVERRIDES`).
@@ -226,6 +226,24 @@ Not built in this round, and why:
 - **The rolled scope as an option on Practice lesions.** The navigation bench says where each opening sits in the view ("upper left"), which way the scope is looking, and what lies toward the lesion, all worked out for the unrolled picture. Under a roll every one of those sentences would be false until it is recomputed, and the "Turn the map to the scope" switch would give the turn away. That is a pass over the bench's sentences of its own, not an option to switch on.
 - **Turning the map by dragging.** The map is turned with the two buttons or the arrow keys.
 - **Taking the drive clock out of the navigation bench and splitting it into panes** (carried from round 3). The drill has its own small bench and clock, so nothing here needed it. It remains a refactor with no change the learner sees.
+
+### Changed on November 10, 2026 (round 7: lesions in five more segments), for your read
+
+1. **Five new Practice lesions**, in RB2, RB6, RB9, LB4 and LB10: 18 lesions in 15 segments, on the same CT and the same slices. Each has its own route from the trachea (22 routes now), its map (2 or 3 divisions past the ostium), its lesion patches and its coronal and sagittal sprites. They were built by the documented pipeline, end to end, with nothing placed or named by hand: `authoring/ct-traces.json` → the headless Slicer export → `build-targets.ts` → `build-branch-decisions.mjs` → `build-paired-routes.mjs` → `build-answer-plane-air.mjs` → `build-reference-planes.mjs`. The records are in [nomenclature](nomenclature-review.md) and [nodule targets](nodule-target-review.md).
+2. **What did not change.** The 236 axial images, the reconstruction planes and crop, and every existing lesion, route, fork and patch are byte for byte the same (checked against the commit before). None of the new lesions is in a lesson, the closing set, the demonstration or the drill.
+3. **What changed for existing content, as a side effect:**
+   - RB2, RB6, LB4 and LB10 already appeared as the branch not taken at forks on older routes. Their displayed names now have the same form as the rest ("Right posterior segmental bronchus", was "Right Upper Lobe Posterior segmental bronchus"). Codes are unchanged.
+   - Lesson 7's closing line and the beta hub card say eighteen Practice lesions.
+4. **A fork is marked only if its explanation is written** (`markable` in `content/nav-lessons.ts`). The new routes bring ten forks whose lumens can be clicked and which have no written explanation. Practice never asks for marks, so nothing a learner sees is missing; but a lesson that marks openings could have been written over one of them. `defaultSteps` now leaves such a fork as chosen-at, and `junction-feedback.test.ts` lists the ten. Writing an explanation for one is what makes it markable.
+5. **Pinned checks moved with the data**: routes 17 → 22, forks on routes 128 → 164, distinct forks 57 → 71, openings 257 → 329, mapped divisions 45 → 58, tree branches 116 → 144, air maps 84 → 99, lesion patch bytes bound 1.2 → 1.3 MB, and the two data digests in `module-contract.test.ts`. The five new ostium frames are pinned in `arc-map.test.ts` as the geometry gives them.
+
+For your read before these are relied on:
+
+- **The five names and placements.** Each segment's name is the labelled case's own, already on those airways; I made no anatomical call. I looked at each lesion in the bench (lesion slice, circle, map, first division, arrival) and nothing looked out of place. That is not a bronchoscopist's read.
+- **The RB9 route** passes an airway the source does not label (edge 72), between the basal bronchus and the fork that gives off RB9 and RB10. It shows as "R basal", inherited from its parent.
+- **Thin lumens.** Which of the new forks show as a thin line, not a ring, has not been read off the images as the first five were. It does not matter while they are only chosen at.
+
+Not included, and why: **RB10** lies below the shipped slices and needs 74 more planes (about 15 MB, and the reconstructions would pass their 40 MB gate); **RB7**'s lesion would cover its last fork; **LB7+8**'s last forks have lumens of 1.2–1.6 mm. Those are your call.
 
 ## Earlier design records
 

@@ -19,7 +19,12 @@
     "left-lingula": [-1010, -1018, -979],
     "left-lower-returning": [-997, -1020, -1012],
     "right-lower-basal": [-1004, -913, -1024],
-    "left-lower-basal": [-866, -1022, -999]
+    "left-lower-basal": [-866, -1022, -999],
+    "right-upper-posterior": [-962, -1021, -1014],
+    "right-lower-superior": [-944, -986, -975],
+    "left-lingula-superior": [-1024, -1003, -853],
+    "left-lower-posterior-basal": [-1009, -955, -941],
+    "right-lower-lateral-basal": [-1024, -987, -941]
   },
   "sliceCount": 236,
   "sliceBytes": 48335710

@@ -92,8 +92,8 @@ test('book rotations and reflection preserve native pixel identity in full field
   expect(pixelToDisplay([20, 40], [40, 40], 100, 'mirror')).toEqual([70, 50])
 })
 test('every route resolves by id to its own target, and every slice it can show has an image address', () => {
-  expect(CT_TRACES).toHaveLength(17)
-  expect(new Set(CT_TRACES.map((t) => t.id)).size).toBe(17)
+  expect(CT_TRACES).toHaveLength(22)
+  expect(new Set(CT_TRACES.map((t) => t.id)).size).toBe(22)
   for (const trace of CT_TRACES) {
     expect(traceById(trace.id)).toBe(trace)
     expect(targetForTrace(trace).id).toBe(trace.targetId)
@@ -125,6 +125,12 @@ test('preserved c3 source checkpoints distinguish segment identity from CT indic
     'left-lower-returning': ['LLL', 'LB6', 'LB6'],
     'right-lower-basal': ['RLL', 'R basal', 'RB8'],
     'left-lower-basal': ['L basal', 'L basal', 'LB9'],
+    // Added November 2026: each is sampled inside its own segmental bronchus.
+    'right-upper-posterior': ['RB2', 'RB2', 'RB2'],
+    'right-lower-superior': ['RB6', 'RB6', 'RB6'],
+    'left-lingula-superior': ['LB4', 'LB4', 'LB4'],
+    'left-lower-posterior-basal': ['LB10', 'LB10', 'LB10'],
+    'right-lower-lateral-basal': ['RB9', 'RB9', 'RB9'],
   }
   expect(legacy.traces.map((t) => t.id).sort()).toEqual(Object.keys(codes).sort())
   for (const trace of legacy.traces) {

@@ -37,6 +37,7 @@ import {
   routePlan,
   totalMinutes,
   type NavTripSpec,
+  markable as canMark,
 } from '../content/nav-lessons'
 import {
   ANATOMICAL_LABEL,
@@ -784,13 +785,17 @@ describe('whole routes', () => {
           expect([id, large]).toEqual([id, true])
         }
         expect([id, identifiable(trace, index)]).toEqual([id, large && !thin])
+        // A fork is marked only where it can be clicked and its explanation is written
+        // (`junction-feedback.test.ts` lists the ten that wait for one).
+        const explained = Boolean(junctionFeedbackPacket(id))
+        expect([id, canMark(trace, index)]).toEqual([id, large && !thin && explained])
         expect(defaultSteps(trace, index)).toEqual(
-          large && !thin ? ['match', 'identify', 'choose'] : ['choose'],
+          large && !thin && explained ? ['match', 'identify', 'choose'] : ['choose'],
         )
-        if (large && !thin) marked++
+        if (large && !thin && explained) marked++
         else chosenOnly++
       }
-    expect(marked + chosenOnly).toBe(128)
+    expect(marked + chosenOnly).toBe(164)
     expect(marked).toBeGreaterThan(chosenOnly)
     expect(chosenOnly).toBeGreaterThan(0)
     expect(THIN_LUMEN_FORKS).toEqual([
@@ -813,9 +818,9 @@ describe('whole routes', () => {
     expect(identifiable(trace, trace.checkpoints.length - 1)).toBe(false)
   })
 
-  test('each of the thirteen lesions opens one route, and that route ends beside it', () => {
-    expect(TARGET_IDS).toHaveLength(13)
-    expect(new Set(TARGET_IDS).size).toBe(13)
+  test('each of the eighteen lesions opens one route, and that route ends beside it', () => {
+    expect(TARGET_IDS).toHaveLength(18)
+    expect(new Set(TARGET_IDS).size).toBe(18)
     expect([...TARGET_IDS].sort()).toEqual(CT_TARGETS.map((target) => target.id).sort())
     const routes = new Set<string>()
     for (const id of TARGET_IDS) {
@@ -837,11 +842,11 @@ describe('whole routes', () => {
       expect(plannedTarget(trace)).toBe(target)
       expect(mappedForks(trace, target).length).toBeGreaterThan(0)
     }
-    expect(routes.size).toBe(13)
+    expect(routes.size).toBe(18)
     expect(Object.keys(TARGET_FOR_TRACE).sort()).toEqual([...routes].sort())
     // No two lesions share a label: the two in RS3 that end in RB3a are told apart by slice.
     const labels = TARGET_IDS.map((id) => targetLabel(targetById(id)!))
-    expect(new Set(labels).size).toBe(13)
+    expect(new Set(labels).size).toBe(18)
     expect(targetLabel(targetById('r-anterior-upper')!)).toBe(
       'RS3 · Right anterior segment, by RB3a, slice 419',
     )
@@ -854,7 +859,7 @@ describe('whole routes', () => {
     expect(targetById('not-a-lesion')).toBeUndefined()
   })
 
-  test('the closing set is three of those lesions in three lobes, and the lobes hold all thirteen once', () => {
+  test('the closing set is three of those lesions in three lobes, and the lobes hold all eighteen once', () => {
     expect(ASSESS_TARGET_IDS).toHaveLength(3)
     expect(new Set(ASSESS_TARGET_IDS).size).toBe(3)
     for (const id of ASSESS_TARGET_IDS) expect(TARGET_IDS).toContain(id)
@@ -867,7 +872,7 @@ describe('whole routes', () => {
       'Left lower lobe',
     ])
     const listed = groups.flatMap((group) => group.targets.map((target) => target.id))
-    expect(listed).toHaveLength(13)
+    expect(listed).toHaveLength(18)
     expect([...listed].sort()).toEqual([...TARGET_IDS].sort())
     const lobeOf = (id: string) =>
       groups.find((group) => group.targets.some((target) => target.id === id))!.lobe

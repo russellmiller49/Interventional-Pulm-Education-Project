@@ -121,10 +121,10 @@ describe('shipped assets', () => {
   test('the route traces and the lesion targets are the recorded data', () => {
     const digest = (value: unknown) => sha(JSON.stringify(value))
     expect(digest(CT_TRACES)).toBe(
-      '86b223c8ef59e3d7943d52984718cff853615a5f876dd2556614742f3e0581a4',
+      'd018d3fe526faf577af72e265d9f2ccdf38c4f697d4f1598d75a1365693a46e2',
     )
     expect(digest(CT_TARGETS)).toBe(
-      'ca1a873b489309e16009b8c3dd7c080fe9890a0a0a38c903c0f4d9685643f957',
+      '6d2d0c2bcc9e4ac987161161513039e4b255eff6e4c6b309e8a1de1097f8c96c',
     )
     // The export still has the main bronchi's own response points on slice 387.
     expect(
@@ -169,9 +169,10 @@ describe('small shared helpers', () => {
     ])
     expect(count(2, 'try', 'tries')).toBe('2 tries')
     // The source data keeps its own spelling.
-    const stored = traceById('left-lower-basal')
+    // (LB10 has had its own normalized name since its route was added; RB7 has no route yet.)
+    const stored = traceById('right-lower-basal')
       .checkpoints.flatMap((p) => p.decision?.options ?? [])
-      .find((o) => o.airway.code === 'LB10')
-    expect(stored?.airway.name).toBe('Left Lower Lobe Posterior Basal segmental bronchus')
+      .find((o) => o.airway.code === 'RB7')
+    expect(stored?.airway.name).toBe('Right Lower Lobe Medial Basal segmental bronchus')
   })
 })
