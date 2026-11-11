@@ -165,9 +165,10 @@ const next = () => fireEvent.click(primary())
 describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L25-5)', () => {
   it('records the registry this batch was built against', () => {
     expect(CHAPTERS).toHaveLength(7)
-    // 21 lessons a learner opens, built from the 26 content units this batch was written against.
-    expect(LESSONS).toHaveLength(21)
-    expect(CONTENT_LESSONS).toHaveLength(26)
+    // 22 lessons a learner opens: the 26 content units this batch was written against, five of
+    // them folded into others, plus the scope lesson added on 2026-11-10.
+    expect(LESSONS).toHaveLength(22)
+    expect(CONTENT_LESSONS).toHaveLength(27)
   })
 
   it('lists the chapters once on the Overview, under a picture of the lab', () => {
@@ -395,13 +396,13 @@ describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () =>
     expect(within(terms as HTMLElement).getByText('N category (N1, N2, N3)')).toBeInTheDocument()
     expect(within(terms as HTMLElement).getByText('Examination record')).toBeInTheDocument()
     expect(within(terms as HTMLElement).getByText('EBUS-TBNA')).toBeInTheDocument()
-    // The link's number follows the registry: lesson 14 since the consolidation, 17 before it.
+    // The link's number follows the registry: it was lesson 17 before the consolidation.
     const staging = LESSONS.findIndex((entry) => entry.id === 'systematic-staging')
     const forward = within(terms as HTMLElement).getByRole('link', {
       name: `Full teaching: Lesson ${staging + 1} · Systematic staging and TNM ninth edition`,
     })
     expect(forward).toHaveAttribute('href', '/ebus-guided/learn?section=systematic-staging')
-    expect(staging).toBe(13)
+    expect(staging).toBe(14)
   })
 
   it('offers the N categories where lesson 15 first assesses them, and never where a lesson teaches the term itself', () => {

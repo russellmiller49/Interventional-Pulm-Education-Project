@@ -190,6 +190,41 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     ...PACKET,
     checkedBy: 'EBUS-PRE-REVIEW-05 packet, partial read; the statement excludes EBUS',
   },
+  /*
+   * Optics of the convex EBUS scope, added 2026-11-10 with the scope lesson (not signed). They are
+   * the values the project already records for this scope in `BF_UC180F_NOMINAL`
+   * (src/lib/bronchoscopy-core/devices.ts), which the simulated lens uses; the manufacturer page
+   * was not re-read when these rows were written.
+   */
+  'scope-view-angle': {
+    label: 'Convex EBUS scope, direction of view',
+    value: '35°',
+    appliesTo: 'Olympus BF-UC180F; forward-oblique, from the long axis of the scope',
+    class: 'device',
+    sources: [
+      { sourceId: 'olympus-uc180f', year: 2010, grade: null, locator: 'Specifications, optics' },
+    ],
+    note: 'The angle differs between scope models. The lesson teaches the consequence, which does not depend on the exact figure.',
+    checkedOn: '2026-11-10',
+    checkedBy:
+      'Project device record BF_UC180F_NOMINAL (src/lib/bronchoscopy-core/devices.ts); manufacturer page not re-read',
+    signedBy: null,
+    signedOn: null,
+  },
+  'scope-field-of-view': {
+    label: 'Convex EBUS scope, field of view',
+    value: '80°',
+    appliesTo: 'Olympus BF-UC180F',
+    class: 'device',
+    sources: [
+      { sourceId: 'olympus-uc180f', year: 2010, grade: null, locator: 'Specifications, optics' },
+    ],
+    checkedOn: '2026-11-10',
+    checkedBy:
+      'Project device record BF_UC180F_NOMINAL (src/lib/bronchoscopy-core/devices.ts); manufacturer page not re-read',
+    signedBy: null,
+    signedOn: null,
+  },
   'scope-tip-diameter': {
     label: 'Convex EBUS scope, distal end',
     value: '6.6 mm',

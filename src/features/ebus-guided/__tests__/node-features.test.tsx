@@ -20,8 +20,9 @@ const lesson = LESSONS.find((entry) => entry.id === 'node-characterization')!
 
 describe('lesson 16 uses the owner’s annotated EBUS images', () => {
   it('opens the describe-and-plan chapter and teaches all six features in its paragraphs', () => {
-    // Lesson 13 since five lessons were folded into others (2026-11-10); it was lesson 16.
-    expect(LESSONS.indexOf(lesson)).toBe(12)
+    // Lesson 14: five lessons were folded into others and the scope lesson was added
+    // (2026-11-10); it was lesson 16.
+    expect(LESSONS.indexOf(lesson)).toBe(13)
     expect(chapterForLesson(lesson.id).lessons[0].id).toBe('node-characterization')
     const text = lesson.paragraphs.join(' ')
     for (const feature of [
