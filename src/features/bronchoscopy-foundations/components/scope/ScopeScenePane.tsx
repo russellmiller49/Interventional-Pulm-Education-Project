@@ -94,7 +94,12 @@ function ScenePane(props: ScopePaneProps) {
   const enabled = props.controlsEnabled && ready
   // The map sits beside the view only on a step that steers, names or is answered on the map; a
   // step without steering keeps its controls directly under the view (owner, 2026-11-03).
-  const showMap = props.state.place !== 'bench' && showsAirwayContext(props.view, props.treeAnswer)
+  // Not on the larynx step: there the tip is above the tree the map draws, the outside view of the
+  // larynx is the picture that helps, and a third panel squeezed all three (owner, 2026-11-10).
+  const showMap =
+    props.state.place !== 'bench' &&
+    showsAirwayContext(props.view, props.treeAnswer) &&
+    (props.view.mode !== 'larynx-entry' || props.treeAnswer !== undefined)
   // The outside view: the see-through airway tree with the scope in it, in the flat map's place.
   // It carries no names, so it says no more than the map's own tip marker. It is not offered while
   // a question is answered on the map, or while the step withholds where the tip is.

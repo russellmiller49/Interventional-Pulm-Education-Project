@@ -10,9 +10,9 @@ import deviceData from '../../../../../public/bronchoscopy-foundations/anatomy/d
 import propData from '../../../../../public/bronchoscopy-foundations/anatomy/devices/teaching-props.json'
 import type { ScopePaneProps, ScopeState } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
-import { CORD_MORPH_WEIGHT } from './scopeSceneModel'
+import { drawnCordWeight } from './scopeSceneModel'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
-import { TUBE_START_MM, TUBE_TIP_MM } from '../../engine/scope/scopeScripts'
+import { LARYNX_GLOTTIS_MM, TUBE_START_MM, TUBE_TIP_MM } from '../../engine/scope/scopeScripts'
 import { createScopeState } from '../../engine/scope/scopeReducer'
 
 export function modelQuaternion(state: ScopeState) {
@@ -97,13 +97,16 @@ export function LarynxLumen({
     },
     [model],
   )
+  // The scope is through the glottis from just short of its plane, and for as long as the tip is
+  // further on, in the subglottis or the trachea.
+  const through = state.place === 'airway' || state.depthMm >= LARYNX_GLOTTIS_MM - 0.5
   useEffect(() => {
     for (const name of ['UA_fold_true_L', 'UA_fold_true_R']) {
       const mesh = model.getObjectByName(name) as THREE.Mesh | undefined
       if (mesh?.morphTargetInfluences)
-        mesh.morphTargetInfluences[0] = CORD_MORPH_WEIGHT[state.inputs.cords]
+        mesh.morphTargetInfluences[0] = drawnCordWeight(state.inputs.cords, through)
     }
-  }, [model, state.inputs.cords])
+  }, [model, state.inputs.cords, through])
   return <primitive object={model} dispose={null} />
 }
 
