@@ -133,11 +133,15 @@ export function HemodynamicsTeachingColumn({
 
   return (
     <div ref={focusRef} className={styles.teaching} data-teaching-panel>
-      {step.teaching && state && (!flow || step.teaching !== 'attempt') ? (
+      {step.teaching && state && !teachingShownOn && (!flow || step.teaching !== 'attempt') ? (
+        <div data-current-teaching={step.teaching}>
+          <IntroductoryTeaching topic={step.teaching} state={state} />
+        </div>
+      ) : null}
+      {step.teaching && state && teachingShownOn ? (
         <ReferenceBlock
           heading={INTRO_TEACHING_HEADINGS[step.teaching] ?? 'The teaching for this question'}
-          repeat={teachingShownOn ? `from task ${teachingShownOn.ordinal}` : undefined}
-          bare
+          repeat={`from task ${teachingShownOn.ordinal}`}
         >
           <div data-current-teaching={step.teaching}>
             <IntroductoryTeaching topic={step.teaching} state={state} />
@@ -334,18 +338,15 @@ function fromSection(sectionId: HemodynamicsSectionId): string {
 
 /**
  * A block of an Explain card. Where the learner has already had it (`repeat` says where), it is a
- * closed heading that opens in place; otherwise it is the stage block it always was. `bare` is for
- * content that was not a stage block before and must render unwrapped when it is not a repeat.
+ * closed heading that opens in place; otherwise it is the stage block it always was.
  */
 function ReferenceBlock({
   heading,
   repeat,
-  bare = false,
   children,
 }: {
   readonly heading: string
   readonly repeat?: string
-  readonly bare?: boolean
   readonly children: ReactNode
 }) {
   if (repeat)
@@ -360,7 +361,6 @@ function ReferenceBlock({
         </StageBlock>
       </div>
     )
-  if (bare) return <>{children}</>
   return (
     <StageBlock kind="after-commitment" heading={heading}>
       {children}
