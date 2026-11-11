@@ -92,6 +92,37 @@
   bottom: 0.45rem;
   color: #3e535a;
 }
+/* What the hand can do on the control head, under its heading. */
+.closeupHint {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 0.55rem;
+  /* Left of the insertion tube, which hangs down the middle of the picture. */
+  max-width: 44%;
+  color: #3e535a;
+  font-size: 0.67rem;
+  line-height: 1.25;
+  pointer-events: none;
+}
+/* The control head worked by hand: a drag surface over the close-up, under its captions. */
+.headDrag {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+}
+.headDrag[data-head-drag='lever'] {
+  cursor: ns-resize;
+}
+.headDrag[data-head-drag='wrist'] {
+  cursor: ew-resize;
+}
+.headDrag:active {
+  cursor: grabbing;
+}
+.headDrag[data-head-drag-enabled='false'] {
+  cursor: default;
+}
 .views[data-pilot-bench='true'][data-observer='true'] .observer {
   border-top: 0;
   border-left: 1px solid #34475c;
@@ -626,6 +657,10 @@
 /* The device needs enough space to see the thumb lever. At narrow pane widths put
    the scope image above two close-ups, instead of shrinking the control head. */
 @container (max-width: 560px) {
+  /* The close-ups are too narrow for the line, and a finger works the sliders there. */
+  .closeupHint {
+    display: none;
+  }
   .views[data-pilot-bench='true'][data-observer='true'] {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;

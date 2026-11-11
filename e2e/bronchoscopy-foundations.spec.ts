@@ -3203,3 +3203,41 @@ test('the outside 3D view takes the flat map’s place beside the scope view, an
   await expect(page.locator('[data-map-column]')).toBeVisible()
   await expect(views).not.toHaveAttribute('data-observer', 'true')
 })
+
+test('the control head is worked by hand: the lever by a drag down, the wrist by a drag across', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await walkToStep(page, 'five-controls', 'five-controls-learn-rotation')
+  await ready(page)
+  const layer = page.locator('[data-head-drag]')
+  await expect(layer).toHaveAttribute('data-head-drag', 'lever wrist')
+  await expect(layer).toHaveAttribute('data-head-drag-enabled', 'true')
+  await expect(page.locator('[data-head-drag-hint]')).toContainText('Drag up or down')
+  const box = (await layer.boundingBox())!
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+
+  // Down on the lever: the tip goes toward U, and the head does not turn.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x, y + 50, { steps: 5 })
+  await page.mouse.up()
+  await expect(control(page, 'deflect')).toHaveValue('60')
+  await expect(control(page, 'rotate')).toHaveValue('0')
+  await expect(page.locator('[data-control-head]')).toHaveAttribute(
+    'data-lever-deflection',
+    '60.00',
+  )
+
+  // Across the head: it turns with the hand, and the lever stays where it was left.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + 40, y, { steps: 4 })
+  await page.mouse.up()
+  await expect(control(page, 'rotate')).toHaveValue('36')
+  await expect(control(page, 'deflect')).toHaveValue('60')
+  // The sliders under the view remain the keyboard path.
+  await control(page, 'deflect').press('ArrowLeft')
+  await expect(control(page, 'deflect')).toHaveValue('59')
+})
