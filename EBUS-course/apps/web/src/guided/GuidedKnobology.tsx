@@ -499,7 +499,8 @@ export function GuidedKnobology({
         {/*
           The recording being manipulated comes first, so that when the pair stacks it is the one
           beside the controls; the previous comparison stays right below it, full size
-          (EBUS-PRE-REVIEW-02, L6-1). Each figure says which it is.
+          (EBUS-PRE-REVIEW-02, L6-1). Each figure says which it is. On a workbench too narrow for
+          a controls column, guided.css places the image controls between the two figures.
         */}
         <div className="recorded-images">
           <figure className="recorded-current">
