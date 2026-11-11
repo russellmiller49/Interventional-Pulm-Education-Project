@@ -36,6 +36,7 @@ import {
   projectScenePins,
 } from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
+import { HeadDragLayer, headDragHint } from './HeadDragLayer'
 import styles from './scope-scene.module.css'
 
 type SceneStatus = 'loading' | 'ready' | 'failed'
@@ -498,7 +499,18 @@ export default function ScopeScene(props: SceneProps) {
                           suctionTravel={presentation.suctionTravel}
                         />
                       </View>
+                      <HeadDragLayer
+                        deflectionDeg={state.inputs.deflectionDeg}
+                        controls={view.controls}
+                        enabled={props.controlsEnabled}
+                        onCommand={props.onCommand}
+                      />
                       <span className={styles.closeupHeading}>Outside view · control head</span>
+                      {props.controlsEnabled && headDragHint(view.controls) ? (
+                        <span className={styles.closeupHint} data-head-drag-hint>
+                          {headDragHint(view.controls)}
+                        </span>
+                      ) : null}
                       <span className={styles.closeupState}>
                         {state.inputs.suction
                           ? 'Suction valve pressed'
