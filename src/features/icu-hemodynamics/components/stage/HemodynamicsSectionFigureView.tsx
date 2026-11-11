@@ -6,6 +6,7 @@ import type { HemodynamicsSectionFigure } from '../../content/taskPresentation'
 import type { HemodynamicSimulationState } from '../../engine/types'
 import { DerivedValueFigure } from '../DerivedValueFigure'
 import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
+import { NormalWaveformReference } from '../NormalWaveformReference'
 import { ThermodilutionCurveFigure } from '../ThermodilutionTrialReview'
 import styles from '../icu-hemodynamics.module.css'
 
@@ -14,7 +15,8 @@ export function sectionFigureShows(
   figure: HemodynamicsSectionFigure,
   state: HemodynamicSimulationState,
 ): boolean {
-  if (figure === 'pac-parts' || figure === 'derived-value') return true
+  if (figure === 'pac-parts' || figure === 'derived-value' || figure === 'normal-reference')
+    return true
   if (figure === 'td-curve') return state.thermodilutionTrials.length > 0
   return false
 }
@@ -50,6 +52,20 @@ export function HemodynamicsSectionFigureView({
     return derived ? (
       <DerivedValueFigure metricId={derived.metricId} episodeId={derived.episodeId} />
     ) : null
+  if (figure === 'normal-reference') {
+    // The chamber the walk is standing in; before the first chamber, the first one.
+    const position = state.catheter.position === 'introducer' ? 'ra' : state.catheter.position
+    return (
+      <section className={styles.walkReference} data-walk-reference={position}>
+        <h3>Normal waveform reference · current walk stop</h3>
+        <p>
+          The reference follows the chamber selected by the walk. Its fixed scale, anatomy and ECG
+          describe that chamber; the live monitor uses the separate teaching-patient values.
+        </p>
+        <NormalWaveformReference fixedPosition={position} concise figuresFirst />
+      </section>
+    )
+  }
   const method = requireCardiacOutputMethod('thermodilution')
   return (
     <figure className={styles.thermoReferenceFigure} data-reference-curve>

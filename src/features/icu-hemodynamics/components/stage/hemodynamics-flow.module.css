@@ -590,8 +590,32 @@
 @container hemo-activity (min-width: 75rem) {
   .flow[data-lesson-shell][data-presentation]
     .activity
-    > [data-flow-content][data-has-visual]:has(> [data-flow-visual] > [data-section-figure]) {
+    > [data-flow-content][data-has-visual]:has(
+      > [data-flow-visual] > [data-section-figure]:not([data-section-figure='normal-reference'])
+    ) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/*
+ * The walk: the catheter map and the normal tracing for the stop, side by side.
+ *
+ * The tracing is what changes at each stop. Stacked under the map it was below the fold of the
+ * pane, and before that it was in the task card, above the stop's text and Next stop, so pressing
+ * Next stop changed a tracing the learner had scrolled past (owner, 2026-11-11). Side by side, the
+ * place and the shape it writes are on screen together and both change in place: measured at
+ * 1280 x 720, 1600 x 852 and 1695 x 920 the tracing is whole in the pane at every stop. This is
+ * the width at which the workspace has two panes; in one pane they stack, the map first.
+ */
+@container hemo-activity (min-width: 75rem) {
+  .activity
+    > [data-flow-content][data-has-visual]
+    > [data-flow-visual]:has(> [data-section-figure='normal-reference']) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    align-content: start;
   }
 }
 

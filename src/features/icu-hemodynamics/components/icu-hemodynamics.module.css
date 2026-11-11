@@ -5882,6 +5882,24 @@
   font-size: 9px;
   font-weight: 700;
 }
+/* The walk's normal reference in the lesson's visual column, under the catheter map. */
+.walkReference {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  color: #eaf4f4;
+}
+.walkReference > h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.walkReference > p {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 /*
  * One calculated value, drawn top to bottom in the lesson's visual column: its inputs, the formula,
  * the result. Where the worked episode fills it in, an input's edge says where it came from, and

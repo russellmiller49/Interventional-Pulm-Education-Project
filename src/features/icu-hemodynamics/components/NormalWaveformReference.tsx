@@ -42,9 +42,16 @@ import { WaveformAtlasFigure } from './WaveformAtlasFigure'
 export function NormalWaveformReference({
   fixedPosition,
   concise = false,
+  figuresFirst = false,
 }: {
   readonly fixedPosition?: NormalWaveformReferenceEntry['position']
   readonly concise?: boolean
+  /**
+   * Draw the chamber's anatomy and tracing ahead of the reference's introduction and controls.
+   * For the walk, where the tracing is what changes at each stop and is what the learner came to
+   * see: it used to sit under the introduction, the rhythm note and the axis control.
+   */
+  readonly figuresFirst?: boolean
 } = {}) {
   const headingId = useId()
   const panelId = useId()
@@ -86,8 +93,66 @@ export function NormalWaveformReference({
     tabRefs.current[next]?.focus()
   }
 
+  const anatomyFigure = (
+    <NormalWaveformAnatomyFigure
+      position={entry.position}
+      physicalLocation={entry.physicalLocation}
+    />
+  )
+  const tracingFigure = (
+    <WaveformAtlasFigure
+      key={`${entry.position}-${scale.id}`}
+      entry={atlasEntry}
+      scaleMaxMmHg={scale.maxMmHg}
+      ecgLandmarks
+      readable={concise}
+      respiration={{
+        swingMmHg: entry.respiratorySwingMmHg,
+        cyclesPerStrip: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.cyclesPerStrip,
+        endExpirationPhase: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.endExpirationPhase,
+        modeLabel: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.mode,
+      }}
+      figureDescription={normalWaveformReferenceTextEquivalent(entry, scale)}
+      // The point the reference, the monitor's own cursor and the cited source all name.
+      readingPoint={
+        entry.position === 'ra'
+          ? {
+              cardiacPhase: RIGHT_ATRIAL_C_WAVE_BASE_PHASE,
+              label: 'read here',
+              description:
+                'Where the right-atrial value is read: at end expiration, at the base of the c wave. The live monitor’s right-atrial cursor uses the same point.',
+            }
+          : undefined
+      }
+    />
+  )
+  const figures = (
+    <>
+      <p className={styles.referenceStateLine}>
+        State {entry.order} of {normalWaveformReference.length} · {atlasEntry.label} · axis 0–
+        {scale.maxMmHg} {entry.displayUnit} · {NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.mode}
+      </p>
+
+      {/* On the walk the tracing leads: the catheter map above it already shows where the tip is. */}
+      <div className={styles.referenceSynchronizedFigures}>
+        {figuresFirst ? tracingFigure : anatomyFigure}
+        {figuresFirst ? anatomyFigure : tracingFigure}
+      </div>
+    </>
+  )
+
   return (
     <section className={styles.normalReference} aria-labelledby={headingId}>
+      {figuresFirst ? (
+        <div
+          role="group"
+          aria-label={`${atlasEntry.label} reference tracing`}
+          className={styles.referencePanel}
+          data-reference-figures-first
+        >
+          {figures}
+        </div>
+      ) : null}
       <header>
         <span className={styles.paneEyebrow}>Normal reference, in insertion order</span>
         <h2 id={headingId}>What each chamber is supposed to look like</h2>
@@ -136,8 +201,9 @@ export function NormalWaveformReference({
             ))}
           </ol>
           <p>
-            The walk chooses the chamber shown here: use Next stop and Previous stop below. The
-            whole reference opens for free browsing in this section&apos;s later tasks.
+            The walk chooses the chamber shown here: use Next stop and Previous stop{' '}
+            {figuresFirst ? 'on the task card' : 'below'}. The whole reference opens for free
+            browsing in this section&apos;s later tasks.
           </p>
         </div>
       ) : (
@@ -203,42 +269,7 @@ export function NormalWaveformReference({
         tabIndex={fixedPosition ? undefined : 0}
         className={styles.referencePanel}
       >
-        <p className={styles.referenceStateLine}>
-          State {entry.order} of {normalWaveformReference.length} · {atlasEntry.label} · axis 0–
-          {scale.maxMmHg} {entry.displayUnit} · {NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.mode}
-        </p>
-
-        <div className={styles.referenceSynchronizedFigures}>
-          <NormalWaveformAnatomyFigure
-            position={entry.position}
-            physicalLocation={entry.physicalLocation}
-          />
-          <WaveformAtlasFigure
-            key={`${entry.position}-${scale.id}`}
-            entry={atlasEntry}
-            scaleMaxMmHg={scale.maxMmHg}
-            ecgLandmarks
-            readable={concise}
-            respiration={{
-              swingMmHg: entry.respiratorySwingMmHg,
-              cyclesPerStrip: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.cyclesPerStrip,
-              endExpirationPhase: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.endExpirationPhase,
-              modeLabel: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.mode,
-            }}
-            figureDescription={normalWaveformReferenceTextEquivalent(entry, scale)}
-            // The point the reference, the monitor's own cursor and the cited source all name.
-            readingPoint={
-              entry.position === 'ra'
-                ? {
-                    cardiacPhase: RIGHT_ATRIAL_C_WAVE_BASE_PHASE,
-                    label: 'read here',
-                    description:
-                      'Where the right-atrial value is read: at end expiration, at the base of the c wave. The live monitor’s right-atrial cursor uses the same point.',
-                  }
-                : undefined
-            }
-          />
-        </div>
+        {figuresFirst ? null : figures}
 
         <p className={styles.paneCaveat}>
           {NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.renderingBoundary}{' '}

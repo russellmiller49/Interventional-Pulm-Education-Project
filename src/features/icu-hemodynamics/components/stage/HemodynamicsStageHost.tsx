@@ -373,6 +373,18 @@ function HemodynamicsStageSession({
     if (visualPane) visualPane.scrollTop = 0
   }, [activeStep.id, readingPart])
 
+  /*
+   * A new stop of the walk is read from its top. The text column goes back to the task card's
+   * start; the visual column stays where the learner left it, so the catheter map and the
+   * reference tracing change in place under their eyes.
+   */
+  const walkedStop = useRef(walkStopIndex)
+  useEffect(() => {
+    if (walkedStop.current === walkStopIndex) return
+    walkedStop.current = walkStopIndex
+    nowFocusRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [walkStopIndex])
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     const url = new URL(window.location.href)
@@ -968,6 +980,9 @@ function HemodynamicsStageSession({
         const last = walkStopIndex >= interaction.stops.length - 1
         return {
           ...base,
+          // Next stop stays at the foot of the view, so a stop can be read and left without
+          // scrolling to find the button (owner, 2026-11-11).
+          pinActions: true,
           status: walkPositionWords(walkStopIndex, interaction.stops.length),
           primary: {
             label: last ? 'Finish the walk' : 'Next stop',
@@ -1632,12 +1647,15 @@ function HemodynamicsStageSession({
       />
     </div>
   ) : null
+  // The walk's reference tracing goes under the catheter map: where the tip is, then what it shows.
+  const figureUnderSimulator = presentation.figure === 'normal-reference'
   const visual =
     sectionFigure || (!readingOnly && (simulatorShown || questionFigure)) ? (
       <>
-        {sectionFigure}
+        {figureUnderSimulator ? null : sectionFigure}
         {!readingOnly && simulatorShown ? simulator : null}
         {!readingOnly ? questionFigure : null}
+        {figureUnderSimulator ? sectionFigure : null}
       </>
     ) : null
 
