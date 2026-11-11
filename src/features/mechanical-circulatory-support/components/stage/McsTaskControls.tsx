@@ -28,8 +28,7 @@ export function McsTaskControls({
   if (!controls.length)
     return (
       <p data-task-controls-locked>
-        Nothing to adjust on this task. Every device control is under All device controls, at the
-        foot of this pane.
+        Nothing to adjust on this task. The controls are under All device controls, below.
       </p>
     )
   return (

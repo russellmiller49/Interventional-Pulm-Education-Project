@@ -19,6 +19,7 @@ import { mcsStageLessonIds } from '../content/stageLessons'
 import { mcsStoryProblemsFor } from '../content/storyProblems'
 import { mcsGrammarRowsFor, MCS_SUPPORT_GRAMMAR } from '../content/supportGrammar'
 import {
+  commitTransfer,
   currentStepId,
   mountSection,
   setupMcsStage,
@@ -105,7 +106,7 @@ describe('the diagnostic table on Explain', () => {
   })
 })
 
-describe('the live panel on Explain', () => {
+describe('the live panel, on the steps where it stands open', () => {
   beforeEach(() => setupMcsStage())
 
   it('folds the parts the step is not about, and keeps their live values in the heading', () => {
@@ -126,9 +127,12 @@ describe('the live panel on Explain', () => {
     expect(q('[data-panel-section="rv-pathways"]')!.tagName).toBe('SECTION')
   })
 
-  it('folds nothing on a step other than Explain', () => {
+  it('folds the same parts on Recognize, the other step where the panel stands open', () => {
     mountSection('impella-suction-purge-rv')
-    expect(q('[data-panel-folded]')).toBeNull()
+    expect(currentStepId()).toBe('impella-suction-purge-rv-recognize')
+    for (const id of MCS_EXPLAIN_FOLDED_PANEL_SECTIONS['impella-suction-purge-rv'])
+      expect(q(`[data-panel-section="${id}"]`)).toHaveAttribute('data-panel-folded')
+    expect(q('[data-panel-section="rv-pathways"]')!.tagName).toBe('SECTION')
   })
 
   it('folds nothing in a section with no entry', () => {
@@ -187,5 +191,51 @@ describe('two story problems that start from one state', () => {
     const again = second.querySelector<HTMLDetailsElement>('[data-story-baseline-again]')!
     expect(again.open).toBe(false)
     expect(again.querySelector('[data-story-baseline-id]')).not.toBeNull()
+  })
+})
+
+describe('the section recap on the last step', () => {
+  beforeEach(() => setupMcsStage())
+
+  it('waits under its heading until the closing answer is committed, then opens', () => {
+    mountSection('lvad-parameters-assessment')
+    openTask('transfer')
+    const recap = q('[data-section-recap]')!
+    expect(recap).toHaveAttribute('data-recap-folded')
+    const fold = recap.querySelector<HTMLDetailsElement>('[data-section-recap-fold]')!
+    expect(fold.open).toBe(false)
+    // Still there, one press away: the objective and the distinctions are inside the fold.
+    expect(fold.querySelector('[data-recap-objective]')).not.toBeNull()
+    expect(fold.querySelector('[data-recap-distinctions]')).not.toBeNull()
+
+    commitTransfer('lvad-parameters-assessment')
+    expect(q('[data-section-recap]')).not.toHaveAttribute('data-recap-folded')
+    expect(q('[data-section-recap-fold]')).toBeNull()
+    expect(q('[data-recap-objective]')).not.toBeNull()
+  })
+
+  it("keeps the module's one boundary statement outside the fold, on the closing screen", () => {
+    mountSection('mcs-device-selection-integration')
+    openTask('transfer')
+    const statement = q('[data-section-recap] [data-teaching-simulator-statement]')!
+    expect(statement).not.toBeNull()
+    expect(statement.closest('details')).toBeNull()
+  })
+})
+
+describe('the "This section" framing', () => {
+  beforeEach(() => setupMcsStage())
+
+  it('keeps the question and the one idea open, and folds the rest under one heading', () => {
+    mountSection('lvad-alarms-emergencies')
+    const framing = q('[data-teaching-block="framing"]')!
+    const more = framing.querySelector<HTMLDetailsElement>('[data-framing-more]')!
+    expect(more.open).toBe(false)
+    expect(more.querySelector('summary')).toHaveTextContent('More about this section')
+    expect(more).toHaveTextContent('By the end you can:')
+    expect(more).toHaveTextContent('On the screen right now:')
+    expect(more).toHaveTextContent('Look here:')
+    const open = [...framing.querySelectorAll('p')].filter((p) => !p.closest('details'))
+    expect(open.some((p) => p.textContent?.startsWith('One idea:'))).toBe(true)
   })
 })

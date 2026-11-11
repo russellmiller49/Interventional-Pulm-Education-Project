@@ -8,7 +8,8 @@
  */
 
 /**
- * The live panel's sub-sections that fold on the Explain step. Only parts that are neither the
+ * The live panel's sub-sections that fold on the two steps where the panel stands open,
+ * Recognize and Explain (the name is from the first of the two to use it). Only parts that are neither the
  * section's stated idea nor its primary target fold; a section with no entry keeps its whole
  * panel open.
  *

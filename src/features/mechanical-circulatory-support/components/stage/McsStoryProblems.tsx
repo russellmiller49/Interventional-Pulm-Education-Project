@@ -38,9 +38,8 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
     >
       <h3 id="story-problems-heading">Story problems</h3>
       <p className={styles.storyIntro}>
-        Two short problems. In each, a colleague does one thing for a reason that sounds sensible.
-        Predict what happens or open the worked example, then run the change on a copy of this
-        circulation and compare the values.
+        Two short problems. In each, a colleague makes one sensible-sounding change. Predict what
+        happens or open the worked example, then run it on a copy of this circulation and compare.
       </p>
       {stories.map((story, index) => (
         <StoryCard

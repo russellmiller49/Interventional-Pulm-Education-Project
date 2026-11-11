@@ -144,7 +144,7 @@ const WALK_LOCATION: StageStepLocation = {
 }
 
 export const MCS_EXPLAIN_READING_INSTRUCTION =
-  'Read why the readings moved, in the explanation below. The question under it is an optional reflection, with a worked response you can open at once.'
+  'Read why the readings moved, below. The reflection under it is optional; its worked response opens at once.'
 
 export const MCS_EXPLAIN_SORT_INSTRUCTION =
   'Sort each item into what you can set, what the console reports, and what the patient’s loading decides. The question under the sort is a separate, optional reflection.'

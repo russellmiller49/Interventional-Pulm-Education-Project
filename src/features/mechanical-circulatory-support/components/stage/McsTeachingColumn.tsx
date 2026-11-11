@@ -234,8 +234,11 @@ export function McsTeachingColumn({
       : 'collapsed'
   const rows = mcsGrammarRowsFor(lesson.sectionId)
   const wholeGrammarTable = MCS_WHOLE_GRAMMAR_TABLE_SECTIONS.includes(lesson.sectionId)
+  // On the two steps where the live panel stands open, Recognize and Explain.
   const foldedPanelSections = new Set(
-    explaining ? (MCS_EXPLAIN_FOLDED_PANEL_SECTIONS[lesson.sectionId] ?? []) : [],
+    explaining || phase === 'recognize'
+      ? (MCS_EXPLAIN_FOLDED_PANEL_SECTIONS[lesson.sectionId] ?? [])
+      : [],
   )
   const stripControls = mcsControlsForDevice(lesson.startingDevice).filter(
     (control) => spec.controlStrip[control.id] !== undefined,
@@ -263,17 +266,26 @@ export function McsTeachingColumn({
           <p>
             <strong>One idea:</strong> {spec.newConcept}
           </p>
-          <p>
-            <strong>By the end you can:</strong> {spec.objective}
-          </p>
-          <p>
-            <strong>On the screen right now:</strong> {contract.teaching.whatYouAreSeeing}
-          </p>
-          {target ? (
+          {/*
+           * The question and the one idea stay open: they are what the section is. The objective,
+           * what the screen shows and where to look were another hundred words open on every
+           * first step (owner, 2026-11-10); they are one press away under their own heading. The
+           * step's own instruction already says where to look.
+           */}
+          <details data-framing-more>
+            <summary>More about this section</summary>
             <p>
-              <strong>Look here:</strong> {target.label}. {contract.whyThisView}
+              <strong>By the end you can:</strong> {spec.objective}
             </p>
-          ) : null}
+            <p>
+              <strong>On the screen right now:</strong> {contract.teaching.whatYouAreSeeing}
+            </p>
+            {target ? (
+              <p>
+                <strong>Look here:</strong> {target.label}. {contract.whyThisView}
+              </p>
+            ) : null}
+          </details>
         </section>
       </StageBlock>
 
