@@ -10,7 +10,8 @@ const N = EBUS_NUMBERS.value
  * A fellow who drives a diagnostic bronchoscope well meets three differences at once: the lens
  * looks obliquely forward, the transducer sees only where it touches, and the two views trade
  * places as the tip flexes. The live example is the course's linked console in demonstration
- * form; nothing here is gated, and the unit's task is the matching.
+ * form. Since 2026-11-10 the same console is then a short task (find the airway view, then bring
+ * the image back), followed by the matching.
  *
  * Sources. The view angle and field are the project's recorded nominal optics for the Olympus
  * BF-UC180F (`BF_UC180F_NOMINAL`), which is also what the simulated lens uses. The statements
@@ -22,7 +23,7 @@ export const scopeLesson: Lesson = {
   id: 'ebus-scope',
   title: 'The EBUS scope: lens, transducer and balloon',
   topic: 'Prepare',
-  minutes: 8,
+  minutes: 9,
   objective:
     'Predict where the tip will travel from an oblique white-light view, and say what each part of the tip does.',
   recall:
@@ -127,8 +128,8 @@ export const scopeLesson: Lesson = {
   },
   /*
    * The linked console in demonstration form: three views, tip flexion and rotation, no gate.
-   * It carries the orientation lab's configuration because that is the console this unit shows;
-   * the unit has no acquisition step, so nothing here is held or checked.
+   * It carries the orientation lab's configuration because that is the console this unit shows.
+   * Nothing on the demonstration is held or checked; the task that follows it is `transferLab`.
    */
   lab: {
     kind: 'simulator',
@@ -140,6 +141,19 @@ export const scopeLesson: Lesson = {
     initialRoll: 0,
     instruction:
       'Move Tip flexion and watch the white-light view and the ultrasound image trade places.',
+  },
+  // The same console as a task (2026-11-10): flexion alone, and the two views found in turn.
+  transferLab: {
+    kind: 'simulator',
+    linkedLesson: 'scope-orientation',
+    linkedVariant: 'airway-view',
+    goal: 'airway-view',
+    presetKey: 'station_7_node_a::rms',
+    controls: ['flexion'],
+    freeDrive: true,
+    initialRoll: 0,
+    instruction:
+      'Use Tip flexion only. First flex down until the airway ahead sits in the middle of the white-light view, and notice what happens to the ultrasound image. Then flex up until the wall fills the white-light view and tissue echoes return.',
   },
   takeaways: [
     'The tip travels below the centre of the white-light image.',

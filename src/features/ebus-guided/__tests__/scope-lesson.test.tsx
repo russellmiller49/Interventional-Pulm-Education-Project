@@ -79,11 +79,18 @@ describe('the EBUS scope lesson', () => {
     expect(flow.map((activity) => activity.kind)).toEqual([
       'prediction',
       'briefing',
+      'acquisition',
       'application',
       'transfer',
     ])
-    // The lab is a demonstration only: nothing in this lesson is acquired or held.
-    expect(flow.some((activity) => activity.interaction === 'acquire')).toBe(false)
+    // The briefing's lab is a demonstration; the one acquisition after it is the airway-view task
+    // (2026-11-10), on flexion alone.
+    expect(flow.filter((activity) => activity.interaction === 'acquire')).toHaveLength(1)
+    expect(flow[2]).toMatchObject({
+      task: 'airway-view',
+      title: 'Look along the airway, then bring back the image',
+    })
+    expect(lesson.transferLab).toMatchObject({ goal: 'airway-view', controls: ['flexion'] })
     render(<LessonHost lesson={lesson} />)
     expect(screen.getByText(lesson.question.prompt)).toBeVisible()
     expect(screen.queryByText(lesson.paragraphs[0])).not.toBeInTheDocument()
@@ -104,7 +111,7 @@ describe('the EBUS scope lesson', () => {
     expect(primary()).toBeEnabled()
   })
 
-  it('has one task, the matching of the four parts of the tip, and marks an unsafe transfer answer', () => {
+  it('matches the four parts of the tip, and marks an unsafe transfer answer', () => {
     expect(lesson.matching!.pairs.map((pair) => pair.cue)).toEqual([
       'The lens, looking obliquely forward',
       'The transducer, at the very tip on one side',
@@ -113,7 +120,7 @@ describe('the EBUS scope lesson', () => {
     ])
     expect(lesson.sequence).toBeUndefined()
     expect(lesson.transfer.choices.filter((choice) => choice.unsafe)).toHaveLength(1)
-    // Its lab configuration is never used as a gate, but it is still a well-formed lab.
+    // The demonstration's lab configuration is never used as a gate, but it is a well-formed lab.
     expect(labGoalRequirements(lesson.lab!, {} as never).length).toBeGreaterThan(0)
   })
 })

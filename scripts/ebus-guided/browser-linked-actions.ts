@@ -4,7 +4,10 @@ import {
   LANDMARK_NAMES,
   LINKED_LANDMARKS,
   LINKED_SWEEP_TOLERANCES,
+  linkedLateralPosition,
+  linkedOpticView,
   type LinkedLesson,
+  type LinkedVariant,
 } from '../../src/lib/ebus-linked-contract'
 
 const WORKBENCH = 'iframe[title="EBUS workbench"]'
@@ -157,12 +160,104 @@ export async function sweepLinked(page: Page) {
   await expect(panel).toHaveAttribute('data-sweep-state', 'complete')
 }
 
-export async function performLinked(page: Page, lesson: LinkedLesson, changed = false) {
+/**
+ * The advance-and-withdraw task: the node starts to one side of the middle and the gate is shut.
+ * The scope is moved one millimetre at a time the way the lesson teaches (a node on the side of
+ * the orientation dot comes back by withdrawing, one on the tip side by advancing) until the
+ * panel reports the middle; the gate then opens and the observation agrees with the panel.
+ */
+export async function slideToMiddle(page: Page) {
   const frame = page.frameLocator(WORKBENCH)
   const primary = page.locator('[data-now-primary]')
+  const panel = frame.locator('[data-along-airway-state]')
+  const slider = frame.getByRole('slider', { name: /^Scope position/ })
+  await expect(panel).toHaveAttribute('data-along-airway-state', /^(left|right)$/, {
+    timeout: 60000,
+  })
+  await expect(frame.locator('[data-along-airway-task]')).toBeVisible()
+  // No landmark task and no sweep panel in this task, and rotation is not offered.
+  await expect(frame.locator('[data-landmark-target]')).toHaveCount(0)
+  await expect(frame.locator('[data-sweep-state]')).toHaveCount(0)
+  await expect(frame.getByLabel('Scope rotation', { exact: true })).toHaveCount(0)
+  await expect(primary).toBeDisabled()
+  await expect(page.locator('[data-requirement="centre-position"]')).toBeVisible()
+  for (let guard = 0; guard < 40; guard++) {
+    const state = await panel.getAttribute('data-along-airway-state')
+    if (state === 'centre') break
+    if (state !== 'left' && state !== 'right') {
+      // A frame is arriving; read again.
+      await page.waitForTimeout(200)
+      continue
+    }
+    const value = Number(await slider.inputValue())
+    const next = String(value + (state === 'right' ? -1 : 1))
+    await slider.fill(next)
+    await expect(slider).toHaveValue(next)
+    await expect(panel).not.toHaveAttribute('data-along-airway-state', 'pending')
+  }
+  await expect(panel).toHaveAttribute('data-along-airway-state', 'centre')
+  await expect
+    .poll(async () => {
+      const observation = await linkedObservation(page)
+      return (
+        !!observation?.usedControls.includes('advance') &&
+        linkedLateralPosition(observation.targetLateral)
+      )
+    })
+    .toBe('centre')
+  await expect(primary).toBeEnabled({ timeout: 30000 })
+}
+
+/**
+ * The scope lesson's task: tip flexion alone. Flexing up first does not open the gate; the lens
+ * has to look along the airway once (the panel says so and the ultrasound image goes), and then
+ * come back onto the wall with tissue echoes.
+ */
+export async function findBothViews(page: Page) {
+  const frame = page.frameLocator(WORKBENCH)
+  const primary = page.locator('[data-now-primary]')
+  const panel = frame.locator('[data-airway-view-state]')
+  const flexion = frame.getByLabel('Tip flexion', { exact: true })
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'find-airway', { timeout: 60000 })
+  await expect(frame.locator('[data-airway-view-task]')).toBeVisible()
+  await expect(frame.getByLabel('Scope rotation', { exact: true })).toHaveCount(0)
+  await expect(primary).toBeDisabled()
+  // Onto the wall without having looked along the airway: an image, and the gate still shut.
+  await flexion.fill('20')
+  await expect
+    .poll(async () => (await linkedObservation(page))?.contactQuality, { timeout: 30000 })
+    .toBeGreaterThanOrEqual(0.8)
+  await expect(panel).toHaveAttribute('data-airway-viewed', 'false')
+  await expect(primary).toBeDisabled()
+  await expect(page.locator('[data-requirement="airway-seen"]')).toBeVisible()
+  // Down: the lens looks along the airway.
+  await flexion.fill('-20')
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'airway')
+  await expect(panel).toHaveAttribute('data-airway-viewed', 'true')
+  await expect
+    .poll(async () => linkedOpticView((await linkedObservation(page))?.opticalWallMm, 0))
+    .toBe('lumen')
+  await expect(primary).toBeDisabled()
+  // Up again: the wall, and the image.
+  await flexion.fill('20')
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'wall')
+  await expect.poll(async () => (await linkedObservation(page))?.linked?.airwayViewed).toBe(true)
+  await expect(primary).toBeEnabled({ timeout: 30000 })
+}
+
+export async function performLinked(
+  page: Page,
+  lesson: LinkedLesson,
+  variant: LinkedVariant = 'guided',
+) {
+  const frame = page.frameLocator(WORKBENCH)
+  const primary = page.locator('[data-now-primary]')
+  const changed = variant === 'changed-window'
   await expect
     .poll(async () => (await linkedObservation(page))?.linked?.source?.variant, { timeout: 60000 })
-    .toBe(changed ? 'changed-window' : 'guided')
+    .toBe(variant)
+  if (variant === 'along-airway') return slideToMiddle(page)
+  if (variant === 'airway-view') return findBothViews(page)
   if (lesson === 'acoustic-contact') {
     await frame.getByLabel('Tip flexion', { exact: true }).fill('10')
     await expect

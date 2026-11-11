@@ -92,8 +92,8 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   for (const unit of CONTENT_LESSONS) {
     /*
      * A unit has one piece of work: a lab the learner acquires an image in, or a matching or
-     * ordering task. A unit with a task may also show a lab, but only as an ungated live example
-     * beside its teaching (the scope lesson), never as a second thing to complete.
+     * ordering task. The scope lesson is the one exception (2026-11-10): its console is shown as
+     * an ungated example, then asked for once as a short task, before its matching.
      */
     expect([unit.sequence, unit.matching].filter(Boolean).length).toBeLessThanOrEqual(1)
     expect(!!unit.lab || !!unit.sequence || !!unit.matching).toBe(true)
@@ -101,7 +101,9 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
       (activity) => activity.lessonId === unit.id,
     )
     const acquires = steps.some((activity) => activity.interaction === 'acquire')
-    if (unit.sequence || unit.matching) expect(acquires).toBe(false)
+    if (unit.id === 'ebus-scope')
+      expect(acquires && !!unit.matching && !!unit.transferLab).toBe(true)
+    else if (unit.sequence || unit.matching) expect(acquires).toBe(false)
     else expect(acquires).toBe(true)
     if (unit.lab && !acquires)
       expect(steps.some((activity) => activity.image === 'demonstration')).toBe(true)

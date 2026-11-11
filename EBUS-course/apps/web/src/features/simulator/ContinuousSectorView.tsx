@@ -50,12 +50,24 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
   useEffect(()=>{
     const element=overlay.current;if(!element||!frame||!volume)return;
     element.width=frame.width;element.height=frame.height;const ctx=element.getContext('2d');if(!ctx)return;
-    ctx.clearRect(0,0,frame.width,frame.height);if(!teaching||assessment)return;
+    ctx.clearRect(0,0,frame.width,frame.height);
+    // The advance-and-withdraw task: the node the learner found in the rotation task is outlined so
+    // it can be followed across the image, and a dashed line marks the middle it is brought to.
+    if(guided?.config.linkedVariant==='along-airway'&&!guided.config.demonstration){
+      const targetId=volume.metadata.labels.findIndex(label=>label.key===guided.targetKey),w=frame.width,h=frame.height,ids=frame.labelImage;
+      ctx.strokeStyle='rgba(255,255,147,.85)';ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(w/2,h*.11);ctx.lineTo(w/2,h*.93);ctx.stroke();ctx.setLineDash([]);
+      if(targetId>=3){
+        ctx.fillStyle='rgba(120,230,140,.95)';
+        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;if(ids[i]!==targetId)continue;if(ids[i-1]!==targetId||ids[i+1]!==targetId||ids[i-w]!==targetId||ids[i+w]!==targetId)ctx.fillRect(x-.5,y-.5,2,2);}
+      }
+      return;
+    }
+    if(!teaching||assessment)return;
     const colors=volume.metadata.labels.map(label=>label.kind==='node'?[110,210,110]:[80,170,245]);
     const image=ctx.createImageData(frame.width,frame.height);
     for(let i=0;i<frame.labelImage.length;i++){const id=frame.labelImage[i];if(id<3)continue;const c=colors[id],p=i*4;image.data[p]=c[0];image.data[p+1]=c[1];image.data[p+2]=c[2];image.data[p+3]=volume.metadata.labels[id].key===activeStructure?130:55;}
     ctx.putImageData(image,0,0);
-  },[frame,volume,teaching,assessment,activeStructure]);
+  },[frame,volume,teaching,assessment,activeStructure,guided?.config.linkedVariant,guided?.config.demonstration,guided?.targetKey]);
   // A click on the image reports the structure under it and within a few pixels of it, so the
   // lesson can ask the learner to find a structure on ultrasound. Nothing is named on screen here.
   const pickCallback = useRef(guided?.onPick);
@@ -125,7 +137,15 @@ export function ContinuousSectorView({caseData,volume,error,pose,contactQuality,
     const targetId = volume?.metadata.labels.findIndex(l => l.key === targetKey) ?? -1;
     const samePose = frame && JSON.stringify(frame.pose) === JSON.stringify(acousticPose);
     if (samePose && !baseline && guided?.config.linkedLesson === 'acoustic-contact' && frame) setBaseline({frame,id:frameId});
-    frameCallback.current?.({ renderSequence: renderedSequence.current, pose:frame?.pose, settings:frame?.controls, baselineFrameId:baseline?.id, ready: !!samePose && frame?.controls.depthMm === controls.depthMm && frame?.controls.gainDb === controls.gainDb && frame?.controls.contactQuality === contactQuality && !error && !renderError, targetVisible: !!frame && frame.structures.some(s => s.id === targetId), depth: controls.depthMm, gain: controls.gainDb, frozen:held, poseKey, frameId });
+    // Where the target sits across this frame (0 = image left, 1 = image right): the mean column
+    // of its own pixels in the frame's label image. Null when too little of it is in the image.
+    let targetLateral: number | null = null;
+    if (frame && targetId >= 3) {
+      let sum = 0, count = 0;
+      for (let i = 0; i < frame.labelImage.length; i++) if (frame.labelImage[i] === targetId) { sum += i % frame.width; count += 1; }
+      if (count >= 40) targetLateral = (sum / count + 0.5) / frame.width;
+    }
+    frameCallback.current?.({ targetLateral, renderSequence: renderedSequence.current, pose:frame?.pose, settings:frame?.controls, baselineFrameId:baseline?.id, ready: !!samePose && frame?.controls.depthMm === controls.depthMm && frame?.controls.gainDb === controls.gainDb && frame?.controls.contactQuality === contactQuality && !error && !renderError, targetVisible: !!frame && frame.structures.some(s => s.id === targetId), depth: controls.depthMm, gain: controls.gainDb, frozen:held, poseKey, frameId });
   }, [frame, volume, acousticPose, controls.depthMm, controls.gainDb, frozen, poseKey, targetKey, error, renderError, contactQuality, held, frameId, baseline, guided?.config.linkedLesson]);
   const allowed = (control:'depth'|'gain'|'freeze') => !guided || (!guided.config.locked && guided.config.controls.includes(control));
   const act = (control:'depth'|'gain'|'freeze', apply:()=>void) => { if (!allowed(control)) return; if (guided) guided.onAction(control,apply); else apply(); };

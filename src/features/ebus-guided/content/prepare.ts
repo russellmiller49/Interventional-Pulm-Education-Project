@@ -236,15 +236,17 @@ export const prepareLessons: Lesson[] = [
     id: 'scope-orientation',
     title: 'Scope orientation and the imaging plane',
     topic: 'Prepare',
-    minutes: 8,
-    objective: 'Relate scope rotation to a change in the ultrasound plane.',
+    minutes: 10,
+    objective:
+      'Relate rotating, advancing and withdrawing the scope to what each does to the ultrasound image.',
     recall:
       'The convex EBUS transducer sits on one side of the scope tip, just beyond the lens and the working-channel outlet.',
     concept: 'Endoscopic and ultrasound views answer different questions',
     paragraphs: [
       'The bronchoscopic view shows where the tip is in the airway. The ultrasound image shows the tissue beyond the wall, as a thin slice that runs along the length of the scope from the transducer. You need both: white light to know where you are, ultrasound to see what lies beside you.',
       'The green orientation dot at the upper right of the ultrasound image marks the proximal (cephalad) side of the view. Image right is toward the patient’s head, image left is toward the tip of the scope, and the needle enters the image from the side of the dot.',
-      'Rotating the scope turns that slice around the airway. Structures enter and leave the image although neither the scope tip nor the node has moved along the airway. Flexing the tip presses the transducer against the wall; advancing or withdrawing slides the slice along the airway. In this lesson you change rotation alone.',
+      'Rotating the scope turns that slice around the airway. A structure enters and leaves the image although neither the scope tip nor the node has moved along the airway.',
+      'Advancing or withdrawing slides the slice along the airway instead. A structure that stays in the plane moves across the image: toward the green dot as you advance, away from it as you withdraw. Flexing the tip presses the transducer against the wall. In this lesson you rotate first, then advance and withdraw.',
     ],
     checklist: [
       'Locate the carina and main bronchi.',
@@ -285,6 +287,19 @@ export const prepareLessons: Lesson[] = [
       initialRoll: 85,
       instruction:
         'Move the Scope rotation slider through at least 20° and watch the node enter and leave the ultrasound image. When the subcarinal node is in the image, click it, and finish with it in view.',
+    },
+    // The second movement (2026-11-10): the same node, held in plane, with the scope moved along
+    // the airway so the node starts at one edge of the image.
+    transferLab: {
+      kind: 'simulator',
+      linkedLesson: 'scope-orientation',
+      linkedVariant: 'along-airway',
+      goal: 'centre',
+      presetKey: 'station_7_node_a::rms',
+      controls: ['advance'],
+      initialRoll: 0,
+      instruction:
+        'The scope has been moved along the airway, and the rotation is set so the node stays in the plane. The node, outlined in green, now sits to one side of the image. Use the Scope position slider to advance or withdraw, watch the node slide across the image, and finish with it on the dashed middle line.',
     },
     observation: {
       ...q(
@@ -327,6 +342,7 @@ export const prepareLessons: Lesson[] = [
     diagram: 'station-map',
     takeaways: [
       'A sector is a slice through anatomy.',
+      'Rotation takes a structure out of the plane; advancing or withdrawing slides it across the image.',
       'Correlate the ultrasound plane with airway landmarks.',
     ],
     sources: ['ics2023', 'simulation'],

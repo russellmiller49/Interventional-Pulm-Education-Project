@@ -1,4 +1,5 @@
 import type { Lesson } from './types'
+import type { LinkedVariant } from '@/lib/ebus-linked-contract'
 import type { ExaminationCase, RecordTask } from '../engine/examination'
 import { EXAMINATION_CASE, MODEL_WINDOW_CASE } from './examination-cases'
 
@@ -33,7 +34,7 @@ export interface ActivitySpec {
   interaction: Interaction
   teaching: TeachingPart[]
   questions: QuestionSlot[]
-  task?: 'guided' | 'changed-window'
+  task?: LinkedVariant
   /**
    * The content unit this step draws on, in a lesson built from two (`Lesson.parts`). Its text,
    * lab, checks and boundary are that unit's. Absent: the unit with the lesson's own id.
@@ -149,7 +150,7 @@ const acquire = (
   id: string,
   title: string,
   presentation: Presentation,
-  task: 'guided' | 'changed-window' = 'guided',
+  task: LinkedVariant = 'guided',
 ): ActivitySpec => ({
   id,
   title,
@@ -163,7 +164,11 @@ const acquire = (
   instruction:
     task === 'changed-window'
       ? 'The scope has moved. Find the same node again from the new position.'
-      : 'Now try it yourself.',
+      : task === 'along-airway'
+        ? 'The rotation is set. Now move the scope along the airway.'
+        : task === 'airway-view'
+          ? 'Now find both views yourself, one after the other.'
+          : 'Now try it yourself.',
 })
 const apply = (
   id: string,
@@ -259,6 +264,13 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       instruction:
         'Read the lead, then move Tip flexion both ways in the lab under it and watch the white-light view and the ultrasound image trade places. The detail continues below the lab.',
     },
+    // The two views, found in turn with flexion alone: the airway ahead, then the image.
+    acquire(
+      'airway-then-wall',
+      'Look along the airway, then bring back the image',
+      'ultrasound',
+      'airway-view',
+    ),
     apply('tip-parts', 'Match each part of the tip to what it does', 'matching'),
     transfer('Keep the image or the airway view'),
   ],
@@ -266,6 +278,8 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     predict('plane-interpretation', 'Interpret a change in plane'),
     brief('distal-scope', 'Relate the scope to the ultrasound plane', 'linked', 'demonstration'),
     acquire('acquire-sweep', 'Sweep through the node', 'ultrasound'),
+    // The second movement: the plane slides along the airway and the node crosses the image.
+    acquire('slide-plane', 'Slide the plane along the airway', 'ultrasound', 'along-airway'),
     explain(),
     transfer('Review a different apparent size'),
   ],

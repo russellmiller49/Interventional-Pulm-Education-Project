@@ -38,10 +38,25 @@ const storedProgress = (page: Page) =>
 /** Select the keyed response and check it; the caller moves on. */
 async function answer(page: Page, question: Question) {
   const card = page.locator(`[data-question-id="${question.id}"]`)
-  await card
-    .getByLabel(question.choices.find((choice) => choice.correct)!.text, { exact: true })
-    .check()
-  await card.getByRole('button', { name: 'Check response', exact: true }).click()
+  const keyed = card.getByLabel(question.choices.find((choice) => choice.correct)!.text, {
+    exact: true,
+  })
+  const other = card.getByLabel(question.choices.find((choice) => !choice.correct)!.text, {
+    exact: true,
+  })
+  const check = card.getByRole('button', { name: 'Check response', exact: true })
+  // On a lesson's first screen the option can be clicked before the page is interactive: the
+  // radio shows selected but the choice was not registered, and the check stays disabled. Choose
+  // again, as a learner would, until the check opens.
+  await expect(async () => {
+    await keyed.check()
+    if (await check.isDisabled()) {
+      await other.check()
+      await keyed.check()
+    }
+    await expect(check).toBeEnabled({ timeout: 1500 })
+  }).toPass({ timeout: 30000 })
+  await check.click()
   await expect(card.locator('[data-answer-verdict]')).toHaveAttribute(
     'data-verdict-outcome',
     'correct',
@@ -54,11 +69,11 @@ async function performActivity(page: Page, lesson: Lesson, activity: LessonActiv
   // A lesson may hold two content units; a step's lab, task and checks are its own unit's.
   const unit = partsOf(lesson).find((part) => part.id === activity.lessonId)!
   if (activity.interaction === 'acquire') {
-    const changed = activity.task === 'changed-window'
-    const lab = changed ? unit.transferLab! : unit.lab!
+    const variant = activity.task ?? 'guided'
+    const lab = variant === 'guided' ? unit.lab! : unit.transferLab!
     const frame = page.frameLocator(WORKBENCH)
     await expect(primary(page)).toBeDisabled()
-    if (lab.linkedLesson) await performLinked(page, lab.linkedLesson, changed)
+    if (lab.linkedLesson) await performLinked(page, lab.linkedLesson, variant)
     else if (lab.kind === 'model') await performModel(frame, lab.modelPackage!)
     else if (lab.kind === 'knobology') await performRecorded(page, lab)
     else {
@@ -75,7 +90,7 @@ async function performActivity(page: Page, lesson: Lesson, activity: LessonActiv
       })
       .toBe(true)
     await page.screenshot({
-      path: out + '/lab-' + lesson.id + (changed ? '-changed-window' : '') + '.png',
+      path: out + '/lab-' + lesson.id + (variant === 'guided' ? '' : '-' + variant) + '.png',
     })
   }
   if (activity.interaction === 'record') await performRecord(page, activity)

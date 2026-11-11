@@ -84,7 +84,8 @@ async function main() {
             await page.screenshot({ path: `${out}/${lesson.id}-introduction.png`, fullPage: false })
         }
         if (activity.interaction === 'acquire') {
-          const lab = activity.task === 'changed-window' ? unit.transferLab! : unit.lab!
+          const variant = activity.task ?? 'guided'
+          const lab = variant === 'guided' ? unit.lab! : unit.transferLab!
           const linkedConsole = lab.kind === 'simulator' && !!lab.linkedLesson
           // The image is the learner's to acquire: the primary control waits for the lab's steps,
           // and leaving without an image is always offered.
@@ -94,8 +95,7 @@ async function main() {
           const surface = page.locator('[data-now-card]')
           if (linkedConsole) await expect(surface).toHaveAttribute('data-console', 'true')
           else await expect(surface).toHaveAttribute('data-top-advance', 'true')
-          if (lab.linkedLesson)
-            await performLinked(page, lab.linkedLesson, activity.task === 'changed-window')
+          if (lab.linkedLesson) await performLinked(page, lab.linkedLesson, variant)
           else if (lab.kind === 'model') {
             await performModel(workbench(), lab.modelPackage!)
             await expect(primary()).toBeEnabled({ timeout: 30000 })

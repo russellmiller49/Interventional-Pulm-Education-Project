@@ -37,6 +37,8 @@ export interface EbusLinkedEvidence {
   sweeps?: Partial<Record<'rms' | 'lms' | 'default', LinkedSweep>>
   source?: LinkedFrameSource
   baselineFrameId?: string
+  /** The airway-view task: the lens has looked along the airway at least once in this session. */
+  airwayViewed?: boolean
 }
 export type EbusControl =
   | 'roll'
@@ -79,6 +81,10 @@ export interface EbusObservation {
   frameReady: boolean
   contactQuality: number
   targetVisible: boolean
+  /** Where the target sits across the image, 0 (tip side) to 1 (dot side); absent when not seen. */
+  targetLateral?: number
+  /** Lens to the first airway wall along the optical axis, in millimetres; absent with no hit. */
+  opticalWallMm?: number
   roll: number
   flexion: number
   depth: number
@@ -213,6 +219,12 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
     ) &&
     typeof v.lastAction === 'string' &&
     v.lastAction.length < 120 &&
+    (v.opticalWallMm === undefined ||
+      (finite(v.opticalWallMm) &&
+        Number(v.opticalWallMm) >= 0 &&
+        Number(v.opticalWallMm) <= 400)) &&
+    (v.targetLateral === undefined ||
+      (finite(v.targetLateral) && Number(v.targetLateral) >= 0 && Number(v.targetLateral) <= 1)) &&
     (v.acquisitionSession === undefined ||
       (typeof v.acquisitionSession === 'string' && v.acquisitionSession.length < 180)) &&
     (v.recorded === undefined || isRecordedFrameSource(v.recorded)) &&
@@ -255,6 +267,7 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
           (typeof v.linked.baselineFrameId === 'string' &&
             v.linked.baselineFrameId.length < 160)) &&
         (v.linked.source === undefined || isLinkedFrameSource(v.linked.source)) &&
+        (v.linked.airwayViewed === undefined || typeof v.linked.airwayViewed === 'boolean') &&
         (v.linked.identifiedStructures === undefined ||
           (Array.isArray(v.linked.identifiedStructures) &&
             v.linked.identifiedStructures.length <= 8 &&
