@@ -175,6 +175,17 @@ The plan came from a review of the module for third-year fellows and attendings,
 
 Not done in this round: the cut of about a third of the task-column text. It changes what every lesson says, so it is left for a pass of its own that you can read sentence by sentence.
 
+### Changed on November 10, 2026 (round 3), for your read
+
+1. **The same opening is lit wherever it shows.** The pointer (or the keyboard, on a choice button) on an opening's number in the scope, its marker on the CT, its button or its row in the fork's table lights all of them. The map's arcs are left out on purpose: which arc is which opening is the question being answered.
+2. **The map's turn and zoom are movements.** The map keeps one frame; inside it the map is moved to the current branch, enlarged and turned about that branch (`arcStage` in `ArcMap`), so the zoom into the next division and the turn to the scope are seen happening. The turn carries on by the shorter way round. Before this the zoomed map was centred on the branch's unturned place, so with the map turned it showed the wrong part.
+3. **Turn the map to the scope is a switch** under the map, with what it does beside it. On, the map follows the scope's own roll as it drives (`mapTurnToScope` on the live pose). It still starts off: the turn in the head is the skill.
+4. **A flip or a quarter turn of the CT is a movement** (0.45 s), and "Show me" at a match plays its turns one at a time. While the picture turns, its overlays and edge letters are out of sight and a click places nothing. A reset is drawn at once.
+5. **Where the scope is, on the whole tree** (`components/AirwayTreeInset.tsx`, `geometry/airway-tree.ts`): a small frontal picture in the corner of the scope pane, drawn from the 116 centrelines, with the route covered so far and the tip. The patient's right is on the left. It never draws the route ahead, the lesion or a name.
+6. With reduced motion every one of these is drawn at once.
+
+Not done in this round: taking the drive's clock out of the bench's state and splitting `NavigationBench` into panes. Nothing above needed it. It is a refactor with no change the learner sees, so it is left for the round that builds the rolled-scope drill, which is what needs the panes apart.
+
 ## Earlier design records
 
 These describe the course this one replaced and are kept as history: [flow redesign](flow-redesign.md), [its validation](flow-redesign-validation.md), [instructional update](instructional-update.md), [module brief](module-brief.md), [QA report](qa-report.md), [orientation QA](orientation-qa-report.md), [branch-decisions QA](branch-decisions-qa-report.md), [architecture decision](architecture-decision.md), and the screenshots under [review/](review/). The data records still apply: [source and coordinate audit](audit.md), [nomenclature](nomenclature-review.md), [nodule targets](nodule-target-review.md), [clinical review boundary](clinical-review.md), [Slicer export evidence](native-export-review.json).

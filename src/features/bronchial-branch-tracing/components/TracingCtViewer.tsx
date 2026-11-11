@@ -8,6 +8,8 @@ import {
   orientationLabels,
   orientationName,
   orientationTransform,
+  sameOrientation,
+  turnCt,
   orientedPixel,
   type CtOrientation,
   type OrientationOperation,
@@ -35,6 +37,10 @@ export interface CtOverlayLocator {
   slice: number
   pixel: [number, number]
   label: string
+  /** This opening is the one pointed at in another pane: lit here too. */
+  hot?: boolean
+  /** The pointer came onto, or left, this opening's marker. */
+  onHover?: (on: boolean) => void
 }
 /** Where the learner has followed an airway to: their own pin, checked by nothing. */
 export interface CtTrailPin {
@@ -49,6 +55,17 @@ export interface CtSliderTick {
 
 const OVERLAY_FONT = 3.6
 const PRELOAD_RADIUS = 3
+/** How long a turn or a flip of the picture takes, and a little longer to be sure it has ended. */
+const TURN_MS = 450
+const TURN_STEPS = ['left', 'right', 'flip'] as const
+type TurnStep = (typeof TURN_STEPS)[number]
+const TURN_CLASS: Record<TurnStep, string> = {
+  left: styles.ctTurnLeft,
+  right: styles.ctTurnRight,
+  flip: styles.ctTurnFlip,
+}
+const reducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 /** A press that moves less than this is a click; more, and it drags the picture. */
 const DRAG_START_PX = 4
 /** A trail pin shows, dimmed, this many slices either side of its own. */
@@ -110,6 +127,38 @@ export function TracingCtViewer({
   const [retry, setRetry] = useState(0)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [magnification, setMagnification] = useState(1)
+  // A quarter turn or a flip is shown happening: the picture is drawn as it was and moved to
+  // where it is going, then drawn there. Anything else (a reset, a jump set by the bench) is drawn
+  // at once, and so is every change when motion is reduced.
+  const [settled, setSettled] = useState(orientation)
+  const [turning, setTurning] = useState<{
+    from: CtOrientation
+    to: CtOrientation
+    step: TurnStep
+  } | null>(null)
+  if (turning && !sameOrientation(turning.to, orientation)) {
+    // Turned again before the last turn had finished: that one is done with.
+    setSettled(turning.to)
+    setTurning(null)
+  } else if (!turning && !sameOrientation(settled, orientation)) {
+    const step = TURN_STEPS.find((candidate) =>
+      sameOrientation(turnCt(settled, candidate), orientation),
+    )
+    if (step && !reducedMotion()) setTurning({ from: settled, to: orientation, step })
+    else setSettled(orientation)
+  }
+  const endTurn = () => {
+    setTurning((current) => {
+      if (current) setSettled(current.to)
+      return null
+    })
+  }
+  useEffect(() => {
+    if (!turning) return
+    // The end of the animation is not always reported (a hidden tab): do not wait on it for ever.
+    const timer = window.setTimeout(endTurn, TURN_MS + 150)
+    return () => window.clearTimeout(timer)
+  }, [turning])
   // The picture can be dragged away from where the bench centred it. The offset is kept in native
   // pixels and belongs to that centre: when the bench moves the field (a new step, a drive), the
   // picture is centred again.
@@ -179,8 +228,9 @@ export function TracingCtViewer({
 
   const field = size / magnification
   const project = (pixel: readonly number[]) => orientedPixel(pixel, view, field, orientation)
-  const canMark = Boolean(onMark) && ready && markSlice === slice
-  const canPin = Boolean(onTrail) && ready && !canMark
+  // While the picture is turning, a click has no fixed place on it.
+  const canMark = Boolean(onMark) && ready && markSlice === slice && !turning
+  const canPin = Boolean(onTrail) && ready && !canMark && !turning
   function place(point: [number, number]) {
     if (!canMark) return
     const pixel = nativePixel(point, view, field, orientation)
@@ -305,6 +355,7 @@ export function TracingCtViewer({
           data-can-mark={canMark || undefined}
           data-can-pin={canPin || undefined}
           data-ct-panned={isPanned || undefined}
+          data-ct-turning={turning ? turning.step : undefined}
         >
           <svg
             viewBox="0 0 100 100"
@@ -364,178 +415,202 @@ export function TracingCtViewer({
             }}
           >
             <rect width="100" height="100" fill="#020507" />
-            <g
-              transform={`translate(50 50) ${orientationTransform(orientation)} scale(${100 / field}) translate(${-view[0]} ${-view[1]})`}
-            >
-              {shown && (
-                <image
-                  key={`shown-${shown.url}-${retry}`}
-                  href={shown.url}
-                  x={-0.5}
-                  y={-0.5}
-                  width="512"
-                  height="512"
-                  onLoad={() => report(shown.url, 'ok')}
-                  onError={() => report(shown.url, 'error')}
-                />
+            <g transform="translate(50 50)">
+              <g
+                className={turning ? TURN_CLASS[turning.step] : undefined}
+                onAnimationEnd={endTurn}
+              >
+                <g
+                  transform={`${orientationTransform(turning ? turning.from : orientation)} scale(${100 / field}) translate(${-view[0]} ${-view[1]})`}
+                >
+                  {shown && (
+                    <image
+                      key={`shown-${shown.url}-${retry}`}
+                      href={shown.url}
+                      x={-0.5}
+                      y={-0.5}
+                      width="512"
+                      height="512"
+                      onLoad={() => report(shown.url, 'ok')}
+                      onError={() => report(shown.url, 'error')}
+                    />
+                  )}
+                  {shown?.patchUrl && (
+                    <image
+                      key={`shown-${shown.patchUrl}-${retry}`}
+                      href={shown.patchUrl}
+                      x={target.patch.originPixel[0] - 0.5}
+                      y={target.patch.originPixel[1] - 0.5}
+                      width={target.patch.size[0]}
+                      height={target.patch.size[1]}
+                      data-ct-nodule={target.id}
+                      onLoad={() => report(shown.patchUrl as string, 'ok')}
+                      onError={() => report(shown.patchUrl as string, 'error')}
+                    />
+                  )}
+                  {/* The requested plane decodes out of sight, then replaces the one above in one step. */}
+                  {pending && (
+                    <image
+                      key={`pending-${pending.url}-${retry}`}
+                      href={pending.url}
+                      x={-0.5}
+                      y={-0.5}
+                      width="512"
+                      height="512"
+                      visibility="hidden"
+                      aria-hidden="true"
+                      onLoad={() => report(pending.url, 'ok')}
+                      onError={() => report(pending.url, 'error')}
+                    />
+                  )}
+                  {pending?.patchUrl && (
+                    <image
+                      key={`pending-${pending.patchUrl}-${retry}`}
+                      href={pending.patchUrl}
+                      x={target.patch.originPixel[0] - 0.5}
+                      y={target.patch.originPixel[1] - 0.5}
+                      width={target.patch.size[0]}
+                      height={target.patch.size[1]}
+                      visibility="hidden"
+                      aria-hidden="true"
+                      onLoad={() => report(pending.patchUrl!, 'ok')}
+                      onError={() => report(pending.patchUrl!, 'error')}
+                    />
+                  )}
+                </g>
+              </g>
+            </g>
+            {/* Everything drawn on the picture is placed where the picture will be, so it is put
+                out of sight while the picture turns and comes back when it has. */}
+            <g className={styles.ctOverlay}>
+              {nodulePoint && inField(nodulePoint) && (
+                <g aria-label="Simulated lesion" data-ct-lesion-ring>
+                  <circle
+                    cx={nodulePoint[0]}
+                    cy={nodulePoint[1]}
+                    r={Math.max(4, (14 * 100) / field)}
+                    fill="none"
+                    stroke="#e6b0ef"
+                    strokeWidth=".35"
+                    strokeDasharray="1 1"
+                  />
+                  <text
+                    x={nodulePoint[0]}
+                    y={nodulePoint[1] + Math.max(4, (14 * 100) / field) + 4}
+                    textAnchor="middle"
+                    fill="#f3c8fa"
+                    fontSize="3.4"
+                    stroke="#07151b"
+                    strokeWidth=".5"
+                    paintOrder="stroke"
+                  >
+                    Lesion
+                  </text>
+                </g>
               )}
-              {shown?.patchUrl && (
-                <image
-                  key={`shown-${shown.patchUrl}-${retry}`}
-                  href={shown.patchUrl}
-                  x={target.patch.originPixel[0] - 0.5}
-                  y={target.patch.originPixel[1] - 0.5}
-                  width={target.patch.size[0]}
-                  height={target.patch.size[1]}
-                  data-ct-nodule={target.id}
-                  onLoad={() => report(shown.patchUrl as string, 'ok')}
-                  onError={() => report(shown.patchUrl as string, 'error')}
-                />
+              {tipPoint && tipAhead && inField(tipPoint) && (
+                <g
+                  aria-label="Scope tip"
+                  data-ct-scope-tip
+                  opacity={tip?.slice === shownSlice ? 1 : 0.45}
+                >
+                  <line
+                    x1={tipPoint[0]}
+                    y1={tipPoint[1]}
+                    x2={tipAhead[0]}
+                    y2={tipAhead[1]}
+                    stroke="#7fe3ff"
+                    strokeWidth=".5"
+                  />
+                  <circle cx={tipPoint[0]} cy={tipPoint[1]} r="1.3" fill="#7fe3ff" />
+                </g>
               )}
-              {/* The requested plane decodes out of sight, then replaces the one above in one step. */}
-              {pending && (
-                <image
-                  key={`pending-${pending.url}-${retry}`}
-                  href={pending.url}
-                  x={-0.5}
-                  y={-0.5}
-                  width="512"
-                  height="512"
-                  visibility="hidden"
+              {drawnTrail.map((entry) => (
+                <g
+                  key={entry.id}
+                  opacity={entry.slice === shownSlice ? 1 : 0.4}
+                  data-ct-trail={entry.slice}
                   aria-hidden="true"
-                  onLoad={() => report(pending.url, 'ok')}
-                  onError={() => report(pending.url, 'error')}
+                >
+                  <circle
+                    cx={entry.point[0]}
+                    cy={entry.point[1]}
+                    r="1.7"
+                    className={styles.ctTrail}
+                  />
+                  <circle cx={entry.point[0]} cy={entry.point[1]} r=".45" fill="#9be7c4" />
+                </g>
+              ))}
+              {drawnLocators.map((locator) => (
+                <g
+                  key={locator.id}
+                  data-locator-hot={locator.hot || undefined}
+                  onPointerEnter={locator.onHover ? () => locator.onHover!(true) : undefined}
+                  onPointerLeave={locator.onHover ? () => locator.onHover!(false) : undefined}
+                >
+                  {/* A wider target than the crosshair, and the ring that lights with its opening. */}
+                  <circle
+                    cx={locator.point[0]}
+                    cy={locator.point[1]}
+                    r="3.6"
+                    className={styles.ctLocatorRing}
+                  />
+                  <path
+                    d={crosshair(locator.point)}
+                    stroke={locator.hot ? '#ffffff' : '#f6c66c'}
+                    strokeWidth={locator.hot ? '.9' : '.6'}
+                    fill="none"
+                    data-ct-locator={locator.label}
+                  />
+                </g>
+              ))}
+              {drawnMarks.map((mark) => (
+                <circle
+                  key={mark.id}
+                  cx={mark.point[0]}
+                  cy={mark.point[1]}
+                  r="2.3"
+                  fill="none"
+                  className={styles.ctMark}
+                  data-ct-mark={mark.label}
+                  data-mark-tone={mark.tone}
                 />
-              )}
-              {pending?.patchUrl && (
-                <image
-                  key={`pending-${pending.patchUrl}-${retry}`}
-                  href={pending.patchUrl}
-                  x={target.patch.originPixel[0] - 0.5}
-                  y={target.patch.originPixel[1] - 0.5}
-                  width={target.patch.size[0]}
-                  height={target.patch.size[1]}
-                  visibility="hidden"
+              ))}
+              {placedLabels.map((label) => (
+                <g key={label.id} aria-hidden="true">
+                  <line
+                    x1={label.point[0]}
+                    y1={label.point[1]}
+                    x2={label.leader[0]}
+                    y2={label.leader[1]}
+                    stroke="#f6c66c"
+                    strokeWidth=".25"
+                    opacity=".85"
+                  />
+                  <text
+                    x={label.x}
+                    y={label.y}
+                    textAnchor={label.textAnchor}
+                    fontSize={OVERLAY_FONT}
+                    fill="#ffe0a1"
+                    stroke="#07151b"
+                    strokeWidth=".55"
+                    paintOrder="stroke"
+                  >
+                    {label.text}
+                  </text>
+                </g>
+              ))}
+              {canMark && (
+                <path
+                  className={styles.ctCursor}
                   aria-hidden="true"
-                  onLoad={() => report(pending.patchUrl!, 'ok')}
-                  onError={() => report(pending.patchUrl!, 'error')}
+                  d={`M${cursor[0] - 1.6},${cursor[1]}h3.2 M${cursor[0]},${cursor[1] - 1.6}v3.2`}
+                  stroke="white"
+                  strokeWidth=".35"
                 />
               )}
             </g>
-            {nodulePoint && inField(nodulePoint) && (
-              <g aria-label="Simulated lesion" data-ct-lesion-ring>
-                <circle
-                  cx={nodulePoint[0]}
-                  cy={nodulePoint[1]}
-                  r={Math.max(4, (14 * 100) / field)}
-                  fill="none"
-                  stroke="#e6b0ef"
-                  strokeWidth=".35"
-                  strokeDasharray="1 1"
-                />
-                <text
-                  x={nodulePoint[0]}
-                  y={nodulePoint[1] + Math.max(4, (14 * 100) / field) + 4}
-                  textAnchor="middle"
-                  fill="#f3c8fa"
-                  fontSize="3.4"
-                  stroke="#07151b"
-                  strokeWidth=".5"
-                  paintOrder="stroke"
-                >
-                  Lesion
-                </text>
-              </g>
-            )}
-            {tipPoint && tipAhead && inField(tipPoint) && (
-              <g
-                aria-label="Scope tip"
-                data-ct-scope-tip
-                opacity={tip?.slice === shownSlice ? 1 : 0.45}
-              >
-                <line
-                  x1={tipPoint[0]}
-                  y1={tipPoint[1]}
-                  x2={tipAhead[0]}
-                  y2={tipAhead[1]}
-                  stroke="#7fe3ff"
-                  strokeWidth=".5"
-                />
-                <circle cx={tipPoint[0]} cy={tipPoint[1]} r="1.3" fill="#7fe3ff" />
-              </g>
-            )}
-            {drawnTrail.map((entry) => (
-              <g
-                key={entry.id}
-                opacity={entry.slice === shownSlice ? 1 : 0.4}
-                data-ct-trail={entry.slice}
-                aria-hidden="true"
-              >
-                <circle
-                  cx={entry.point[0]}
-                  cy={entry.point[1]}
-                  r="1.7"
-                  className={styles.ctTrail}
-                />
-                <circle cx={entry.point[0]} cy={entry.point[1]} r=".45" fill="#9be7c4" />
-              </g>
-            ))}
-            {drawnLocators.map((locator) => (
-              <path
-                key={locator.id}
-                d={crosshair(locator.point)}
-                stroke="#f6c66c"
-                strokeWidth=".6"
-                fill="none"
-                data-ct-locator={locator.label}
-              />
-            ))}
-            {drawnMarks.map((mark) => (
-              <circle
-                key={mark.id}
-                cx={mark.point[0]}
-                cy={mark.point[1]}
-                r="2.3"
-                fill="none"
-                className={styles.ctMark}
-                data-ct-mark={mark.label}
-                data-mark-tone={mark.tone}
-              />
-            ))}
-            {placedLabels.map((label) => (
-              <g key={label.id} aria-hidden="true">
-                <line
-                  x1={label.point[0]}
-                  y1={label.point[1]}
-                  x2={label.leader[0]}
-                  y2={label.leader[1]}
-                  stroke="#f6c66c"
-                  strokeWidth=".25"
-                  opacity=".85"
-                />
-                <text
-                  x={label.x}
-                  y={label.y}
-                  textAnchor={label.textAnchor}
-                  fontSize={OVERLAY_FONT}
-                  fill="#ffe0a1"
-                  stroke="#07151b"
-                  strokeWidth=".55"
-                  paintOrder="stroke"
-                >
-                  {label.text}
-                </text>
-              </g>
-            ))}
-            {canMark && (
-              <path
-                className={styles.ctCursor}
-                aria-hidden="true"
-                d={`M${cursor[0] - 1.6},${cursor[1]}h3.2 M${cursor[0]},${cursor[1] - 1.6}v3.2`}
-                stroke="white"
-                strokeWidth=".35"
-              />
-            )}
           </svg>
           <span className={styles.edgeTop} data-ct-edge="top">
             {labels.top}
