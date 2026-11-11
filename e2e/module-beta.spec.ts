@@ -238,6 +238,8 @@ test('server-mode drafts stay in memory: an empty dialog is no draft and nothing
     page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
   ).toBeVisible()
   await expect(page.getByText('Beta testing', { exact: true })).toBeVisible()
+  await expect(page.getByText('Version history not yet available')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
   await expect(page.getByText('Owner review', { exact: false })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Review feedback' })).toHaveCount(0)
   const button = page.getByRole('button', { name: /^(Give|Continue) feedback$/ })
@@ -1042,3 +1044,125 @@ test('feedback guide: opens on the first hub visit only, reopens from the hub an
     animations: 'disabled',
   })
 })
+
+for (const [layout, viewport] of [
+  ['desktop', { width: 1440, height: 1000 }],
+  ['mobile', { width: 390, height: 844 }],
+] as const) {
+  test(`revision details on ${layout} keep the module and review controls available`, async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.setTimeout(60000)
+    await page.setViewportSize(viewport)
+    await context.addCookies([
+      {
+        name: 'ip_local_dev_auth',
+        value: process.env.MODULE_BETA_TEST_TOKEN!,
+        domain: '127.0.0.1',
+        path: '/',
+      },
+    ])
+    await context.route('**/api/module-review/mine', (route) =>
+      route.fulfill({
+        json: {
+          profile: { label: 'PCCM Fellow', defaultTrack: 'learner' },
+          reviewsOpen: true,
+          reviews: [
+            {
+              id: 'review-fixture',
+              module_id: 'baxter-crrt',
+              track: 'learner',
+              updated_at: '2026-11-09T18:00:00Z',
+              answers: {
+                coverage: 'most',
+                experience: 'supervised',
+                overall: '4',
+                clarity: '4',
+                easeOfUse: '3',
+                interactive: '5',
+                level: 'about-right',
+                readiness: 'minor-fixes',
+                workedBest: 'The cases',
+                oneFix: '',
+                confidenceBefore: '2',
+                confidenceNow: '4',
+                wouldUse: 'yes',
+              },
+            },
+          ],
+          reportCounts: {},
+        },
+      }),
+    )
+
+    await page.goto('/en/development-beta')
+    const crrt = page.getByRole('article').filter({
+      has: page.getByRole('heading', { name: 'Baxter CRRT', exact: true }),
+    })
+    const untracked = page.getByRole('article').filter({
+      has: page.getByRole('heading', { name: 'EBUS: Guided Course', exact: true }),
+    })
+    await expect(untracked.getByText('Version history not yet available')).toBeVisible()
+    await expect(untracked.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
+    await expect(crrt.getByText('Beta v0.1')).toBeVisible()
+    await expect(crrt.getByRole('link', { name: 'Edit', exact: true })).toHaveAttribute(
+      'href',
+      '/en/development-beta/baxter-crrt?review=1',
+    )
+    await crrt.getByRole('button', { name: 'What’s changed' }).click()
+    const hubDialog = page.getByRole('dialog', { name: 'What’s changed' })
+    await expect(hubDialog.getByText(/expanded the lessons on when to use CRRT/i)).toBeVisible()
+    await expect(hubDialog.getByText(/re-review recommended/i)).toBeVisible()
+    const changelog = await hubDialog.innerText()
+    await page.screenshot({
+      path: testInfo.outputPath(`revision-hub-${layout}.png`),
+      animations: 'disabled',
+    })
+
+    const popup = page.waitForEvent('popup')
+    await hubDialog.getByRole('link', { name: /Prescription and dosing/ }).click()
+    const wrapper = await popup
+    await wrapper.setViewportSize(viewport)
+    const frame = wrapper.locator('iframe')
+    const toolbar = wrapper.locator('header').filter({ hasText: 'Beta testing' })
+    await expect(frame).toHaveAttribute(
+      'src',
+      '/en/baxter-crrt/learn?lesson=crrt-prescription-dosing',
+    )
+    await expect(
+      frame.contentFrame().locator('[data-foundation-lesson="crrt-prescription-dosing"]'),
+    ).toBeVisible()
+    await expect(toolbar.getByText('Beta v0.1')).toBeVisible()
+    expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(96)
+    const editReview = toolbar.getByRole('button', { name: 'Edit overall review' })
+    await expect(editReview).toBeInViewport()
+    await wrapper.screenshot({
+      path: testInfo.outputPath(`revision-toolbar-${layout}.png`),
+      animations: 'disabled',
+    })
+    await editReview.click()
+    const review = wrapper.getByRole('dialog', { name: 'Overall review' })
+    await expect(review.getByRole('textbox', { name: /worked best/i })).toHaveValue('The cases')
+    await review.getByRole('button', { name: 'Close dialog' }).click()
+    await toolbar.getByRole('button', { name: 'Give feedback', exact: true }).click()
+    const feedback = wrapper.getByRole('dialog', { name: /feedback/i })
+    await expect(feedback.getByText(/Page: .*lesson=crrt-prescription-dosing/)).toBeVisible()
+    await feedback
+      .getByRole('textbox', { name: 'What should we know?' })
+      .fill('Review the dosing lesson.')
+    await feedback.getByRole('button', { name: 'Close dialog' }).click()
+    await toolbar.getByRole('button', { name: 'What’s changed' }).click()
+    const wrapperDialog = wrapper.getByRole('dialog', { name: 'What’s changed' })
+    expect(await wrapperDialog.innerText()).toBe(changelog)
+    const bounds = await wrapperDialog.boundingBox()
+    expect(bounds?.x).toBeGreaterThanOrEqual(0)
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width)
+    await wrapper.keyboard.press('Escape')
+    await expect(toolbar.getByRole('button', { name: 'What’s changed' })).toBeFocused()
+    await toolbar.getByRole('button', { name: 'Continue feedback' }).click()
+    await expect(feedback.getByRole('textbox', { name: 'What should we know?' })).toHaveValue(
+      'Review the dosing lesson.',
+    )
+  })
+}

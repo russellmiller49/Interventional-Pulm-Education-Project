@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { BetaHubSections } from './BetaHubSections'
 import { betaModules } from './catalog'
@@ -52,16 +53,14 @@ describe('hub module sections', () => {
           expect(within(card).queryByText('Estimated time:')).not.toBeInTheDocument()
         }
       } else {
-        // The card a module had before notes existed: its title and its link, nothing else.
-        expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-        expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
+        expect(within(card).queryByText('Where feedback helps most')).not.toBeInTheDocument()
       }
     }
     // Every listed module carries a note (owner request, 2026-11-04).
     expect(hubBetaModules.every((entry) => betaRollout[entry.id].note)).toBe(true)
   })
 
-  it('leaves a card without a note as it was: its title and its link', () => {
+  it('keeps the title and feedback link on a card without a tester note', () => {
     render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     const preview = screen.getByRole('region', { name: 'Still in development' })
     for (const entry of betaModules) {
@@ -69,8 +68,31 @@ describe('hub module sections', () => {
         .getByRole('heading', { name: entry.title })
         .closest('article') as HTMLElement
       expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-      expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
+      expect(within(card).getByRole('link', { name: /Test with feedback/ })).toBeVisible()
     }
+  })
+
+  it('shows the tracked changelog, the neutral state, and only visible modules', async () => {
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+    const crrt = screen.getByRole('heading', { name: 'Baxter CRRT' }).closest('article')!
+    const ebus = screen.getByRole('heading', { name: 'EBUS: Guided Course' }).closest('article')!
+    expect(within(crrt).getByText('Beta v0.1')).toBeVisible()
+    expect(within(ebus).getByText('Version history not yet available')).toBeVisible()
+    expect(within(ebus).queryByRole('button', { name: 'What’s changed' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Dolphin Bronchoscopy' })).not.toBeInTheDocument()
+
+    const trigger = within(crrt).getByRole('button', { name: 'What’s changed' })
+    await userEvent.click(trigger)
+    const dialog = within(screen.getByRole('dialog', { name: 'What’s changed' }))
+    expect(dialog.getByText(/expanded the lessons on when to use CRRT/i)).toBeVisible()
+    expect(dialog.getByText('Clinical or educational re-review recommended')).toBeVisible()
+    expect(dialog.getByRole('link', { name: /CRRT-03 practice case/ })).toHaveAttribute(
+      'href',
+      '/en/development-beta/baxter-crrt?section=crrt-03',
+    )
+    expect(dialog.getByText('educational').closest('p')?.querySelector('time')).toBeNull()
+    await userEvent.keyboard('{Escape}')
+    expect(trigger).toHaveFocus()
   })
 
   it('has no ready section while nothing is ready', () => {

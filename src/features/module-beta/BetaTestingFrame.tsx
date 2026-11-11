@@ -54,6 +54,8 @@ import {
   type SavedReview,
 } from './OverallReviewDialog'
 import { FeedbackGuide } from './FeedbackGuide'
+import { RevisionDetails } from './RevisionDetails'
+import type { BetaModuleRevision } from './revisions'
 
 const message = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
@@ -101,12 +103,17 @@ export function BetaTestingFrame({
   moduleEntry,
   locale,
   reviewNote = null,
+  revisions = [],
+  initialModulePath = betaModuleReviewPath(moduleEntry),
 }: {
   moduleEntry: BetaModule
   locale: string
+  revisions?: readonly BetaModuleRevision[]
+  initialModulePath?: string
   /** From the module's hub card; the overall review asks the module's own questions from it. */
   reviewNote?: ReviewModuleNote | null
 }) {
+  const frameSrc = `/${locale}${initialModulePath}`
   const local = feedbackMode() === 'owner-local'
   const hubHref = `/${locale}/development-beta`
   // Server mode only: the overall review needs the reviewer's account and site profile.
@@ -124,7 +131,7 @@ export function BetaTestingFrame({
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [selectedText, setSelectedText] = useState('')
-  const [pagePath, setPagePath] = useState(`/${locale}${betaModuleReviewPath(moduleEntry)}`)
+  const [pagePath, setPagePath] = useState(frameSrc)
   const [reportModule, setReportModule] = useState<BetaModule>(moduleEntry)
   const [reportId, setReportId] = useState('')
   const [hasImage, setHasImage] = useState(false)
@@ -801,7 +808,7 @@ export function BetaTestingFrame({
   }
   return (
     <div ref={shell} className="fixed inset-0 z-40 flex flex-col bg-background">
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-1.5 sm:px-4">
+      <header className="flex flex-wrap items-center gap-x-3 border-b px-3 py-0.5 sm:gap-y-1 sm:px-4 sm:py-1.5">
         <Link
           aria-label="All beta modules"
           href={hubHref as Route}
@@ -812,12 +819,12 @@ export function BetaTestingFrame({
           <span className="hidden whitespace-nowrap sm:inline">All modules</span>
         </Link>
         <div className="min-w-0 flex-1 basis-48">
-          {/* The guide link rides on the label line, so it costs the bar no width or height. */}
           <div className="flex flex-wrap items-center gap-x-3 text-xs">
             <p className="font-semibold text-primary">
               {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
             </p>
             {!local && <FeedbackGuide placement="toolbar" />}
+            <RevisionDetails moduleEntry={moduleEntry} locale={locale} revisions={revisions} />
           </div>
           <h1 className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere] md:text-base">
             {moduleEntry.title}
@@ -878,7 +885,7 @@ export function BetaTestingFrame({
       <iframe
         ref={frame}
         title={moduleEntry.title}
-        src={`/${locale}${betaModuleReviewPath(moduleEntry)}`}
+        src={frameSrc}
         className="min-h-0 w-full flex-1 border-0"
         allow="fullscreen; clipboard-write"
       />
