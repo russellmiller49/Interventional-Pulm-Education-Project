@@ -5882,6 +5882,25 @@
   font-size: 9px;
   font-weight: 700;
 }
+/* The flow section's reference curve in the lesson's visual column: the drawing, then its parts in words. */
+.thermoReferenceFigure {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+.thermoReferenceFigure figcaption {
+  display: grid;
+  gap: 0.35rem;
+  line-height: 1.5;
+}
+.thermoReferenceFigure figcaption span {
+  color: #9fb4b7;
+  font-size: 0.9rem;
+}
 
 .curveFeatureList {
   container-type: inline-size;

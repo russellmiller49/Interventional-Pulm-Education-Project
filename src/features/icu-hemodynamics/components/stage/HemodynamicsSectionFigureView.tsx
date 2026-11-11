@@ -5,7 +5,7 @@ import type { HemodynamicsSectionFigure } from '../../content/taskPresentation'
 import type { HemodynamicSimulationState } from '../../engine/types'
 import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
 import { ThermodilutionCurveFigure } from '../ThermodilutionTrialReview'
-import flowStyles from './hemodynamics-flow.module.css'
+import styles from '../icu-hemodynamics.module.css'
 
 /** Whether the step's named figure has something to draw in this state. */
 export function sectionFigureShows(
@@ -18,7 +18,12 @@ export function sectionFigureShows(
 }
 
 /**
- * A section's drawing in the visual column (`presentation.figure`).
+ * A section's drawing in the visual column (`presentation.figure`). The stage wraps it.
+ *
+ * This file must not import the stage's own stylesheets. It is imported ahead of them, and a
+ * stylesheet's first import fixes where its rules fall in the cascade: importing the flow
+ * stylesheet here moved it ahead of the stage's, which changed the flush comparison's alignment
+ * and a card's contrast two sections away (caught by the browser specs, November 2026).
  *
  * `answered` is for a drawing whose legend could answer the question beside it: the catheter's
  * parts keep their names and places and hold back what each measures until the question is
@@ -35,18 +40,10 @@ export function HemodynamicsSectionFigureView({
   readonly answered: boolean
 }) {
   if (!sectionFigureShows(figure, state)) return null
-  if (figure === 'pac-parts')
-    return (
-      <div className={flowStyles.sectionFigure} data-section-figure={figure}>
-        <PacComponentSchematic functions={answered} />
-      </div>
-    )
+  if (figure === 'pac-parts') return <PacComponentSchematic functions={answered} />
   const method = requireCardiacOutputMethod('thermodilution')
   return (
-    <figure
-      className={`${flowStyles.sectionFigure} ${flowStyles.curveFigure}`}
-      data-section-figure={figure}
-    >
+    <figure className={styles.thermoReferenceFigure} data-reference-curve>
       {/* The first curve on this lesson's record: standard technique, the section's reference. */}
       <ThermodilutionCurveFigure trial={state.thermodilutionTrials[0]} named />
       <figcaption>

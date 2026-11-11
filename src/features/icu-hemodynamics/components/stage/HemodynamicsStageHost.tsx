@@ -1599,11 +1599,13 @@ function HemodynamicsStageSession({
     interaction.kind === 'sort' ? Boolean(commitments.sort) || commitments.sortShown : revealOpen
   const figureShown = !onCaseStep && sectionFigureShows(presentation.figure, state)
   const sectionFigure = figureShown ? (
-    <HemodynamicsSectionFigureView
-      figure={presentation.figure}
-      state={state}
-      answered={figureAnswered}
-    />
+    <div className={flowStyles.sectionFigure} data-section-figure={presentation.figure}>
+      <HemodynamicsSectionFigureView
+        figure={presentation.figure}
+        state={state}
+        answered={figureAnswered}
+      />
+    </div>
   ) : null
   const visual =
     sectionFigure || (!readingOnly && (simulatorShown || questionFigure)) ? (

@@ -640,22 +640,3 @@
   max-width: 46rem;
   margin-inline: auto;
 }
-/* The flow section's reference curve: the drawing, then what its parts are, in words. */
-.curveFigure {
-  display: grid;
-  gap: 0.6rem;
-  margin-block: 0;
-  padding: 0.85rem;
-  border: 1px solid rgba(163, 206, 209, 0.22);
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-}
-.curveFigure figcaption {
-  display: grid;
-  gap: 0.35rem;
-  line-height: 1.5;
-}
-.curveFigure figcaption span {
-  color: var(--stage-muted, #9fb4b7);
-  font-size: 0.9rem;
-}
