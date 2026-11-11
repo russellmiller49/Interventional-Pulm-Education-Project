@@ -1007,8 +1007,8 @@ function McsStageSession({
           return (
             <div data-no-observation>
               <p>
-                Nothing was captured on the last task, so there is no before and after to compare
-                yet. Go back to it, or read what the change does:
+                Nothing was captured on the last task, so there is nothing to compare yet. Go back
+                to it, or read what the change does:
               </p>
               <h3>What the change does</h3>
               <p>{lesson.contract.teaching.howTheActionAffectsTheModel}</p>
@@ -1852,7 +1852,9 @@ function McsStageSession({
           ))}
         </ol>
       </details>
-      {isLastStep ? <McsSectionRecap lesson={lesson} onRevisit={goToStep} /> : null}
+      {isLastStep ? (
+        <McsSectionRecap lesson={lesson} onRevisit={goToStep} folded={!transferCommitted} />
+      ) : null}
       {isLastStep && sectionId === MCS_LVAD_PERFUSION_SECTION_ID ? <McsLvadPerfusionCase /> : null}
       {isLastStep && lesson.practicePairing ? (
         <section className={stageStyles.completion} data-stage-completion>

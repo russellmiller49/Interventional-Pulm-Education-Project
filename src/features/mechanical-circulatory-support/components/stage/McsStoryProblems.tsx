@@ -38,14 +38,14 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
     >
       <h3 id="story-problems-heading">Story problems</h3>
       <p className={styles.storyIntro}>
-        Two short problems. In each, a colleague does one thing for a reason that sounds sensible.
-        Predict what happens or open the worked example, then run the change on a copy of this
-        circulation and compare the values.
+        Two short problems. In each, a colleague makes one sensible-sounding change. Predict what
+        happens or open the worked example, then run it on a copy of this circulation and compare.
       </p>
-      {stories.map((story) => (
+      {stories.map((story, index) => (
         <StoryCard
           key={story.id}
           story={story}
+          sharesStartWithPrevious={index > 0 && stories[index - 1].baselineId === story.baselineId}
           selectedId={selected[story.id] ?? null}
           committedId={committed[story.id] ?? null}
           ran={ran[story.id] ?? false}
@@ -69,6 +69,7 @@ export function McsStoryProblems({ stories }: { readonly stories: readonly McsSt
 
 function StoryCard({
   story,
+  sharesStartWithPrevious,
   selectedId,
   committedId,
   ran,
@@ -78,6 +79,12 @@ function StoryCard({
   onRetry,
 }: {
   readonly story: McsStoryProblem
+  /**
+   * The problem above starts from this same constructed state. Its values are then printed once,
+   * above; here one sentence says it is the same illustration (and not the patient on the
+   * monitor, the misreading F26 fixed), with the values one press away.
+   */
+  readonly sharesStartWithPrevious: boolean
   readonly selectedId: string | null
   readonly committedId: string | null
   readonly ran: boolean
@@ -108,55 +115,75 @@ function StoryCard({
         : 'clear'
       : null
 
+  const startingValues = (
+    <dl className={styles.storyReadings}>
+      <div>
+        <dt>Baseline</dt>
+        <dd data-story-baseline-id>{story.baselineId}</dd>
+      </div>
+      <div>
+        <dt>Support setting</dt>
+        <dd data-story-baseline-setting>{mcsConfigurationLabel(baseline)}</dd>
+      </div>
+      <div>
+        <dt>Right atrial pressure</dt>
+        <dd data-story-baseline-metric="rapMmHg">
+          {baseline.metrics.rapMmHg.toFixed(0)} <small>mm Hg</small>
+        </dd>
+      </div>
+      <div>
+        <dt>Wedge pressure</dt>
+        <dd data-story-baseline-metric="pcwpMmHg">
+          {baseline.metrics.pcwpMmHg.toFixed(0)} <small>mm Hg</small>
+        </dd>
+      </div>
+      {story.readings
+        .filter((reading) => reading !== 'rapMmHg' && reading !== 'pcwpMmHg')
+        .map((reading) => (
+          <div key={reading}>
+            <dt>{MCS_STORY_READING_LABELS[reading]}</dt>
+            <dd data-story-baseline-metric={reading}>
+              {(baseline.metrics[reading] as number).toFixed(1)}{' '}
+              <small>{MCS_STORY_READING_UNITS[reading]}</small>
+            </dd>
+          </div>
+        ))}
+      {story.alarmId ? (
+        <div>
+          <dt>The alarm</dt>
+          <dd data-story-baseline-alarm>{alarmState(baseline)}</dd>
+        </div>
+      ) : null}
+      <div>
+        <dt>Read at</dt>
+        <dd data-story-baseline-time>{baseline.timeSeconds.toFixed(2)} simulated seconds</dd>
+      </div>
+    </dl>
+  )
+
   return (
     <article className={styles.story} data-story={story.id}>
       <h4>{story.title}</h4>
       <section className={styles.storyBaseline} data-story-baseline={story.baselineId}>
         <h5>Where this illustration starts</h5>
-        <p>{story.baselineNote}</p>
-        <dl className={styles.storyReadings}>
-          <div>
-            <dt>Baseline</dt>
-            <dd data-story-baseline-id>{story.baselineId}</dd>
-          </div>
-          <div>
-            <dt>Support setting</dt>
-            <dd data-story-baseline-setting>{mcsConfigurationLabel(baseline)}</dd>
-          </div>
-          <div>
-            <dt>Right atrial pressure</dt>
-            <dd data-story-baseline-metric="rapMmHg">
-              {baseline.metrics.rapMmHg.toFixed(0)} <small>mm Hg</small>
-            </dd>
-          </div>
-          <div>
-            <dt>Wedge pressure</dt>
-            <dd data-story-baseline-metric="pcwpMmHg">
-              {baseline.metrics.pcwpMmHg.toFixed(0)} <small>mm Hg</small>
-            </dd>
-          </div>
-          {story.readings
-            .filter((reading) => reading !== 'rapMmHg' && reading !== 'pcwpMmHg')
-            .map((reading) => (
-              <div key={reading}>
-                <dt>{MCS_STORY_READING_LABELS[reading]}</dt>
-                <dd data-story-baseline-metric={reading}>
-                  {(baseline.metrics[reading] as number).toFixed(1)}{' '}
-                  <small>{MCS_STORY_READING_UNITS[reading]}</small>
-                </dd>
-              </div>
-            ))}
-          {story.alarmId ? (
-            <div>
-              <dt>The alarm</dt>
-              <dd data-story-baseline-alarm>{alarmState(baseline)}</dd>
-            </div>
-          ) : null}
-          <div>
-            <dt>Read at</dt>
-            <dd data-story-baseline-time>{baseline.timeSeconds.toFixed(2)} simulated seconds</dd>
-          </div>
-        </dl>
+        {sharesStartWithPrevious ? (
+          <>
+            <p data-story-baseline-shared>
+              The same constructed starting state as the problem above, not the patient on the
+              monitor.
+            </p>
+            <details data-story-baseline-again>
+              <summary>Show the starting values again</summary>
+              <p>{story.baselineNote}</p>
+              {startingValues}
+            </details>
+          </>
+        ) : (
+          <>
+            <p>{story.baselineNote}</p>
+            {startingValues}
+          </>
+        )}
         <p data-story-change-scope>{story.changeScope}</p>
       </section>
       <fieldset

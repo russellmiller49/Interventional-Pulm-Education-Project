@@ -26,7 +26,7 @@ const timingExample = (
   title,
   visual: 'timing',
   instruction:
-    'Compare the balloon band with valve closure and the next ejection on the Timing reference. This is a demonstrated condition; Continue opens the next example.',
+    'Compare the balloon band with valve closure and the next ejection on the Timing reference. Continue opens the next example.',
   paragraphs: [
     explanation,
     'The colored band follows the same timing source as the waveform and 3D balloon. Read where each event falls in the beat, then check the three pressure relationships on the five-pressure readout at 1:2.',

@@ -21,9 +21,17 @@ import styles from './mcs-stage.module.css'
 export function McsSectionRecap({
   lesson,
   onRevisit,
+  folded = false,
 }: {
   readonly lesson: McsStageLesson
   readonly onRevisit: (stepIndex: number) => void
+  /**
+   * The closing question has not been answered yet. The recap then waits under its heading: it
+   * names the section's one idea and its common misreading, so open beside the question it could
+   * hand over the answer, and it was about 180 words on every section's last step. It opens by
+   * itself once the answer is committed, and a learner can open it at any time.
+   */
+  readonly folded?: boolean
 }) {
   const { contract, spec } = lesson
   const distinctions = [
@@ -32,12 +40,8 @@ export function McsSectionRecap({
     `A common misreading: ${contract.commonMisinterpretation}`,
   ]
   const explainIndex = lesson.steps.findIndex((step) => step.interaction.kind === 'explain')
-  return (
-    <section
-      className={styles.block}
-      aria-labelledby="mcs-section-recap-heading"
-      data-section-recap
-    >
+  const recap = (
+    <>
       <p className={styles.kicker}>Section recap · nothing is counted</p>
       <h3 id="mcs-section-recap-heading">What this section was teaching</h3>
       <p data-recap-objective>{spec.objective}</p>
@@ -52,10 +56,6 @@ export function McsSectionRecap({
       <h4>At the bedside</h4>
       <p data-recap-limit>{contract.whatThisDoesNotEstablish}</p>
       {contract.unmodeledNote ? <p data-recap-unmodeled>{contract.unmodeledNote}</p> : null}
-      {/* The module's one boundary statement, on its closing screen: the last section's recap. */}
-      {lesson.sectionId === 'mcs-device-selection-integration' ? (
-        <p data-teaching-simulator-statement>{MCS_TEACHING_SIMULATOR_STATEMENT}</p>
-      ) : null}
 
       {/* The way back to each step, folded so the recap itself stays a few lines. */}
       <details data-recap-revisit-disclosure>
@@ -78,6 +78,30 @@ export function McsSectionRecap({
             Open it with its worked response
           </button>
         </p>
+      ) : null}
+    </>
+  )
+  return (
+    <section
+      className={styles.block}
+      aria-labelledby="mcs-section-recap-heading"
+      data-section-recap
+      data-recap-folded={folded || undefined}
+    >
+      {folded ? (
+        <details data-section-recap-fold>
+          <summary>Section recap: what this section was teaching</summary>
+          {recap}
+        </details>
+      ) : (
+        recap
+      )}
+      {/*
+       * The module's one boundary statement, on its closing screen: the last section's recap. It
+       * stays outside the fold, so it is on the closing screen whether or not the recap is open.
+       */}
+      {lesson.sectionId === 'mcs-device-selection-integration' ? (
+        <p data-teaching-simulator-statement>{MCS_TEACHING_SIMULATOR_STATEMENT}</p>
       ) : null}
     </section>
   )

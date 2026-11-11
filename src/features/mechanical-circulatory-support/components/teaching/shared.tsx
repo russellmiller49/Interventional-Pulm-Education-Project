@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 
 import { DerivedValueReadout } from '@/features/critical-care/components/teaching/EvidenceRenderers'
 import type { CriticalCareDerivedValueGuide } from '@/features/critical-care/content/derivedValueGuides'
@@ -65,10 +65,17 @@ export const styles = {
  * is hidden from assistive technology. A block that carries a consequential limit at its point of
  * use is never marked `reference`.
  */
+/**
+ * The panel sub-sections a step folds under their headings (see `content/explainFocus.ts`). No
+ * provider, or an id that is not in the set, and a section renders open as it always did.
+ */
+export const PanelFoldContext = createContext<ReadonlySet<string> | null>(null)
+
 export function PanelSection({
   title,
   id,
   reference = false,
+  foldedNote,
   children,
 }: {
   readonly title: string
@@ -76,9 +83,37 @@ export function PanelSection({
   readonly id: string
   /** Lookup material: folded behind its heading, open on request. */
   readonly reference?: boolean
+  /**
+   * Shown beside the heading while a step has this section folded: its live value in a few words,
+   * so the number stays on screen without the section being opened.
+   */
+  readonly foldedNote?: ReactNode
   readonly children: ReactNode
 }) {
   const headingId = `mcs-panel-${id}`
+  const folded = useContext(PanelFoldContext)?.has(id) ?? false
+  if (folded && !reference) {
+    return (
+      <details
+        className={styles.section}
+        aria-labelledby={headingId}
+        data-panel-section={id}
+        data-panel-folded
+      >
+        <summary className="cursor-pointer">
+          <h4 id={headingId} className={`${styles.heading} inline`}>
+            {title}
+          </h4>
+          {foldedNote ? (
+            <span className="ml-2 text-sm" data-panel-folded-note>
+              {foldedNote}
+            </span>
+          ) : null}
+        </summary>
+        {children}
+      </details>
+    )
+  }
   if (reference) {
     return (
       <details

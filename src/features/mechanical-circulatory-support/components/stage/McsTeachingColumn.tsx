@@ -20,6 +20,11 @@ import {
 } from '../../content/supportSpine'
 import type { McsDerivedMetrics, McsSimulationState } from '../../engine/types'
 import { McsTeachingPanel } from '../teaching/McsTeachingPanel'
+import { PanelFoldContext } from '../teaching/shared'
+import {
+  MCS_EXPLAIN_FOLDED_PANEL_SECTIONS,
+  MCS_WHOLE_GRAMMAR_TABLE_SECTIONS,
+} from '../../content/explainFocus'
 import { mcsRevealStage } from '../teaching/revealStage'
 import styles from './mcs-stage.module.css'
 
@@ -70,6 +75,32 @@ export function McsTeachingColumn({
   // legacy panel is retained for the four application sections and the open workbench.
   if (lesson.introductory && !walkStop) {
     const pending = !predictionCommitted && (phase === 'recognize' || phase === 'predict')
+    const whyItMoved = [
+      {
+        open: phase === 'act' || explaining,
+        node: (
+          <p key="action" data-what-the-action-does>
+            <strong>What the action does:</strong> {contract.teaching.howTheActionAffectsTheModel}
+          </p>
+        ),
+      },
+      {
+        open: phase === 'observe' || explaining,
+        node: (
+          <p key="flow" data-flow-account-note>
+            {contract.teaching.flowAccountNote}
+          </p>
+        ),
+      },
+      {
+        open: explaining,
+        node: (
+          <p key="takeaway" data-does-not-establish>
+            <strong>What to do with it:</strong> {contract.whatThisDoesNotEstablish}
+          </p>
+        ),
+      },
+    ]
     return (
       <section className={styles.block} data-teaching-panel data-teaching-focus={phase}>
         {/*
@@ -88,13 +119,26 @@ export function McsTeachingColumn({
           </p>
         ) : (
           <>
-            <p>
-              <strong>What the action does:</strong> {contract.teaching.howTheActionAffectsTheModel}
-            </p>
-            <p data-flow-account-note>{contract.teaching.flowAccountNote}</p>
-            <p data-does-not-establish>
-              <strong>What to do with it:</strong> {contract.whatThisDoesNotEstablish}
-            </p>
+            {/*
+             * Three paragraphs that stood open on every step after the commitment, four to six
+             * times a section (measured 2026-11-10: 12% of the module's visible words were
+             * paragraphs repeated within a section). Each is now open on the step it belongs to,
+             * and on Explain all three are: what the action does while acting, the flow account
+             * while reading the result, what to do with it once it is explained. Elsewhere they
+             * fold together under one heading, so a learner who opens a later step first still
+             * has them one press away.
+             */}
+            {whyItMoved.filter((part) => part.open).map((part) => part.node)}
+            {whyItMoved.some((part) => !part.open) ? (
+              <details data-why-it-moved-rest>
+                <summary>
+                  {whyItMoved.some((part) => part.open)
+                    ? 'The rest of why it moved'
+                    : 'Why it moved, from this section'}
+                </summary>
+                {whyItMoved.filter((part) => !part.open).map((part) => part.node)}
+              </details>
+            ) : null}
             {/*
              * The same three paragraphs stood open on every step of the five introductory sections
              * — about seventy words, twenty times over (F39). They are the reading rule for any
@@ -154,9 +198,11 @@ export function McsTeachingColumn({
       : phase === 'transfer'
         ? 'collapsed'
         : 'collapsed'
+  // Open while acting and on the explanation. It used to stand open on Observe as well, between
+  // the two steps that already show it; there it folds to its heading.
   const mechanism: StageBlockVisibility = !predictionCommitted
     ? 'hidden'
-    : phase === 'act' || phase === 'observe' || explaining
+    : phase === 'act' || explaining
       ? 'shown'
       : 'collapsed'
   /*
@@ -187,6 +233,13 @@ export function McsTeachingColumn({
       ? 'shown'
       : 'collapsed'
   const rows = mcsGrammarRowsFor(lesson.sectionId)
+  const wholeGrammarTable = MCS_WHOLE_GRAMMAR_TABLE_SECTIONS.includes(lesson.sectionId)
+  // On the two steps where the live panel stands open, Recognize and Explain.
+  const foldedPanelSections = new Set(
+    explaining || phase === 'recognize'
+      ? (MCS_EXPLAIN_FOLDED_PANEL_SECTIONS[lesson.sectionId] ?? [])
+      : [],
+  )
   const stripControls = mcsControlsForDevice(lesson.startingDevice).filter(
     (control) => spec.controlStrip[control.id] !== undefined,
   )
@@ -213,17 +266,26 @@ export function McsTeachingColumn({
           <p>
             <strong>One idea:</strong> {spec.newConcept}
           </p>
-          <p>
-            <strong>By the end you can:</strong> {spec.objective}
-          </p>
-          <p>
-            <strong>On the screen right now:</strong> {contract.teaching.whatYouAreSeeing}
-          </p>
-          {target ? (
+          {/*
+           * The question and the one idea stay open: they are what the section is. The objective,
+           * what the screen shows and where to look were another hundred words open on every
+           * first step (owner, 2026-11-10); they are one press away under their own heading. The
+           * step's own instruction already says where to look.
+           */}
+          <details data-framing-more>
+            <summary>More about this section</summary>
             <p>
-              <strong>Look here:</strong> {target.label}. {contract.whyThisView}
+              <strong>By the end you can:</strong> {spec.objective}
             </p>
-          ) : null}
+            <p>
+              <strong>On the screen right now:</strong> {contract.teaching.whatYouAreSeeing}
+            </p>
+            {target ? (
+              <p>
+                <strong>Look here:</strong> {target.label}. {contract.whyThisView}
+              </p>
+            ) : null}
+          </details>
         </section>
       </StageBlock>
 
@@ -334,31 +396,97 @@ export function McsTeachingColumn({
                 ? 'The row this section highlights'
                 : 'The rows this section highlights'}
             </p>
-            <table className={styles.grammar} data-support-grammar>
-              <thead>
-                <tr>
-                  <th scope="col">What moved</th>
-                  <th scope="col">Where the constraint lives</th>
-                  <th scope="col">Check</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MCS_SUPPORT_GRAMMAR.rows.map((row) => {
-                  const highlighted = rows.some((candidate) => candidate.id === row.id)
-                  return (
-                    <tr
-                      key={row.id}
-                      data-grammar-row={row.id}
-                      data-highlighted={highlighted || undefined}
-                    >
-                      <td>{row.whatMoved}</td>
-                      <td>{row.whereTheConstraintLives}</td>
-                      <td>{row.shortlist.join(' · ')}</td>
+            {/*
+             * The whole seven-row table stood open on every application section's Explain step,
+             * about 290 words each time. It is whole where it first stands open and in the
+             * capstone, where reading across the rows is the task (`content/explainFocus.ts`);
+             * elsewhere the section's own rows are printed and the whole table is one press away.
+             */}
+            {wholeGrammarTable ? (
+              <table className={styles.grammar} data-support-grammar>
+                <thead>
+                  <tr>
+                    <th scope="col">What moved</th>
+                    <th scope="col">Where the constraint lives</th>
+                    <th scope="col">Check</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {MCS_SUPPORT_GRAMMAR.rows.map((row) => {
+                    const highlighted = rows.some((candidate) => candidate.id === row.id)
+                    return (
+                      <tr
+                        key={row.id}
+                        data-grammar-row={row.id}
+                        data-highlighted={highlighted || undefined}
+                      >
+                        <td>{row.whatMoved}</td>
+                        <td>{row.whereTheConstraintLives}</td>
+                        <td>{row.shortlist.join(' · ')}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <>
+                <table className={styles.grammar} data-support-grammar data-grammar-rows="section">
+                  <thead>
+                    <tr>
+                      <th scope="col">What moved</th>
+                      <th scope="col">Where the constraint lives</th>
+                      <th scope="col">Check</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {MCS_SUPPORT_GRAMMAR.rows
+                      .filter((row) => rows.some((candidate) => candidate.id === row.id))
+                      .map((row) => {
+                        const highlighted = true
+                        return (
+                          <tr
+                            key={row.id}
+                            data-grammar-row={row.id}
+                            data-highlighted={highlighted || undefined}
+                          >
+                            <td>{row.whatMoved}</td>
+                            <td>{row.whereTheConstraintLives}</td>
+                            <td>{row.shortlist.join(' · ')}</td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+                <details data-grammar-whole>
+                  <summary>The whole table: all {MCS_SUPPORT_GRAMMAR.rows.length} rows</summary>
+                  <table className={styles.grammar} data-support-grammar>
+                    <thead>
+                      <tr>
+                        <th scope="col">What moved</th>
+                        <th scope="col">Where the constraint lives</th>
+                        <th scope="col">Check</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MCS_SUPPORT_GRAMMAR.rows.map((row) => {
+                        const highlighted = rows.some((candidate) => candidate.id === row.id)
+                        return (
+                          <tr
+                            key={row.id}
+                            data-grammar-row={row.id}
+                            data-highlighted={highlighted || undefined}
+                          >
+                            <td>{row.whatMoved}</td>
+                            <td>{row.whereTheConstraintLives}</td>
+                            <td>{row.shortlist.join(' · ')}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </details>
+              </>
+            )}
             <p className={styles.footnote} data-trend-rule>
               {MCS_SUPPORT_GRAMMAR.trendRule}
             </p>
@@ -401,13 +529,15 @@ export function McsTeachingColumn({
           data-teaching-block="live-panel"
           data-reveal-stage={reveal}
         >
-          <McsTeachingPanel
-            contract={contract}
-            state={state}
-            reveal={reveal}
-            beforeMetrics={beforeMetrics}
-            withholdFlowAccount={flowAccountWithheld}
-          />
+          <PanelFoldContext.Provider value={foldedPanelSections}>
+            <McsTeachingPanel
+              contract={contract}
+              state={state}
+              reveal={reveal}
+              beforeMetrics={beforeMetrics}
+              withholdFlowAccount={flowAccountWithheld}
+            />
+          </PanelFoldContext.Provider>
         </section>
       </StageBlock>
 

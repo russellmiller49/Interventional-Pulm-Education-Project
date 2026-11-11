@@ -301,7 +301,7 @@ describe('one door', () => {
       expect(mcsGroupSummaryLine(group)).toMatch(/min$/)
     }
     expect(mcsGroupSummaryLine(groups[1])).toBe(
-      'Sections 3–4 · 2 sections · 3 cases · 1 integrated case · 24 min',
+      'Sections 3–4 · 2 sections · 3 cases · 1 integrated case · 22 min',
     )
   })
 })

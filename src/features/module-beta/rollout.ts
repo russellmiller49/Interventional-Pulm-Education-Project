@@ -269,7 +269,7 @@ export const betaRollout: BetaRollout = {
       summary:
         'IABP, Impella and durable LVAD support on one simulated circulation, in nine sections: why a normal pressure can mislead, balloon timing, inlet position and suction on an Impella, then speed, resistance and alarms on an LVAD.',
       estimate: {
-        minutes: 114,
+        minutes: 101,
         basis:
           "9 sections, by the module's own count; the nine practice cases and three closing cases are extra",
       },
