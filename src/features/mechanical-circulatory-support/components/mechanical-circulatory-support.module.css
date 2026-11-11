@@ -90,17 +90,21 @@
 }
 
 /*
- * The dark frame: the overview and the Learn page (owner, 2026-11-10), on the palette the lesson
- * stage already uses (`.stage` in `stage/mcs-stage.module.css`), so the hub and the lesson it
- * opens are one surface. The module's light tokens above stay for the practice workbench and the
- * cases, which still pass `theme="light"`.
+ * The dark frame: the overview, the Learn page, and the practice workbench with its cases (owner,
+ * 2026-11-10), on the palette the lesson stage already uses (`.stage` in
+ * `stage/mcs-stage.module.css`), so every MCS page is one surface. Three selectors: the frame
+ * outside any activity, the workbench's own scope, and the shared activity shell inside it, whose
+ * own dark tokens are a bluer navy than this module's. A lesson is none of the three: its stage
+ * sets its palette itself.
  *
  * The site's own colour tokens are pinned to their dark values here for the same reason they are
  * pinned to light ones in the light frame: Tailwind-classed blocks inside the hub read them, and
  * a visitor on the site's light mode would otherwise get pale cards with this palette's pale ink.
  */
 .moduleShell:not([data-activity-mode='true'])
-  [data-learning-module-v2-theme-root][data-theme='dark'] {
+  [data-learning-module-v2-theme-root][data-theme='dark'],
+.moduleShell [data-learning-module-v2-theme-root][data-theme='dark'] [data-mcs-workbench-scope],
+.moduleShell [data-mcs-workbench-scope] [data-learning-module-v2-theme-root][data-theme='dark'] {
   --ink: #eaf4f4;
   --muted: #9fb4b7;
   --line: rgba(163, 206, 209, 0.22);
@@ -315,6 +319,8 @@
   --mcs-fg-96700f: #ebd18e;
   --mcs-fg-9a6a12: #ebca8e;
   --mcs-fg-a2463a: #dca59d;
+  /* Translucent white washes over a card: a faint lift on the dark surface instead. */
+  --mcs-bg-white-55: rgba(255, 255, 255, 0.06);
   --mcs-cta-fill: #71e1e5;
   --mcs-cta-ink: #05252a;
   /* The navy doubles as heading ink in the light theme; here it stays a background. */
@@ -2623,7 +2629,7 @@
   padding: 0.45rem 0.6rem;
   border-left: 3px solid rgba(174, 117, 24, 0.4);
   border-radius: 0.35rem;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--mcs-bg-white-55, rgba(255, 255, 255, 0.55));
 }
 .debriefCard [data-condition-list] > li > small {
   font-size: 0.94em;

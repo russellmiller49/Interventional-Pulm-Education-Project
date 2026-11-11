@@ -11,10 +11,10 @@ import { mcsModuleNavItems } from './McsModuleNav'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
- * The module frame. The overview and the Learn page are dark, like the lessons they lead into and
- * like the other four critical care modules (owner, 2026-11-10); they were the one light hub of
- * the five. The practice workbench and the case surfaces still pass `theme="light"` and move in
- * their own change.
+ * The module frame. Every MCS page is dark: the overview, the Learn page, the lessons, the
+ * practice workbench and the cases, like the other four critical care modules (owner,
+ * 2026-11-10). It was the one light module of the five. The `theme` prop stays for a caller that
+ * needs the light frame.
  */
 export function McsModuleFrame({
   locale,

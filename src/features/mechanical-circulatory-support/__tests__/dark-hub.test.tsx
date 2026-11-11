@@ -10,9 +10,8 @@ jest.mock('@/i18n/navigation', () =>
 import { McsModuleFrame } from '../components/McsModuleFrame'
 
 /**
- * The MCS overview and Learn page are dark (owner, 2026-11-10), like the lessons they lead into
- * and the other four critical care modules. The practice workbench and the cases stay light for
- * now, and must draw exactly what they drew.
+ * Every MCS page is dark (owner, 2026-11-10): the overview, the Learn page, the practice
+ * workbench and the cases, like the lessons and the other four critical care modules.
  *
  * The stylesheet does this with tokens: each light background, dark ink and light border reads
  * `var(--mcs-<role>-<hex>, <the literal it replaced>)`, and the tokens are set only inside the
@@ -39,7 +38,7 @@ describe('the MCS frame', () => {
     )
   })
 
-  it('still lets the practice workbench ask for the light theme', () => {
+  it('still gives a caller the light frame when it asks for it', () => {
     const { container } = render(
       <McsModuleFrame
         locale="en"
@@ -55,6 +54,26 @@ describe('the MCS frame', () => {
       'data-theme',
       'light',
     )
+  })
+})
+
+describe('the practice workbench', () => {
+  const workbench = readFileSync(
+    join(process.cwd(), 'src/features/mechanical-circulatory-support/components/McsWorkbench.tsx'),
+    'utf8',
+  )
+
+  it('no longer asks for the light theme, for its frame or its activity shell', () => {
+    expect(workbench).not.toContain('theme="light"')
+    expect(workbench).toContain('theme="dark"')
+  })
+
+  it('is covered by the dark tokens through its own scope, and a lesson is not', () => {
+    const start = sheet.indexOf(".moduleShell:not([data-activity-mode='true'])")
+    const selectors = sheet.slice(start, sheet.indexOf('{', start))
+    expect(selectors).toContain('[data-mcs-workbench-scope]')
+    // Three selectors and no more: none of them can match a lesson's stage.
+    expect(selectors.split(',').length).toBe(3)
   })
 })
 
