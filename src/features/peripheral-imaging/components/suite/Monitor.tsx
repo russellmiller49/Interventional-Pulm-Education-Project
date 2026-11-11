@@ -65,6 +65,7 @@ export function Monitor({
   frameContext,
   fieldProcessing,
   wedgeDeg = 0,
+  boneDepthAid = false,
 }: {
   pose: DrrPose
   depth: number
@@ -91,12 +92,20 @@ export function Monitor({
   fieldProcessing?: { readonly rect: FieldRect; readonly areaFraction: number }
   /** A wedge under the patient: `pose.orbit` is through the patient, the caption gives the C-arm's. */
   wedgeDeg?: number
+  /**
+   * Offer the bone depth colouring: bone behind the nodule against bone in front of it. It is what
+   * makes the cranial and caudal rule visible — the two sets of ribs slide opposite ways — and it is
+   * offered only where the learner is working the angles, never on a check.
+   */
+  boneDepthAid?: boolean
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
   const [state, setState] = useState<ProjectionState>('loading')
   const [revision, setRevision] = useState(0)
   const [processing, setProcessing] = useState<FieldDisplay | null>(null)
+  const [boneDepth, setBoneDepth] = useState(false)
+  const boneDepthOn = boneDepthAid && boneDepth
   const filterId = useId().replace(/:/g, '')
   const [baseline, setBaseline] = useState<StoredProjection | null>(
     viewMemory?.current.baseline ?? null,
@@ -186,6 +195,10 @@ export function Monitor({
     engine.current?.update(pose)
   }, [pose])
   useEffect(() => {
+    engine.current?.setBoneDepthTint(boneDepthOn)
+    // `state` is here so the choice is applied once the image is ready, not only when it changes.
+  }, [boneDepthOn, state])
+  useEffect(() => {
     setProcessing(readProcessing())
     // The frame on the canvas (its revision) and the field are the whole input.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,13 +275,34 @@ export function Monitor({
           </div>
           {displayMask}
           {state !== 'ready' && (
-            <p className={styles.imageStatus} role="status">
+            <p className={styles.imageStatus} role="status" data-image-status>
               {state === 'failed'
                 ? 'The image could not be drawn. Reload to retry; the text remains available.'
                 : 'Preparing the projection…'}
             </p>
           )}
         </div>
+        {boneDepthAid && (
+          <div className={styles.imageAids} data-image-aids>
+            <button
+              type="button"
+              aria-pressed={boneDepth}
+              disabled={state !== 'ready'}
+              onClick={() => setBoneDepth((on) => !on)}
+              data-bone-depth-toggle
+            >
+              Colour bone by depth
+            </button>
+            {boneDepthOn && (
+              <p data-bone-depth-legend>
+                <span className={styles.boneBehind}>Amber</span>: bone the beam crosses before the
+                nodule, on the tube side. <span className={styles.boneFront}>Blue</span>: bone it
+                crosses after, on the detector side. Tilt the beam and the two slide opposite ways.
+                A fluoroscopic image carries no depth; the colouring comes from the CT.
+              </p>
+            )}
+          </div>
+        )}
       </figure>
     </div>
   )

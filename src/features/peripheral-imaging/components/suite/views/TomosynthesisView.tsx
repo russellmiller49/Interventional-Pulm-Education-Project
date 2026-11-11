@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Line } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import {
   DTS,
