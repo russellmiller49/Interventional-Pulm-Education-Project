@@ -240,16 +240,21 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     note: 'Transbronchial lung biopsy in the same procedure was the only risk factor for a complication.',
     ...ABSTRACT_ONLY,
   },
-  /* Restaging after induction therapy, added 2026-11-10 with the consolidation (not signed). */
+  /*
+   * Restaging after induction therapy, added 2026-11-10 with the consolidation (not signed: the
+   * owner reviews these two rows separately). The 10 studies and 558 patients are the whole
+   * review, across EBUS-TBNA, EUS-FNA or both; the two values are its EBUS-TBNA-specific estimates.
+   */
   'restaging-sensitivity': {
     label: 'Sensitivity of EBUS-TBNA for mediastinal restaging after induction therapy',
     value: '65%',
-    appliesTo: 'pooled, 10 studies and 558 patients; negative results confirmed surgically',
+    appliesTo:
+      'EBUS-TBNA-specific pooled estimate. The review pooled 10 studies and 558 patients restaged by EBUS-TBNA, EUS-FNA or both; negative results were confirmed surgically',
     class: 'consensus',
     sources: [
       { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
     ],
-    note: '95% CI 52 to 76; pooled specificity 99%. Lower than at first staging: a negative restaging result does not exclude persistent nodal disease.',
+    note: '95% CI 52 to 76, for EBUS-TBNA alone (the same review gives EUS-FNA 73%). The denominator is patients with persistent nodal disease, so about one in three of them is missed; this is not a negative predictive value. The abstract does not say how many of the 558 patients had EBUS-TBNA.',
     checkedOn: '2026-11-10',
     checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
     signedBy: null,
@@ -258,12 +263,13 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
   'restaging-specificity': {
     label: 'Specificity of EBUS-TBNA for mediastinal restaging after induction therapy',
     value: '99%',
-    appliesTo: 'pooled, 10 studies and 558 patients',
+    appliesTo:
+      'EBUS-TBNA-specific pooled estimate. The review pooled 10 studies and 558 patients restaged by EBUS-TBNA, EUS-FNA or both; negative results were confirmed surgically',
     class: 'consensus',
     sources: [
       { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
     ],
-    note: '95% CI 78 to 100.',
+    note: '95% CI 78 to 100, for EBUS-TBNA alone (the same review gives EUS-FNA 99%, 95% CI 90 to 100).',
     checkedOn: '2026-11-10',
     checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
     signedBy: null,

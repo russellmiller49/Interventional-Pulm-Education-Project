@@ -117,10 +117,12 @@ export const planLessons: Lesson[] = [
       'In TNM ninth edition, N2a means involvement of a single ipsilateral mediastinal or subcarinal station; N2b means multiple such stations. Count involved stations, not individual nodes or needle passes. This distinction does not itself prescribe treatment.',
       /*
        * Restaging (owner decision of 2026-11-10 to add it). The figures are the pooled estimates in
-       * Jiang 2020, read from the abstract and verified by the owner on 2026-11-10; the sentence
-       * after them is those numbers' plain meaning, not a guideline recommendation.
+       * Jiang 2020, read from the abstract and verified by the owner on 2026-11-10. The miss rate
+       * (the complement of the sensitivity) is stated with its denominator, patients with
+       * persistent nodal disease, at the owner's correction: it is not a negative predictive
+       * value. Nothing here is a guideline recommendation.
        */
-      `Restaging after induction therapy is the same examination with a lower yield: in pooled data EBUS-TBNA found ${EBUS_NUMBERS.value('restaging-sensitivity')} of persistent nodal disease, with a specificity of ${EBUS_NUMBERS.value('restaging-specificity')} (Jiang 2020). A positive restaging result stands. A negative one misses about one case in three, so report it as a negative sample, not as a cleared mediastinum, and agree with the team how it will be confirmed.`,
+      `Restaging after induction therapy is the same examination with a lower yield: in pooled data EBUS-TBNA found ${EBUS_NUMBERS.value('restaging-sensitivity')} of persistent nodal disease, with a specificity of ${EBUS_NUMBERS.value('restaging-specificity')} (Jiang 2020). A positive restaging result stands. Sensitivity is counted among patients who still have nodal disease: about one in three of them is missed. It is not the share of negative results that are wrong, which depends on how often disease persists in the patients examined. Report a negative restaging as a negative sample, not as a cleared mediastinum, and agree with the team how it will be confirmed.`,
     ],
     checklist: [
       'State the primary side.',
