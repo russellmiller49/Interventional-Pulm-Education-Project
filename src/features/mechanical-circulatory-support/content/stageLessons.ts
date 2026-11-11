@@ -21,14 +21,12 @@ import {
   type McsLeadVisual,
   type McsPresentationKind,
 } from './taskPresentation'
-import { mcsPresentationTitle } from './casePresentation'
 import { MCS_CONTROL_PANEL_SORT, type McsControlPanelSort } from './controlPanelSort'
 import { mcsIncrementForSection, type McsDeviceIncrement } from './deviceIncrements'
 import { mcsLearnControls, type McsLearnControlId } from './learnControls'
 import { mcsLessons } from './lessons'
 import { mcsLessonTransferByLessonId, type McsLessonTransferDefinition } from './lessonTransfers'
 import { mcsMapAnswerTargets } from './mapAnswerTargets'
-import { mcsPracticeScenarios } from './scenarios'
 import {
   mcsSectionLearningContractById,
   type McsLearnActionMode,
@@ -36,7 +34,12 @@ import {
   type McsRecognizeOption,
   type McsSectionLearningContract,
 } from './sectionLearningContracts'
-import { mcsSectionSpec, type McsSectionSpec } from './sectionSpecs'
+import {
+  mcsSectionCase,
+  mcsSectionSpec,
+  type McsSectionCase,
+  type McsSectionSpec,
+} from './sectionSpecs'
 import { mcsStoryProblemsFor } from './storyProblems'
 import type { McsSpineStopId } from './supportSpine'
 
@@ -48,7 +51,9 @@ import type { McsSpineStopId } from './supportSpine'
  * four-level explanation, the transfer patient. The six phases become six steps in contract
  * order (seven where the section opens with the walk along the loop). Every task is open;
  * optional answers and actual model work remain local to the session. This adapter chooses
- * which teaching and controls each task recommends, without awarding completion.
+ * which teaching and controls each task recommends, without awarding completion. A section paired
+ * to a case ends on it: the case, run embedded on its own engine, is the last task, after the
+ * transfer.
  */
 
 /** The surfaces a step can open beside the monitor, which is always present. */
@@ -104,6 +109,12 @@ export type McsStageInteraction =
   | { readonly kind: 'explain'; readonly prompt: string; readonly sort?: McsControlPanelSort }
   /** The transfer patient, loaded on entry, with its item and its required work. */
   | { readonly kind: 'transfer'; readonly transfer: McsLessonTransferDefinition }
+  /**
+   * The section's paired case as its last task: a fresh patient on the case's own engine, run inside
+   * the section. While it is the current task the section's own patient is paused and its simulator
+   * is not mounted, so only one simulation ever runs.
+   */
+  | { readonly kind: 'case'; readonly sectionCase: McsSectionCase }
 
 export interface McsStageStep extends StageStepBase<McsStageInteraction> {
   readonly presentation: McsPresentationKind
@@ -125,11 +136,10 @@ export interface McsStageLesson extends StageLessonBase<McsStageStep> {
   readonly startingDevice: McsDeviceKind
   readonly lifecycleActivityId: string
   readonly increment?: McsDeviceIncrement
-  readonly practicePairing?: {
-    readonly kind: 'mechanism-match' | 'next-in-unit'
-    readonly caseId: string
-    readonly title: string
-  }
+  /** The case that is the section's last task, when it has one. */
+  readonly practicePairing?: McsSectionCase
+  /** The case step, the section's last task, or -1 when the section ends on its transfer. */
+  readonly caseStepIndex: number
 }
 
 /**
@@ -388,16 +398,36 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     contract.completionCondition,
   )
 
+  /*
+   * The case, appended as the last task. Appending keeps every earlier step id where it was, and
+   * the title in the task list names no case: several case titles name the problem the section's
+   * first question asks about. The case is named on its own task card once the task is reached.
+   */
+  const sectionCase = mcsSectionCase(sectionId)
+  if (sectionCase) {
+    push(
+      'transfer',
+      'case',
+      'Apply it in a patient case',
+      'A fresh patient. Run the case here; nothing from this section’s patient carries over, and the end of the case brings you back to this section.',
+      'Start the case',
+      { kind: 'case', sectionCase },
+      undefined,
+      {
+        pane: 'steps',
+        landmark: 'the case below, from its patient problem to its worked explanation',
+      },
+    )
+    const position = steps.length - 1
+    steps[position] = { ...steps[position], surfaces: [] }
+  }
+
   // A task that leads with the heart and the device opens that view on entry. Done here, after
   // the steps above have had their surfaces set one by one, so no later edit can drop it.
   steps.forEach((step, position) => {
     if (step.leadVisual === 'anatomy' && !step.surfaces.includes('anatomy'))
       steps[position] = { ...step, surfaces: [...step.surfaces, 'anatomy'] }
   })
-
-  const pairedCase = spec.practicePairing
-    ? mcsPracticeScenarios.find((scenario) => scenario.id === spec.practicePairing?.caseId)
-    : undefined
 
   return {
     introductory: isMcsIntroductorySection(sectionId),
@@ -414,15 +444,8 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     startingDevice: contract.startingDevice,
     lifecycleActivityId: `mcs:learn:${sectionId}`,
     increment: mcsIncrementForSection(sectionId),
-    ...(pairedCase && spec.practicePairing
-      ? {
-          practicePairing: {
-            kind: spec.practicePairing.kind,
-            caseId: pairedCase.id,
-            title: mcsPresentationTitle(pairedCase),
-          },
-        }
-      : {}),
+    ...(sectionCase ? { practicePairing: sectionCase } : {}),
+    caseStepIndex: steps.findIndex((step) => step.interaction.kind === 'case'),
   }
 }
 

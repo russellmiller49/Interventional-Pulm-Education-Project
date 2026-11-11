@@ -129,7 +129,8 @@ describe('F11 — a hint is this item’s nudge, and the Explain question has a 
     for (const lesson of lessons) {
       for (const step of lesson.steps) {
         const kind = step.interaction.kind
-        if (kind === 'teaching' || kind === 'walk') continue
+        // The case brings its own hint, inside the case.
+        if (kind === 'teaching' || kind === 'walk' || kind === 'case') continue
         const hint =
           kind === 'explain'
             ? step.interaction.sort

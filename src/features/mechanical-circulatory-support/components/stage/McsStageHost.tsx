@@ -18,7 +18,6 @@ import {
 } from '@/features/learning-module/curriculum/types'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
-import type { ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { FlowContent } from '@/features/learning-module/stage/FlowContent'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
@@ -32,9 +31,7 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 import { useRouter } from '@/i18n/navigation'
 
-import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
 import { mcsClaimChecksForSection } from '../../content/claimSourceMap'
-import { mcsDeviceStatusLabel } from '../../content/deviceNaming'
 import { mcsExplainReflection } from '../../content/explainReflections'
 
 import { mcsStepHint } from '../../content/stepHints'
@@ -65,6 +62,7 @@ import type {
 import { McsModuleFrame } from '../McsModuleFrame'
 import { McsLvadPerfusionCase } from './McsLvadPerfusionCase'
 import { McsSimulatorPane } from './McsSimulatorPane'
+import { McsSectionCase } from './McsSectionCase'
 import { McsSectionRecap } from './McsSectionRecap'
 import { McsSourceList } from './McsSourceList'
 import { McsStoryProblems } from './McsStoryProblems'
@@ -88,6 +86,7 @@ import {
 import styles from './mcs-stage.module.css'
 import flowStyles from './mcs-flow.module.css'
 import { McsClockBar } from './McsClockBar'
+import { mcsClockContext } from './mcsClockContext'
 import { McsPrerequisiteReference, mcsHasPrerequisiteReference } from './McsPrerequisiteReference'
 import { McsTaskPresentation } from './McsTaskPresentation'
 import { useWorkspaceLayout } from './useWorkspaceLayout'
@@ -103,6 +102,12 @@ import type { McsPointedPlace } from '../../content/readingPlaces'
  * scrolling on its own in a desktop workspace that does not scroll as a page. The task card's way
  * forward is pinned to the foot of the text pane. On a narrower window, or with enlarged text,
  * the two stack: text first, then the simulator.
+ *
+ * A section paired to a case ends on it (owner, 2026-10-17, as ICU hemodynamics did): the case is
+ * the last task, run inside the task card on the case's own engine at the task's full width. While
+ * that task is current the section's patient is paused and its simulator is not mounted, so two
+ * simulations never run at once; Exit case, the end of the case and Skip the case all finish the
+ * section and bring its completion card up.
  */
 
 const LOOKING_BACK = 'An earlier task, as you left it. Return to the current task to go on.'
@@ -276,6 +281,14 @@ function McsStageSession({
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [explorationOpen, setExplorationOpen] = useState(false)
   const [revealedStepIds, setRevealedStepIds] = useState<readonly string[]>([])
+  // The case open on the section's last task, the cases opened in this visit, and whether the
+  // section was finished there (the case closed, or skipped).
+  const [openCaseId, setOpenCaseId] = useState<string | null>(null)
+  const [casesOpened, setCasesOpened] = useState<readonly string[]>([])
+  const [caseFinished, setCaseFinished] = useState(false)
+  const [completionFocusRequest, setCompletionFocusRequest] = useState(0)
+  const completionRef = useRef<HTMLElement>(null)
+  const previousCaseId = useRef<string | null>(null)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const hintButtonRef = useRef<HTMLButtonElement>(null)
   const glossaryButtonRef = useRef<HTMLButtonElement>(null)
@@ -306,6 +319,13 @@ function McsStageSession({
   const beforeMetrics = capturedBefore?.metrics ?? progression.beforeMetrics
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
   const committedChoiceId = progression.committedByStepId[activeStep.id] ?? null
+  /*
+   * One engine at a time. On the case step the case owns the only simulation: the section's patient
+   * stops ticking and its simulator is not mounted. Moving to any other task resumes it from where
+   * it stopped.
+   */
+  const onCaseStep = activeStep.interaction.kind === 'case'
+  const runningCaseId = onCaseStep && !lookingBack ? openCaseId : null
 
   const allowedActionIds = lookingBack
     ? []
@@ -372,7 +392,7 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   useEffect(() => {
-    if (!playbackRunning || lookingBack || !referenceViewed) return
+    if (!playbackRunning || lookingBack || !referenceViewed || onCaseStep) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 500 : 250
     const timer = window.setInterval(
@@ -380,7 +400,7 @@ function McsStageSession({
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [playbackRunning, lookingBack, referenceViewed])
+  }, [playbackRunning, lookingBack, referenceViewed, onCaseStep])
 
   useEffect(() => {
     recordMcsVisit(sectionId, 'learn', lesson.startingDevice, activeStep.phase)
@@ -530,7 +550,7 @@ function McsStageSession({
 
   function goToStep(index: number) {
     const target = lesson.steps[index]
-    if (!target || index === progression.index) return
+    if (!target || index === progression.index || runningCaseId) return
     setReferenceViewed(true)
     if (index === progression.review) {
       setProgression((current) => ({ ...current, index, review: null }))
@@ -599,6 +619,38 @@ function McsStageSession({
       })
     else onRestart()
   }
+
+  /* ---------------------------------------------------------------- *
+   * The case: the section's last task
+   * ---------------------------------------------------------------- */
+
+  function openCase(caseId: string) {
+    setOpenCaseId(caseId)
+    setCasesOpened((current) => (current.includes(caseId) ? current : [...current, caseId]))
+  }
+
+  /** Exit case, the end of the case and Skip the case: the section is finished either way. */
+  function closeCase() {
+    setOpenCaseId(null)
+    setCaseFinished(true)
+    setCompletionFocusRequest((count) => count + 1)
+  }
+
+  useEffect(() => {
+    const previous = previousCaseId.current
+    previousCaseId.current = runningCaseId
+    // The case fills the task card under its heading; the card's top is where reading resumes.
+    if (runningCaseId && !previous) {
+      nowFocusRef.current?.focus({ preventScroll: true })
+      nowFocusRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    }
+  }, [runningCaseId])
+
+  useEffect(() => {
+    if (completionFocusRequest === 0) return
+    completionRef.current?.focus({ preventScroll: true })
+    completionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [completionFocusRequest])
 
   const openSurfaces = useMemo(
     () =>
@@ -707,7 +759,7 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
-  const canGoBack = activeIndex > 0
+  const canGoBack = activeIndex > 0 && !runningCaseId
 
   function handleContinue(event?: MouseEvent<HTMLButtonElement>) {
     // A native double-click is one navigation intent: the pinned button stays where it is while
@@ -740,7 +792,9 @@ function McsStageSession({
           ? nextSection
             ? `Continue to the next section: ${nextSection.title}`
             : 'Back to the Learn page'
-          : 'Continue',
+          : lesson.steps[activeIndex + 1]?.interaction.kind === 'case'
+            ? 'Continue to the case'
+            : 'Continue',
     onActivate: lookingBack || !walking || walkIsLast ? handleContinue : nextWalkStop,
     icon: <ArrowRight aria-hidden="true" />,
   }
@@ -754,25 +808,83 @@ function McsStageSession({
     )
   }
 
-  const nowModel: NowCardModel = {
-    kicker: stepPosition,
-    heading:
-      walking && walkStop
-        ? `Stop ${walkStop.ordinal} of ${MCS_SUPPORT_SPINE.stops.length}: ${walkStop.plainName}`
-        : activeStep.title,
-    body: walking && walkStop ? walkStop.whereYouAre : activeStep.instruction,
-    why: activeStep.rationale,
-    pinActions: true,
-    ...(canGoBack
+  const nowModel: NowCardModel = onCaseStep && !lookingBack ? caseNowModel() : stepNowModel()
+
+  /*
+   * The case step's card. Before the case: start it, or skip it and finish the section. While it
+   * runs, the case below is the work and its own exits lead back; the card only names it. After it,
+   * the section is finished and the way on is the next section.
+   */
+  function caseNowModel(): NowCardModel {
+    if (activeStep.interaction.kind !== 'case') return stepNowModel()
+    const { sectionCase } = activeStep.interaction
+    const heading = `Apply it: ${sectionCase.title}`
+    if (runningCaseId) {
+      return {
+        kicker: stepPosition,
+        heading,
+        body: 'The case runs below, on its own patient. Exit case, or the end of the case, brings you back to this task.',
+      }
+    }
+    const start = {
+      label: casesOpened.includes(sectionCase.caseId)
+        ? 'Run the case again'
+        : activeStep.actionLabel,
+      // The pinned button stays where it is while the case task loads under it, so the second
+      // click of a double-click on Continue to the case lands here; it is one intent, not two.
+      onActivate: (event?: MouseEvent<HTMLButtonElement>) => {
+        if (event && event.detail > 1) return
+        openCase(sectionCase.caseId)
+      },
+      icon: <ArrowRight aria-hidden="true" />,
+    }
+    const back = canGoBack
       ? { back: { label: 'Back to previous task', onActivate: () => goToStep(activeIndex - 1) } }
-      : {}),
-    ...(lookingBack
-      ? {
-          status: LOOKING_BACK,
-          secondary: { label: 'Do this task again', onActivate: doTaskAgain },
-        }
-      : {}),
-    primary: continueAction,
+      : {}
+    if (caseFinished) {
+      return {
+        kicker: stepPosition,
+        heading,
+        body: activeStep.instruction,
+        pinActions: true,
+        ...back,
+        status: 'Section finished.',
+        primary: continueAction,
+        secondary: start,
+      }
+    }
+    return {
+      kicker: stepPosition,
+      heading,
+      body: activeStep.instruction,
+      pinActions: true,
+      ...back,
+      primary: start,
+      secondary: { label: 'Skip the case · finish the section', onActivate: closeCase },
+    }
+  }
+
+  function stepNowModel(): NowCardModel {
+    return {
+      kicker: stepPosition,
+      heading:
+        walking && walkStop
+          ? `Stop ${walkStop.ordinal} of ${MCS_SUPPORT_SPINE.stops.length}: ${walkStop.plainName}`
+          : activeStep.title,
+      body: walking && walkStop ? walkStop.whereYouAre : activeStep.instruction,
+      why: activeStep.rationale,
+      pinActions: true,
+      ...(canGoBack
+        ? { back: { label: 'Back to previous task', onActivate: () => goToStep(activeIndex - 1) } }
+        : {}),
+      ...(lookingBack
+        ? {
+            status: LOOKING_BACK,
+            secondary: { label: 'Do this task again', onActivate: doTaskAgain },
+          }
+        : {}),
+      primary: continueAction,
+    }
   }
 
   /* ---------------------------------------------------------------- *
@@ -1446,30 +1558,8 @@ function McsStageSession({
    * The simulator: one clock, then the map, the readings, the monitor and the controls
    * ---------------------------------------------------------------- */
 
-  const activeAlarm =
-    state.alarms.find((alarm) => alarm.active && alarm.priority === 'critical') ??
-    state.alarms.find((alarm) => alarm.active)
   const teachingStep = activeStep.interaction.kind === 'teaching'
-  const contextItems: ContextStripItem[] = [
-    { label: 'Device · mechanism', value: mcsDeviceStatusLabel(state) },
-    { label: 'Setting', value: settingLabel(state) },
-    { label: 'Displayed flow', value: displayedFlowLabel(state) },
-    { label: 'Mean pressure', value: `${state.metrics.mapMmHg} mm Hg` },
-  ]
-  /*
-   * The clock bar may not say "No active alarm" on its own while the trigger rating is held.
-   *
-   * In atrial fibrillation the engine's trigger alarm is quiet on arterial pressure and on nothing
-   * else, so the bar answered a switch to the warned-against source with an all-clear (F19). The
-   * bar still reports every alarm the model raises; it just cannot report silence as the whole
-   * story here.
-   */
-  const afTriggerLimitHeld = mcsAfTriggerLimitApplies(state)
-  const alarm = activeAlarm
-    ? { priority: alarmPriority(activeAlarm.priority), text: activeAlarm.label }
-    : afTriggerLimitHeld
-      ? { priority: 'medium' as const, text: MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear }
-      : { priority: 'none' as const, text: 'No active alarm' }
+  const clockContext = mcsClockContext(state)
 
   const highlightControl: McsLearnControlId | undefined =
     activeStep.interaction.kind === 'action'
@@ -1501,8 +1591,8 @@ function McsStageSession({
         setPlaybackRunning(false)
         sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
       }}
-      items={contextItems}
-      alarm={alarm}
+      items={clockContext.items}
+      alarm={clockContext.alarm}
     />
   )
 
@@ -1604,14 +1694,15 @@ function McsStageSession({
    * The worked comparison of the unloading section is its own figure, read in the text; it has no
    * live patient, so it has no simulator beside it. Every other task does, on the right.
    */
-  const visual = unloadingExample ? undefined : (
-    <div className={flowStyles.visualPane} data-mcs-visual>
-      {clockBar}
-      {mapQuestion}
-      {simulator}
-      {allControls}
-    </div>
-  )
+  const visual =
+    unloadingExample || onCaseStep ? undefined : (
+      <div className={flowStyles.visualPane} data-mcs-visual>
+        {clockBar}
+        {mapQuestion}
+        {simulator}
+        {allControls}
+      </div>
+    )
 
   /* ---------------------------------------------------------------- *
    * The text: the task card, then the section around it
@@ -1788,27 +1879,65 @@ function McsStageSession({
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard model={nowModel}>
-          <div className={flowStyles.taskContent}>
-            <McsTaskPresentation
-              kind={activeStep.presentation}
-              teaching={teaching}
-              action={nowBody}
-              explaining={
-                activeStep.interaction.kind === 'explain' ||
-                activeStep.interaction.kind === 'observe'
-              }
-              reference={teachingStep || walking}
-            />
-            {answerRow}
-            {showExplanation && explanationOffered ? (
-              <section className={styles.block} data-provided-explanation>
-                <h3>Answer</h3>
-                <p>{explanation}</p>
-              </section>
-            ) : null}
-          </div>
+          {onCaseStep ? (
+            runningCaseId && activeStep.interaction.kind === 'case' ? (
+              <McsSectionCase
+                key={runningCaseId}
+                caseId={runningCaseId}
+                sectionId={sectionId}
+                embedded={{
+                  sectionTitle: lesson.title,
+                  sectionNumber: lesson.index + 1,
+                  applies: activeStep.interaction.sectionCase.applies,
+                  onReturnToSection: closeCase,
+                  onCaseFinished: closeCase,
+                }}
+              />
+            ) : null
+          ) : (
+            <div className={flowStyles.taskContent}>
+              <McsTaskPresentation
+                kind={activeStep.presentation}
+                teaching={teaching}
+                action={nowBody}
+                explaining={
+                  activeStep.interaction.kind === 'explain' ||
+                  activeStep.interaction.kind === 'observe'
+                }
+                reference={teachingStep || walking}
+              />
+              {answerRow}
+              {showExplanation && explanationOffered ? (
+                <section className={styles.block} data-provided-explanation>
+                  <h3>Answer</h3>
+                  <p>{explanation}</p>
+                </section>
+              ) : null}
+            </div>
+          )}
         </NowCard>
       </div>
+      {/*
+       * The section's end, once the case is closed or skipped: where focus lands on the way back
+       * from the case. The way on is the card's own Continue, pinned at its foot.
+       */}
+      {onCaseStep && caseFinished && !runningCaseId && lesson.practicePairing ? (
+        <section
+          ref={completionRef}
+          tabIndex={-1}
+          className={stageStyles.completion}
+          role="status"
+          aria-live="polite"
+          data-stage-completion
+        >
+          <h3>Section finished</h3>
+          <p data-case-outcome={casesOpened.length > 0 ? 'ran' : 'skipped'}>
+            {casesOpened.length > 0
+              ? `The case is closed: ${lesson.practicePairing.title}. Nothing about it is saved.`
+              : 'The case was skipped. Start it from this task whenever you like; Practice lists it too.'}
+          </p>
+        </section>
+      ) : null}
       {!lesson.introductory &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       stories.length > 0 ? (
@@ -1840,7 +1969,7 @@ function McsStageSession({
               <button
                 type="button"
                 aria-current={index === activeIndex ? 'step' : undefined}
-                disabled={index === activeIndex}
+                disabled={index === activeIndex || runningCaseId !== null}
                 onClick={() => goToStep(index)}
               >
                 {step.ordinal}. {step.title}
@@ -1852,31 +1981,20 @@ function McsStageSession({
           ))}
         </ol>
       </details>
-      {isLastStep ? (
-        <McsSectionRecap lesson={lesson} onRevisit={goToStep} folded={!transferCommitted} />
+      {/*
+       * The recap closes the section, so it sits on the last task: the case where the section has
+       * one. It waits under its heading until the closing answer is committed or the case is closed.
+       */}
+      {isLastStep && !runningCaseId ? (
+        <McsSectionRecap
+          lesson={lesson}
+          onRevisit={goToStep}
+          folded={!transferCommitted && !caseFinished}
+        />
       ) : null}
-      {isLastStep && sectionId === MCS_LVAD_PERFUSION_SECTION_ID ? <McsLvadPerfusionCase /> : null}
-      {isLastStep && lesson.practicePairing ? (
-        <section className={stageStyles.completion} data-stage-completion>
-          <h3>Take it to a patient case</h3>
-          <div className={stageStyles.completionActions}>
-            <button
-              type="button"
-              className={shellStyles.nowSecondary}
-              data-practice-pairing={lesson.practicePairing.kind}
-              onClick={() =>
-                router.push({
-                  pathname: `${mechanicalCirculatorySupportNavBase}/practice`,
-                  query: { case: lesson.practicePairing?.caseId ?? '' },
-                })
-              }
-            >
-              {lesson.practicePairing.kind === 'mechanism-match'
-                ? `Apply it in a case: ${lesson.practicePairing.title}`
-                : `Next case in this unit (a different mechanism): ${lesson.practicePairing.title}`}
-            </button>
-          </div>
-        </section>
+      {/* Section 8's two patients stay with the closing question; the case is the task after it. */}
+      {activeStep.interaction.kind === 'transfer' && sectionId === MCS_LVAD_PERFUSION_SECTION_ID ? (
+        <McsLvadPerfusionCase />
       ) : null}
       {/*
        * The glossary, from inside the lesson (F42). It opens over the task and closes back to this
@@ -1939,10 +2057,17 @@ function McsStageSession({
         </p>
         <p>{activeStep.instruction}</p>
         {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
-        <p>
-          Every task in this section is optional: open any of them from Tasks in this section, and
-          continue without answering or acting whenever you like.
-        </p>
+        {runningCaseId ? (
+          <p>
+            The case runs inside this task. Exit case, or the end of the case, brings you back here,
+            and the other tasks open again from Tasks in this section.
+          </p>
+        ) : (
+          <p>
+            Every task in this section is optional: open any of them from Tasks in this section, and
+            continue without answering or acting whenever you like.
+          </p>
+        )}
       </HelpDialog>
       <HelpDialog
         open={hintOpen && hint !== undefined}
@@ -1984,7 +2109,9 @@ function McsStageSession({
             <header className={shellStyles.header}>{header}</header>
             <div
               className={flowStyles.activity}
-              data-single-column={referenceViewed && visual ? undefined : 'reading'}
+              data-single-column={
+                onCaseStep ? 'case' : referenceViewed && visual ? undefined : 'reading'
+              }
             >
               {referenceViewed ? (
                 <FlowContent kind={activeStep.presentation} teaching={textColumn} visual={visual} />
@@ -2007,41 +2134,14 @@ function McsStageSession({
 }
 
 /* -------------------------------------------------------------------- *
- * Context-strip derivations
+ * Helpers (the clock bar's console line is `mcsClockContext`)
  * -------------------------------------------------------------------- */
-
-function settingLabel(state: McsSimulationState): string {
-  if (state.device.kind === 'iabp') {
-    return `1:${state.device.assistRatio} · ${state.device.triggerSource.toUpperCase()} trigger`
-  }
-  if (state.device.kind === 'lvad') return `${state.device.speedRpm} rpm`
-  const { left, right } = state.device
-  const parts: string[] = []
-  if (left.enabled) parts.push(`${left.variant === '55' ? '5.5' : 'CP'} P${left.performanceLevel}`)
-  if (right.enabled) parts.push(`RP P${right.performanceLevel}`)
-  return parts.join(' · ') || 'no pump in place'
-}
-
-function displayedFlowLabel(state: McsSimulationState): string {
-  if (state.device.kind === 'iabp') return 'none reported'
-  if (state.device.kind === 'lvad')
-    return `${(state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(1)} L/min`
-  const { left, right } = state.device
-  const parts: string[] = []
-  if (left.enabled) parts.push(`left ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min`)
-  if (right.enabled) parts.push(`right ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min`)
-  return parts.join(' · ') || 'none reported'
-}
 
 /** The read-back answer as a sentence: "It increased.", or that it held within the shown precision. */
 function directionSentence(direction: 'increased' | 'decreased' | 'unchanged'): string {
   return direction === 'unchanged'
     ? 'It did not change within the displayed precision.'
     : `It ${direction}.`
-}
-
-function alarmPriority(priority: 'advisory' | 'warning' | 'critical'): 'low' | 'medium' | 'high' {
-  return priority === 'critical' ? 'high' : priority === 'warning' ? 'medium' : 'low'
 }
 
 /** The first required transfer action that is not a guided button, resolved back to its control. */

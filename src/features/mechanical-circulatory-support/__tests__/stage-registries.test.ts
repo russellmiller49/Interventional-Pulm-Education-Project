@@ -162,6 +162,20 @@ describe('section specs — the ladder', () => {
         }),
         /case on another device/,
       ],
+      [
+        'a case on another mechanism that does not say what it applies instead',
+        mutate('lvad-alarms-emergencies', {
+          practicePairing: { caseId: 'LVAD-03', kind: 'next-in-unit' },
+        }),
+        /must say what it applies instead/,
+      ],
+      [
+        'one case as the last task of two sections',
+        mutate('lvad-parameters-assessment', {
+          practicePairing: { caseId: 'LVAD-02', kind: 'mechanism-match' },
+        }),
+        /LVAD-02 is the last task of more than one section/,
+      ],
     ]
     for (const [, specs, message] of cases) {
       expect(validateMcsSectionSpecs(specs).join('\n')).toMatch(message)
@@ -301,7 +315,7 @@ describe('one door', () => {
       expect(mcsGroupSummaryLine(group)).toMatch(/min$/)
     }
     expect(mcsGroupSummaryLine(groups[1])).toBe(
-      'Sections 3–4 · 2 sections · 3 cases · 1 integrated case · 22 min',
+      'Sections 3–4 · 2 sections · 3 cases · 1 integrated case · 42 min',
     )
   })
 })

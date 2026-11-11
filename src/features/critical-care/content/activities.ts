@@ -665,20 +665,22 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
  * isolates the mechanism the device manipulates and the second applies it at the bedside.
  *
  * The last figure in each row is the section's minutes. It must equal the section's `minutes` in
- * `learningPathways.ts` (the catalog check fails otherwise); both were re-estimated on 2026-11-10
- * after the MCS text cut, 114 minutes in all becoming 101.
+ * `learningPathways.ts` (the catalog check fails otherwise). Both were re-estimated on 2026-11-10
+ * after the MCS text cut. Every section after the two foundations ends on a case run inside it,
+ * and its minutes include the case's ten (`minutes` on the case, `practicePairing` in the
+ * module's section specs).
  */
 const mcsLessonSeeds: readonly ActivitySeed[] = (
   [
     ['mcs-foundations-signals', 'A pressure that looks fine', 'foundation', 1, 10],
     ['mcs-foundations-mechanisms', 'Three devices called support', 'foundation', 2, 11],
-    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1, 11],
-    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1, 11],
-    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2, 11],
-    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2, 10],
-    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3, 10],
-    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3, 10],
-    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1, 17],
+    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1, 21],
+    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1, 21],
+    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2, 21],
+    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2, 20],
+    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3, 20],
+    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3, 20],
+    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1, 27],
   ] as const
 ).map(([sourceId, title, curriculumStage, stageOrder, estimatedMinutes]) => ({
   sourceId,

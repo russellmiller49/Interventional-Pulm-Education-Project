@@ -198,7 +198,8 @@ describe('the section recap on the last step', () => {
   beforeEach(() => setupMcsStage())
 
   it('waits under its heading until the closing answer is committed, then opens', () => {
-    mountSection('lvad-parameters-assessment')
+    // A section with no case ends on its closing question.
+    mountSection('mcs-foundations-mechanisms')
     openTask('transfer')
     const recap = q('[data-section-recap]')!
     expect(recap).toHaveAttribute('data-recap-folded')
@@ -208,15 +209,35 @@ describe('the section recap on the last step', () => {
     expect(fold.querySelector('[data-recap-objective]')).not.toBeNull()
     expect(fold.querySelector('[data-recap-distinctions]')).not.toBeNull()
 
-    commitTransfer('lvad-parameters-assessment')
+    commitTransfer('mcs-foundations-mechanisms')
     expect(q('[data-section-recap]')).not.toHaveAttribute('data-recap-folded')
     expect(q('[data-section-recap-fold]')).toBeNull()
     expect(q('[data-recap-objective]')).not.toBeNull()
   })
 
+  it('moves to the case where the section ends on one, and opens once the answer is committed', () => {
+    const lastTask = () =>
+      [...document.querySelectorAll<HTMLButtonElement>('[data-step-list] button')].at(-1)!
+    mountSection('lvad-parameters-assessment')
+    openTask('transfer')
+    expect(q('[data-section-recap]')).toBeNull()
+    fireEvent.click(lastTask())
+    expect(currentStepId()).toBe('lvad-parameters-assessment-case')
+    expect(q('[data-section-recap]')).toHaveAttribute('data-recap-folded')
+
+    cleanup()
+    mountSection('lvad-parameters-assessment')
+    openTask('transfer')
+    commitTransfer('lvad-parameters-assessment')
+    fireEvent.click(lastTask())
+    expect(currentStepId()).toBe('lvad-parameters-assessment-case')
+    expect(q('[data-section-recap]')).not.toHaveAttribute('data-recap-folded')
+    expect(q('[data-recap-objective]')).not.toBeNull()
+  })
+
   it("keeps the module's one boundary statement outside the fold, on the closing screen", () => {
     mountSection('mcs-device-selection-integration')
-    openTask('transfer')
+    openTask('case')
     const statement = q('[data-section-recap] [data-teaching-simulator-statement]')!
     expect(statement).not.toBeNull()
     expect(statement.closest('details')).toBeNull()

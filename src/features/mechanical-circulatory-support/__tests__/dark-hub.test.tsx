@@ -72,8 +72,10 @@ describe('the practice workbench', () => {
     const start = sheet.indexOf(".moduleShell:not([data-activity-mode='true'])")
     const selectors = sheet.slice(start, sheet.indexOf('{', start))
     expect(selectors).toContain('[data-mcs-workbench-scope]')
-    // Three selectors and no more: none of them can match a lesson's stage.
-    expect(selectors.split(',').length).toBe(3)
+    // Four selectors and no more. Three cannot match a lesson's stage; the fourth is the one card
+    // inside a lesson that this stylesheet draws, the case that is a section's last task.
+    expect(selectors.split(',').map((selector) => selector.trim())).toHaveLength(4)
+    expect(selectors).toContain('.moduleShell [data-section-case]')
   })
 })
 

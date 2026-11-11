@@ -141,6 +141,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'iabp',
     title: 'The balloon that stays inflated too long',
     shortTitle: 'Late deflation',
+    minutes: 10,
     presentation:
       'An LV-predominant shock patient has weak augmentation and a higher assisted end-diastolic pressure after a timing change.',
     learningObjectives: [
@@ -200,6 +201,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'iabp',
     title: 'Irregular rhythm, unreliable trigger',
     shortTitle: 'Trigger mismatch',
+    minutes: 10,
     presentation:
       'A patient in atrial fibrillation has inconsistent assisted beats and variable augmentation.',
     learningObjectives: [
@@ -254,6 +256,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'iabp',
     title: 'Correct timing, inadequate circulation',
     shortTitle: 'Support ceiling',
+    minutes: 10,
     presentation:
       'Counterpulsation is well timed, but profound LV failure and poor RV delivery leave effective flow critically low.',
     learningObjectives: [
@@ -314,6 +317,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'impella',
     title: 'High support, underfilled LV',
     shortTitle: 'Suction physiology',
+    minutes: 10,
     presentation:
       'At a high performance level, device flow falls, PCWP is low, RAP is rising, and a suction alarm appears.',
     learningObjectives: [
@@ -381,6 +385,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'impella',
     title: 'Malposition with blood-trauma risk',
     shortTitle: 'Placement signal',
+    minutes: 10,
     presentation:
       'Displayed flow is below expectation, the motor-current pattern is abnormal, and hemolysis risk is rising.',
     learningObjectives: [
@@ -433,6 +438,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'impella',
     title: 'Low flow across high afterload',
     shortTitle: 'Afterload + purge',
+    minutes: 10,
     presentation:
       'The performance level is unchanged, MAP/SVR are high, estimated flow has fallen, and purge pressure is elevated.',
     learningObjectives: [
@@ -497,6 +503,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'lvad',
     title: 'Low flow with severe hypertension',
     shortTitle: 'Afterload-limited flow',
+    minutes: 10,
     presentation:
       'A durable LVAD patient has a low-flow alarm, elevated MAP, high SVR, and preserved filling.',
     learningObjectives: [
@@ -557,6 +564,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'lvad',
     title: 'Low flow with a failing right ventricle',
     shortTitle: 'RV-limited LVAD',
+    minutes: 10,
     presentation:
       'LVAD flow is low, RAP is high, PCWP is low-normal, PAPi is reduced, and pulmonary vascular load is elevated.',
     learningObjectives: [
@@ -634,6 +642,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'lvad',
     title: 'Controller alarm after power interruption',
     shortTitle: 'Power emergency',
+    minutes: 10,
     presentation: 'The controller reports loss of external power and pump flow falls to zero.',
     learningObjectives: [
       'Recognize a time-critical loss-of-support pattern.',

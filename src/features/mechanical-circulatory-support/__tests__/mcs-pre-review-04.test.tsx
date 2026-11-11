@@ -215,7 +215,8 @@ describe('the no-answer and skip-all paths', () => {
   it('lets the recap take a learner back to any step', () => {
     const sectionId = 'iabp-efficacy-limits'
     mountSection(sectionId)
-    const lesson = goToKind(sectionId, 'transfer') && buildMcsStageLesson(sectionId)
+    // The recap closes the section: on its last task, which is its case here.
+    const lesson = goToKind(sectionId, 'case') && buildMcsStageLesson(sectionId)
     const explain = lesson.steps.find((step) => step.interaction.kind === 'explain')!
     fireEvent.click(document.querySelector<HTMLElement>(`[data-recap-step="${explain.id}"]`)!)
     expect(currentStepId()).toBe(explain.id)

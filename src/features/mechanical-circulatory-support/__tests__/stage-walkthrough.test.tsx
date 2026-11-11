@@ -96,8 +96,14 @@ describe('the stage: one progression per section', () => {
       mountSection(sectionId)
       const lesson = buildMcsStageLesson(sectionId)
       const spec = mcsSectionSpec(sectionId)
-      const phases = lesson.steps.map((step) => step.phase)
+      // The five phases close the section; a paired section's case follows them as its last task.
+      const phases = lesson.steps
+        .filter((step) => step.interaction.kind !== 'case')
+        .map((step) => step.phase)
       expect(phases.slice(-5)).toEqual(['predict', 'act', 'observe', 'explain', 'transfer'])
+      expect(lesson.steps.at(-1)?.interaction.kind).toBe(
+        lesson.practicePairing ? 'case' : 'transfer',
+      )
 
       if (spec.walksTheLoop) {
         expect(nowCard().textContent).toMatch(/Follow three support pathways/)
@@ -160,17 +166,24 @@ describe('the stage: one progression per section', () => {
         'data-verdict-outcome',
         'correct',
       )
-      // The paired case is offered on the last task of a section that has one, answered or not.
+      // Nothing finishes on the transfer: a paired section goes on to its case, answered or not.
       const completion = () => document.querySelector('[data-stage-completion]')
-      if (lesson.practicePairing) expect(completion()).toBeInTheDocument()
-      else expect(completion()).toBeNull()
+      expect(completion()).toBeNull()
       performTransferWork(sectionId)
       expect(document.querySelector('[data-transfer-work]')).toHaveAttribute('data-met', 'true')
       expect(document.querySelector('[data-transfer-work-status]')).toHaveTextContent(
         'Done on this patient.',
       )
-      if (lesson.practicePairing) expect(completion()).toBeInTheDocument()
-      else expect(completion()).toBeNull()
+      expect(completion()).toBeNull()
+      if (lesson.practicePairing) {
+        expect(nowPrimary()?.textContent).toMatch(/^Continue to the case/)
+        continueStep()
+        expect(currentStepId()).toBe(`${sectionId}-case`)
+        expect(nowCard().querySelector('h2')?.textContent).toBe(
+          `Apply it: ${lesson.practicePairing.title}`,
+        )
+        expect(completion()).toBeNull()
+      }
       expect(storedLessonIds()).toEqual([])
     },
   )
@@ -242,7 +255,9 @@ describe('the stage: verdicts, Back, sources, help', () => {
     mountSection('lvad-alarms-emergencies')
     fireEvent.click(screen.getByRole('button', { name: /What do I do now/ }))
     const dialog = document.querySelector('dialog')
-    expect(dialog?.textContent).toContain('Task 1 of 6')
+    expect(dialog?.textContent).toContain(
+      `Task 1 of ${buildMcsStageLesson('lvad-alarms-emergencies').steps.length}`,
+    )
     expect(dialog?.textContent).toContain(
       buildMcsStageLesson('lvad-alarms-emergencies').steps[0].title,
     )
@@ -286,13 +301,18 @@ describe('the stage: verdicts, Back, sources, help', () => {
     })
   })
 
-  it('offers the paired case by presentation, and says when it applies a different mechanism', () => {
+  it('ends on the paired case by presentation, and says when it applies a different mechanism', () => {
     mountSection('lvad-alarms-emergencies')
     workThroughSection('lvad-alarms-emergencies')
-    const pairing = document.querySelector('[data-practice-pairing]')
-    expect(pairing).toHaveAttribute('data-practice-pairing', 'next-in-unit')
-    expect(pairing?.textContent).toMatch(/different mechanism/)
-    expect(pairing?.textContent).toMatch(/power interruption/i)
+    continueStep()
+    expect(nowCard().querySelector('h2')?.textContent).toMatch(/power interruption/i)
+    fireEvent.click(nowPrimary()!)
+    expect(document.querySelector('[data-case-strip]')?.textContent).toMatch(
+      /the last task of Section 8, on its power check, not its thrombosis pattern/,
+    )
+    // Nothing leaves the section for Practice.
+    expect(document.querySelector('[data-practice-pairing]')).toBeNull()
+    expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
   it('mounts a selected later-phase URL at its reference without invented work', () => {

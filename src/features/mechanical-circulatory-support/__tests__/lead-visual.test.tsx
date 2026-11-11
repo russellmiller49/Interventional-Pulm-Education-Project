@@ -46,7 +46,7 @@ describe('the lead visual of every MCS task', () => {
   it('is named on every step', () => {
     for (const lesson of lessons)
       for (const step of lesson.steps)
-        expect(['comparison', 'timing', 'map', 'anatomy']).toContain(step.leadVisual)
+        expect(['comparison', 'timing', 'map', 'anatomy', 'case']).toContain(step.leadVisual)
   })
 
   it('opens the heart-and-device view on the steps that lead with it, and only there by default', () => {
@@ -71,9 +71,15 @@ describe('the lead visual of every MCS task', () => {
     expect(leads('mcs-foundations-mechanisms')[0]).toBe('anatomy')
     // The LVAD controller's readings and the LVAD alarms: a table of numbers.
     expect(leads('lvad-parameters-assessment').filter((lead) => lead === 'anatomy').length).toBe(7)
-    expect(new Set(leads('lvad-alarms-emergencies'))).toEqual(new Set(['anatomy']))
-    // Every section closes on a patient, and that task shows the device on the heart.
-    for (const lesson of lessons) expect(lesson.steps.at(-1)!.leadVisual).toBe('anatomy')
+    expect(new Set(leads('lvad-alarms-emergencies'))).toEqual(new Set(['anatomy', 'case']))
+    // Every section's closing question is a patient, and that task shows the device on the heart.
+    // The case that follows it in sections 3 to 9 is its own picture: a monitor and a console.
+    for (const lesson of lessons) {
+      const transfer = lesson.steps.find((step) => step.interaction.kind === 'transfer')!
+      expect(transfer.leadVisual).toBe('anatomy')
+      for (const step of lesson.steps)
+        expect(step.leadVisual === 'case').toBe(step.interaction.kind === 'case')
+    }
   })
 })
 

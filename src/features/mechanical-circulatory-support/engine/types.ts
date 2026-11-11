@@ -281,6 +281,12 @@ export interface McsScenarioDefinition {
   device: McsDeviceKind
   title: string
   shortTitle: string
+  /**
+   * About how long one unhurried run takes: the readings, the prediction, a control or two and the
+   * worked explanation. Authored on every practice case; a case that is the last task of a Learn
+   * section adds this to the section's minutes.
+   */
+  minutes?: number
   presentation: string
   learningObjectives: readonly string[]
   initialPatient: McsPatientState
