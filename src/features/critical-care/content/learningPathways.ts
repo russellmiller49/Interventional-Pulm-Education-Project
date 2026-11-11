@@ -221,11 +221,16 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
     arcSentence:
       'Validate the signal, separate the mechanisms, work each device, and choose between them',
     sections: [
+      /*
+       * Minutes re-estimated 2026-11-10 after the MCS text cut. Each section's earlier figure is
+       * scaled by how much of its on-screen text remained, counted with the section recap open
+       * (a learner who answers the closing question reads it): 114 minutes became 101.
+       */
       {
         id: 'mcs-foundations-signals',
         shortTitle: 'Pressure and flow',
         title: 'A pressure that looks fine',
-        minutes: 12,
+        minutes: 10,
         description:
           'Build a pressure–flow baseline and separate patient, measurement, and device problems.',
         stage: 'foundation',
@@ -235,7 +240,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'mcs-foundations-mechanisms',
         shortTitle: 'Three devices',
         title: 'Three devices called support',
-        minutes: 12,
+        minutes: 11,
         description:
           'Distinguish what each mechanism changes before meeting the device that delivers it.',
         stage: 'foundation',
@@ -245,7 +250,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'iabp-timing-triggering',
         shortTitle: 'IABP timing',
         title: 'Is the balloon inflating at the right moment?',
-        minutes: 12,
+        minutes: 11,
         description:
           'Place inflation and deflation against the native beat, and match the trigger to signal quality.',
         stage: 'mechanism',
@@ -255,7 +260,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'iabp-efficacy-limits',
         shortTitle: 'IABP limits',
         title: 'Timed correctly, still not perfusing',
-        minutes: 12,
+        minutes: 11,
         description:
           'Read the assisted beat against the whole circulation, and decide whether the balloon is the problem.',
         stage: 'application',
@@ -265,7 +270,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'impella-unloading-placement',
         shortTitle: 'Impella flow',
         title: 'Where is the inlet sitting?',
-        minutes: 12,
+        minutes: 11,
         description:
           'The setting has not changed and the flow has fallen: decide what the readings say before any setting is touched.',
         stage: 'mechanism',
@@ -275,7 +280,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'impella-suction-purge-rv',
         shortTitle: 'Impella suction',
         title: 'A suction alarm at high support',
-        minutes: 12,
+        minutes: 10,
         description: 'Work the conditions in which more support produces less effective flow.',
         stage: 'application',
         activityId: 'mcs:learn:impella-suction-purge-rv',
@@ -284,7 +289,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'lvad-parameters-assessment',
         shortTitle: 'LVAD flow',
         title: 'Speed unchanged, resistance rising',
-        minutes: 12,
+        minutes: 10,
         description: 'Read speed, flow, power, and pulsatility index as one interdependent set.',
         stage: 'mechanism',
         activityId: 'mcs:learn:lvad-parameters-assessment',
@@ -293,7 +298,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'lvad-alarms-emergencies',
         shortTitle: 'LVAD alarms',
         title: 'An alarm at an unchanged speed',
-        minutes: 12,
+        minutes: 10,
         description:
           'Decide which of the controller’s readings is the signal when the speed has not changed.',
         stage: 'application',
@@ -303,7 +308,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'mcs-device-selection-integration',
         shortTitle: 'Choose',
         title: 'Low output on left-sided support',
-        minutes: 18,
+        minutes: 17,
         description:
           'Hold all three mechanisms against one phenotype and let the limiting problem select the device.',
         stage: 'integration',
