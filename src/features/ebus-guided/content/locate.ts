@@ -90,7 +90,7 @@ export const locateLessons: Lesson[] = [
       ),
       imagePolicy: 'none',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '7',
     takeaways: [
       'Multiplanar anatomy resolves station boundaries.',
@@ -198,7 +198,7 @@ export const locateLessons: Lesson[] = [
       instruction:
         'The scope is now at a different position in the left main bronchus. Find the node, the pulmonary artery and the esophagus again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '7',
     takeaways: [
       'Station 7 is an anatomical compartment, not an approach.',
@@ -308,7 +308,7 @@ export const locateLessons: Lesson[] = [
       instruction:
         'The scope now starts higher or lower in the same airway. Find the superior vena cava, the azygos vein and the node again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '4R',
     takeaways: [
       'Use vein landmarks to distinguish 2R, 4R, and 10R.',
@@ -395,7 +395,7 @@ export const locateLessons: Lesson[] = [
         'Routine transvascular sampling is outside this introductory course and is not a default solution.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '4L',
     takeaways: [
       'The arch and left pulmonary artery define key levels.',
@@ -472,7 +472,7 @@ export const locateLessons: Lesson[] = [
         'N2a counts a single ipsilateral mediastinal or subcarinal station; 11L is interlobar, which is N1.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '11Rs',
     takeaways: [
       'Branching landmarks distinguish interlobar stations.',

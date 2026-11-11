@@ -203,12 +203,14 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
   })
 
   it('says what a drawn schematic is and marks the structure a name selects', () => {
-    const { container } = render(<TeachingDiagram kind="stations" />)
+    // The airway drawing with unlabelled ovals was replaced by the nodal map (2026-11-10); the
+    // two schematics that remain keep this behaviour.
+    const { container } = render(<TeachingDiagram kind="ultrasound" />)
     expect(container.querySelector('[data-diagram-caption]')).toHaveTextContent(
       'A schematic drawn for this course, not to scale and not a patient image.',
     )
-    fireEvent.click(screen.getByRole('button', { name: '2. Carina' }))
-    expect(screen.getByRole('button', { name: '2. Carina' })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: '2. Airway wall' }))
+    expect(screen.getByRole('button', { name: '2. Airway wall' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )

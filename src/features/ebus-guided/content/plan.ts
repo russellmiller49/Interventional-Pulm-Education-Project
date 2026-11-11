@@ -190,7 +190,7 @@ export const planLessons: Lesson[] = [
         'Ipsilateral mediastinal involvement is N2; N1 is ipsilateral hilar, interlobar and intrapulmonary.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map-n',
     takeaways: [
       'Survey and specimen order serve different purposes.',
       'N2a versus N2b counts involved stations.',
@@ -285,7 +285,7 @@ export const planLessons: Lesson[] = [
         'An unassessed target is not a negative tissue result.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map-access',
     takeaways: [
       'EUS-B can add access, especially to the lower mediastinum.',
       'A difficult window requires a plan, not a presumed negative result.',

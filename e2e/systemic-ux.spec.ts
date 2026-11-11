@@ -130,6 +130,9 @@ for (const id of Object.keys(routes) as (keyof typeof routes)[]) {
         await page.locator('[data-now-primary]').click()
         await page.locator('[data-now-primary]').click()
       }
+      // An EBUS lesson opens on its prediction (2026-11-10); the depth example and its slider are
+      // the next step.
+      if (id === 'ebus') await goToActivity(page, 'image-depth:depth-example')
       const frame = page.frameLocator('iframe[title="EBUS workbench"]')
       const control =
         id === 'pi'
