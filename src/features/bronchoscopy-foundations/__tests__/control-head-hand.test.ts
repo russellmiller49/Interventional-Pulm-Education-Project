@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { leverPadPoint, thumbKnuckle } from '../components/scope/ControlHeadHand'
+import { leverPadPoint, thumbKnuckle } from '../components/scope/controlHeadHandPose'
 
 type Point = readonly [number, number, number]
 const PIVOT: Point = [-7, 29, 18]
