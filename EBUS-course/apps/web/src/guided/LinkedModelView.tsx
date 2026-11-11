@@ -1103,6 +1103,17 @@ export function LinkedModelView(props: Props) {
               {landmarkFeedback}
             </p>
           )}
+          {/* What the numbers on the image are: each structure found so far stays outlined. */}
+          {(evidence.identifiedStructures?.length ?? 0) > 0 && (
+            <p data-landmarks-found>
+              Outlined on the image:{' '}
+              {evidence
+                .identifiedStructures!.map(
+                  (id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id),
+                )
+                .join(' · ')}
+            </p>
+          )}
         </div>
       )}
       {identifying && !config.locked && alongAirway && (
@@ -1126,7 +1137,9 @@ export function LinkedModelView(props: Props) {
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
         <p role="status" data-landmarks-identified className="linked-task-line">
           Found on ultrasound:{' '}
-          {landmarkIds.map((id) => linkedLandmarkName(config.linkedLesson, id)).join(' · ')}
+          {landmarkIds
+            .map((id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id))
+            .join(' · ')}
           .{' '}
           {/* The line names the step the lesson is actually waiting for (owner feedback of
               2026-10-12): this lesson asks for the model section, not a sweep. */}
@@ -1152,6 +1165,21 @@ export function LinkedModelView(props: Props) {
           )}
         </p>
       )}
+      {/* The held image keeps its outlines; this says what each number is. */}
+      {config.locked &&
+        !config.demonstration &&
+        !alongAirway &&
+        !airwayView &&
+        (evidence.identifiedStructures?.length ?? 0) > 0 && (
+          <p className="linked-task-line" data-landmarks-legend>
+            On your image:{' '}
+            {evidence
+              .identifiedStructures!.map(
+                (id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id),
+              )
+              .join(' · ')}
+          </p>
+        )}
       {config.demonstration && (
         <div className="linked-demo">
           <strong>Try it</strong>
