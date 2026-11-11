@@ -24,10 +24,11 @@ jest.mock('@/i18n/navigation', () => ({
 /**
  * What a section has already shown is folded under its heading (owner, 2026-11-11).
  *
- * Measured on screen, the module's seventeen Explain cards held 30,313 of its 41,365 task-card
- * words. Each section has two, the Explain task and "What carried over", and the second printed
- * the first one's pattern table, control list and whole reference again, word for word: 12,684
- * words. Three folds, none of which removes a sentence:
+ * Measured on screen, the module's seventeen Explain cards held about 26,000 of its 36,900
+ * task-card words (counting what is drawn, not the text equivalents a screen reader gets). Each
+ * section has two, the Explain task and "What carried over", and the second printed the first
+ * one's pattern table, control list and whole reference again, word for word. Three folds, none
+ * of which removes a sentence:
  *
  *   A. on "What carried over", a block shown on the section's Explain task is a closed heading
  *      that says so;
@@ -35,7 +36,7 @@ jest.mock('@/i18n/navigation', () => ({
  *   C. the shock profiles and the validity sequence each have one home (Sections 8 and 2), and
  *      Section 9 shows them as closed headings.
  *
- * After: 27,722 words, a third fewer, every block one press away.
+ * After: about 25,300 words on screen, 32% fewer, every block one press away.
  */
 beforeAll(() => installDom())
 beforeEach(() => {

@@ -99,8 +99,9 @@ export function HemodynamicsTeachingColumn({
   /*
    * What the learner has already had is folded under its heading (owner, 2026-11-11).
    *
-   * Measured on screen, the seventeen Explain cards held 30,313 of the module's 41,365 task-card
-   * words, and 12,684 of those were blocks printed word for word earlier in the same section: each
+   * Measured on screen, the seventeen Explain cards held about 26,000 of the module's 36,900
+   * task-card words, and close to half of that was blocks printed word for word earlier in the
+   * same section: each
    * section has two Explain cards, and the second ("What carried over") printed the first one's
    * pattern table, control list and whole reference again. On the second card each of those blocks
    * is now a closed heading that says where it was shown; the worked explanation of the question
