@@ -186,6 +186,10 @@ Not done in this round: the cut of about a third of the task-column text. It cha
 
 Not done in this round: taking the drive's clock out of the bench's state and splitting `NavigationBench` into panes. Nothing above needed it. It is a refactor with no change the learner sees, so it is left for the round that builds the rolled-scope drill, which is what needs the panes apart.
 
+### Changed on November 10, 2026 (the text cut), for your read
+
+The task column says less: 17% fewer words over fifteen screens, 25% to 33% fewer where the scope is driven with the map. Every changed sentence is in [the clinical-language report](../clinical-language/bronchial-branch-tracing.md), before and after, with five further cuts that would remove content and are left for your ruling. Two cuts are in what is shown: the fork's CT table shows only while the CT is the middle pane, and "turning the CT is your choice" is said once a trip.
+
 ## Earlier design records
 
 These describe the course this one replaced and are kept as history: [flow redesign](flow-redesign.md), [its validation](flow-redesign-validation.md), [instructional update](instructional-update.md), [module brief](module-brief.md), [QA report](qa-report.md), [orientation QA](orientation-qa-report.md), [branch-decisions QA](branch-decisions-qa-report.md), [architecture decision](architecture-decision.md), and the screenshots under [review/](review/). The data records still apply: [source and coordinate audit](audit.md), [nomenclature](nomenclature-review.md), [nodule targets](nodule-target-review.md), [clinical review boundary](clinical-review.md), [Slicer export evidence](native-export-review.json).

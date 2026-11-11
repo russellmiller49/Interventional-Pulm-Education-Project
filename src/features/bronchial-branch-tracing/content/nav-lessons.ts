@@ -301,7 +301,7 @@ export function buildTrip(spec: NavTripSpec, options: DriveOptions): BuiltTrip {
 
 /** The ostium circle, said the same way wherever it is taught. */
 const OSTIUM_CHECKLIST =
-  'Work out the circle in three steps. First, which way does the segment run from its ostium? That direction and its opposite are along your line of sight, so they are not on the circle. Second, read the other four off the CT: looking toward the head, the axial CT as drawn is the view; looking toward the feet, it is that CT mirrored; looking along the slice, stand facing that way with your head up, and your right-hand side is the circle’s right. Third, turn the circle to however you hold the scope, but never mirror it.'
+  'Work out the circle in three steps. First, which way does the segment run from its ostium? That direction and its opposite lie along your line of sight, so they are not on the circle. Second, read the other four off the CT: looking toward the head, the axial CT as drawn is the view; toward the feet, it is that CT mirrored; along the slice, face that way with your head up, and your right is the circle’s right. Third, turn the circle to however you hold the scope, but never mirror it.'
 
 const AUTHORED: readonly NavLesson[] = [
   {
@@ -325,7 +325,7 @@ const AUTHORED: readonly NavLesson[] = [
           'junction-1': {
             steps: ['match', 'identify'],
             teach:
-              'Look at the letters on both pictures. The scope shows the patient’s right on the right. The CT shows it on the left, because the CT is drawn from the feet. The two are mirror images, so one flip matches them. Once they match, an opening on the right of the scope is the lumen on the right of the CT.',
+              'Look at the letters on both pictures. The scope shows the patient’s right on the right; the CT shows it on the left, because the CT is drawn from the feet. They are mirror images, so one flip matches them. Once they match, an opening on the right of the scope is the lumen on the right of the CT.',
           },
         },
       },
@@ -335,7 +335,7 @@ const AUTHORED: readonly NavLesson[] = [
         from: 'junction-14',
         through: 'junction-14',
         intro:
-          'The scope has climbed into RB1, the apical bronchus of the right upper lobe. Two things changed: it now looks straight up toward the head, and it has rolled so the right chest wall is at the bottom of the view. Kurimoto and Morita display the right upper lobe this way.',
+          'The scope has climbed into RB1, the apical bronchus of the right upper lobe. It now looks straight up toward the head, and it has rolled so the right chest wall is at the bottom of the view, as Kurimoto and Morita display the right upper lobe.',
         stations: {
           'junction-14': {
             steps: ['match'],
@@ -346,7 +346,7 @@ const AUTHORED: readonly NavLesson[] = [
       },
     ],
     closing:
-      'Looking down an airway, the CT is mirrored. Looking up an airway, it is not; it only needs turning. From the next lesson on, turning the CT is your choice: keep it as the radiologist shows it and turn it in your head, or turn it on the screen.',
+      'Looking down an airway, the CT is mirrored. Looking up an airway, it is not; it only needs turning. After this lesson, turning the CT is your choice: keep it as the radiologist shows it and turn it in your head, or turn it on the screen.',
   },
   {
     id: 'two-levels',
@@ -379,7 +379,7 @@ const AUTHORED: readonly NavLesson[] = [
       },
     ],
     closing:
-      'A fork on the CT is a few slices deep, not one picture. Scroll from the parent until a wall appears between two lumens; each daughter is named on the slice where it stands alone. Every map you draw from here on is built from that scrolling.',
+      'A fork on the CT is a few slices deep, not one picture. Scroll from the parent until a wall appears between two lumens; each daughter is named on the slice where it stands alone. Every map is built from that scrolling.',
   },
   {
     id: 'start-at-the-lesion',
@@ -388,20 +388,19 @@ const AUTHORED: readonly NavLesson[] = [
     objective:
       'Find the airway that runs into a peripheral lesion on the CT, follow it back to its segmental bronchus, and name that bronchus.',
     concept:
-      'A route is planned backwards. The lesion is the fixed point; the airway that enters it is the first thing to find. Following that airway toward the hilum, slice by slice, tells you which segment the route lies in, and the map starts at that segment’s ostium.',
+      'A route is planned backwards, from the lesion. Find the airway that enters it and follow it toward the hilum, slice by slice: that tells you which segment the route lies in, and the map starts at that segment’s ostium.',
     trips: [
       {
         traceId: 'right-upper-apical',
         title: 'A lesion in the right upper lobe',
-        intro:
-          'The lesion is drawn on the CT in the right upper lobe. The scope plays no part yet: this is the work done on the CT before the procedure.',
+        intro: 'The scope plays no part yet: this is the CT work done before the procedure.',
         plan: {
           parts: ['lesion', 'segment'],
           teach: {
             lesion:
-              'Scroll through the lesion and look for an airway that runs into it: a bronchus sign. The airways out here are a millimeter or two across, which is why planning uses thin slices. Where the wall of a larger airway shows a break, a small branch leaves through it. A small pulmonary artery runs beside each airway; where the airway is hard to see, follow the artery. Click the airway where it runs into the lesion.',
+              'An airway that runs into the lesion is a bronchus sign. The airways out here are a millimeter or two across, which is why planning uses thin slices. A break in the wall of a larger airway is where a small branch leaves. A small pulmonary artery runs beside each airway; where the airway is hard to see, follow the artery.',
             segment:
-              'Now follow that airway back toward the hilum, a slice at a time, keeping it in view as it joins larger airways. Stop at the segmental bronchus: the largest airway on the way back that still supplies this segment alone. Beyond it the airway joins the lobar bronchus, or a trunk it shares with other segments. Its ostium is where the map will start. Name it.',
+              'Go a slice at a time and stop at the segmental bronchus: the largest airway on the way back that still supplies this segment alone. Beyond it the airway joins the lobar bronchus, or a trunk it shares with other segments. Its ostium is where the map starts.',
           },
         },
       },
@@ -409,12 +408,12 @@ const AUTHORED: readonly NavLesson[] = [
         traceId: 'middle-lobe-caudal',
         title: 'A lesion in the middle lobe',
         intro:
-          'The same two steps, on a lesion in another lobe. Help is there if you want it, but try it on your own first.',
+          'The same two steps in another lobe. Try it on your own first; help is there if you want it.',
         plan: { parts: ['lesion', 'segment'] },
       },
     ],
     closing:
-      'Every plan starts here: the airway into the lesion, traced back to its segment. If there is no bronchus sign, choose the airway that gives the best approach to the lesion and trace that one.',
+      'Every plan starts with the airway into the lesion, traced back to its segment. If there is no bronchus sign, trace the airway that gives the best approach to the lesion.',
   },
   {
     id: 'stand-at-the-ostium',
@@ -423,17 +422,17 @@ const AUTHORED: readonly NavLesson[] = [
     objective:
       'Picture the bronchoscopic view at a segmental ostium and label the four directions around it, without mirroring them.',
     concept:
-      'Imagine the scope at the ostium of the segment, looking in. The map starts as a circle: the view into that ostium, with the four directions that lie across it written round the edge. How you hold the scope decides where the circle starts; it never decides which way round it goes.',
+      'Imagine the scope at the segment’s ostium, looking in. The map starts as a circle: that view, with the four directions that lie across it written round the edge. How you hold the scope decides where the circle starts, never which way round it goes.',
     trips: [
       {
         traceId: 'right-upper-apical',
         title: 'RB1: looking up',
         intro:
-          'The lesion you traced in the last lesson lies in RB1, the apical segment of the right upper lobe. Stand at the RB1 ostium and look in.',
+          'The lesion from the last lesson lies in RB1, the apical segment of the right upper lobe.',
         plan: {
           parts: ['frame'],
           teach: {
-            frame: `${OSTIUM_CHECKLIST} Label the four places round the circle, then check.`,
+            frame: OSTIUM_CHECKLIST,
           },
         },
       },
@@ -446,7 +445,7 @@ const AUTHORED: readonly NavLesson[] = [
           parts: ['frame'],
           teach: {
             frame:
-              'The same three steps. Compare your answer with RB1’s when you have checked it: what stayed in place, and what changed sides?',
+              'The same three steps. Once it is checked, compare it with RB1’s: what stayed in place, and what changed sides?',
           },
         },
       },
@@ -459,7 +458,7 @@ const AUTHORED: readonly NavLesson[] = [
       },
     ],
     closing:
-      'The circle is the view into the ostium. Up or down the airway, the axial CT gives it to you directly or mirrored; along the slice, face the way the segment runs with your head up. Any roll is yours to choose. From here on, turning the CT on screen is optional: the circle is where orientation now lives.',
+      'The circle is the view into the ostium. Up or down the airway, the axial CT gives it directly or mirrored; along the slice, face the way the segment runs with your head up. Any roll is yours to choose. Orientation now lives in the circle, so turning the CT on screen is optional.',
   },
   {
     id: 'nested-arcs',
@@ -468,7 +467,7 @@ const AUTHORED: readonly NavLesson[] = [
     objective:
       'Draw each division from a segmental ostium to a lesion as arcs nested inside the arc before it, and mark the branch that reaches the lesion.',
     concept:
-      'At each division the airway splits in two, sometimes three. Draw each branch as an arc on the side of the circle it leaves toward, relative to its sibling, and draw the next division inside the arc of the branch that goes on. The map does not need to be exact: it needs each branch on the right side of its sibling.',
+      'At each division the airway splits in two, sometimes three. Draw each branch as an arc on the side of the circle it leaves toward, relative to its sibling, and draw the next division inside the arc of the branch that goes on. The map need not be exact: each branch must be on the right side of its sibling.',
     trips: [
       {
         traceId: 'right-upper-apical',
@@ -480,7 +479,7 @@ const AUTHORED: readonly NavLesson[] = [
           locators: true,
           teach: {
             frame: 'The same circle as before, in whatever roll you chose.',
-            arcs: 'At each division, scroll the CT from the fork until the branches separate; the numbers on the CT mark them. For each branch, ask which way it moves compared with the other, and click that side of the current arc on the map. Then mark the branch that goes on toward the lesion: it is the airway you followed back from the lesion.',
+            arcs: 'The numbers on the CT mark the branches once they separate. Ask which way each branch moves compared with the other: that is its side of the current arc. The branch that goes on toward the lesion is the airway you followed back from it.',
           },
           divisions: {
             'junction-14':
@@ -494,12 +493,12 @@ const AUTHORED: readonly NavLesson[] = [
         traceId: 'right-upper-distal',
         title: 'The same ostium, another lesion',
         intro:
-          'A second lesion in the same segment. The circle is the same; the branches you follow are not. The CT numbers are off: find the branches yourself.',
+          'A second lesion in the same segment: the same circle, different branches. The CT numbers are off, so find the branches yourself.',
         plan: { parts: ['frame', 'arcs'] },
       },
     ],
     closing:
-      'A map is a circle, an arc for every branch at every division, and a star. Number the divisions in the order you will meet them; that is the order the scope will show them.',
+      'A map is a circle, an arc for every branch at every division, and a star. Number the divisions in the order the scope will meet them.',
   },
   {
     id: 'drive-with-the-map',
@@ -508,13 +507,13 @@ const AUTHORED: readonly NavLesson[] = [
     objective:
       'Drive the scope from the trachea to a lesion using your map past the segmental ostium, and recognize and back out of a branch that leads away.',
     concept:
-      'Above the segment the scope flies through airways you know, and stops at the fork where the segment’s bronchus leaves. From the segmental ostium the map takes over: at each division, find the arc that holds the star and take the opening on that side. A branch that leads away shows a division that is not on your map; that is the signal to back out.',
+      'Above the segment the scope flies through airways you know and stops at the fork where the segment’s bronchus leaves. From the segmental ostium the map takes over: at each division, take the opening on the side of the arc that holds the star. A branch that leads away shows a division that is not on your map: back out.',
     trips: [
       {
         traceId: 'right-upper-apical',
         title: 'Trachea to the RB1 lesion',
         intro:
-          'The RB1 lesion again, with the map you drew in the last lesson already on the bench. Drive from the trachea: the scope flies through the airways you know and stops where RB1 leaves. At the second division past the ostium, take the branch that leads away on purpose this once, to see what it looks like.',
+          'The RB1 lesion again, with the map from the last lesson already on the bench. The scope flies through the airways you know and stops where RB1 leaves. At the second division past the ostium, take the branch that leads away on purpose, this once, to see what it looks like.',
         plan: { parts: ['frame', 'arcs'], prefilled: true },
         from: 'junction-1',
         arrive: true,
@@ -525,11 +524,11 @@ const AUTHORED: readonly NavLesson[] = [
           },
           'junction-30': {
             teach:
-              'Take the opening that does not hold the star. Look at the division that comes into view and compare it with your map: nothing on the map is drawn there. Back out to this fork.',
+              'Take the opening that does not hold the star. Compare the division that comes into view with your map: nothing on the map is drawn there. Back out to this fork.',
           },
           'junction-61': {
             teach:
-              'The scope has turned as it went deeper, so the map may sit rotated against the view. Turn the map to the scope, or turn it in your head; either works, as long as you do it before you choose.',
+              'The scope has turned as it went deeper, so the map may sit rotated against the view. Turn the map to the scope, on screen or in your head, before you choose.',
           },
         },
       },
@@ -544,7 +543,7 @@ const AUTHORED: readonly NavLesson[] = [
     objective:
       'Use a coronal or sagittal reconstruction beside the axial CT to see a segment that runs forward, backward or out toward the chest wall, and map it.',
     concept:
-      'An axial slice cuts across the airways that run up and down, so scrolling it shows each division as one ring becoming two. A segment that runs forward or back is cut across by a coronal reconstruction instead, and one that runs out toward the chest wall by a sagittal. Mortimer and Saghaie suggest a pairing for each segment; take it as a starting point and use whatever shows the airway.',
+      'An axial slice cuts across airways that run up and down, so scrolling it shows each division as one ring becoming two. A segment that runs forward or back is cut across by a coronal reconstruction instead, and one that runs out toward the chest wall by a sagittal. Mortimer and Saghaie suggest a pairing for each segment: a starting point; use whatever shows the airway.',
     trips: [
       {
         traceId: 'upper-oblique-medial',
@@ -555,7 +554,7 @@ const AUTHORED: readonly NavLesson[] = [
           parts: ['lesion', 'segment', 'views', 'frame', 'arcs'],
           teach: {
             views:
-              'Open the coronal view beside the axial CT and scroll it to the segment. A click on it moves the axial CT to the same place. Turn the axial CT too if that helps you; none of this is checked.',
+              'Open the coronal view beside the axial CT and scroll it to the segment. A click on it moves the axial CT to the same place. Turn the axial CT too if that helps; none of this is checked.',
           },
         },
       },
@@ -583,14 +582,14 @@ const AUTHORED: readonly NavLesson[] = [
         traceId: 'left-lower-returning',
         title: 'A lesion in the left lower lobe',
         intro:
-          'The lesion is in the left lower lobe, yet it lies above the fork where the left main bronchus divides into its lobes. Plan it from the lesion, then drive.',
+          'The lesion is in the left lower lobe, yet it lies above the fork where the left main bronchus divides. Plan it from the lesion, then drive.',
         plan: { parts: ['lesion', 'segment', 'frame', 'arcs'] },
         from: 'junction-1',
         arrive: true,
         stations: {
           'junction-3': {
             teach:
-              'The lesion is in the lower lobe, but look at its slice: it is above this fork. Do not let the level decide for you. Decide by which lobe it is in.',
+              'The lesion is in the lower lobe, but its slice is above this fork. Decide by the lobe it is in, not by its level.',
           },
           'junction-6': {
             teach:

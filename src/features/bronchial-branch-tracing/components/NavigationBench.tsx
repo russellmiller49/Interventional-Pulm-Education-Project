@@ -606,6 +606,11 @@ export function NavigationBench({
       window.setTimeout(() => dispatch({ type: 'show-match' }), steps.length * SHOW_TURN_MS),
     ]
   }
+  // Said once a trip, at the first fork that asks anything: that turning the CT is the learner's
+  // choice. After that the Check my turn button beside the CT says it.
+  const firstStop =
+    session.log.filter((entry) => entry.matchAsked || entry.identifyAsked || entry.chooseAsked)
+      .length <= 1
   const reading = readMatch(match, session.orientation)
   const mark = useCallback((value: CtMark) => dispatch({ type: 'mark', mark: value }), [dispatch])
   const showMark = () => {
@@ -704,8 +709,8 @@ export function NavigationBench({
         help && !(map && pastOstium) ? lesionSentence(target, lesion) : lesionPlaceSentence(target),
       where:
         map && pastOstium
-          ? 'Map panel: the arc that holds the star. Take the opening on that side: click it in the scope, or its button here.'
-          : 'CT panel: follow each lumen with the slider. Lesion slice shows the lesion. Click the opening in the scope, or its button here.',
+          ? 'Map panel: the arc that holds the star. Click the opening on that side, in the scope or here.'
+          : 'CT panel: follow each lumen with the slider; Lesion slice shows the lesion. Click an opening in the scope or here.',
       primary: worked
         ? { label: 'Show the choice', onActivate: () => dispatch({ type: 'show-choice' }) }
         : undefined,
@@ -996,16 +1001,20 @@ export function NavigationBench({
               )}
               {/* A note about the CT's turn belongs beside the CT: with the map or a
                   reconstruction in the middle pane it would point at a picture that is not there. */}
-              {phase !== 'match' && session.matchNote !== 'asked' && !moving && centre === 'ct' && (
-                <p className={styles.note} data-match-note={session.matchNote}>
-                  {matchNoteSentence(
-                    session.matchNote,
-                    session.orientation,
-                    session.station === 0,
-                    match.oblique,
-                  )}
-                </p>
-              )}
+              {phase !== 'match' &&
+                session.matchNote !== 'asked' &&
+                !moving &&
+                centre === 'ct' &&
+                (session.matchNote !== 'optional' || firstStop) && (
+                  <p className={styles.note} data-match-note={session.matchNote}>
+                    {matchNoteSentence(
+                      session.matchNote,
+                      session.orientation,
+                      session.station === 0,
+                      match.oblique,
+                    )}
+                  </p>
+                )}
               {phase !== 'match' &&
                 session.matchNote === 'asked' &&
                 reading.kind === 'matches' &&
@@ -1037,30 +1046,36 @@ export function NavigationBench({
                 {!arrivedTeach && lookKind(camera.direction) === 'level' && (
                   <p>{alongSliceSentence(match)}</p>
                 )}
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">Opening</th>
-                      <th scope="col">In the scope</th>
-                      <th scope="col">On the CT</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {facts.openings.map((opening) => (
-                      <tr
-                        key={opening.index}
-                        onPointerEnter={() => hover(opening.index)(true)}
-                        onPointerLeave={() => hover(opening.index)(false)}
-                        data-row-hot={hot === opening.index || undefined}
-                      >
-                        <th scope="row">{openingName(opening, named(opening))}</th>
-                        <td>{opening.side}</td>
-                        <td>{openingLevelSentence(opening)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p>{forkPatternSentence(facts)}</p>
+                {/* Where each opening is on the CT is read with the CT: with the map in the middle
+                    pane the fork's card keeps to its name and what the lesson says of it. */}
+                {centre !== 'map' && (
+                  <>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Opening</th>
+                          <th scope="col">In the scope</th>
+                          <th scope="col">On the CT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {facts.openings.map((opening) => (
+                          <tr
+                            key={opening.index}
+                            onPointerEnter={() => hover(opening.index)(true)}
+                            onPointerLeave={() => hover(opening.index)(false)}
+                            data-row-hot={hot === opening.index || undefined}
+                          >
+                            <th scope="row">{openingName(opening, named(opening))}</th>
+                            <td>{opening.side}</td>
+                            <td>{openingLevelSentence(opening)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <p>{forkPatternSentence(facts)}</p>
+                  </>
+                )}
                 {/* Said before the openings are identified: what the lumens look like on their
                     slices. It names the airways, so it is kept off the trips that withhold names. */}
                 {packet?.entryLimitation &&
