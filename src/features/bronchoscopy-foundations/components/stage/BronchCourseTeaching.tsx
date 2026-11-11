@@ -10,6 +10,7 @@ import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
 import { isStillStructureId } from '../../content/media'
 import type { CourseVisual } from '../../content/courseFlow'
+import { TeachingStills } from './TeachingStills'
 import type { BronchStageLesson, BronchStageStep } from '../../content/stageLessons'
 import type { TourStop } from '../../content/types'
 import { ReadingTheViewTable } from '../ReadingTheViewTable'
@@ -58,7 +59,12 @@ export function BronchCourseTeaching({
   const reading = chunk.presentation !== 'skill' && chunk.presentation !== 'inspection'
   const sectionMedia = chunk.visual === 'section' && step.workspace.kind === 'media'
   const cards = step.learn && blocks.length ? [] : blocks
-  const figure = courseFigure(chunk.visual)
+  const figure =
+    chunk.visual === 'stills' && chunk.stills?.length ? (
+      <TeachingStills ids={chunk.stills} heading={chunk.stillsHeading} />
+    ) : (
+      courseFigure(chunk.visual)
+    )
   const instrument =
     chunk.visual === 'instrument' ? (
       section.id === 'pre-use-check' && !rewritten ? (
