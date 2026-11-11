@@ -82,4 +82,55 @@ describe('the map on screen', () => {
     // The model's arcs are never the route and are never numbered as branches.
     expect(container.querySelectorAll('[data-arc-ghost][data-arc-route]')).toHaveLength(0)
   })
+
+  it('turns and zooms inside a frame that never changes, with its words kept upright', () => {
+    const levels = [
+      { angles: [270, 90], route: 0 },
+      { angles: [0, 180], route: 1 },
+    ]
+    const stage = (container: HTMLElement) =>
+      (container.querySelector('[data-arc-turn]') as SVGGElement).style.transform
+    const whole = render(<ArcMap rim={RIM} levels={levels} star label="Your map" />)
+    const frame = whole.container.querySelector('svg')!.getAttribute('viewBox')
+    expect(stage(whole.container)).toBe('rotate(0deg) scale(1) translate(0px, 0px)')
+    whole.unmount()
+
+    // Zoomed on the second division and turned a quarter: the frame is the same; the map inside
+    // it is moved, enlarged and turned.
+    const turned = render(
+      <ArcMap rim={RIM} levels={levels} focus={1} rotation={90} star label="Your map" />,
+    )
+    expect(turned.container.querySelector('svg')!.getAttribute('viewBox')).toBe(frame)
+    expect(turned.container.querySelector('[data-arc-turn]')!.getAttribute('data-arc-turn')).toBe(
+      '90',
+    )
+    const moved = stage(turned.container)
+    expect(moved.startsWith('rotate(90deg) scale(')).toBe(true)
+    expect(Number(moved.match(/scale\(([\d.]+)\)/)![1])).toBeGreaterThan(1.1)
+    expect(moved).not.toContain('translate(0px, 0px)')
+    // Each rim word is turned back by as much as its frame is turned, so it reads upright.
+    const word = turned.container.querySelector('[data-arc-rim="top"]') as HTMLElement
+    expect(word.style.transform).toBe('translate(-50%, -50%) rotate(-90deg)')
+    expect((word.parentElement as HTMLElement).style.transform).toBe('rotate(90deg)')
+    // The words stay at their own places on that frame: the turn is the frame's, not theirs.
+    expect(word.style.top).toBe('6%')
+  })
+
+  it('carries a turn on by the shorter way round', () => {
+    const { container, rerender } = render(
+      <ArcMap rim={RIM} levels={[]} rotation={350} label="Your map" />,
+    )
+    const shown = () =>
+      Number(
+        (container.querySelector('[data-arc-turn]') as SVGGElement).style.transform.match(
+          /rotate\((-?[\d.]+)deg\)/,
+        )![1],
+      )
+    expect(shown()).toBe(350)
+    rerender(<ArcMap rim={RIM} levels={[]} rotation={10} label="Your map" />)
+    // Twenty degrees on, not three hundred and forty back.
+    expect(shown()).toBe(370)
+    rerender(<ArcMap rim={RIM} levels={[]} rotation={0} label="Your map" />)
+    expect(shown()).toBe(360)
+  })
 })

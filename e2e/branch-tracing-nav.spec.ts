@@ -68,14 +68,18 @@ async function showUntil(page: Page, until: RegExp, limit = 200) {
   }
   throw new Error(`The bench did not reach ${until}`)
 }
+/** A turn or a flip of the CT is a movement: a click waits until the picture is still. */
+const ctStill = (page: Page) => expect(ct(page)).not.toHaveAttribute('data-ct-turning', /.+/)
 /** Clicks the CT image at a fraction of its width and height. */
 async function clickCt(page: Page, fx: number, fy: number) {
+  await ctStill(page)
   const box = (await ct(page).boundingBox())!
   await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy)
 }
 
 /** Clicks the CT at a pixel of the source image, whatever way the CT is turned or zoomed. */
 async function clickSourcePixel(page: Page, x: number, y: number) {
+  await ctStill(page)
   const at = await ct(page).evaluate(
     (element, [px, py]) => {
       const image = element.querySelector('image') as SVGImageElement
@@ -407,6 +411,41 @@ test.describe('refresher 2: choose and drive', () => {
   })
 })
 
+test.describe('a turn of the CT is seen happening', () => {
+  test('a flip is a movement, and a match that is shown is played one turn at a time', async ({
+    page,
+  }) => {
+    await openBench(page, '/learn?lesson=carina-orientation')
+    await page.locator('[data-bench-restart]').click()
+    await expectStage(page, '0:match')
+    await page.locator('[data-ct-turn="flip"]').click()
+    // The picture is on its way; where it is going is already known.
+    await expect(ct(page)).toHaveAttribute('data-ct-turning', 'flip')
+    await expect(ct(page)).toHaveAttribute('data-orientation', '0r')
+    await ctStill(page)
+    await page.locator('[data-ct-turn="reset"]').click()
+    await expect(ct(page)).toHaveAttribute('data-orientation', '0')
+    // Shown, the flip is made for the learner to watch, and then the fork moves on.
+    await nowButton(page, 'Show me').click()
+    await expect(ct(page)).toHaveAttribute('data-ct-turning', 'flip')
+    await expectStage(page, '0:identify:0')
+    await expect(ct(page)).toHaveAttribute('data-orientation', '0r')
+  })
+
+  test('with reduced motion a turn is drawn at once', async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: 'reduce' })
+    const page = await context.newPage()
+    await openBench(page, '/learn?lesson=carina-orientation')
+    await page.locator('[data-bench-restart]').click()
+    await page.locator('[data-ct-turn="flip"]').click()
+    await expect(ct(page)).toHaveAttribute('data-orientation', '0r')
+    await expect(ct(page)).not.toHaveAttribute('data-ct-turning', /.+/)
+    await nowButton(page, 'Show me').click()
+    await expectStage(page, '0:identify:0')
+    await context.close()
+  })
+})
+
 test.describe('turning the CT is optional once it has been shown', () => {
   test('no fork waits for the match; a check is answered on request', async ({ page }) => {
     await orientationShown(page)
@@ -664,6 +703,27 @@ test.describe('driving with the map', () => {
     // numbered and not named until one is chosen: the name would be the answer.
     await expect(page.locator('[data-choice] strong')).toHaveText(['Opening 1', 'Opening 2'])
     await expect(page.locator('[data-fork-card] tbody')).not.toContainText('RB1')
+    // The same opening is lit wherever it shows: its button, its number in the scope, its marker
+    // on the CT and its row in the fork's table.
+    await expect(scope(page)).toHaveAttribute('data-scope-ready', 'true', { timeout: 30000 })
+    await expect(
+      page.locator('[data-opening-hot], [data-locator-hot], [data-row-hot]'),
+    ).toHaveCount(0)
+    await page.locator('[data-choice="2"]').hover()
+    await expect(scope(page).locator('[data-scope-opening="2"]')).toHaveAttribute(
+      'data-opening-hot',
+      'true',
+    )
+    await expect(scope(page).locator('[data-opening-hot]')).toHaveCount(1)
+    await expect(page.locator('[data-fork-card] [data-row-hot]')).toHaveCount(1)
+    await scope(page).locator('[data-scope-opening="1"]').hover()
+    await expect(page.locator('[data-choice="1"]')).toHaveAttribute('data-choice-hot', 'true')
+    await expect(page.locator('[data-choice="2"]')).not.toHaveAttribute('data-choice-hot', 'true')
+    // Where the scope is, on the whole tree: the route so far and the tip, in the scope pane.
+    await expect(page.locator('[data-tree-inset]')).toBeVisible()
+    await expect(page.locator('[data-tree-inset] [data-tree-route]')).toHaveCount(1)
+    const arcHere = Number(await page.locator('[data-tree-inset]').getAttribute('data-tree-arc'))
+    expect(arcHere).toBeGreaterThan(100)
     await expect(page.locator('[data-centre-pane="ct"]')).toBeVisible()
     await expect(page.locator('[data-stage-step="navigate"]')).toHaveAttribute(
       'data-stage-state',
@@ -677,6 +737,10 @@ test.describe('driving with the map', () => {
     // way it lies from this fork.
     await expect(now(page)).toContainText('ringed on slice')
     await expect(now(page)).not.toContainText('mm away')
+    // Deeper along the route, more of it is drawn on the tree.
+    expect(
+      Number(await page.locator('[data-tree-inset]').getAttribute('data-tree-arc')),
+    ).toBeGreaterThan(arcHere)
     const pose = await scope(page).getAttribute('data-scope-pose')
     await page.locator('[data-choice="2"]').click()
     await expectStage(page, '5:astray')
@@ -688,7 +752,14 @@ test.describe('driving with the map', () => {
     await page.locator('[data-centre-tab="ct"]').click()
     await expect(ct(page)).toBeVisible()
     await page.locator('[data-centre-tab="map"]').click()
-    await page.locator('[data-map-turn]').check()
+    // Turning the map to the scope is a switch beside the map; on, the map is turned.
+    const turnSwitch = page.locator('[data-map-turn]')
+    await expect(turnSwitch).toHaveAttribute('aria-checked', 'false')
+    await expect(page.locator('[data-arc-turn]')).toHaveAttribute('data-arc-turn', '0')
+    await turnSwitch.click()
+    await expect(turnSwitch).toHaveAttribute('aria-checked', 'true')
+    await expect(page.locator('[data-arc-turn]')).not.toHaveAttribute('data-arc-turn', '0')
+    await expect(page.locator('[data-map-turn-row]')).toContainText('follows the scope')
     await expect(page.locator('[data-arc-map]')).toBeVisible()
     await showUntil(page, /arrived/)
     const closing = await page.locator('[data-bench-closing]').innerText()
@@ -1052,6 +1123,8 @@ test.describe('one screen', () => {
       await square('map-drive', 'scope', scope(page))
       await square('map-drive', 'map', map)
       await inside('map-drive: openings', page.locator('[data-choice]'))
+      await inside('map-drive: tree', page.locator('[data-tree-inset]'))
+      await inside('map-drive: map turn', page.locator('[data-map-turn]'))
     })
 
   test('a bench has the whole window: no site menu or section tabs above it', async ({ page }) => {

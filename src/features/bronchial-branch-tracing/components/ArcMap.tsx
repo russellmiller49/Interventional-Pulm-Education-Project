@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import {
   RIMS,
   SECTORS,
@@ -59,6 +59,8 @@ export interface ArcMapProps {
    * circle itself, where they belong.
    */
   rimSlot?: (position: Rim) => ReactNode
+  /** The turn is following something that moves (the scope, mid-drive): keep close behind it. */
+  following?: boolean
 }
 
 const unit = (angle: number): [number, number] => {
@@ -66,6 +68,21 @@ const unit = (angle: number): [number, number] => {
   return [Math.sin(a), -Math.cos(a)]
 }
 const fmt = (n: number) => Number(n.toFixed(4))
+/** Half the width of the picture, in map units: the ostium circle with a little room round it. */
+const FRAME = 1.06
+
+/**
+ * An angle that carries on from the one before it by the shorter way round, so a turn from 350°
+ * to 10° is twenty degrees on, not three hundred and forty back. The value shown only ever changes
+ * by the difference, which is what lets the turn be animated.
+ */
+function useContinuousAngle(angle: number) {
+  const [shown, setShown] = useState(angle)
+  const gap = ((((angle - shown) % 360) + 540) % 360) - 180
+  // A new angle from the parent: carry the shown one on to it during this render.
+  if (Math.abs(gap) > 0.01) setShown(shown + gap)
+  return Math.abs(gap) > 0.01 ? shown + gap : shown
+}
 
 /** The region a division takes place in: the ostium, or the route's branch from the division before. */
 function divisionHome(regions: readonly MapRegion[], level: number) {
@@ -84,6 +101,7 @@ export function ArcMap({
   label,
   variant = 'large',
   rimSlot,
+  following = false,
 }: ArcMapProps) {
   const uid = useId().replace(/:/g, '')
   const all: MapLevel[] = [
@@ -97,8 +115,13 @@ export function ArcMap({
   const cx = zoomed ? zoomed.inner.cx : 0,
     cy = zoomed ? zoomed.inner.cy : 0
   // Zoomed far enough to keep the branch around the current one in view.
-  const half = zoomed ? Math.max(zoomed.inner.r * 2.1, 0.12) : 1.06
-  const viewBox = `${fmt(cx - half)} ${fmt(cy - half)} ${fmt(2 * half)} ${fmt(2 * half)}`
+  const half = zoomed ? Math.max(zoomed.inner.r * 2.1, 0.12) : FRAME
+  // The picture's frame never changes. The map inside it is moved so the current branch is at the
+  // centre, enlarged, and turned about that centre: three steps the browser can carry out as one
+  // movement, so a zoom into the next division and a turn to the scope are seen happening.
+  const turn = useContinuousAngle(rotation)
+  const stage = `rotate(${fmt(turn)}deg) scale(${fmt(FRAME / half)}) translate(${fmt(-cx)}px, ${fmt(-cy)}px)`
+  const upright = { transform: `rotate(${fmt(-turn)}deg)` }
   const clip = (id: string) => `${uid}-clip-${id.replace(':', '-')}`
   const byId = new Map(regions.map((r) => [r.id, r]))
   const target = regions.find((r) => r.target)
@@ -111,10 +134,11 @@ export function ArcMap({
       data-arc-map={label}
       data-arc-map-variant={variant}
       data-arc-zoomed={zoomed ? true : undefined}
+      data-arc-following={following || undefined}
       role="img"
       aria-label={`${label}: ${RIMS.map((r) => `${r} ${rim[r] ?? 'blank'}`).join(', ')}. ${all.length} ${all.length === 1 ? 'division' : 'divisions'} drawn.`}
     >
-      <svg viewBox={viewBox} aria-hidden>
+      <svg viewBox={`${-FRAME} ${-FRAME} ${2 * FRAME} ${2 * FRAME}`} aria-hidden>
         <defs>
           {regions.map((region) => {
             const parent = region.parent ? byId.get(region.parent)! : null
@@ -130,7 +154,7 @@ export function ArcMap({
             )
           })}
         </defs>
-        <g transform={`rotate(${fmt(rotation)})`}>
+        <g className={styles.arcStage} style={{ transform: stage }} data-arc-turn={fmt(rotation)}>
           <circle className={styles.arcOstium} cx={0} cy={0} r={1} />
           {home && (
             <circle
@@ -172,11 +196,11 @@ export function ArcMap({
             return (
               <text
                 key={`n${level}`}
-                className={styles.arcNumber}
+                className={`${styles.arcNumber} ${styles.arcUpright}`}
                 x={fmt(at.inner.cx)}
                 y={fmt(at.inner.cy)}
                 fontSize={fmt(Math.max(textSize, at.inner.r * 0.28))}
-                transform={`rotate(${fmt(-rotation)} ${fmt(at.inner.cx)} ${fmt(at.inner.cy)})`}
+                style={upright}
                 data-arc-division={level + 1}
               >
                 {level + 1}
@@ -216,7 +240,8 @@ export function ArcMap({
               })}
           {star && target && (
             <text
-              className={styles.arcStar}
+              className={`${styles.arcStar} ${styles.arcUpright}`}
+              style={upright}
               x={fmt(target.inner.cx)}
               y={fmt(target.inner.cy + target.inner.r * 0.32)}
               fontSize={fmt(Math.max(textSize * 1.4, target.inner.r * 0.9))}
@@ -250,32 +275,39 @@ export function ArcMap({
             })}
         </g>
       </svg>
-      {RIMS.map((position) => {
-        const [x, y] = unit(sectorAngle(rimSector[position]) + rotation)
-        const word = rim[position]
-        if (rimSlot)
+      {/* The rim words ride a frame that turns with the map, and each stays upright on it. */}
+      <div className={styles.arcRim} style={{ transform: `rotate(${fmt(turn)}deg)` }}>
+        {RIMS.map((position) => {
+          const [x, y] = unit(sectorAngle(rimSector[position]))
+          const word = rim[position]
+          if (rimSlot)
+            return (
+              <span
+                key={position}
+                className={styles.arcRimSlot}
+                // Just inside the rim, so a control at the left or right is not cut by the pane.
+                style={{ left: `${50 + 31 * x}%`, top: `${50 + 33 * y}%` }}
+                data-arc-rim-slot={position}
+              >
+                {rimSlot(position)}
+              </span>
+            )
           return (
             <span
               key={position}
-              className={styles.arcRimSlot}
-              // Just inside the rim, so a control at the left or right is not cut by the pane.
-              style={{ left: `${50 + 31 * x}%`, top: `${50 + 33 * y}%` }}
-              data-arc-rim-slot={position}
+              className={styles.arcRimWord}
+              style={{
+                left: `${50 + 44 * x}%`,
+                top: `${50 + 44 * y}%`,
+                transform: `translate(-50%, -50%) rotate(${fmt(-turn)}deg)`,
+              }}
+              data-arc-rim={position}
             >
-              {rimSlot(position)}
+              {word ? ANATOMICAL_LABEL[word] : '?'}
             </span>
           )
-        return (
-          <span
-            key={position}
-            className={styles.arcRimWord}
-            style={{ left: `${50 + 44 * x}%`, top: `${50 + 44 * y}%` }}
-            data-arc-rim={position}
-          >
-            {word ? ANATOMICAL_LABEL[word] : '?'}
-          </span>
-        )
-      })}
+        })}
+      </div>
     </div>
   )
 }

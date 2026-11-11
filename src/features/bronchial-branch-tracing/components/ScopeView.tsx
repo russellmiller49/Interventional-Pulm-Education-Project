@@ -31,6 +31,10 @@ export interface ScopeOpeningLabel extends ScopeOpening {
    * image to a screen reader, so the task card's own buttons stay the keyboard's way to choose.
    */
   onPick?: () => void
+  /** This opening is the one pointed at in another pane: lit here too. */
+  hot?: boolean
+  /** The pointer came onto, or left, this opening's number. */
+  onHover?: (on: boolean) => void
 }
 
 /** The patient directions that lie across the scope's view, with where each sits on its rim. */
@@ -228,8 +232,17 @@ export function ScopeView({
               data-opening-tone={opening.tone}
               data-opening-seen={opening.seen}
               data-opening-pick={opening.onPick ? true : undefined}
-              className={opening.onPick ? styles.openingPick : undefined}
+              data-opening-hot={opening.hot || undefined}
+              className={
+                opening.onPick
+                  ? styles.openingPick
+                  : opening.onHover
+                    ? styles.openingLive
+                    : undefined
+              }
               onClick={opening.onPick}
+              onPointerEnter={opening.onHover ? () => opening.onHover!(true) : undefined}
+              onPointerLeave={opening.onHover ? () => opening.onHover!(false) : undefined}
               aria-label={opening.ariaLabel}
             >
               {/* A wider target than the badge: an opening is chosen with one click on it. */}
