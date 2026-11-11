@@ -161,6 +161,14 @@ export function IntroductoryTeaching({
         </section>
       )
     case 'normal-walk':
+      // In the lesson stage the reference is with the catheter map, where it changes in place.
+      if (figureBeside)
+        return (
+          <p className={styles.dockNote} data-figure-pointer>
+            The normal tracing for each stop is shown with the catheter map and changes with the
+            stop.
+          </p>
+        )
       return (
         <section className={styles.teachingCard}>
           <h3>Normal waveform reference · current walk stop</h3>

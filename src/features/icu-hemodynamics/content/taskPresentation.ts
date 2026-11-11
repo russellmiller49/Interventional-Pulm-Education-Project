@@ -25,8 +25,18 @@ export type HemodynamicsPresentationKind =
  * `derived-value` is one calculated value drawn as what goes into it, its formula and what comes
  * out (`DerivedValueFigure`). The derived-values section had no drawing at all: its reading, its
  * two questions and its two Explain cards were text about equations.
+ *
+ * `normal-reference` is the normal tracing for the chamber the walk is standing in. It used to
+ * be the first thing in the walk's task card, with the stop's text and Next stop a few screens
+ * under it: pressing Next stop changed a tracing that had scrolled out of view (owner,
+ * 2026-11-11). It now sits under the catheter map and changes in place.
  */
-export type HemodynamicsSectionFigure = 'none' | 'pac-parts' | 'td-curve' | 'derived-value'
+export type HemodynamicsSectionFigure =
+  | 'none'
+  | 'pac-parts'
+  | 'td-curve'
+  | 'derived-value'
+  | 'normal-reference'
 
 export interface HemodynamicsTaskPresentation {
   readonly kind: HemodynamicsPresentationKind
@@ -62,6 +72,7 @@ function sectionFigure(
     (task === 'provenance-drill' || task === 'prediction' || task === 'explain')
   )
     return 'derived-value'
+  if (section === 'waveform-interpretation' && task === 'walk') return 'normal-reference'
   return 'none'
 }
 
@@ -91,7 +102,9 @@ function simulatorPresentation(
     case 'waveform-interpretation':
       return {
         kind: 'waveform-reader',
-        monitor: task === 'prediction' ? 'pac' : 'none',
+        // The walk's instruction compares the live shape with the normal reference, so the live
+        // strip is on screen for it (it was not, until November 2026).
+        monitor: task === 'prediction' || task === 'walk' ? 'pac' : 'none',
         anatomy: task === 'walk' || task === 'prediction' ? 'map' : 'none',
         controls: true,
       }

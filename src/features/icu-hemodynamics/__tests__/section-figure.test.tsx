@@ -75,7 +75,9 @@ describe('which steps name a section figure', () => {
               : sectionId === 'derived-hemodynamics' &&
                   (kind === 'provenance-drill' || kind === 'prediction' || kind === 'explain')
                 ? 'derived-value'
-                : 'none'
+                : sectionId === 'waveform-interpretation' && kind === 'walk'
+                  ? 'normal-reference'
+                  : 'none'
         expect({ step: step.id, named }).toEqual({ step: step.id, named: expected })
       }
     }
@@ -303,6 +305,134 @@ describe('the derived-values section on the stage', () => {
   })
 })
 
+describe('the walk through the four places', () => {
+  /*
+   * Owner, 2026-11-11: Next stop sat under the stop's waveforms, and pressing it changed a tracing
+   * the learner had scrolled past. The tracing is now with the catheter map in the visual column,
+   * Next stop is pinned at the foot of the view, and a new stop is read from its top.
+   */
+  const reference = () => document.querySelector<HTMLElement>('[data-walk-reference]')
+  const stop = () =>
+    document.querySelector('[data-walk-stop]')?.getAttribute('data-walk-stop') ?? undefined
+
+  it('keeps the stop’s normal tracing with the catheter map, not in the task card', () => {
+    mountSection('waveform-interpretation')
+    expect(reference()!.closest('[data-flow-visual]')).not.toBeNull()
+    expect(reference()!.closest('[data-section-figure]')).toHaveAttribute(
+      'data-section-figure',
+      'normal-reference',
+    )
+    // After the map: where the tip is, then what it writes.
+    const visual = document.querySelector('[data-flow-visual]')!
+    const map = visual.querySelector('[data-simulator-surface]')!
+    expect(
+      map.compareDocumentPosition(reference()!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    // The card holds the stop's text and points at the tracing; it has no second copy of it.
+    expect(document.querySelector('[data-now-card] [data-walk-reference]')).toBeNull()
+    expect(document.querySelector('[data-now-card] svg[role="img"]')).toBeNull()
+    expect(document.querySelector('[data-now-card] [data-figure-pointer]')).toHaveTextContent(
+      'shown with the catheter map',
+    )
+  })
+
+  it('draws the tracing ahead of the reference’s introduction and controls', () => {
+    mountSection('waveform-interpretation')
+    const first = reference()!.querySelector('[data-reference-figures-first]')!
+    const header = reference()!.querySelector('header')!
+    expect(first.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // The same tracing is not drawn a second time further down.
+    expect(reference()!.querySelectorAll('[class*="referenceSynchronizedFigures"]')).toHaveLength(1)
+    // The sentence that says what moves the walk names where the buttons now are.
+    expect(reference()!.querySelector('[data-reference-progress]')).toHaveTextContent(
+      'Next stop and Previous stop on the task card',
+    )
+  })
+
+  it('follows the stop: Next stop changes the map’s stop and the tracing together', () => {
+    mountSection('waveform-interpretation')
+    const seen: (readonly [string | undefined, string | null | undefined])[] = []
+    for (let guard = 0; guard < 6; guard += 1) {
+      seen.push([stop(), reference()?.getAttribute('data-walk-reference')])
+      if (!/Next stop/.test(document.querySelector('[data-now-primary]')?.textContent ?? '')) break
+      clickPrimary()
+    }
+    expect(seen).toEqual([
+      ['ra', 'ra'],
+      ['rv', 'rv'],
+      ['pa', 'pa'],
+      ['wedge', 'wedge'],
+    ])
+  })
+
+  it('shows the live strip for the chamber, so there is a live shape to compare', () => {
+    // The instruction says "compare the live shape with the normal reference"; until November
+    // 2026 the walk drew no live monitor at all.
+    const { lesson } = mountSection('waveform-interpretation')
+    expect(hemodynamicsTaskPresentation('waveform-interpretation', lesson.steps[0]).monitor).toBe(
+      'pac',
+    )
+    const strip = () => document.querySelector('[data-flow-visual] [data-monitor-column]')!
+    expect(strip().textContent).toMatch(/PAC · RA/)
+    // Ahead of the catheter map, level with the reference it is compared with.
+    const map = document.querySelector('[data-flow-visual] [data-catheter-map]')
+    if (map)
+      expect(strip().compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    clickPrimary()
+    expect(strip().textContent).toMatch(/PAC · RV/)
+    expect(reference()).toHaveAttribute('data-walk-reference', 'rv')
+  })
+
+  it('pins Next stop at the foot of the view on the walk, and only there', () => {
+    mountSection('waveform-interpretation')
+    const card = document.querySelector('[data-now-card]')!
+    expect(card).toHaveAttribute('data-pinned-actions')
+    expect(card.querySelector('[data-now-footer="pinned"] [data-now-primary]')).toHaveTextContent(
+      'Next stop',
+    )
+    cleanup()
+    // The pressure section's walk has one stop; the same rule holds there.
+    mountSection('pressure-system')
+    expect(document.querySelector('[data-now-card]')).toHaveAttribute('data-pinned-actions')
+    cleanup()
+    // A task that is not a walk keeps its action row where it was.
+    mountSection('why-measure')
+    expect(document.querySelector('[data-now-card]')).not.toHaveAttribute('data-pinned-actions')
+  })
+
+  it('reads a new stop from its top', () => {
+    const scrolled = jest.fn()
+    Element.prototype.scrollIntoView = scrolled
+    mountSection('waveform-interpretation')
+    scrolled.mockClear()
+    clickPrimary()
+    expect(stop()).toBe('rv')
+    expect(scrolled).toHaveBeenCalledWith({ block: 'start', behavior: 'instant' })
+  })
+})
+
+describe('the walk’s layout rules', () => {
+  const flow = readFileSync(
+    join(
+      process.cwd(),
+      'src/features/icu-hemodynamics/components/stage/hemodynamics-flow.module.css',
+    ),
+    'utf8',
+  )
+
+  it('sets the catheter map and the tracing side by side wherever the workspace has two panes', () => {
+    expect(flow).toMatch(
+      /@container hemo-activity \(min-width: 75rem\) \{\s*\.activity\s*> \[data-flow-content\]\[data-has-visual\]\s*> \[data-flow-visual\]:has\(> \[data-section-figure='normal-reference'\]\) \{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
+    )
+  })
+
+  it('leaves the walk out of the rule that gives the text half the width', () => {
+    expect(flow).toMatch(
+      /\[data-section-figure\]:not\(\[data-section-figure='normal-reference'\]\)/,
+    )
+  })
+})
+
 describe('the stylesheet rule that gives the text half the width beside a drawing', () => {
   const flow = readFileSync(
     join(
@@ -314,7 +444,7 @@ describe('the stylesheet rule that gives the text half the width beside a drawin
 
   it('applies where the visual column holds a section figure', () => {
     expect(flow).toMatch(
-      /\[data-flow-content\]\[data-has-visual\]:has\(> \[data-flow-visual\] > \[data-section-figure\]\) \{\s*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
+      /\[data-flow-content\]\[data-has-visual\]:has\(\s*> \[data-flow-visual\] > \[data-section-figure\]:not\(\[data-section-figure='normal-reference'\]\)\s*\) \{\s*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
     )
   })
 })
