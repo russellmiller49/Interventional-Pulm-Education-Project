@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useEffect, useRef, useState } from 'react'
+import { useId, useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { useStageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -17,7 +17,11 @@ import {
 import { pawpCaptureSteps } from '../../content/pawpCaptureSequence'
 import { pressureSystemValiditySteps } from '../../content/pressureSystemValidity'
 import { routeStop, routeStopNumber, type RouteStopId } from '../../content/routeSpine'
-import type { ControlStripState } from '../../content/sectionSpecs'
+import {
+  hemodynamicsSectionIds,
+  type ControlStripState,
+  type HemodynamicsSectionId,
+} from '../../content/sectionSpecs'
 import {
   grammarLocusLabels,
   SIGNAL_GRAMMAR_TREND_RULE,
@@ -25,7 +29,10 @@ import {
 } from '../../content/signalGrammar'
 import type { HemodynamicsStageLesson, HemodynamicsStageStep } from '../../content/stageLessons'
 import { HEMODYNAMICS_NUMBERS } from '../../content/teachingNumbers'
-import { CardiacOutputMethodModel } from '../CardiacOutputMethodModel'
+import {
+  CardiacOutputMethodModel,
+  type CardiacOutputMethodSectionId,
+} from '../CardiacOutputMethodModel'
 import { FickMethodWorkbench } from '../FickMethodWorkbench'
 import {
   HemodynamicsReferenceValues,
@@ -39,6 +46,11 @@ import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
 import type { HemodynamicSimulationState } from '../../engine/types'
 
+import {
+  THERMODILUTION_PAGES_AFTER_EXPLANATION,
+  THERMODILUTION_PAGES_BEFORE_QUESTIONS,
+  methodSectionsOn,
+} from './FlowPrerequisite'
 import { IntroductoryTeaching } from './IntroductoryTeaching'
 import styles from './hemodynamics-stage.module.css'
 
@@ -92,6 +104,43 @@ export function HemodynamicsTeachingColumn({
   const procedural =
     lesson.sectionId === 'catheter-advancement' || lesson.sectionId === 'pawp-capture'
   const independentAttempt = step.teaching === 'attempt' || step.surface === 'recognition'
+  /*
+   * What the learner has already had is folded under its heading (owner, 2026-11-11).
+   *
+   * Measured on screen, the seventeen Explain cards held about 26,000 of the module's 36,900
+   * task-card words, and close to half of that was blocks printed word for word earlier in the
+   * same section: each
+   * section has two Explain cards, and the second ("What carried over") printed the first one's
+   * pattern table, control list and whole reference again. On the second card each of those blocks
+   * is now a closed heading that says where it was shown; the worked explanation of the question
+   * stays open. Section 3's first Explain card also reprinted the teaching of the task before it.
+   * No sentence is removed: a folded block keeps its content and opens in place.
+   */
+  const explaining = flow && step.interaction.kind === 'explain'
+  const firstExplain = lesson.steps.find((candidate) => candidate.interaction.kind === 'explain')
+  const shownOn =
+    explaining && firstExplain && firstExplain.id !== step.id
+      ? `shown on task ${firstExplain.ordinal}`
+      : undefined
+  // The flow section's Explain card: its method block and its Fick block reprint reading pages.
+  const fickPages = lesson.steps.find((candidate) => candidate.interaction.kind === 'observe')
+  const earlierPages =
+    explaining && lesson.sectionId === 'thermodilution-series'
+      ? {
+          method: thermodilutionReadElsewhere(
+            `from task ${lesson.steps[0].ordinal}`,
+            // Only the Explain task reads on after its explanation.
+            step.phase === 'explain' ? 'on the pages after this card' : undefined,
+          ),
+          fick: fickPages ? `shown on task ${fickPages.ordinal}` : undefined,
+        }
+      : undefined
+  const teachingShownOn =
+    explaining && step.teaching && step.teaching !== 'attempt'
+      ? lesson.steps.find(
+          (candidate) => candidate.teaching === step.teaching && candidate.ordinal < step.ordinal,
+        )
+      : undefined
   const rows = signalGrammarRows.filter((row) => spec.grammarRowIds.includes(row.id))
   const stopsToShow = flow
     ? []
@@ -106,10 +155,20 @@ export function HemodynamicsTeachingColumn({
 
   return (
     <div ref={focusRef} className={styles.teaching} data-teaching-panel>
-      {step.teaching && state && (!flow || step.teaching !== 'attempt') ? (
+      {step.teaching && state && !teachingShownOn && (!flow || step.teaching !== 'attempt') ? (
         <div data-current-teaching={step.teaching}>
           <IntroductoryTeaching topic={step.teaching} state={state} figureBeside={flow} />
         </div>
+      ) : null}
+      {step.teaching && state && teachingShownOn ? (
+        <ReferenceBlock
+          heading={INTRO_TEACHING_HEADINGS[step.teaching] ?? 'The teaching for this question'}
+          repeat={`from task ${teachingShownOn.ordinal}`}
+        >
+          <div data-current-teaching={step.teaching}>
+            <IntroductoryTeaching topic={step.teaching} state={state} />
+          </div>
+        </ReferenceBlock>
       ) : null}
       {procedural && (!flow || step.interaction.kind === 'read') ? (
         <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} prebrief />
@@ -207,8 +266,14 @@ export function HemodynamicsTeachingColumn({
 
       {committed && !independentAttempt && (!flow || step.interaction.kind === 'explain') ? (
         <>
+          {shownOn ? (
+            <p className={styles.dockNote} data-carried-over-note>
+              The section&apos;s tables and reference were {shownOn} and are folded here. Open any
+              of them to read it again.
+            </p>
+          ) : null}
           {rows.length > 0 ? (
-            <StageBlock kind="after-commitment" heading="Waveform patterns and common causes">
+            <ReferenceBlock heading="Waveform patterns and common causes" repeat={shownOn}>
               <section className={styles.teachingCard} data-teaching-block="grammar">
                 <p className={styles.kicker}>Waveform patterns and common causes</p>
                 <table className={styles.grammarTable}>
@@ -238,10 +303,10 @@ export function HemodynamicsTeachingColumn({
                 </table>
                 <p className={styles.trendRule}>{SIGNAL_GRAMMAR_TREND_RULE}</p>
               </section>
-            </StageBlock>
+            </ReferenceBlock>
           ) : null}
 
-          <StageBlock kind="after-commitment" heading="Which control, if any">
+          <ReferenceBlock heading="Which control, if any" repeat={shownOn}>
             <section className={styles.teachingCard} data-teaching-block="control-strip">
               <p className={styles.kicker}>Which control, if any</p>
               <ul className={styles.controlStrip} data-control-strip={spec.controlStrip.verdict}>
@@ -260,10 +325,15 @@ export function HemodynamicsTeachingColumn({
               </ul>
               <p>{spec.controlStrip.sentence}</p>
             </section>
-          </StageBlock>
+          </ReferenceBlock>
 
           {!procedural ? (
-            <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} />
+            <DeeperReference
+              lesson={lesson}
+              provenanceResolved={provenanceResolved}
+              repeat={shownOn}
+              earlierPages={earlierPages}
+            />
           ) : null}
 
           {spec.modelBoundary.trim().length > 0 ? (
@@ -279,14 +349,90 @@ export function HemodynamicsTeachingColumn({
   )
 }
 
+/**
+ * Where the flow section reads each part of the thermodilution method instead of in the Explain
+ * card: the first task's pages (the sequence and quality checks it always read, and the two pages
+ * that now come before the questions), and the pages after the explanation.
+ */
+function thermodilutionReadElsewhere(
+  firstTask: string,
+  afterExplanation: string | undefined,
+): NonNullable<ComponentProps<typeof CardiacOutputMethodModel>['shownElsewhere']> {
+  const sections: Partial<Record<CardiacOutputMethodSectionId, string>> = {
+    acquisition: firstTask,
+    quality: firstTask,
+  }
+  for (const section of methodSectionsOn(THERMODILUTION_PAGES_BEFORE_QUESTIONS))
+    sections[section] = firstTask
+  if (afterExplanation)
+    for (const section of methodSectionsOn(THERMODILUTION_PAGES_AFTER_EXPLANATION))
+      sections[section] = afterExplanation
+  return { methodId: 'thermodilution', sections, openQuestions: afterExplanation }
+}
+
+/** The headings the introductory teaching carries, for where it is folded as already shown. */
+const INTRO_TEACHING_HEADINGS: Readonly<Record<string, string>> = {
+  'rv-pa': 'Right ventricle versus pulmonary artery',
+}
+
+/** "from Section 8": the section where a reference shared between sections is shown open. */
+function fromSection(sectionId: HemodynamicsSectionId): string {
+  return `from Section ${hemodynamicsSectionIds.indexOf(sectionId) + 1}`
+}
+
+/**
+ * A block of an Explain card. Where the learner has already had it (`repeat` says where), it is a
+ * closed heading that opens in place; otherwise it is the stage block it always was.
+ */
+function ReferenceBlock({
+  heading,
+  repeat,
+  children,
+}: {
+  readonly heading: string
+  readonly repeat?: string
+  readonly children: ReactNode
+}) {
+  if (repeat)
+    return (
+      <div data-repeated-block={repeat}>
+        <StageBlock
+          kind="after-commitment"
+          heading={`${heading} · ${repeat}`}
+          visibility="collapsed"
+        >
+          {children}
+        </StageBlock>
+      </div>
+    )
+  return (
+    <StageBlock kind="after-commitment" heading={heading}>
+      {children}
+    </StageBlock>
+  )
+}
+
 function DeeperReference({
   lesson,
   provenanceResolved,
   prebrief = false,
+  repeat,
+  earlierPages,
 }: {
   readonly lesson: HemodynamicsStageLesson
   readonly provenanceResolved: boolean
   readonly prebrief?: boolean
+  /** Where the learner has already had this section's reference ("shown on task 5"). */
+  readonly repeat?: string
+  /**
+   * The flow section's reading pages, where its Explain card would reprint them: the first task
+   * reads the thermodilution sequence and quality checks, and the Observe task reads the six Fick
+   * episodes one page at a time (`flowReadingParts`).
+   */
+  readonly earlierPages?: {
+    readonly method?: ComponentProps<typeof CardiacOutputMethodModel>['shownElsewhere']
+    readonly fick?: string
+  }
 }) {
   switch (lesson.sectionId) {
     case 'pressure-system':
@@ -294,14 +440,19 @@ function DeeperReference({
       return (
         <>
           {lesson.sectionId === 'pac-signal-validation' ? (
-            <StageBlock kind="after-commitment" heading="Shock profiles">
+            <ReferenceBlock heading="Shock profiles" repeat={fromSection('derived-hemodynamics')}>
               <section className={styles.teachingCard} data-teaching-block="shock-profiles">
                 <p className={styles.kicker}>Once the numbers are valid: which shock is it?</p>
                 <HemodynamicsShockProfiles />
               </section>
-            </StageBlock>
+            </ReferenceBlock>
           ) : null}
-          <StageBlock kind="after-commitment" heading="The validity sequence, in full">
+          <ReferenceBlock
+            heading="The validity sequence, in full"
+            repeat={
+              lesson.sectionId === 'pac-signal-validation' ? fromSection('pressure-system') : repeat
+            }
+          >
             <section className={styles.teachingCard} data-teaching-block="validity-sequence">
               <p className={styles.kicker}>The validity sequence, in full</p>
               <ol className={styles.sequence}>
@@ -314,34 +465,34 @@ function DeeperReference({
               </ol>
             </section>
             <SignalTroubleshootingAtlas />
-          </StageBlock>
+          </ReferenceBlock>
         </>
       )
     case 'waveform-interpretation':
       return (
         <>
-          <StageBlock kind="after-commitment" heading="The normal reference, in full">
+          <ReferenceBlock heading="The normal reference, in full" repeat={repeat}>
             <div data-teaching-block="normal-reference">
               <NormalWaveformReference />
             </div>
-          </StageBlock>
-          <StageBlock kind="after-commitment" heading="When a fault makes the place unnameable">
+          </ReferenceBlock>
+          <ReferenceBlock heading="When a fault makes the place unnameable" repeat={repeat}>
             <div data-teaching-block="validity-challenges">
               <NormalWaveformValidityChallenges />
             </div>
-          </StageBlock>
+          </ReferenceBlock>
         </>
       )
     case 'waveform-components':
       return (
-        <StageBlock kind="after-commitment" heading="The patterns the waves can make">
+        <ReferenceBlock heading="The patterns the waves can make" repeat={repeat}>
           <div data-teaching-block="abnormal-atlas">
             <WaveformAtlasPanel
               onlyCategories={['abnormal']}
               heading="The patterns the waves can make"
             />
           </div>
-        </StageBlock>
+        </ReferenceBlock>
       )
     case 'catheter-advancement':
       return (
@@ -424,7 +575,7 @@ function DeeperReference({
     case 'thermodilution-series':
       return (
         <>
-          <StageBlock kind="after-commitment" heading="Thermodilution technique">
+          <ReferenceBlock heading="Thermodilution technique" repeat={repeat}>
             <section className={styles.teachingCard} data-teaching-block="thermodilution-technique">
               <p className={styles.kicker}>Thermodilution technique</p>
               <p>
@@ -438,18 +589,21 @@ function DeeperReference({
                 ids={['injectate-volume', 'thermodilution-spread']}
               />
             </section>
-          </StageBlock>
-          <StageBlock kind="after-commitment" heading="The three ways to a flow number">
+          </ReferenceBlock>
+          <ReferenceBlock heading="The three ways to a flow number" repeat={repeat}>
             <div data-teaching-block="method-model">
-              <CardiacOutputMethodModel provenanceResolved={provenanceResolved} />
+              <CardiacOutputMethodModel
+                provenanceResolved={provenanceResolved}
+                shownElsewhere={earlierPages?.method}
+              />
             </div>
-          </StageBlock>
-          <StageBlock kind="after-commitment" heading="Fick, input by input">
+          </ReferenceBlock>
+          <ReferenceBlock heading="Fick, input by input" repeat={repeat}>
             <div data-teaching-block="fick-episodes">
-              <FickMethodWorkbench />
+              <FickMethodWorkbench episodesShownEarlier={earlierPages?.fick} />
             </div>
-          </StageBlock>
-          <StageBlock kind="after-commitment" heading="Vary the technique yourself">
+          </ReferenceBlock>
+          <ReferenceBlock heading="Vary the technique yourself" repeat={repeat}>
             {/*
               The thermodilution lab with adjustable volume, temperature, respiratory phase and
               injection time lives in the case workspace, on that case's own engine. It used to be
@@ -467,23 +621,23 @@ function DeeperReference({
               </p>
               <p data-thermodilution-lab-note>The lab is the last task of this section.</p>
             </section>
-          </StageBlock>
+          </ReferenceBlock>
         </>
       )
     case 'derived-hemodynamics':
       return (
         <>
-          <StageBlock kind="after-commitment" heading="Shock profiles">
+          <ReferenceBlock heading="Shock profiles" repeat={repeat}>
             <section className={styles.teachingCard} data-teaching-block="shock-profiles">
               <p className={styles.kicker}>Shock profiles: what the numbers add up to</p>
               <HemodynamicsShockProfiles />
             </section>
-          </StageBlock>
-          <StageBlock kind="after-commitment" heading="Each calculated value, input by input">
+          </ReferenceBlock>
+          <ReferenceBlock heading="Each calculated value, input by input" repeat={repeat}>
             <div data-teaching-block="derived-records">
               <DerivedHemodynamicsTeachingPanel />
             </div>
-          </StageBlock>
+          </ReferenceBlock>
         </>
       )
     default:

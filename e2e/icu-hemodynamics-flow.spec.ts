@@ -444,7 +444,13 @@ test('thermodilution ledger precedes Fick and keeps disagreement decisions separ
     'correct',
   )
   await primary(page)
+  // The explanation comes first; the rest of the method is read on from it, a page at a time.
+  await expect(page.locator('[data-now-card] [data-now-primary]')).toHaveText(
+    /Read on: the method, 3 pages/,
+  )
   await primary(page)
+  await expect(page.locator('[data-now-card] h2')).toHaveText('Where every value came from')
+  await readings(page)
   await answer(page, /Reject the poor curve and repeat it at end expiration/)
   const lab = page.locator('[data-surface="disagreement"]')
   const correct = [

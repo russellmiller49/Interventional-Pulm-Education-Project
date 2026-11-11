@@ -2841,6 +2841,34 @@
   background: #fbfdfc;
 }
 
+/*
+ * A part of the cardiac-output method read as a page of its own. The lists inside were drawn for
+ * the light card the Explain card puts them on, so the page gives them the same card, at the
+ * page's type size.
+ */
+.methodPageSurface {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #d5e3e1;
+  border-radius: 0.8rem;
+  background: #fbfdfc;
+  color: #24393d;
+}
+
+.methodPageSurface > :first-child {
+  margin-top: 0;
+}
+
+.methodPageSurface > dl,
+.methodPageSurface > ul,
+.methodPageSurface > ol,
+.methodPageSurface > p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 .measurementTeachingCardHeading {
   display: flex;
   gap: 0.6rem;
@@ -5867,6 +5895,19 @@
   border-color: #c8899a;
   color: #7c2a3d;
   background: #fceef1;
+}
+
+/* A part of a reference card the learner has already read, as a closed heading that opens in place. */
+.repeatedPart {
+  margin-block: 0.5rem;
+}
+.repeatedPart > summary {
+  padding: 0.45rem 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.repeatedPart[open] > summary {
+  margin-bottom: 0.4rem;
 }
 
 .thermoTrialCurve {
