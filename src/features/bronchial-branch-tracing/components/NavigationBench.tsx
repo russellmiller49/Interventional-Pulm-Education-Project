@@ -81,6 +81,7 @@ import {
   tipSlice as astrayTipSlice,
 } from '../geometry/astray'
 import { falloffMmFor, routeRadiusMm } from '../geometry/airway-radius'
+import { openingAnchors } from '../geometry/opening-anchors'
 import type { Vec3 } from '../geometry/coordinates'
 import { AirwayTreeInset } from './AirwayTreeInset'
 import { ArcMap } from './ArcMap'
@@ -563,23 +564,9 @@ export function NavigationBench({
         ? []
         : facts.openings.map((opening) => {
             const option = checkpoint.decision!.options[opening.index]
-            const fork = checkpoint.decision!.junctionLps
-            const delta = [
-              option.lps[0] - fork[0],
-              option.lps[1] - fork[1],
-              option.lps[2] - fork[2],
-            ]
-            const length = Math.hypot(delta[0], delta[1], delta[2]) || 1
-            const at = (mm: number) =>
-              [0, 1, 2].map((axis) => fork[axis] + (delta[axis] / length) * mm) as [
-                number,
-                number,
-                number,
-              ]
             return {
               id: `${stationKey}:${opening.index}`,
-              // Deepest first: the number should sit in the opening, not on the spur in front of it.
-              anchors: [at(12), at(9), at(6), at(Math.min(3, length)), at(1.5)],
+              anchors: openingAnchors(checkpoint.decision!.junctionLps, option.lps),
               text: openingNumber(opening.index),
               caption: named(opening) && !opening.repeatedName ? opening.airway.code : undefined,
               tone: session.declined.includes(opening.index)

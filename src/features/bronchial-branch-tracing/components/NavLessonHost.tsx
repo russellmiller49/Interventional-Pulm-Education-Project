@@ -24,7 +24,9 @@ import {
   type NavLesson,
 } from '../content/nav-lessons'
 import { planSummaryLines } from '../content/plan-copy'
+import { ROLL_TITLE } from '../content/roll-copy'
 import { DEMO_LESSON_ID } from '../engine/demo-script'
+import { ROLL_DRILL_ID } from '../engine/roll-drill'
 import { summarize } from '../engine/nav-session'
 import {
   navKey,
@@ -45,6 +47,7 @@ import styles from './nav-bench.module.css'
 // Kept below the module frame: the frame's stylesheet has to load before the bench's, which
 // overrides it at equal weight, and a file that brings in the bench first reverses the two.
 import { DemoPlayer } from './DemoPlayer'
+import { RollDrillBench } from './RollDrillBench'
 
 export function NavLessonHost({ requestedId }: { requestedId?: string }) {
   const lesson = lessonById(requestedId) ?? NAV_LESSONS[0]
@@ -52,18 +55,22 @@ export function NavLessonHost({ requestedId }: { requestedId?: string }) {
   // The demonstration has the Learn address of a lesson, but it is watched, not worked: it has
   // no place to save and is not one of the lessons.
   const demo = requestedId === DEMO_LESSON_ID
+  // So has the drill: one bench of its own, five divisions, nothing saved but that it was done.
+  const drill = requestedId === ROLL_DRILL_ID
   return (
     <ModuleFrame section="learn" activity>
       {hydrated ? (
         demo ? (
           <DemoPlayer />
+        ) : drill ? (
+          <RollDrill />
         ) : (
           <LessonTrips key={lesson.id} lesson={lesson} />
         )
       ) : (
         <section aria-busy="true">
           <p role="status" style={{ padding: '1rem' }}>
-            Loading {demo ? 'the demonstration' : lessonLabel(lesson, ': ')}…
+            Loading {demo ? 'the demonstration' : drill ? ROLL_TITLE : lessonLabel(lesson, ': ')}…
           </p>
         </section>
       )}
@@ -217,7 +224,7 @@ function Trip({
               ],
               next: next
                 ? { label: lessonLabel(next, ': '), href: lessonHref(next.id) }
-                : { label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` },
+                : { label: `Drill: ${ROLL_TITLE}`, href: lessonHref(ROLL_DRILL_ID) },
             }
           : {
               heading: arrived ? 'You have reached the lesion' : 'End of this trip',
@@ -267,6 +274,20 @@ function Trip({
           </dl>
         </details>
       }
+    />
+  )
+}
+
+/** The drill, opened: its place in the course is that it was opened, and then that it was done. */
+function RollDrill() {
+  useEffect(() => {
+    recordLessonOpened(ROLL_DRILL_ID)
+  }, [])
+  return (
+    <RollDrillBench
+      exit={<Link href={BASE_PATH}>Course overview</Link>}
+      next={{ label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` }}
+      onDone={() => setLessonReviewed(ROLL_DRILL_ID, true)}
     />
   )
 }

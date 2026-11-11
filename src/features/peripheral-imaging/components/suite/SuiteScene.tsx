@@ -15,7 +15,7 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Anatomy } from './Anatomy'
 import { Room, ROOM_BACKGROUND, roomBounds } from './Room'
-import { ParametricCarm, BeamCone } from './ParametricCarm'
+import { ParametricCarm, CarmStand, BeamCone } from './ParametricCarm'
 import { DetectorImage } from './DetectorImage'
 import { Monitor } from './Monitor'
 import type { DrrTextureSource } from './drrTextureSource'
@@ -60,7 +60,9 @@ import {
   cbctOrbitSamples,
   roomMonitorOffset,
   fieldGeometry,
+  SCENE_REFLECTION,
 } from './suiteModel'
+import { PatientBody } from './PatientBody'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -74,7 +76,7 @@ import styles from './suite-scene.module.css'
 const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | 'target', string> = {
   suite:
     'Suite: the whole C-arm, table and patient, to see where each component of image formation sits.',
-  beam: 'Beam view: from the X-ray tube, looking along the beam to the detector. Everything the beam crosses lines up, which is why a projection superimposes it.',
+  beam: 'Beam view: from the X-ray tube, looking along the beam through the table to the detector. Everything the beam crosses lines up, which is why a projection superimposes it. At 0° you are behind the patient, so left and right are the reverse of the displayed image.',
   anterior:
     'Anterior: looking down on the patient from the front. At 0° the detector is nearest you and covers the chest; the tube is beneath the table. Rotate the C-arm and the detector moves off the chest.',
   side: 'Side: from beside the table. The tube is below, the detector above, and the depth between the tool and the target, which a frontal image collapses, is visible.',
@@ -208,6 +210,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const frame = useMemo(
     () => suiteFrame(sceneOrbit, inputs.tilt, sceneGeometry),
     [sceneOrbit, inputs.tilt, sceneGeometry],
+  )
+  // The same C-arm as the room sees it. With the patient on a wedge the patient-side scene is
+  // rolled, and `frame` is the C-arm relative to the patient; the stand and the overview cameras
+  // belong to the room.
+  const roomFrame = useMemo(
+    () => (roll === 0 ? frame : suiteFrame(sceneOrbit + roll, inputs.tilt, sceneGeometry)),
+    [frame, roll, sceneOrbit, inputs.tilt, sceneGeometry],
   )
   const detectorFrame = useMemo(
     () => ({ center: frame.detectorCenter, u: frame.u, v: frame.v, field: frame.geometry.field }),
@@ -383,6 +392,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         : [],
     [view.layers, view.mode, drrMode, frame, inputs, translation],
   )
+  // The figure lies on the table, so it is drawn wherever the table is. The sampling close-up is
+  // inside the chest, where a skin would only veil the planes.
+  const showPatient = isRoom
+    ? view.layers.includes('Thoracic envelope')
+    : view.layers.includes('table') && view.mode !== 'sampling'
   const stepPurposeId = useId()
   const stepPurpose =
     view.mode === 'sampling'
@@ -414,6 +428,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     }
   }, [view.mode, frame, inputs.fieldPercent])
   const viewControls = visibleLabControls(view, props.independent)
+  // Where the learner is working the C-arm's angles on a projection, the image can colour bone by
+  // depth. Not on a check (it has no controls), and not where the display range is being read from
+  // the image itself.
+  const boneDepthAid =
+    (view.mode === 'projection' || view.mode === 'signal') &&
+    !fieldProcessing &&
+    viewControls.some((control) => control.key === 'orbit' || control.key === 'tilt')
   const comparable = !props.independent && (viewControls.length > 0 || props.comparable === true)
   const orbitBinding = view.bindings.find((b) => b.input === 'orbit')
   const sequenceStep =
@@ -539,124 +560,143 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           color="#9ab9cf"
                         />
                         <Suspense fallback={null}>
-                          <Room
-                            layers={view.layers}
-                            geometry={inputs.geometry}
-                            floorSpan={staffModel ? 8000 : undefined}
-                            atRest={isRoom}
-                          />
-                          <group rotation={[0, 0, (roll * Math.PI) / 180]}>
-                            <Anatomy
+                          <group scale={SCENE_REFLECTION}>
+                            <Room
                               layers={view.layers}
-                              offset={translation}
-                              contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
-                              room={isRoom}
+                              geometry={inputs.geometry}
+                              floorSpan={staffModel ? 8000 : undefined}
+                              atRest={isRoom}
+                              tableShift={isCbct ? translation : undefined}
+                              screen={source}
+                              ghostTable={displayCamera === 'beam'}
+                              wedgeDeg={roll}
                             />
-                            {view.layers.includes('gantry') && (
-                              <ParametricCarm
-                                frame={frame}
-                                variant={inputs.variant}
-                                atRest={isRoom}
-                                lit={
-                                  view.mode === 'time'
-                                    ? timeModel.pulseIsOn
-                                    : view.litStop === 'source'
-                                }
-                                shutters={!['field', 'dose'].includes(view.mode)}
-                              />
+                            {view.layers.includes('gantry') && displayCamera !== 'beam' && (
+                              <CarmStand frame={roomFrame} variant={inputs.variant} />
                             )}
-                            {view.layers.includes('cone') && (
-                              <BeamCone
-                                frame={frame}
-                                fieldPercent={dose ? dose.fieldPercent : inputs.fieldPercent}
-                                target={dose ? frame.iso : undefined}
-                                opacity={isRoom ? 0.14 : undefined}
-                              />
-                            )}
-                            {view.layers.includes('gantry') && (
-                              <DetectorImage frame={detectorFrame} source={source} />
-                            )}
-                            {drrMode && !['time', 'navigation'].includes(view.mode) && (
-                              <ProjectionView3D
-                                frame={frame}
-                                inputs={inputs}
+                            <group rotation={[0, 0, (roll * Math.PI) / 180]}>
+                              <Anatomy
+                                layers={view.layers}
                                 offset={translation}
-                                ray={view.layers.includes('ray')}
+                                contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
+                                room={isRoom}
                               />
-                            )}
-                            {view.mode === 'time' && (
-                              <TimeView
-                                frame={frame}
-                                model={timeModel}
-                                portal={portal as RefObject<HTMLDivElement>}
-                                labels={view.layers.includes('labels')}
-                              />
-                            )}
-                            {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
-                            {dts.active && (
-                              <TomosynthesisView
-                                model={dts}
-                                inputs={inputs}
-                                prior={view.mode === 'dts-prior'}
-                              />
-                            )}
-                            {view.mode === 'sampling' && !props.independent && (
-                              <SamplingView
-                                inputs={inputs}
-                                volume={volume}
-                                planes={view.layers.includes('planes')}
-                                portal={portal as RefObject<HTMLDivElement>}
-                                labels={view.layers.includes('labels')}
-                              />
-                            )}
-                            {isRegistration && (
-                              <RegistrationView
-                                inputs={inputs}
-                                augmented={view.mode === 'augmented'}
-                                portal={portal as RefObject<HTMLDivElement>}
-                                labels={view.layers.includes('labels')}
-                                onSensor={setRegisteredSensor}
-                              />
-                            )}
-                            {view.mode === 'staff' && (
-                              <StaffView inputs={inputs} layers={view.layers} />
-                            )}
-                            {view.mode === 'dose' && view.layers.includes('planes') && (
-                              <DoseView inputs={inputs} profile={profile} />
-                            )}
-                            {fieldVisible && (
-                              <FieldView
-                                frame={frame}
-                                fieldPercent={inputs.fieldPercent}
-                                crop={false}
-                              />
-                            )}
-                            {view.mode === 'signal' && view.layers.includes('ray') && (
-                              <RayTrace segments={segments} />
-                            )}
-                            {showChain && (
-                              <ChainPins
-                                objectLabels={objectLabels}
-                                frame={frame}
-                                portal={portal as RefObject<HTMLDivElement>}
-                                lit={view.litStop}
-                                answer={props.chainAnswer}
-                                onCamera={onCamera}
-                                monitorOffset={monitorOffset}
-                              />
-                            )}
-                            {!showChain && objectLabels.length > 0 && (
-                              <SceneLabels
-                                portal={portal as RefObject<HTMLDivElement>}
-                                labels={objectLabels}
-                              />
-                            )}
+                              {showPatient && (
+                                <PatientBody
+                                  offset={isCbct ? translation : undefined}
+                                  solid={isRoom}
+                                />
+                              )}
+                              {view.layers.includes('gantry') && (
+                                <ParametricCarm
+                                  frame={frame}
+                                  housing={displayCamera !== 'beam'}
+                                  roomOrbit={sceneOrbit + roll}
+                                  lit={
+                                    view.mode === 'time'
+                                      ? timeModel.pulseIsOn
+                                      : view.litStop === 'source'
+                                  }
+                                  shutters={
+                                    !['field', 'dose'].includes(view.mode) &&
+                                    displayCamera !== 'beam'
+                                  }
+                                />
+                              )}
+                              {view.layers.includes('cone') && (
+                                <BeamCone
+                                  frame={frame}
+                                  fieldPercent={dose ? dose.fieldPercent : inputs.fieldPercent}
+                                  target={dose ? frame.iso : undefined}
+                                  opacity={isRoom ? 0.14 : undefined}
+                                />
+                              )}
+                              {view.layers.includes('gantry') && (
+                                <DetectorImage frame={detectorFrame} source={source} />
+                              )}
+                              {drrMode && !['time', 'navigation'].includes(view.mode) && (
+                                <ProjectionView3D
+                                  frame={frame}
+                                  inputs={inputs}
+                                  offset={translation}
+                                  ray={view.layers.includes('ray')}
+                                />
+                              )}
+                              {view.mode === 'time' && (
+                                <TimeView
+                                  frame={frame}
+                                  model={timeModel}
+                                  portal={portal as RefObject<HTMLDivElement>}
+                                  labels={view.layers.includes('labels')}
+                                />
+                              )}
+                              {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
+                              {dts.active && (
+                                <TomosynthesisView
+                                  model={dts}
+                                  inputs={inputs}
+                                  prior={view.mode === 'dts-prior'}
+                                />
+                              )}
+                              {view.mode === 'sampling' && !props.independent && (
+                                <SamplingView
+                                  inputs={inputs}
+                                  volume={volume}
+                                  planes={view.layers.includes('planes')}
+                                  portal={portal as RefObject<HTMLDivElement>}
+                                  labels={view.layers.includes('labels')}
+                                />
+                              )}
+                              {isRegistration && (
+                                <RegistrationView
+                                  inputs={inputs}
+                                  augmented={view.mode === 'augmented'}
+                                  portal={portal as RefObject<HTMLDivElement>}
+                                  labels={view.layers.includes('labels')}
+                                  onSensor={setRegisteredSensor}
+                                />
+                              )}
+                              {view.mode === 'staff' && (
+                                <StaffView inputs={inputs} layers={view.layers} />
+                              )}
+                              {view.mode === 'dose' && view.layers.includes('planes') && (
+                                <DoseView inputs={inputs} profile={profile} />
+                              )}
+                              {fieldVisible && (
+                                <FieldView
+                                  frame={frame}
+                                  fieldPercent={inputs.fieldPercent}
+                                  crop={false}
+                                />
+                              )}
+                              {view.mode === 'signal' && view.layers.includes('ray') && (
+                                <RayTrace segments={segments} />
+                              )}
+                              {showChain && (
+                                <ChainPins
+                                  objectLabels={objectLabels}
+                                  frame={frame}
+                                  portal={portal as RefObject<HTMLDivElement>}
+                                  lit={view.litStop}
+                                  answer={props.chainAnswer}
+                                  onCamera={onCamera}
+                                  monitorOffset={monitorOffset}
+                                />
+                              )}
+                              {!showChain && objectLabels.length > 0 && (
+                                <SceneLabels
+                                  portal={portal as RefObject<HTMLDivElement>}
+                                  labels={objectLabels}
+                                />
+                              )}
+                            </group>
                           </group>
                           <FrameReady ready={onReady} />
                         </Suspense>
                         <CameraRig
                           view={displayCamera}
                           frame={frame}
+                          roomFrame={roomFrame}
                           enabled
                           labelled={showChain}
                           roomComposition={isRoom}
@@ -825,6 +865,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 }
                 acquisitionField={inputs.fieldPercent}
                 fieldProcessing={fieldProcessing}
+                boneDepthAid={boneDepthAid}
                 displayMask={
                   fieldVisible && inputs.crop ? (
                     <FieldMask frame={frame} fieldPercent={inputs.cropWidth} crop />

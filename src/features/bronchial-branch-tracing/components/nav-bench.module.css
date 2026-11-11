@@ -1564,6 +1564,17 @@ g[data-locator-hot] .ctLocatorRing {
   align-items: center;
   gap: 0.35rem 0.8rem;
 }
+/* The drill's own turn buttons, and the way to see the drive in again. */
+.mapTurnRow > button,
+.rollReplay > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 36px;
+}
+.rollReplay {
+  margin-top: 0.5rem;
+}
 .mapTurnSwitch {
   display: inline-flex;
   align-items: center;

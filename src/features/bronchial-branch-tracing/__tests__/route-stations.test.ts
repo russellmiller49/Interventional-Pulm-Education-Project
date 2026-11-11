@@ -222,7 +222,7 @@ describe('the scope waiting at a fork', () => {
         expect(stationCamera(trace, index)).toBe(camera)
       }
     }
-    expect(stations).toBe(128)
+    expect(stations).toBe(164)
   })
 
   test('at the tracheal fork the scope looks down the trachea with anterior at the top', () => {

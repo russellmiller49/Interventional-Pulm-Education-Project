@@ -92,8 +92,9 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   for (const unit of CONTENT_LESSONS) {
     /*
      * A unit has one piece of work: a lab the learner acquires an image in, or a matching or
-     * ordering task. The scope lesson is the one exception (2026-11-10): its console is shown as
-     * an ungated example, then asked for once as a short task, before its matching.
+     * ordering task. Two units have both (2026-11-10), and are named here: the scope lesson, whose
+     * console is an ungated example and then a short task before its matching, and the hilar and
+     * interlobar lesson, whose matching names the stations before one of them is scanned.
      */
     expect([unit.sequence, unit.matching].filter(Boolean).length).toBeLessThanOrEqual(1)
     expect(!!unit.lab || !!unit.sequence || !!unit.matching).toBe(true)
@@ -103,6 +104,8 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
     const acquires = steps.some((activity) => activity.interaction === 'acquire')
     if (unit.id === 'ebus-scope')
       expect(acquires && !!unit.matching && !!unit.transferLab).toBe(true)
+    else if (unit.id === 'hilar-interlobar')
+      expect(acquires && !!unit.matching && !!unit.lab).toBe(true)
     else if (unit.sequence || unit.matching) expect(acquires).toBe(false)
     else expect(acquires).toBe(true)
     if (unit.lab && !acquires)

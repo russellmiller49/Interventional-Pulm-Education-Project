@@ -1,5 +1,6 @@
 'use client'
-import { Html, Line } from '@react-three/drei'
+import { Html } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import type { RefObject } from 'react'
 import { LESION_CENTER, LESION_RADIUS } from '../../../lib/physics'
 import { add, rayThrough, scale, type temporal, type SuiteFrame } from '../suiteModel'

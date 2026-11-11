@@ -222,14 +222,28 @@ const PAC_CHAMBER_NAMES = [
  * text over the drawing, so they stay readable at any width, and every part is also listed in
  * words beneath it.
  */
-export function PacComponentSchematic() {
+export function PacComponentSchematic({
+  functions = true,
+}: {
+  /**
+   * Whether each part says what it measures or does. Beside a question that has not been answered
+   * the drawing keeps the parts' names and places and holds this back: one of the section's
+   * questions asks exactly what the catheter itself measures.
+   */
+  readonly functions?: boolean
+} = {}) {
   const tip = TIP_POINTS.pa
   const travelled = ROUTE_LENGTH * ROUTE_PROGRESS.pa
   const description = `Schematic of a pulmonary artery catheter passing from the superior vena cava through the right atrium and right ventricle, with its tip in the pulmonary artery. ${PAC_COMPONENT_PARTS.map(
-    (part, index) => `${index + 1}, ${part.name.toLowerCase()}: ${part.where}. ${part.carries}`,
+    (part, index) =>
+      `${index + 1}, ${part.name.toLowerCase()}: ${part.where}.${functions ? ` ${part.carries}` : ''}`,
   ).join(' ')} The drawing is not to scale and gives no distances.`
   return (
-    <figure className={styles.pacSchematic} data-pac-component-schematic>
+    <figure
+      className={styles.pacSchematic}
+      data-pac-component-schematic
+      data-pac-functions={functions ? 'shown' : 'withheld'}
+    >
       <div className={styles.pacSchematicScroll}>
         <div className={styles.pacSchematicDrawing}>
           <svg
@@ -302,10 +316,15 @@ export function PacComponentSchematic() {
         <ol>
           {PAC_COMPONENT_PARTS.map((part) => (
             <li key={part.id} data-pac-part={part.id}>
-              <b>{part.name}</b> — {part.where}. {part.carries}
+              <b>{part.name}</b> — {part.where}.{functions ? ` ${part.carries}` : ''}
             </li>
           ))}
         </ol>
+        {functions ? null : (
+          <span data-pac-functions-note>
+            What each part measures or does is shown again once you have answered.
+          </span>
+        )}
         <span>
           A schematic, not to scale. Where each part sits along the catheter, and the balloon’s
           volume, belong to the particular catheter and its instructions for use; this drawing gives

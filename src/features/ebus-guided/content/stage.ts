@@ -36,6 +36,12 @@ export interface ActivitySpec {
   questions: QuestionSlot[]
   task?: LinkedVariant
   /**
+   * This acquisition uses the unit's second lab (`Lesson.transferLab`) although it is an ordinary
+   * guided task: a second station in the same lesson, with its own preset and landmarks. A task
+   * other than 'guided' always uses the second lab.
+   */
+  secondLab?: boolean
+  /**
    * The content unit this step draws on, in a lesson built from two (`Lesson.parts`). Its text,
    * lab, checks and boundary are that unit's. Absent: the unit with the lesson's own id.
    */
@@ -170,6 +176,15 @@ const acquire = (
           ? 'Now find both views yourself, one after the other.'
           : 'Now try it yourself.',
 })
+/** The lab an acquisition step works in: the unit's own, or its second one. */
+export function labForActivity(
+  unit: Lesson,
+  activity: Pick<ActivitySpec, 'task' | 'secondLab'> | undefined,
+) {
+  return activity?.secondLab || (activity?.task && activity.task !== 'guided')
+    ? unit.transferLab
+    : unit.lab
+}
 const apply = (
   id: string,
   title: string,
@@ -373,6 +388,20 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     brief('flow-example', 'Use flow and anatomy together', 'ultrasound', 'demonstration'),
     acquire('flow-comparison', 'Compare grayscale and color recordings', 'ultrasound'),
     explain('Compare the two recordings'),
+    // The owner's patient recording (2026-11-11): the node, the small vessels around it and the
+    // pleura beyond it, read on a paused frame before anything is labelled.
+    {
+      ...decide(
+        'patient-flow',
+        'Read colour flow around a node on a patient recording',
+        ['observation'],
+        'ultrasound',
+        'diagram',
+      ),
+      figure: 'clip-doppler',
+      instruction:
+        'Play the recording, then open the frame with colour flow and answer. Its labels open after you answer.',
+    },
     transfer('Resolve an uncertain vascular structure'),
   ],
   capture: [
@@ -443,7 +472,15 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'left-paratracheal': [
     predict('left-boundary', 'Distinguish the left-sided compartments'),
     brief('left-region', 'Locate 4L beside its vascular landmarks', 'regional', 'reference'),
-    acquire('left-assisted', 'Explore the 4L window', 'regional'),
+    // A linked lab since 2026-11-10: the arch, the left pulmonary artery, then the node.
+    acquire('left-assisted', 'Find 4L between the arch and the pulmonary artery', 'linked'),
+    explain('Read the acquired compartment'),
+    // The same lesson's upper station, from its own position in the trachea.
+    {
+      ...acquire('left-upper', 'Find 2L above the arch', 'ultrasound'),
+      secondLab: true,
+      instruction: 'Now the station above it, from a higher position in the trachea.',
+    },
     transfer('Consider a lateral subaortic target'),
   ],
   'hilar-interlobar': [
@@ -461,6 +498,10 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       [],
       'regional',
     ),
+    // One interlobar station on ultrasound (2026-11-10): the white-light view shows the lobar
+    // bronchi that name it.
+    acquire('interlobar-scan', 'Find 11Ri between the lobar bronchi', 'linked'),
+    explain('Read the interlobar window'),
     transfer('Apply the primary side to another case'),
   ],
   'node-characterization': [

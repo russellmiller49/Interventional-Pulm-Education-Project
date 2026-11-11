@@ -7,8 +7,8 @@ import { sampleRoute, stationCamera } from '../geometry/route-stations'
 /** The small frontal tree in the corner of the scope pane: where the scope is, and no more. */
 describe('the airway tree picture', () => {
   it('draws every airway the routes name, each from its own centreline', () => {
-    expect(TREE_BRANCHES).toHaveLength(116)
-    expect(new Set(TREE_BRANCHES.map((branch) => branch.id)).size).toBe(116)
+    expect(TREE_BRANCHES).toHaveLength(144)
+    expect(new Set(TREE_BRANCHES.map((branch) => branch.id)).size).toBe(144)
     for (const branch of TREE_BRANCHES) {
       expect(branch.d.startsWith('M')).toBe(true)
       expect(branch.d).not.toMatch(/NaN|undefined/)

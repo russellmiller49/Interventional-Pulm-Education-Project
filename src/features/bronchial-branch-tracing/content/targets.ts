@@ -21,6 +21,12 @@ const ROUTE_FOR_TARGET: Readonly<Record<string, string>> = {
   'l-inferior-lingula': 'left-lingula',
   'l-superior': 'left-lower-returning',
   'l-lateral-basal': 'left-lower-basal',
+  // Added November 2026: the segments that had no lesion and whose routes lie in the shipped CT.
+  'r-posterior': 'right-upper-posterior',
+  'r-superior': 'right-lower-superior',
+  'r-lateral-basal': 'right-lower-lateral-basal',
+  'l-superior-lingula': 'left-lingula-superior',
+  'l-posterior-basal': 'left-lower-posterior-basal',
 }
 
 export interface LobeGroup {

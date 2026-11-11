@@ -108,7 +108,7 @@ export function HemodynamicsTeachingColumn({
     <div ref={focusRef} className={styles.teaching} data-teaching-panel>
       {step.teaching && state && (!flow || step.teaching !== 'attempt') ? (
         <div data-current-teaching={step.teaching}>
-          <IntroductoryTeaching topic={step.teaching} state={state} />
+          <IntroductoryTeaching topic={step.teaching} state={state} figureBeside={flow} />
         </div>
       ) : null}
       {procedural && (!flow || step.interaction.kind === 'read') ? (

@@ -26,7 +26,9 @@ export const VOLUME_ASSET: VolumeDrrAsset = {
   huRange: metadata.huRange as [number, number],
   sampleDomain: 'normalized-r8',
   baselineMas: 16,
-  recommendedSteps: { interactive: 96, full: 240 },
+  // Bone is weighted to show (`lib/fluoroLook.ts`), and a rib is a few voxels thick: the settled
+  // frame samples at under a voxel so its edges are not stair-stepped.
+  recommendedSteps: { interactive: 128, full: 360 },
   recommendedRenderScale: { interactive: 0.55, full: 0.9 },
 }
 

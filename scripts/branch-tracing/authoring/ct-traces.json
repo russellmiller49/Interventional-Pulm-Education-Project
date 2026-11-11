@@ -140,6 +140,47 @@
       "preset": "mirror",
       "region": "Left lower lobe",
       "range": [245, 325]
+    },
+    {
+      "id": "right-upper-posterior",
+      "edges": [12, 26, 55, 111],
+      "trimStartMm": 0,
+      "preset": "rul",
+      "region": "Right upper lobe",
+      "range": [386, 452]
+    },
+    {
+      "id": "right-lower-superior",
+      "edges": [17, 37, 78, 150],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [296, 316],
+      "fractions": [0.08, 0.4, 0.8]
+    },
+    {
+      "id": "left-lingula-superior",
+      "edges": [42, 88, 166, 258],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Lingula",
+      "range": [328, 382]
+    },
+    {
+      "id": "left-lower-posterior-basal",
+      "edges": [25, 53, 107],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Left lower lobe",
+      "range": [260, 290]
+    },
+    {
+      "id": "right-lower-lateral-basal",
+      "edges": [137, 223, 325],
+      "trimStartMm": 0,
+      "preset": "mirror",
+      "region": "Right lower lobe",
+      "range": [247, 270]
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   defaultSteps,
   identifiable,
   routePlan,
+  markable as canMark,
 } from '../content/nav-lessons'
 import {
   edgeAirway,
@@ -173,15 +174,36 @@ describe('fork explanations', () => {
     expect(marked.size).toBeGreaterThan(0)
     expect([...marked].sort()).toEqual([...expected].sort())
     expect([...marked].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
-    // A trip that marks openings can be written for any fork whose lumens can be clicked: each of
-    // those, on every route, already has its explanation.
+    // A trip that marks openings can be written for any fork that can be marked: its lumens can
+    // be clicked, and its explanation is written. No fork without one is ever marked by default.
     const markable = new Set<string>()
+    const unexplained = new Set<string>()
     for (const trace of CT_TRACES)
       trace.checkpoints.forEach((checkpoint, index) => {
-        if (identifiable(trace, index)) markable.add(checkpoint.id)
+        if (canMark(trace, index)) markable.add(checkpoint.id)
+        else if (identifiable(trace, index)) unexplained.add(checkpoint.id)
+        expect(defaultSteps(trace, index).includes('identify')).toBe(canMark(trace, index))
       })
     for (const id of marked) expect(markable).toContain(id)
     expect([...markable].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
+    // The routes added in November 2026 (RB2, RB6, RB9, LB4, LB10) brought ten forks whose lumens
+    // can be clicked and which have no explanation yet. They are only chosen at. Writing an
+    // explanation for one is what makes it markable; this list is then one shorter.
+    expect([...unexplained].sort()).toEqual(
+      [
+        'junction-13',
+        'junction-18',
+        'junction-39',
+        'junction-80',
+        'junction-44',
+        'junction-90',
+        'junction-27',
+        'junction-55',
+        'junction-74',
+        'junction-139',
+      ].sort(),
+    )
+    for (const id of unexplained) expect(junctionFeedbackPacket(id)).toBeUndefined()
     // Seven explained forks could not be marked at all: two small LB6 forks, and the five forks
     // with a lumen about 2 mm wide.
     expect(JUNCTION_FEEDBACK_SCOPE.filter((id) => !markable.has(id))).toEqual([

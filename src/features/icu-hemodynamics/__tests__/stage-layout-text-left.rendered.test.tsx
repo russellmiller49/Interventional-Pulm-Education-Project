@@ -28,7 +28,7 @@ import { hemodynamicsSectionIds } from '../content/sectionSpecs'
 import type { StageSurface } from '../content/stageLessons'
 import { hemodynamicsTaskPresentation } from '../content/taskPresentation'
 import { cleanState } from '../engine/stageRuntime'
-import { installDom, mountSection } from '../test-support/stageHarness'
+import { installDom, leaveTask, mountSection } from '../test-support/stageHarness'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -103,7 +103,15 @@ describe('Learn layout: text ahead of the visual in every task of every section'
   })
 
   it('gives a reading-only step one column at a reading measure', () => {
-    mountSection('why-measure')
+    // The RV-versus-PA comparison carries its tracings inside the card. (The opening, flow and
+    // derived-values sections are no longer reading only: each keeps a drawing beside its text;
+    // see `section-figure.test.tsx`.)
+    mountSection('waveform-interpretation')
+    leaveTask()
+    expect(document.querySelector('[data-stage]')).toHaveAttribute(
+      'data-stage',
+      'waveform-interpretation-2-recognize',
+    )
     expect(document.querySelector('[data-flow-visual]')).toBeNull()
     expect(document.querySelector('[data-single-column]')).toHaveAttribute(
       'data-single-column',
@@ -206,6 +214,7 @@ describe('Learn layout: an empty simulator is no visual', () => {
       monitor: 'none',
       anatomy: 'none',
       controls: true,
+      figure: 'none',
     } as const
     render(
       <HemodynamicsSimulatorPane

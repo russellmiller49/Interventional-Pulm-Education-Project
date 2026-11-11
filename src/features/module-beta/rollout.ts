@@ -108,7 +108,7 @@ export const betaRollout: BetaRollout = {
       estimate: {
         minutes: 61,
         basis:
-          "7 lessons, by the module's own count; the optional orientation check, the two refreshers, the 13 practice lesions and the 3-lesion closing set are extra",
+          "7 lessons, by the module's own count; the optional orientation check, the two refreshers, the 18 practice lesions and the 3-lesion closing set are extra",
       },
       lookFor: [
         'The orientation check at the start, turning the CT to face the scope at three forks, and whether the orientation reads the way you hold the scope.',

@@ -1,8 +1,9 @@
 'use client'
-import { Html, Line } from '@react-three/drei'
+import { Html } from '@react-three/drei'
+import { Line } from './SceneLine'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
-import { Vector3 } from 'three'
+import { Vector3, type Group } from 'three'
 import type { Point3 } from '../../lib/physics'
 import { placeLabels, type LabelRequest } from './labelLayout'
 
@@ -40,6 +41,8 @@ export function SceneLabels({
   portal: RefObject<HTMLDivElement>
 }) {
   const nodes = useRef(new Map<string, HTMLDivElement>())
+  // Anchors are in the scene's own frame; the camera sees them through the scene's transform.
+  const space = useRef<Group>(null)
   const [placements, setPlacements] = useState<Record<string, Placement>>({})
   // The scene renders on demand, so a label that changes size without the scene changing — text
   // enlarged after load, a font arriving late — would keep a layout made for its old size. Ask for
@@ -57,7 +60,11 @@ export function SceneLabels({
     }
   }, [invalidate])
   useFrame(({ camera, size }) => {
-    const projected = labels.map((label) => new Vector3(...label.anchor).project(camera))
+    const group = space.current
+    if (!group) return
+    const projected = labels.map((label) =>
+      new Vector3(...label.anchor).applyMatrix4(group.matrixWorld).project(camera),
+    )
     const requests: LabelRequest[] = labels.map((label, index) => {
       const node = nodes.current.get(label.id)
       if (node) {
@@ -78,6 +85,7 @@ export function SceneLabels({
       }
     })
     const placed = placeLabels(requests, size.width, size.height)
+    const inverse = group.matrixWorld.clone().invert()
     let changed = false
     const next: Record<string, Placement> = {}
     placed.forEach((item, index) => {
@@ -86,7 +94,9 @@ export function SceneLabels({
         (item.x / size.width) * 2 - 1,
         1 - (item.y / size.height) * 2,
         projected[index].z,
-      ).unproject(camera)
+      )
+        .unproject(camera)
+        .applyMatrix4(inverse)
       const hidden = projected[index].z > 1
       const before = placements[item.id]
       const position = world.toArray() as Point3
@@ -103,7 +113,7 @@ export function SceneLabels({
     if (changed || Object.keys(placements).length !== placed.length) setPlacements(next)
   })
   return (
-    <>
+    <group ref={space}>
       {labels.map((label) => {
         const placement = placements[label.id]
         const position = placement?.position ?? label.anchor
@@ -138,6 +148,6 @@ export function SceneLabels({
           </group>
         )
       })}
-    </>
+    </group>
   )
 }

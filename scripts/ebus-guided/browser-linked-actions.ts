@@ -1,9 +1,9 @@
 import { expect, type Page } from '@playwright/test'
 import type { EbusObservation } from '../../src/lib/ebus-guided-bridge'
 import {
-  LANDMARK_NAMES,
   LINKED_LANDMARKS,
   LINKED_SWEEP_TOLERANCES,
+  linkedLandmarkName,
   linkedLateralPosition,
   linkedOpticView,
   type LinkedLesson,
@@ -80,7 +80,7 @@ export async function identifyLandmarks(page: Page, lesson: LinkedLesson) {
     await expect(task).toBeVisible({ timeout: 60000 })
     const target = (await task.getAttribute('data-landmark-target'))!
     expect(expected).toContain(target)
-    await expect(task.getByRole('heading')).toContainText(LANDMARK_NAMES[target])
+    await expect(task.getByRole('heading')).toContainText(linkedLandmarkName(lesson, target))
     let found = false
     for (const roll of SEARCH_ROLLS) {
       await rotateTo(page, roll)

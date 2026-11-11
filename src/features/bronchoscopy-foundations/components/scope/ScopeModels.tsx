@@ -183,7 +183,7 @@ export function LarynxLumen({
       // are one continuous mucosa, the same tissue as the trachea below: the same colour, vessels
       // and sheen, with no rings (none of them carries a ring attribute). As flat colours they
       // were separate cut-out shapes, and a wall was one blank colour when the tip turned to it.
-      const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true })
+      const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
       mucosa.side = THREE.DoubleSide
       node.material = mucosa
     })

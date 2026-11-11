@@ -1,4 +1,5 @@
 import type { CtNoduleTarget, CtTrace } from './ct-types'
+import { junctionFeedbackPacket } from './junction-feedback'
 import { optionLumenAreaMm2 } from '../engine/junction-feedback'
 import type { NavPlan, NavStation, NavStep } from '../engine/nav-session'
 import type { PlanPart } from '../engine/plan-session'
@@ -119,11 +120,24 @@ export function identifiable(trace: CtTrace, checkpointIndex: number) {
 }
 
 /**
- * The steps a fork is asked for when a trip that marks openings does not say. A fork whose lumens
- * are too small to click is only chosen at: the bench turns the CT there and numbers the openings.
+ * True when a trip may ask for a fork's openings to be marked: its lumens can be clicked, and its
+ * written explanation exists. The forks of the routes added in November 2026 have clickable
+ * lumens and no explanation yet, so no trip marks them until one is written for each.
+ */
+export function markable(trace: CtTrace, checkpointIndex: number) {
+  return (
+    identifiable(trace, checkpointIndex) &&
+    Boolean(junctionFeedbackPacket(trace.checkpoints[checkpointIndex].id))
+  )
+}
+
+/**
+ * The steps a fork is asked for when a trip that marks openings does not say. A fork that cannot
+ * be marked (lumens too small to click, or no explanation written) is only chosen at: the bench
+ * turns the CT there and numbers the openings.
  */
 export function defaultSteps(trace: CtTrace, checkpointIndex: number): NavStep[] {
-  return identifiable(trace, checkpointIndex) ? ['match', 'identify', 'choose'] : ['choose']
+  return markable(trace, checkpointIndex) ? ['match', 'identify', 'choose'] : ['choose']
 }
 /** The steps at a fork on a drive that follows a map: the openings were read off the CT in planning. */
 export const MAP_STEPS: readonly NavStep[] = ['match', 'choose']
@@ -196,6 +210,11 @@ export const TARGET_FOR_TRACE: Readonly<Record<string, string>> = {
   'left-lingula': 'l-inferior-lingula',
   'left-lower-returning': 'l-superior',
   'left-lower-basal': 'l-lateral-basal',
+  'right-upper-posterior': 'r-posterior',
+  'right-lower-superior': 'r-superior',
+  'right-lower-lateral-basal': 'r-lateral-basal',
+  'left-lingula-superior': 'l-superior-lingula',
+  'left-lower-posterior-basal': 'l-posterior-basal',
 }
 export function plannedTarget(trace: CtTrace): CtNoduleTarget {
   const target = CT_TARGETS.find((t) => t.id === TARGET_FOR_TRACE[trace.id])
@@ -630,7 +649,7 @@ const AUTHORED: readonly NavLesson[] = [
       },
     ],
     closing:
-      'That is the method: from the lesion back to the segment, a circle at the ostium, an arc for every branch, then the drive. Practice has thirteen lesions to plan and reach the same way.',
+      'That is the method: from the lesion back to the segment, a circle at the ostium, an arc for every branch, then the drive. Practice has eighteen lesions to plan and reach the same way.',
   },
 ]
 

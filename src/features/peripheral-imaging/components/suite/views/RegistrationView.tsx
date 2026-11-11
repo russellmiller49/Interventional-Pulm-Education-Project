@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, type RefObject } from 'react'
-import { Html, Line, useGLTF } from '@react-three/drei'
+import { Html, useGLTF } from '@react-three/drei'
+import { Line } from '../SceneLine'
 import { Mesh, Vector3 } from 'three'
 import { ANATOMY_MODEL } from '../../../lib/anatomy'
 import { LESION_CENTER, LESION_RADIUS, projectToDetector, type Point3 } from '../../../lib/physics'

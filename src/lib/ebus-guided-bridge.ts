@@ -8,23 +8,20 @@ import {
   type ModelPackage,
 } from './ebus-model-contract'
 import {
+  LINKED_LESSONS,
   LINKED_TASK_VERSION,
   LINKED_VARIANTS,
   isLinkedFrameSource,
   type LinkedFrameSource,
+  type LinkedLesson,
   type LinkedVariant,
   type LinkedSweep,
 } from './ebus-linked-contract'
 /** Shared by the Next lesson host and the dedicated Vite workbench; no React or storage. */
 export const EBUS_BRIDGE_VERSION = 1 as const
-export const EBUS_LINKED_LESSONS = [
-  'scope-orientation',
-  'acoustic-contact',
-  'ct-map',
-  'station-seven',
-  'right-paratracheal',
-] as const
-export type EbusLinkedLesson = (typeof EBUS_LINKED_LESSONS)[number]
+/** The linked labs, as the contract lists them: one list, so the two cannot drift apart. */
+export const EBUS_LINKED_LESSONS = LINKED_LESSONS
+export type EbusLinkedLesson = LinkedLesson
 export interface EbusLinkedEvidence {
   assetsReady: boolean
   selectedStructure: string

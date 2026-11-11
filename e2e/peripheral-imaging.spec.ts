@@ -3492,3 +3492,70 @@ test('expert session, part 2: Section 19 runs one nodule through the workflow on
   await expect(anatomy).toHaveText('Lung only')
   await expect(primary(page)).toBeEnabled()
 })
+
+test('the fluoroscopic image draws the ribs, and bone is coloured by depth only where the angles are worked', async ({
+  page,
+}, info) => {
+  // Owner request, 2026-11-10: the rib over the nodule and the effect of tilt have to be seen on
+  // the image, not only read from the readout.
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('signal')
+  const ribs = lesson.steps.find((step) => step.id.endsWith(':ribs'))!
+  await openSection(page, 'signal')
+  for (let guard = 0; guard < 12; guard++) {
+    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    await primary(page).click()
+  }
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
+  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+    { timeout: 90000 },
+  )
+  const canvas = page.locator('[data-current-image] canvas')
+  await expectImageSignal(canvas)
+  /** Pixels that are not grey, and the brightness of the lung beside the nodule. */
+  const read = () =>
+    canvas.evaluate((node) => {
+      const c = node as HTMLCanvasElement
+      const gl = c.getContext('webgl2')!
+      const pixels = new Uint8Array(c.width * c.height * 4)
+      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+      let coloured = 0
+      for (let i = 0; i < pixels.length; i += 4)
+        if (Math.abs(pixels[i] - pixels[i + 2]) > 24) coloured++
+      // A vertical line through the left lung, clear of the heart: ribs cross it as bright bands.
+      const col = Math.round(c.width * 0.78)
+      const profile: number[] = []
+      for (let row = Math.round(c.height * 0.35); row < Math.round(c.height * 0.7); row++)
+        profile.push(pixels[(row * c.width + col) * 4])
+      return { coloured, swing: Math.max(...profile) - Math.min(...profile) }
+    })
+  const grey = await read()
+  expect(grey.coloured).toBe(0)
+  // Ribs and the lung between them: before, this profile was nearly flat.
+  expect(grey.swing).toBeGreaterThan(20)
+  await capture(page, info, 'fluoro-ribs-grey.png')
+
+  const toggle = page.locator('[data-bone-depth-toggle]')
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('[data-bone-depth-legend]')).toContainText('carries no depth')
+  await expect.poll(async () => (await read()).coloured).toBeGreaterThan(2000)
+  await capture(page, info, 'fluoro-ribs-depth.png')
+  await toggle.click()
+  await expect.poll(async () => (await read()).coloured).toBe(0)
+
+  // A check holds its image fixed and offers nothing that would read the answer off it.
+  const check = lesson.steps[lesson.predictionStepIndex]
+  for (let guard = 0; guard < 12; guard++) {
+    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === check.id) break
+    if ((await primary(page).count()) > 0 && (await primary(page).isEnabled()))
+      await primary(page).click()
+    else await skip(page).click()
+  }
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', check.id)
+  await expect(page.locator('[data-bone-depth-toggle]')).toHaveCount(0)
+})

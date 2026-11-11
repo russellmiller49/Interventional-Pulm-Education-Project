@@ -3,6 +3,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {
   MUCOSA_ANATOMY_DEFINE,
+  MUCOSA_PALE_WALL_DEFINE,
   mucosaVertexShader,
   mucosaFragmentShader,
 } from '../bronchoscopy-core/mucosa'
@@ -102,6 +103,11 @@ export interface BronchoscopyMaterialOptions {
    * must carry `MUCOSA_ANATOMY_ATTRIBUTE`; omitted, the material is the shared one, unchanged.
    */
   readonly anatomy?: boolean
+  /**
+   * With `anatomy`: the paler, warmer, wetter wall of Bronchoscopy Foundations' own stills. A
+   * viewer that asks for `anatomy` alone is unchanged.
+   */
+  readonly paleWall?: boolean
 }
 
 export function createBronchoscopyMaterial(
@@ -111,7 +117,14 @@ export function createBronchoscopyMaterial(
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     toneMapped: false,
-    ...(options?.anatomy ? { defines: { [MUCOSA_ANATOMY_DEFINE]: '' } } : {}),
+    ...(options?.anatomy
+      ? {
+          defines: {
+            [MUCOSA_ANATOMY_DEFINE]: '',
+            ...(options.paleWall ? { [MUCOSA_PALE_WALL_DEFINE]: '' } : {}),
+          },
+        }
+      : {}),
     uniforms: {
       uWallAlpha: { value: 1 },
       uHeadlightAxis: { value: new THREE.Vector3(0, 0, -1) },

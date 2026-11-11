@@ -33,7 +33,17 @@ const AGREEMENT_QUALIFIER = requireParameter(
  * round, so the figure carries baseline, onset, peak, decay, and any secondary disturbance and
  * nothing else.
  */
-export function ThermodilutionCurveFigure({ trial }: { readonly trial: ThermodilutionTrial }) {
+export function ThermodilutionCurveFigure({
+  trial,
+  named = false,
+}: {
+  readonly trial: ThermodilutionTrial
+  /**
+   * Names each part on the drawing. For the section's reference curve, beside the text that names
+   * the parts; a learner's own trial stays unnamed, because reading the parts off it is the task.
+   */
+  readonly named?: boolean
+}) {
   const features = thermodilutionCurveFeatures(trial)
   const values = trial.curve.map((point) => point.temperatureChangeC)
   const minimum = Math.min(...values, -0.01)
@@ -88,6 +98,49 @@ export function ThermodilutionCurveFigure({ trial }: { readonly trial: Thermodil
           r="4"
           fill="#ff7488"
         />
+      ) : null}
+      {named ? (
+        <g className={styles.thermoCurveNames} data-curve-names aria-hidden="true">
+          <text x="496" y={scaleY(features.baselineC) - 5} textAnchor="end">
+            baseline
+          </text>
+          {features.onsetSeconds !== null ? (
+            <text x={scaleX(features.onsetSeconds) + 7} y={scaleY(features.baselineC) - 5}>
+              onset
+            </text>
+          ) : null}
+          <text
+            x={scaleX(features.peakTimeSeconds)}
+            y={scaleY(features.baselineC + features.peakChangeC) + 14}
+            textAnchor="middle"
+          >
+            peak change
+          </text>
+          {features.decayToTenthSeconds !== null ? (
+            <>
+              <circle
+                cx={scaleX(features.decayToTenthSeconds)}
+                cy={scaleY(features.baselineC + features.peakChangeC / 10)}
+                r="3.5"
+                fill="#8fb6c4"
+              />
+              <text
+                x={scaleX(features.decayToTenthSeconds) + 7}
+                y={scaleY(features.baselineC + features.peakChangeC / 10) + 13}
+              >
+                decay back toward baseline
+              </text>
+            </>
+          ) : null}
+          {features.secondaryDisturbanceTimeSeconds !== null ? (
+            <text
+              x={scaleX(features.secondaryDisturbanceTimeSeconds) + 7}
+              y={scaleY(features.baselineC) - 6}
+            >
+              secondary disturbance
+            </text>
+          ) : null}
+        </g>
       ) : null}
     </svg>
   )
