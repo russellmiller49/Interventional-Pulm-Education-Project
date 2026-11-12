@@ -85,6 +85,16 @@ export const ventilationStages: readonly {
 export interface VentilationLearningUnit {
   readonly id: string
   readonly title: string
+  /**
+   * The topic, in the words a fellow would look it up by: "Peak and plateau pressure". It leads
+   * the section's question in the Sections menu, the lesson's header line and the Learn page, so a
+   * section can be found by name.
+   *
+   * It is on screen before any answer, in every section (the Sections menu lists all fourteen), so
+   * it names the subject and never the finding: it must pass every section's
+   * `precommitDenyPatterns` (see `ventilationSectionSpecErrors`). Section 7 is "Expiratory time"
+   * for that reason; its deny list bars the name of what the learner is about to find.
+   */
   readonly shortTitle: string
   readonly stage: VentilationStage
   readonly minutes: number
@@ -117,7 +127,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'breathing-with-support',
     title: 'Follow one supported breath',
-    shortTitle: 'The whole breath',
+    shortTitle: 'The breath cycle',
     stage: 'orientation',
     minutes: 5,
     objective: 'breath',
@@ -152,7 +162,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'waveform-anatomy',
     title: 'Three traces, one breath',
-    shortTitle: 'Read the traces',
+    shortTitle: 'Ventilator waveforms',
     stage: 'foundation',
     minutes: 6,
     objective: 'breath',
@@ -190,7 +200,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'controls-and-goals',
     title: 'What you set. What you check.',
-    shortTitle: 'Settings and results',
+    shortTitle: 'Ventilator settings',
     stage: 'foundation',
     minutes: 6,
     objective: 'breath',
@@ -226,7 +236,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'mechanics-load-and-pressure',
     title: 'Where does the pressure go?',
-    shortTitle: 'Pressure and load',
+    shortTitle: 'Peak and plateau pressure',
     stage: 'mechanism',
     minutes: 8,
     objective: 'mechanics',
@@ -266,7 +276,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'modes-and-breath-delivery',
     title: 'What does this breath hold constant?',
-    shortTitle: 'Breath delivery',
+    shortTitle: 'Volume and pressure control',
     stage: 'mechanism',
     minutes: 8,
     objective: 'breath',
@@ -304,7 +314,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'lung-protection',
     title: 'Is this breath appropriate for this lung?',
-    shortTitle: 'Lung protection',
+    shortTitle: 'Lung-protective ventilation',
     stage: 'mechanism',
     minutes: 7,
     objective: 'mechanics',
@@ -352,7 +362,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'expiration-and-air-trapping',
     title: 'Does the breath have time to finish?',
-    shortTitle: 'Time to empty',
+    shortTitle: 'Expiratory time',
     stage: 'mechanism',
     minutes: 8,
     objective: 'mechanics',
@@ -396,7 +406,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'triggering-and-cycling',
     title: 'Do the two breath clocks agree?',
-    shortTitle: 'Patient and machine timing',
+    shortTitle: 'Triggering and cycling',
     stage: 'mechanism',
     minutes: 8,
     objective: 'interaction',
@@ -438,7 +448,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'oxygenation-response',
     title: 'Did oxygenation improve at a cost?',
-    shortTitle: 'Oxygenation and tolerance',
+    shortTitle: 'Oxygenation and PEEP',
     stage: 'mechanism',
     minutes: 7,
     objective: 'gas-exchange',
@@ -477,7 +487,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'ventilation-and-co2',
     title: 'What will change the CO₂?',
-    shortTitle: 'Effective ventilation',
+    shortTitle: 'CO₂ and minute ventilation',
     stage: 'mechanism',
     minutes: 7,
     objective: 'gas-exchange',
@@ -520,7 +530,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'waveform-reading-sequence',
     title: 'Read the whole breath in order',
-    shortTitle: 'A systematic read',
+    shortTitle: 'Systematic waveform reading',
     stage: 'application',
     minutes: 7,
     objective: 'interaction',
@@ -563,7 +573,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'dyssynchrony-mechanisms',
     title: 'Locate the mismatch before changing support',
-    shortTitle: 'Explain the mismatch',
+    shortTitle: 'Patient–ventilator dyssynchrony',
     stage: 'application',
     minutes: 8,
     objective: 'interaction',
@@ -604,7 +614,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'safety-reassessment-and-human-factors',
     title: 'The alarm and the person',
-    shortTitle: 'Patient first',
+    shortTitle: 'Alarms and reassessment',
     stage: 'application',
     minutes: 7,
     objective: 'safety',
@@ -647,7 +657,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'high-peak-pressure-integration',
     title: 'One alarm, different patients',
-    shortTitle: 'Put it together',
+    shortTitle: 'High peak pressure',
     stage: 'integration',
     minutes: 10,
     objective: 'safety',

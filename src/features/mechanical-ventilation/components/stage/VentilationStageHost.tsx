@@ -788,7 +788,8 @@ function VentilationStageSession({
   const header = (
     <SectionHeader
       breadcrumb={{ href: mechanicalVentilationNavBase, label: 'Mechanical Ventilation' }}
-      kicker={`Section ${lesson.index + 1} of ${lesson.total} · ${lesson.minutes} min`}
+      /* The topic word leads the question, so the section can be recognised by name. */
+      kicker={`Section ${lesson.index + 1} of ${lesson.total} · ${lesson.unit.shortTitle} · ${lesson.minutes} min`}
       title={lesson.title}
       sectionsControl={
         <SectionsDrawer

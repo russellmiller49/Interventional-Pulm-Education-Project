@@ -282,7 +282,14 @@ select.consoleChoice {
   font-weight: 600;
 }
 
+/* A section chip leads with its topic word; the section's question follows, lighter. */
+.chipQuestion {
+  font-weight: 400;
+  opacity: 0.82;
+}
+
 .chip svg {
+  flex: none;
   width: 15px;
   height: 15px;
   color: var(--cyan-bright);

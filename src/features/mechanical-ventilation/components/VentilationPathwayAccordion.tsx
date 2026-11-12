@@ -99,8 +99,11 @@ export function VentilationPathwayAccordion({
                     }}
                   >
                     <GraduationCap aria-hidden="true" />
-                    {ventilationSectionNumber(unit.id)}. {unit.title}
-                    {done ? ' · visited' : ''}
+                    <span data-section-name>
+                      {ventilationSectionNumber(unit.id)}. {unit.shortTitle}
+                      <span className={styles.chipQuestion}> · {unit.title}</span>
+                      {done ? ' · visited' : ''}
+                    </span>
                     {isNext ? <em>Up next</em> : null}
                   </Link>
                 )
