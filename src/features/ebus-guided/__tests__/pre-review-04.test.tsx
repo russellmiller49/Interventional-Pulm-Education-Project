@@ -170,11 +170,12 @@ const next = () => fireEvent.click(primary())
 
 describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L25-5)', () => {
   it('records the registry this batch was built against', () => {
-    expect(CHAPTERS).toHaveLength(7)
+    expect(CHAPTERS).toHaveLength(8)
     // 22 lessons a learner opens: the 26 content units this batch was written against, five of
     // them folded into others, plus the scope lesson added on 2026-11-10.
-    expect(LESSONS).toHaveLength(22)
-    expect(CONTENT_LESSONS).toHaveLength(28)
+    // 23 since the capstone lesson of 2026-11-11, which is built from five units.
+    expect(LESSONS).toHaveLength(23)
+    expect(CONTENT_LESSONS).toHaveLength(33)
   })
 
   it('lists the chapters once on the Overview, under a picture of the lab', () => {

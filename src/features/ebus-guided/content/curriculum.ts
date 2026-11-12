@@ -8,6 +8,7 @@ import { locateLessons } from './locate'
 import { planLessons } from './plan'
 import { sampleLessons } from './sample'
 import { completeLessons } from './complete'
+import { capstoneLessons } from './capstone'
 import { scopeLesson } from './scope'
 export const BASE = '/ebus-guided'
 export const RELEASE = 'unlisted-preview'
@@ -128,6 +129,7 @@ const authoredLessons: Lesson[] = [
     lesson.id === 'needle-safety' ? [lesson, needleModel] : [lesson],
   ),
   ...completeLessons,
+  ...capstoneLessons,
 ]
 export const HISTORICAL_IMAGE_QUESTIONS = authoredLessons
   .filter((lesson) => IMAGE_INTERPRETATIONS[lesson.id])
@@ -195,6 +197,23 @@ const MERGED: Record<
     // Needle technique within the node was folded in on 2026-11-11 (owner decision).
     parts: ['needle-safety', 'needle-technique', 'needle-assembly-model'],
   },
+  /*
+   * The capstone (2026-11-11): one examination at four stations. Each station is a unit of its
+   * own, so each brings the lab the learner already used for it.
+   */
+  'staging-examination': {
+    title: 'A complete staging examination',
+    objective:
+      'Carry one staging examination from the plan to the report: station order, a scan and a sample at each station, and a conclusion that says only what the samples support.',
+    minutes: 28,
+    parts: [
+      'staging-examination',
+      'staging-exam-4l',
+      'staging-exam-7',
+      'staging-exam-4r',
+      'staging-exam-11ri',
+    ],
+  },
 }
 /** A unit that used to be a lesson of its own → the lesson that now holds it. */
 export const MERGED_INTO: Record<string, string> = Object.fromEntries(
@@ -258,6 +277,7 @@ export const CHAPTERS = [
     'complications-recovery',
     'results-reporting',
   ]),
+  chapter('capstone', 'Put the examination together', ['staging-examination']),
 ]
 /** The lessons a learner opens, in course order. */
 export const LESSONS: Lesson[] = CHAPTERS.flatMap((entry) => entry.lessons)

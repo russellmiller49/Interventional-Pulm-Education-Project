@@ -46,6 +46,7 @@ import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
 import { ClipFigure } from './ClipFigure'
 import { NeedleTipFigure } from './NeedleTipFigure'
+import { StagingRecord } from './StagingRecord'
 
 /**
  * One lesson, self-paced (EBUS-01, owner decision of 2026-09-14).
@@ -449,7 +450,7 @@ function LessonSession({
         ? 'needle-in-node'
         : undefined
   /** A step with a figure of its own shows that figure, not the lab the lesson ran before it. */
-  const clipStep = !!clipSlug || figure === 'needle-tip'
+  const clipStep = !!clipSlug || figure === 'needle-tip' || figure === 'staging-summary'
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * A briefing with a live example shows a short lead, then the three views, then the rest of the
@@ -478,7 +479,10 @@ function LessonSession({
           ? ('held-missing' as const)
           : current.image === 'live'
             ? ('live' as const)
-            : ['reference', 'diagram'].includes(current.image) && figure !== 'node-reading'
+            : ['reference', 'diagram'].includes(current.image) &&
+                figure !== 'node-reading' &&
+                // The capstone's record is the learner's own examination, not a reference figure.
+                figure !== 'staging-summary'
               ? ('supplied' as const)
               : undefined
   const heldContactMode =
@@ -852,7 +856,9 @@ function LessonSession({
                 ? 'Review · Current activity paused'
                 : current.kind === 'debrief' && current.image !== 'held'
                   ? // An explanation read on a figure is not the learner's own image.
-                    'Explanation'
+                    figure === 'staging-summary'
+                    ? 'Your examination'
+                    : 'Explanation'
                   : KIND_LABELS[current.kind]}
             </p>
             <h2 id="ebus-task-title" ref={heading} tabIndex={-1}>
@@ -891,7 +897,11 @@ function LessonSession({
              * feedback of 2026-10-11). Beside the text the workbench was too narrow for a row
              * and stacked its views, and the controls scrolled away from the image they change.
              */
-            data-stacked={(showDemo || figure === 'node-reading') && !finished ? 'true' : undefined}
+            data-stacked={
+              (showDemo || figure === 'node-reading' || figure === 'staging-summary') && !finished
+                ? 'true'
+                : undefined
+            }
             data-figure={figure}
           >
             <div
@@ -986,6 +996,11 @@ function LessonSession({
                 />
               ) : figure === 'needle-tip' ? (
                 <NeedleTipFigure />
+              ) : figure === 'staging-summary' ? (
+                <StagingRecord
+                  scanned={(unitId) => !!heldFor[unitId + ':scan']}
+                  answers={answers}
+                />
               ) : figure === 'ultrasound' || figure === 'needle' ? (
                 <TeachingDiagram kind={figure} />
               ) : null}
