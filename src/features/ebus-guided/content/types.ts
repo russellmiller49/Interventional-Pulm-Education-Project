@@ -13,6 +13,7 @@ import {
   linkedTaskId,
   type LinkedVariant,
 } from '@/lib/ebus-linked-contract'
+import type { ReviewImage } from './chapter-reviews'
 export type Topic = 'Prepare' | 'Optimize' | 'Locate' | 'Plan' | 'Sample' | 'Complete'
 export interface Choice {
   id: string
@@ -27,6 +28,11 @@ export interface Question {
   choices: Choice[]
   explanation: string
   imageStation?: string
+  /**
+   * A picture a case check is read beside, where the case is not about one station's CT and
+   * ultrasound (2026-11-11): the needle lab's picture, for a case about the needle tip.
+   */
+  imageFigure?: ReviewImage
   imagePolicy?: 'none' | 'retained-acquisition'
   /**
    * A passage from this lesson's own teaching that bears on this check (EBUS-PRE-REVIEW-04,

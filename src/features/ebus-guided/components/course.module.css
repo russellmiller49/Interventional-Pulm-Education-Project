@@ -261,6 +261,32 @@
   padding: 14px;
   min-width: 0;
 }
+/* A case's reference images: the CT beside the ultrasound still, each named under it. */
+.casePictures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.casePicture {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.casePicture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #000;
+}
+.casePicture span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 .figure h2 {
   font-size: 18px;
   font-weight: 650;
