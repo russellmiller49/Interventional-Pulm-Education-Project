@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 
+import type { BreathCursorReading } from '../content/lungFigure'
 import type { VentilationReferenceMarker } from '../content/referenceEvidence'
 import type { VentilatorDeviceId, WaveformSample } from '../engine/types'
 import { CapturedBreath } from './stage/CapturedBreath'
@@ -29,6 +30,8 @@ export interface ConsoleInspection {
   /** Use this captured interval: records the learner's reading of the breath, where a task asks. */
   readonly onInspect?: (sample: WaveformSample, previous: WaveformSample) => void
   readonly effort: boolean
+  /** Told what the cursor reads as it moves; see `CapturedBreath`. */
+  readonly onCursor?: (reading: BreathCursorReading | null) => void
 }
 
 export function ConsoleWaveformArea({
@@ -51,6 +54,7 @@ export function ConsoleWaveformArea({
         samples={inspection.samples}
         marker={inspection.marker}
         onInspect={inspection.onInspect}
+        onCursor={inspection.onCursor}
         effort={inspection.effort}
         revealMarkerEvidence={inspection.revealMarkerEvidence}
         compact

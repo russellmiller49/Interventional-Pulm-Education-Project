@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type Dispatch } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
 import { FitWidthSurface } from '@/features/learning-module/stage/FitWidthSurface'
 
@@ -17,6 +17,7 @@ import {
   type LabRound,
 } from '../../content/learningExperiments'
 import { resolveVentilationSimulationCase } from '../../content/learningPatient'
+import { lungFigureModel, type BreathCursorReading } from '../../content/lungFigure'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { ventilationReferenceMarker } from '../../content/referenceEvidence'
@@ -39,6 +40,7 @@ import {
 } from '../MechanicalVentilatorConsole'
 import { BreathProvenanceNotes, CapturedBreath } from './CapturedBreath'
 import { VentilationClockBar } from './VentilationClockBar'
+import { VentilationLungFigure } from './VentilationLungFigure'
 import { VentilationResponseTimeline } from './VentilationResponseTimeline'
 import styles from './task-flow.module.css'
 
@@ -177,7 +179,25 @@ export function VentilationConsoleSurface({
   const presentation = step.presentation
   const definition = resolveVentilationSimulationCase(state.caseId)
   const openingRecord = useOpeningRecord(session)
-  const inspection = ventilationConsoleInspection({ step, session, openingRecord, lab })
+  /*
+   * What the console's cursor is reading, for the drawing of the lungs beside it. A frozen breath
+   * reports its cursor; while the clock runs the newest sample stands in for it.
+   */
+  const [cursor, setCursor] = useState<BreathCursorReading | null>(null)
+  const frozen = ventilationConsoleInspection({ step, session, openingRecord, lab })
+  const inspection = frozen ? { ...frozen, onCursor: setCursor } : null
+  const newest = state.waveforms.at(-1)
+  const lungReading: BreathCursorReading | null = inspection
+    ? cursor
+    : newest
+      ? {
+          flowLMin: newest.flowLMin,
+          volumeMl: newest.volumeMl,
+          anchored: false,
+          pmusCmH2O: newest.pmusCmH2O,
+          phase: newest.phase,
+        }
+      : null
   const operate = presentation.consoleMode === 'operate'
   const canAct = operate && !state.ventilator.locked
   const integration = session.unitId === 'high-peak-pressure-integration'
@@ -207,6 +227,47 @@ export function VentilationConsoleSurface({
     presentation.layout !== 'breath-walk' &&
     (round.watch.length > 0 || presentation.kind === 'response-lab')
 
+  const patientShown = operate && mechanicsGoals.length > 0 && !integration
+  const bedsideActionsShown = bedsideActionIds.length > 0 && (operate || showPatient)
+  // The rail is for something to do or to read; the options fold alone stays under the console.
+  /*
+   * Gas trapped at end expiration is drawn in the air-trapping section only (owner, 2026-11-11),
+   * and there only where the readings beside the drawing show intrinsic PEEP: it is that reading,
+   * drawn. The section's first part shows flow before the next breath instead, and gets none.
+   */
+  const trappedGasShown =
+    session.unitId === 'expiration-and-air-trapping' &&
+    readingsShown &&
+    round.watch.includes('intrinsicPeep')
+  const lungFigure = lungReading
+    ? lungFigureModel(lungReading, {
+        effortShown: presentation.effort,
+        // The patient's properties are drawn only where the learner is the one setting them.
+        mechanics: patientShown ? state.teachingMechanics : null,
+        mechanicsKeys: mechanicsGoals.map((goal) => goal.key),
+        intrinsicPeepCmH2O: trappedGasShown
+          ? labSnapshot(state, session.holds, session.conditionRevision).values.intrinsicPeep
+          : null,
+      })
+    : null
+  const lungFigureCard = lungFigure ? (
+    <VentilationLungFigure
+      model={lungFigure}
+      when={inspection ? 'at the cursor' : 'now'}
+      breath={inspection?.label}
+    />
+  ) : null
+  const hasRail =
+    Boolean(lungFigure) ||
+    readingsShown ||
+    patientShown ||
+    bedsideActionsShown ||
+    presentation.patient === 'protection'
+  const confoundsShown = Boolean(session.confounds?.length) && operate
+  const timelineShown =
+    presentation.kind === 'response-lab' && presentation.layout === 'console-lab'
+  const underConsole = showPatient || timelineShown
+
   return (
     <div
       className={styles.consoleSurface}
@@ -214,6 +275,7 @@ export function VentilationConsoleSurface({
       data-console-mode={presentation.consoleMode}
       data-session-time={state.simulationTime}
       data-mv-density={density}
+      data-has-rail={hasRail || undefined}
     >
       <div className={styles.consoleCell}>
         <VentilationClockBar
@@ -251,117 +313,142 @@ export function VentilationConsoleSurface({
         ) : null}
       </div>
 
-      {readingsShown ? (
-        <ReadingsStrip
-          session={session}
-          round={round}
-          kind={presentation.kind}
-          withholdUnacquiredPlateau={withholdUnacquiredPlateau}
-        />
-      ) : null}
+      {/*
+        What the learner operates and reads off the console: the teaching patient, the bedside
+        actions, the readings. In a wide pane this is a rail beside the console; the tasks say
+        "beside the console", and stacked under it every one of these was below the fold (walked
+        November 2026: the readings off screen on 79 of 79 tasks at 1600 × 852, the patient's
+        sliders on 10 of 10). What the learner moves comes first, then what they read.
+      */}
+      {hasRail || confoundsShown ? (
+        <div className={styles.consoleRail} data-console-rail>
+          {patientShown ? (
+            <section className={styles.sideCard} data-patient-properties>
+              <h3>Teaching patient</h3>
+              <p className={styles.note}>
+                The patient’s own lungs, not a ventilator setting. Leave the ventilator alone.
+              </p>
+              {mechanicsGoals.map((goal) => (
+                <label key={goal.key} htmlFor={quickControlId(goal.key)}>
+                  <span>
+                    {goal.key === 'complianceScale' ? 'Patient compliance' : 'Patient resistance'}{' '}
+                    <output>{state.teachingMechanics[goal.key].toFixed(2)}×</output>
+                  </span>
+                  <input
+                    id={quickControlId(goal.key)}
+                    type="range"
+                    min={0.25}
+                    max={4}
+                    step={0.05}
+                    value={state.teachingMechanics[goal.key]}
+                    disabled={!canAct}
+                    data-guided-help={guidedControlId === quickControlId(goal.key) || undefined}
+                    onChange={(event) =>
+                      engine({
+                        type: 'SET_TEACHING_MECHANICS',
+                        overrides: { [goal.key]: Number(event.target.value) },
+                      })
+                    }
+                  />
+                </label>
+              ))}
+            </section>
+          ) : null}
 
-      {session.confounds?.length && operate ? (
-        <p className={styles.boundary} role="status" data-confounds>
-          This comparison no longer isolates one change: {session.confounds.join('; ')}. Reset the
-          patient for a clean repeat.
-        </p>
-      ) : null}
+          {bedsideActionsShown ? (
+            <section className={styles.sideCard} data-bedside-actions>
+              <h3>Bedside actions</h3>
+              {bedsideActionIds.map((id) => {
+                const record = state.interventions.find((item) => item.interventionId === id)
+                const pending = record ? Math.max(0, record.effectiveAt - state.simulationTime) : 0
+                return (
+                  <div key={id}>
+                    <button
+                      id={bedsideActionId(id)}
+                      className={styles.sideButton}
+                      type="button"
+                      disabled={!canAct || Boolean(record)}
+                      data-guided-help={guidedControlId === bedsideActionId(id) || undefined}
+                      onClick={() => engine({ type: 'PERFORM_INTERVENTION', interventionId: id })}
+                    >
+                      {interventionLabels[id] ??
+                        definition.interventions.find((item) => item.id === id)?.label ??
+                        id}
+                    </button>
+                    {record ? (
+                      <p className={styles.note} aria-live="off">
+                        {pending > 0
+                          ? `Selected; its effect starts in ${Math.ceil(pending)} s of model time.`
+                          : 'In effect. Reassess the patient.'}
+                      </p>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </section>
+          ) : null}
 
-      {operate && mechanicsGoals.length > 0 && !integration ? (
-        <section className={styles.sideCard} data-patient-properties>
-          <h3>Teaching patient</h3>
-          <p className={styles.note}>
-            The patient’s own lungs, not a ventilator setting. Leave the ventilator alone.
-          </p>
-          {mechanicsGoals.map((goal) => (
-            <label key={goal.key} htmlFor={quickControlId(goal.key)}>
-              <span>
-                {goal.key === 'complianceScale' ? 'Patient compliance' : 'Patient resistance'}{' '}
-                <output>{state.teachingMechanics[goal.key].toFixed(2)}×</output>
-              </span>
-              <input
-                id={quickControlId(goal.key)}
-                type="range"
-                min={0.25}
-                max={4}
-                step={0.05}
-                value={state.teachingMechanics[goal.key]}
-                disabled={!canAct}
-                data-guided-help={guidedControlId === quickControlId(goal.key) || undefined}
-                onChange={(event) =>
-                  engine({
-                    type: 'SET_TEACHING_MECHANICS',
-                    overrides: { [goal.key]: Number(event.target.value) },
-                  })
-                }
-              />
-            </label>
-          ))}
-        </section>
-      ) : null}
+          {/*
+            The drawing leads the readings, except where the rail opens with a column of bedside
+            actions: there the readings the task watches come first, and the drawing follows.
+          */}
+          {bedsideActionsShown ? null : lungFigureCard}
 
-      {bedsideActionIds.length > 0 && (operate || showPatient) ? (
-        <section className={styles.sideCard} data-bedside-actions>
-          <h3>Bedside actions</h3>
-          {bedsideActionIds.map((id) => {
-            const record = state.interventions.find((item) => item.interventionId === id)
-            const pending = record ? Math.max(0, record.effectiveAt - state.simulationTime) : 0
-            return (
-              <div key={id}>
-                <button
-                  id={bedsideActionId(id)}
-                  className={styles.sideButton}
-                  type="button"
-                  disabled={!canAct || Boolean(record)}
-                  data-guided-help={guidedControlId === bedsideActionId(id) || undefined}
-                  onClick={() => engine({ type: 'PERFORM_INTERVENTION', interventionId: id })}
-                >
-                  {interventionLabels[id] ??
-                    definition.interventions.find((item) => item.id === id)?.label ??
-                    id}
-                </button>
-                {record ? (
-                  <p className={styles.note} aria-live="off">
-                    {pending > 0
-                      ? `Selected; its effect starts in ${Math.ceil(pending)} s of model time.`
-                      : 'In effect. Reassess the patient.'}
-                  </p>
-                ) : null}
-              </div>
-            )
-          })}
-        </section>
-      ) : null}
+          {readingsShown ? (
+            <ReadingsStrip
+              session={session}
+              round={round}
+              kind={presentation.kind}
+              withholdUnacquiredPlateau={withholdUnacquiredPlateau}
+            />
+          ) : null}
 
-      {presentation.patient === 'protection' ? (
-        <section className={styles.sideCard} data-pbw-context>
-          <h3>Patient · PBW {definition.predictedBodyWeightKg} kg</h3>
-          {state.measurements.exhaledVtSource === 'trace' ? (
-            <p>
-              Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
-              {definition.predictedBodyWeightKg} kg ={' '}
-              {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)} mL/kg
-              PBW.
+          {bedsideActionsShown ? lungFigureCard : null}
+
+          {confoundsShown ? (
+            <p className={styles.boundary} role="status" data-confounds>
+              This comparison no longer isolates one change: {(session.confounds ?? []).join('; ')}.
+              Reset the patient for a clean repeat.
             </p>
-          ) : (
-            <p>Delivered VT: waiting for a completed breath on the trace.</p>
-          )}
-          <p className={styles.note}>
-            Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
-            {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
-            {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure (plateau minus total
-            PEEP) held against the reference of{' '}
-            {VENTILATION_NUMBERS.value('driving-pressure-reference')}.
-          </p>
-        </section>
+          ) : null}
+
+          {presentation.patient === 'protection' ? (
+            <section className={styles.sideCard} data-pbw-context>
+              <h3>Patient · PBW {definition.predictedBodyWeightKg} kg</h3>
+              {state.measurements.exhaledVtSource === 'trace' ? (
+                <p>
+                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
+                  {definition.predictedBodyWeightKg} kg ={' '}
+                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
+                  mL/kg PBW.
+                </p>
+              ) : (
+                <p>Delivered VT: waiting for a completed breath on the trace.</p>
+              )}
+              <p className={styles.note}>
+                Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
+                {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
+                {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure (plateau minus
+                total PEEP) held against the reference of{' '}
+                {VENTILATION_NUMBERS.value('driving-pressure-reference')}.
+              </p>
+            </section>
+          ) : null}
+        </div>
       ) : null}
 
-      {showPatient ? (
-        <BedsidePanel state={state} definition={definition} compact requireAssessment />
-      ) : null}
+      {/*
+        Wide blocks that were laid out for the console's width stay under it: the bedside panel's
+        row of vital signs does not fit an 18.5 rem rail.
+      */}
+      {underConsole ? (
+        <div className={styles.consoleUnder} data-console-under>
+          {showPatient ? (
+            <BedsidePanel state={state} definition={definition} compact requireAssessment />
+          ) : null}
 
-      {presentation.kind === 'response-lab' && presentation.layout === 'console-lab' ? (
-        <VentilationResponseTimeline session={session} />
+          {timelineShown ? <VentilationResponseTimeline session={session} /> : null}
+        </div>
       ) : null}
 
       <details className={styles.consoleOptions} data-console-options>

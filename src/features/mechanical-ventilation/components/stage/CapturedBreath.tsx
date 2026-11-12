@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { WaveformSample } from '../../engine/types'
 import type { BreathStopId } from '../../content/breathSpine'
+import type { BreathCursorReading } from '../../content/lungFigure'
 import {
   anchorBreathVolume,
   breathStopIndex,
@@ -69,6 +70,7 @@ export function CapturedBreath({
   revealMarkerEvidence = true,
   compact = false,
   palette = 'dark',
+  onCursor,
 }: {
   samples: readonly WaveformSample[]
   label: string
@@ -108,6 +110,12 @@ export function CapturedBreath({
    */
   revealMarkerEvidence?: boolean
   /**
+   * Told what the cursor is reading whenever it moves: the same flow, volume, effort and phase the
+   * read-out under the traces prints. A drawing beside the console follows it. Null when there is
+   * no complete breath to read.
+   */
+  onCursor?: (reading: BreathCursorReading | null) => void
+  /**
    * Drawn inside the console screen: the provenance paragraphs (sampling, the volume origin, the
    * model effort note) are left out here and offered once under the console instead.
    */
@@ -135,6 +143,28 @@ export function CapturedBreath({
     fixedIndex ??
       (stop ? breathStopIndex(breath, stop) : (position ?? breathStopIndex(breath, 'inspiration'))),
   )
+  const lastCursorKey = useRef('')
+  useEffect(() => {
+    if (!onCursor) return
+    if (breath.length < 4) {
+      if (lastCursorKey.current !== 'none') onCursor(null)
+      lastCursorKey.current = 'none'
+      return
+    }
+    const raw = breath[index]
+    const reading: BreathCursorReading = {
+      flowLMin: raw.flowLMin,
+      volumeMl: (whole ? anchorBreathVolume(breath) : breath)[index].volumeMl,
+      anchored: whole,
+      pmusCmH2O: raw.pmusCmH2O,
+      phase: raw.phase,
+    }
+    // Keyed on what is read, not on where: two breaths can share a start time and a length.
+    const key = Object.values(reading).join(':')
+    if (key === lastCursorKey.current) return
+    lastCursorKey.current = key
+    onCursor(reading)
+  })
   if (breath.length < 4)
     return retained ? (
       <p role="status" data-no-complete-breath>
