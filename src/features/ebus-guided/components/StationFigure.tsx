@@ -37,9 +37,9 @@ export function stillRegionName(label: string) {
   const name = label.replace(/azygous/i, 'azygos').toLowerCase()
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
-const stillRegionKind = (label: string) =>
+export const stillRegionKind = (label: string) =>
   /^station /i.test(label) ? 'node' : /lung/i.test(label) ? 'lung' : 'vessel'
-const STILL_COLOURS = { node: '#78e68c', vessel: '#7dc3ff', lung: '#ffcd7d' } as const
+export const STILL_COLOURS = { node: '#78e68c', vessel: '#7dc3ff', lung: '#ffcd7d' } as const
 export function StationFigure({
   station,
   allowSelect = false,
