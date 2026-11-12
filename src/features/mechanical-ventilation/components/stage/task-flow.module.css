@@ -676,6 +676,100 @@
   gap: 0.5rem;
   min-width: 0;
 }
+/*
+ * The lungs at the cursor: the drawing beside what it says, so it costs the rail little height.
+ */
+.lungFigure {
+  /* The first lines sit beside the drawing; the rest run under it at the card's full width. */
+  display: flow-root;
+  min-width: 0;
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px solid #345158;
+  border-radius: 0.7rem;
+}
+.lungFigure svg {
+  float: left;
+  width: 8.75rem;
+  height: auto;
+  margin: 0 0.6rem 0.2rem 0;
+}
+.lungFigure figcaption {
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.lungFigure figcaption strong {
+  display: block;
+  font-weight: 750;
+}
+.lungFigure ul {
+  padding: 0;
+  margin: 0.15rem 0 0;
+  list-style: none;
+}
+.lungFigure li + li {
+  margin-top: 0.15rem;
+}
+/* Flow and volume beside the drawing; effort and the patient's properties under it, whole. */
+.lungFigure li:nth-child(n + 3) {
+  clear: left;
+}
+.lungFigure details {
+  clear: left;
+  margin-top: 0.3rem;
+  color: #aec5c8;
+}
+.lungFigure details p {
+  margin: 0.3rem 0 0;
+}
+.lungChest {
+  fill: #0d2227;
+  stroke: #47666d;
+  stroke-width: 2;
+}
+.lungLobe {
+  fill: #1f6f78;
+  stroke: #71e1e5;
+  stroke-width: 1.5;
+}
+.lungStiffHatch {
+  fill: none;
+  stroke: #eaf4f4;
+  stroke-width: 0.9;
+}
+.lungAirwayWall {
+  fill: none;
+  stroke: #71e1e5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lungAirwayWall[data-calibre='narrowed'] {
+  stroke: #ffbf62;
+}
+.lungAirwayLumen {
+  fill: none;
+  stroke: #0d2227;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lungFlowArrow {
+  fill: none;
+  stroke: #eaf4f4;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lungDiaphragm {
+  fill: none;
+  stroke: #9fb4b7;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.lungDiaphragm[data-pulling] {
+  stroke: #ffbf62;
+}
+
 /* Under the console by default, each block as it was; a rail beside it in a wide pane (below). */
 .consoleRail,
 .consoleUnder {

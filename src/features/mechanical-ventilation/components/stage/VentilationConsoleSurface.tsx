@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type Dispatch } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
 import { FitWidthSurface } from '@/features/learning-module/stage/FitWidthSurface'
 
@@ -17,6 +17,7 @@ import {
   type LabRound,
 } from '../../content/learningExperiments'
 import { resolveVentilationSimulationCase } from '../../content/learningPatient'
+import { lungFigureModel, type BreathCursorReading } from '../../content/lungFigure'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { ventilationReferenceMarker } from '../../content/referenceEvidence'
@@ -39,6 +40,7 @@ import {
 } from '../MechanicalVentilatorConsole'
 import { BreathProvenanceNotes, CapturedBreath } from './CapturedBreath'
 import { VentilationClockBar } from './VentilationClockBar'
+import { VentilationLungFigure } from './VentilationLungFigure'
 import { VentilationResponseTimeline } from './VentilationResponseTimeline'
 import styles from './task-flow.module.css'
 
@@ -177,7 +179,25 @@ export function VentilationConsoleSurface({
   const presentation = step.presentation
   const definition = resolveVentilationSimulationCase(state.caseId)
   const openingRecord = useOpeningRecord(session)
-  const inspection = ventilationConsoleInspection({ step, session, openingRecord, lab })
+  /*
+   * What the console's cursor is reading, for the drawing of the lungs beside it. A frozen breath
+   * reports its cursor; while the clock runs the newest sample stands in for it.
+   */
+  const [cursor, setCursor] = useState<BreathCursorReading | null>(null)
+  const frozen = ventilationConsoleInspection({ step, session, openingRecord, lab })
+  const inspection = frozen ? { ...frozen, onCursor: setCursor } : null
+  const newest = state.waveforms.at(-1)
+  const lungReading: BreathCursorReading | null = inspection
+    ? cursor
+    : newest
+      ? {
+          flowLMin: newest.flowLMin,
+          volumeMl: newest.volumeMl,
+          anchored: false,
+          pmusCmH2O: newest.pmusCmH2O,
+          phase: newest.phase,
+        }
+      : null
   const operate = presentation.consoleMode === 'operate'
   const canAct = operate && !state.ventilator.locked
   const integration = session.unitId === 'high-peak-pressure-integration'
@@ -210,8 +230,27 @@ export function VentilationConsoleSurface({
   const patientShown = operate && mechanicsGoals.length > 0 && !integration
   const bedsideActionsShown = bedsideActionIds.length > 0 && (operate || showPatient)
   // The rail is for something to do or to read; the options fold alone stays under the console.
+  const lungFigure = lungReading
+    ? lungFigureModel(lungReading, {
+        effortShown: presentation.effort,
+        // The patient's properties are drawn only where the learner is the one setting them.
+        mechanics: patientShown ? state.teachingMechanics : null,
+        mechanicsKeys: mechanicsGoals.map((goal) => goal.key),
+      })
+    : null
+  const lungFigureCard = lungFigure ? (
+    <VentilationLungFigure
+      model={lungFigure}
+      when={inspection ? 'at the cursor' : 'now'}
+      breath={inspection?.label}
+    />
+  ) : null
   const hasRail =
-    readingsShown || patientShown || bedsideActionsShown || presentation.patient === 'protection'
+    Boolean(lungFigure) ||
+    readingsShown ||
+    patientShown ||
+    bedsideActionsShown ||
+    presentation.patient === 'protection'
   const confoundsShown = Boolean(session.confounds?.length) && operate
   const timelineShown =
     presentation.kind === 'response-lab' && presentation.layout === 'console-lab'
@@ -337,6 +376,12 @@ export function VentilationConsoleSurface({
             </section>
           ) : null}
 
+          {/*
+            The drawing leads the readings, except where the rail opens with a column of bedside
+            actions: there the readings the task watches come first, and the drawing follows.
+          */}
+          {bedsideActionsShown ? null : lungFigureCard}
+
           {readingsShown ? (
             <ReadingsStrip
               session={session}
@@ -345,6 +390,8 @@ export function VentilationConsoleSurface({
               withholdUnacquiredPlateau={withholdUnacquiredPlateau}
             />
           ) : null}
+
+          {bedsideActionsShown ? lungFigureCard : null}
 
           {confoundsShown ? (
             <p className={styles.boundary} role="status" data-confounds>

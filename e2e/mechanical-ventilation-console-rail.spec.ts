@@ -70,7 +70,10 @@ for (const [width, height] of [
     expect(patient.top).toBeLessThan(consoleBox.bottom)
     // On screen, with the traces and the console's own tabs.
     expect(await shareInView(page, '[data-patient-properties]')).toBe(1)
-    expect(await shareInView(page, '[data-live-readings]')).toBe(1)
+    // The reading values are on screen. With the drawing of the lungs between the sliders and
+    // the readings, the tail of the notes under the values is below the fold on this task.
+    expect(await shareInView(page, '[data-live-readings] dl')).toBeGreaterThan(0.9)
+    expect(await shareInView(page, '[data-live-readings]')).toBeGreaterThan(0.75)
     expect(await shareInView(page, '[data-ventilation-console] nav')).toBe(1)
     // The clock bar keeps the pane's width and one line.
     const clock = await box(page, '[data-clock-bar]')
@@ -83,7 +86,7 @@ for (const [width, height] of [
     for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
     await expect(page.locator('[data-patient-properties] output').first()).toHaveText('2.00×')
     expect(await paneScroll(page)).toBe(0)
-    expect(await shareInView(page, '[data-live-readings]')).toBe(1)
+    expect(await shareInView(page, '[data-live-readings] dl')).toBeGreaterThan(0.9)
   })
 
   test(`the bedside actions are beside the console — ${width}×${height}`, async ({ page }) => {
@@ -103,6 +106,60 @@ for (const [width, height] of [
     expect(await paneScroll(page)).toBe(0)
   })
 }
+
+test('the lungs are drawn beside the console and follow its cursor — 1600×852', async ({
+  page,
+}) => {
+  await openTask(page, 1600, 852, 'mechanics-load-and-pressure', 3)
+  const figure = page.locator('[data-lung-figure]')
+  await expect(figure).toBeVisible()
+  const consoleBox = await box(page, '[data-ventilation-console]')
+  const figureBox = await box(page, '[data-lung-figure]')
+  expect(figureBox.left).toBeGreaterThanOrEqual(consoleBox.right)
+  expect(await shareInView(page, '[data-lung-figure]')).toBe(1)
+  // The patient's sliders lead it; the reading values after it are still on screen.
+  const patient = await box(page, '[data-patient-properties]')
+  expect(figureBox.top).toBeGreaterThanOrEqual(patient.bottom - 1)
+  expect(await shareInView(page, '[data-live-readings] dl')).toBeGreaterThan(0.9)
+
+  // It says what the read-out under the traces says, and changes with the cursor.
+  const readOut = page.locator('[data-ventilation-console] [data-captured-breath] p', {
+    hasText: 'Cursor at',
+  })
+  const volume = async () => (await readOut.textContent())!.match(/to (-?\d+) mL/)![1]
+  await expect(figure).toHaveAttribute('data-flow', 'in')
+  await expect(figure.locator('li').nth(1)).toHaveText(new RegExp(`^${await volume()} mL · `))
+  const cursor = page.locator(
+    '[data-ventilation-console] [data-captured-breath] input[type="range"]',
+  )
+  await cursor.fill(await cursor.evaluate((input) => (input as HTMLInputElement).max))
+  await expect(figure).toHaveAttribute('data-flow', 'out')
+  await expect(figure.locator('li').nth(1)).toHaveText(new RegExp(`^${await volume()} mL · `))
+
+  // The learner's own change to the patient is drawn.
+  const slider = page.locator('[data-patient-properties] input[type="range"]').first()
+  await slider.focus()
+  for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
+  await expect(figure.locator('li', { hasText: 'Patient resistance' })).toHaveText(
+    'Patient resistance 2.00×',
+  )
+  expect(Number(await figure.getAttribute('data-airway'))).toBeLessThan(1)
+})
+
+test('while the clock runs the lungs are drawn from the newest sample', async ({ page }) => {
+  await openTask(page, 1600, 852, 'mechanics-load-and-pressure', 3)
+  const figure = page.locator('[data-lung-figure]')
+  await expect(figure.locator('strong')).toHaveText('Lungs at the cursor')
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(figure.locator('strong')).toHaveText('Lungs now')
+  // Both directions of flow are seen within a few breaths.
+  const seen = new Set<string>()
+  for (let i = 0; i < 80 && seen.size < 2; i++) {
+    seen.add((await figure.getAttribute('data-flow'))!)
+    await page.waitForTimeout(100)
+  }
+  expect([...seen].sort()).toEqual(expect.arrayContaining(['in', 'out']))
+})
 
 test('a narrower pane keeps everything under the console, what is operated first — 1440×800', async ({
   page,

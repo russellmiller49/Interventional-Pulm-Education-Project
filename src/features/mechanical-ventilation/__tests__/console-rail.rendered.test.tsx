@@ -70,7 +70,11 @@ describe('the rail beside the console', () => {
   it('holds the teaching patient, then the readings, on a mechanics task', () => {
     const surface = open('mechanics-load-and-pressure', 2)
     expect(surface).toHaveAttribute('data-has-rail')
-    expect(railOrder(surface)).toEqual(['data-patient-properties', 'data-live-readings'])
+    expect(railOrder(surface)).toEqual([
+      'data-patient-properties',
+      'data-lung-figure',
+      'data-live-readings',
+    ])
     // The console's own cell comes first and the options fold last, outside the rail.
     expect(kids(surface)).toEqual(['div', 'data-console-rail', 'data-console-options'])
     expect(surface.firstElementChild!.querySelector('[data-clock-bar]')).not.toBeNull()
@@ -81,7 +85,12 @@ describe('the rail beside the console', () => {
 
   it('holds the bedside actions, then the readings; the wide bedside panel stays under the console', () => {
     const surface = open('waveform-reading-sequence', 2)
-    expect(railOrder(surface)).toEqual(['data-bedside-actions', 'data-live-readings'])
+    // Where the rail opens with bedside actions, the readings the task watches lead the drawing.
+    expect(railOrder(surface)).toEqual([
+      'data-bedside-actions',
+      'data-live-readings',
+      'data-lung-figure',
+    ])
     expect(kids(surface)).toEqual([
       'div',
       'data-console-rail',
@@ -95,14 +104,18 @@ describe('the rail beside the console', () => {
 
   it('keeps the patient’s weight and the delivered volume with the readings in the lung-protection section', () => {
     const surface = open('lung-protection', 2)
-    expect(railOrder(surface)).toEqual(['data-live-readings', 'data-pbw-context'])
+    expect(railOrder(surface)).toEqual([
+      'data-lung-figure',
+      'data-live-readings',
+      'data-pbw-context',
+    ])
   })
 
-  it('is not drawn for the options fold alone', () => {
+  it('holds the drawing of the lungs alone where a task has nothing to operate or read', () => {
     const surface = open('breathing-with-support', 0)
-    expect(surface).not.toHaveAttribute('data-has-rail')
-    expect(surface.querySelector('[data-console-rail]')).toBeNull()
-    expect(surface.querySelector('[data-console-options]')).not.toBeNull()
+    expect(surface).toHaveAttribute('data-has-rail')
+    expect(railOrder(surface)).toEqual(['data-lung-figure'])
+    expect(kids(surface)).toEqual(['div', 'data-console-rail', 'data-console-options'])
   })
 })
 
