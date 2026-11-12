@@ -112,6 +112,15 @@
   gap: 0.35rem 0.75rem;
 }
 
+/*
+ * Withdraw and Advance sit level with the control's name, not centred on its wrapped description.
+ * In a narrow column the description runs to three lines, and centring put the buttons on the
+ * lower edge of a 720 px window, a fifth of them cut off.
+ */
+.dock[data-dock='tip'] > .dockRow {
+  align-items: start;
+}
+
 .dockRow > label,
 .dockRow > div:first-child {
   display: grid;

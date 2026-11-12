@@ -138,6 +138,16 @@
 .paired > * {
   min-width: 0;
 }
+/* The map the learner answers on, then the heart, in the column beside the monitor. */
+.answerColumn {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+}
+.answerColumn > * {
+  min-width: 0;
+}
 /*
  * The monitor stays beside the controls that act on it.
  *
