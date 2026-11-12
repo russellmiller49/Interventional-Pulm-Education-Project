@@ -1075,10 +1075,11 @@
 }
 
 /*
- * The rail beside the console, once the picture pane can give the console the width it has in a
- * 1280 px window (about 45 rem) and the rail 18.5 rem beside it.
+ * The rail beside the console, once the picture pane can give the console about 40 rem and the
+ * rail 18.5 rem beside it. The text column below gives up width so that a 1440 px window reaches
+ * this; at 62 rem it took a 1600 px one.
  */
-@container mv-visual (min-width: 62rem) {
+@container mv-visual (min-width: 60rem) {
   .consoleSurface[data-has-rail] {
     grid-template-columns: minmax(0, 1fr) 18.5rem;
     align-items: start;
@@ -1128,8 +1129,16 @@
   }
 }
 
-@container mv-task (min-width: 90rem) {
+/*
+ * From a 1440 px window the picture pane is given the width it needs for the console and the rail
+ * side by side (64 rem with the gap and the two scrollbar gutters), and the text column takes
+ * what is left: 23 rem at 1440 px, its full 30 rem from about 1550 px. Measured at 1440 x 800
+ * before this, the text column was 543 px and the pane 814 px: no rail, so the readings, the lung
+ * drawing and the teaching patient's sliders were under the console on every task. `cqw` is the
+ * task body's own width, so this follows the reader's text size as the rest of the workspace does.
+ */
+@container mv-task (min-width: 86.5rem) {
   .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
-    grid-template-columns: minmax(24rem, 30rem) minmax(0, 1fr);
+    grid-template-columns: clamp(23rem, calc(100cqw - 64rem), 30rem) minmax(0, 1fr);
   }
 }
