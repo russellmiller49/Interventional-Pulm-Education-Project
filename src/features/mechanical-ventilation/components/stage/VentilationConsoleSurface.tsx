@@ -233,7 +233,7 @@ export function VentilationConsoleSurface({
   /*
    * Gas trapped at end expiration is drawn in the air-trapping section only (owner, 2026-11-11),
    * and there only where the readings beside the drawing show intrinsic PEEP: it is that reading,
-   * drawn. The section's first part shows flow before the next breath instead, and gets none.
+   * drawn. Both of the section's parts watch it; a step with no readings beside it gets none.
    */
   const trappedGasShown =
     session.unitId === 'expiration-and-air-trapping' &&
