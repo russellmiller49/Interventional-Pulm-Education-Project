@@ -4,7 +4,13 @@ export const MODEL_REVISION = contract.revision
 export const MODEL_PACKAGES = ['needle', 'contact', 'measurement', 'routes'] as const
 export type ModelPackage = (typeof MODEL_PACKAGES)[number]
 export const MODEL_STEPS = {
-  needle: ['sheath', 'live-tip', 'lost-tip-stop', 'resistance-stop', 'protected-removal'],
+  /*
+   * The needle lab is worked by the learner's own hand, in the order of a pass (rebuild of
+   * 2026-11-11): sheath out and locked, stop set to the far side of the node, needle into the node
+   * with its tip in the image, the tip turned out of the image and brought back, movements within
+   * the node, then the needle back in its sheath and the assembly out.
+   */
+  needle: ['sheath', 'stop', 'in-node', 'tip-recovered', 'agitate', 'protected-removal'],
   contact: ['gain-gap', 'direct', 'balloon', 'bubble', 'shadow'],
   // One sweep and one measurement, both on the elongated shape. The other shapes are optional.
   measurement: ['ellipsoid-sweep', 'short-axis-record'],
@@ -30,16 +36,23 @@ interface Base {
 }
 export interface NeedleState extends Base {
   package: 'needle'
+  /** Millimetres the sheath is brought out of the channel: 0 is inside it. */
   sheath: number
-  extension: number
+  /** The sheath lock. */
   secured: boolean
+  /** The needle stop: the travel the needle is allowed, in millimetres. 0 is not set. */
+  stop: number
+  /** Millimetres of needle beyond the sheath. */
+  extension: number
+  /** Scope rotation off the needle path, in degrees. */
   plane: number
-  live: boolean
-  contact: boolean
-  stopped: boolean
-  resistance: boolean
+  /** The learner has turned the tip out of the image with the needle out. */
+  tipLost: boolean
+  /** Completed back-and-forth movements within the node. */
+  movements: number
+  movementsNeeded: number
+  stroke: 'idle' | 'deep' | 'back'
   removed: boolean
-  held: null | { extension: number; sheath: number; plane: number; contact: boolean }
 }
 export interface ContactState extends Base {
   package: 'contact'
@@ -69,22 +82,30 @@ export interface ModelAction {
   type: string
   value?: string | number | Point2
 }
-export function initialModelState(pkg: ModelPackage): ModelState {
+const add = (steps: string[], step: string) => [...new Set([...steps, step])]
+const drop = (steps: string[], step: string) => steps.filter((entry) => entry !== step)
+const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
+/** What a lesson can set on a model activity. Only the needle lab takes any. */
+export interface ModelOptions {
+  /** Movements within the node the needle lab asks for; the lesson passes its sourced number. */
+  needleMovements?: number
+}
+export function initialModelState(pkg: ModelPackage, options: ModelOptions = {}): ModelState {
   const base = { steps: [], actions: 0, notice: '' }
   if (pkg === 'needle')
     return {
       ...base,
       package: pkg,
       sheath: 0,
-      extension: 0,
       secured: false,
+      stop: 0,
+      extension: 0,
       plane: 0,
-      live: true,
-      contact: true,
-      stopped: false,
-      resistance: false,
+      tipLost: false,
+      movements: 0,
+      movementsNeeded: clamp(Math.round(options.needleMovements ?? 5), 1, 20),
+      stroke: 'idle',
       removed: false,
-      held: null,
     }
   if (pkg === 'contact') return { ...base, package: pkg, mode: 'gap', gain: 45, inspected: false }
   if (pkg === 'measurement')
@@ -103,8 +124,96 @@ export function initialModelState(pkg: ModelPackage): ModelState {
     }
   return { ...base, package: pkg, station: '4L', route: 'airway' }
 }
-const add = (steps: string[], step: string) => [...new Set([...steps, step])]
-const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
+/**
+ * What the needle lab draws around the needle, in the model's own millimetres (x along the scope,
+ * distal positive; y into the tissue). The 3D view places its node and vessel on these same
+ * sections, so the ultrasound picture and the model cannot disagree. Teaching geometry: the node
+ * lies on the needle path and a vessel lies beyond its far side, which is what the needle stop is
+ * for. None of it is a depth for a patient.
+ */
+export const NEEDLE_LAB = {
+  node: { cx: 1.25, cy: 15.5, rx: 6, ry: 4.5 },
+  vessel: { cx: 6.3, cy: 24.2, r: 3 },
+  /** The tissue side of the airway wall. */
+  wallOuter: 9.7,
+  /** The ultrasound sector: a fan from a point above the transducer face. */
+  fan: { cx: 2, cy: -6, near: 13, far: 48, halfAngle: 32 },
+  maxRotation: 8,
+  /** How far short of the far side of the node a stop may be set and still be "at the far side". */
+  stopShortMm: 3,
+  /** The slack allowed at a border, so a whole-millimetre setting can sit on it. */
+  borderMm: 0.3,
+} as const
+const NEEDLE_START = contract.needle.retractedTip
+const NEEDLE_AXIS = contract.needle.axis
+/** Distances along the needle path, from the retracted tip, at which it crosses something. */
+function crossings(cx: number, cy: number, rx: number, ry: number): [number, number] | null {
+  const px = (NEEDLE_START[0] - cx) / rx,
+    py = (NEEDLE_START[1] - cy) / ry
+  const dx = NEEDLE_AXIS[0] / rx,
+    dy = NEEDLE_AXIS[1] / ry
+  const a = dx * dx + dy * dy,
+    b = 2 * (px * dx + py * dy),
+    c = px * px + py * py - 1
+  const disc = b * b - 4 * a * c
+  if (disc <= 0) return null
+  const root = Math.sqrt(disc)
+  return [(-b - root) / (2 * a), (-b + root) / (2 * a)]
+}
+const NODE_CROSSING = crossings(
+  NEEDLE_LAB.node.cx,
+  NEEDLE_LAB.node.cy,
+  NEEDLE_LAB.node.rx,
+  NEEDLE_LAB.node.ry,
+)!
+const VESSEL_CROSSING = crossings(
+  NEEDLE_LAB.vessel.cx,
+  NEEDLE_LAB.vessel.cy,
+  NEEDLE_LAB.vessel.r,
+  NEEDLE_LAB.vessel.r,
+)!
+/**
+ * Where the needle path meets the node and the vessel, measured as the learner reads it: in
+ * millimetres of needle beyond the sheath, for the sheath position in this state.
+ */
+export function needlePath(s: Pick<NeedleState, 'sheath'>) {
+  const fromSheath = (t: number) => t - s.sheath
+  return {
+    wall: fromSheath((NEEDLE_LAB.wallOuter - NEEDLE_START[1]) / NEEDLE_AXIS[1]),
+    nodeNear: fromSheath(NODE_CROSSING[0]),
+    nodeFar: fromSheath(NODE_CROSSING[1]),
+    vessel: fromSheath(VESSEL_CROSSING[0]),
+  }
+}
+/** The stop settings that put the limit of travel at the far side of the node. */
+export function needleStopWindow(s: Pick<NeedleState, 'sheath'>) {
+  const far = needlePath(s).nodeFar
+  return {
+    min: Math.ceil(far - NEEDLE_LAB.stopShortMm),
+    max: Math.floor(far + NEEDLE_LAB.borderMm),
+  }
+}
+export const needleStopValid = (s: Pick<NeedleState, 'sheath' | 'stop'>) => {
+  const window = needleStopWindow(s)
+  return s.stop >= window.min && s.stop <= window.max
+}
+export type NeedleTipPlace = 'sheath' | 'wall' | 'before-node' | 'node' | 'beyond-node' | 'vessel'
+/** Which structure the true tip is in, whatever the image shows. */
+export function needleTipPlace(s: Pick<NeedleState, 'sheath' | 'extension'>): NeedleTipPlace {
+  const path = needlePath(s)
+  if (s.extension <= 0) return 'sheath'
+  if (s.extension >= path.vessel) return 'vessel'
+  if (s.extension > path.nodeFar + NEEDLE_LAB.borderMm) return 'beyond-node'
+  if (s.extension >= path.nodeNear + NEEDLE_LAB.borderMm) return 'node'
+  if (s.extension > path.wall) return 'before-node'
+  return 'wall'
+}
+/** How far the point of the needle at a given extension lies from the imaging plane. */
+const planeOffset = (s: Pick<NeedleState, 'plane'>, extension: number) =>
+  Math.abs(Math.sin((s.plane * Math.PI) / 180) * (NEEDLE_AXIS[0] * extension - 0.5))
+/** Whether the tip would be in the image with the needle at this extension. */
+export const needleTipInPlane = (s: Pick<NeedleState, 'plane'>, extension: number) =>
+  planeOffset(s, extension) <= contract.needle.sliceHalfThickness
 export const needleGeometry = (s: NeedleState) => {
   const d = contract.needle.axis
   const tip = contract.needle.retractedTip.map((p, i) => p + d[i] * (s.extension + s.sheath))
@@ -114,7 +223,9 @@ export const needleGeometry = (s: NeedleState) => {
     tip,
     outlet,
     axis: d,
-    tipVisible: s.extension > 1 && s.contact && planeDistance <= contract.needle.sliceHalfThickness,
+    tipVisible: s.extension > 1 && planeDistance <= contract.needle.sliceHalfThickness,
+    /** The needle is out and its tip is not in the image: what remains on screen is shaft. */
+    tipLost: s.extension > 1 && planeDistance > contract.needle.sliceHalfThickness,
     planeDistance,
   }
 }
@@ -274,112 +385,151 @@ export function modelFrameId(s: ModelState) {
     actions: undefined,
     notice: undefined,
     record: undefined,
+    // The needle lab's history of the pass is not part of the pose either.
+    tipLost: undefined,
+    movements: undefined,
+    movementsNeeded: undefined,
+    stroke: undefined,
   }
   let h = 2166136261
   for (const c of JSON.stringify(pose)) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
   return `${MODEL_REVISION}:${s.package}:${(h >>> 0).toString(16)}`
 }
-export function modelReducer(state: ModelState, a: ModelAction): ModelState {
-  if (a.type === 'reset') return initialModelState(state.package)
-  const s = { ...state, actions: state.actions + 1, notice: '' }
+/**
+ * The needle lab (rebuild of 2026-11-11). Every action is one the operator makes on the handle or
+ * the scope; nothing happens to the learner. The rules the earlier model enforced are kept: the
+ * needle does not leave an unlocked sheath, it is not advanced while its tip is out of the image,
+ * and the assembly does not come out with the needle exposed. Credit is given only along that
+ * path, and a stop set too long is never credited.
+ */
+function needleReducer(s: NeedleState, a: ModelAction): NeedleState {
   const value = Number(a.value)
-  if (s.package === 'needle') {
-    if (s.removed)
-      return {
-        ...s,
-        notice: 'Assembly removed with the tip protected. Reset to repeat the exercise.',
-      }
-    if (a.type === 'sheath') {
-      if (s.extension > 0 || s.secured)
-        return {
-          ...s,
-          notice: 'Retract the needle and release the sheath lock before adjusting the sheath.',
-        }
-      s.sheath = clamp(value, 0, 2)
-      if (s.sheath > 0) s.steps = add(s.steps, 'sheath')
-    } else if (a.type === 'secure') s.secured = !s.secured
-    else if (a.type === 'live') {
-      s.live = !s.live
-      s.held = s.live
-        ? null
-        : { extension: s.extension, sheath: s.sheath, plane: s.plane, contact: s.contact }
-    } else if (a.type === 'contact') s.contact = !s.contact
-    else if (a.type === 'extend') {
-      if (!s.secured || s.sheath === 0)
-        return {
-          ...s,
-          notice:
-            'Prepare and lock the sheath before exposing the needle in this conceptual assembly.',
-        }
-      if (!s.live || !s.contact || s.plane !== 0 || s.resistance || s.stopped)
-        return {
-          ...s,
-          notice:
-            'Stop. Needle advancement is blocked while live tip guidance is unavailable or resistance requires reassessment.',
-        }
-      s.extension = clamp(s.extension + 4, 0, contract.needle.maxTravel)
-      if (needleGeometry(s).tipVisible) s.steps = add(s.steps, 'live-tip')
-    } else if (a.type === 'retract') s.extension = 0
-    else if (a.type === 'lost') {
-      if (!s.steps.includes('live-tip') || s.extension < 4)
-        return { ...s, notice: 'First display the exposed tip with live guidance.' }
-      s.plane = 24
-      s.stopped = false
-      s.notice = 'The imaging plane has changed. Inspect the displayed needle echo before acting.'
-    } else if (a.type === 'resistance') {
-      s.resistance = true
-      s.stopped = false
+  const say = (notice: string): NeedleState => ({ ...s, notice })
+  if (s.removed)
+    return say(
+      'The assembly is out of the scope with the needle inside its sheath. Reset to repeat the pass.',
+    )
+  if (a.type === 'sheath') {
+    if (s.extension > 0) return say('Retract the needle before moving the sheath.')
+    if (s.secured) return say('Release the sheath lock before moving the sheath.')
+    s.sheath = clamp(Math.round(value), 0, 2)
+    s.steps = drop(s.steps, 'sheath')
+    if (s.stop > 0) s.steps = needleStopValid(s) ? add(s.steps, 'stop') : drop(s.steps, 'stop')
+    return s
+  }
+  if (a.type === 'secure') {
+    if (s.extension > 0) return say('Retract the needle before releasing the sheath lock.')
+    s.secured = !s.secured
+    if (s.secured && s.sheath > 0) s.steps = add(s.steps, 'sheath')
+    else s.steps = drop(s.steps, 'sheath')
+    if (s.secured && s.sheath === 0)
       s.notice =
-        'Resistance is reported by the operator. Choose the next action; this model does not calculate force.'
-    } else if (a.type === 'stop') {
-      s.stopped = true
-      const lostTip = s.plane !== 0 && !needleGeometry(s).tipVisible
-      if (lostTip) s.steps = add(s.steps, 'lost-tip-stop')
-      if (s.resistance) s.steps = add(s.steps, 'resistance-stop')
-      /*
-       * The stop that follows a plane change is not the stop that follows resistance, and the
-       * model already distinguishes them: it sets `plane` and `resistance` from two different
-       * actions and records two different steps. The notice did not — every stop read "do not
-       * overcome resistance by adding force", including a stop taken because the tip had left
-       * the imaging plane, where no resistance had been reported at all (EBUS-PRE-REVIEW-01,
-       * L21-4). Each state now gets the reason already authored for it: the plane-change wording
-       * from the `lost` action and the lesson's "stop movement and regain a reliable view", and
-       * the resistance wording unchanged. Both together when both are true. The safety
-       * predicates, the recorded steps and the block on advancing are untouched.
-       */
-      s.notice =
-        lostTip && s.resistance
-          ? 'Advancement stopped with the tip out of the imaging plane and resistance reported. Restore a reliable view of the tip and reassess the assembly with the supervising operator; do not overcome resistance by adding force.'
-          : lostTip
-            ? 'Advancement stopped. The tip is not identified in the imaging plane: restore the window and regain a reliable view of the tip with the supervising operator before any further movement.'
-            : 'Advancement stopped. Reassess the image and assembly with the supervising operator; do not overcome resistance by adding force.'
-    } else if (a.type === 'restore') {
-      if (!s.stopped)
-        return { ...s, notice: 'Stop advancement before restoring this demonstration window.' }
-      if (s.resistance)
-        return {
-          ...s,
-          notice:
-            'The resistance scenario ends with protected retraction and removal. It does not authorize another pass.',
-        }
-      s.plane = 0
-      s.contact = true
-      s.live = true
-      s.stopped = false
-    } else if (a.type === 'remove') {
-      if (s.extension !== 0 || !s.secured)
-        return {
-          ...s,
-          notice:
-            'Do not remove an exposed or unsecured needle through the working channel. Retract the needle fully and secure the assembly.',
-        }
-      s.removed = true
-      s.steps = add(s.steps, 'protected-removal')
-      s.notice =
-        'The needle is protected within the sheath. The assembly has been removed in the model.'
+        'The sheath is locked inside the channel. Release the lock and bring the sheath out until it is seen beyond the scope tip.'
+    return s
+  }
+  if (a.type === 'stop') {
+    if (s.extension > 0) return say('Retract the needle before moving the stop.')
+    s.stop = clamp(Math.round(value), 0, contract.needle.maxTravel)
+    const window = needleStopWindow(s)
+    if (needleStopValid(s)) s.steps = add(s.steps, 'stop')
+    else {
+      s.steps = drop(s.steps, 'stop')
+      if (s.stop > window.max)
+        s.notice =
+          'With the stop here the needle can pass the far side of the node, toward the vessel. Read the depth to the far border on the needle path and set the stop to it.'
+      else if (s.stop > 0)
+        s.notice =
+          'The stop is short of the far side of the node. Read the depth to the far border on the needle path and set the stop to it.'
     }
     return s
   }
+  if (a.type === 'rotate') {
+    s.plane = clamp(Math.round(value), -NEEDLE_LAB.maxRotation, NEEDLE_LAB.maxRotation)
+    const g = needleGeometry(s)
+    if (g.tipLost) {
+      s.tipLost = true
+      s.notice =
+        'The tip has left the image. The bright line that remains is shaft. Do not advance: turn the scope back until the tip returns.'
+    } else if (s.tipLost && g.tipVisible) {
+      s.tipLost = false
+      if (needleTipPlace(s) === 'node') s.steps = add(s.steps, 'tip-recovered')
+      s.notice = 'The tip is back in the image.'
+    }
+    return s
+  }
+  if (a.type === 'needle') {
+    const target = clamp(Math.round(value), 0, contract.needle.maxTravel)
+    if (target > s.extension) {
+      if (!s.secured || s.sheath === 0)
+        return say('Bring the sheath out and lock it before the needle leaves the sheath.')
+      if (s.stop === 0) return say('Set the needle stop before advancing the needle.')
+      if (needleGeometry(s).tipLost)
+        return say(
+          'The tip is not in the image. Do not advance: bring the tip back with small rotations of the scope.',
+        )
+      const next = Math.min(target, s.stop)
+      if (next > 1 && !needleTipInPlane(s, next))
+        return say(
+          'The scope is turned off the needle path, so the tip would not be seen. Turn the scope back before advancing.',
+        )
+      if (next === s.extension) return say('The needle is at the stop.')
+      s.extension = next
+      if (target > s.stop) s.notice = 'The needle is at the stop.'
+    } else s.extension = target
+    const place = needleTipPlace(s)
+    const visible = needleGeometry(s).tipVisible
+    if (place === 'vessel')
+      s.notice =
+        'The tip is at the vessel beyond the node. Retract the needle. The stop was set too long.'
+    else if (place === 'beyond-node')
+      s.notice =
+        'The tip is past the far side of the node, toward the vessel. Retract the needle. The stop was set too long.'
+    else if (place === 'node' && visible && needleStopValid(s)) s.steps = add(s.steps, 'in-node')
+    else if (s.extension === s.stop && s.stop > 0 && !needleStopValid(s))
+      s.notice =
+        'The needle is at the stop, short of the far side of the node. Retract it and set the stop to the far side.'
+    // A movement is the tip carried from the stop back toward the near side of the node and to
+    // the stop again, in the image throughout and without leaving the node.
+    if (!visible && place === 'node') s.stroke = 'idle'
+    else if (place !== 'node' || !s.steps.includes('in-node')) {
+      if (
+        s.stroke !== 'idle' &&
+        s.extension > 0 &&
+        place !== 'node' &&
+        !s.steps.includes('agitate')
+      )
+        s.notice =
+          'The tip came out of the node. Keep the tip within the node as you move the needle.'
+      s.stroke = 'idle'
+    } else if (s.extension >= s.stop - 1) {
+      if (s.stroke === 'back') {
+        s.movements += 1
+        if (s.movements >= s.movementsNeeded) s.steps = add(s.steps, 'agitate')
+      }
+      s.stroke = 'deep'
+    } else if (s.stroke === 'deep' && s.extension <= s.stop - 4) s.stroke = 'back'
+    return s
+  }
+  if (a.type === 'remove') {
+    if (s.extension !== 0 || !s.secured)
+      return say(
+        'Do not remove an exposed or unsecured needle through the working channel. Retract the needle fully and keep the sheath locked.',
+      )
+    s.removed = true
+    s.steps = add(s.steps, 'protected-removal')
+    s.notice = 'The needle is inside its sheath and the assembly is out of the scope.'
+  }
+  return s
+}
+export function modelReducer(state: ModelState, a: ModelAction): ModelState {
+  if (a.type === 'reset')
+    return initialModelState(
+      state.package,
+      state.package === 'needle' ? { needleMovements: state.movementsNeeded } : {},
+    )
+  const s = { ...state, actions: state.actions + 1, notice: '' }
+  const value = Number(a.value)
+  if (s.package === 'needle') return needleReducer(s, a)
   if (s.package === 'contact') {
     if (a.type === 'gain') {
       s.gain = clamp(value, 0, 100)

@@ -52,6 +52,8 @@ export interface EbusWorkbenchConfig {
   sessionId: string
   kind: 'simulator' | 'knobology' | 'model'
   modelPackage?: ModelPackage
+  /** Movements within the node the needle lab asks for (the lesson's sourced number). */
+  needleMovements?: number
   presetKey: string
   controls: EbusControl[]
   locked: boolean
@@ -176,6 +178,10 @@ export function isEbusConfig(v: unknown): v is EbusWorkbenchConfig {
     (v.kind === 'simulator' || v.kind === 'knobology' || v.kind === 'model') &&
     (v.kind !== 'model' || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
     (v.modelPackage === undefined || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
+    (v.needleMovements === undefined ||
+      (Number.isInteger(v.needleMovements) &&
+        Number(v.needleMovements) >= 1 &&
+        Number(v.needleMovements) <= 20)) &&
     typeof v.presetKey === 'string' &&
     v.presetKey.length < 120 &&
     Array.isArray(v.controls) &&

@@ -590,14 +590,23 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       from: 'needle-technique',
     },
     {
-      ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
+      ...brief('needle-components', 'Know what each control on the handle does', 'briefing'),
       from: 'needle-assembly-model',
     },
     {
-      ...acquire('needle-states', 'Prepare, pass and withdraw the needle', 'sampling'),
+      ...acquire('needle-states', 'Make one needle pass', 'sampling'),
       from: 'needle-assembly-model',
     },
-    { ...explain('Read the live-tip limitation', 'sampling'), from: 'needle-assembly-model' },
+    // The lab ends with the assembly out, so the learner's own last picture shows no needle. The
+    // explanation is read on the two pictures the lab is about: the tip in the image, and the tip
+    // turned out of it with the line still on the screen.
+    {
+      ...explain('Explain why the needle was held still', 'sampling'),
+      from: 'needle-assembly-model',
+      image: 'diagram',
+      figure: 'needle-tip',
+      instruction: 'Compare the two pictures with the key points beside them.',
+    },
     transfer('Respond to resistance at a calcified target'),
   ],
   'adequacy-rose': [

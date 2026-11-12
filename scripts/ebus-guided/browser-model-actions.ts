@@ -8,26 +8,47 @@ export async function performModel(frame: FrameLocator, pkg: ModelPackage) {
     { timeout: 60000 },
   )
   if (pkg === 'needle') {
-    await frame.getByLabel('Sheath position', { exact: true }).selectOption('1')
+    // One pass by the learner's own hand: each control is named after the handle part it moves.
+    const slide = async (name: string, value: number) => {
+      const slider = frame.getByRole('slider', { name, exact: true })
+      await slider.fill(String(value))
+      return slider
+    }
+    const notice = frame.locator('[data-needle-notice]')
+    // The needle does not leave an unlocked sheath, or move before the stop is set.
+    await expect(await slide('Needle slider', 5)).toHaveValue('0')
+    await expect(notice).toContainText('Bring the sheath out and lock it')
+    await slide('Sheath adjuster', 1)
     await click('Lock sheath')
-    await click('Advance needle one increment')
-    await click('Remove assembly')
-    await expect(frame.getByRole('status')).toContainText('Do not remove')
-    await click('Freeze reference image')
-    await click('Advance needle one increment')
-    await expect(frame.getByRole('status')).toContainText('blocked')
-    await click('Return to live image')
-    await click('Change imaging plane')
-    await click('Advance needle one increment')
-    await expect(frame.getByRole('status')).toContainText('blocked')
-    await click('Stop and reassess')
-    await click('Restore demonstration window')
-    await click('Introduce resistance')
-    await click('Advance needle one increment')
-    await expect(frame.getByRole('status')).toContainText('blocked')
-    await click('Stop and reassess')
-    await click('Retract needle fully')
-    await click('Remove assembly')
+    await expect(await slide('Needle slider', 5)).toHaveValue('0')
+    await expect(notice).toContainText('Set the needle stop')
+    // A stop set too long is named and not credited; the far side of the node is.
+    await slide('Needle stop', 22)
+    await expect(notice).toContainText('can pass the far side of the node')
+    await slide('Needle stop', 19)
+    await expect(await slide('Needle slider', 22)).toHaveValue('19')
+    await expect(frame.locator('[data-needle-tip]')).toHaveAttribute('data-needle-tip', 'seen')
+    await click('Remove the assembly')
+    await expect(notice).toContainText('Do not remove')
+    // Turning the scope takes the tip out of the image; the needle is then held.
+    await slide('Scope rotation', 6)
+    await expect(frame.locator('[data-needle-tip]')).toHaveAttribute('data-needle-tip', 'lost')
+    await slide('Needle slider', 15)
+    await expect(await slide('Needle slider', 19)).toHaveValue('15')
+    await expect(notice).toContainText('Do not advance')
+    await slide('Scope rotation', 0)
+    await expect(notice).toContainText('The tip is back in the image')
+    await slide('Needle slider', 19)
+    for (let movement = 0; movement < 5; movement += 1) {
+      await slide('Needle slider', 14)
+      await slide('Needle slider', 19)
+    }
+    await expect(frame.locator('[data-needle-movements]')).toHaveAttribute(
+      'data-needle-movements',
+      '5',
+    )
+    await slide('Needle slider', 0)
+    await click('Remove the assembly')
   }
   if (pkg === 'contact') {
     await frame.getByLabel('Gain · illustrative', { exact: false }).fill('90')

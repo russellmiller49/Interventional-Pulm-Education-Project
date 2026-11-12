@@ -29,44 +29,53 @@ const readyNeedle = () =>
     initialModelState('needle'),
     { type: 'sheath', value: 1 },
     { type: 'secure' },
-    { type: 'extend' },
+    { type: 'stop', value: 19 },
+    { type: 'needle', value: 19 },
   ) as NeedleState
-it('links handle travel, distal tip and finite imaging-plane visibility, with live and resistance guards', () => {
+it('links needle travel, the true tip and what the imaging plane shows, and holds the needle while the tip is lost', () => {
   const s = readyNeedle()
   expect(needleGeometry(s).tipVisible).toBe(true)
-  const lost = modelReducer(s, { type: 'lost' }) as NeedleState
+  expect(s.steps).toEqual(['sheath', 'stop', 'in-node'])
+  const lost = modelReducer(s, { type: 'rotate', value: 6 }) as NeedleState
   expect(needleGeometry(lost).tip).toEqual(needleGeometry(s).tip)
   expect(needleGeometry(lost).tipVisible).toBe(false)
-  expect(modelReducer(lost, { type: 'extend' })).toMatchObject({
-    extension: s.extension,
+  expect(needleGeometry(lost).tipLost).toBe(true)
+  // The needle can be drawn back, but not advanced, until the tip is seen again.
+  const back = modelReducer(lost, { type: 'needle', value: 15 }) as NeedleState
+  expect(back.extension).toBe(15)
+  expect(modelReducer(back, { type: 'needle', value: 19 })).toMatchObject({
+    extension: 15,
     steps: s.steps,
   })
-  const frozen = modelReducer(s, { type: 'live' }) as NeedleState
-  expect(frozen.held?.extension).toBe(s.extension)
-  expect(modelReducer(frozen, { type: 'extend' })).toMatchObject({ extension: s.extension })
-  expect(modelReducer({ ...s, contact: false }, { type: 'extend' })).toMatchObject({
-    extension: s.extension,
+  // It does not leave an unlocked sheath, and it does not move before the stop is set.
+  expect(modelReducer(initialModelState('needle'), { type: 'needle', value: 5 })).toMatchObject({
+    extension: 0,
   })
-  expect(modelReducer({ ...s, resistance: true }, { type: 'extend' })).toMatchObject({
-    extension: s.extension,
-  })
+  expect(
+    apply(
+      initialModelState('needle'),
+      { type: 'sheath', value: 1 },
+      { type: 'secure' },
+      {
+        type: 'needle',
+        value: 5,
+      },
+    ),
+  ).toMatchObject({ extension: 0 })
   expect(modelComplete(lost)).toBe(false)
 })
-it('blocks exposed removal and requires independent lost-tip and resistance responses before completion', () => {
+it('blocks exposed removal and needs every step of the pass before completion', () => {
   let s: ModelState = readyNeedle()
   const unsafe = modelReducer(s, { type: 'remove' }) as NeedleState
   expect(unsafe.removed).toBe(false)
   expect(unsafe.notice).toMatch(/Do not remove/)
-  s = apply(
-    s,
-    { type: 'lost' },
-    { type: 'stop' },
-    { type: 'restore' },
-    { type: 'resistance' },
-    { type: 'stop' },
-  )
+  // Retracting and removing without the rest of the pass does not complete the activity.
+  expect(modelComplete(apply(s, { type: 'needle', value: 0 }, { type: 'remove' }))).toBe(false)
+  s = apply(s, { type: 'rotate', value: 6 }, { type: 'rotate', value: 0 })
+  for (let movement = 0; movement < 5; movement += 1)
+    s = apply(s, { type: 'needle', value: 14 }, { type: 'needle', value: 19 })
   expect(modelComplete(s)).toBe(false)
-  s = apply(s, { type: 'retract' }, { type: 'remove' })
+  s = apply(s, { type: 'needle', value: 0 }, { type: 'remove' })
   expect(modelComplete(s)).toBe(true)
   expect(modelComplete(modelReducer(s, { type: 'reset' }))).toBe(false)
 })

@@ -92,7 +92,9 @@ async function main() {
         prediction = own.find((a) => a.kind === 'prediction'),
         briefing = own.find((a) => a.kind === 'briefing')!,
         acquisition = own.find((a) => a.interaction === 'acquire')!,
-        held = own.find((a) => a.image === 'held')!,
+        // The needle lab ends with the assembly out, so its explanation is read on the lab's two
+        // pictures (tip in the image, tip turned out of it) and not on a held frame.
+        held = own.find((a) => a.image === 'held') ?? own[own.indexOf(acquisition) + 1],
         after = activities[activities.indexOf(held) + 1],
         closing = activities.at(-1)!,
         closingUnit = partsOf(lesson).find((part) => part.id === closing.lessonId)!
@@ -124,21 +126,32 @@ async function main() {
 
       // The acquisition: the one live model. Nothing is done yet, so the image cannot be held.
       await onActivity(acquisition)
-      await expect(page.locator('[data-now-card]')).toHaveAttribute('data-top-advance', 'true')
+      // The needle lab is worked in the one-screen console; the other models keep the reading
+      // layout with the advance row beside the heading.
+      const consoleLab = pkg === 'needle'
+      await expect(page.locator('[data-now-card]')).toHaveAttribute(
+        consoleLab ? 'data-console' : 'data-top-advance',
+        'true',
+      )
       await expect(page.locator('[data-evidence-identity="live"]')).toBeVisible()
       await expect(modelFrame).toHaveAttribute('data-model-frame', /additional-models-v1/, {
         timeout: 60000,
       })
       await expect(primary()).toHaveText('Continue with this image')
       await expect(primary()).toBeDisabled()
-      await expect(note()).toHaveText('To turn this on: ' + unmetStep)
+      // In the console the open steps are listed beside the button, so the note under it is empty.
+      if (consoleLab)
+        await expect(page.locator('[data-acquisition-outstanding]')).toContainText(unmetStep)
+      else await expect(note()).toHaveText('To turn this on: ' + unmetStep)
       await expect(page.locator('[data-skip-acquisition]')).toHaveText('Continue without an image')
       // The advance row sits beside the heading, above the workbench.
       const advanceBox = (await primary().boundingBox())!,
         benchBox = (await workbench().boundingBox())!
       expect(advanceBox.y + advanceBox.height).toBeLessThanOrEqual(benchBox.y)
       await expect(frame.locator('.model-kicker')).toHaveText('Model activity')
-      await expect(frame.locator('.model-controls h2')).toHaveText('Controls')
+      await expect(frame.locator('.model-controls h2')).toHaveText(
+        consoleLab ? stepsText(0) : 'Controls',
+      )
       await expect(frame.locator('.model-steps')).toContainText(stepsText(0))
       await expect(frame.getByText(ALL_DONE)).toHaveCount(0)
       await expect(frame.locator('.model-controls fieldset')).toBeEnabled()
@@ -168,13 +181,26 @@ async function main() {
         frame.locator('details', { hasText: 'How to move the model' }),
       ).not.toHaveAttribute('open', '')
       // Choosing a structure outlines it and says so; the list holds nothing the activity conceals.
+      // The needle lab names the handle's parts on the handle itself and has no list to choose from;
+      // nothing in it is concealed, because the learner works the needle and watches it.
       const concealedOptions = await selector.locator('option').allInnerTexts()
       expect(concealedOptions.length).toBeGreaterThan(1)
-      expect(concealedOptions.filter((label) => CONCEALED.test(label))).toEqual([])
-      await selector.selectOption({ index: 1 })
-      await expect(frame.locator('.model-inspector [role=status]')).toHaveText(
-        concealedOptions[1].trim() + ': outlined in violet in the model.',
-      )
+      if (consoleLab) {
+        await expect(selector).toBeHidden()
+        await expect(frame.locator('.needle-handle-name')).toHaveText([
+          'Sheath adjuster',
+          'Sheath lock',
+          'Needle stop',
+          'Needle slider',
+          'Stylet',
+        ])
+      } else {
+        expect(concealedOptions.filter((label) => CONCEALED.test(label))).toEqual([])
+        await selector.selectOption({ index: 1 })
+        await expect(frame.locator('.model-inspector [role=status]')).toHaveText(
+          concealedOptions[1].trim() + ': outlined in violet in the model.',
+        )
+      }
       await expect(frame.locator('.model-image [role=tooltip]')).toHaveCount(0)
       if (pkg === 'measurement') await expect(readout).toHaveCount(0)
       // Looking around the model is not a step: the image still cannot be held.
@@ -192,51 +218,64 @@ async function main() {
 
       // The held image: the same frame, locked, nothing revealed before a response.
       await onActivity(held)
-      await expect(page.locator('[data-evidence-identity="held"]')).toBeVisible()
-      await expect(frame.locator('.model-controls fieldset')).toHaveAttribute('disabled', '')
-      await expect(
-        frame.getByRole('button', { name: 'Reset activity', exact: true }),
-      ).toBeDisabled()
-      await expect(frame.locator('.model-kicker')).toHaveText('Your image')
-      await expect(frame.locator('.model-controls h2')).toHaveText('Your image')
-      await expect(frame.locator('.model-steps')).toHaveCount(0)
-      await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
-      await page.screenshot({ path: `${out}/${pkg}-observe.png` })
-      if (held.questions.length) {
-        // A check on the learner's own image: nothing is revealed before a response.
-        await expect(frame.locator('.model-image [role=tooltip]')).toHaveCount(0)
-        await expect(primary()).toHaveText('Continue without answering')
-        await expect(card(unit.observation)).toBeVisible()
-        await answer(unit.observation)
-        await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
-        // The held contact state has a reflector, which the list names only once a response is in.
-        // The reveal reaches the lab as a message, so the list is polled rather than read once.
-        if (pkg === 'contact')
-          await expect
-            .poll(async () =>
-              (await selector.locator('option').allInnerTexts()).filter((label) =>
-                CONCEALED.test(label),
-              ),
-            )
-            .toHaveLength(1)
-      } else {
-        // Nothing is asked here, so the model's own reference for the held plane is shown at once.
+      let revealedOptions: string[] = []
+      if (held.image !== 'held') {
+        await expect(workbench()).toHaveCount(0)
+        await expect(page.locator('[data-needle-tip-figure] img')).toHaveCount(2)
+        await expect(page.locator('[data-needle-tip-figure]')).toContainText('Tip in the image.')
+        await expect(page.locator('[data-needle-tip-figure]')).toContainText(
+          'The line now ends short of the tip',
+        )
         await expect(page.locator('[data-question-id]')).toHaveCount(0)
-        if (pkg === 'measurement') {
-          await expect(readout).toBeVisible()
-          await expect(readout).toContainText('short axis 16.0 phantom mm')
-          await expect(frame.locator('[data-model-reference]')).toHaveCount(1)
+      } else {
+        await expect(page.locator('[data-evidence-identity="held"]')).toBeVisible()
+        await expect(frame.locator('.model-controls fieldset')).toHaveAttribute('disabled', '')
+        await expect(
+          frame.getByRole('button', { name: 'Reset activity', exact: true }),
+        ).toBeDisabled()
+        await expect(frame.locator('.model-kicker')).toHaveText('Your image')
+        await expect(frame.locator('.model-controls h2')).toHaveText('Your image')
+        await expect(frame.locator('.model-steps')).toHaveCount(0)
+        await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
+        await page.screenshot({ path: `${out}/${pkg}-observe.png` })
+        if (held.questions.length) {
+          // A check on the learner's own image: nothing is revealed before a response.
+          await expect(frame.locator('.model-image [role=tooltip]')).toHaveCount(0)
+          await expect(primary()).toHaveText('Continue without answering')
+          await expect(card(unit.observation)).toBeVisible()
+          await answer(unit.observation)
+          await expect(modelFrame).toHaveAttribute('data-model-frame', id!)
+          // The held contact state has a reflector, which the list names only once a response is in.
+          // The reveal reaches the lab as a message, so the list is polled rather than read once.
+          if (pkg === 'contact')
+            await expect
+              .poll(async () =>
+                (await selector.locator('option').allInnerTexts()).filter((label) =>
+                  CONCEALED.test(label),
+                ),
+              )
+              .toHaveLength(1)
+        } else {
+          // Nothing is asked here, so the model's own reference for the held plane is shown at once.
+          await expect(page.locator('[data-question-id]')).toHaveCount(0)
+          if (pkg === 'measurement') {
+            await expect(readout).toBeVisible()
+            await expect(readout).toContainText('short axis 16.0 phantom mm')
+            await expect(frame.locator('[data-model-reference]')).toHaveCount(1)
+          }
+          if (pkg === 'routes') {
+            // Unsupported final state still retains a visible anatomy view, with no invented route arrow.
+            await expect(
+              frame.getByText('No supported orientation preset for this selection.', {
+                exact: true,
+              }),
+            ).toBeVisible()
+          }
         }
-        if (pkg === 'routes') {
-          // Unsupported final state still retains a visible anatomy view, with no invented route arrow.
-          await expect(
-            frame.getByText('No supported orientation preset for this selection.', { exact: true }),
-          ).toBeVisible()
-        }
+        // What the structure list names once the held image is revealed (after the response, or
+        // at once where nothing is asked).
+        revealedOptions = await selector.locator('option').allInnerTexts()
       }
-      // What the structure list names once the held image is revealed (after the response, or at
-      // once where nothing is asked).
-      const revealedOptions = await selector.locator('option').allInnerTexts()
       await page.screenshot({ path: `${out}/${pkg}-explain.png` })
       await expect(primary()).toHaveText('Continue to ' + after.title)
       await next()

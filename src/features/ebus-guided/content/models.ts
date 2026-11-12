@@ -1,34 +1,38 @@
 import type { Lesson } from './types'
 import { question } from './authoring'
+import { EBUS_NUMBERS } from './teachingNumbers'
+
+/** The lab asks for the low end of the sourced range of movements on one pass. */
+const NEEDLE_MOVEMENTS = Number.parseInt(EBUS_NUMBERS.value('agitations-per-pass'), 10)
 
 export const needleModel: Lesson = {
   id: 'needle-assembly-model',
-  title: 'Needle assembly and live-tip visibility',
+  title: 'One needle pass, by your own hand',
   topic: 'Sample',
   minutes: 10,
   objective:
-    'Distinguish sheath movement from needle exposure and stop advancement when live tip guidance is lost.',
+    'Work the sheath, the stop and the needle in order, and hold the needle still when its tip leaves the image.',
   recall:
     'The sheath protects the needle during passage through the working channel. A visible shaft segment does not establish the location of its tip.',
   concept: 'The handle and distal needle form one assembly',
   paragraphs: [
-    'Use this model to follow movement from the handle to the distal needle: switch between the Needle tip and Handle views to see both ends. The sheath and needle move separately along a common outlet axis. The handle and the scope tip are drawn at true size, with the length of the scope between them left out.',
-    'The ultrasound schematic shows only the part of the needle intersecting its finite imaging plane. Changing that plane can remove the tip echo while leaving part of the shaft visible. Frozen images and missing contact cannot provide current tip guidance.',
+    'Each control on the handle does one thing. The sheath adjuster moves the sheath, and the sheath lock holds it. The needle stop limits how far the needle can travel. The needle slider moves the needle. In the lab the handle is drawn above the scope tip and the ultrasound picture, at true size, with the length of the scope between them left out.',
+    'The ultrasound picture shows only the part of the needle that lies in the imaging plane. A small turn of the scope can take the tip out of the image while part of the shaft stays in it. The line on the screen is then shorter than the needle.',
   ],
   checklist: [
-    'Identify the sheath, needle handle, extension stop and channel outlet.',
-    'Compare the live tip with a shaft-only image.',
-    'Stop and reassess lost visualization or resistance; retract and secure before removal.',
+    'Sheath out until it is seen beyond the scope tip, then locked.',
+    'Stop set to the far side of the node before the needle moves.',
+    'Tip in the image for every movement; needle back in its sheath before the assembly comes out.',
   ],
   worked: {
     context:
-      'The operator changes the imaging plane while the needle remains in place. A short bright line persists.',
+      'The needle is in the node. The scope turns a few degrees and the bright line on the screen shortens.',
     reasoning:
-      'In the worked model, hover over the assembly, prepare and lock the sheath, then expose the tip. Introduce a plane change. Compare the true tip location in 3D with the shorter line in the schematic. Stop advancement before restoring the demonstration window.',
+      'The needle has not moved; less of it lies in the imaging plane, and the end of the line is no longer the tip. Hold the needle still and turn the scope back until the tip returns.',
   },
   question: question(
     'assembly-predict',
-    'A needle-like line remains after the imaging plane changes. What must be established before further advancement?',
+    'A bright line remains on the screen after the scope turns. What must be established before the needle is advanced again?',
     [
       'Live visualization of the actual tip',
       'A shaft intersection alone does not establish the distal endpoint. Stop and restore guidance.',
@@ -48,24 +52,25 @@ export const needleModel: Lesson = {
     goal: 'model',
     presetKey: 'needle',
     controls: [],
+    needleMovements: NEEDLE_MOVEMENTS,
     instruction:
-      'Prepare the sheath and lock it. Display the tip live, introduce a plane change, then stop and reassess. Restore the window. Introduce resistance and stop again. Finish by retracting the needle and removing the secured assembly.',
+      'Make one pass with the controls beside the model. Work down the steps: each control is named after the part of the handle it moves.',
   },
   observation: {
     ...question(
       'assembly-observe',
-      'Why was advancement blocked after the plane changed?',
+      'After you turned the scope, the needle could not be advanced. Why?',
       [
-        'A shaft echo could remain while the tip left the imaging plane',
-        'The needle geometry and imaging plane are separate. A surviving shaft intersection does not prove visible tip guidance.',
+        'The tip had left the image, although part of the shaft was still seen',
+        'The needle and the imaging plane move separately. A line that is still on the screen does not show where the tip is.',
       ],
       [
         'The needle had reached the far border of the node',
         'Nothing about the node changed; the plane moved, so the position of the tip was no longer known.',
       ],
       [
-        'The shorter echo showed that the needle was bending',
-        'A shorter line after a plane change means less of the needle lies in the plane, not that it has deflected.',
+        'The shorter line showed that the needle was bending',
+        'A shorter line after the scope turns means less of the needle lies in the plane, not that it has deflected.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
@@ -86,12 +91,12 @@ export const needleModel: Lesson = {
   ),
   diagram: 'needle',
   takeaways: [
-    'Sheath position and needle exposure are distinct.',
-    'A frozen frame or shaft-only echo cannot substitute for live tip guidance.',
+    'Sheath, stop and needle are set in that order, and undone in reverse.',
+    'A line on the screen is not the tip: hold the needle still until the tip is seen.',
   ],
-  sources: ['ics2023', 'simulation'],
+  sources: ['ics2023', 'chest2016', 'simulation'],
   boundary:
-    'Generic mechanical and imaging-plane illustration. No patient tissue mechanics, device dimensions, force, sampling yield or clinically validated puncture trajectory is modeled.',
+    'A teaching model. Its depths and travel are for practising the steps and are not settings for a patient or for a particular needle.',
 }
 export const contactModel: Lesson = {
   id: 'contact-cutaway-model',
