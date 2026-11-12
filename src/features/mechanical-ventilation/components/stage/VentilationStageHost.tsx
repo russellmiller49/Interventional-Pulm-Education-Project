@@ -164,6 +164,20 @@ function useSideBySidePanes(content: RefObject<HTMLDivElement | null>, workspace
 }
 
 /** One section of the Learn pathway, on the shared flowing stage (the ECMO format). */
+/**
+ * Bring "Section finished" clear of the pinned Continue bar. The card is the answer to leaving or
+ * skipping the case, and under a long last task it otherwise sits behind that bar.
+ */
+function revealSectionFinished(from: HTMLElement): void {
+  const done = from
+    .closest('[data-flow-content]')
+    ?.querySelector<HTMLElement>('[data-section-completion]')
+  if (!done) return
+  const footer = from.ownerDocument.querySelector<HTMLElement>('[data-now-footer]')
+  done.style.scrollMarginBottom = `${(footer?.getBoundingClientRect().height ?? 0) + 12}px`
+  done.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'instant' })
+}
+
 export function VentilationStageHost({
   unitId,
   locale = 'en',
@@ -286,8 +300,14 @@ function VentilationStageSession({
     }
     if (!caseReturn.current) return
     caseReturn.current = false
-    if (headingRef.current) revealTaskHeading(headingRef.current)
+    if (!headingRef.current) return
+    revealTaskHeading(headingRef.current)
+    revealSectionFinished(headingRef.current)
   }, [caseOpen])
+  // Skipping the case answers on the same card, which a long last task leaves below the fold.
+  useLayoutEffect(() => {
+    if (caseOutcome === 'skipped' && headingRef.current) revealSectionFinished(headingRef.current)
+  }, [caseOutcome])
 
   /*
    * Explicit same-tab navigation to another section. The request names its destination, and the

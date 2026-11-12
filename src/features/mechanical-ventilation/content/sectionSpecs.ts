@@ -322,7 +322,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       },
     }),
     precommitDenyPatterns: [/toward a lower value/i, /co₂ rises as effective ventilation falls/i],
-    practicePairing: { kind: 'mechanism-match', caseId: 'MV-05' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'MV-06' },
   },
   {
     unitId: 'waveform-reading-sequence',
@@ -413,7 +413,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       /compliance/i,
       /stiff/i,
     ],
-    practicePairing: { kind: 'mechanism-match', caseId: 'MV-13' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'MV-14' },
   },
 ]
 

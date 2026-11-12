@@ -162,11 +162,8 @@ describe('one learner map', () => {
       const earlier = flat.slice(0, index).some((other) => other.caseId === entry.caseId)
       expect(entry.revisit).toBe(earlier)
     })
-    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual([
-      'MV-01',
-      'MV-05',
-      'MV-13',
-    ])
+    // Sections 10 and 14 have had their own case since 2026-11-12 (MV-06, MV-14).
+    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual(['MV-01'])
     // The stage of Sections 11–13 keeps its id and is not called "applications".
     expect(ventilationCompositionLine()).not.toMatch(/application/i)
     expect(ventilationCompositionLine()).toMatch(/3 integration sections · 1 capstone/)

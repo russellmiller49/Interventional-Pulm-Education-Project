@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test'
  * Mechanical ventilation: the case is the section's last task.
  *
  * A section used to end with a link to Practice; the case ran on its own page and there was no way
- * back. Seven sections now end on their case, run inside the section on its own patient and clock.
+ * back. Nine sections now end on their case, run inside the section on its own patient and clock.
  */
 
 async function openLastOwnTask(page: Page, width: number, height: number, section: string) {
@@ -20,6 +20,18 @@ async function openLastOwnTask(page: Page, width: number, height: number, sectio
 
 const sideways = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+
+/** How much of "Section finished" the pinned Continue bar covers, in px. */
+const coveredByBar = (page: Page) =>
+  page.evaluate(() => {
+    const done = document.querySelector('[data-section-completion]')
+    const bar = document.querySelector('[data-now-footer]')
+    if (!done || !bar) return -1
+    return Math.max(
+      0,
+      Math.round(done.getBoundingClientRect().bottom - bar.getBoundingClientRect().top),
+    )
+  })
 
 for (const [width, height] of [
   [1600, 852],
@@ -87,15 +99,72 @@ test('the case can be skipped, and stays one press away', async ({ page }) => {
   await expect(page.locator('[data-section-case="MV-13"]')).toBeVisible()
 })
 
-test('a section whose case an earlier section ends on keeps its link to Practice', async ({
+test('the section whose case a later section ends on keeps its link to Practice', async ({
   page,
 }) => {
-  await openLastOwnTask(page, 1600, 852, 'ventilation-and-co2')
+  await openLastOwnTask(page, 1600, 852, 'lung-protection')
   await expect(page.locator('[data-step-list] li[data-case-row]')).toHaveCount(0)
   const pairing = page.locator('[data-section-completion] [data-practice-pairing]')
-  await expect(pairing).toContainText('It is also the last task of Section 7')
-  await expect(pairing.getByRole('link')).toHaveAttribute('href', /\/practice\?case=MV-05$/)
+  await expect(pairing).toContainText('It is also the last task of Section 9')
+  await expect(pairing.getByRole('link')).toHaveAttribute('href', /\/practice\?case=MV-01$/)
 })
+
+// Section 9's last task is long: at this size the card used to sit two-thirds behind the bar.
+test('skipping the case brings "Section finished" clear of the pinned Continue bar', async ({
+  page,
+}) => {
+  await openLastOwnTask(page, 1440, 800, 'oxygenation-response')
+  const card = page.locator('[data-now-card]').first()
+  await card.getByRole('button', { name: 'Skip the case' }).click()
+  const done = page.locator('[data-section-completion]')
+  await expect(done).toContainText('You skipped this section’s case')
+  await expect(done.getByRole('button', { name: 'Open the case' })).toBeInViewport({ ratio: 1 })
+  expect(await coveredByBar(page)).toBe(0)
+})
+
+// Given their case by the owner on 2026-11-12.
+for (const [section, caseId, title, next] of [
+  [
+    'oxygenation-response',
+    'MV-01',
+    'ARDS hypoxemia: recruitment versus overdistension',
+    /^Continue to Section 10 · /,
+  ],
+  [
+    'ventilation-and-co2',
+    'MV-06',
+    'Severe asthma: auto-PEEP with obstructive shock',
+    /^Continue to Section 11 · /,
+  ],
+  [
+    'high-peak-pressure-integration',
+    'MV-14',
+    'Sudden loss of compliance: tension pneumothorax',
+    null,
+  ],
+] as const) {
+  test(`${section} ends on ${caseId} and comes back finished`, async ({ page }) => {
+    await openLastOwnTask(page, 1440, 800, section)
+    const card = page.locator('[data-now-card]').first()
+    await expect(page.locator('[data-step-list] li[data-case-row]')).toHaveAttribute(
+      'data-case-row',
+      caseId,
+    )
+    await expect(page.locator('[data-task-map]')).not.toContainText(title)
+    await card.getByRole('button', { name: 'Continue to the case' }).click()
+    const view = page.locator(`[data-section-case="${caseId}"]`)
+    await expect(view.locator('h2[data-case-title]')).toHaveText(title)
+    await expect(view.locator('[data-case-title]')).toBeInViewport()
+    await expect(view.locator('[data-device]')).toHaveCount(1)
+    expect(await sideways(page)).toBeLessThanOrEqual(1)
+    await view.getByRole('button', { name: 'Leave the case' }).click()
+    const done = page.locator('[data-section-completion]')
+    await expect(done).toContainText(`You opened this section’s case: ${title}.`)
+    await expect(done).toBeInViewport()
+    expect(await coveredByBar(page)).toBe(0)
+    if (next) await expect(card.getByRole('button', { name: next })).toBeInViewport()
+  })
+}
 
 test('Practice still opens the same case on its own page', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })

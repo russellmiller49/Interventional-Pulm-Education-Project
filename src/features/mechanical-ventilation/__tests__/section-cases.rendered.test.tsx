@@ -2,10 +2,12 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 
 import MechanicalVentilationCaseActivityV2 from '../components/MechanicalVentilationCaseActivityV2'
+import { MechanicalVentilationPracticePicker } from '../components/MechanicalVentilationPracticePicker'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { isVentilationCaseLive, ventilationSectionLabel } from '../content/learnerMap'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import {
+  VENTILATION_CASE_HOME,
   VENTILATION_SECTION_CASE_TASK_TITLE,
   ventilationCaseHomeUnitId,
   ventilationSectionCase,
@@ -72,20 +74,46 @@ function openLastOwnTask() {
  * The case is the section's last task.
  *
  * Until November 2026 a section ended with a link to Practice: the case ran on its own page and
- * there was no way back. Each case is now the last task of the section Practice already says it
- * builds on, run inside the section. The pairing itself is unchanged.
+ * there was no way back. Each case is now the last task of a section, run inside it.
+ *
+ * Seven pairings are the module's own, unchanged. Three are the owner's ruling of 2026-11-12:
+ * Section 10 ends on MV-06 and Section 14 on MV-14 (each used to pair the case an earlier section
+ * already ends on), and MV-01 is run in Section 9, not Section 6.
  */
 describe('which section ends on which case', () => {
-  it('is the module’s own mechanism pairing, each case in the first section that pairs it', () => {
+  it('is each section’s mechanism pairing: nine sections, nine different cases', () => {
     expect(ventilationSectionCases().map((entry) => [entry.sectionNumber, entry.caseId])).toEqual([
       [4, 'MV-13'],
-      [6, 'MV-01'],
       [7, 'MV-05'],
       [8, 'MV-07'],
+      [9, 'MV-01'],
+      [10, 'MV-06'],
       [11, 'MV-08'],
       [12, 'MV-11'],
       [13, 'MV-15'],
+      [14, 'MV-14'],
     ])
+  })
+
+  it('runs a case that two sections pair in the section named for it, which must pair it', () => {
+    expect(VENTILATION_CASE_HOME).toEqual({ 'MV-01': 'oxygenation-response' })
+    for (const [caseId, unitId] of Object.entries(VENTILATION_CASE_HOME)) {
+      expect(ventilationSectionSpec(unitId).practicePairing).toEqual({
+        kind: 'mechanism-match',
+        caseId,
+      })
+      expect(ventilationCaseHomeUnitId(caseId)).toBe(unitId)
+    }
+    // Section 6 still pairs MV-01, and no longer ends on it.
+    expect(ventilationSectionSpec('lung-protection').practicePairing?.caseId).toBe('MV-01')
+    expect(ventilationSectionCase('lung-protection')).toBeNull()
+  })
+
+  it('gives a section only a case the section already lists', () => {
+    for (const entry of ventilationSectionCases()) {
+      const unit = ventilationLearningUnits.find((candidate) => candidate.id === entry.unitId)!
+      expect(unit.caseIds).toContain(entry.caseId)
+    }
   })
 
   it('places no case in two sections and none that is held as a worked explanation', () => {
@@ -101,13 +129,13 @@ describe('which section ends on which case', () => {
     }
   })
 
-  it('leaves the other seven sections as they were', () => {
+  it('leaves the other five sections without a case of their own', () => {
     const without = ventilationLearningUnits
       .filter((unit) => !ventilationSectionCase(unit.id))
       .map((unit) => ventilationLearningUnits.indexOf(unit) + 1)
-    // 1, 2, 3 and 5 pair a case only as "next in this part of the pathway"; 9, 10 and 14 pair a
-    // case that an earlier section already ends on.
-    expect(without).toEqual([1, 2, 3, 5, 9, 10, 14])
+    // 1, 2, 3 and 5 pair a case only as "next in this part of the pathway"; 6 pairs the case
+    // Section 9 ends on.
+    expect(without).toEqual([1, 2, 3, 5, 6])
   })
 })
 
@@ -229,24 +257,62 @@ describe('a section that ends on its case', () => {
   })
 })
 
-describe('a section whose paired case an earlier section ends on', () => {
+describe.each([
+  ['oxygenation-response', 'MV-01', 'ARDS hypoxemia: recruitment versus overdistension'],
+  ['ventilation-and-co2', 'MV-06', 'Severe asthma: auto-PEEP with obstructive shock'],
+  ['high-peak-pressure-integration', 'MV-14', 'Sudden loss of compliance: tension pneumothorax'],
+])('%s, given its case on 2026-11-12', (unitId, caseId, title) => {
+  it(`ends on ${caseId}, named only once the case is open`, () => {
+    mount(unitId)
+    const own = ventilationPresentedStepIndexes(ventilationStageLesson(unitId)).length
+    const last = rows().at(-1)!
+    expect(last).toHaveAttribute('data-case-row', caseId)
+    expect(last.textContent).toBe(`${own + 1}. ${VENTILATION_SECTION_CASE_TASK_TITLE}`)
+    expect(document.querySelector('[data-task-map]')!.textContent).not.toContain(title)
+    openLastOwnTask()
+    expect(card().textContent).toContain(`Task ${own} of ${own + 1}`)
+    expect(document.querySelector('[data-section-completion]')).toBeNull()
+    press('Continue to the case', card())
+    const view = document.querySelector(`[data-section-case="${caseId}"]`) as HTMLElement
+    expect(view.querySelector('h2[data-case-title]')!.textContent).toBe(title)
+    press('Leave the case', view)
+    const done = document.querySelector('[data-section-completion]') as HTMLElement
+    expect(done.textContent).toContain(`You opened this section’s case: ${title}.`)
+    expect(done.querySelector('[data-practice-pairing]')).toBeNull()
+  })
+})
+
+describe('the section whose paired case a later section ends on', () => {
   it('keeps its line and link to the case, and says where the case is run', () => {
-    mount('ventilation-and-co2')
+    mount('lung-protection')
     expect(rows().some((row) => row.hasAttribute('data-case-row'))).toBe(false)
     openLastOwnTask()
     const done = document.querySelector('[data-section-completion]') as HTMLElement
     expect(done.querySelector('[data-practice-pairing]')!.textContent).toBe(
-      `A case on this mechanism: COPD: dynamic hyperinflation with ineffective efforts. It is also the last task of ${ventilationSectionLabel('expiration-and-air-trapping')}.`,
+      `A case on this mechanism: ARDS hypoxemia: recruitment versus overdistension. It is also the last task of ${ventilationSectionLabel('oxygenation-response')}.`,
     )
     expect(done.querySelector('a')).toHaveAttribute(
       'href',
-      '/mechanical-ventilation/practice?case=MV-05',
+      '/mechanical-ventilation/practice?case=MV-01',
     )
     expect(screen.queryByRole('button', { name: 'Continue to the case' })).toBeNull()
   })
 })
 
 describe('Practice', () => {
+  it('says each case builds on the section that ends on it', () => {
+    render(<MechanicalVentilationPracticePicker />)
+    act(() => jest.advanceTimersByTime(20))
+    const all = document.querySelector('[aria-labelledby="mv-practice-all"]') as HTMLElement
+    const links = within(all).getAllByRole('link')
+    for (const entry of ventilationSectionCases()) {
+      const link = links.find((candidate) =>
+        candidate.getAttribute('href')!.includes(`case=${entry.caseId}&`),
+      )!
+      expect(link.textContent).toContain(`builds on ${ventilationSectionLabel(entry.unitId)}`)
+    }
+  })
+
   it('still opens the same case on its own page, with its links to other cases', () => {
     render(
       <MechanicalVentilationCaseActivityV2
