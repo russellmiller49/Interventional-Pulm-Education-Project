@@ -89,6 +89,8 @@ const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | '
 const CHEST_FOCUS: Point3 = [0, -30, 0]
 const CHEST_CLOSEUP_PURPOSE =
   'Target: close on the chest, from the patient’s left and in front. Front and back are apart in this view, so a bronchus the frontal image draws short is seen at its length.'
+const NODULE_CLOSEUP_PURPOSE =
+  'Target: close on the nodule, from the patient’s left and in front. Front and back are apart in this view, so the bronchi the frontal image draws over the nodule are seen in front of it and behind it.'
 
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -436,6 +438,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const viewControls = visibleLabControls(view, props.independent)
   // A section about the anatomy alone: the bronchial tree, with no tool in it yet.
   const anatomyOnly = view.mode === 'projection' && !inputs.showTool
+  // The bronchi over the nodule are read against the nodule, so the close-up is on it.
+  const noduleCloseup = anatomyOnly && inputs.airwayShow === 'lesion'
   // Where the learner is working the C-arm's angles on a projection, the image can colour bone by
   // depth. Not on a check (it has no controls), and not where the display range is being read from
   // the image itself.
@@ -713,15 +717,23 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           roomComposition={isRoom}
                           monitorOffset={monitorOffset}
                           overviewBounds={overviewBounds}
-                          focus={isCbct ? cbct.setup.target : anatomyOnly ? CHEST_FOCUS : undefined}
+                          focus={
+                            isCbct
+                              ? cbct.setup.target
+                              : anatomyOnly && !noduleCloseup
+                                ? CHEST_FOCUS
+                                : undefined
+                          }
                           closeupDistance={
                             view.mode === 'sampling'
                               ? 120
                               : isRegistration
                                 ? 180
-                                : anatomyOnly
-                                  ? 560
-                                  : undefined
+                                : noduleCloseup
+                                  ? 300
+                                  : anatomyOnly
+                                    ? 560
+                                    : undefined
                           }
                           command={cameraCommand}
                           rollDeg={roll}
@@ -850,7 +862,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     {displayCamera in CAMERA_PURPOSE && (
                       <p className={styles.cameraPurpose} data-camera-purpose={displayCamera}>
                         {anatomyOnly && displayCamera === 'target'
-                          ? CHEST_CLOSEUP_PURPOSE
+                          ? noduleCloseup
+                            ? NODULE_CLOSEUP_PURPOSE
+                            : CHEST_CLOSEUP_PURPOSE
                           : CAMERA_PURPOSE[displayCamera as keyof typeof CAMERA_PURPOSE]}{' '}
                         Drag to rotate; the mouse wheel scrolls the page.
                       </p>

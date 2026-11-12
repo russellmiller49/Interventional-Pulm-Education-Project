@@ -50,8 +50,10 @@ describe('the stage lessons', () => {
       'prediction',
     ])
     // Expert-session round, part 2: Section 5 reads the angles off the CT on its own screen, and
-    // Section 19's matching task became the run-through on the geometry lab.
+    // Section 19's matching task became the run-through on the geometry lab. Airway anatomy, part 3:
+    // a fourth reading screen follows the bronchi over the nodule through a rotation.
     expect(imagingStageLesson('projection').steps.map((s) => s.interaction.kind)).toEqual([
+      'read',
       'read',
       'read',
       'read',

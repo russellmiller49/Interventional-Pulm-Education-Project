@@ -1,6 +1,11 @@
 'use client'
 import { useMemo } from 'react'
-import { AIRWAY_BRANCHES, AIRWAY_LOBE_KEYS, type AirwayBranchKey } from '../../content/airwayNames'
+import {
+  AIRWAY_BRANCHES,
+  AIRWAY_LOBE_KEYS,
+  lobeOfSegments,
+  type AirwayBranchKey,
+} from '../../content/airwayNames'
 import {
   AIRWAY_LOBE_COLORS,
   AIRWAY_SEGMENTS_BY_LOBE,
@@ -9,10 +14,13 @@ import {
   airwayLabelAnchor,
   airwayLegend,
   airwayStem,
+  isAirwayLobeShow,
+  lesionOutlineRadius,
   type AirwayShow,
 } from '../../lib/airwayTree'
 import {
   DEFAULT_GEOMETRY,
+  LESION_CENTER,
   magnificationAt,
   type ImagingGeometry,
   type Point3,
@@ -26,7 +34,8 @@ import { add, dot, rayThrough, subtract, suiteFrame, type SuiteFrame } from './s
  * Fluoroscopy does not show a bronchus beyond the central airways: air in a bronchus has no
  * contrast against the air in the lung round it. This drawing comes from the CT, the way a
  * registered overlay would, and the legend under the image says so. `show` is the learner's
- * choice: the whole tree coloured by lobe, or one lobe with a colour and a name per segment.
+ * choice: the whole tree coloured by lobe, one lobe with a colour and a name per segment, or the
+ * segmental bronchi that cross the nodule's outline on the frontal image.
  */
 const VIEW = 512
 /** The length of bronchus drawn as its stem; the readout measures the same two centimetres. */
@@ -96,11 +105,30 @@ export function airwayLabels(frame: SuiteFrame, show: AirwayShow, offset: Point3
       labels.push({ key: lobe, text: lobe, color: AIRWAY_LOBE_COLORS[lobe], x, y })
     }
   } else {
-    const origin = at(airwayLabelAnchor(`${show}-bronchus`))
     for (const entry of airwayLegend(show)) {
-      const end = at(airwayLabelAnchor(entry.key as AirwayBranchKey))
+      const key = entry.key as AirwayBranchKey
+      // Each name sits beyond the far end of its bronchus, on the line from where its lobe begins.
+      const parent = isAirwayLobeShow(show) ? `${show}-bronchus` : lobeOfSegments([key])
+      const origin = at(airwayLabelAnchor(parent as AirwayBranchKey))
+      const end = at(airwayLabelAnchor(key))
       const [x, y] = beyond(end, origin, 16)
       labels.push({ key: entry.key, text: entry.label, color: entry.color, x, y })
+    }
+  }
+  if (show === 'lesion') {
+    // These bronchi end at the nodule, so their names would sit on it. Each is moved straight out
+    // from the nodule until it is clear of the outline the learner is reading.
+    const [cx, cy] = at(LESION_CENTER)
+    const clear = lesionRing(frame).radius + LABEL_SIZE * 2
+    for (const label of labels) {
+      const dx = label.x - cx,
+        dy = label.y - cy
+      const from = Math.hypot(dx, dy)
+      if (from >= clear) continue
+      // A name exactly on the centre has no direction of its own: it goes out to the side.
+      const [ux, uy] = from > 1 ? [dx / from, dy / from] : [1, 0]
+      label.x = cx + ux * clear
+      label.y = cy + uy * clear
     }
   }
   // Keep every label on the image, then separate any two that would sit on one another.
@@ -118,6 +146,13 @@ export function airwayLabels(frame: SuiteFrame, show: AirwayShow, offset: Point3
       )
         labels[i].y = labels[j].y + LABEL_SIZE + 2
   return labels
+}
+
+/** The nodule's outline in image units, as the projection overlay draws it. */
+function lesionRing(frame: SuiteFrame) {
+  return {
+    radius: (lesionOutlineRadius(frame.orbit, frame.tilt) / frame.geometry.field) * VIEW + 5,
+  }
 }
 
 export function AirwayOverlay({
@@ -168,25 +203,30 @@ export function AirwayOverlay({
     }
     // With one lobe drawn, the first two centimetres of each segmental bronchus are drawn heavier:
     // that is the stem whose length the image shows or hides, and what the readout measures.
-    const stems =
-      show === 'all'
-        ? []
-        : airwayLegend(show).map((entry) => {
-            const points = airwayStem(entry.key as AirwayBranchKey, AIRWAY_STEM_MM).map((point) =>
-              screenOf(frame, add(point, offset)),
-            )
-            return {
-              key: entry.key,
-              color: entry.color,
-              origin: points[0],
-              d: points
-                .map(([x, y], index) => `${index ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`)
-                .join(''),
-            }
-          })
+    const stems = !isAirwayLobeShow(show)
+      ? []
+      : airwayLegend(show).map((entry) => {
+          const points = airwayStem(entry.key as AirwayBranchKey, AIRWAY_STEM_MM).map((point) =>
+            screenOf(frame, add(point, offset)),
+          )
+          return {
+            key: entry.key,
+            color: entry.color,
+            origin: points[0],
+            d: points
+              .map(([x, y], index) => `${index ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`)
+              .join(''),
+          }
+        })
     return {
       strokes: [...strokes.values()].sort((a, b) => Number(b.dim) - Number(a.dim)),
       stems,
+      // With the bronchi over the nodule drawn, the outline is redrawn above them: what crosses it
+      // is the thing being read.
+      ring:
+        show === 'lesion'
+          ? { centre: screenOf(frame, add(LESION_CENTER, offset)), ...lesionRing(frame) }
+          : null,
       labels: names ? airwayLabels(frame, show, offset) : [],
     }
   }, [orbit, tilt, geometry, show, names, offset])
@@ -208,9 +248,29 @@ export function AirwayOverlay({
             d={stroke.d}
             stroke={stroke.color}
             strokeWidth={stroke.dim ? Math.min(stroke.width, 2.5) : stroke.width}
-            strokeOpacity={stroke.dim ? 0.22 : show === 'all' ? 0.62 : 0.5}
+            strokeOpacity={
+              stroke.dim ? 0.22 : show === 'all' ? 0.62 : show === 'lesion' ? 0.8 : 0.5
+            }
           />
         ))}
+        {drawing.ring && (
+          <g data-airway-lesion-ring>
+            <circle
+              cx={drawing.ring.centre[0]}
+              cy={drawing.ring.centre[1]}
+              r={drawing.ring.radius}
+              stroke="#04141a"
+              strokeWidth="4.5"
+            />
+            <circle
+              cx={drawing.ring.centre[0]}
+              cy={drawing.ring.centre[1]}
+              r={drawing.ring.radius}
+              stroke="#eec482"
+              strokeWidth="2"
+            />
+          </g>
+        )}
         {drawing.stems.map((stem) => (
           <g key={stem.key} data-airway-stem={stem.key}>
             <path d={stem.d} stroke="#04141a" strokeWidth="8.5" />

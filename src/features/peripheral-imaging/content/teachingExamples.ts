@@ -57,6 +57,28 @@ const airways: readonly TeachingExample[] = [
     values: { orbit: -30, tilt: 0, airways: 'LLL', airwayNames: true },
   },
 ]
+/**
+ * Projection, the bronchi step: the four segmental bronchi that cross the nodule on the frontal
+ * image, followed through one oblique each way. Which of them still cross it at each angle is
+ * computed from the tree and held by `airway-tree.test.ts`.
+ */
+const bronchiOverNodule: readonly TeachingExample[] = [
+  {
+    title: 'Frontal · bronchi over the nodule',
+    look: 'Four segmental bronchi cross the amber outline of the nodule: LB5, LB7+8, LB9 and LB10. In the 3D view, from the head of the table, they lie one behind another along the beam, LB5 nearest the detector and LB10 nearest the tube.',
+    values: { orbit: 0, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+  {
+    title: 'LAO 30° · the anterior bronchus leaves',
+    look: 'LB5 has moved off the nodule toward the midline, and the heart has moved off it the same way: both lie in front of the nodule. LB7+8, LB9 and LB10 still cross it. The two posterior bronchi run back toward the spine, nearly along this beam.',
+    values: { orbit: -30, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+  {
+    title: 'RAO 30° · the posterior bronchi leave',
+    look: 'LB9 and LB10 have moved off the nodule toward the midline, the way the spine moves, and LB5 has moved off it toward the chest wall. Only LB7+8 still crosses the nodule. The heart now lies over it: this angle sorts the bronchi and is a poor one for seeing the nodule.',
+    values: { orbit: 30, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+]
 const field: readonly TeachingExample[] = [
   {
     title: 'Baseline · full acquisition field',
@@ -252,7 +274,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
     case 'chain-walk':
       return { lab: 'geometry', examples: projection }
     case 'projection':
-      return { lab: 'geometry', examples: [...projection, ...plannedAngles] }
+      return { lab: 'geometry', examples: [...projection, ...bronchiOverNodule, ...plannedAngles] }
     case 'good-image':
       return {
         lab: 'geometry',

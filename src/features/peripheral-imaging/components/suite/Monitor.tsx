@@ -10,7 +10,7 @@ import {
 } from '../../lib/fieldDisplay'
 import type { Point3 } from '../../lib/physics'
 import { AirwayOverlay } from './AirwayOverlay'
-import { airwayLegend, type AirwayShow } from '../../lib/airwayTree'
+import { airwayLegend, isAirwayLobeShow, type AirwayShow } from '../../lib/airwayTree'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import type { ImagingSuitePaneProps } from './types'
 import styles from './suite-scene.module.css'
@@ -321,8 +321,10 @@ export function Monitor({
             <p>
               The bronchi are drawn from the CT of this patient. Fluoroscopy shows the trachea and
               the main bronchi as lucent columns and no bronchus beyond them.
-              {airwayShow !== 'all' &&
+              {isAirwayLobeShow(airwayShow) &&
                 ' The heavy line is the first two centimetres of each segmental bronchus, from the white dot where it arises.'}
+              {airwayShow === 'lesion' &&
+                ' These are the segmental bronchi that cross the outline of the nodule on the frontal image.'}
             </p>
           </div>
         )}

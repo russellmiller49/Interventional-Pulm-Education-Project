@@ -11,6 +11,7 @@ import {
   type LabValue,
   type LabValues,
 } from './labMetrics'
+import { isAirwayLobeShow } from '../lib/airwayTree'
 
 /**
  * Goals a step can set on a lab, and the one place the labs' history rules live.
@@ -213,7 +214,7 @@ export function labStateAfterChange(
     // The bronchial tree: which lobes the learner has had drawn, and whether a lobe has been
     // looked at from a second angle (its bronchi separate; the frontal image had them overlapping).
     const airways = labValue(lab, values, 'airways', lessonId)
-    if (typeof airways === 'string' && airways !== 'off' && airways !== 'all') {
+    if (isAirwayLobeShow(airways)) {
       events = withEvent(events, `airway-lobe-${airways}-seen`)
       if (airways === 'RLL' || airways === 'LLL')
         events = withEvent(events, 'airway-lower-lobe-seen')

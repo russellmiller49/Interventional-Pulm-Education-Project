@@ -1,6 +1,8 @@
 import { LESION_CENTER } from '../lib/physics'
 import {
+  LESION_AIRWAYS,
   airwayAlongBeam,
+  airwayDepthAtLesion,
   airwayOrigin,
   airwayRouteKeys,
   airwayStem,
@@ -29,7 +31,29 @@ export const AIRWAY_FACTS = {
   noduleBronchus: nearest.branch.key,
   noduleBronchusMm: Math.round(nearest.distanceMm),
   noduleRoute: airwayRouteKeys(nearest.branch),
+  /**
+   * The segmental bronchi that cross the nodule's outline on the frontal image, front to back, with
+   * how far in front of the nodule's centre (positive) or behind it (negative) each one lies there.
+   */
+  overNodule: LESION_AIRWAYS.map((key) => ({
+    key,
+    depthMm: Math.round(airwayDepthAtLesion(key)!),
+  })),
 } as const
+
+/** How far a bronchus lies in front of or behind the nodule where it crosses it, in whole centimetres. */
+export function overNoduleCm(key: AirwayBranchKey): number {
+  const entry = AIRWAY_FACTS.overNodule.find((bronchus) => bronchus.key === key)
+  if (!entry) throw new Error(`${key} does not cross the nodule on the frontal image.`)
+  return Math.round(Math.abs(entry.depthMm) / 10)
+}
+
+/** The depth, front to back, that the bronchi over the nodule span, in whole centimetres. */
+export const overNoduleSpanCm = Math.round(
+  (Math.max(...AIRWAY_FACTS.overNodule.map((bronchus) => bronchus.depthMm)) -
+    Math.min(...AIRWAY_FACTS.overNodule.map((bronchus) => bronchus.depthMm))) /
+    10,
+)
 
 /** The share of a bronchus's first two centimetres that runs along the frontal beam, in percent. */
 export const frontalBeamShare = (key: AirwayBranchKey): number =>
