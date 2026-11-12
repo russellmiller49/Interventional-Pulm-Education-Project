@@ -361,7 +361,9 @@ describe('N4: navigation, focus and scroll', () => {
  * ---------------------------------------------------------------------------------------------- */
 
 describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sections', () => {
-  const ALLOWED = ['Worked example', 'More detail', 'Keep in mind']
+  // November 2026: the live view of a section's mechanism leads the named parts under its own
+  // name, in the sections that have one. It was the sixth of eight parts inside "More detail".
+  const ALLOWED = ['On this ventilator, right now', 'Worked example', 'More detail', 'Keep in mind']
   it.each(ventilationLearningUnits.map((unit) => unit.id))('%s', (unitId) => {
     const lesson = mount(unitId)
     const kinds = new Set<string>()

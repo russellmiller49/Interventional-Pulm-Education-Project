@@ -196,7 +196,8 @@ function Disclosure({
  *      guide on an experiment, or the picture and checklist — shown;
  *   3. the evidence this step asks you to read, when it asks — a worked figure or a separate
  *      normal reference — shown, with the limit that applies to it right beside it;
- *   4. the same three named disclosures: Worked example, More detail, Model limits. Sources are the
+ *   4. the live view of the mechanism, where the section has one, then the same three named
+ *      disclosures: Worked example, More detail, Model limits. Sources are the
  *      list below the lesson (the end of the text pane on a desktop, the end of the page below it),
  *      and the lesson says so.
  * Sections 1–5 are shorter (they have fewer mechanism panels) but not a different template.
@@ -251,6 +252,7 @@ export function VentilationTeachingColumn({
   const foundationFigure = foundation && !orientationStep && foundationFigureStep(step)
   const mechanismEvidence = !foundation && readingStep && !orientationStep
   const boundaryShown = readingStep || reveal
+  const liveView = !foundation && hasVentilationTeachingPanel(lesson.panelId)
 
   return (
     <section
@@ -329,6 +331,22 @@ export function VentilationTeachingColumn({
         <p className={flow.note} data-teaching-block="boundary">
           <strong>Keep in mind:</strong> {unit.boundary}
         </p>
+      ) : null}
+
+      {/*
+        The live view of this section's mechanism, under its own name. It was the sixth of eight
+        parts inside "More detail" (about 870 words a task, measured November 2026), so nothing on
+        the screen said the section has a picture computed from the running patient. It leads the
+        named parts, and is open on the steps that explain a result the learner has just seen.
+        Everything else in "More detail" stays where the October review put it.
+      */}
+      {liveView ? (
+        <Disclosure name="On this ventilator, right now" id="live-view" open={reveal}>
+          <section data-teaching-block="panel" data-teaching-panel={lesson.panelId}>
+            <p className={styles.kicker}>Computed from the running patient</p>
+            <MechanicalVentilationTeachingPanel lessonId={lesson.panelId} state={state} />
+          </section>
+        </Disclosure>
       ) : null}
 
       {integration ? null : (
@@ -413,13 +431,6 @@ export function VentilationTeachingColumn({
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.monitoringSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.notSettingsSentence}</p>
         </section>
-        {!foundation && hasVentilationTeachingPanel(lesson.panelId) ? (
-          <section data-teaching-block="panel" data-teaching-panel={lesson.panelId}>
-            <h4>On this ventilator, right now</h4>
-            <p className={styles.kicker}>Computed from the running patient</p>
-            <MechanicalVentilationTeachingPanel lessonId={lesson.panelId} state={state} />
-          </section>
-        ) : null}
         {ventilationStoryProblemsFor(unit.id).length > 0 ? (
           <section data-teaching-block="story-problems">
             <h4>Two story problems</h4>
