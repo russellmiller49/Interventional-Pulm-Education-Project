@@ -7,7 +7,14 @@ import {
   type AirwayLobeKey,
   type AirwaySegmentKey,
 } from '../content/airwayNames'
-import { beamDirection, type Point3 } from './physics'
+import {
+  LESION_CENTER,
+  LESION_RADIUS,
+  beamDirection,
+  magnificationAt,
+  projectToDetector,
+  type Point3,
+} from './physics'
 
 /**
  * The named bronchial tree of the course CT: every branch's centreline and radius, in the course
@@ -48,13 +55,24 @@ for (const branch of AIRWAY_TREE) {
   CHILDREN.set(branch.parent, list)
 }
 
-/** What the learner has asked to see drawn: nothing, the whole tree, or one lobe's bronchi. */
-export type AirwayShow = 'off' | 'all' | AirwayLobeKey
+/**
+ * What the learner has asked to see drawn: nothing, the whole tree, one lobe's bronchi, or the
+ * segmental bronchi that cross the outline of the nodule on the frontal image.
+ */
+export type AirwayShow = 'off' | 'all' | 'lesion' | AirwayLobeKey
 
-export const AIRWAY_SHOW_VALUES: readonly AirwayShow[] = ['off', 'all', ...AIRWAY_LOBE_KEYS]
+export const AIRWAY_SHOW_VALUES: readonly AirwayShow[] = [
+  'off',
+  'all',
+  'lesion',
+  ...AIRWAY_LOBE_KEYS,
+]
 
 export const isAirwayShow = (value: unknown): value is AirwayShow =>
   (AIRWAY_SHOW_VALUES as readonly unknown[]).includes(value)
+
+export const isAirwayLobeShow = (show: unknown): show is AirwayLobeKey =>
+  (AIRWAY_LOBE_KEYS as readonly unknown[]).includes(show)
 
 export const lobeOfBranch = (branch: AirwayBranch): AirwayLobeKey | undefined =>
   AIRWAY_BRANCHES[branch.key].lobe
@@ -229,17 +247,121 @@ export const AIRWAY_LOBE_COLORS: Readonly<Record<AirwayLobeKey, string>> = {
 }
 export const AIRWAY_CENTRAL_COLOR = '#e6efe9'
 const SEGMENT_COLORS = ['#f2b25c', '#6fd3e0', '#f08fb4', '#a8e06c', '#c7a6f5'] as const
+/** For the bronchi over the nodule: no amber, which is the colour of the nodule's own contour. */
+const LESION_AIRWAY_COLORS = ['#6fd3e0', '#f08fb4', '#a8e06c', '#c7a6f5', '#e6efe9'] as const
+
+const SEGMENT_KEYS = Object.values(AIRWAY_SEGMENTS_BY_LOBE).flat()
+const BRANCHES_BY_KEY = new Map<AirwayBranchKey, AirwayBranch[]>()
+for (const branch of AIRWAY_TREE) {
+  const list = BRANCHES_BY_KEY.get(branch.key) ?? []
+  list.push(branch)
+  BRANCHES_BY_KEY.set(branch.key, list)
+}
+
+/** Detector millimetres from where `point` projects to the projected line from `a` to `b`. */
+function projectedDistance(
+  point: readonly [number, number],
+  a: readonly [number, number],
+  b: readonly [number, number],
+): number {
+  const abx = b[0] - a[0],
+    aby = b[1] - a[1]
+  const t = Math.min(
+    1,
+    Math.max(0, ((point[0] - a[0]) * abx + (point[1] - a[1]) * aby) / (abx ** 2 + aby ** 2 || 1)),
+  )
+  return Math.hypot(point[0] - a[0] - abx * t, point[1] - a[1] - aby * t)
+}
+
+/** The radius of the nodule's outline on the detector at this angle, in detector millimetres. */
+export function lesionOutlineRadius(orbit: number, tilt = 0): number {
+  const beam = beamDirection(orbit, tilt)
+  return (
+    LESION_RADIUS *
+    magnificationAt(
+      LESION_CENTER[0] * beam[0] + LESION_CENTER[1] * beam[1] + LESION_CENTER[2] * beam[2],
+    )
+  )
+}
+
+/** Whether the centreline of any branch of this bronchus projects inside the nodule's outline. */
+export function airwayCrossesLesion(key: AirwayBranchKey, orbit: number, tilt = 0): boolean {
+  const centre = projectToDetector(LESION_CENTER, orbit, tilt)
+  const radius = lesionOutlineRadius(orbit, tilt)
+  for (const branch of BRANCHES_BY_KEY.get(key) ?? []) {
+    let previous = projectToDetector(branch.points[0], orbit, tilt)
+    for (let i = 1; i < branch.points.length; i++) {
+      const next = projectToDetector(branch.points[i], orbit, tilt)
+      if (projectedDistance(centre, previous, next) <= radius) return true
+      previous = next
+    }
+  }
+  return false
+}
+
+/**
+ * How far in front of the nodule's centre (positive) or behind it (negative) a bronchus passes, in
+ * millimetres: read where its centreline lies inside the nodule's outline on the frontal image, at
+ * the point of that stretch nearest the nodule. Null when it does not cross the outline there.
+ */
+export function airwayDepthAtLesion(key: AirwayBranchKey): number | null {
+  const centre = projectToDetector(LESION_CENTER, 0, 0)
+  const radius = lesionOutlineRadius(0, 0)
+  let best: Point3 | null = null,
+    bestDistance = Infinity
+  for (const branch of BRANCHES_BY_KEY.get(key) ?? [])
+    for (let i = 1; i < branch.points.length; i++) {
+      const a = branch.points[i - 1],
+        b = branch.points[i]
+      const steps = Math.max(1, Math.ceil(distance(a, b)))
+      for (let step = 0; step <= steps; step++) {
+        const t = step / steps
+        const point: Point3 = [
+          a[0] + (b[0] - a[0]) * t,
+          a[1] + (b[1] - a[1]) * t,
+          a[2] + (b[2] - a[2]) * t,
+        ]
+        const [u, v] = projectToDetector(point, 0, 0)
+        if (Math.hypot(u - centre[0], v - centre[1]) > radius) continue
+        const d = distance(point, LESION_CENTER)
+        if (d < bestDistance) {
+          best = point
+          bestDistance = d
+        }
+      }
+    }
+  return best ? best[1] - LESION_CENTER[1] : null
+}
+
+/**
+ * The segmental bronchi whose centrelines cross the outline of the nodule on the frontal image,
+ * from the one furthest in front of it to the one furthest behind. One projection cannot tell
+ * them apart: a catheter in any of them is drawn reaching the nodule.
+ */
+export const LESION_AIRWAYS: readonly AirwaySegmentKey[] = SEGMENT_KEYS.filter((key) =>
+  airwayCrossesLesion(key, 0, 0),
+).sort((a, b) => (airwayDepthAtLesion(b) ?? 0) - (airwayDepthAtLesion(a) ?? 0))
+
+/** Of those bronchi, the ones that still cross the nodule's outline at this angle. */
+export const lesionAirwaysAt = (orbit: number, tilt = 0): AirwaySegmentKey[] =>
+  LESION_AIRWAYS.filter((key) => airwayCrossesLesion(key, orbit, tilt))
+
+const lesionAirwayColor = (key: AirwayBranchKey): string | null => {
+  const index = (LESION_AIRWAYS as readonly string[]).indexOf(key)
+  return index < 0 ? null : LESION_AIRWAY_COLORS[index % LESION_AIRWAY_COLORS.length]
+}
 
 export function airwayColor(branch: AirwayBranch, show: AirwayShow): string | null {
   if (show === 'off') return null
   const lobe = lobeOfBranch(branch)
   if (show === 'all') return lobe ? AIRWAY_LOBE_COLORS[lobe] : AIRWAY_CENTRAL_COLOR
+  if (show === 'lesion') return lesionAirwayColor(branch.key)
   if (lobe !== show) return null
   const index = (AIRWAY_SEGMENTS_BY_LOBE[show] as readonly string[]).indexOf(branch.key)
   return index < 0 ? AIRWAY_CENTRAL_COLOR : SEGMENT_COLORS[index % SEGMENT_COLORS.length]
 }
 
-/** The names drawn for a setting, each with its colour: lobes for the whole tree, segments for a lobe. */
+/** The names drawn for a setting, each with its colour: lobes for the whole tree, segments otherwise. */
 export function airwayLegend(
   show: AirwayShow,
 ): readonly { key: string; label: string; color: string }[] {
@@ -249,6 +371,12 @@ export function airwayLegend(
       key: lobe,
       label: lobe,
       color: AIRWAY_LOBE_COLORS[lobe],
+    }))
+  if (show === 'lesion')
+    return LESION_AIRWAYS.map((segment) => ({
+      key: segment,
+      label: segment,
+      color: lesionAirwayColor(segment)!,
     }))
   return AIRWAY_SEGMENTS_BY_LOBE[show].map((segment, index) => ({
     key: segment,

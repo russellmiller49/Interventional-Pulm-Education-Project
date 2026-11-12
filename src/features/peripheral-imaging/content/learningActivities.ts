@@ -1,3 +1,5 @@
+import type { LabMetricId } from '../engine/labMetrics'
+import type { SuiteInputs, SuiteViewSpec } from '../components/suite/types'
 import { imagingLesson, peripheralImagingSectionIds, type ImagingSectionId } from './pathway'
 import { teachingDemonstration } from './teachingExamples'
 
@@ -30,6 +32,15 @@ export interface ImagingLearningActivity {
   readonly visual: ImagingVisual
   readonly examples?: readonly string[]
   readonly controls?: readonly string[]
+  /**
+   * What this step changes in the section's suite view: its own readouts, or an input no control
+   * is bound to. A step without it shows the section's view.
+   */
+  readonly view?: {
+    readonly camera?: SuiteViewSpec['camera']
+    readonly readouts?: readonly LabMetricId[]
+    readonly defaults?: Partial<SuiteInputs>
+  }
   readonly captureGroup?: string
   readonly disclosure: 'teaching' | 'learner-work' | 'independent'
   readonly completion: 'explicit-continue' | 'supported-observations' | 'committed-response'
@@ -47,7 +58,18 @@ const read = (
   presentation: ImagingPresentation = 'illustrated',
   examples?: readonly string[],
   controls?: readonly string[],
-): ActivityInput => ({ id, title, content, visual, presentation, examples, controls, task: 'read' })
+  view?: ImagingLearningActivity['view'],
+): ActivityInput => ({
+  id,
+  title,
+  content,
+  visual,
+  presentation,
+  examples,
+  controls,
+  view,
+  task: 'read',
+})
 const work = (
   title: string,
   presentation: ImagingPresentation,
@@ -284,6 +306,29 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'comparison',
       ['Baseline · frontal overlap', 'Change projection only'],
       ['orbit'],
+    ),
+    // The same parallax applied to the anatomy: the bronchi that cross the nodule on the frontal
+    // image lie at different depths, and rotating the C-arm takes them off it. No tool is drawn;
+    // the question is which bronchus reaches the nodule, before anything is in it.
+    read(
+      'bronchi',
+      'Find which bronchus stays over the nodule',
+      ['Which bronchus reaches the nodule'],
+      'suite',
+      'comparison',
+      [
+        'Frontal · bronchi over the nodule',
+        'LAO 30° · the anterior bronchus leaves',
+        'RAO 30° · the posterior bronchi leave',
+      ],
+      ['orbit'],
+      {
+        // Close on the nodule from the patient's left and in front: the four bronchi are seen one
+        // behind another, which is what the image beside it cannot show.
+        camera: 'target',
+        readouts: ['airwaysOverLesion', 'rayCrosses'],
+        defaults: { showTool: false },
+      },
     ),
     // Expert-session round, part 2: choosing the angles from the CT gets its own reading step.
     read(
@@ -777,9 +822,12 @@ export function imagingLearningActivities(
     ...activity,
     id: `${sectionId}:${activity.id}`,
     sectionId,
-    // These activities compare one acquisition across different display/temporal explanations.
+    // These activities compare one acquisition across different display/temporal explanations. A
+    // step with a view of its own draws a different picture, so it keeps a baseline of its own.
     captureGroup:
-      ['field', 'time', 'projection'].includes(sectionId) && activity.task === 'read'
+      ['field', 'time', 'projection'].includes(sectionId) &&
+      activity.task === 'read' &&
+      !activity.view
         ? `${sectionId}:worked-acquisition`
         : activity.id,
     disclosure:

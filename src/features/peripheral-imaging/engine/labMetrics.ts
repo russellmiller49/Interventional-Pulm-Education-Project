@@ -14,7 +14,13 @@ import {
   type Point3,
 } from '../lib/physics'
 import { AIRWAY_LOBES, AIRWAY_LOBE_KEYS } from '../content/airwayNames'
-import { AIRWAY_SEGMENTS_BY_LOBE, isAirwayShow, mostForeshortened } from '../lib/airwayTree'
+import {
+  AIRWAY_SEGMENTS_BY_LOBE,
+  LESION_AIRWAYS,
+  isAirwayShow,
+  lesionAirwaysAt,
+  mostForeshortened,
+} from '../lib/airwayTree'
 import { tableCrossing } from '../lib/rayCrossingTable'
 import { rayCrossingLabel } from '../lib/rayStructures'
 
@@ -122,8 +128,9 @@ export const WEDGE_CONTROL: LabControlSpec = {
 }
 
 /**
- * The bronchial tree drawn on the image from the CT: hidden, the whole tree coloured by lobe, or
- * one lobe with a colour and a name for each segmental bronchus.
+ * The bronchial tree drawn on the image from the CT: hidden, the whole tree coloured by lobe, one
+ * lobe with a colour and a name for each segmental bronchus, or the segmental bronchi that cross
+ * the outline of the nodule on the frontal image.
  */
 export const AIRWAYS_CONTROL: LabControlSpec = {
   key: 'airways',
@@ -133,6 +140,7 @@ export const AIRWAYS_CONTROL: LabControlSpec = {
     { value: 'off', label: 'None' },
     { value: 'all', label: 'Whole tree, by lobe' },
     ...AIRWAY_LOBE_KEYS.map((lobe) => ({ value: lobe, label: AIRWAY_LOBES[lobe].name })),
+    { value: 'lesion', label: 'Bronchi over the nodule' },
   ],
   default: (lessonId) => (lessonId === 'airway-anatomy' ? 'all' : 'off'),
 }
@@ -589,6 +597,7 @@ export type LabMetricId =
   | 'viewObliquityDeg'
   | 'airwaysDrawn'
   | 'airwayShortest'
+  | 'airwaysOverLesion'
   | 'spineInField'
   | 'zoomAddsExposure'
   | 'pulseRate'
@@ -634,6 +643,7 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   viewObliquityDeg: { label: 'Projection through the patient', unit: '°', digits: 0 },
   airwaysDrawn: { label: 'Bronchi drawn' },
   airwayShortest: { label: 'Most foreshortened at this angle' },
+  airwaysOverLesion: { label: 'Bronchi over the nodule at this angle' },
   spineInField: { label: 'Spine in the field' },
   irradiatedAreaPct: { label: 'Irradiated area vs the open field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
@@ -692,6 +702,8 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
     'Which bronchi are drawn over the image. They are taken from the CT of this patient; fluoroscopy itself does not show a bronchus beyond the central airways.',
   airwayShortest:
     'Of the segmental bronchi of the lobe shown, the one whose first two centimetres run most nearly along the X-ray beam at this angle, with the share of its length that the image cannot show as length.',
+  airwaysOverLesion:
+    'Of the segmental bronchi that cross the outline of the nodule on the frontal image, the ones whose centrelines still cross it at this angle, from the CT. A bronchus named at one angle and not at another lies in front of the nodule or behind it.',
   viewObliquityDeg:
     'The C-arm obliquity less the wedge: rolling the patient 30° gives the same image as rotating the C-arm 30° the other way.',
   spineInField:
@@ -729,24 +741,38 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
 }
 
 function airwayReadouts(show: LabValue, named: boolean, orbit: number, tilt: number): LabReadouts {
-  if (!isAirwayShow(show) || show === 'off')
-    return { airwaysDrawn: 'None', airwayShortest: 'Show one lobe to compare its bronchi' }
-  if (show === 'all')
-    return {
-      airwaysDrawn: 'Whole tree, by lobe',
-      airwayShortest: 'Show one lobe to compare its bronchi',
-    }
   // With the names hidden the readouts do not print them either: hiding them is how the learner
   // tests their own naming, and how a check withholds its answer.
+  const over = lesionAirwaysAt(orbit, tilt)
+  const airwaysOverLesion = !named
+    ? 'Names hidden'
+    : over.length === 0
+      ? 'None of the ' + LESION_AIRWAYS.length
+      : over.join(', ')
+  const oneLobe = 'Show one lobe to compare its bronchi'
+  if (!isAirwayShow(show) || show === 'off')
+    return { airwaysDrawn: 'None', airwayShortest: oneLobe, airwaysOverLesion }
+  if (show === 'all')
+    return { airwaysDrawn: 'Whole tree, by lobe', airwayShortest: oneLobe, airwaysOverLesion }
+  if (show === 'lesion')
+    return {
+      airwaysDrawn: named
+        ? `Over the nodule on the frontal image: ${LESION_AIRWAYS.join(', ')}`
+        : 'Over the nodule on the frontal image, names hidden',
+      airwayShortest: oneLobe,
+      airwaysOverLesion,
+    }
   if (!named)
     return {
       airwaysDrawn: `${AIRWAY_LOBES[show].name}, names hidden`,
       airwayShortest: 'Names hidden',
+      airwaysOverLesion,
     }
   const shortest = mostForeshortened(show, orbit, tilt)
   return {
     airwaysDrawn: `${AIRWAY_LOBES[show].name}: ${AIRWAY_SEGMENTS_BY_LOBE[show].join(', ')}`,
     airwayShortest: `${shortest.key}, ${Math.round(shortest.along * 100)}% along the beam`,
+    airwaysOverLesion,
   }
 }
 

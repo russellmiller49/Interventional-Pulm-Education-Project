@@ -7,7 +7,13 @@ import metadata from '../../../../public/peripheral-imaging/anatomy/manifest.jso
 import { airwayLabels } from '../components/suite/AirwayOverlay'
 import { suiteFrame } from '../components/suite/suiteModel'
 import { visibleLabControls } from '../components/suite/LabDock'
-import { AIRWAY_FACTS, airwayRouteText, frontalBeamShare } from '../content/airwayFacts'
+import {
+  AIRWAY_FACTS,
+  airwayRouteText,
+  frontalBeamShare,
+  overNoduleCm,
+  overNoduleSpanCm,
+} from '../content/airwayFacts'
 import {
   AIRWAY_BRANCH_KEYS,
   AIRWAY_BRANCHES,
@@ -20,22 +26,31 @@ import { fixedExampleValues, teachingDemonstration } from '../content/teachingEx
 import { LESSONS } from '../data/lessons'
 import { QUESTION_BY_ID } from '../data/questions'
 import { emptyLabState, labStateAfterChange } from '../engine/labGoalEvaluation'
-import { labDefaults, labReadouts } from '../engine/labMetrics'
+import { LAB_METRIC_MEANINGS, labDefaults, labReadouts } from '../engine/labMetrics'
 import {
   AIRWAY_SEGMENTS_BY_LOBE,
   AIRWAY_SHOW_VALUES,
   AIRWAY_TREE,
+  LESION_AIRWAYS,
   airwayAlongBeam,
   airwayColor,
   airwayCourse,
+  airwayCrossesLesion,
   airwayLegend,
   airwayOrigin,
   airwayRouteKeys,
+  lesionAirwaysAt,
   mostForeshortened,
   nearestAirway,
 } from '../lib/airwayTree'
 import { ANATOMY } from '../lib/anatomy'
-import { LESION_CENTER, LESION_RADIUS, type Point3 } from '../lib/physics'
+import {
+  LESION_CENTER,
+  LESION_RADIUS,
+  SPINE_COLUMN,
+  projectToDetector,
+  type Point3,
+} from '../lib/physics'
 
 /*
  * The bronchial tree the course draws on its fluoroscopic image. Three things have to hold for it
@@ -330,7 +345,13 @@ describe('the drawing', () => {
       for (const orbit of [0, -30, 30]) {
         const labels = airwayLabels(suiteFrame(orbit, 0), show, [0, 0, 0])
         expect(labels.length).toBe(
-          show === 'off' ? 0 : show === 'all' ? 9 : AIRWAY_SEGMENTS_BY_LOBE[show].length,
+          show === 'off'
+            ? 0
+            : show === 'all'
+              ? 9
+              : show === 'lesion'
+                ? LESION_AIRWAYS.length
+                : AIRWAY_SEGMENTS_BY_LOBE[show].length,
         )
         expect(new Set(labels.map((label) => label.key)).size).toBe(labels.length)
         for (const label of labels) {
@@ -358,5 +379,128 @@ describe('the drawing', () => {
     // Top of the image is superior: the upper lobes are named above the lower.
     expect(y('RUL')).toBeLessThan(y('RLL'))
     expect(y('LUL')).toBeLessThan(y('LLL'))
+  })
+})
+
+/*
+ * Projection, the bronchi step. The step says which segmental bronchi cross the nodule on the
+ * frontal image, how deep each lies, and which leave it at one oblique each way. Each of those is a
+ * statement about this CT, so each is held to the tree here.
+ */
+describe('the bronchi over the nodule, in the Projection section', () => {
+  const lesson = LESSONS.find((entry) => entry.id === 'projection')!
+  const block = lesson.blocks.find((entry) => entry.title === 'Which bronchus reaches the nodule')!
+  const depth = (key: string) =>
+    AIRWAY_FACTS.overNodule.find((bronchus) => bronchus.key === key)!.depthMm
+  /** Detector millimetres toward the patient's left that `point` has moved against the nodule. */
+  const shift = (point: Point3, orbit: number) => {
+    const at = (angle: number) =>
+      projectToDetector(point, angle, 0)[0] - projectToDetector(LESION_CENTER, angle, 0)[0]
+    return at(orbit) - at(0)
+  }
+
+  it('four segmental bronchi cross the nodule on the frontal image, front to back', () => {
+    expect(LESION_AIRWAYS).toEqual(['LB5', 'LB7+8', 'LB9', 'LB10'])
+    expect(lesionAirwaysAt(0, 0)).toEqual(LESION_AIRWAYS)
+    for (const key of LESION_AIRWAYS) expect(block.body).toContain(key)
+    // No other segmental bronchus crosses it there, so the drawing leaves none out.
+    for (const key of AIRWAY_BRANCH_KEYS)
+      if (AIRWAY_BRANCHES[key].level === 'segment')
+        expect(airwayCrossesLesion(key, 0, 0)).toBe((LESION_AIRWAYS as string[]).includes(key))
+  })
+
+  it('they lie where the lesson says: LB5 in front, LB9 and LB10 behind, LB7+8 at the nodule', () => {
+    expect(depth('LB5')).toBeGreaterThan(25)
+    expect(depth('LB5')).toBeLessThan(35)
+    expect(Math.abs(depth('LB7+8'))).toBeLessThan(LESION_RADIUS)
+    expect(depth('LB9')).toBeLessThan(-35)
+    expect(depth('LB9')).toBeGreaterThan(-45)
+    expect(depth('LB10')).toBeLessThan(-60)
+    expect(depth('LB10')).toBeGreaterThan(-70)
+    expect(block.body).toContain(`about ${overNoduleSpanCm} cm front to back`)
+    expect(block.body).toContain(`LB5 lies about ${overNoduleCm('LB5')} cm in front`)
+    expect(block.body).toContain(`LB9 about ${overNoduleCm('LB9')} cm behind`)
+    expect(block.body).toContain(`LB10 about ${overNoduleCm('LB10')} cm behind`)
+    expect([overNoduleCm('LB5'), overNoduleCm('LB9'), overNoduleCm('LB10')]).toEqual([3, 4, 6])
+    expect(overNoduleSpanCm).toBe(9)
+    expect(AIRWAY_FACTS.noduleBronchus).toBe('LB7+8')
+  })
+
+  it('LAO 30° takes LB5 off the nodule, RAO 30° takes LB9 and LB10 off, and LB7+8 stays', () => {
+    expect(lesionAirwaysAt(-30, 0)).toEqual(['LB7+8', 'LB9', 'LB10'])
+    expect(lesionAirwaysAt(30, 0)).toEqual(['LB7+8'])
+    for (let orbit = -60; orbit <= 60; orbit += 5)
+      expect(lesionAirwaysAt(orbit, 0)).toContain('LB7+8')
+    expect(block.body).toMatch(/At LAO 30° LB5 has left the nodule/)
+    expect(block.body).toMatch(/LB9 and LB10 still cross it/)
+    expect(block.body).toMatch(/LB7\+8 crosses the nodule at all three angles/)
+  })
+
+  it('front and back move opposite ways, with the heart and with the spine', () => {
+    const front: Point3 = [LESION_CENTER[0], LESION_CENTER[1] + 30, LESION_CENTER[2]]
+    const back: Point3 = [LESION_CENTER[0], LESION_CENTER[1] - 40, LESION_CENTER[2]]
+    const spine: Point3 = [SPINE_COLUMN.x, SPINE_COLUMN.y, LESION_CENTER[2]]
+    // The nodule is in the left lung: toward the patient's right is toward the midline.
+    expect(LESION_CENTER[0]).toBeGreaterThan(0)
+    // LAO 30°: what lies in front moves toward the midline, what lies behind toward the chest wall.
+    expect(shift(front, -30)).toBeLessThan(-10)
+    expect(shift(back, -30)).toBeGreaterThan(10)
+    expect(shift(spine, -30)).toBeGreaterThan(10)
+    // RAO 30°: the reverse, and the spine again moves with what lies behind.
+    expect(shift(front, 30)).toBeGreaterThan(10)
+    expect(shift(back, 30)).toBeLessThan(-10)
+    expect(shift(spine, 30)).toBeLessThan(-10)
+    // The heart leaves the nodule at LAO 30° and lies over it at RAO 30°, as the examples say.
+    const over = (orbit: number) =>
+      labReadouts('geometry', { orbit, tilt: 0 }, 'projection').rayCrosses as string
+    expect(over(-30)).not.toMatch(/Heart/)
+    expect(over(30)).toMatch(/Heart/)
+  })
+
+  it('the step draws those bronchi without a tool, offers rotation only, and prints its own readout', () => {
+    const steps = imagingStageLessons().find((entry) => entry.sectionId === 'projection')!.steps
+    const step = steps.find((entry) => entry.title === 'Find which bronchus stays over the nodule')!
+    expect(step.interaction.kind).toBe('read')
+    expect(visibleLabControls(step.suite).map((control) => control.key)).toEqual(['orbit'])
+    expect(step.suite.readouts).toEqual(['airwaysOverLesion', 'rayCrosses'])
+    expect(step.suite.defaults.showTool).toBe(false)
+    // Every other step of the section keeps the tool and the section's readouts.
+    for (const other of steps.filter((entry) => entry !== step)) {
+      expect(other.suite.defaults.showTool).toBeUndefined()
+      expect(other.suite.readouts).toEqual(['separationMm', 'rayCrosses', 'depthMm'])
+    }
+    const examples = teachingDemonstration('projection')!.examples.filter(
+      (example) => example.values.airways === 'lesion',
+    )
+    expect(examples.map((example) => [example.title, example.values.orbit])).toEqual([
+      ['Frontal · bronchi over the nodule', 0],
+      ['LAO 30° · the anterior bronchus leaves', -30],
+      ['RAO 30° · the posterior bronchi leave', 30],
+    ])
+  })
+
+  it('the readout names the bronchi still over the nodule, and nothing when names are hidden', () => {
+    const read = (values: Record<string, string | number | boolean>) =>
+      labReadouts('geometry', { airways: 'lesion', tilt: 0, ...values }, 'projection')
+    expect(read({ orbit: 0 }).airwaysOverLesion).toBe('LB5, LB7+8, LB9, LB10')
+    expect(read({ orbit: -30 }).airwaysOverLesion).toBe('LB7+8, LB9, LB10')
+    expect(read({ orbit: 30 }).airwaysOverLesion).toBe('LB7+8')
+    expect(read({ orbit: 0 }).airwaysDrawn).toBe(
+      'Over the nodule on the frontal image: LB5, LB7+8, LB9, LB10',
+    )
+    const hidden = read({ orbit: 0, airwayNames: false })
+    expect(`${hidden.airwaysDrawn} ${hidden.airwaysOverLesion}`).not.toMatch(/[LR]B\d/)
+    expect(LAB_METRIC_MEANINGS.airwaysOverLesion).toMatch(/in front of the nodule or behind it/)
+  })
+
+  it('gives each of the four a colour of its own, none of them the amber of the nodule', () => {
+    const legend = airwayLegend('lesion')
+    expect(legend.map((entry) => entry.key)).toEqual(LESION_AIRWAYS)
+    expect(new Set(legend.map((entry) => entry.color)).size).toBe(legend.length)
+    for (const entry of legend) expect(entry.color).not.toBe('#f2b25c')
+    for (const branch of AIRWAY_TREE) {
+      const entry = legend.find((item) => item.key === branch.key)
+      expect(airwayColor(branch, 'lesion')).toBe(entry ? entry.color : null)
+    }
   })
 })

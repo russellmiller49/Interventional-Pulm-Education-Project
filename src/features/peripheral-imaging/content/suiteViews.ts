@@ -313,6 +313,8 @@ export interface SuiteViewOverrides {
   readonly camera?: SuiteViewSpec['camera']
   readonly controls?: readonly string[]
   readonly readouts?: readonly LabMetricId[]
+  /** Inputs no control is bound to, for this step only: the tool hidden, for one. */
+  readonly defaults?: SuiteViewSpec['defaults']
   readonly chainAnswer?: boolean
   readonly autoplay?: boolean
 }
@@ -334,6 +336,7 @@ export function suiteViewForStep(
     camera: overrides.camera ?? base.camera,
     controls: overrides.controls ?? base.controls,
     readouts: overrides.readouts ?? base.readouts,
+    defaults: overrides.defaults ? { ...base.defaults, ...overrides.defaults } : base.defaults,
     chainAnswer: overrides.chainAnswer ?? false,
     animation:
       base.animation && overrides.autoplay !== undefined

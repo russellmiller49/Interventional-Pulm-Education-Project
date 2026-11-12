@@ -4,7 +4,13 @@ import {
   obliquityName,
   type ChestWallQuadrant,
 } from '../content/angleRules'
-import { AIRWAY_FACTS, airwayRouteText, frontalBeamShare } from '../content/airwayFacts'
+import {
+  AIRWAY_FACTS,
+  airwayRouteText,
+  frontalBeamShare,
+  overNoduleCm,
+  overNoduleSpanCm,
+} from '../content/airwayFacts'
 import { PI_NUMBERS } from '../content/teachingNumbers'
 import type { Lesson, ObjectiveId } from '../types'
 
@@ -401,7 +407,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Projection & depth',
     group: 'Localize and optimize',
     stage: 'Foundation',
-    minutes: 12,
+    minutes: 14,
     objective: 'optimize',
     outcome:
       'Distinguish projected overlap from a resolved three-dimensional tool–lesion relationship.',
@@ -424,6 +430,19 @@ export const LESSONS: Lesson[] = [
           'Recenter and recollimate after rotating the C-arm.',
         ],
         sources: ['setser', 'tg272'],
+      },
+      {
+        // The parallax of the block above, applied to the bronchi of the course CT. Which bronchi
+        // cross the nodule, how deep each lies and which leave it at each angle are computed from
+        // the tree (`content/airwayFacts.ts`, `lib/airwayTree.ts`) and held by `airway-tree.test.ts`.
+        title: 'Which bronchus reaches the nodule',
+        body: `Superimposition applies to the airways as it does to the tool. On the frontal image of this patient four segmental bronchi cross the outline of the nodule: LB5 from the lingula, and LB7+8, LB9 and LB10 from the lower lobe. They span about ${overNoduleSpanCm} cm front to back. LB5 lies about ${overNoduleCm('LB5')} cm in front of the nodule, LB9 about ${overNoduleCm('LB9')} cm behind it and LB10 about ${overNoduleCm('LB10')} cm behind it; only LB7+8 runs at the depth of the nodule. A catheter in any of the four is drawn reaching the nodule on this one image. Rotating the C-arm sorts them by depth. A bronchus in front of the nodule and a bronchus behind it move across it in opposite directions, and a bronchus at its depth stays over it. At LAO 30° LB5 has left the nodule toward the midline, as the heart has: both lie in front of it. LB9 and LB10 still cross it, because they run back toward the spine, nearly along this beam. At RAO 30° they have left it toward the midline as well, the way the spine moves, and LB5 has left toward the chest wall. LB7+8 crosses the nodule at all three angles.`,
+        points: [
+          'Overlap on the frontal image names several bronchi, not one.',
+          'What moves with the heart lies in front of the nodule; what moves with the spine lies behind it.',
+          'The bronchus that stays over the nodule as the C-arm rotates is the one to follow. One oblique did not separate LB9 and LB10; the opposite oblique did.',
+        ],
+        sources: ['setser', 'chassagnon'],
       },
       {
         // Expert-session round, part 2 (2026-10-20): the educators' slides list these three benefits
@@ -478,6 +497,7 @@ export const LESSONS: Lesson[] = [
       'Keep the tool depth offset, rotate the C-arm, and compare the 3D view with its projection.',
     takeaway: [
       'Overlap on one projection is superimposition until shown otherwise.',
+      'Several bronchi cross a nodule on one image; the one at its depth stays over it as the C-arm rotates.',
       'Plan the obliquity on the axial CT and the cranial or caudal angle on the sagittal.',
       'Choose the projection for the question: alignment or advancement.',
       'Changing the projection does not move the tool.',

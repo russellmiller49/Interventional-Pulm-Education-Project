@@ -164,7 +164,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
       interaction: { kind: 'read' },
       lookIn: { pane: 'simulator', landmark: 'the image and its explanation in this task' },
       suite: {
-        ...suiteViewForStep(sectionId),
+        ...suiteViewForStep(sectionId, activity.view),
         ...(activity.controls ? { controls: activity.controls } : {}),
       },
     }

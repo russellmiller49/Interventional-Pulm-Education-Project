@@ -76,6 +76,11 @@ the segment model in the local source folder, converts both to the course frame,
 - **Check.** `__tests__/airway-tree.test.ts` decodes the CT atlas and requires the centrelines of
   the wide airways to lie in air, and to stop doing so when the tree is mirrored or shifted 10 mm.
   It also holds every sentence of Section 5 about a bronchus's course to the tree.
+- **The bronchi over the nodule.** `lib/airwayTree.ts` works out which segmental bronchi have a
+  centreline inside the nodule's outline at a given C-arm angle (`airwayCrossesLesion`), and how
+  far in front of or behind the nodule each lies. Section 6 (Projection) draws the four that cross
+  it on the frontal image and follows them through LAO 30° and RAO 30°; the same test file holds
+  that step's sentences, examples and readout to the tree.
 - **Limits.** The names are those the owner assigned on this CT; lobar bronchi are grouped from
   their segments because the segment model has no separate lobar surfaces. Subsegmental branches
   carry their segment's name. It is a teaching map of one patient, not a diagnostic airway map.

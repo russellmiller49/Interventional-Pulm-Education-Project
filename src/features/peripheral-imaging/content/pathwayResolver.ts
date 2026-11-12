@@ -195,7 +195,7 @@ export function imagingPathwayComposition(): ImagingPathwayComposition {
   }
 }
 
-/** "20 sections in 6 chapters · 217 min". */
+/** "20 sections in 6 chapters · 219 min". */
 export function imagingCompositionLine(): string {
   const composition = imagingPathwayComposition()
   return `${composition.total} sections in ${composition.byPhase.length} chapters · ${composition.minutes} min`

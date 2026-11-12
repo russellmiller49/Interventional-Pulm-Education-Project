@@ -621,7 +621,7 @@ test('required-image failure counts nothing as seen, keeps explanation and retry
   // Contract change (PI-01): the failed image no longer holds the learner on this step.
   await expect(skip(page)).toHaveText('Continue without the image')
   await skip(page).click()
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await expect(page.locator('[data-now-status]')).toContainText('without completing it')
   await expectNoStoredResponses(page)
@@ -648,7 +648,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await capture(page, info, `projection-${width}.png`)
     await primary(page).focus()
     await page.keyboard.press('Enter')
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
     await expect(page.locator('[data-now-focus]')).toBeFocused()
   }
   for (const width of [900, 1440]) {
@@ -661,7 +661,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await primary(page).scrollIntoViewIfNeeded()
     await capture(page, info, `projection-text-200-percent-${width}.png`)
     await primary(page).click()
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:angles')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
   }
 })
 
@@ -3662,4 +3662,81 @@ test('the bronchial tree is drawn and named on the frontal image, and withheld o
   const suite = page.locator('[data-suite-scene]')
   await expect(suite).not.toContainText(/LB6|LB7\+8|LB9|LB10/)
   await capture(page, info, 'airway-check.png')
+})
+
+test('Projection: the bronchi over the nodule are drawn without a tool, and rotation takes them off it', async ({
+  page,
+}, info) => {
+  // Airway anatomy, part 3 (owner go-ahead 2026-11-11): one reading step in Projection applies
+  // parallax to the bronchi. Four segmental bronchi cross the nodule on the frontal image; LAO 30°
+  // takes the anterior one off it, RAO 30° the posterior two, and LB7+8 stays.
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('projection')
+  const step = lesson.steps.find(
+    (entry) => entry.title === 'Find which bronchus stays over the nodule',
+  )!
+  const ready = () =>
+    expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
+  const overlay = page.locator('[data-current-image] [data-airway-overlay]')
+  const over = page.locator('[data-readout="airwaysOverLesion"]')
+
+  await openSection(page, 'projection')
+  await ready()
+  // The section opens on the tool and the lesion, with no bronchus drawn.
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(1)
+  await expect(primary(page)).toBeEnabled({ timeout: 90000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', step.id)
+  await ready()
+
+  // Frontal: the four bronchi, named, and no tool.
+  await expect(overlay).toHaveAttribute('data-airway-show', 'lesion')
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-target-overlay]')).toHaveCount(1)
+  expect(
+    (
+      await overlay
+        .locator('[data-airway-label]')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-airway-label')))
+    ).sort(),
+  ).toEqual(['LB10', 'LB5', 'LB7+8', 'LB9'])
+  await expect(overlay.locator('[data-airway-stem]')).toHaveCount(0)
+  await expect(over).toContainText('LB5, LB7+8, LB9, LB10')
+  await expect(page.locator('[data-readout="separationMm"]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-airway-legend]')).toContainText(
+    'cross the outline of the nodule on the frontal image',
+  )
+  // Rotation is the only control; the bronchi drawn are not the learner's to change here.
+  await expect(page.locator('#peripheral-imaging-control-orbit')).toBeVisible()
+  await expect(page.locator('#peripheral-imaging-control-airways')).toHaveCount(0)
+  await capture(page, info, 'projection-bronchi-frontal.png')
+
+  await page.getByRole('button', { name: 'LAO 30° · the anterior bronchus leaves' }).click()
+  await ready()
+  await expect(over).toContainText('LB7+8, LB9, LB10')
+  await expect(over).not.toContainText('LB5')
+  await capture(page, info, 'projection-bronchi-lao.png')
+
+  await page.getByRole('button', { name: 'RAO 30° · the posterior bronchi leave' }).click()
+  await ready()
+  await expect(over).toHaveText(/LB7\+8\s*$/)
+  await expect(page.locator('[data-readout="rayCrosses"]')).toContainText('Heart')
+  await capture(page, info, 'projection-bronchi-rao.png')
+
+  // The learner can turn the C-arm between the examples and the readout follows.
+  await controlRange(page, 'orbit', 10)
+  await expect(over).toContainText('LB5, LB7+8')
+  await expect(over).not.toContainText('LB9')
+
+  // The next step is the section's own again: the tool is back and no bronchus is drawn.
+  await primary(page).click()
+  await ready()
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(1)
 })
