@@ -47,6 +47,32 @@
   overflow: visible;
 }
 
+/*
+ * The lesson bar stays on screen.
+ *
+ * In a flowing activity the shell scrolls as one page, and its header row used to scroll away with
+ * the task. That was survivable while the site menu was pinned above it. The menu is now hidden
+ * while an activity is open, so this bar is the one place Sections and Save & exit live, and on a
+ * desktop window it is pinned to the top of the scrolling shell. Its measured height is published
+ * as `--ecmo-lesson-bar-height` (`useEcmoLessonBar`) for everything that has to start under it.
+ * A bar that has wrapped to more than a quarter of the window (enlarged text) is not pinned.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .shell[data-flowing='true'] > .header {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    /* Opaque: the task scrolls underneath. The same tint the bar has over the page. */
+    background: color-mix(in srgb, var(--ecmo-shell-panel) 88%, #061519);
+  }
+  .shell[data-flowing='true'] > .header[data-bar-unfits='true'] {
+    position: static;
+  }
+  .shell[data-flowing='true'] {
+    scroll-padding-block-start: calc(var(--ecmo-lesson-bar-height, 0px) + 1rem);
+  }
+}
+
 /* Below the fixed-workspace viewport the shell flows with the document and nothing is clipped. */
 @media (max-width: 1023px), (max-height: 699px) {
   .shell {
@@ -163,7 +189,7 @@
   outline-offset: 2px;
 }
 
-/* The phone header's one disclosure: main menu and restart (see EcmoSectionHeader). */
+/* The bar's one disclosure: main menu and the restarts (see EcmoSectionHeader). */
 @media (max-width: 600px) {
   .headerMore[open] {
     flex-basis: 100%;
@@ -179,7 +205,12 @@
   border-radius: 0.65rem;
   font-size: var(--ecmo-type-floor);
   font-weight: 700;
+  list-style: none;
   cursor: pointer;
+}
+
+.headerMore > summary::-webkit-details-marker {
+  display: none;
 }
 
 .headerMore > summary::after {
@@ -205,12 +236,42 @@
 }
 
 /*
- * Wider than a phone the two controls simply sit in the header and the summary is not shown.
+ * Between a phone and a wide window the disclosure is a menu under its button, so opening it does
+ * not add a row to the bar. The bar is pinned over the task there; a second row would cover it.
+ */
+@media (min-width: 601px) and (max-width: 1499px) {
+  .headerMore {
+    position: relative;
+  }
+  .headerMoreBody {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    margin-top: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--ecmo-shell-line);
+    border-radius: 0.9rem;
+    background: var(--ecmo-shell-panel);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
+  }
+  .headerMoreBody .headerButton {
+    justify-content: flex-start;
+  }
+}
+
+/*
+ * On a wide window the controls simply sit in the bar and the summary is not shown.
  * This must come after the base summary rule: at equal specificity the later rule wins, and when
  * it came first the summary stayed on screen on a desktop, forced open, and did nothing when
- * pressed (live report, 2026-09-27).
+ * pressed (live report, 2026-09-27). The width is the one `EcmoSectionHeader` folds at.
  */
-@media (min-width: 601px) {
+@media (min-width: 1500px) {
   .headerMore > summary {
     display: none;
   }
@@ -804,14 +865,16 @@
 
 @media (min-width: 1024px) and (min-height: 700px) {
   .shell[data-flowing='true'] > .strip:has([data-operational-status='true']) {
-    top: 0;
+    top: var(--ecmo-lesson-bar-height, 0px);
   }
 }
 
 /* Native Tab/Shift+Tab must use the same reading owner as wheel and guided focus. The strip's
  * measured size includes wrapping/text enlargement; the activity header is not pinned chrome. */
 .shell[data-ecmo-shell='learn'][data-flowing='true'] {
-  scroll-padding-block-start: calc(var(--ecmo-sticky-strip-height, 0px) + 1rem);
+  scroll-padding-block-start: calc(
+    var(--ecmo-lesson-bar-height, 0px) + var(--ecmo-sticky-strip-height, 0px) + 1rem
+  );
 }
 .shell[data-ecmo-shell='learn'][data-flowing='true']:has(> .header :focus),
 .shell[data-ecmo-shell='learn'][data-flowing='true']:has(> .strip :focus) {

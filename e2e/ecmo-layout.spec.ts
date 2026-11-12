@@ -384,6 +384,84 @@ test('every authored task change restores the header and keeps content reachable
   }
 })
 
+for (const viewport of [
+  { width: 1600, height: 852 },
+  { width: 1440, height: 800 },
+  { width: 1280, height: 720 },
+]) {
+  test(`a lesson has the whole window and its bar stays on screen: ${viewport.width}×${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    for (const [id, track] of [
+      ['circuit-flow-path', 'vv'],
+      ['va-lv-loading', 'va'],
+    ] as const) {
+      await openLesson(page, id, track)
+      const shell = page.locator(shellSelector)
+      const read = () =>
+        page.evaluate(() => {
+          const site = document.querySelector<HTMLElement>('#site-header')!
+          const shell = document.querySelector<HTMLElement>('[data-ecmo-shell]')!
+          const bar = shell.querySelector<HTMLElement>(':scope > [data-ecmo-lesson-bar]')!
+          const exit = bar.querySelector<HTMLElement>('[data-ecmo-save-exit]')!
+          const sections = bar.querySelector<HTMLElement>('[data-sections-drawer] > summary')!
+          const hit = (node: HTMLElement) => {
+            const rect = node.getBoundingClientRect()
+            const at = document.elementFromPoint(
+              rect.left + rect.width / 2,
+              rect.top + rect.height / 2,
+            )
+            return at === node || node.contains(at)
+          }
+          return {
+            siteDisplay: getComputedStyle(site).display,
+            shellTop: shell.getBoundingClientRect().top,
+            shellHeight: shell.getBoundingClientRect().height,
+            barTop: bar.getBoundingClientRect().top,
+            barHeight: bar.getBoundingClientRect().height,
+            exitOnTop: hit(exit),
+            sectionsOnTop: hit(sections),
+            scrollTop: shell.scrollTop,
+            documentScroll: scrollY,
+          }
+        })
+      const entry = await read()
+      // The site menu is gone and the lesson starts at the top of the window.
+      expect(entry.siteDisplay).toBe('none')
+      expect(entry.shellTop).toBe(0)
+      expect(entry.shellHeight).toBe(viewport.height)
+      // One row: the section name, Sections, help, Save & exit, and one folded menu.
+      expect(entry.barHeight).toBeLessThanOrEqual(64)
+      // Scrolled to the end of the task, the bar and its way out are still there.
+      await shell.evaluate((node) => node.scrollTo({ top: node.scrollHeight, behavior: 'instant' }))
+      await page.waitForTimeout(150)
+      const end = await read()
+      expect(end.scrollTop).toBeGreaterThan(0)
+      expect(end.barTop).toBe(0)
+      expect(end.exitOnTop).toBe(true)
+      expect(end.sectionsOnTop).toBe(true)
+      expect(end.documentScroll).toBe(0)
+    }
+  })
+}
+
+test('the Sections menu names each section in full', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 })
+  await openLesson(page, 'va-lv-loading', 'va')
+  await page.locator('[data-sections-drawer] > summary').click()
+  const current = page.locator('[data-sections-panel] [aria-current="step"]')
+  await expect(current).toBeVisible()
+  await expect(current.locator('small')).toBeVisible()
+  await expect(current.locator('small')).toHaveText(
+    'VA left ventricular loading: interpreting low pulsatility',
+  )
+  // The same title the lesson bar prints.
+  await expect(page.locator('[data-ecmo-lesson-bar] h1')).toHaveText(
+    'VA left ventricular loading: interpreting low pulsatility',
+  )
+})
+
 test('circuit walk and guided control focus stay in the reading surface', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await openLesson(page, 'circuit-flow-path')
@@ -411,7 +489,11 @@ test('circuit walk and guided control focus stay in the reading surface', async 
     }
   })
   expect(focus.inside).toBe(true)
-  expect(focus.top).toBeGreaterThanOrEqual(81)
+  // Below the pinned lesson bar: the site menu is hidden while a lesson is open.
+  const barBottom = await page
+    .locator('[data-ecmo-lesson-bar]')
+    .evaluate((node) => node.getBoundingClientRect().bottom)
+  expect(focus.top).toBeGreaterThanOrEqual(barBottom)
   expect(focus.bottom).toBeLessThanOrEqual(900)
   expect(focus.scrollY).toBe(0)
   await page.locator(shellSelector).evaluate((node) => {

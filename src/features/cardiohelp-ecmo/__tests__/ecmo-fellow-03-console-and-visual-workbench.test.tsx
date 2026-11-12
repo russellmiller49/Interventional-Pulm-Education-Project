@@ -806,7 +806,9 @@ describe('phone chrome', () => {
   function withPhone(matches: boolean, run: () => void) {
     const original = window.matchMedia
     window.matchMedia = ((query: string) => ({
-      matches: matches && query === '(max-width: 600px)',
+      // The fold was phone-only (600 px) until the bar was pinned; it is now every window too
+      // narrow for the six controls and the section name on one row.
+      matches: matches && query === '(max-width: 1499px)',
       media: query,
       addEventListener: () => {},
       removeEventListener: () => {},
@@ -818,7 +820,7 @@ describe('phone chrome', () => {
     }
   }
 
-  it('folds main menu and restart into one disclosure on a phone, keeping section, help and exit', () => {
+  it('folds main menu and restart into one disclosure on a narrow window, keeping section, help and exit', () => {
     withPhone(true, () => {
       const onMainMenu = jest.fn()
       render(
@@ -836,6 +838,8 @@ describe('phone chrome', () => {
       const more = document.querySelector('details[data-ecmo-header-more]')
       expect(more).not.toBeNull()
       expect(more?.querySelector('summary')).toHaveTextContent('Main menu or restart')
+      // Closed until asked for: the bar is one row.
+      expect(more).not.toHaveAttribute('open')
       expect(more?.querySelector('[role="radiogroup"]')).toBeNull()
       const menu = within(more as HTMLElement).getByRole('button', { name: 'Main menu' })
       expect(
@@ -863,15 +867,20 @@ describe('phone chrome', () => {
       expect(screen.getByRole('button', { name: 'Main menu' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Restart' })).toBeInTheDocument()
     })
-    // The summary is hidden above 600 px only if that rule comes after the base summary rule: at
-    // equal specificity the later one wins. In the wrong order the desktop showed a summary that
+    // The summary is hidden on a wide window only if that rule comes after the base summary rule:
+    // at equal specificity the later one wins. In the wrong order the desktop showed a summary that
     // was forced open and did nothing (live report, 2026-09-27).
     const base = shellCss.indexOf('.headerMore > summary {')
-    const wide = shellCss.indexOf('@media (min-width: 601px)')
+    const wide = shellCss.indexOf('@media (min-width: 1500px)')
     expect(base).toBeGreaterThan(-1)
     expect(wide).toBeGreaterThan(base)
-    expect(mediaBlock(shellCss, '@media (min-width: 601px)')).toMatch(
+    expect(mediaBlock(shellCss, '@media (min-width: 1500px)')).toMatch(
       /\.headerMore > summary \{\s*display: none;/,
+    )
+    // Between a phone and that width the disclosure is a menu under its button, so opening it adds
+    // no row to the pinned bar.
+    expect(mediaBlock(shellCss, '@media (min-width: 601px) and (max-width: 1499px)')).toMatch(
+      /\.headerMoreBody \{\s*position: absolute;/,
     )
   })
 
