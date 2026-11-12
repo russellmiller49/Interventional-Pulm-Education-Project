@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { isLayerGroup } from '@/features/eus-b-simulator/content';
+import { EusAnatomyScene } from '@/features/eus-b-simulator/EusAnatomyScene';
 import { DEFAULT_EUS_CONTROLS } from '@/features/eus-b-simulator/eusAcoustic';
+import { EusEndoscopeView } from '@/features/eus-b-simulator/EusEndoscopeView';
 import { describeFacing, insertionDepthCm } from '@/features/eus-b-simulator/eusPose';
 import {
   EusScopeControls,
@@ -10,6 +13,7 @@ import {
 import type {
   EusAcousticVolume,
   EusCaseManifest,
+  EusLayerState,
   EusScopePath,
   EusScopeState,
 } from '@/features/eus-b-simulator/types';
@@ -30,8 +34,17 @@ import {
   eusbLab,
   type EusbControl,
   type EusbLabSpec,
+  type EusbPane,
 } from '../../../../../src/lib/eus-b-guided-contract';
 import { EusGuidedSector } from './EusGuidedSector';
+import {
+  DEMO_LEG_MS,
+  DEMO_STEP_MS,
+  demoLegs,
+  demoLegText,
+  demoPoseAt,
+  demoViewText,
+} from './guidedDemo';
 import {
   buildObservation,
   heldImage,
@@ -53,6 +66,26 @@ import './eus-b-guided.css';
 const REPORT_GAP_MS = 100;
 /** Where the scope sits if a lab's start cannot be read from the case. */
 const FALLBACK_START: EusScopeState = { sMm: 20, rollDeg: 0, flexDeg: 0 };
+/** The 3D view names nothing and draws no ultrasound image on a cut: these never change. */
+const NAMES_NOTHING = () => null;
+const NO_FRAMES = () => () => {};
+const IGNORE = () => {};
+/**
+ * What the 3D view draws when it is opened to locate a target: the airway a bronchoscopist
+ * already knows, the nodes, the esophagus and stomach the scope lies in, and the abdominal organs.
+ * The heart and the great vessels cover most mediastinal targets from every side, so they start
+ * hidden and the learner can add them. The spine and the bowel are left out.
+ */
+const LOCATING_LAYERS: EusLayerState = {
+  node: true,
+  airway: true,
+  gi: true,
+  organ: true,
+  heart: false,
+  vessel: false,
+  bone: false,
+  bowel: false,
+};
 
 interface EusGuidedWorkbenchProps {
   config: EusbWorkbenchConfig;
@@ -98,6 +131,27 @@ function ownedReachReducer(state: OwnedReach, event: ReachEvent & { labKey: stri
   const reach = state.labKey === event.labKey ? state.reach : REACH_START;
   return { labKey: event.labKey, reach: reachReducer(reach, event) };
 }
+
+/** The help a learner has asked for in one task. A new task, or a fresh start of one, has none. */
+interface HelpState {
+  labKey: string;
+  /** The 3D view is open. */
+  anatomy: boolean;
+  /** The 3D view also draws the heart, and the vessels. */
+  heart: boolean;
+  vessel: boolean;
+  demo: 'idle' | 'running' | 'done';
+  /** What the lab is doing while it drives the scope. */
+  leg: string;
+}
+const noHelp = (labKey: string): HelpState => ({
+  labKey,
+  anatomy: false,
+  heart: false,
+  vessel: false,
+  demo: 'idle',
+  leg: '',
+});
 
 interface WorkState {
   labKey: string;
@@ -195,8 +249,10 @@ function GuidedLab({
   // ---- The task --------------------------------------------------------------------------------
   const [owned, dispatch] = useReducer(ownedReachReducer, { labKey, reach: REACH_START });
   const reach = owned.labKey === labKey ? owned.reach : REACH_START;
-  const locked = reach.found;
-  const interactive = phase === 'work' && !locked;
+  const [helpState, setHelpState] = useState<HelpState>(() => noHelp(labKey));
+  const help = helpState.labKey === labKey ? helpState : noHelp(labKey);
+  const locked = reach.found || reach.shown;
+  const interactive = phase === 'work' && !locked && help.demo !== 'running';
 
   const note = (control: EusbControl) => {
     const mine = workFor(labKey);
@@ -235,6 +291,90 @@ function GuidedLab({
     note(control);
   };
 
+  // ---- Help for a learner who is stuck -----------------------------------------------------------
+  const offered = phase === 'work' && target ? (lab.help ?? []) : [];
+  const demoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopDemo = () => {
+    if (demoTimer.current) clearInterval(demoTimer.current);
+    demoTimer.current = null;
+  };
+  // A demonstration belongs to one task in its work phase and ends with it.
+  useEffect(() => stopDemo, [labKey, phase]);
+
+  const showMe = () => {
+    if (!target || !interactive || demoTimer.current || !offered.includes('show')) return;
+    const mine = workFor(labKey);
+    const key = labKey;
+    const legs = demoLegs(path, mine.scope, target.pose);
+    // The view is shown as the course shows it: at the image settings of the reference.
+    mine.depthMm = defaultDepthMm;
+    mine.gainDb = DEFAULT_EUS_CONTROLS.gainDb;
+    setDepthMm(mine.depthMm);
+    setGainDb(mine.gainDb);
+    // A hold the learner had begun does not finish under the demonstration.
+    dispatch({ type: 'reset', labKey: key });
+    const finish = () => {
+      stopDemo();
+      mine.scope = target.pose;
+      reset(target.pose);
+      dispatch({
+        type: 'shown',
+        labKey: key,
+        image: heldImage(
+          manifest,
+          { scope: target.pose, depthMm: mine.depthMm, gainDb: mine.gainDb },
+          'reference',
+        ),
+      });
+      setHelpState((current) => ({
+        ...(current.labKey === key ? current : noHelp(key)),
+        demo: 'done',
+        leg: '',
+      }));
+    };
+    if (legs.length === 0) return finish();
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const say = (at: number) =>
+      setHelpState((current) => ({
+        ...(current.labKey === key ? current : noHelp(key)),
+        demo: 'running',
+        leg: demoLegText(manifest, legs[at]),
+      }));
+    let at = 0;
+    let began = Date.now();
+    say(0);
+    // A timer, not animation frames: the lesson may be in a hidden tab.
+    demoTimer.current = setInterval(() => {
+      const t = still ? 1 : (Date.now() - began) / DEMO_LEG_MS;
+      const next = demoPoseAt(path, legs[at], t);
+      mine.scope = next;
+      reset(next);
+      if (t < 1) return;
+      at += 1;
+      began = Date.now();
+      if (at >= legs.length) finish();
+      else say(at);
+    }, DEMO_STEP_MS);
+  };
+
+  const showEndoscope = config.panes.includes('endoscope');
+  const showAnatomy = help.anatomy && offered.includes('anatomy');
+  const targetGroup = target ? session.structures.get(target.key)?.group : undefined;
+  // The target's own kind of structure is always drawn, whatever else is hidden.
+  const layers = useMemo<EusLayerState>(
+    () => ({
+      ...LOCATING_LAYERS,
+      heart: help.heart,
+      vessel: help.vessel,
+      ...(targetGroup && isLayerGroup(targetGroup) ? { [targetGroup]: true } : {}),
+    }),
+    [help.heart, help.vessel, targetGroup],
+  );
+  const views: EusbPane[] = [
+    ...(showEndoscope ? (['endoscope'] as const) : []),
+    ...(showAnatomy ? (['anatomy'] as const) : []),
+  ];
+
   // ---- The image -------------------------------------------------------------------------------
   const controls = useMemo(
     () => ({
@@ -260,6 +400,8 @@ function GuidedLab({
   useEffect(() => {
     if (!frame || !frameTag || !target) return;
     if (frameTag.labKey !== labKey || frameTag.phase !== 'work') return;
+    // While the lab drives the scope, nothing it passes or reaches counts as the learner's.
+    if (demoTimer.current) return;
     dispatch({
       type: 'frame',
       labKey,
@@ -302,6 +444,7 @@ function GuidedLab({
       actionCount: mine.actions,
       lastAction: mine.last,
       target: target ? { key: target.key, reach } : null,
+      views,
       now: Date.now(),
     });
   };
@@ -317,7 +460,19 @@ function GuidedLab({
       lastSent.current = Date.now();
       send.current(report.current());
     }, wait);
-  }, [frame, frameTag, reach, scope, depthMm, gainDb, labKey, phase, config.observationRequest]);
+  }, [
+    frame,
+    frameTag,
+    reach,
+    scope,
+    depthMm,
+    gainDb,
+    labKey,
+    phase,
+    showEndoscope,
+    showAnatomy,
+    config.observationRequest,
+  ]);
   useEffect(
     () => () => {
       if (pending.current) clearTimeout(pending.current);
@@ -368,6 +523,9 @@ function GuidedLab({
       data-names={config.names}
       data-frame-ready={frameReady ? 'true' : 'false'}
       data-found={target ? (reach.found ? 'true' : 'false') : undefined}
+      data-shown={target ? (reach.shown ? 'true' : 'false') : undefined}
+      data-demo={target ? help.demo : undefined}
+      data-views={views.length > 0 ? views.join(' ') : undefined}
     >
       <EusGuidedSector
         volume={volume}
@@ -385,7 +543,17 @@ function GuidedLab({
           moveScope(action.control, action.change);
         }}
       >
-        {phase === 'work' && target && (holding || reach.found) && (
+        {phase === 'work' && target && (help.demo === 'running' || reach.shown) && (
+          <div
+            className={`eusg-hold${reach.shown ? ' is-shown' : ''}`}
+            role="status"
+            aria-live="polite"
+            data-eusg-hold={reach.shown ? 'shown' : 'showing'}
+          >
+            <span className="eusg-hold__text">{reach.shown ? 'View shown' : `${help.leg}…`}</span>
+          </div>
+        )}
+        {phase === 'work' && target && help.demo === 'idle' && (holding || reach.found) && (
           <div
             className={`eusg-hold${reach.found ? ' is-done' : ''}`}
             role="status"
@@ -407,58 +575,155 @@ function GuidedLab({
       </EusGuidedSector>
 
       <div className="eusg-side">
-        <p className="eusg-position" aria-live="off">
-          {named && <strong data-eusg-level>{level.label}</strong>}
-          <span data-eusg-depth>≈ {cm} cm from the incisors</span>
-          {named && <span>Transducer faces {facing || 'along the scope'}</span>}
-        </p>
+        <div className="eusg-panel">
+          <p className="eusg-position" aria-live="off">
+            {named && <strong data-eusg-level>{level.label}</strong>}
+            <span data-eusg-depth>≈ {cm} cm from the incisors</span>
+            {named && <span>Transducer faces {facing || 'along the scope'}</span>}
+          </p>
 
-        {showControls && (
-          <section className="eusg-controls" aria-label="Scope controls">
-            <EusScopeControls
-              allowed={lab.controls}
-              manifest={manifest}
-              path={path}
-              scope={scope}
-              depthMm={depthMm}
-              gainDb={gainDb}
-              onMove={moveScope}
-              onDepthMm={(value) => setImage('depth', value)}
-              onGainDb={(value) => setImage('gain', value)}
-              disabled={!interactive}
-              hideLevels={!named}
-            />
-            {keyHelp && <p className="eusg-keys">{keyHelp}</p>}
-          </section>
-        )}
+          {showControls && (
+            <section className="eusg-controls" aria-label="Scope controls">
+              <EusScopeControls
+                allowed={lab.controls}
+                manifest={manifest}
+                path={path}
+                scope={scope}
+                depthMm={depthMm}
+                gainDb={gainDb}
+                onMove={moveScope}
+                onDepthMm={(value) => setImage('depth', value)}
+                onGainDb={(value) => setImage('gain', value)}
+                disabled={!interactive}
+                hideLevels={!named}
+              />
+              {keyHelp && <p className="eusg-keys">{keyHelp}</p>}
+            </section>
+          )}
 
-        {named && (
-          <section className="eusg-legend" aria-label="In this image" data-eusg-legend>
-            <h2>In this image</h2>
-            {legend.length === 0 ? (
-              <p className="eusg-muted">Nothing in this image has a name.</p>
-            ) : (
-              <ul>
-                {legend.map((row) => (
-                  <li
-                    key={row.key}
-                    data-structure={row.key}
-                    className={
-                      row.key === (pointedKey ?? legendKey) ? 'is-pointed' : undefined
-                    }
-                    onPointerEnter={() => setLegendKey(row.key)}
-                    onPointerLeave={() => setLegendKey(null)}
+          {offered.length > 0 && (
+            <section className="eusg-help" aria-label="If you are stuck" data-eusg-help-block>
+              <h2>If you are stuck</h2>
+              <div className="eusg-help__actions">
+                {offered.includes('anatomy') && (
+                  <button
+                    type="button"
+                    className="eus-step-button"
+                    data-eusg-help="anatomy"
+                      onClick={() => setHelpState({ ...help, anatomy: !help.anatomy })}
                   >
-                    <span className="eusg-swatch" style={{ backgroundColor: row.color }} />
-                    <span>
-                      {row.label}
-                      {row.note && <small>{row.note}</small>}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                    {help.anatomy ? 'Hide the 3D view' : 'Show the 3D view'}
+                  </button>
+                )}
+                {offered.includes('show') && help.demo === 'idle' && !locked && (
+                  <button
+                    type="button"
+                    className="eus-step-button"
+                    data-eusg-help="show"
+                    onClick={showMe}
+                  >
+                    Show me the view
+                  </button>
+                )}
+              </div>
+              <p className="eusg-muted" data-eusg-help-text>
+                {reach.shown
+                  ? `This is the view: ${demoViewText(manifest, scope)}. To find it yourself, use “Start this task again” above the image.`
+                  : help.demo === 'running'
+                    ? 'Watch the image and the scope controls.'
+                    : reach.found
+                      ? 'You found the view.'
+                      : help.anatomy
+                        ? 'In the 3D view your target is highlighted, and the scope and its scan plane follow the controls. Drag to turn the model.'
+                        : 'The 3D view shows the scope in the anatomy with your target highlighted. “Show me the view” drives the scope to it.'}
+              </p>
+            </section>
+          )}
+
+          {named && (
+            <section className="eusg-legend" aria-label="In this image" data-eusg-legend>
+              <h2>In this image</h2>
+              {legend.length === 0 ? (
+                <p className="eusg-muted">Nothing in this image has a name.</p>
+              ) : (
+                <ul>
+                  {legend.map((row) => (
+                    <li
+                      key={row.key}
+                      data-structure={row.key}
+                      className={
+                        row.key === (pointedKey ?? legendKey) ? 'is-pointed' : undefined
+                      }
+                      onPointerEnter={() => setLegendKey(row.key)}
+                      onPointerLeave={() => setLegendKey(null)}
+                    >
+                      <span className="eusg-swatch" style={{ backgroundColor: row.color }} />
+                      <span>
+                        {row.label}
+                        {row.note && <small>{row.note}</small>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
+
+        {views.length > 0 && session.pose && (
+          <div className="eusg-views">
+            {showEndoscope && (
+              <div className="eusg-view" data-eusg-view="endoscope">
+                <h2>White light view</h2>
+                <EusEndoscopeView
+                  manifest={manifest}
+                  path={path}
+                  pose={session.pose}
+                  sMm={scope.sMm}
+                  depthLabel={`≈ ${cm} cm`}
+                  viewSwitch={null}
+                  imageOnly
+                />
+              </div>
             )}
-          </section>
+            {showAnatomy && (
+              <div className="eusg-view" data-eusg-view="anatomy">
+                <div className="eusg-view__head">
+                  <h2>3D view</h2>
+                  {(['heart', 'vessel'] as const)
+                    .filter((group) => group !== targetGroup)
+                    .map((group) => (
+                      <button
+                        key={group}
+                        type="button"
+                        className="eus-chip-button"
+                        aria-pressed={help[group]}
+                        data-eusg-layer={group}
+                        onClick={() => setHelpState({ ...help, [group]: !help[group] })}
+                      >
+                        {group === 'heart' ? 'Heart' : 'Vessels'}
+                      </button>
+                    ))}
+                </div>
+                <EusAnatomyScene
+                  manifest={manifest}
+                  path={path}
+                  pose={session.pose}
+                  sMm={scope.sMm}
+                  depthMm={depthMm}
+                  layers={layers}
+                  onLayers={IGNORE}
+                  activeStructure={target?.key ?? null}
+                  hoverStructure={null}
+                  onHoverStructure={IGNORE}
+                  namingEnabled={false}
+                  structureAt={NAMES_NOTHING}
+                  sectorCanvas={null}
+                  subscribeFrames={NO_FRAMES}
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </main>

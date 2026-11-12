@@ -7,13 +7,21 @@
  */
 
 /** Raise when a lab's meaning changes, so a lab build from before the change says so. */
-export const EUSB_CONTRACT_REVISION = 1 as const
+export const EUSB_CONTRACT_REVISION = 2 as const
 
 export const EUSB_CONTROLS = ['advance', 'rotate', 'flex', 'depth', 'gain'] as const
 export type EusbControl = (typeof EUSB_CONTROLS)[number]
 
-export const EUSB_PANES = ['ultrasound', 'ct', 'anatomy'] as const
+export const EUSB_PANES = ['ultrasound', 'endoscope', 'ct', 'anatomy'] as const
 export type EusbPane = (typeof EUSB_PANES)[number]
+
+/**
+ * Help a find-the-view task can offer a learner who is stuck.
+ * anatomy: the 3D model with the scope in it and the target marked.
+ * show: the lab drives the scope to the target's view. A view reached this way was shown, not found.
+ */
+export const EUSB_HELP = ['anatomy', 'show'] as const
+export type EusbHelp = (typeof EUSB_HELP)[number]
 
 export const EUSB_LAB_KINDS = ['explore', 'reach', 'rotate', 'identify', 'survey'] as const
 export type EusbLabKind = (typeof EUSB_LAB_KINDS)[number]
@@ -53,6 +61,8 @@ export interface EusbLabSpec {
   structures?: readonly string[]
   /** View keys in survey order (survey). */
   stops?: readonly string[]
+  /** Help offered while the learner looks for the target (reach, rotate). None when left out. */
+  help?: readonly EusbHelp[]
 }
 
 export const EUSB_LABS = {
@@ -64,6 +74,7 @@ export const EUSB_LABS = {
     start: { view: 'left_atrium' },
     controls: ['advance', 'rotate'],
     target: 'liver',
+    help: EUSB_HELP,
   },
   /** The subcarinal view from the esophagus, as a still. */
   'station-7-view': { kind: 'explore', start: { view: 'station_7' }, controls: [] },
@@ -73,6 +84,7 @@ export const EUSB_LABS = {
     start: { view: 'left_atrium' },
     controls: ['advance', 'rotate'],
     target: 'station_7',
+    help: EUSB_HELP,
   },
 } as const satisfies Record<string, EusbLabSpec>
 

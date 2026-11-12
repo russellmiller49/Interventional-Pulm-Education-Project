@@ -39,9 +39,11 @@ async function expectOneScreen(page: Page) {
         scrolls: document.scrollingElement!.scrollHeight > window.innerHeight + 1,
         image: within(document.querySelector('[data-eusg-image]')!),
         controls: Array.from(document.querySelectorAll('input[type=range], button')).every(within),
+        // The white light view, and the 3D view while it is open.
+        views: Array.from(document.querySelectorAll('[data-eusg-view]')).every(within),
       }
     })
-  expect(inside).toEqual({ scrolls: false, image: true, controls: true })
+  expect(inside).toEqual({ scrolls: false, image: true, controls: true, views: true })
 }
 
 for (const size of [
@@ -77,6 +79,16 @@ for (const size of [
       await expect(page.locator('[data-requirement]')).toHaveAttribute('data-met', 'false')
       // Only the two movements the task offers are drawn.
       await expect(frame.locator('input[type=range]')).toHaveCount(2)
+      // The white light view is beside the image, and it does not say which organ the scope is in.
+      const whiteLight = frame.locator('[data-eusg-view="endoscope"]')
+      await expect(whiteLight).toBeVisible()
+      await expect(whiteLight.locator('.eus-endoscope-image')).toHaveAttribute(
+        'data-status',
+        'ready',
+        { timeout: 60_000 },
+      )
+      await expect(whiteLight).not.toContainText(/stomach|esophagus/i)
+      await expect(frame.locator('[data-eusg-view="anatomy"]')).toHaveCount(0)
 
       await frame.getByRole('slider', { name: /Rotate the shaft/ }).fill(String(target.rollDeg))
       await frame.getByRole('slider', { name: /Advance or withdraw/ }).fill(String(target.sMm))
@@ -100,6 +112,57 @@ for (const size of [
     })
   }
 }
+
+test('a learner who is stuck can open the 3D view and be shown the view', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/en/eus-b-guided/learn?section=station-7')
+  await goToActivity(page, 'station-7:find-station-7')
+  const frame = lab(page)
+  const root = frame.locator('.eusg')
+  await expect(root).toHaveAttribute('data-frame-ready', 'true', { timeout: 60_000 })
+  const primary = page.locator('[data-now-primary]')
+  await expect(primary).toBeDisabled()
+
+  // The 3D view opens beside the image and closes again; opening it finishes nothing.
+  const anatomy = frame.locator('[data-eusg-view="anatomy"]')
+  await frame.locator('[data-eusg-help="anatomy"]').click()
+  await expect(anatomy).toBeVisible()
+  await expect(anatomy.locator('.eus-anatomy-canvas')).toHaveAttribute('data-status', 'ready', {
+    timeout: 90_000,
+  })
+  await expectOneScreen(page)
+  await expect(primary).toBeDisabled()
+  await frame.locator('[data-eusg-help="anatomy"]').click()
+  await expect(anatomy).toHaveCount(0)
+
+  // Show me drives the scope to the view. The task then says the view was shown, not found.
+  await frame.locator('[data-eusg-help="show"]').click()
+  await expect(root).toHaveAttribute('data-demo', 'running')
+  await expect(frame.getByRole('slider', { name: /Rotate the shaft/ })).toBeDisabled()
+  await expect(root).toHaveAttribute('data-shown', 'true', { timeout: 20_000 })
+  await expect(root).toHaveAttribute('data-found', 'false')
+  await expect(frame.locator('[data-eusg-hold]')).toHaveText('View shown')
+  await expect(frame.locator('[data-eusg-help="show"]')).toHaveCount(0)
+  await expect(page.locator('[data-requirement]')).toHaveText(/You were shown station 7\./)
+  await expect(primary).toBeEnabled()
+  await expect(primary).toHaveText('Continue with the view shown')
+  await expectOneScreen(page)
+
+  await primary.click()
+  await expect(page.locator('[data-eusb-flow]')).toHaveAttribute('data-step-kind', 'debrief')
+  await expect(page.locator('[data-debrief-reference]')).toHaveAttribute(
+    'data-debrief-reference',
+    'shown',
+  )
+  await expect(root).toHaveAttribute('data-phase', 'review')
+
+  // Starting the task again gives it back unfinished, with the help unused.
+  await page.getByRole('button', { name: 'Previous task' }).click()
+  await expect(root).toHaveAttribute('data-phase', 'work')
+  await expect(root).toHaveAttribute('data-shown', 'false')
+  await expect(frame.locator('[data-eusg-help="show"]')).toBeVisible()
+  await expect(primary).toBeDisabled()
+})
 
 test('a scope task left unfinished is explained on the landmark, and says so', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })

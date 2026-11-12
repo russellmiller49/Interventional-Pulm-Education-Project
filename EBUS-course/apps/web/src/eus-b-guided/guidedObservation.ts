@@ -11,7 +11,7 @@ import {
   type EusbHeld,
   type EusbObservation,
 } from '../../../../../src/lib/eus-b-guided-bridge';
-import type { EusbControl } from '../../../../../src/lib/eus-b-guided-contract';
+import type { EusbControl, EusbPane } from '../../../../../src/lib/eus-b-guided-contract';
 import { reachHeldMs, type ReachState } from './guidedTask';
 import { structuresInView } from './visibleArea';
 
@@ -71,6 +71,8 @@ export interface ObservationInput {
   lastAction: EusbControl | '';
   /** The lab's target and the state of its task, when it has one. */
   target: { key: string; reach: ReachState } | null;
+  /** The views on screen beside the ultrasound image. */
+  views?: readonly EusbPane[];
   now: number;
 }
 
@@ -96,7 +98,7 @@ export function buildObservation(input: ObservationInput): EusbObservation {
     actionCount: input.actionCount,
     lastAction: input.lastAction,
     inView: frame && drawn ? structuresInView(frame, input.volume) : [],
-    panes: ['ultrasound'],
+    panes: ['ultrasound', ...(input.views ?? []).filter((pane) => pane !== 'ultrasound')],
   };
   if (input.target) {
     const { key, reach } = input.target;
@@ -106,6 +108,7 @@ export function buildObservation(input: ObservationInput): EusbObservation {
       heldMs: reachHeldMs(reach, input.now),
       found: reach.found,
       ...(reach.found && reach.foundAt ? { foundAt: reach.foundAt } : {}),
+      ...(reach.shown && reach.shownAt ? { shown: true, shownAt: reach.shownAt } : {}),
     };
   }
   return observation;

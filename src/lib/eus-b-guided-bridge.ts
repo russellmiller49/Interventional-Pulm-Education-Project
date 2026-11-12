@@ -70,6 +70,12 @@ export interface EusbObservation {
     heldMs: number
     found: boolean
     foundAt?: EusbHeld
+    /**
+     * The lab drove the scope to the target's view because the learner asked to be shown it.
+     * `shownAt` is then the lab's reference view. A shown view is never also a found one.
+     */
+    shown?: boolean
+    shownAt?: EusbHeld
   }
   identified?: { keys: string[]; wrong: number }
   survey?: { found: (EusbHeld & { key: string })[] }
@@ -192,7 +198,11 @@ export function isEusbObservation(v: unknown): v is EusbObservation {
         within(target.heldMs, [0, 600000]) &&
         typeof target.found === 'boolean' &&
         (target.foundAt === undefined || isEusbHeld(target.foundAt)) &&
-        (target.found === false || target.foundAt !== undefined))) &&
+        (target.found === false || target.foundAt !== undefined) &&
+        (target.shown === undefined || typeof target.shown === 'boolean') &&
+        (target.shownAt === undefined ||
+          (isEusbHeld(target.shownAt) && target.shownAt.source === 'reference')) &&
+        (!target.shown || (target.shownAt !== undefined && target.found === false)))) &&
     (identified === undefined ||
       (object(identified) &&
         Array.isArray(identified.keys) &&

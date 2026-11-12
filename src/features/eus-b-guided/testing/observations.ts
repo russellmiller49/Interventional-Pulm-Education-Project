@@ -18,6 +18,33 @@ export function searching(labId: EusbLabId): EusbObservation {
   }
 }
 
+/** The same lab after the learner asked to be shown the view and the lab drove the scope to it. */
+export function shown(labId: EusbLabId): EusbObservation {
+  const lab = eusbLab(labId)
+  const pose = { sMm: 259, rollDeg: 45, flexDeg: 0 }
+  const frameId = 'eus-b-case-001:eus-b-v3:259:45:0:50:0'
+  return {
+    ...searching(labId),
+    pose,
+    level: 'stomach',
+    region: 'stomach',
+    depthCm: 43,
+    frameId,
+    panes: ['ultrasound', 'endoscope'],
+    inView: [{ key: lab.target ?? 'liver', fraction: 0.8 }],
+    target: lab.target
+      ? {
+          key: lab.target,
+          areaRatio: 0,
+          heldMs: 0,
+          found: false,
+          shown: true,
+          shownAt: { pose, depthMm: 50, gainDb: 0, frameId, source: 'reference' },
+        }
+      : undefined,
+  }
+}
+
 /** The same lab after the learner held its target for the full second. */
 export function held(labId: EusbLabId): EusbObservation {
   const lab = eusbLab(labId)

@@ -15,7 +15,7 @@ import {
   eusbLab,
   isEusbLabId,
 } from '@/lib/eus-b-guided-contract'
-import { held, searching } from '../testing/observations'
+import { held, searching, shown } from '../testing/observations'
 
 const config: EusbWorkbenchConfig = {
   sessionId: 'liver-0-1-abc',
@@ -54,6 +54,11 @@ describe('messages between the lesson and the lab', () => {
     expect(isEusbConfig({ ...config, phase: 'play' })).toBe(false)
     expect(isEusbConfig({ ...config, names: 'maybe' })).toBe(false)
     expect(isEusbConfig({ ...config, panes: ['ct', 'ultrasound'] })).toBe(false)
+    // A scope task also draws the white light view; the ultrasound image stays first.
+    expect(isEusbConfig({ ...config, panes: ['ultrasound', 'endoscope'] })).toBe(true)
+    expect(isEusbConfig({ ...config, panes: ['endoscope', 'ultrasound'] })).toBe(false)
+    // The view a learner was shown can be handed back as the picture to review.
+    expect(isEusbConfig({ ...config, held: [shown('liver-reach').target!.shownAt] })).toBe(true)
     expect(isEusbConfig({ ...config, panes: [] })).toBe(false)
     expect(isEusbConfig({ ...config, sessionId: '' })).toBe(false)
     expect(isEusbConfig({ ...config, observationRequest: -1 })).toBe(false)
@@ -71,6 +76,8 @@ describe('messages between the lesson and the lab', () => {
 
   it('refuses an observation with a value out of range or of the wrong kind', () => {
     const good = held('liver-reach')
+    const seen = shown('liver-reach')
+    expect(isEusbObservation(seen)).toBe(true)
     const bad: unknown[] = [
       { ...good, pose: { ...good.pose, sMm: Number.NaN } },
       { ...good, pose: { ...good.pose, rollDeg: 181 } },
@@ -86,7 +93,12 @@ describe('messages between the lesson and the lab', () => {
       { ...good, inView: [{ key: 'liver', fraction: 1.2 }] },
       { ...good, target: { ...good.target!, foundAt: undefined } },
       { ...good, target: { ...good.target!, areaRatio: -1 } },
-      { ...good, panes: ['endoscope'] },
+      { ...good, panes: ['bronchoscope'] },
+      // A found view is never also a shown one, and a shown view has the lab's own image.
+      { ...good, target: { ...good.target!, shown: true, shownAt: seen.target!.shownAt } },
+      { ...seen, target: { ...seen.target!, shownAt: undefined } },
+      { ...seen, target: { ...seen.target!, shownAt: good.target!.foundAt } },
+      { ...seen, target: { ...seen.target!, shown: 'yes' } },
       null,
       'observation',
     ]
@@ -95,7 +107,9 @@ describe('messages between the lesson and the lab', () => {
 
   it('accepts only version 1 messages of a known kind', () => {
     const observation = held('liver-reach')
-    expect(isEusbMessage({ version: 1, type: 'ready', contractRevision: 1 })).toBe(true)
+    expect(
+      isEusbMessage({ version: 1, type: 'ready', contractRevision: EUSB_CONTRACT_REVISION }),
+    ).toBe(true)
     expect(isEusbMessage({ version: 1, type: 'ready' })).toBe(false)
     expect(isEusbMessage({ version: 1, type: 'configure', config })).toBe(true)
     expect(isEusbMessage({ version: 2, type: 'configure', config })).toBe(false)

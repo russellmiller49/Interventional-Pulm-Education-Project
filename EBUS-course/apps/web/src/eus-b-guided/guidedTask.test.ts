@@ -92,6 +92,40 @@ describe('the hold task', () => {
     expect(tick(done, EUSB_HOLD_MS + 70)).toBe(done);
   });
 
+  it('closes as shown, not found, when the lab drives the scope to the view', () => {
+    const reference = { ...image(259), source: 'learner' as const };
+    const state = reachReducer(held(REACH_START, 1000), { type: 'shown', image: reference });
+    expect(state.shown).toBe(true);
+    expect(state.found).toBe(false);
+    expect(state.foundAt).toBeUndefined();
+    // Whatever the image was tagged as, a shown view is the lab's own.
+    expect(state.shownAt).toEqual({ ...reference, source: 'reference' });
+    expect(state.heldSince).toBeNull();
+    expect(reachTimeLeftMs(state, 1000)).toBeNull();
+  });
+
+  it('never turns a shown view into a found one', () => {
+    let state = reachReducer(REACH_START, { type: 'shown', image: image(259) });
+    state = held(state, 2000, 259);
+    state = tick(state, 2000 + EUSB_HOLD_MS + 1);
+    state = held(state, 9000, 259);
+    expect(state.found).toBe(false);
+    expect(state.shown).toBe(true);
+    expect(reachHeldMs(state, 9000)).toBe(0);
+  });
+
+  it('does not mark a view the learner already found as shown', () => {
+    const done = tick(held(REACH_START, 0), EUSB_HOLD_MS);
+    const state = reachReducer(done, { type: 'shown', image: image(259) });
+    expect(state).toBe(done);
+    expect(state.shown).toBe(false);
+  });
+
+  it('a fresh start clears a shown view', () => {
+    const state = reachReducer(REACH_START, { type: 'shown', image: image(259) });
+    expect(reachReducer(state, { type: 'reset' })).toEqual(REACH_START);
+  });
+
   it('starts over on reset', () => {
     const done = tick(held(REACH_START, 0), EUSB_HOLD_MS);
     expect(reachReducer(done, { type: 'reset' })).toEqual(REACH_START);

@@ -43,7 +43,8 @@ function configFromHash(): EusbWorkbenchConfig | null {
     labId,
     phase: params.get('phase') === 'review' ? 'review' : 'work',
     names: params.get('names') === 'shown' ? 'shown' : 'hidden',
-    panes: ['ultrasound'],
+    // The white light view is on in a task, as it is in a lesson.
+    panes: params.get('phase') === 'review' ? ['ultrasound'] : ['ultrasound', 'endoscope'],
     observationRequest: 0,
   };
   return isEusbConfig(config) ? config : null;

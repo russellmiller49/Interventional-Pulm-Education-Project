@@ -5,7 +5,7 @@ import { LessonHost } from '../components/LessonHost'
 import type { StageRequest } from '../components/Workbench'
 import { LESSONS, lessonById } from '../content/curriculum'
 import { PROGRESS_STORAGE_KEY, readProgress } from '../engine/progress'
-import { held, searching } from '../testing/observations'
+import { held, searching, shown } from '../testing/observations'
 
 const mockBench: {
   emit: (observation: EusbObservation) => void
@@ -141,6 +141,8 @@ describe('a lesson, task by task', () => {
     expect(flow()).toHaveAttribute('data-step-kind', 'lab')
     expect(flow()).toHaveAttribute('data-arrange', 'console')
     expect(mockBench.stage).toMatchObject({ labId: 'liver-reach', phase: 'work', names: 'hidden' })
+    // A scope task shows the white light view beside the ultrasound image.
+    expect(mockBench.stage!.panes).toEqual(['ultrasound', 'endoscope'])
     expect(primary()).toBeDisabled()
     const item = container.querySelector('[data-requirement]')!
     expect(item).toHaveAttribute('data-met', 'false')
@@ -178,6 +180,32 @@ describe('a lesson, task by task', () => {
     })
   })
 
+  it('lets a learner who was shown the view go on, and says the image is the course’s own', () => {
+    const { container, flow, next, primary } = open()
+    next()
+    next()
+    expect(primary()).toBeDisabled()
+    const seen = shown('liver-reach')
+    act(() => mockBench.emit(seen))
+    expect(primary()).toBeEnabled()
+    expect(primary()).toHaveTextContent('Continue with the view shown')
+    const item = container.querySelector('[data-requirement]')!
+    expect(item).toHaveAttribute('data-met', 'true')
+    expect(item).toHaveTextContent('You were shown the left lobe of the liver.')
+    next()
+    expect(flow()).toHaveAttribute('data-step-kind', 'debrief')
+    expect(mockBench.stage).toMatchObject({
+      labId: 'liver-reach',
+      phase: 'review',
+      names: 'shown',
+      held: [seen.target!.shownAt],
+    })
+    expect(mockBench.stage!.panes).toEqual(['ultrasound'])
+    const note = container.querySelector('[data-debrief-reference]')!
+    expect(note).toHaveAttribute('data-debrief-reference', 'shown')
+    expect(note).toHaveTextContent('You asked to be shown this view')
+  })
+
   it('lets the learner move on without finishing, and then shows the landmark, not a held image', () => {
     const { container, flow, next } = open()
     next()
@@ -185,7 +213,10 @@ describe('a lesson, task by task', () => {
     fireEvent.click(container.querySelector('[data-skip-lab]')!)
     expect(flow()).toHaveAttribute('data-step-kind', 'debrief')
     expect(mockBench.stage!.held).toBeUndefined()
-    expect(container.querySelector('[data-debrief-reference]')).not.toBeNull()
+    expect(container.querySelector('[data-debrief-reference]')).toHaveAttribute(
+      'data-debrief-reference',
+      'skipped',
+    )
   })
 
   it('starts a scope task fresh each time it is entered or restarted', () => {

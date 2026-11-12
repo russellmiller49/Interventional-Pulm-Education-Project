@@ -15,7 +15,7 @@ import {
   lessonUsesLab,
   nextLesson,
 } from '../content/curriculum'
-import { eusbRequirements, eusbTaskMet } from '../content/tasks'
+import { eusbRequirements, eusbTaskMet, eusbViewShown } from '../content/tasks'
 import type { Lesson, Step, StepKind } from '../content/types'
 import { clearProgress, recordLocation, setLessonReviewed } from '../engine/progress'
 import { ConsoleStrip } from './ConsoleStrip'
@@ -72,8 +72,14 @@ function stageFor(
       (stage.names === 'shown' ? 2 : 0) +
       (stage.held ? 1 : 0),
   })
+  // A scope task also shows what the scope's own lens sees.
   if (step.kind === 'lab')
-    return numbered({ ...base, labId: step.lab, phase: 'work', names: 'hidden' })
+    return numbered({
+      panes: ['ultrasound', 'endoscope'],
+      labId: step.lab,
+      phase: 'work',
+      names: 'hidden',
+    })
   if (step.kind === 'debrief') {
     const lab = labStepFor(lesson, step)
     if (!lab) return null
@@ -320,6 +326,7 @@ function LessonRun({
   } else if (step?.kind === 'lab') {
     const requirements = eusbRequirements(step.lab, observation)
     const met = eusbTaskMet(step.lab, observation)
+    const shown = eusbViewShown(step.lab, observation)
     body = (
       <ConsoleStrip
         kicker={kicker}
@@ -327,9 +334,9 @@ function LessonRun({
         instruction={step.instruction}
         requirements={requirements}
         met={met}
-        primaryLabel="Continue with this image"
+        primaryLabel={shown ? 'Continue with the view shown' : 'Continue with this image'}
         onContinue={() => {
-          const image = observation?.target?.foundAt
+          const image = shown ? observation?.target?.shownAt : observation?.target?.foundAt
           if (image) setHeld((all) => ({ ...all, [step.id]: image }))
           moveOn()
         }}
@@ -342,7 +349,8 @@ function LessonRun({
     )
   } else if (step?.kind === 'debrief') {
     const lab = labStepFor(lesson, step)
-    const own = !!lab && !!held[lab.id]
+    const image = lab ? held[lab.id] : undefined
+    const own = image?.source === 'learner'
     body = (
       <NowCard
         model={{
@@ -356,9 +364,10 @@ function LessonRun({
         <div className={styles.prose}>
           <div>
             {!own && (
-              <p className={styles.muted} data-debrief-reference>
-                You moved on without holding a view, so the image beside this text is the landmark
-                as the course shows it.
+              <p className={styles.muted} data-debrief-reference={image ? 'shown' : 'skipped'}>
+                {image
+                  ? 'You asked to be shown this view, so the image beside this text is the landmark as the course shows it.'
+                  : 'You moved on without holding a view, so the image beside this text is the landmark as the course shows it.'}
               </p>
             )}
             {step.body.map((paragraph) => (

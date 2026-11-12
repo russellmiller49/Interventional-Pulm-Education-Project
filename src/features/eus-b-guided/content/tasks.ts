@@ -15,6 +15,9 @@ export interface Requirement {
  * This list is the gate: `eusbTaskMet` is true exactly when every item on it is met, so the button
  * can never ask for something the list does not say. An observation from another lab, or from a
  * lab that is not ready, meets nothing.
+ *
+ * A learner who asked to be shown the view has seen it and may go on, and the list then says so in
+ * place of the instruction: a shown view is never listed as one the learner found.
  */
 export function eusbRequirements(
   labId: EusbLabId,
@@ -23,16 +26,40 @@ export function eusbRequirements(
   const lab = eusbLab(labId)
   const live = observation && observation.labId === labId && observation.ready ? observation : null
   if ((lab.kind === 'reach' || lab.kind === 'rotate') && lab.target) {
-    const target = live?.target
+    const target = live?.target?.key === lab.target ? live.target : undefined
+    if (eusbViewShown(labId, observation))
+      return [
+        {
+          id: 'hold-' + lab.target,
+          met: true,
+          text: `You were shown ${structureName(lab.target)}.`,
+        },
+      ]
     return [
       {
         id: 'hold-' + lab.target,
-        met: !!target && target.key === lab.target && target.found && !!target.foundAt,
+        met: !!target && target.found && !!target.foundAt,
         text: `Bring ${structureName(lab.target)} into the image and hold it for one second.`,
       },
     ]
   }
   return []
+}
+
+/** True when the lab drove the scope to the target's view at the learner's request. */
+export function eusbViewShown(labId: EusbLabId, observation: EusbObservation | null | undefined) {
+  const lab = eusbLab(labId)
+  if (!observation || observation.labId !== labId || !observation.ready) return false
+  const target = observation.target
+  return (
+    !!lab.target &&
+    !!lab.help?.includes('show') &&
+    !!target &&
+    target.key === lab.target &&
+    !target.found &&
+    !!target.shown &&
+    !!target.shownAt
+  )
 }
 
 /** A lab with nothing to ask for is never "met": there is nothing to hold or to continue with. */

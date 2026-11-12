@@ -11,6 +11,10 @@ import type { EusbHeld } from '../../../../../src/lib/eus-b-guided-bridge';
  * area in the reference view. Held without a break for a set time, the task is done and stays
  * done: the image at that moment is kept and later frames cannot undo it.
  *
+ * A learner who is stuck can ask to be shown the view. The lab then drives the scope there, and
+ * the task is closed as shown, never as found: nothing the scope does afterwards can turn a shown
+ * view into a found one. Only a fresh start of the task can.
+ *
  * Time is passed in. The component that runs this times the hold with a timer, never with frame
  * counts or animation frames: frames stop arriving once the scope is still, and a hidden tab
  * pauses animation frames.
@@ -24,6 +28,9 @@ export interface ReachState {
   areaRatio: number;
   found: boolean;
   foundAt?: EusbHeld;
+  /** The lab drove the scope to the view. `shownAt` is the lab's reference image. */
+  shown: boolean;
+  shownAt?: EusbHeld;
 }
 
 export const REACH_START: ReachState = {
@@ -31,6 +38,7 @@ export const REACH_START: ReachState = {
   candidate: null,
   areaRatio: 0,
   found: false,
+  shown: false,
 };
 
 export type ReachEvent =
@@ -38,6 +46,8 @@ export type ReachEvent =
   | { type: 'frame'; areaRatio: number; now: number; image: EusbHeld }
   /** The hold timer fired. */
   | { type: 'tick'; now: number }
+  /** The lab has driven the scope to the target's view at the learner's request. */
+  | { type: 'shown'; image: EusbHeld }
   | { type: 'reset' };
 
 export const targetIsHeld = (areaRatio: number) => areaRatio >= EUSB_HOLD_AREA_FRACTION;
@@ -50,8 +60,16 @@ function finish(state: ReachState, now: number): ReachState {
 
 export function reachReducer(state: ReachState, event: ReachEvent): ReachState {
   if (event.type === 'reset') return REACH_START;
-  // Done stays done, whatever arrives afterwards.
-  if (state.found) return state;
+  // Done stays done, and shown stays shown, whatever arrives afterwards.
+  if (state.found || state.shown) return state;
+  if (event.type === 'shown')
+    return {
+      ...state,
+      heldSince: null,
+      candidate: null,
+      shown: true,
+      shownAt: { ...event.image, source: 'reference' },
+    };
   if (event.type === 'tick') return finish(state, event.now);
   const areaRatio = Number.isFinite(event.areaRatio) ? Math.max(0, event.areaRatio) : 0;
   if (!targetIsHeld(areaRatio)) return { ...state, heldSince: null, candidate: null, areaRatio };
@@ -75,6 +93,6 @@ export function reachHeldMs(state: ReachState, now: number) {
 
 /** Milliseconds until the hold completes, or null when no hold is running. */
 export function reachTimeLeftMs(state: ReachState, now: number) {
-  if (state.found || state.heldSince === null) return null;
+  if (state.found || state.shown || state.heldSince === null) return null;
   return Math.max(0, EUSB_HOLD_MS - (now - state.heldSince));
 }

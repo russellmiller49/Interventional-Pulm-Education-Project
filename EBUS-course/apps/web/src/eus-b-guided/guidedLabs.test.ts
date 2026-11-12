@@ -305,6 +305,47 @@ describe('what the lab tells the lesson page', () => {
     expect(done.target).toMatchObject({ found: true, heldMs: EUSB_HOLD_MS, foundAt: held });
     expect(done.target?.foundAt?.frameId).toBe(done.frameId);
     expect(done.inView[0].key).toBeTruthy();
+    // The other views on screen are reported after the ultrasound image.
+    const withViews = buildObservation({
+      ...base,
+      scope: target.pose,
+      frame,
+      frameTag: tag,
+      target: { key: target.key, reach },
+      views: ['endoscope', 'anatomy'],
+    });
+    expect(withViews.panes).toEqual(['ultrasound', 'endoscope', 'anatomy']);
+    expect(isEusbObservation(withViews)).toBe(true);
+
+    // Shown at the learner's request: reported as shown with the lab's own image, never as found.
+    const reference = heldImage(manifest, tag, 'reference');
+    const shownReach = reachReducer(REACH_START, { type: 'shown', image: reference });
+    const shown = buildObservation({
+      ...base,
+      scope: target.pose,
+      frame,
+      frameTag: tag,
+      target: { key: target.key, reach: shownReach },
+      views: ['endoscope'],
+    });
+    expect(isEusbObservation(shown)).toBe(true);
+    expect(shown.target).toMatchObject({ found: false, shown: true, shownAt: reference });
+    expect(shown.target?.foundAt).toBeUndefined();
+    expect(shown.target?.shownAt?.frameId).toBe(shown.frameId);
+    expect(
+      isEusbConfig({
+        sessionId: 'session-1',
+        labId,
+        phase: 'review',
+        names: 'shown',
+        panes: ['ultrasound'],
+        held: [shown.target!.shownAt],
+        observationRequest: 5,
+      }),
+    ).toBe(true);
+    // A task still being searched says nothing about being shown.
+    expect(holding.target).not.toHaveProperty('shown');
+
     // The held image can be handed straight back as the picture to review.
     expect(
       isEusbConfig({
