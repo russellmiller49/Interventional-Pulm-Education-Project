@@ -126,6 +126,8 @@ export interface Lesson {
     | 'node-reading'
     /** A patient recording read on its paused frames (2026-11-11): colour Doppler around a node. */
     | 'clip-doppler'
+    /** The same, for a needle pass: the needle and the stylet at its tip. */
+    | 'clip-needle'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]

@@ -133,6 +133,55 @@ export const TEACHING_CLIPS: TeachingClip[] = [
   },
 ]
 
+/** Positions on the needle clip's 1280 x 720 frame, as fractions of it. */
+const n = (x: number, y: number): [number, number] => [x / 1280, y / 720]
+
+TEACHING_CLIPS.push({
+  slug: 'needle-in-node',
+  title: 'A needle pass on ultrasound',
+  what: 'A patient recording of a 21-gauge needle pass into a station 11L node, with suction. The small picture at the lower right is the white-light view.',
+  // Placed from the owner's two marked slides (2026-11-11), each matched to its frame of the clip
+  // (2.2 s and 13.9 s): his circle on the stylet, and the needle traced inside his outline. The
+  // needle marks are drawn just beside the needle so the needle itself stays in view. He checked
+  // them as placed here on 2026-11-11.
+  outlines: 'owner-checked',
+  stops: [
+    {
+      id: 'stylet',
+      label: 'A frame early in the pass',
+      marks: [
+        {
+          label: 'Needle: the bright line beside this mark, entering from the side of the dot',
+          kind: 'needle',
+          shape: { type: 'line', points: [n(604.6, 100.5), n(524.6, 162.5)] },
+        },
+        {
+          label: 'Stylet at the needle tip',
+          kind: 'stylet',
+          shape: {
+            type: 'ellipse',
+            cx: 520.5 / 1280,
+            cy: 182.9 / 720,
+            rx: 27 / 1280,
+            ry: 27 / 720,
+          },
+        },
+      ],
+    },
+    {
+      id: 'needle',
+      label: 'A frame later in the pass',
+      marks: [
+        {
+          label: 'Needle: the bright line beside this mark',
+          kind: 'needle',
+          shape: { type: 'line', points: [n(609, 90), n(475, 186)] },
+        },
+      ],
+    },
+  ],
+})
+
 export interface ResolvedClip extends TeachingClip {
   built: BuiltClip
 }

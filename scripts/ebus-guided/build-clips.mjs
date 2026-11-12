@@ -57,8 +57,10 @@ const CLIPS = [
     fps: 30,
     crf: 24,
     stops: [
-      { id: 'stylet', t: 1.8 },
-      { id: 'needle', t: 2.6 },
+      // The two frames the owner marked on his slides (2026-11-11): the stylet at the needle tip,
+      // and the needle itself later in the pass.
+      { id: 'stylet', t: 2.2 },
+      { id: 'needle', t: 13.9 },
     ],
   },
 ]

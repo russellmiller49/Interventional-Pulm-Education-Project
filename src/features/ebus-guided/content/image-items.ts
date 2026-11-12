@@ -63,6 +63,28 @@ export const IMAGE_INTERPRETATIONS: Record<string, Question> = {
     ),
     imagePolicy: 'none',
   },
+  // Asked on the owner's patient recording of a needle pass (2026-11-11): station 11L, a
+  // 21-gauge needle, suction; the stylet is advanced and withdrawn early in the pass and the tip
+  // never leaves the plane. All of that is his description of his recording.
+  'needle-safety': {
+    ...question(
+      'needle-patient-pass',
+      'On the frame early in the pass, a bright line runs into the node from the side of the orientation dot and ends in a brighter point. What are they?',
+      [
+        'The needle, with the stylet at its tip',
+        'The bright line is the needle, entering from the side of the orientation dot. The brighter point at its end is the stylet, which is advanced and then withdrawn in the next moments of the recording. The tip stays in the plane for the whole pass.',
+      ],
+      [
+        'The needle shaft, with its tip out of the plane',
+        'The line ends inside the node at a bright point that moves with it, so the tip is in the plane. In this recording it never leaves it.',
+      ],
+      [
+        'A vessel wall, with calcification at its edge',
+        'A vessel wall does not arrive from the side of the orientation dot and lengthen as the pass begins. This line is the needle, and the point at its end is the stylet.',
+      ],
+    ),
+    imagePolicy: 'none',
+  },
   capture: {
     ...question(
       'capture-observe-v2',
