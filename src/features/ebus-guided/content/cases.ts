@@ -69,22 +69,25 @@ export const FINAL_CASES: EbusCase[] = [
     lessonIds: ['acoustic-contact', 'image-depth', 'doppler'],
     sources: ['ics2023', 'simulation'],
     questions: [
-      q(
-        'image-window',
-        'Which action addresses the initial fading of echoes most directly?',
-        [
-          'Restore wall contact',
-          'The positional loss of echoes suggests an acoustic-window problem.',
-        ],
-        [
-          'Increase the gain',
-          'Gain amplifies received echoes; with the transducer off the wall there are none to amplify.',
-        ],
-        [
-          'Increase the image depth',
-          'Depth changes the displayed range; it does not restore a lost acoustic window.',
-        ],
-      ),
+      {
+        ...q(
+          'image-window',
+          'Which action addresses the initial fading of echoes most directly?',
+          [
+            'Restore wall contact',
+            'The positional loss of echoes suggests an acoustic-window problem.',
+          ],
+          [
+            'Increase the gain',
+            'Gain amplifies received echoes; with the transducer off the wall there are none to amplify.',
+          ],
+          [
+            'Increase the image depth',
+            'Depth changes the displayed range; it does not restore a lost acoustic window.',
+          ],
+        ),
+        imageStation: '4L',
+      },
       q(
         'image-field',
         'With contact restored, which setting should be reconsidered for the cropped far margin?',
@@ -123,26 +126,35 @@ export const FINAL_CASES: EbusCase[] = [
     lessonIds: ['right-paratracheal', 'hilar-interlobar', 'systematic-staging'],
     sources: ['atlas', 'iaslc9'],
     questions: [
-      q(
-        'map-right',
-        'Which station fits the described right paratracheal target?',
-        ['4R', 'The stated vascular boundaries define the lower right paratracheal compartment.'],
-        [
-          '10R',
-          'The target is above the lower azygos boundary, rather than in the specified hilar compartment.',
-        ],
-        [
-          '2R',
-          'The target is below the brachiocephalic-vein crossing used for the 2R/4R boundary.',
-        ],
-      ),
-      q(
-        'map-left',
-        'Which station fits the target between the left lobar bronchi?',
-        ['11L', 'This is the left interlobar compartment.'],
-        ['10L', '10L is hilar, beside the left main bronchus and proximal to the lobar division.'],
-        ['4L', 'The stated location is interlobar rather than lower paratracheal.'],
-      ),
+      {
+        ...q(
+          'map-right',
+          'Which station fits the described right paratracheal target?',
+          ['4R', 'The stated vascular boundaries define the lower right paratracheal compartment.'],
+          [
+            '10R',
+            'The target is above the lower azygos boundary, rather than in the specified hilar compartment.',
+          ],
+          [
+            '2R',
+            'The target is below the brachiocephalic-vein crossing used for the 2R/4R boundary.',
+          ],
+        ),
+        imageStation: '4R',
+      },
+      {
+        ...q(
+          'map-left',
+          'Which station fits the target between the left lobar bronchi?',
+          ['11L', 'This is the left interlobar compartment.'],
+          [
+            '10L',
+            '10L is hilar, beside the left main bronchus and proximal to the lobar division.',
+          ],
+          ['4L', 'The stated location is interlobar rather than lower paratracheal.'],
+        ),
+        imageStation: '11L',
+      },
       q(
         'map-category',
         'For this left lung primary, what N category would malignant involvement of the described right paratracheal target represent?',
@@ -217,16 +229,19 @@ export const FINAL_CASES: EbusCase[] = [
     lessonIds: ['systematic-staging', 'specimen-triage'],
     sources: ['iaslc9', 'ics2023', 'ers2026'],
     questions: [
-      q(
-        'distribution-first',
-        'Which of these targets should be sampled first in the stated staging sequence?',
-        ['4L', 'For a right lung primary, 4L is a contralateral mediastinal N3 target.'],
-        [
-          '11R',
-          'This ipsilateral interlobar N1 target is sampled after the higher-category targets.',
-        ],
-        ['4R', '4R is ipsilateral N2 for a right primary and follows the N3 target.'],
-      ),
+      {
+        ...q(
+          'distribution-first',
+          'Which of these targets should be sampled first in the stated staging sequence?',
+          ['4L', 'For a right lung primary, 4L is a contralateral mediastinal N3 target.'],
+          [
+            '11R',
+            'This ipsilateral interlobar N1 target is sampled after the higher-category targets.',
+          ],
+          ['4R', '4R is ipsilateral N2 for a right primary and follows the N3 target.'],
+        ),
+        imageStation: '7',
+      },
       q(
         'distribution-n2',
         'Based on the stated positive 4R and 7 stations, which N2 subdivision fits?',
@@ -267,23 +282,26 @@ export const FINAL_CASES: EbusCase[] = [
     lessonIds: ['needle-safety', 'adequacy-rose', 'capture'],
     sources: ['ics2023', 'chest2024'],
     questions: [
-      q(
-        'sampling-tip',
-        'What should occur when the tip is no longer identifiable?',
-        [
-          'Stop movement and restore tip visualization',
-          'The shaft alone does not establish the position of the tip.',
-        ],
-        [
-          'Continue advancing using the visible shaft as a guide',
-          'Continuing without the tip risks unintended penetration.',
-        ],
-        [
-          'Freeze the image and continue the pass',
-          'A frozen frame cannot provide real-time guidance.',
-        ],
-        'both',
-      ),
+      {
+        ...q(
+          'sampling-tip',
+          'What should occur when the tip is no longer identifiable?',
+          [
+            'Stop movement and restore tip visualization',
+            'The shaft alone does not establish the position of the tip.',
+          ],
+          [
+            'Continue advancing using the visible shaft as a guide',
+            'Continuing without the tip risks unintended penetration.',
+          ],
+          [
+            'Freeze the image and continue the pass',
+            'A frozen frame cannot provide real-time guidance.',
+          ],
+          'both',
+        ),
+        imageFigure: { kind: 'needle', state: 'turned' },
+      },
       q(
         'sampling-adequacy',
         'What does the positive ROSE finding leave to be confirmed?',
@@ -327,22 +345,25 @@ export const FINAL_CASES: EbusCase[] = [
     lessonIds: ['specimen-triage', 'node-characterization', 'results-reporting'],
     sources: ['chest2024', 'ics2023', 'ats2020'],
     questions: [
-      q(
-        'differential-handling',
-        'Which planning choice best preserves the differential diagnosis?',
-        [
-          'Agree on fresh material, microbiology, and cytology allocation with the laboratory',
-          'Different studies may need separate specimens and specific preservation.',
-        ],
-        [
-          'Place every sample in formalin before discussing tests',
-          'That can prevent culture and some fresh-material analyses.',
-        ],
-        [
-          'Use ultrasound morphology to select a single diagnosis in advance',
-          'Morphology alone cannot settle these alternatives.',
-        ],
-      ),
+      {
+        ...q(
+          'differential-handling',
+          'Which planning choice best preserves the differential diagnosis?',
+          [
+            'Agree on fresh material, microbiology, and cytology allocation with the laboratory',
+            'Different studies may need separate specimens and specific preservation.',
+          ],
+          [
+            'Place every sample in formalin before discussing tests',
+            'That can prevent culture and some fresh-material analyses.',
+          ],
+          [
+            'Use ultrasound morphology to select a single diagnosis in advance',
+            'Morphology alone cannot settle these alternatives.',
+          ],
+        ),
+        imageStation: '4R',
+      },
       q(
         'differential-blood',
         'What does the blood-only specimen establish about the target?',
