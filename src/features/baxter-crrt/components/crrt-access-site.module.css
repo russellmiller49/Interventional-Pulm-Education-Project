@@ -1,0 +1,297 @@
+/*
+ * The access-site drawing: a catheter with two lumens in a central vein.
+ *
+ * One set of marks serves the inset inside the circuit drawing and the enlarged figure in its
+ * dialog (which is rendered in a portal, so the palette is stated here, not inherited from the
+ * circuit). The access side is drawn in the circuit's blood red and the return side in blue, as
+ * the two limbs of a dialysis catheter are marked.
+ */
+.inset,
+.figureLayout {
+  --site-skin: #23424a;
+  --site-skin-line: rgba(175, 222, 215, 0.5);
+  --site-bone: rgba(214, 232, 232, 0.4);
+  --site-vein: rgba(104, 150, 232, 0.5);
+  --site-heart: rgba(232, 94, 115, 0.3);
+  --site-heart-line: rgba(255, 145, 162, 0.7);
+  --site-catheter: #f4fbfb;
+  --site-access: #ff91a2;
+  --site-return: #8fb6ff;
+  --site-ink: #e9f5f5;
+  --site-muted: #b9cdd0;
+}
+
+.body {
+  fill: var(--site-skin);
+  stroke: var(--site-skin-line);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.bone {
+  fill: none;
+  stroke: var(--site-bone);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.heart {
+  fill: var(--site-heart);
+  stroke: var(--site-heart-line);
+  stroke-width: 1.2;
+}
+.vein {
+  fill: none;
+  stroke: var(--site-vein);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.catheter {
+  fill: none;
+  stroke: var(--site-catheter);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tip {
+  fill: var(--site-catheter);
+  stroke: #06201f;
+  stroke-width: 1;
+}
+.entry {
+  fill: #06201f;
+  stroke: var(--site-catheter);
+  stroke-width: 1.4;
+}
+.limb {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.limb[data-lumen='access'] {
+  stroke: var(--site-access);
+}
+.limb[data-lumen='return'] {
+  stroke: var(--site-return);
+}
+.limb[data-lit='true'] {
+  stroke-width: 5;
+}
+.hub {
+  stroke: #06201f;
+  stroke-width: 1;
+}
+.hub[data-lumen='access'] {
+  fill: var(--site-access);
+}
+.hub[data-lumen='return'] {
+  fill: var(--site-return);
+}
+/* The stop a walk is on: a ring round its hub, as well as the heavier limb. */
+.hub[data-lit='true'] {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+}
+.hubMark {
+  fill: #06201f;
+  font:
+    800 9px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  pointer-events: none;
+}
+.sideMark {
+  fill: var(--site-muted);
+  font:
+    800 10px ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+/* ------------------------------------------------------------- the inset */
+
+.insetFrame {
+  fill: rgba(6, 26, 32, 0.82);
+  stroke: rgba(117, 220, 227, 0.35);
+  stroke-width: 1.5;
+}
+.insetTitle {
+  fill: #75dce3;
+  font:
+    800 10px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.insetCaption {
+  fill: var(--site-ink);
+  font:
+    700 9px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.04em;
+}
+.insetLead {
+  fill: none;
+  stroke: rgba(117, 220, 227, 0.6);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+/* ----------------------------------------------------- the enlarged figure */
+
+.figureLayout {
+  display: grid;
+  gap: 0.9rem;
+  color: var(--site-ink);
+}
+.siteChoice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.siteChoice button,
+.trigger {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(175, 222, 215, 0.45);
+  border-radius: 0.6rem;
+  background: #123138;
+  color: #e9f5f5;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.trigger svg {
+  width: 1rem;
+  height: 1rem;
+}
+.siteChoice button[aria-pressed='true'] {
+  border-color: #74d7cc;
+  background: #74d7cc;
+  color: #06201f;
+}
+.siteChoice button:focus-visible,
+.trigger:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 2px;
+}
+.figure,
+.tipFigure {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(117, 220, 227, 0.25);
+  border-radius: 14px;
+  background: #061a20;
+}
+.figureSvg {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  height: auto;
+  max-height: 60dvh;
+  margin-inline: auto;
+}
+.tipSvg {
+  display: block;
+  width: 100%;
+  max-width: 30rem;
+  height: auto;
+  margin-inline: auto;
+}
+.figure figcaption,
+.tipFigure figcaption {
+  margin-top: 0.6rem;
+  color: var(--site-ink);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.leader {
+  fill: none;
+  stroke: rgba(233, 245, 245, 0.55);
+  stroke-width: 0.7;
+}
+.leaderDot {
+  fill: var(--site-ink);
+}
+.label {
+  fill: var(--site-ink);
+  font:
+    600 10.5px ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+/* The tip detail. */
+.tipVein {
+  fill: rgba(104, 150, 232, 0.22);
+  stroke: var(--site-vein);
+  stroke-width: 2;
+}
+.tipCatheter {
+  fill: none;
+  stroke: var(--site-catheter);
+  stroke-width: 22;
+  stroke-linecap: butt;
+  opacity: 0.9;
+}
+.tipSeptum {
+  fill: none;
+  stroke: #06201f;
+  stroke-width: 1.5;
+}
+.tipHole {
+  fill: #06201f;
+}
+.tipFlow {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.tipFlow[data-lumen='access'] {
+  stroke: var(--site-access);
+}
+.tipFlow[data-lumen='return'] {
+  stroke: var(--site-return);
+}
+.tipFlow[data-lumen='vein'] {
+  stroke: var(--site-muted);
+}
+.tipArrowHead {
+  fill: context-stroke;
+}
+.tipLabel {
+  fill: var(--site-ink);
+  font:
+    600 10.5px ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+@media (forced-colors: active) {
+  .body,
+  .vein,
+  .catheter,
+  .limb,
+  .leader,
+  .tipFlow,
+  .tipCatheter {
+    stroke: CanvasText;
+  }
+  .hub,
+  .tip {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .hubMark,
+  .label,
+  .tipLabel,
+  .insetTitle,
+  .insetCaption,
+  .sideMark {
+    fill: CanvasText;
+  }
+}
