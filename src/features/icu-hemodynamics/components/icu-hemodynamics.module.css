@@ -1441,7 +1441,116 @@
 }
 .heartFigure .physiologyViewport {
   margin: 0;
+  border-radius: 0;
+}
+
+/*
+ * In the lesson the view shares a column with its status and key, in a window that does not
+ * scroll as a page. Its height follows the window so the three are on screen together.
+ */
+[data-surface='heart-3d'] .heartFigure .physiologyViewport {
+  height: clamp(340px, 44vh, 440px);
+  min-height: 0;
+}
+
+/*
+ * The heart view's buttons sit in a bar above the canvas. As an overlay they covered the top of
+ * the model, where the catheter comes in from the superior vena cava.
+ */
+.heartFigure .physiologyOrientation {
+  position: static;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #244955;
+  border-bottom: 0;
   border-radius: 0.9rem 0.9rem 0 0;
+  background: #071c26;
+  pointer-events: auto;
+}
+
+/* Six arrow buttons in one unbreakable row are wider than a phone at 200% text. */
+.heartFigure .physiologyKeyboardControls {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* The key under the view: a mark, then what it stands for. */
+.heartKey {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.heartKey ul {
+  display: grid;
+  /* Never wider than the column: at 200% text a fixed 13rem track pushed the page sideways. */
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: 0.2rem 0.9rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.heartKey li {
+  min-width: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.heartKey i {
+  flex: 0 0 1.6rem;
+  height: 0;
+  border-top: 3px solid #ffd23f;
+}
+
+.heartKey i[data-key-mark='structure'] {
+  height: 0.7rem;
+  border: 0;
+  border-radius: 0.2rem;
+  background: #4fb0ff;
+}
+
+.heartKey details {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.heartKey summary {
+  width: max-content;
+  max-width: 100%;
+  color: #9fc5c8;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.heartKey details span {
+  display: block;
+  margin-top: 0.3rem;
+}
+
+/* Which way the heart is facing, on the foot of the canvas where only the great vessels run off. */
+.heartOrientationNote {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 0.6rem;
+  z-index: 5;
+  margin: 0;
+  color: #c9dddb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  pointer-events: none;
+  text-shadow: 0 0 4px #04161c;
+}
+
+.heartKey i[data-key-mark='axis'] {
+  border-top: 2px dashed #7edbd2;
+}
+
+.heartKey i[data-key-mark='tubing'] {
+  border-top: 2px solid #c7dde0;
 }
 .physiologyAnatomyHud {
   display: grid;

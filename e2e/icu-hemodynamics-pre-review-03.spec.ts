@@ -1066,7 +1066,7 @@ for (const theme of ['dark', 'light'] as const) {
   })
 }
 
-test('the 3D course names its convention and offers chamber names by keyboard — 1204×987, dark', async ({
+test('the 3D course names its convention and its chambers, and hides the names by keyboard — 1204×987, dark', async ({
   page,
 }, info) => {
   await prepare(
@@ -1093,11 +1093,37 @@ test('the 3D course names its convention and offers chamber names by keyboard �
     const canvasBox = await canvas.boundingBox()
     const statusBox = await status.boundingBox()
     expect(statusBox!.y).toBeGreaterThanOrEqual(canvasBox!.y + canvasBox!.height - 1)
+    // The view's buttons are above the canvas, not over the top of the model.
+    const toolbarBox = await figure.locator('[data-heart-toolbar]').boundingBox()
+    expect(toolbarBox!.y + toolbarBox!.height).toBeLessThanOrEqual(canvasBox!.y + 1)
+    // The names are on the model from the start; the keyboard hides them and brings them back.
     const toggle = figure.locator('[data-heart-names-toggle]')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(figure.locator('[data-heart-stop-name]')).toHaveCount(4)
     await toggle.focus()
+    await page.keyboard.press('Enter')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(figure.locator('[data-heart-stop-name]')).toHaveCount(0)
     await page.keyboard.press('Enter')
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await expect(figure.locator('[data-heart-stop-name]')).toHaveCount(4)
+    // No name sits outside the view. Measured in one pass: focusing the button can scroll the pane.
+    const outside = await figure.locator('[data-heart-stop-name]').evaluateAll((nodes) => {
+      const view = nodes[0]
+        .closest('[data-heart-figure]')!
+        .querySelector('canvas')!
+        .getBoundingClientRect()
+      return nodes
+        .map((node) => node.getBoundingClientRect())
+        .filter(
+          (r) =>
+            r.left < view.left - 1 ||
+            r.right > view.right + 1 ||
+            r.top < view.top - 1 ||
+            r.bottom > view.bottom + 1,
+        ).length
+    })
+    expect(outside).toBe(0)
     const names = await figure.locator('[data-heart-stop-name]').evaluateAll((nodes) =>
       nodes.map((node) => ({
         text: node.textContent,
