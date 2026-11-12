@@ -132,7 +132,7 @@ describe('the stylesheet that places it', () => {
 
   it('measures the picture pane, not the window', () => {
     expect(css).toMatch(/container:\s*mv-visual\s*\/\s*inline-size/)
-    expect(block).toMatch(/^@container mv-visual \(min-width: 62rem\)/)
+    expect(block).toMatch(/^@container mv-visual \(min-width: 60rem\)/)
   })
 
   it('puts the rail in a second column and leaves the clock bar the whole width', () => {
