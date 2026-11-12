@@ -267,13 +267,84 @@ describe('F-15 membrane transport comparison', () => {
     expect(source).not.toMatch(/Solute moves down its concentration gradient/)
   })
 
-  it('is static: no animation elements and a stated conceptual scope', () => {
+  it('states its conceptual scope and keeps one dot size', () => {
     const { container } = render(<CrrtMembraneTransport selected="ultrafiltration" />)
-    expect(container.querySelectorAll('animate, animateMotion, animateTransform')).toHaveLength(0)
     expect(container).toHaveTextContent('not a quantitative clearance or patient model')
-    expect(container).toHaveTextContent('nothing in it is measured or animated')
+    expect(container).toHaveTextContent(
+      'The motion shows direction only; nothing in it is measured',
+    )
     // One dot size only — no molecule-size or relative-clearance claim.
     const radii = new Set([...container.querySelectorAll('circle')].map((c) => c.getAttribute('r')))
     expect([...radii]).toEqual(['6'])
+  })
+
+  describe('in motion (critical care plan 2026-11-10)', () => {
+    const figureOf = (container: HTMLElement) =>
+      container.querySelector<HTMLElement>('[data-crrt-membrane-transport]')!
+    const panel = (container: HTMLElement, id: string) =>
+      container.querySelector<HTMLElement>(`[data-mechanism="${id}"]`)!
+    afterEach(() => {
+      // @ts-expect-error restore jsdom's default (no matchMedia)
+      delete window.matchMedia
+    })
+
+    it('plays by default and one button pauses and resumes it', () => {
+      const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+      expect(figureOf(container)).toHaveAttribute('data-motion', 'playing')
+      fireEvent.click(screen.getByRole('button', { name: 'Pause motion' }))
+      expect(figureOf(container)).toHaveAttribute('data-motion', 'paused')
+      fireEvent.click(screen.getByRole('button', { name: 'Play motion' }))
+      expect(figureOf(container)).toHaveAttribute('data-motion', 'playing')
+    })
+
+    it('starts still where the device asks for reduced motion, until the learner presses Play', () => {
+      window.matchMedia = ((query: string) => ({
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })) as unknown as typeof window.matchMedia
+      const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+      expect(figureOf(container)).toHaveAttribute('data-motion', 'paused')
+      expect(figureOf(container)).not.toHaveAttribute('data-motion-chosen')
+      fireEvent.click(screen.getByRole('button', { name: 'Play motion' }))
+      expect(figureOf(container)).toHaveAttribute('data-motion', 'playing')
+      expect(figureOf(container)).toHaveAttribute('data-motion-chosen')
+    })
+
+    it('diffusion: dots step across with no water; more dots on the blood side than the fluid side', () => {
+      const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+      const diffusion = panel(container, 'diffusion')
+      expect(diffusion.querySelectorAll('[data-crrt-crossing]').length).toBeGreaterThan(0)
+      expect(diffusion.querySelectorAll('[data-crrt-carried]')).toHaveLength(0)
+      const [blood, fluid] = [...diffusion.querySelectorAll('g[clip-path]')].map(
+        (group) => group.querySelectorAll('circle').length,
+      )
+      expect(blood).toBeGreaterThan(fluid)
+      expect(fluid).toBeGreaterThan(0)
+    })
+
+    it('convection: the dots are carried in the water; ultrafiltration: water and no dots', () => {
+      const { container } = render(<CrrtMembraneTransport selected="convection" />)
+      const convection = panel(container, 'convection')
+      expect(convection.querySelectorAll('[data-crrt-carried]')).toHaveLength(3)
+      expect(convection.querySelectorAll('[data-crrt-crossing]')).toHaveLength(0)
+      // Each carried dot starts on the water arrow's own line.
+      for (const dot of convection.querySelectorAll('[data-crrt-carried]')) {
+        expect(dot).toHaveAttribute('cy', '128')
+        expect(dot).toHaveAttribute('cx', '44')
+      }
+      expect(panel(container, 'ultrafiltration').querySelectorAll('circle')).toHaveLength(0)
+    })
+
+    it('says in words what moves in each panel, and uses no SMIL', () => {
+      const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+      const equivalent = screen.getByRole('region', { name: 'What each panel shows' })
+      for (const mechanism of crrtTransportMechanisms) {
+        expect(mechanism.motion).toMatch(/^Moving: /)
+        expect(equivalent).toHaveTextContent(mechanism.motion)
+      }
+      expect(container.querySelectorAll('animate, animateMotion, animateTransform')).toHaveLength(0)
+    })
   })
 })
