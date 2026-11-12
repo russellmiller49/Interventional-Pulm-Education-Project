@@ -1476,3 +1476,42 @@
   font-size: 0.88rem;
   line-height: 1.5;
 }
+
+/*
+ * In a lesson's picture pane (`crrt-foundations.module.css`) the drawing is sized to the pane, so
+ * it never needs to be swiped: the swipe hint goes, and the key and the Expand button share the
+ * heading's row, so the height under the lesson bar goes to the drawing.
+ */
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'],
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  column-gap: 0.6rem;
+  align-items: center;
+}
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > *,
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > * {
+  grid-column: 1 / -1;
+}
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .panHint,
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > .panHint {
+  display: none;
+}
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .focusedHeading,
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > .focusedHeading {
+  grid-column: 1;
+  grid-row: 1;
+}
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .legend,
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > .legend {
+  grid-column: 2;
+  grid-row: 1;
+  justify-content: flex-end;
+  margin: 0;
+}
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .focusedTools,
+:global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > .focusedTools {
+  grid-column: 3;
+  grid-row: 1;
+  margin: 0;
+}

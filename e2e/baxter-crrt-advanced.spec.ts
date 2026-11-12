@@ -1,5 +1,12 @@
 import { test, expect, type Page, type Locator, type TestInfo } from '@playwright/test'
 
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 const base = '/en/baxter-crrt/learn?lesson='
 const saved = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('baxter-crrt-progress-v3') || '{}'))
@@ -278,7 +285,9 @@ test('Batch C session review, reload and compact reflow keep answers transient a
   await page.reload()
   await expect(button(page, 'Review patient and treatment')).toBeVisible()
   expect((await saved(page)).learnTaskHistory).toEqual(old)
+  await openLessonMenu(page)
   await expect(page.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
+  await page.keyboard.press('Escape')
   for (const width of [1440, 1280, 1024, 900, 720, 320]) {
     await page.setViewportSize({ width, height: 900 })
     await capture(page, info, `18-integration-reflow-${width}`)

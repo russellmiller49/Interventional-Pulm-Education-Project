@@ -1,5 +1,12 @@
 import { test, expect, type Page, type Locator, type TestInfo } from '@playwright/test'
 
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 const base = '/en/baxter-crrt/learn?lesson='
 const saved = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('baxter-crrt-progress-v3') || '{}'))
@@ -295,6 +302,7 @@ test('Batch B history and restart retain old work while replacing the whole inco
   await click(page, 'Continue')
   await expect(page.locator('[data-run-id="delivery"]')).toContainText('clock 0h 00m')
   await click(page, 'Record to 1 hours')
+  await openLessonMenu(page)
   await click(page, 'Restart lesson')
   await click(page, 'Continue')
   await expect(page.locator('[data-run-id="delivery"]')).toContainText('clock 0h 00m')

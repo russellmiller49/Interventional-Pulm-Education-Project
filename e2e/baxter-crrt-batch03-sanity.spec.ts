@@ -1,5 +1,14 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 
+/** The lesson bar prints "CRRT · Lesson N of 8" above the lesson's title. */
+const lessonNumber = (page: Page) => page.locator('[data-lesson-module="baxter-crrt"] p:has(+ h1)')
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 const practice = '/en/baxter-crrt/practice?case='
 const lesson = '/en/baxter-crrt/learn?lesson='
 
@@ -321,8 +330,9 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
     await picker.locator('summary').click()
     await picker.locator(`button[data-section="${item.id}"]`).click()
     await expect(page).toHaveURL(new RegExp(`lesson=${item.id}$`))
-    await expect(page.locator('[data-crrt-lesson-number]')).toHaveText(`Lesson ${index + 1} of 8`)
+    await expect(lessonNumber(page)).toHaveText(new RegExp(`Lesson ${index + 1} of 8$`))
     const nav = page.getByRole('navigation', { name: 'Previous and next lesson' })
+    await openLessonMenu(page)
     if (index > 0)
       await expect(
         nav.getByRole('button', { name: `Previous lesson: ${lessons[index - 1].label}` }),
@@ -346,7 +356,8 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
         exact: index === 7,
       }),
     ).toBeVisible()
-    // The header control; the end card offers the same operation under the same words (F-25).
+    // The menu's control; the end card offers the same operation under the same words (F-25).
+    await openLessonMenu(page)
     await page.getByRole('button', { name: 'Restart lesson', exact: true }).first().click()
     await expect(page.getByText(/^Lesson tasks · 1 of/)).toBeVisible()
     expect(
@@ -378,7 +389,7 @@ test('sanity 03: long task outline visits do not complete tasks; Save and exit p
   const resume = page.getByRole('link', { name: /Continue to the next topic/ })
   await expect(resume).toContainText('Lesson 1:')
   await resume.click()
-  await expect(page.locator('[data-crrt-lesson-number]')).toHaveText('Lesson 1 of 8')
+  await expect(lessonNumber(page)).toHaveText(/Lesson 1 of 8$/)
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem('baxter-crrt-progress-v3')!).completedLessonIds,

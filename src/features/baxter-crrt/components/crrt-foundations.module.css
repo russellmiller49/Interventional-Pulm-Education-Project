@@ -9,16 +9,40 @@
 }
 .foundation :global([data-lesson-shell]) {
   height: auto;
+  /* The lesson reads at the module's own text size, as its cards always have. */
+  --stage-type-floor: 0.95rem;
 }
 .foundation :global([data-lesson-shell]) > div:first-child {
   position: static;
 }
-.readingSurface {
-  container: crrt-reading / inline-size;
+/*
+ * The task body. One column by default: the text, with each exercise's drawing where it is written.
+ * The two-pane workspace is at the end of this file.
+ */
+.activity {
+  container: crrt-activity / inline-size;
   max-width: 1140px;
   margin: 0 auto;
-  padding: 1rem clamp(0.6rem, 2vw, 1.5rem) 2rem;
+  padding: 0.25rem clamp(0.6rem, 2vw, 1.5rem) 2rem;
   min-width: 0;
+}
+.activity:has(.circuitWorkbench) {
+  max-width: 1440px;
+}
+/* The text column is also the container the exercises size their own layouts against. */
+.activity :global([data-flow-teaching]) {
+  container: crrt-reading / inline-size;
+}
+.activity :global([data-flow-teaching]) > * + * {
+  margin-top: 0.9rem;
+}
+/* One column: the right pane is not drawn. Each exercise keeps its drawing beside its controls. */
+.activity :global([data-flow-visual]) {
+  display: none;
+}
+.foundation :global([data-now-card]) {
+  position: static;
+  box-shadow: none;
 }
 .instruction {
   scroll-margin-top: 9rem;
@@ -27,42 +51,86 @@
   outline: 3px solid #ffce80;
   outline-offset: 3px;
 }
-.header {
-  display: flex;
+/*
+ * The lesson bar: the lesson's name, the Lessons list, the glossary, the menu, and the way out.
+ * The Lessons list and the menu sit toward the right of the bar, so their panels open leftward
+ * from the button's right edge instead of running off the screen.
+ */
+.foundation :global([data-sections-drawer]) > div {
+  right: 0;
+  left: auto;
+}
+.lessonMenu {
+  position: relative;
+}
+.lessonMenuSummary {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #49676e;
+  border-radius: 8px;
+  background: #13373e;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+.lessonMenuSummary::-webkit-details-marker {
+  display: none;
+}
+/* `.foundation summary` (below) is written for the folds in the text; the bar's two are buttons. */
+.foundation .lessonMenuSummary,
+.foundation :global([data-sections-drawer]) > summary {
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
+}
+.lessonMenuPanel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
   gap: 0.75rem;
-  width: 100%;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 0.85rem;
+  border: 1px solid #49676e;
+  border-radius: 0.9rem;
+  background: #10262b;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
 }
-.header > div {
-  flex: 1 1 24rem;
-}
-/* F-25: the restart control states what it clears; F-24: the glossary sits beside it. */
-.header > .lessonControls {
+/* F-25: the restart control states what it clears. */
+.lessonControls {
   display: flex;
-  flex: 1 1 100%;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 .restartScope {
-  flex: 1 1 100%;
   margin: 0;
   color: #bfd6d4;
   font-size: 0.82rem;
   line-height: 1.45;
 }
-.header h1 {
-  font-size: clamp(1.15rem, 2vw, 1.6rem);
-  margin: 0.15rem 0;
+.lessonMenuLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #35525c;
 }
-/*
- * The Lessons menu (shared with the other guided modules) sits near the right of this header, so
- * its panel opens leftward from the button's right edge instead of running off the screen.
- */
-.header [data-sections-drawer] > div {
-  right: 0;
-  left: auto;
+.lessonMenuLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #91ecee;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.lessonMenuPanel .context {
+  padding: 0;
 }
 .foundation button {
   min-height: 44px;
@@ -139,9 +207,6 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.7rem 0;
-}
-.readingSurface:has(.circuitWorkbench) {
-  max-width: 1440px;
 }
 /* F-13: the controls sit in one wrapped row directly above the circuit, and the circuit takes
    the full reading width instead of an 800 px column (0.60 of its drawing size at 1280 × 900).
@@ -384,9 +449,6 @@
   .instruction {
     scroll-margin-top: 5rem;
   }
-  .header {
-    align-items: stretch;
-  }
   .table th,
   .table td {
     padding: 0.5rem 0.25rem;
@@ -486,4 +548,210 @@
   color: #f6e6cf;
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------- *
+ * The lesson workspace: text on the left, the picture on the right
+ * ---------------------------------------------------------------- *
+ * The same shape as the mechanical ventilation, ICU hemodynamics and mechanical circulatory
+ * support lessons (owner, 2026-10-15 to 2026-10-17; critical care plan, 2026-11-10). In the desktop
+ * workspace (a window at least 1024 by 700) the page does not scroll: the lesson bar keeps its row
+ * and the task body takes the rest of the window. Below that the lesson flows in the document as
+ * one column, as it always has.
+ */
+
+/* One column unless the workspace below says otherwise. This outweighs the shared stage's two
+   columns from 1100 px (`FlowContent.module.css`, specificity 0,4,0) at 0,5,0. */
+.foundation[data-crrt-panes] .activity > :global([data-flow-content][data-has-visual]) {
+  grid-template-columns: minmax(0, 1fr);
+  margin-block: 0.5rem 0;
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+  .foundation {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .foundation :global([data-lesson-shell]) {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+  /*
+   * The shell's rows are bar, context strip, body, footer, and the body's is the one that takes
+   * the rest of the window. This lesson has no context strip (its notes are in the menu), and an
+   * empty strip is not laid out, so the body is named to its row rather than left to fall into
+   * the strip's, which would size it by its content.
+   */
+  .foundation :global([data-lesson-shell]) > div:nth-child(3) {
+    grid-row: 3;
+  }
+  .activity,
+  .activity:has(.circuitWorkbench) {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0.5rem 0.25rem 0.5rem 0.75rem;
+  }
+  /*
+   * Narrower than two panes need (a 1024–1199 px window, or enlarged text), the task body is the
+   * one scroller. Positioned, so it is the containing block of what it holds: an absolutely
+   * positioned screen-reader line inside otherwise escapes it and lengthens the locked page.
+   */
+  .foundation[data-crrt-panes] .activity > :global([data-flow-content]) {
+    position: relative;
+    align-content: start;
+    min-height: 0;
+    margin-block: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .activity > :global([data-flow-content]) > :global([data-flow-teaching]) {
+    width: 100%;
+    max-width: 1140px;
+    margin-inline: auto;
+  }
+  .activity:has(.circuitWorkbench) > :global([data-flow-content]) > :global([data-flow-teaching]) {
+    max-width: 1440px;
+  }
+
+  /*
+   * Two panes need room, so they are a container query in rem on the task body: it follows the
+   * reader's text size, which a media query does not. `--crrt-panes` is this stylesheet's answer
+   * to "is the lesson two panes?"; the lesson reads it to decide where each drawing renders.
+   */
+  @container crrt-activity (min-width: 75rem) {
+    .foundation[data-crrt-panes] .activity > :global([data-flow-content][data-has-visual]) {
+      --crrt-panes: two;
+      grid-template-columns: clamp(19rem, 26cqw, 28rem) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+    .activity
+      > :global([data-flow-content][data-has-visual])
+      > :is(:global([data-flow-teaching]), :global([data-flow-visual])) {
+      position: relative;
+      max-width: none;
+      min-height: 0;
+      margin: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+    .activity > :global([data-flow-content][data-has-visual]) > :global([data-flow-teaching]) {
+      padding-right: 0.25rem;
+      padding-bottom: 1rem;
+    }
+    /* The picture pane publishes its own size, so a drawing can be as tall as the pane allows. */
+    .activity > :global([data-flow-content][data-has-visual]) > :global([data-flow-visual]) {
+      display: block;
+      container: crrt-visual / size;
+      scroll-padding-top: 1rem;
+    }
+    /* Until the lesson has moved a drawing to the pane, it is not also drawn in the text. */
+    .activity :global([data-flow-teaching] [data-crrt-visual-inline]) {
+      display: none !important;
+    }
+  }
+}
+
+/* The picture pane. A task's own drawing leads; anything that supports it follows. */
+.visualPane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-bottom: 0.75rem;
+}
+.visualSlot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.visualSlot:empty {
+  display: none;
+}
+.visualSlot > :global([data-crrt-lesson-visual]) {
+  min-width: 0;
+}
+.visualSlot > :global([data-crrt-lesson-visual='lead']) {
+  order: 0;
+}
+.visualSlot > :global([data-crrt-lesson-visual='support']) {
+  order: 1;
+}
+/*
+ * A circuit in the pane is as wide as the pane and no taller than the pane leaves it under its
+ * heading row (the heading, the key and the Expand button) and above its one-line note, so the
+ * whole drawing is on screen with nothing to scroll. With enlarged text the rem term grows; the
+ * drawing never falls below 18rem.
+ */
+.foundation .visualPane :global([data-crrt-lesson-visual]) :global(svg[data-overlay]) {
+  min-height: 0;
+  max-height: max(18rem, calc(100cqh - 7.25rem));
+}
+
+/* Two panes: the selections stand under the instruction, in the text, two to a row. */
+.circuitWorkbench[data-crrt-drawing='pane'] {
+  display: block;
+  margin-top: 0.5rem;
+}
+/* A grid, not a flex column: a flex column sized the button grid as if it were one column wide
+   and left six rows of height under two columns of buttons. */
+.circuitWorkbench[data-crrt-drawing='pane'] .controlRow {
+  display: grid;
+  gap: 0.5rem;
+}
+.circuitWorkbench[data-crrt-drawing='pane'] .controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  grid-auto-rows: auto;
+  align-content: start;
+}
+/*
+ * A run and its record in the picture pane. In one column the four parts read in the order they
+ * are written (the run's summary, the action, the instrument, the record) and have no box of
+ * their own. In the pane the action and the instrument it changes lead, so the button and what it
+ * moves are on one screen; the summary and the record follow.
+ */
+.runPart {
+  display: contents;
+}
+.visualPane .operational {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+}
+.visualPane .operational > .runPart {
+  display: block;
+  min-width: 0;
+}
+.visualPane .operational > .runPart:empty {
+  display: none;
+}
+.visualPane .operational > .runPart[data-run-part='action'] {
+  order: 1;
+}
+.visualPane .operational > .runPart[data-run-part='instrument'] {
+  order: 2;
+}
+.visualPane .operational > .runPart[data-run-part='summary'] {
+  order: 3;
+  margin-top: 1rem;
+}
+.visualPane .operational > .runPart[data-run-part='record'] {
+  order: 4;
 }
