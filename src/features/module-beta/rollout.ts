@@ -62,6 +62,30 @@ export const betaRollout: BetaRollout = {
       ],
     },
   },
+  'eus-b-guided': {
+    stage: 'preview',
+    note: {
+      audience:
+        'Pulmonologists and interventional pulmonologists who already perform linear EBUS and are learning EUS-B.',
+      summary:
+        'One systematic survey with the EBUS scope in the esophagus and stomach, taught landmark by landmark: predict, find the view yourself on a simulated image, then read it labeled.',
+      estimate: {
+        minutes: 24,
+        basis: "3 lessons, by the course's own count; 10 more are being built",
+      },
+      lookFor: [
+        'Whether the survey order, and the neighbors used to confirm each landmark, are the ones you teach.',
+        'The find-the-view tasks: whether the scope and the image respond the way your EUS-B images do, and whether the task says clearly what it is waiting for.',
+        'Whether the first lesson gives an EBUS operator the right picture of what the esophagus adds and what it does not.',
+      ],
+      knownLimits: [
+        'Three of 13 planned lessons are open: what the esophagus adds, the left lobe of the liver, and station 7. The other landmarks, the complete survey, sampling and the cases are still being built.',
+        'The author has not yet reviewed the lesson text. Its 5 sourced numbers were checked against abstracts only and are not signed off.',
+        'It is one CT case, and the ultrasound image is simulated from CT, not recorded ultrasound.',
+        'The scope tasks need a desktop or tablet.',
+      ],
+    },
+  },
   'eus-b-simulator': {
     stage: 'preview',
     note: {

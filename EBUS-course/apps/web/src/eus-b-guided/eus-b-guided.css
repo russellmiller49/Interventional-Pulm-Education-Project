@@ -1,0 +1,349 @@
+/*
+ * The EUS-B guided lab. Everything here hangs off `.eusg`; the simulator's stylesheet supplies the
+ * shared control, button and name styles, and its page layout (`.eus-page`, `.eus-stage`) is not
+ * used. No text is smaller than 13 px.
+ */
+
+html,
+body,
+#root {
+  margin: 0;
+}
+
+.eusg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  color: #e8eeec;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.eusg *,
+.eusg *::before,
+.eusg *::after {
+  box-sizing: border-box;
+}
+
+.eusg--message {
+  min-height: 200px;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  text-align: center;
+}
+
+/* ---- The image ---- */
+
+.eusg-image {
+  position: relative;
+  flex: none;
+  width: min(100%, 640px);
+  aspect-ratio: 1 / 1;
+  align-self: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+}
+
+.eusg-image canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.eusg-image canvas + canvas {
+  pointer-events: none;
+}
+
+.eusg-image.is-named {
+  cursor: crosshair;
+}
+
+.eusg-image:focus-visible,
+.eusg button:focus-visible,
+.eusg input:focus-visible {
+  outline: 2px solid #8bd4ff;
+  outline-offset: -2px;
+}
+
+.eusg-mark,
+.eusg-readout {
+  position: absolute;
+  z-index: 2;
+  color: #dce3e8;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  pointer-events: none;
+}
+
+.eusg-mark {
+  top: 8px;
+}
+
+.eusg-mark--left {
+  left: 10px;
+}
+
+.eusg-mark--right {
+  right: 10px;
+}
+
+.eusg-readout {
+  bottom: 8px;
+  left: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.eusg-image-message {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: #c6d2cf;
+  text-align: center;
+}
+
+/* Sits over both canvases, which would otherwise cover it. */
+.eusg-hold {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 34px;
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 7px;
+  background: rgba(9, 14, 17, 0.9);
+  color: #f2f6f5;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.eusg-hold.is-done {
+  border-color: #8fe0c0;
+  color: #8fe0c0;
+}
+
+.eusg-hold__bar {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #33444b;
+}
+
+.eusg-hold__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #8fe0c0;
+  transform-origin: left center;
+  animation: eusg-hold-fill linear both;
+}
+
+@keyframes eusg-hold-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- The column beside the image ---- */
+
+.eusg-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.eusg-position {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(222, 232, 226, 0.14);
+  border-radius: 8px;
+  background: rgba(23, 29, 31, 0.92);
+  color: #c6d2cf;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.eusg-position strong {
+  color: #8fe0c0;
+}
+
+.eusg-controls,
+.eusg-legend {
+  display: grid;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid rgba(222, 232, 226, 0.14);
+  border-radius: 8px;
+  background: rgba(23, 29, 31, 0.92);
+}
+
+.eusg input[type='range'] {
+  width: 100%;
+  min-height: 24px;
+  accent-color: #8bd4ff;
+}
+
+.eusg button:disabled,
+.eusg input:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.eusg-keys,
+.eusg-muted {
+  margin: 0;
+  color: #9aa7a7;
+  font-size: 0.8125rem;
+}
+
+.eusg-legend {
+  gap: 8px;
+  min-height: 0;
+}
+
+.eusg-legend h2 {
+  margin: 0;
+  color: #8bd4ff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eusg-legend ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eusg-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-size: 0.875rem;
+}
+
+.eusg-legend li.is-pointed {
+  background: #1d3440;
+}
+
+.eusg-legend small {
+  display: block;
+  color: #e9dcc3;
+  font-size: 0.8125rem;
+}
+
+.eusg-swatch {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  transform: translateY(1px);
+}
+
+/* Shared simulator styles that fall under 13 px. */
+.eusg .eus-ruler__tick,
+.eusg .eus-hover-name__kind,
+.eusg .eus-hover-name__note {
+  font-size: 0.8125rem;
+}
+
+.eusg .eus-ruler {
+  height: 40px;
+}
+
+/*
+ * One screen: the image as large as the frame's height allows, with the controls or the legend
+ * in a column beside it. Nothing sits below the image and the frame does not scroll. This holds
+ * from 700 by 480 up: the lab is shown both across a whole lesson and in a narrower frame beside
+ * the lesson's text. `main.tsx` uses the same sizes to decide when to report its height.
+ */
+@media (min-width: 700px) and (min-height: 480px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .eusg {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Padding, gap and the narrow column come to 284 px. */
+  .eusg-image {
+    align-self: flex-start;
+    width: min(100vh - 16px, 100vw - 284px);
+  }
+
+  .eusg-side {
+    flex: 1 1 260px;
+    min-width: 260px;
+    max-width: 420px;
+    overflow-y: auto;
+  }
+}
+
+/* In a narrow column a slider takes a row of its own, above its buttons. */
+@media (min-width: 700px) and (max-width: 899.98px) and (min-height: 480px) {
+  .eusg .eus-control__row {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .eusg .eus-control__row > input,
+  .eusg .eus-control__row > .eus-track {
+    order: -1;
+    flex: 1 1 100%;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 480px) {
+  .eusg-image {
+    width: min(100vh - 16px, 100vw - 344px);
+  }
+
+  .eusg-side {
+    flex-basis: 320px;
+    min-width: 320px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eusg-hold__bar {
+    display: none;
+  }
+
+  .eusg-hold__fill {
+    animation: none;
+  }
+}

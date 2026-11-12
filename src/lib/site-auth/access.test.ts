@@ -324,6 +324,30 @@ describe('main site auth access helpers', () => {
     )
   })
 
+  it('keeps the EUS-B guided course public-unlisted and opens its lab only as a training embed', () => {
+    for (const path of [
+      '/eus-b-guided',
+      '/es/eus-b-guided',
+      '/eus-b-guided/learn',
+      '/zh-CN/eus-b-guided/learn',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('eus-b-guided')
+    }
+    expect(isPublicPath('/socal-ebus-course/app/eus-b-guided.html')).toBe(false)
+    expect(
+      getRequiredEntitlement(
+        '/socal-ebus-course/app/eus-b-guided.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBeNull()
+    expect(getRequiredEntitlement('/socal-ebus-course/app/eus-b-guided.html', params())).toBe(
+      'socal_ebus_course',
+    )
+  })
+
   it('requires site admin for the virtual bronchoscopy EBUS preview embed', () => {
     expect(
       isAdminEbusPreviewEmbed('/socal-ebus-course/app/index.html', params('adminPreview=1')),

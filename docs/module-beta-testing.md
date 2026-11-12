@@ -32,7 +32,7 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The catalog holds 15 modules; the hub lists 11 of them: EBUS Guided, the EUS-B Simulator,
+The catalog holds 16 modules; the hub lists 12 of them: EBUS Guided, EUS-B Guided, the EUS-B Simulator,
 Synchronized Bronchoscopy (`/en/learn/anatomy/airway`), Bronchial Branch Tracing, Peripheral
 Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical care modules. By the owner's
 decision of 2026-11-04, Live Bronchoscopy Anatomy, Dolphin Bronchoscopy, Device Atlas and the
@@ -43,7 +43,7 @@ feedback stays reviewable and their wrapper addresses still open when typed.
 The hub separates **Ready for review** from **Still in development**. Ready cards appear first
 with a tester note: who the module is for, what it teaches, an estimated time where the module's
 own sections and cases support one, where feedback helps most, and known limits. The ready section
-is omitted when empty. All 11 listed modules currently remain `preview` under **Still in
+is omitted when empty. All 12 listed modules currently remain `preview` under **Still in
 development**, grouped by Bronchoscopy and Critical care; empty groups are omitted. Every listed
 `preview` card carries the same note (see
 [Beta reviewer readiness](gap-remediation/beta-reviewer-readiness-2026-11-03.md); the notes for
@@ -222,6 +222,10 @@ These files describe the expected schema; this list is **not** an instruction to
    this SQL; it contains one review. Neither this version nor name is recorded in production history.
    Module IDs are checked by the API against the catalog, so adding a module needs no change to
    this table.
+7. `supabase/migrations/20261112130000_add_eus_b_guided_to_module_beta_feedback.sql`: permits
+   EUS-B Guided Course submissions, keeping every earlier module ID. Written with the module and
+   **not applied**: until it is, the hub lists the course and its feedback wrapper opens, but
+   saving feedback for it fails the module-ID check.
 
 The first two are recorded in the main-site project on 2026-09-25 UTC as versions
 `20260925055413` and `20260925055423`, respectively. No production schema/history changes were

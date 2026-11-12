@@ -3,6 +3,12 @@ import { unlocalizedPathname } from '@/i18n/path'
 export const betaModules = [
   { id: 'ebus-guided', title: 'EBUS: Guided Course', path: '/ebus-guided', group: 'Bronchoscopy' },
   {
+    id: 'eus-b-guided',
+    title: 'EUS-B: Guided Course',
+    path: '/eus-b-guided',
+    group: 'Bronchoscopy',
+  },
+  {
     id: 'eus-b-simulator',
     title: 'EUS-B Simulator',
     path: '/eus-b-simulator',
