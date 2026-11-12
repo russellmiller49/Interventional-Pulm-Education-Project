@@ -1153,3 +1153,25 @@
   color: #8fc4f5;
   font-weight: 600;
 }
+
+/* The colour key of the bronchi drawn on the image. */
+.airwayKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #eaf4f4;
+  font-size: 0.75rem;
+}
+.airwayKey li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.airwayKey span {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}

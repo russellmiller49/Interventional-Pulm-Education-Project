@@ -210,6 +210,18 @@ export function labStateAfterChange(
     // nudge — a change of beam tilt alone, with the heart off the nodule before and after, that
     // lays a rib over the nodule or takes it off.
     if (readouts.rayCrosses === 'Lung only') events = withEvent(events, 'lung-only-seen')
+    // The bronchial tree: which lobes the learner has had drawn, and whether a lobe has been
+    // looked at from a second angle (its bronchi separate; the frontal image had them overlapping).
+    const airways = labValue(lab, values, 'airways', lessonId)
+    if (typeof airways === 'string' && airways !== 'off' && airways !== 'all') {
+      events = withEvent(events, `airway-lobe-${airways}-seen`)
+      if (airways === 'RLL' || airways === 'LLL')
+        events = withEvent(events, 'airway-lower-lobe-seen')
+      if (events.filter((event) => /^airway-lobe-.*-seen$/.test(event)).length >= 2)
+        events = withEvent(events, 'airway-lobes-compared')
+      if (Math.abs(labNumber(lab, values, 'orbit', lessonId)) >= 20)
+        events = withEvent(events, 'airway-lobe-rotated')
+    }
     if (touched.length === 1 && touched[0] === 'tilt') {
       const before = labReadouts(lab, state.values, lessonId)
       if (

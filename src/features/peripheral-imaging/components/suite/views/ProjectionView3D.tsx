@@ -33,9 +33,9 @@ export function projectionObjectLabels(
       </span>
     ),
   }
-  if (!inputs.showCurrent) return [tip]
+  if (!inputs.showCurrent) return inputs.showTool ? [tip] : []
   return [
-    tip,
+    ...(inputs.showTool ? [tip] : []),
     {
       id: 'object-target',
       anchor: markers.target,
@@ -89,11 +89,15 @@ export function ProjectionView3D({
           <meshStandardMaterial color="#e2b46f" transparent opacity={0.9} />
         </mesh>
       )}
-      <Line points={[markers.start, markers.tip]} color="#e6eff3" lineWidth={3} />
-      <mesh position={markers.tip}>
-        <sphereGeometry args={[SHAFT_RADIUS * 3, 12, 8]} />
-        <meshBasicMaterial color="#ffffff" />
-      </mesh>
+      {inputs.showTool && (
+        <>
+          <Line points={[markers.start, markers.tip]} color="#e6eff3" lineWidth={3} />
+          <mesh position={markers.tip}>
+            <sphereGeometry args={[SHAFT_RADIUS * 3, 12, 8]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+        </>
+      )}
       {ray && (
         <>
           {inputs.showCurrent && (
@@ -105,21 +109,25 @@ export function ProjectionView3D({
               lineWidth={1}
             />
           )}
-          <Line
-            points={[frame.source, markers.tipRay.hit]}
-            color="#85d2d2"
-            transparent
-            opacity={0.7}
-            lineWidth={1}
-          />
+          {inputs.showTool && (
+            <Line
+              points={[frame.source, markers.tipRay.hit]}
+              color="#85d2d2"
+              transparent
+              opacity={0.7}
+              lineWidth={1}
+            />
+          )}
         </>
       )}
       {inputs.showCurrent && <Line points={circle} color="#eec482" lineWidth={1} />}
-      <Line
-        points={[lift(markers.startRay.hit), lift(markers.tipRay.hit)]}
-        color="#ffffff"
-        lineWidth={2.5}
-      />
+      {inputs.showTool && (
+        <Line
+          points={[lift(markers.startRay.hit), lift(markers.tipRay.hit)]}
+          color="#ffffff"
+          lineWidth={2.5}
+        />
+      )}
     </group>
   )
 }

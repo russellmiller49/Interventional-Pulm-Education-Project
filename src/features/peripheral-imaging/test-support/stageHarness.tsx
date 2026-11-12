@@ -201,6 +201,16 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       setRange('orbit', 25)
       for (let i = 0; i < 6; i++) clickPrimary()
       break
+    case 'airway-anatomy':
+      if (observe) {
+        setSelect('airways', 'LLL')
+        setRange('orbit', -30)
+        setToggle('airwayNames', false)
+      } else {
+        setSelect('airways', 'RLL')
+        setSelect('airways', 'RML')
+      }
+      break
     case 'projection':
       // LAO 24° leaves only lung over the nodule (the obliquity is read off the axial CT).
       setRange('orbit', observe ? 0 : -24)

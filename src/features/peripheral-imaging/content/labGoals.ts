@@ -111,6 +111,34 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     ],
     watch: ['storedShiftMm', 'currentShiftMm', 'contourStale'],
   },
+  'airway-anatomy': {
+    act: [
+      {
+        type: 'event',
+        id: 'airway-lower-lobe-seen',
+        label: 'Draw a lower lobe and find its superior segmental bronchus',
+      },
+      {
+        type: 'event',
+        id: 'airway-lobes-compared',
+        label: 'Draw a second lobe and find the bronchus it shows shortest',
+      },
+    ],
+    observe: [
+      {
+        type: 'event',
+        id: 'airway-lobe-rotated',
+        label: 'With one lobe drawn, rotate the C-arm by twenty degrees or more',
+      },
+      {
+        type: 'flag',
+        key: 'airwayNames',
+        value: false,
+        label: 'Hide the names and name the bronchi yourself',
+      },
+    ],
+    watch: ['airwaysDrawn', 'airwayShortest'],
+  },
   projection: {
     act: [
       {

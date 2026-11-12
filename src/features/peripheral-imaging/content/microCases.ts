@@ -58,6 +58,13 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
       'A 14 mm solid nodule lies in the posterior left lower lobe, a few centimetres from the posterior chest wall. The patient is about to be intubated for navigation bronchoscopy, with the C-arm and the navigation platform in the room. Nothing has been imaged yet, and the team is agreeing the setup with anesthesia.',
   },
   {
+    id: 'airway-anatomy-practice-1',
+    sectionId: 'airway-anatomy',
+    presentationTitle: 'A catheter that stops lengthening',
+    situation:
+      'A catheter has been advanced beyond the view of the bronchoscope toward a right-sided nodule. On the frontal image it leaves the bronchus intermedius at the level of the middle lobe bronchus. Two more centimetres are advanced without resistance, and the tip moves only a few millimetres on the image. No other projection has been taken.',
+  },
+  {
     id: 'projection-practice-1',
     sectionId: 'projection',
     presentationTitle: 'Planning a right anterior nodule',

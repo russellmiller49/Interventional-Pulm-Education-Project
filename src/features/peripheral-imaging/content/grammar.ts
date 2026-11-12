@@ -82,7 +82,7 @@ export const IMAGING_GRAMMAR: readonly GrammarRow[] = Object.freeze([
     livesPlain: 'a single projection collapses depth',
     shortlist: ['a sufficiently separated second projection', 'DTS or CBCT'],
     taughtIn: ['projection'],
-    litIn: ['chain-walk', 'projection', 'dts-acquisition'],
+    litIn: ['chain-walk', 'airway-anatomy', 'projection', 'dts-acquisition'],
     sourceIds: ['setser', 'pritchett'],
   },
   {

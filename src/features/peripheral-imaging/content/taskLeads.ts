@@ -27,6 +27,11 @@ export const IMAGING_TASK_LEADS: Readonly<Partial<Record<ImagingSectionId, Imagi
     observe:
       'Capture a new contour. Only a new acquisition puts the contour back on the lesion; switching the old one off does not.',
   },
+  'airway-anatomy': {
+    act: 'Choose a lobe under Bronchi drawn from the CT. Each segmental bronchus takes its own colour and name, with its first two centimetres drawn heavier. Find the one whose heavy line is shortest and check it against the readout: it is the bronchus that runs most nearly along the beam. Then do the same for a second lobe.',
+    observe:
+      'Keep one lobe drawn and rotate the C-arm 20° or more. The heavy line that was shortest lengthens and another shortens; the readout names it. Then hide the names and name each bronchus yourself from where it arises and where it runs.',
+  },
   projection: {
     act: 'Rotate the C-arm with the tool and the lesion held still. Their separation on the image changes although neither has moved. Then plan as you would from the CT: pick the obliquity side, rotate until the heart leaves the nodule, and use beam tilt where the diaphragm or a rib is in the way. Anatomy over the nodule names what the path crosses at each angle.',
     observe:

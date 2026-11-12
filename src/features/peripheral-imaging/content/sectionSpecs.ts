@@ -208,6 +208,31 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     sourceIds: ['setser', 'ilocate', 'vespa', 'pritchett'],
   },
   {
+    id: 'airway-anatomy',
+    recognizeTitle: 'A catheter, and no bronchus to see it in',
+    newConcept:
+      'The frontal image places a bronchus by side and by height; it draws short, or on top of one another, the bronchi that run front to back.',
+    objective:
+      'Locate the lobar and segmental bronchi on a frontal fluoroscopic image, and name the bronchi it draws short or on top of one another.',
+    incrementSentence:
+      'This section adds one idea: the frontal image places a bronchus by side and by height, and cannot place it front to back.',
+    prerequisiteSectionIds: ['chain-walk', 'current-anatomy'],
+    chainStops: ['patient', 'detector'],
+    grammarRowIds: ['overlap-depth'],
+    act: { kind: 'lab' },
+    controlStrip: {
+      verdict: 'this-control',
+      states: oneOf('angle', { display: 'not-this-one' }),
+      sentence:
+        'This control: the C-arm projection, which changes which bronchi run across the beam. Not this one: the display, which enlarges a foreshortened bronchus without lengthening it.',
+    },
+    precommitDenyPatterns: [/has entered LB6/i, /front or back takes a second projection/i],
+    modelBoundary:
+      'The bronchi are the centrelines of the airways on this CT, drawn at the width of each lumen through the same projection as the image, with the names assigned on this CT. Fluoroscopy does not show them, and segmental anatomy varies between patients.',
+    capstoneCaseId: null,
+    sourceIds: ['chassagnon', 'setser'],
+  },
+  {
     id: 'projection',
     recognizeTitle: 'A needle that appears to be on the lesion',
     newConcept:

@@ -37,6 +37,8 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
     { input: 'tilt', control: 'tilt' },
     { input: 'wedgeDeg', control: 'wedge' },
     { input: 'toolDepth', control: 'depth' },
+    { input: 'airwayShow', control: 'airways' },
+    { input: 'airwayNames', control: 'airwayNames' },
     { input: 'fieldPercent', control: 'field' },
     { input: 'crop', control: 'crop' },
     { input: 'cropWidth', control: 'cropWidth' },
@@ -161,6 +163,18 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'suite',
     layers: [...ANATOMY, 'table', 'fieldGenerator', 'labels', 'monitor'],
     readouts: ['storedShiftMm', 'currentShiftMm', 'contourStale'],
+  }),
+  'airway-anatomy': view('airway-anatomy', {
+    mode: 'projection',
+    litStop: 'patient',
+    // Close on the chest from the patient's left and in front: front and back are apart in this
+    // view, so a bronchus the frontal image draws short is seen at its length.
+    camera: 'target',
+    layers: [...ANATOMY, ...SUITE, 'monitor'],
+    // The section is about the anatomy; no tool is in the airway yet.
+    defaults: { showTool: false },
+    controls: ['airways', 'airwayNames'],
+    readouts: ['airwaysDrawn', 'airwayShortest'],
   }),
   projection: view('projection', {
     mode: 'projection',
