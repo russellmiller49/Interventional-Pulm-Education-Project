@@ -44,6 +44,7 @@ import { CaseSpecimens } from './CaseSpecimens'
 import { TroubleshootingFlow } from './TroubleshootingFlow'
 import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
+import { chapterReview, reviewHref } from '../content/chapter-reviews'
 import { ClipFigure } from './ClipFigure'
 import { NeedleTipFigure } from './NeedleTipFigure'
 import { StagingRecord } from './StagingRecord'
@@ -1036,6 +1037,16 @@ function LessonSession({
                    * now: practice is not a prerequisite for the cases.
                    */}
                   <div className={styles.actions} data-lesson-destinations>
+                    {/* The last lesson of a chapter offers that chapter's image review. */}
+                    {chapter.lessons.at(-1)?.id === lesson.id && chapterReview(chapter.id) && (
+                      <Link
+                        className={styles.button}
+                        href={reviewHref(chapter.id)}
+                        data-chapter-review-link
+                      >
+                        Chapter review: {chapterReview(chapter.id)!.items.length} image questions
+                      </Link>
+                    )}
                     <Link className={styles.secondary} href={BASE + '/practice'}>
                       Practice cases and labs
                     </Link>

@@ -20,7 +20,8 @@ const COLOURS: Record<ClipMarkKind, string> = {
   stylet: '#ffff93',
 }
 
-function Mark({ mark, number }: { mark: ClipMark; number: number }) {
+/** One mark on a paused frame, drawn in a 1000 x 1000 box stretched over it. */
+export function Mark({ mark, number }: { mark: ClipMark; number: number }) {
   const colour = COLOURS[mark.kind]
   const shape = mark.shape
   // The overlay's box is 1000 x 1000 units stretched over the frame.

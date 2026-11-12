@@ -10,6 +10,7 @@ import {
   lessonHref,
 } from '../content/curriculum'
 import { legacyRecordPresent, recommendedLesson } from '../engine/selfPacedProgress'
+import { chapterReview, reviewHref } from '../content/chapter-reviews'
 import { EbusModuleFrame } from './ModuleFrame'
 import { useCourseProgress } from './useCourseProgress'
 import { StorageNotice } from './StorageNotice'
@@ -210,6 +211,15 @@ export function CoursePage({
                     </li>
                   ))}
                 </ol>
+                {chapterReview(chapter.id) && (
+                  <p data-chapter-review-link>
+                    <Link href={reviewHref(chapter.id)}>Chapter review</Link>{' '}
+                    <span className={styles.muted}>
+                      · {chapterReview(chapter.id)!.items.length} image questions from the lessons
+                      so far
+                    </span>
+                  </p>
+                )}
               </section>
             )
           })}

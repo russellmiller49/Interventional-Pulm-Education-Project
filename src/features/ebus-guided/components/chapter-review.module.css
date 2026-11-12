@@ -1,0 +1,89 @@
+/* A chapter review: one image beside its question. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.figure {
+  margin: 0;
+  min-width: 0;
+}
+.frame {
+  position: relative;
+  line-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+.frame img,
+.frame > svg:only-child {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.frame img + svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.caption {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+.names li {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.names li span {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  border: 2px solid #7dc3ff;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.names li[data-kind='node'] span {
+  border-color: #78e68c;
+}
+.names li[data-kind='lung'] span,
+.names li[data-kind='pleura'] span {
+  border-color: #ffcd7d;
+}
+.names li[data-kind='needle'] span,
+.names li[data-kind='stylet'] span {
+  border-color: #ffff93;
+}
+.locked {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.from {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
