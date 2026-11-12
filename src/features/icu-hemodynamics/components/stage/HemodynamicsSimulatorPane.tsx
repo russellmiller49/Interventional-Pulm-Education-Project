@@ -296,6 +296,18 @@ export function HemodynamicsSimulatorPane({
     </div>
   )
 
+  /*
+   * The map the learner confirms each place on, at the head of the column beside the monitor.
+   *
+   * It used to close the monitor's own column, under the tracing and the controls, which put it
+   * below the fold: 30% of the drawing in view at 1600 × 852 on "Advance by the tracing", none of
+   * it at 1280 × 720, and none at any size on "Repair, then move". Every stop meant pressing
+   * Advance, scrolling down to answer, and scrolling back up, the pattern the owner reported in
+   * the waveform section (2026-11-11). The tracing, the control and the map are one loop and are
+   * now on screen together; the 3D heart follows the map.
+   */
+  const answerMapBesideMonitor = Boolean(presentation?.anatomy === 'paired' && mapAnswer)
+
   const heart = (
     <section
       className={styles.surfaceCard}
@@ -312,15 +324,18 @@ export function HemodynamicsSimulatorPane({
       ) : (
         <p>Tip position is withheld for this question. Use the pressure tracing.</p>
       )}
-      <details>
-        <summary>2D catheter map and keyboard position choices</summary>
-        <CatheterMap
-          emphasis={stops}
-          caption={mapCaption}
-          tipPosition={tipVisible ? state.catheter.position : null}
-          balloonUp={tipVisible && state.catheter.balloonInflated}
-        />
-      </details>
+      {/* Not where the map the learner answers on is already open above this view. */}
+      {answerMapBesideMonitor ? null : (
+        <details>
+          <summary>2D catheter map and keyboard position choices</summary>
+          <CatheterMap
+            emphasis={stops}
+            caption={mapCaption}
+            tipPosition={tipVisible ? state.catheter.position : null}
+            balloonUp={tipVisible && state.catheter.balloonInflated}
+          />
+        </details>
+      )}
     </section>
   )
 
@@ -351,18 +366,22 @@ export function HemodynamicsSimulatorPane({
             {presentation.anatomy === 'paired' && showControls && dock ? (
               <div className={styles.docks}>{dock}</div>
             ) : null}
-            {presentation.anatomy === 'paired' && mapAnswer ? (
-              <CatheterMap
-                emphasis={stops}
-                caption={mapCaption}
-                tipPosition={tipVisible ? state.catheter.position : null}
-                balloonUp={tipVisible && state.catheter.balloonInflated}
-                answer={mapAnswer}
-              />
-            ) : null}
           </div>
           {presentation.anatomy === 'paired' ? (
-            heart
+            answerMapBesideMonitor ? (
+              <div className={flowStyles.answerColumn} data-answer-map-column>
+                <CatheterMap
+                  emphasis={stops}
+                  caption={mapCaption}
+                  tipPosition={tipVisible ? state.catheter.position : null}
+                  balloonUp={tipVisible && state.catheter.balloonInflated}
+                  answer={mapAnswer!}
+                />
+                {heart}
+              </div>
+            ) : (
+              heart
+            )
           ) : showControls && dock ? (
             <div className={styles.docks}>{dock}</div>
           ) : null}
