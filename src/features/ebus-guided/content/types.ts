@@ -132,6 +132,8 @@ export interface Lesson {
     | 'clip-needle'
     /** After the needle lab: the tip in the image beside the tip turned out of it. */
     | 'needle-tip'
+    /** The capstone's last page: the examination the learner has just carried out, as a record. */
+    | 'staging-summary'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]

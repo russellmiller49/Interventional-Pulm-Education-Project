@@ -673,6 +673,53 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     apply('result-meaning', 'Reconcile the result with the clinical question', 'matching'),
     transfer('Close the loop on unresolved findings'),
   ],
+  /*
+   * The capstone (2026-11-11). The order is committed to before the case is laid out, each station
+   * is scanned in the lab the learner already knows and then read for what its sample settles, and
+   * the lesson ends on the record of the examination.
+   */
+  'staging-examination': [
+    predict('first-station', 'Choose the first station to sample'),
+    {
+      ...brief('case-plan', 'Read the case and the plan', 'regional', 'diagram'),
+      figure: 'station-map-n',
+    },
+    decide('plan-check', 'Check the plan', ['observation'], 'regional'),
+    ...['4l', '7', '4r', '11ri'].flatMap((station): ActivitySpec[] => {
+      const from = 'staging-exam-' + station
+      const name = station === '11ri' ? '11Ri' : station.toUpperCase()
+      return [
+        {
+          ...acquire('scan', 'Scan station ' + name, 'linked'),
+          from,
+          instruction: 'Scan the node as you did when you first met this station.',
+        },
+        {
+          ...decide(
+            'sample',
+            'Sample station ' + name + ' and read the result',
+            ['observation', 'question'],
+            'ultrasound',
+            'held',
+          ),
+          from,
+        },
+      ]
+    }),
+    apply('report-lines', 'Match each result to its line in the report', 'matching', [], 'record'),
+    {
+      ...transfer('State what the examination supports'),
+      teaching: [],
+    },
+    {
+      ...explain('Read the record of your examination', 'record'),
+      id: 'examination-record',
+      image: 'diagram',
+      figure: 'staging-summary',
+      instruction:
+        'This is the examination you have just carried out. Nothing on this page is stored.',
+    },
+  ],
 }
 
 export function activitiesForLesson(lesson: Lesson): LessonActivity[] {

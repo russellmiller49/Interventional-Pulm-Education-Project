@@ -65,8 +65,9 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   // 27 content units in 22 lessons: five units were folded into the lesson before or after them
   // (consolidation of 2026-11-10), and the scope lesson was added. A unit keeps its id, lab,
   // checks and sources.
-  expect(LESSONS).toHaveLength(22)
-  expect(CONTENT_LESSONS).toHaveLength(28)
+  // The capstone (2026-11-11) is one more lesson, built from five units.
+  expect(LESSONS).toHaveLength(23)
+  expect(CONTENT_LESSONS).toHaveLength(33)
   expect(Object.keys(MERGED_INTO).sort()).toEqual([
     'contact-cutaway-model',
     'eus-b-route-model',
@@ -74,6 +75,10 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
     'measurement-phantoms',
     'needle-assembly-model',
     'needle-technique',
+    'staging-exam-11ri',
+    'staging-exam-4l',
+    'staging-exam-4r',
+    'staging-exam-7',
   ])
   for (const [unit, holder] of Object.entries(MERGED_INTO)) {
     expect(lessonById(unit)!.id).toBe(holder)
@@ -316,8 +321,8 @@ it('exposes only the new direct-link route family without replacing existing EBU
   expect(isPublicUnlistedPath('/en/ebus-training')).toBe(false)
 })
 
-it('uses seven chapters and teaches measurement before capture without changing lesson identity', () => {
-  expect(CHAPTERS).toHaveLength(7)
+it('uses eight chapters and teaches measurement before capture without changing lesson identity', () => {
+  expect(CHAPTERS).toHaveLength(8)
   expect(
     LESSONS.indexOf(LESSONS.find((lesson) => lesson.id === 'measurement-phantoms')!),
   ).toBeLessThan(LESSONS.indexOf(LESSONS.find((lesson) => lesson.id === 'capture')!))

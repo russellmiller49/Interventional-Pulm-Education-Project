@@ -1,0 +1,93 @@
+/* The capstone's record of the examination: one line per station, then the conclusion. */
+.record {
+  container-type: inline-size;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(8, 24, 32, 0.6);
+}
+.case {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+.record table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.record th,
+.record td {
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.record thead th {
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.record tbody th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.record tbody th span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  white-space: normal;
+}
+.category {
+  display: inline-block;
+  min-width: 2.4em;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 700;
+}
+.category[data-category='N3'] {
+  border-color: #e58a8a;
+}
+.category[data-category='N2'] {
+  border-color: #e8c06a;
+}
+.category[data-category='N1'] {
+  border-color: #7fd0c4;
+}
+.conclusion,
+.yours {
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+.yours {
+  color: var(--muted);
+}
+/* In a narrow column the table becomes one block per station. */
+@container (max-width: 34rem) {
+  .record thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .record tr {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2px 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .record th,
+  .record td {
+    padding: 0;
+    border: 0;
+  }
+  .record td:nth-child(n + 4) {
+    grid-column: 1 / -1;
+  }
+}

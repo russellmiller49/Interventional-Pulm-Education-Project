@@ -74,7 +74,9 @@ function goTo(id: string) {
 }
 
 describe('merged lessons', () => {
-  const merged = LESSONS.filter((lesson) => lesson.parts)
+  // The capstone is also built from units, one per station, but it is not a merge of two lessons:
+  // it has its own tests (`capstone.test.tsx`).
+  const merged = LESSONS.filter((lesson) => lesson.parts && lesson.id !== 'staging-examination')
 
   it('are five lessons of two units each (three in the needle lesson), and every step names a unit the lesson holds', () => {
     expect(merged.map((lesson) => lesson.id)).toEqual([
@@ -234,10 +236,10 @@ describe('lesson numbers a learner reads', () => {
   it('counts lessons and minutes from the merged registry on the hub', () => {
     render(<CoursePage />)
     // 22 lessons from 27 units: the five merges, plus the scope lesson added after them.
-    expect(LESSONS).toHaveLength(22)
+    expect(LESSONS).toHaveLength(23)
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
-      '0 of 22 lessons reviewed',
+      '0 of 23 lessons reviewed',
     )
-    expect(CONTENT_LESSONS).toHaveLength(28)
+    expect(CONTENT_LESSONS).toHaveLength(33)
   })
 })
