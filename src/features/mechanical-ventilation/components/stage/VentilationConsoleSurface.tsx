@@ -19,6 +19,7 @@ import {
 import { resolveVentilationSimulationCase } from '../../content/learningPatient'
 import { lungFigureModel, type BreathCursorReading } from '../../content/lungFigure'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
+import { drivingPressureReadout } from '../../content/drivingPressure'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import type { VentilationStageStep } from '../../content/stageLessons'
@@ -250,6 +251,11 @@ export function VentilationConsoleSurface({
           : null,
       })
     : null
+  const drivingPressure = drivingPressureReadout(
+    plateauAcquisition(state),
+    state.ventilator.settings.peepCmH2O,
+    state.measurements.intrinsicPeepCmH2O,
+  )
   const lungFigureCard = lungFigure ? (
     <VentilationLungFigure
       model={lungFigure}
@@ -394,6 +400,43 @@ export function VentilationConsoleSurface({
           */}
           {bedsideActionsShown ? null : lungFigureCard}
 
+          {/*
+            The patient's weight, the breath per kilogram and the driving pressure lead the
+            readings in the sections that size the breath: they are what those readings are read
+            for, and under the readings the driving pressure was off screen when it got its number.
+          */}
+          {presentation.patient === 'protection' ? (
+            <section className={styles.sideCard} data-pbw-context>
+              <h3>Patient · PBW {definition.predictedBodyWeightKg} kg</h3>
+              {state.measurements.exhaledVtSource === 'trace' ? (
+                <p>
+                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
+                  {definition.predictedBodyWeightKg} kg ={' '}
+                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
+                  mL/kg PBW.
+                </p>
+              ) : (
+                <p>Delivered VT: waiting for a completed breath on the trace.</p>
+              )}
+              {/*
+                The note under this card tells the learner to hold a driving pressure, plateau
+                minus total PEEP, against a reference; until now they worked it out by hand from
+                two tiles. It is worked here, from the acquired plateau only: the same gate every
+                claim that needs a valid plateau goes through.
+              */}
+              <p data-driving-pressure={drivingPressure.shown ? 'shown' : 'withheld'}>
+                {drivingPressure.text}
+              </p>
+              <p className={styles.note}>
+                Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
+                {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
+                {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure (plateau minus
+                total PEEP) held against the reference of{' '}
+                {VENTILATION_NUMBERS.value('driving-pressure-reference')}.
+              </p>
+            </section>
+          ) : null}
+
           {readingsShown ? (
             <ReadingsStrip
               session={session}
@@ -410,29 +453,6 @@ export function VentilationConsoleSurface({
               This comparison no longer isolates one change: {(session.confounds ?? []).join('; ')}.
               Reset the patient for a clean repeat.
             </p>
-          ) : null}
-
-          {presentation.patient === 'protection' ? (
-            <section className={styles.sideCard} data-pbw-context>
-              <h3>Patient · PBW {definition.predictedBodyWeightKg} kg</h3>
-              {state.measurements.exhaledVtSource === 'trace' ? (
-                <p>
-                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
-                  {definition.predictedBodyWeightKg} kg ={' '}
-                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
-                  mL/kg PBW.
-                </p>
-              ) : (
-                <p>Delivered VT: waiting for a completed breath on the trace.</p>
-              )}
-              <p className={styles.note}>
-                Goal in ARDS: {VENTILATION_NUMBERS.value('vt-ards-goal')}, within{' '}
-                {VENTILATION_NUMBERS.value('vt-ards-range')}. Read it with a valid plateau{' '}
-                {VENTILATION_NUMBERS.value('pplat-limit')} and a driving pressure (plateau minus
-                total PEEP) held against the reference of{' '}
-                {VENTILATION_NUMBERS.value('driving-pressure-reference')}.
-              </p>
-            </section>
           ) : null}
         </div>
       ) : null}

@@ -102,13 +102,14 @@ describe('the rail beside the console', () => {
     expect(surface.querySelector('[data-console-rail] [data-bedside-panel]')).toBeNull()
   })
 
-  it('keeps the patient’s weight and the delivered volume with the readings in the lung-protection section', () => {
+  it('leads the readings with the patient’s weight, the breath per kilogram and the driving pressure in the lung-protection section', () => {
     const surface = open('lung-protection', 2)
     expect(railOrder(surface)).toEqual([
       'data-lung-figure',
-      'data-live-readings',
       'data-pbw-context',
+      'data-live-readings',
     ])
+    expect(surface.querySelector('[data-pbw-context] [data-driving-pressure]')).not.toBeNull()
   })
 
   it('holds the drawing of the lungs alone where a task has nothing to operate or read', () => {

@@ -182,6 +182,51 @@ test('trapped gas is drawn in the air-trapping section, from the intrinsic PEEP 
   expect(await shareInView(page, '[data-live-readings] dl')).toBe(1)
 })
 
+test('driving pressure is worked beside the patient’s weight once a hold is acquired', async ({
+  page,
+}) => {
+  await openTask(page, 1600, 852, 'lung-protection', 3)
+  const readout = page.locator('[data-pbw-context] [data-driving-pressure]')
+  await expect(readout).toHaveAttribute('data-driving-pressure', 'withheld')
+  await expect(readout).toHaveText(/^Driving pressure: waiting for an inspiratory hold\./)
+  expect(await shareInView(page, '[data-pbw-context]')).toBe(1)
+
+  await page.locator('#mv-screen-tools').click()
+  await page.locator('#mv-hold-inspiratory').click()
+  await page.locator('#mv-clock-run').click()
+  await expect(readout).toHaveAttribute('data-driving-pressure', 'shown', { timeout: 40_000 })
+  const text = (await readout.textContent())!
+  const [, plateau, totalPeep, value] = text.match(
+    /^Driving pressure: plateau (\d+\.\d) − total PEEP (\d+\.\d) = (\d+\.\d) cmH₂O\./,
+  )!
+  expect(Number(value)).toBeCloseTo(Number(plateau) - Number(totalPeep), 5)
+  // The acquired plateau the tile shows, and still on screen with it.
+  await expect(page.locator('[data-live-readings] [data-metric="plateau"] dd')).toContainText(
+    `${plateau} cmH₂O`,
+  )
+  expect(await shareInView(page, '[data-pbw-context] [data-driving-pressure]')).toBe(1)
+})
+
+test('the live view of the mechanism has its own name, and is open where a result is explained', async ({
+  page,
+}) => {
+  await openTask(page, 1600, 852, 'lung-protection', 3)
+  const fold = page.locator('[data-lesson-disclosure="live-view"]')
+  await expect(fold.locator('summary')).toHaveText('On this ventilator, right now')
+  expect(await fold.evaluate((node) => (node as HTMLDetailsElement).open)).toBe(false)
+  await expect(
+    page.locator('[data-lesson-disclosure="more-detail"] [data-teaching-block="panel"]'),
+  ).toHaveCount(0)
+
+  await openTask(page, 1600, 852, 'lung-protection', 4)
+  expect(await fold.evaluate((node) => (node as HTMLDetailsElement).open)).toBe(true)
+  await expect(fold.locator('[data-teaching-block="panel"]')).toBeVisible()
+
+  // A section with no live view has no such line.
+  await openTask(page, 1600, 852, 'breathing-with-support', 3)
+  await expect(page.locator('[data-lesson-disclosure="live-view"]')).toHaveCount(0)
+})
+
 test('a narrower pane keeps everything under the console, what is operated first — 1440×800', async ({
   page,
 }) => {
