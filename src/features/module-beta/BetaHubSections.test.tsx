@@ -1,8 +1,16 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { BetaHubSections } from './BetaHubSections'
 import { betaModules } from './catalog'
 import { betaRollout, hubBetaModules, type BetaRollout } from './rollout'
+import { betaRevisionHistory } from './revisions'
+import { revisionFixture } from './test-support/revisionFixture'
+
+jest.mock('./revisions', () => {
+  const actual = jest.requireActual<typeof import('./revisions')>('./revisions')
+  return { ...actual, betaRevisionHistory: jest.fn(actual.betaRevisionHistory) }
+})
 
 const allPreview = Object.fromEntries(
   betaModules.map((entry) => [entry.id, { stage: 'preview' }]),
@@ -52,16 +60,14 @@ describe('hub module sections', () => {
           expect(within(card).queryByText('Estimated time:')).not.toBeInTheDocument()
         }
       } else {
-        // The card a module had before notes existed: its title and its link, nothing else.
-        expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-        expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
+        expect(within(card).queryByText('Where feedback helps most')).not.toBeInTheDocument()
       }
     }
     // Every listed module carries a note (owner request, 2026-11-04).
     expect(hubBetaModules.every((entry) => betaRollout[entry.id].note)).toBe(true)
   })
 
-  it('leaves a card without a note as it was: its title and its link', () => {
+  it('keeps the title and feedback link on a card without a tester note', () => {
     render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     const preview = screen.getByRole('region', { name: 'Still in development' })
     for (const entry of betaModules) {
@@ -69,8 +75,50 @@ describe('hub module sections', () => {
         .getByRole('heading', { name: entry.title })
         .closest('article') as HTMLElement
       expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
-      expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
+      expect(within(card).getByRole('link', { name: /Test with feedback/ })).toBeVisible()
     }
+  })
+
+  it('shows fixture history, the neutral state, and only visible modules', async () => {
+    const actual = jest.requireActual<typeof import('./revisions')>('./revisions')
+    const withheldFixture = {
+      ...revisionFixture,
+      moduleId: 'dolphin-bronchoscopy',
+      revisionId: 'test-withheld-first',
+    } as const
+    await jest.mocked(betaRevisionHistory).withImplementation(
+      (id) => actual.betaRevisionHistory(id, [revisionFixture, withheldFixture]),
+      async () => {
+        render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+        const crrt = screen.getByRole('heading', { name: 'Baxter CRRT' }).closest('article')!
+        const ebus = screen
+          .getByRole('heading', { name: 'EBUS: Guided Course' })
+          .closest('article')!
+        expect(within(crrt).getByText(revisionFixture.displayVersion)).toBeVisible()
+        expect(within(ebus).getByText('Version history not yet available')).toBeVisible()
+        expect(
+          screen.queryByRole('heading', { name: 'Dolphin Bronchoscopy' }),
+        ).not.toBeInTheDocument()
+        const trigger = screen.getByRole('button', { name: 'What’s changed' })
+        expect(crrt).toContainElement(trigger)
+        await userEvent.click(trigger)
+        const dialog = within(screen.getByRole('dialog', { name: 'What’s changed' }))
+        expect(dialog.getByText(revisionFixture.changelog[0])).toBeVisible()
+        expect(dialog.getByText('Jan 15, 2026')).toHaveAttribute(
+          'datetime',
+          revisionFixture.releasedOn,
+        )
+        expect(dialog.getByText('Clinical or educational re-review recommended')).toBeVisible()
+        expect(dialog.getByRole('link', { name: /Prescription and dosing/ })).toHaveAttribute(
+          'href',
+          '/en/development-beta/baxter-crrt?section=crrt-prescription-dosing',
+        )
+        expect(dialog.getByText('Example without a navigation target')).toBeVisible()
+        expect(dialog.getAllByRole('link')).toHaveLength(1)
+        await userEvent.keyboard('{Escape}')
+        expect(trigger).toHaveFocus()
+      },
+    )
   })
 
   it('has no ready section while nothing is ready', () => {

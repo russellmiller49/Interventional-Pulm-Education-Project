@@ -4,6 +4,8 @@ import { ArrowUpRight } from 'lucide-react'
 import type { BetaModule } from './catalog'
 import type { BetaRollout, BetaTesterNote } from './rollout'
 import { ReviewStatus } from './HubReviewStatus'
+import { RevisionDetails } from './RevisionDetails'
+import { betaRevisionHistory } from './revisions'
 
 const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
@@ -15,6 +17,13 @@ const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as con
 function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
   return (
     <div className="space-y-3">
+      <div className="text-sm">
+        <RevisionDetails
+          moduleEntry={entry}
+          locale={locale}
+          revisions={betaRevisionHistory(entry.id)}
+        />
+      </div>
       <Link
         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
         href={`/${locale}/development-beta/${entry.id}` as Route}
@@ -70,9 +79,7 @@ function TesterNote({ note }: { note: BetaTesterNote }) {
 }
 
 /**
- * The hub's module list. Every module passed in is listed and opens the same way; a
- * module that is ready for review moves to the first section and shows its tester note. A module
- * still in development shows its note too when it has one.
+ * Ready and preview modules open in the same feedback wrapper. Withheld modules are omitted.
  */
 export function BetaHubSections({
   locale,

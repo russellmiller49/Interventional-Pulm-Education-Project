@@ -79,6 +79,12 @@ at `/en/development-beta/live-anatomy/lesson`, which is what the wrapper frames.
 the rest of the hub, and the page sits outside `/intro-bronchoscopy`, so it grants no course
 access. It needs no database row: the feedback module id `live-anatomy` is unchanged.
 
+## Module versions
+
+A tracked module shows its current revision and **What’s changed** on its hub card and in the
+feedback toolbar. See [Beta module versioning](module-beta-versioning.md) for revision approval,
+section links, and the proposed V2 review attribution.
+
 ## Tester feedback
 
 **How to give feedback.** A one-screen guide (`FeedbackGuide.tsx`) pictures the four steps: open

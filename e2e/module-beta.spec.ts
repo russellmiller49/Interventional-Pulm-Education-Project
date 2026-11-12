@@ -238,6 +238,8 @@ test('server-mode drafts stay in memory: an empty dialog is no draft and nothing
     page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
   ).toBeVisible()
   await expect(page.getByText('Beta testing', { exact: true })).toBeVisible()
+  await expect(page.getByText('Version history not yet available')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
   await expect(page.getByText('Owner review', { exact: false })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Review feedback' })).toHaveCount(0)
   const button = page.getByRole('button', { name: /^(Give|Continue) feedback$/ })
@@ -1042,3 +1044,97 @@ test('feedback guide: opens on the first hub visit only, reopens from the hub an
     animations: 'disabled',
   })
 })
+
+for (const [layout, viewport] of [
+  ['desktop', { width: 1440, height: 1000 }],
+  ['mobile', { width: 390, height: 844 }],
+] as const) {
+  test(`unversioned modules on ${layout} keep feedback and review controls available`, async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.setTimeout(60000)
+    await page.setViewportSize(viewport)
+    await context.addCookies([
+      {
+        name: 'ip_local_dev_auth',
+        value: process.env.MODULE_BETA_TEST_TOKEN!,
+        domain: '127.0.0.1',
+        path: '/',
+      },
+    ])
+    await context.route('**/api/module-review/mine', (route) =>
+      route.fulfill({
+        json: {
+          profile: { label: 'PCCM Fellow', defaultTrack: 'learner' },
+          reviewsOpen: true,
+          reviews: [
+            {
+              id: 'review-fixture',
+              module_id: 'baxter-crrt',
+              track: 'learner',
+              updated_at: '2026-11-09T18:00:00Z',
+              answers: {
+                coverage: 'most',
+                experience: 'supervised',
+                overall: '4',
+                clarity: '4',
+                easeOfUse: '3',
+                interactive: '5',
+                level: 'about-right',
+                readiness: 'minor-fixes',
+                workedBest: 'The cases',
+                oneFix: '',
+                confidenceBefore: '2',
+                confidenceNow: '4',
+                wouldUse: 'yes',
+              },
+            },
+          ],
+          reportCounts: {},
+        },
+      }),
+    )
+
+    await page.goto('/en/development-beta')
+    const crrt = page.getByRole('article').filter({
+      has: page.getByRole('heading', { name: 'Baxter CRRT', exact: true }),
+    })
+    await expect(crrt.getByText('Version history not yet available')).toBeVisible()
+    await expect(crrt.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
+    const editLink = crrt.getByRole('link', { name: 'Edit', exact: true })
+    await expect(editLink).toHaveAttribute('href', '/en/development-beta/baxter-crrt?review=1')
+    await crrt.screenshot({
+      path: testInfo.outputPath(`unversioned-hub-${layout}.png`),
+      animations: 'disabled',
+    })
+
+    // An unapproved section ID cannot select an alternate route.
+    await page.goto('/en/development-beta/baxter-crrt?review=1&section=crrt-prescription-dosing')
+    const frame = page.locator('iframe')
+    const toolbar = page.locator('header').filter({ hasText: 'Beta testing' })
+    await expect(frame).toHaveAttribute('src', '/en/baxter-crrt')
+    await expect(frame.contentFrame().getByRole('heading', { level: 1 })).toBeVisible()
+    const review = page.getByRole('dialog', { name: 'Overall review' })
+    await expect(review.getByRole('textbox', { name: /worked best/i })).toHaveValue('The cases')
+    await review.getByRole('button', { name: 'Close dialog' }).click()
+    await expect(toolbar.getByText('Version history not yet available')).toBeVisible()
+    await expect(toolbar.getByRole('button', { name: 'What’s changed' })).toHaveCount(0)
+    expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(96)
+    await expect(toolbar.getByRole('button', { name: 'Edit overall review' })).toBeInViewport()
+    await page.screenshot({
+      path: testInfo.outputPath(`unversioned-toolbar-${layout}.png`),
+      animations: 'disabled',
+    })
+
+    await toolbar.getByRole('button', { name: 'Give feedback', exact: true }).click()
+    const feedback = page.getByRole('dialog', { name: /feedback/i })
+    await expect(feedback.getByText('Page: /en/baxter-crrt')).toBeVisible()
+    await feedback.getByRole('textbox', { name: 'What should we know?' }).fill('Review this page.')
+    await feedback.getByRole('button', { name: 'Close dialog' }).click()
+    await toolbar.getByRole('button', { name: 'Continue feedback' }).click()
+    await expect(feedback.getByRole('textbox', { name: 'What should we know?' })).toHaveValue(
+      'Review this page.',
+    )
+  })
+}
