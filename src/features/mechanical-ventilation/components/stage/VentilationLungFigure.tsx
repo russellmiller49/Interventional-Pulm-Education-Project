@@ -3,6 +3,11 @@
 import type { LungFigureModel } from '../../content/lungFigure'
 import styles from './task-flow.module.css'
 
+const LOBES = [
+  'M72 34 Q50 30 42 58 Q38 84 46 96 Q62 100 72 90 Z',
+  'M88 34 Q110 30 118 58 Q122 84 114 96 Q98 100 88 90 Z',
+] as const
+
 /**
  * The lungs at the cursor: a chest, an airway, two lungs and a diaphragm, drawn from
  * `lungFigureModel`. Everything that moves is one of that model's numbers.
@@ -19,7 +24,9 @@ export function VentilationLungFigure({
   readonly breath?: string
 }) {
   // The lungs grow about their hilum as they fill.
-  const scale = 0.7 + 0.45 * model.inflation
+  const trapped = model.trapped ?? 0
+  // Gas not exhaled leaves the lungs larger at every point of the breath.
+  const scale = 0.7 + 0.45 * model.inflation + 0.12 * trapped
   const effort = model.effort ?? 0
   // The diaphragm's dome flattens and descends as the patient pulls.
   const domeY = 96 + 8 * effort + 6 * model.inflation
@@ -36,6 +43,7 @@ export function VentilationLungFigure({
       data-effort={model.effort === null ? 'not-shown' : model.effort.toFixed(2)}
       data-airway={model.airway === null ? undefined : model.airway.toFixed(2)}
       data-stiffness={model.stiffness === null ? undefined : model.stiffness.toFixed(2)}
+      data-trapped={model.trapped === null ? undefined : model.trapped.toFixed(2)}
     >
       <svg
         viewBox="0 0 160 124"
@@ -46,6 +54,11 @@ export function VentilationLungFigure({
           <pattern id="lung-figure-stiff" width="5" height="5" patternUnits="userSpaceOnUse">
             <path d="M0 5 L5 0" className={styles.lungStiffHatch} />
           </pattern>
+          <clipPath id="lung-figure-lobes">
+            {LOBES.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </clipPath>
         </defs>
         {/* Chest wall */}
         <path
@@ -54,10 +67,7 @@ export function VentilationLungFigure({
         />
         {/* Lungs, growing about the hilum */}
         <g transform={`translate(80 62) scale(${scale.toFixed(3)}) translate(-80 -62)`}>
-          {[
-            'M72 34 Q50 30 42 58 Q38 84 46 96 Q62 100 72 90 Z',
-            'M88 34 Q110 30 118 58 Q122 84 114 96 Q98 100 88 90 Z',
-          ].map((d) => (
+          {LOBES.map((d) => (
             <g key={d}>
               <path d={d} className={styles.lungLobe} />
               {stiff > 0 ? (
@@ -65,6 +75,19 @@ export function VentilationLungFigure({
               ) : null}
             </g>
           ))}
+          {/* Gas not exhaled: the base of each lung, to a height that follows intrinsic PEEP */}
+          {trapped > 0 ? (
+            <rect
+              x="36"
+              // At most about half of each lung, so the shading reads as a share, not the whole.
+              y={100 - 34 * trapped}
+              width="88"
+              height={34 * trapped}
+              clipPath="url(#lung-figure-lobes)"
+              className={styles.lungTrapped}
+              data-trapped-gas
+            />
+          ) : null}
         </g>
         {/* Airway: trachea and the two main bronchi; its width is the airway's calibre */}
         <path
@@ -120,6 +143,13 @@ export function VentilationLungFigure({
             total lung volume. The airway’s width follows the fourth root of its resistance, as a
             tube’s does. It is not this patient’s anatomy.
           </p>
+          {model.trapped === null ? null : (
+            <p data-trapped-note>
+              The shaded base of each lung is gas still in the lung when the next breath starts. Its
+              height follows the intrinsic PEEP reading beside the drawing; it is not a measured
+              volume.
+            </p>
+          )}
         </details>
       </figcaption>
     </figure>

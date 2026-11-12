@@ -230,12 +230,24 @@ export function VentilationConsoleSurface({
   const patientShown = operate && mechanicsGoals.length > 0 && !integration
   const bedsideActionsShown = bedsideActionIds.length > 0 && (operate || showPatient)
   // The rail is for something to do or to read; the options fold alone stays under the console.
+  /*
+   * Gas trapped at end expiration is drawn in the air-trapping section only (owner, 2026-11-11),
+   * and there only where the readings beside the drawing show intrinsic PEEP: it is that reading,
+   * drawn. The section's first part shows flow before the next breath instead, and gets none.
+   */
+  const trappedGasShown =
+    session.unitId === 'expiration-and-air-trapping' &&
+    readingsShown &&
+    round.watch.includes('intrinsicPeep')
   const lungFigure = lungReading
     ? lungFigureModel(lungReading, {
         effortShown: presentation.effort,
         // The patient's properties are drawn only where the learner is the one setting them.
         mechanics: patientShown ? state.teachingMechanics : null,
         mechanicsKeys: mechanicsGoals.map((goal) => goal.key),
+        intrinsicPeepCmH2O: trappedGasShown
+          ? labSnapshot(state, session.holds, session.conditionRevision).values.intrinsicPeep
+          : null,
       })
     : null
   const lungFigureCard = lungFigure ? (

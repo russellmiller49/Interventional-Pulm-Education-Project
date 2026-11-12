@@ -34,6 +34,11 @@ export interface LungFigureModel {
   readonly airway: number | null
   /** How stiff the lungs are drawn, 0 (as this patient's) to 1; null unless the learner sets it. */
   readonly stiffness: number | null
+  /**
+   * 0 to 1: how much of each lung is drawn as gas not exhaled; null unless the step's readings
+   * show intrinsic PEEP, which is the only number it is drawn from.
+   */
+  readonly trapped: number | null
   /** What the drawing says, in words, one fact a line. */
   readonly lines: readonly string[]
 }
@@ -42,6 +47,9 @@ export interface LungFigureModel {
 export const LUNG_FIGURE_FULL_SCALE_ML = 1000
 /** The effort at which the diaphragm is drawn fully descended. A drawing scale. */
 export const LUNG_FIGURE_FULL_EFFORT_CMH2O = 15
+
+/** The intrinsic PEEP at which the trapped-gas shading reaches its full height. A drawing scale. */
+export const LUNG_FIGURE_FULL_TRAPPING_CMH2O = 15
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
@@ -53,6 +61,13 @@ export function lungFigureModel(
     readonly mechanics?: TeachingMechanicsOverride | null
     /** Which of the two the step's sliders offer. */
     readonly mechanicsKeys?: readonly (keyof TeachingMechanicsOverride)[]
+    /**
+     * The intrinsic PEEP the readings beside the drawing are showing, on a step where they show
+     * it. The traces draw volume from each breath's own first sample, so nothing else on the
+     * screen says how much gas was still in the lung; the drawing takes it from this reading and
+     * from nowhere else.
+     */
+    readonly intrinsicPeepCmH2O?: number | null
   },
 ): LungFigureModel {
   // The read-out prints flow to one decimal; a flow it prints as 0.0 is drawn as no flow.
@@ -84,7 +99,19 @@ export function lungFigureModel(
   if (resistanceScale !== null) lines.push(`Patient resistance ${resistanceScale.toFixed(2)}×`)
   if (complianceScale !== null) lines.push(`Patient compliance ${complianceScale.toFixed(2)}×`)
 
+  const intrinsicPeep = options.intrinsicPeepCmH2O ?? null
+  // The reading's own label, digits and qualifier, so the line and the tile cannot differ.
+  if (intrinsicPeep !== null)
+    lines.push(`Intrinsic PEEP ${intrinsicPeep.toFixed(1)} cmH₂O · model estimate`)
+
   return {
+    trapped:
+      intrinsicPeep === null
+        ? null
+        : // A reading printed as 0.0 is drawn as no trapped gas.
+          intrinsicPeep.toFixed(1) === '0.0'
+          ? 0
+          : clamp01(intrinsicPeep / LUNG_FIGURE_FULL_TRAPPING_CMH2O),
     inflation: clamp01(reading.volumeMl / LUNG_FIGURE_FULL_SCALE_ML),
     flow,
     effort: options.effortShown ? clamp01(effortCmH2O / LUNG_FIGURE_FULL_EFFORT_CMH2O) : null,

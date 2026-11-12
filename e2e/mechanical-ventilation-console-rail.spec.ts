@@ -161,6 +161,27 @@ test('while the clock runs the lungs are drawn from the newest sample', async ({
   expect([...seen].sort()).toEqual(expect.arrayContaining(['in', 'out']))
 })
 
+test('trapped gas is drawn in the air-trapping section, from the intrinsic PEEP reading beside it', async ({
+  page,
+}) => {
+  // Part 1 shows flow before the next breath, not intrinsic PEEP: nothing is drawn.
+  await openTask(page, 1600, 852, 'expiration-and-air-trapping', 3)
+  await expect(page.locator('[data-lung-figure]')).toBeVisible()
+  await expect(page.locator('[data-lung-figure] [data-trapped-gas]')).toHaveCount(0)
+
+  // Part 2 shows the reading, and the drawing shades the lungs' base from it.
+  await openTask(page, 1600, 852, 'expiration-and-air-trapping', 6)
+  const figure = page.locator('[data-lung-figure]')
+  await expect(figure.locator('[data-trapped-gas]')).toBeVisible()
+  const tile = page.locator('[data-live-readings] [data-metric="intrinsicPeep"] dd')
+  const shown = (await tile.textContent())!.match(/^(-?\d+\.\d) cmH₂O/)![1]
+  await expect(figure.locator('li', { hasText: 'Intrinsic PEEP' })).toHaveText(
+    `Intrinsic PEEP ${shown} cmH₂O · model estimate`,
+  )
+  expect(await shareInView(page, '[data-lung-figure]')).toBe(1)
+  expect(await shareInView(page, '[data-live-readings] dl')).toBe(1)
+})
+
 test('a narrower pane keeps everything under the console, what is operated first — 1440×800', async ({
   page,
 }) => {

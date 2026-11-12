@@ -1,6 +1,7 @@
 import {
   LUNG_FIGURE_FULL_EFFORT_CMH2O,
   LUNG_FIGURE_FULL_SCALE_ML,
+  LUNG_FIGURE_FULL_TRAPPING_CMH2O,
   lungFigureModel,
   type BreathCursorReading,
 } from '../content/lungFigure'
@@ -94,6 +95,29 @@ describe('what the lung figure draws from a cursor reading', () => {
     expect(lung.lines).toContain('Patient compliance 0.50×')
     expect(lung.airway).toBeNull()
     expect(lung.stiffness).toBe(0.5)
+  })
+
+  it('draws no trapped gas unless it is handed the intrinsic PEEP reading', () => {
+    const plain = lungFigureModel(reading(), { effortShown: true })
+    expect(plain.trapped).toBeNull()
+    expect(plain.lines.join(' ')).not.toMatch(/PEEP|trapped/i)
+    expect(
+      lungFigureModel(reading(), { effortShown: true, intrinsicPeepCmH2O: null }).trapped,
+    ).toBe(null)
+  })
+
+  it('draws trapped gas from the intrinsic PEEP reading, in the reading’s own words', () => {
+    const model = lungFigureModel(reading(), { effortShown: false, intrinsicPeepCmH2O: 8.94 })
+    // The tile beside it reads "Intrinsic PEEP · model estimate — 8.9 cmH₂O".
+    expect(model.lines.at(-1)).toBe('Intrinsic PEEP 8.9 cmH₂O · model estimate')
+    expect(model.trapped).toBeCloseTo(8.94 / LUNG_FIGURE_FULL_TRAPPING_CMH2O)
+    // A reading printed as 0.0 is drawn as none, and still stated.
+    const none = lungFigureModel(reading(), { effortShown: false, intrinsicPeepCmH2O: 0.04 })
+    expect(none.trapped).toBe(0)
+    expect(none.lines.at(-1)).toBe('Intrinsic PEEP 0.0 cmH₂O · model estimate')
+    expect(lungFigureModel(reading(), { effortShown: false, intrinsicPeepCmH2O: 40 }).trapped).toBe(
+      1,
+    )
   })
 
   it('draws this patient’s own lungs as neither narrowed nor stiff', () => {

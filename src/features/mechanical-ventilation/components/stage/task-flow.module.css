@@ -733,6 +733,10 @@
   stroke: #71e1e5;
   stroke-width: 1.5;
 }
+.lungTrapped {
+  fill: #ffbf62;
+  opacity: 0.6;
+}
 .lungStiffHatch {
   fill: none;
   stroke: #eaf4f4;

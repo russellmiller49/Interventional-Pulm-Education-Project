@@ -79,6 +79,7 @@ describe('the lung figure against the cursor read-out, on every step', () => {
     mount(unitId)
     let drawn = 0
     let compared = 0
+    let trappedSeen = 0
     eachListedTask(() => {
       const node = figure()
       if (!node) return
@@ -91,6 +92,17 @@ describe('the lung figure against the cursor read-out, on every step', () => {
         expect(node).not.toHaveAttribute('data-airway')
         expect(node).not.toHaveAttribute('data-stiffness')
         expect(said.join(' ')).not.toMatch(/resistance|compliance/i)
+      }
+      // Trapped gas: only in the air-trapping section, and only as the intrinsic PEEP reading
+      // printed beside the drawing, with that reading's own number.
+      const trappedLine = said.find((line) => line.startsWith('Intrinsic PEEP'))
+      if (node.hasAttribute('data-trapped') || trappedLine) {
+        expect(unitId).toBe('expiration-and-air-trapping')
+        const tile = document.querySelector('[data-live-readings] [data-metric="intrinsicPeep"]')!
+        expect(tile.querySelector('dt')!.textContent).toBe('Intrinsic PEEP · model estimate')
+        const shown = tile.querySelector('dd')!.textContent!.match(/^(-?\d+\.\d) cmH₂O/)![1]
+        expect(trappedLine).toBe(`Intrinsic PEEP ${shown} cmH₂O · model estimate`)
+        trappedSeen += 1
       }
       if (!text) return
       compared += 1
@@ -112,6 +124,8 @@ describe('the lung figure against the cursor read-out, on every step', () => {
     // Not a vacuous pass: the drawing is on this section's screens, beside a read-out to hold it to.
     expect(drawn).toBeGreaterThan(0)
     expect(compared).toBeGreaterThan(0)
+    // Drawn on the second part of the air-trapping section, where the reading is, and nowhere else.
+    expect(trappedSeen > 0).toBe(unitId === 'expiration-and-air-trapping')
   })
 
   it('never draws the airway or the stiffness in the section that asks for the cause', () => {
@@ -122,6 +136,44 @@ describe('the lung figure against the cursor read-out, on every step', () => {
       if (!node) return
       expect(node).not.toHaveAttribute('data-airway')
       expect(node).not.toHaveAttribute('data-stiffness')
+    })
+  })
+})
+
+describe('trapped gas in the air-trapping section', () => {
+  it('is not drawn in the first part, whose readings show flow before the next breath instead', () => {
+    mount('expiration-and-air-trapping')
+    openStep(2)
+    expect(
+      document.querySelector('[data-live-readings] [data-metric="expiratoryFlow"]'),
+    ).not.toBeNull()
+    expect(document.querySelector('[data-live-readings] [data-metric="intrinsicPeep"]')).toBeNull()
+    expect(figure()).not.toHaveAttribute('data-trapped')
+    expect(figure()!.querySelector('[data-trapped-gas]')).toBeNull()
+    expect(figure()!.querySelector('[data-trapped-note]')).toBeNull()
+  })
+
+  it('is drawn in the second part, shaded at the base of the lungs, and explained one press away', () => {
+    mount('expiration-and-air-trapping')
+    eachListedTask((row) => {
+      if (row !== 5) return
+      const node = figure()!
+      expect(Number(node.getAttribute('data-trapped'))).toBeGreaterThan(0)
+      expect(node.querySelector('[data-trapped-gas]')).not.toBeNull()
+      const note = node.querySelector('[data-trapped-note]')!
+      expect(note.closest('details')!.open).toBe(false)
+      expect(note.textContent).toContain('it is not a measured volume')
+      expect(node.querySelector('svg')!.getAttribute('aria-label')).toMatch(
+        /Intrinsic PEEP \d+\.\d cmH₂O/,
+      )
+    })
+  })
+
+  it('is not drawn where another section shows the same reading', () => {
+    // The owner asked for the air-trapping section only (2026-11-11).
+    mount('dyssynchrony-mechanisms')
+    eachListedTask(() => {
+      expect(figure()).not.toHaveAttribute('data-trapped')
     })
   })
 })
