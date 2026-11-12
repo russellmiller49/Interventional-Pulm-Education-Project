@@ -42,7 +42,10 @@ function mount(unitId: string) {
 }
 function eachListedTask(visit: (row: number) => void) {
   const rows = () => [
-    ...document.querySelectorAll<HTMLButtonElement>('[data-task-map] [data-step-list] li button'),
+    // The section's own tasks. The case that ends some sections is another patient on its own card.
+    ...document.querySelectorAll<HTMLButtonElement>(
+      '[data-task-map] [data-step-list] li:not([data-case-row]) button',
+    ),
   ]
   const count = rows().length
   for (let row = 0; row < count; row += 1) {

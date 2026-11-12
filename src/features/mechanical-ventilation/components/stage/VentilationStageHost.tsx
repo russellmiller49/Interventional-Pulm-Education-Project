@@ -52,6 +52,11 @@ import {
 } from '../../content/learnerMap'
 import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import {
+  VENTILATION_SECTION_CASE_TASK_TITLE,
+  ventilationCaseHomeUnitId,
+  ventilationSectionCase,
+} from '../../content/sectionCases'
+import {
   resolvePresentedStepIndex,
   roundManeuver,
   roundQuestionKind,
@@ -65,6 +70,7 @@ import { labGoalMet } from '../../engine/learningLab'
 import { observationFor } from '../../engine/learningObservation'
 import type { VentilatorDeviceId } from '../../engine/types'
 import { BreathMap, breathMapCaption } from '../breath-map/BreathMap'
+import { VentilationCaseWorkspace } from '../MechanicalVentilationCaseActivityV2'
 import { MechanicalVentilationModuleFrame } from '../MechanicalVentilationModuleFrame'
 import type { ConsolePendingSetting } from '../MechanicalVentilatorConsole'
 import { VentilationReinforcement } from '../VentilationReinforcement'
@@ -158,6 +164,20 @@ function useSideBySidePanes(content: RefObject<HTMLDivElement | null>, workspace
 }
 
 /** One section of the Learn pathway, on the shared flowing stage (the ECMO format). */
+/**
+ * Bring "Section finished" clear of the pinned Continue bar. The card is the answer to leaving or
+ * skipping the case, and under a long last task it otherwise sits behind that bar.
+ */
+function revealSectionFinished(from: HTMLElement): void {
+  const done = from
+    .closest('[data-flow-content]')
+    ?.querySelector<HTMLElement>('[data-section-completion]')
+  if (!done) return
+  const footer = from.ownerDocument.querySelector<HTMLElement>('[data-now-footer]')
+  done.style.scrollMarginBottom = `${(footer?.getBoundingClientRect().height ?? 0) + 12}px`
+  done.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'instant' })
+}
+
 export function VentilationStageHost({
   unitId,
   locale = 'en',
@@ -235,6 +255,19 @@ function VentilationStageSession({
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const headingRef = useRef<HTMLDivElement>(null)
   /*
+   * The section's last task, where it has one: its paired case, run here on its own patient and
+   * clock. It is not one of the lesson's steps — it has no round, no console pane of the section's
+   * and nothing to capture — so the host opens it in place of the two panes and the section's own
+   * patient is paused meanwhile. Leaving it finishes the section.
+   */
+  const sectionCase = useMemo(() => ventilationSectionCase(unitId), [unitId])
+  const [caseOpen, setCaseOpen] = useState(false)
+  const [caseOutcome, setCaseOutcome] = useState<'run' | 'skipped' | null>(null)
+  const caseRef = useRef<HTMLDivElement>(null)
+  const caseReturn = useRef(false)
+  const taskCount = presented.length + (sectionCase ? 1 : 0)
+  const caseAhead = sectionCase !== null && caseOutcome === null
+  /*
    * Set only by the explicit navigation handlers below — Continue, Back, the task list and
    * Restart — and consumed by the next committed step. A tick, Run/Pause, a capture, a control
    * change or a disclosure never sets it, so none of them moves focus or the page (N4). "Show me
@@ -259,6 +292,22 @@ function VentilationStageSession({
     if (consumeTaskHeadingReveal(unitId) && headingRef.current)
       revealTaskHeading(headingRef.current, 'if-needed')
   }, [unitId])
+  // Opening the case brings its card into view and focus; leaving it, the section's last card.
+  useLayoutEffect(() => {
+    if (caseOpen) {
+      if (caseRef.current) revealTaskHeading(caseRef.current)
+      return
+    }
+    if (!caseReturn.current) return
+    caseReturn.current = false
+    if (!headingRef.current) return
+    revealTaskHeading(headingRef.current)
+    revealSectionFinished(headingRef.current)
+  }, [caseOpen])
+  // Skipping the case answers on the same card, which a long last task leaves below the fold.
+  useLayoutEffect(() => {
+    if (caseOutcome === 'skipped' && headingRef.current) revealSectionFinished(headingRef.current)
+  }, [caseOutcome])
 
   /*
    * Explicit same-tab navigation to another section. The request names its destination, and the
@@ -318,7 +367,23 @@ function VentilationStageSession({
     if (!first || first.id === unitId) restart()
     else navigateToSection(first.id)
   }
+  function openCase() {
+    if (!sectionCase || caseOpen) return
+    engine({ type: 'SET_PAUSED', paused: true })
+    setHelp(null)
+    setCaseOpen(true)
+  }
+  /** Leaving the case finishes the section: the learner lands on its last card, now finished. */
+  function leaveCase() {
+    const last = presented[presented.length - 1]
+    caseReturn.current = true
+    setCaseOpen(false)
+    setCaseOutcome('run')
+    if (index !== last) goToStep(last)
+  }
   function restart() {
+    setCaseOpen(false)
+    setCaseOutcome(null)
     revealRequested.current = true
     setRestartCount((count) => count + 1)
     lab({ type: 'RESTART' })
@@ -458,17 +523,19 @@ function VentilationStageSession({
   const continueToNext: NowCardAction | undefined =
     nextIndex !== null
       ? { label: 'Continue', onActivate: () => navigateToStep(nextIndex) }
-      : nextUnit
-        ? {
-            label: `Continue to ${ventilationSectionLabel(nextUnit.id)}`,
-            icon: <ArrowRight aria-hidden="true" />,
-            onActivate: () => navigateToSection(nextUnit.id),
-          }
-        : {
-            label: 'Continue to Applications',
-            icon: <ArrowRight aria-hidden="true" />,
-            onActivate: () => router.push('/mechanical-ventilation/assess'),
-          }
+      : caseAhead
+        ? { label: 'Continue to the case', onActivate: openCase }
+        : nextUnit
+          ? {
+              label: `Continue to ${ventilationSectionLabel(nextUnit.id)}`,
+              icon: <ArrowRight aria-hidden="true" />,
+              onActivate: () => navigateToSection(nextUnit.id),
+            }
+          : {
+              label: 'Continue to Applications',
+              icon: <ArrowRight aria-hidden="true" />,
+              onActivate: () => router.push('/mechanical-ventilation/assess'),
+            }
   const showMeWhere: NowCardAction | undefined = whereControlId
     ? {
         label: 'Show me where',
@@ -502,7 +569,7 @@ function VentilationStageSession({
       : undefined
 
   const nowModel: NowCardModel = {
-    kicker: `Task ${position + 1} of ${presented.length}${peepLesson ? '' : ` · Part ${session.round + 1} of 2`}`,
+    kicker: `Task ${position + 1} of ${taskCount}${peepLesson ? '' : ` · Part ${session.round + 1} of 2`}`,
     heading: step.title,
     body,
     pinActions: true,
@@ -522,7 +589,14 @@ function VentilationStageSession({
         ? performed
           ? { primary: continueToNext }
           : { secondary: showMeWhere }
-        : { primary: continueToNext }),
+        : {
+            primary: continueToNext,
+            // Nothing gates: the case can be passed over, and stays in the task list and Practice.
+            secondary:
+              lastStep && caseAhead
+                ? { label: 'Skip the case', onActivate: () => setCaseOutcome('skipped') }
+                : undefined,
+          }),
   }
 
   // A single goal is the card's own heading; the checklist earns its place from two goals up.
@@ -587,33 +661,52 @@ function VentilationStageSession({
       </section>
     ) : null
 
-  const completion = lastStep ? (
-    <section
-      className={stageStyles.completion}
-      role="status"
-      aria-live="polite"
-      data-stage-completion
-      data-section-completion
-    >
-      <h3>Section finished</h3>
-      {lesson.spec.practicePairing ? (
-        <p data-practice-pairing={lesson.spec.practicePairing.kind}>
-          {lesson.spec.practicePairing.kind === 'mechanism-match'
-            ? 'A case on this mechanism: '
-            : 'A case in this part of the pathway: '}
-          <Link
-            href={{
-              pathname: '/mechanical-ventilation/practice',
-              query: { case: lesson.spec.practicePairing.caseId },
-            }}
-          >
-            {ventilationCasePresentationTitle(lesson.spec.practicePairing.caseId)}
-          </Link>
-          .
-        </p>
-      ) : null}
-    </section>
-  ) : null
+  const pairing = lesson.spec.practicePairing
+  const pairedHomeUnitId = pairing ? ventilationCaseHomeUnitId(pairing.caseId) : null
+  const completion =
+    lastStep && !caseAhead ? (
+      <section
+        className={stageStyles.completion}
+        role="status"
+        aria-live="polite"
+        data-stage-completion
+        data-section-completion
+      >
+        <h3>Section finished</h3>
+        {sectionCase ? (
+          <>
+            <p data-section-case-outcome={caseOutcome ?? undefined}>
+              {caseOutcome === 'run'
+                ? `You opened this section’s case: ${sectionCase.title}.`
+                : `You skipped this section’s case: ${sectionCase.title}. It stays the last task in this section’s list, and in Practice.`}
+            </p>
+            <div className={styles.tools}>
+              <button type="button" data-reopen-case onClick={openCase}>
+                {caseOutcome === 'run' ? 'Run the case again' : 'Open the case'}
+              </button>
+            </div>
+          </>
+        ) : pairing ? (
+          <p data-practice-pairing={pairing.kind}>
+            {pairing.kind === 'mechanism-match'
+              ? 'A case on this mechanism: '
+              : 'A case in this part of the pathway: '}
+            <Link
+              href={{
+                pathname: '/mechanical-ventilation/practice',
+                query: { case: pairing.caseId },
+              }}
+            >
+              {ventilationCasePresentationTitle(pairing.caseId)}
+            </Link>
+            .
+            {pairing.kind === 'mechanism-match' && pairedHomeUnitId && pairedHomeUnitId !== unitId
+              ? ` It is also the last task of ${ventilationSectionLabel(pairedHomeUnitId)}.`
+              : ''}
+          </p>
+        ) : null}
+      </section>
+    ) : null
 
   const cardChildren: ReactNode = (
     <div
@@ -818,7 +911,21 @@ function VentilationStageSession({
     />
   )
 
-  const helpDialog = (
+  const helpDialog = caseOpen ? (
+    <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} returnFocusTo={helpButtonRef}>
+      <p className={shellStyles.kicker}>
+        Task {taskCount} of {taskCount}
+      </p>
+      <p>
+        <strong>{VENTILATION_SECTION_CASE_TASK_TITLE}</strong>
+      </p>
+      <p>
+        This is the section’s last task: a patient case on its own patient and clock. Inspect, act
+        and reassess, and open Show explanation whenever you like. Leave the case returns you to the
+        section, finished.
+      </p>
+    </HelpDialog>
+  ) : (
     <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} returnFocusTo={helpButtonRef}>
       <p className={shellStyles.kicker}>{nowModel.kicker}</p>
       <p>
@@ -921,6 +1028,17 @@ function VentilationStageSession({
               </li>
             )
           })}
+          {sectionCase ? (
+            <li
+              data-step-state={caseOutcome === 'run' ? 'done' : 'open'}
+              data-case-row={sectionCase.caseId}
+            >
+              <button type="button" onClick={openCase}>
+                {taskCount}. {VENTILATION_SECTION_CASE_TASK_TITLE}
+                {caseOutcome === 'run' ? ' · done' : ''}
+              </button>
+            </li>
+          ) : null}
         </ol>
       </details>
       {workspace && sideBySide ? sourcesBlock : null}
@@ -937,7 +1055,7 @@ function VentilationStageSession({
       <div
         className={styles.flow}
         data-stage-frame
-        data-layout={presentation.layout}
+        data-layout={caseOpen ? 'case' : presentation.layout}
         data-workspace={workspace || undefined}
       >
         <LessonShell
@@ -949,9 +1067,35 @@ function VentilationStageSession({
           footer={workspace ? undefined : sourcesBlock}
         >
           <div ref={contentRef} className={styles.content}>
-            <FlowContent kind={presentation.layout} teaching={textColumn} visual={visual}>
-              {workspace && !sideBySide ? sourcesBlock : null}
-            </FlowContent>
+            {caseOpen && sectionCase ? (
+              <div
+                ref={caseRef}
+                tabIndex={-1}
+                className={styles.sectionCase}
+                data-flow-content
+                data-single-column="case"
+                data-task-kicker={`Task ${taskCount} of ${taskCount}`}
+              >
+                <p className={shellStyles.kicker} data-case-kicker>
+                  Task {taskCount} of {taskCount} · {VENTILATION_SECTION_CASE_TASK_TITLE}
+                </p>
+                <VentilationCaseWorkspace
+                  caseId={sectionCase.caseId}
+                  deviceId={session.device}
+                  section="practice"
+                  embedded={{
+                    sectionLabel: ventilationSectionLabel(unitId),
+                    sectionNumber: sectionCase.sectionNumber,
+                    returnLocation: { section: 'learn', id: unitId, step: index },
+                    onLeave: leaveCase,
+                  }}
+                />
+              </div>
+            ) : (
+              <FlowContent kind={presentation.layout} teaching={textColumn} visual={visual}>
+                {workspace && !sideBySide ? sourcesBlock : null}
+              </FlowContent>
+            )}
           </div>
         </LessonShell>
         {helpDialog}

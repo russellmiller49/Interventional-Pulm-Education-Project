@@ -1142,3 +1142,20 @@
     grid-template-columns: clamp(23rem, calc(100cqw - 64rem), 30rem) minmax(0, 1fr);
   }
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * The section's last task, a patient case: one column in place of the two panes. In the desktop
+ * workspace the task body is the one scroller (the rule on `[data-flow-content]` above).
+ * ---------------------------------------------------------------------------------------------- */
+.sectionCase {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  min-width: 0;
+}
+.sectionCase:focus {
+  outline: none;
+}
+.sectionCase > [data-case-kicker] {
+  margin: 0;
+}

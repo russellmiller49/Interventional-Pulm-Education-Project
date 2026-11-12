@@ -162,11 +162,8 @@ describe('one learner map', () => {
       const earlier = flat.slice(0, index).some((other) => other.caseId === entry.caseId)
       expect(entry.revisit).toBe(earlier)
     })
-    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual([
-      'MV-01',
-      'MV-05',
-      'MV-13',
-    ])
+    // Sections 10 and 14 have had their own case since 2026-11-12 (MV-06, MV-14).
+    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual(['MV-01'])
     // The stage of Sections 11–13 keeps its id and is not called "applications".
     expect(ventilationCompositionLine()).not.toMatch(/application/i)
     expect(ventilationCompositionLine()).toMatch(/3 integration sections · 1 capstone/)
@@ -290,7 +287,8 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     render(<VentilationStageHost unitId="mechanics-load-and-pressure" />)
     boot()
     const card = document.querySelector('[data-current-step]') as HTMLElement
-    expect(card.textContent).toMatch(/Task 1 of 7 · Part 1 of 2/)
+    // Seven tasks of its own, and the case it ends on.
+    expect(card.textContent).toMatch(/Task 1 of 8 · Part 1 of 2/)
     expect(document.querySelector('[data-stage-frame]')!.textContent).not.toMatch(/Application \d/)
     expect(document.querySelector('[data-part-setup]')?.textContent).toBe(
       ventilationPartSetupLine('mechanics-load-and-pressure', 0),
