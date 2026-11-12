@@ -33,7 +33,7 @@ function jpegSize(bytes: Buffer): { width: number; height: number } {
   throw new Error('No frame header')
 }
 
-describe('teaching stills drawn from the 3D airway', () => {
+describe('teaching stills drawn from the 3D models', () => {
   test('every still the course names is a file on disk, of the stated size', () => {
     for (const id of ids) {
       const file = path.join(PUBLIC, teachingStillUrl(id))
@@ -104,13 +104,47 @@ describe('teaching stills drawn from the 3D airway', () => {
     for (const chunk of teaching) expect(chunk.visual).toBe('stills')
   })
 
-  test('says once how the pictures are seen', () => {
-    expect(teachingStillsNote(['bleeding-scope-wells-up'])).toBeNull()
+  test('the deterioration section has a picture on each of its five teaching screens', () => {
+    const teaching = (COURSE_FLOWS.deterioration ?? []).filter(
+      (chunk) => chunk.kind === 'teach' && chunk.blocks.length > 0,
+    )
+    expect(teaching.map((chunk) => chunk.id)).toEqual([
+      'opening',
+      'breathing',
+      'spasm',
+      'circulation',
+      'topical',
+    ])
+    for (const chunk of teaching) expect(chunk.visual).toBe('stills')
+  })
+
+  test('says once what the pictures are drawn from and how they are seen', () => {
+    expect(teachingStillsNote(['bleeding-scope-wells-up'])).toBe(
+      'Drawn from the course’s 3D airway.',
+    )
     expect(teachingStillsNote(['bleeding-blocker'])).toBe(
-      'From the front, the patient’s right is on the left.',
+      'Drawn from the course’s 3D airway. From the front, the patient’s right is on the left.',
     )
     expect(teachingStillsNote(['bleeding-wedge-close', 'bleeding-side-down'])).toBe(
-      'From the front, the patient’s right is on the left. In the side-down picture the patient’s right is at the bottom.',
+      'Drawn from the course’s 3D airway. From the front, the patient’s right is on the left. In the side-down picture the patient’s right is at the bottom.',
     )
+    expect(teachingStillsNote(['deterioration-cords-shut', 'deterioration-trace-spasm'])).toBe(
+      'Drawn from the course’s 3D airway. The traces are drawings, not recordings.',
+    )
+    expect(teachingStillsNote(['deterioration-pneumothorax', 'deterioration-tension'])).toBe(
+      'Drawn from the course’s 3D chest. From the front, the patient’s right is on the left.',
+    )
+    expect(teachingStillsNote(['deterioration-oximeter-plateau'])).toBe(
+      'The traces are drawings, not recordings.',
+    )
+  })
+
+  test('a trace still is described as a drawing wherever one is shown', () => {
+    for (const flow of Object.values(COURSE_FLOWS))
+      for (const chunk of flow) {
+        const stills = chunk.stills ?? []
+        if (stills.some((id) => TEACHING_STILLS[id].view === 'monitor'))
+          expect(teachingStillsNote(stills)).toContain('drawings, not recordings')
+      }
   })
 })

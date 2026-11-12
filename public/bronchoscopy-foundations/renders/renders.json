@@ -52,6 +52,72 @@
       "file": "bleeding-wedge-close.jpg",
       "bytes": 47666,
       "sha256": "4b5dcd06af06f89a6fb8c773b73f04cac035e47a980d7aa073b13a1fac142abf"
+    },
+    {
+      "id": "deterioration-bronchi-narrowed",
+      "file": "deterioration-bronchi-narrowed.jpg",
+      "bytes": 36351,
+      "sha256": "84f61b92beed19ce372a9a0644ad5ad25a762773ce5b8195af572e2880722c0d"
+    },
+    {
+      "id": "deterioration-clear-view",
+      "file": "deterioration-clear-view.jpg",
+      "bytes": 41075,
+      "sha256": "8c0a772cd5a77fb3251ccc92fdcdc2a3e5b0549ff056752bf9ef1fd87514a185"
+    },
+    {
+      "id": "deterioration-cords-open",
+      "file": "deterioration-cords-open.jpg",
+      "bytes": 48534,
+      "sha256": "57606d7201cfdbd927679958834960fc72f1b536c940aca4191d55df9e866d86"
+    },
+    {
+      "id": "deterioration-cords-shut",
+      "file": "deterioration-cords-shut.jpg",
+      "bytes": 45987,
+      "sha256": "8ff657d0d55a48542e3800fdcfb68d7355bb0f98d5a33eb67742b7e336155d6f"
+    },
+    {
+      "id": "deterioration-oximeter-plateau",
+      "file": "deterioration-oximeter-plateau.jpg",
+      "bytes": 49570,
+      "sha256": "24fb0b7d0fb86b5f9735802c9d9a71f4c0b3815793263e80bbe312681f02ceed"
+    },
+    {
+      "id": "deterioration-pneumothorax",
+      "file": "deterioration-pneumothorax.jpg",
+      "bytes": 73529,
+      "sha256": "fb80024a75f160e0192291bf138ce805e28cdc5dba0c7d9c89b7144148ff54b2"
+    },
+    {
+      "id": "deterioration-scope-in-lobe",
+      "file": "deterioration-scope-in-lobe.jpg",
+      "bytes": 42392,
+      "sha256": "a715a594345f41c0523115e8441982fcadd1161174ca0d92ee23c62dac9effbb"
+    },
+    {
+      "id": "deterioration-scope-in-trachea",
+      "file": "deterioration-scope-in-trachea.jpg",
+      "bytes": 40062,
+      "sha256": "b0b13fd6a5b81afc051019346cbdf8d831c21139050e9dfcdf5efead7ae03ade"
+    },
+    {
+      "id": "deterioration-tension",
+      "file": "deterioration-tension.jpg",
+      "bytes": 69238,
+      "sha256": "b87ee4ce68954c2651f6642a67336cf31f9f085062d84cd21b4db729d0aefce7"
+    },
+    {
+      "id": "deterioration-trace-sedated",
+      "file": "deterioration-trace-sedated.jpg",
+      "bytes": 70936,
+      "sha256": "d464f01fbd6b75e135359d21d265cf2f29aac279ffcf9694bc80a444b0cb7603"
+    },
+    {
+      "id": "deterioration-trace-spasm",
+      "file": "deterioration-trace-spasm.jpg",
+      "bytes": 71244,
+      "sha256": "94071b464751fed334218ef46faa1c017c12c9dbbd20f128d29724cd4d4c349d"
     }
   ]
 }

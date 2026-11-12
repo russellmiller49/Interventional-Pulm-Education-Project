@@ -193,7 +193,7 @@ and axes are written directly, avoiding DCC scene scale or an implicit Y-up conv
 
 ## Teaching stills
 
-`public/bronchoscopy-foundations/renders/` holds pictures drawn from the teaching airway for
+`public/bronchoscopy-foundations/renders/` holds pictures drawn from the course's 3D models for
 teaching screens that had none, with `renders.json` beside them (size and checksum of each file).
 They are drawings, not photographs: blood, a blocker, a tube and the scope are authored shapes
 placed in `lumen.glb` to show where each one is, and every size and position is a presentation
@@ -204,19 +204,37 @@ node scripts/bronchoscopy-foundations/render-teaching-stills.mjs          # ever
 node scripts/bronchoscopy-foundations/render-teaching-stills.mjs <id> ... # only these
 ```
 
-`render-teaching-stills.browser.mts` holds the stills, one entry each in `STILLS`. Two kinds:
+`render-teaching-stills.browser.mts` holds the stills, one entry each in `STILLS`. Five kinds:
 
 - `renderOutside`: the airway tree as pale glass, airways with blood in them solid red, and any
   device inside. Each wall vertex is given to its nearest centerline, so a still names airways by
   their graph edge ids.
 - `renderScope`: the view down the scope, with the course's own wall material (rings, pale wall)
   and blood drawn on the dependent wall. The patient is supine, so that is the posterior wall.
+  With `narrow`, the named airways are drawn in toward their own centerlines (bronchospasm): most
+  at the membranous back wall, with the movement averaged over neighbouring vertices so the wall
+  stays one surface where airways meet.
+- `renderCords`: the view from just above the vocal folds in `larynx/larynx-lumen.glb`, with the
+  folds' own morph target open (0) or shut (1) and the trachea drawn beyond them.
+- `renderChest`: both lungs and the airways from in front, from the peripheral-imaging course's
+  CT-derived `public/peripheral-imaging/anatomy/thorax.glb` (its file is x left, y anterior; the
+  script turns it into the patient frame the airway uses). `rightLung` draws the right lung in
+  toward its hilum by that share and leaves the space it filled as an empty outline; `shiftMm`
+  pushes the trachea and the left lung's inner border toward the patient's left. The lung
+  surface's wrap round the tracheal air is left out. The ribs in that file are a threshold surface
+  with gaps at the costal cartilages and are not drawn: they are not clean enough to count
+  interspaces on, so no still marks a decompression site.
+- `renderStrips`: monitor traces drawn as lines on one time scale, each under a short label. A
+  capnography trace is built breath by breath (`capnogram`); its shape is the one the section's
+  text describes, with no values on it.
 
 To add a still: add its entry to `STILLS`, run the script, add its caption and description to
 `src/features/bronchoscopy-foundations/content/teachingStills.ts`, and name it in a screen's
 `stills` in `content/courseFlow.ts` with `visual: 'stills'`. `teaching-stills.test.ts` holds the
-folder, the manifest and the course to each other, file for file. First used for the four teaching
-screens of the Bleeding section (2026-11-11).
+folder, the manifest and the course to each other, file for file. The note under a set of pictures
+(`teachingStillsNote`) says what they are drawn from and how they are seen, from each still's
+`view`. First used for the four teaching screens of the Bleeding section (2026-11-11), then the
+five of When the patient deteriorates (2026-11-11).
 
 ## Regeneration and validation
 

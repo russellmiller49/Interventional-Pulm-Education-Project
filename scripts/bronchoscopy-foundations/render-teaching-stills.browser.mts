@@ -10,6 +10,8 @@
  * Coordinates are patient LPS millimetres: +X the patient's left, +Y posterior, +Z toward the head.
  */
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import {
   createBronchoscopyMaterial,
   loadAirwayStlGeometry,
@@ -384,9 +386,17 @@ interface Pool {
   /** Only the last millimetres of the airway (for the trachea just above the carina). */
   readonly lastMm?: number
 }
+interface Narrowing {
+  /** Airways drawn narrowed. */
+  readonly airways: readonly number[]
+  /** The share of their calibre that is left. */
+  readonly to: number
+}
 interface ScopeSpec {
   readonly id: number
   readonly mm: number
+  /** Bronchi drawn narrowed, as in bronchospasm. */
+  readonly narrow?: Narrowing
   /** Blood lying in airways. The patient is supine, so it lies on the posterior wall. */
   readonly pools?: readonly Pool[]
   /** Blood on the lens, 0 to 1. */
@@ -398,7 +408,7 @@ interface ScopeSpec {
  * The course's own wall material, with blood drawn on the wall where the still asks for it: dark,
  * wet and red, its edge broken up so it reads as fluid and not as paint.
  */
-function bloodyWall(pools: readonly Pool[]) {
+function bloodyWall(pools: readonly Pool[], narrow?: Narrowing) {
   const blood = new Float32Array(vertexCount)
   const centre = new Map<number, V[]>()
   for (const pool of pools) for (const id of pool.airways) centre.set(id, edge(id).pointsLps.map(v))
@@ -418,6 +428,68 @@ function bloodyWall(pools: readonly Pool[]) {
   }
   const geometry = lumen.clone()
   geometry.setAttribute('aBlood', new THREE.BufferAttribute(blood, 1))
+  if (narrow) {
+    // Each wall drawn in toward its own centerline: most at the membranous back wall, which bows
+    // in, with the mucosa gathered into lengthwise folds.
+    const set = new Set(narrow.airways)
+    const points = geometry.getAttribute('position')
+    const move = new Float32Array(vertexCount * 3)
+    const r = new THREE.Vector3()
+    const back = new THREE.Vector3()
+    const side = new THREE.Vector3()
+    for (let i = 0; i < vertexCount; i += 1) {
+      const id = owner[i]
+      if (!set.has(id)) continue
+      const { point, tangent } = pointAt(id, along[i])
+      r.fromBufferAttribute(points, i).sub(point)
+      r.addScaledVector(tangent, -r.dot(tangent))
+      back.copy(POSTERIOR).addScaledVector(tangent, -POSTERIOR.dot(tangent)).normalize()
+      side.crossVectors(tangent, back)
+      const angle = Math.atan2(r.dot(side), r.dot(back))
+      const target =
+        narrow.to * (1 - 0.22 * Math.max(0, Math.cos(angle))) + 0.035 * Math.cos(angle * 7)
+      r.multiplyScalar(target - 1)
+      move.set([r.x, r.y, r.z], i * 3)
+    }
+    // Where two airways meet, each wall was drawn toward a different centerline. Averaging the
+    // movement over neighbouring vertices keeps the wall one surface there.
+    const twin = new Int32Array(vertexCount)
+    const seen = new Map<string, number>()
+    for (let i = 0; i < vertexCount; i += 1) {
+      const key = `${points.getX(i).toFixed(3)},${points.getY(i).toFixed(3)},${points.getZ(i).toFixed(3)}`
+      const first = seen.get(key)
+      if (first === undefined) seen.set(key, i)
+      twin[i] = first ?? i
+    }
+    const neighbours = Array.from({ length: vertexCount }, () => new Set<number>())
+    for (let i = 0; i < triangles.length; i += 3) {
+      const corners = [twin[triangles[i]], twin[triangles[i + 1]], twin[triangles[i + 2]]]
+      for (const a of corners) for (const b of corners) if (a !== b) neighbours[a].add(b)
+    }
+    let current = move
+    for (let pass = 0; pass < 12; pass += 1) {
+      const next = new Float32Array(current.length)
+      for (let i = 0; i < vertexCount; i += 1) {
+        if (twin[i] !== i) continue
+        for (let k = 0; k < 3; k += 1) {
+          let sum = current[i * 3 + k]
+          for (const n of neighbours[i]) sum += current[n * 3 + k]
+          next[i * 3 + k] = sum / (neighbours[i].size + 1)
+        }
+      }
+      current = next
+    }
+    for (let i = 0; i < vertexCount; i += 1) {
+      const from = twin[i] * 3
+      points.setXYZ(
+        i,
+        points.getX(i) + current[from],
+        points.getY(i) + current[from + 1],
+        points.getZ(i) + current[from + 2],
+      )
+    }
+    geometry.computeVertexNormals()
+  }
   const material = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
   const once = (source: string, find: string, replacement: string) => {
     if (!source.includes(find)) throw new Error(`The wall shader no longer has: ${find}`)
@@ -464,7 +536,7 @@ function renderScope(spec: ScopeSpec) {
   camera.lookAt(point.clone().add(forward))
   camera.updateProjectionMatrix()
   camera.updateMatrixWorld()
-  const { geometry, material } = bloodyWall(spec.pools ?? [])
+  const { geometry, material } = bloodyWall(spec.pools ?? [], spec.narrow)
   material.uniforms.uHeadlightAxis.value.copy(forward)
   scene.add(new THREE.Mesh(geometry, material))
   renderer.toneMapping = THREE.NoToneMapping
@@ -477,6 +549,431 @@ function renderScope(spec: ScopeSpec) {
   material.dispose()
   geometry.dispose()
 }
+
+// ── The cords from above ──────────────────────────────────────────────────────────────────────────
+const gltf = new GLTFLoader().setDRACOLoader(
+  new DRACOLoader().setDecoderPath('/fluoroview/draco/').setWorkerLimit(1),
+)
+const larynxData = (await fetch('/bronchoscopy-foundations/anatomy/larynx/larynx.json').then((r) =>
+  r.json(),
+)) as {
+  pathLps: number[][]
+  frameLps: { forward: number[]; left: number[]; anterior: number[] }
+}
+const larynx = (await gltf.loadAsync('/bronchoscopy-foundations/anatomy/larynx/larynx-lumen.glb'))
+  .scene
+const LARYNX_MUCOSA = /^UA_(lumen|subglottis|fold_)/
+const larynxForward = v(larynxData.frameLps.forward)
+const larynxAnterior = v(larynxData.frameLps.anterior)
+/** The path ends 15 mm below the glottis, where the larynx meets the trachea. */
+const glottis = v(larynxData.pathLps.at(-1)!).addScaledVector(larynxForward, -15)
+larynx.traverse((node) => {
+  if (!(node instanceof THREE.Mesh)) return
+  if (!LARYNX_MUCOSA.test(node.name)) {
+    // From the scope the cartilages are under the mucosa.
+    node.visible = false
+    return
+  }
+  if (node.name.startsWith('UA_fold_true')) {
+    // The true folds as the course draws them: pearly at the free edge, pink toward the wall.
+    node.material = new THREE.MeshPhysicalMaterial({
+      color: '#ffffff',
+      vertexColors: true,
+      emissive: '#5e4d3c',
+      roughness: 0.3,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.25,
+      side: THREE.DoubleSide,
+    })
+    return
+  }
+  const mucosa = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
+  mucosa.side = THREE.DoubleSide
+  node.material = mucosa
+})
+/** The view down the scope from above the cords. `closed` is 0 for open cords and 1 for shut. */
+/** How far above the cords the tip sits for the view of them. */
+const CORDS_FROM_MM = 17
+function renderCords(closed: number) {
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color('#050305')
+  for (const side of ['L', 'R']) {
+    const fold = larynx.getObjectByName(`UA_fold_true_${side}`) as THREE.Mesh
+    fold.morphTargetInfluences![0] = closed
+  }
+  camera.fov = OPTICAL_FOV_DEG
+  camera.position.copy(glottis).addScaledVector(larynxForward, -CORDS_FROM_MM)
+  camera.up.copy(larynxAnterior)
+  camera.lookAt(glottis)
+  camera.updateProjectionMatrix()
+  camera.updateMatrixWorld()
+  larynx.traverse((node) => {
+    const material = node instanceof THREE.Mesh ? node.material : null
+    if (material instanceof THREE.ShaderMaterial)
+      material.uniforms.uHeadlightAxis.value.copy(larynxForward)
+  })
+  // The trachea beyond the cords, so open cords show the airway through them.
+  const beyond = createBronchoscopyMaterial(undefined, { anatomy: true, paleWall: true })
+  beyond.uniforms.uHeadlightAxis.value.copy(larynxForward)
+  // The lamp the course's own scope view lights the folds with.
+  const headlight = new THREE.PointLight('#ffffff', 8, 100, 1)
+  headlight.position.copy(camera.position)
+  scene.add(
+    larynx,
+    new THREE.Mesh(lumen, beyond),
+    headlight,
+    new THREE.AmbientLight('#ffffff', 0.7),
+  )
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.autoClear = true
+  renderer.render(scene, camera)
+  overlay.uniforms.uRed.value = 0
+  renderer.autoClear = false
+  renderer.render(overlayScene, overlayCamera)
+  renderer.autoClear = true
+  scene.remove(larynx)
+  beyond.dispose()
+}
+
+// ── The chest: lungs and airways from the course's teaching CT ────────────────────────────────────
+// A different model from the teaching airway. Its file is x left, y anterior, z toward the head;
+// turned here into the same patient frame as everything above (+Y posterior).
+const thorax = (await gltf.loadAsync('/peripheral-imaging/anatomy/thorax.glb')).scene
+function chestGeometry(name: string): THREE.BufferGeometry {
+  const source = (thorax.getObjectByName(name.replace(/ /g, '_')) ??
+    thorax.getObjectByName(name)) as THREE.Mesh
+  const geometry = source.geometry.clone()
+  const points = geometry.getAttribute('position')
+  for (let i = 0; i < points.count; i += 1) points.setY(i, -points.getY(i))
+  const order = geometry.index!
+  for (let i = 0; i < order.count; i += 3) {
+    const first = order.getX(i)
+    order.setX(i, order.getX(i + 1))
+    order.setX(i + 1, first)
+  }
+  return geometry
+}
+const chestLungs = chestGeometry('Lungs')
+const chestAirways = chestGeometry('Airways')
+const chest = (() => {
+  const lung = chestLungs.getAttribute('position')
+  const airway = chestAirways.getAttribute('position')
+  // The gap between the lungs: the emptiest 4 mm of the middle of the chest.
+  const bins = new Array<number>(30).fill(0)
+  for (let i = 0; i < lung.count; i += 1) {
+    const bin = Math.floor((lung.getX(i) + 60) / 4)
+    if (bin >= 0 && bin < bins.length) bins[bin] += 1
+  }
+  const midX = bins.indexOf(Math.min(...bins)) * 4 - 58
+  // The carina: going down from the top, the level where the airway first spreads wide.
+  let top = -Infinity
+  for (let i = 0; i < airway.count; i += 1) top = Math.max(top, airway.getZ(i))
+  let carinaZ = top - 60
+  for (let z = top; z > top - 220; z -= 4) {
+    let low = Infinity
+    let high = -Infinity
+    let y = 0
+    let n = 0
+    for (let i = 0; i < airway.count; i += 1) {
+      if (Math.abs(airway.getZ(i) - z) > 2) continue
+      low = Math.min(low, airway.getX(i))
+      high = Math.max(high, airway.getX(i))
+      y += airway.getY(i)
+      n += 1
+    }
+    if (n && high - low > 42) {
+      carinaZ = z
+      return finish(y / n)
+    }
+  }
+  return finish(0)
+  function finish(carinaY: number) {
+    const box = new THREE.Box3().setFromBufferAttribute(lung as THREE.BufferAttribute)
+    // The trachea's own middle at each level above the carina, in 4 mm steps going up.
+    const trachea: { x: number; y: number }[] = []
+    for (let z = carinaZ; z <= top; z += 4) {
+      let x = 0
+      let y = 0
+      let n = 0
+      for (let i = 0; i < airway.count; i += 1) {
+        if (Math.abs(airway.getZ(i) - z - 2) > 2) continue
+        x += airway.getX(i)
+        y += airway.getY(i)
+        n += 1
+      }
+      trachea.push(n ? { x: x / n, y: y / n } : (trachea.at(-1) ?? { x: midX, y: carinaY }))
+    }
+    // Just above the carina the slice still holds both main bronchi; a little higher it is the
+    // trachea alone.
+    const carinaX = trachea[Math.min(trachea.length - 1, 5)].x
+    return { midX, top, carinaZ, carinaY, carinaX, box, trachea }
+  }
+})()
+interface ChestSpec {
+  /** How much of its size the right lung keeps: 1 is full. */
+  readonly rightLung: number
+  /** How far the middle of the chest is pushed toward the patient's left, in millimetres. */
+  readonly shiftMm?: number
+}
+function renderChest(spec: ChestSpec) {
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color('#0c1824')
+  const shift = spec.shiftMm ?? 0
+  const ease = (value: number, from: number, to: number) => {
+    const t = Math.min(1, Math.max(0, (value - from) / (to - from)))
+    return t * t * (3 - 2 * t)
+  }
+  /** The middle of the chest moves most at and below the carina, and not at all at the neck. */
+  const push = (z: number) => shift * ease(z, chest.top - 15, chest.carinaZ)
+  /** Where the right lung hangs from: its hilum. It moves with the middle of the chest. */
+  const hilum = new THREE.Vector3(chest.carinaX - 38 + shift, chest.carinaY, chest.carinaZ - 28)
+  const p = new THREE.Vector3()
+  const fold = (p: V, weight: number) => {
+    // Toward the hilum, by the share the lung has lost.
+    const target = hilum.clone().add(p.clone().sub(hilum).multiplyScalar(spec.rightLung))
+    p.lerp(target, weight)
+  }
+  const reshape = (source: THREE.BufferGeometry, move: (p: V) => void) => {
+    const geometry = source.clone()
+    const points = geometry.getAttribute('position')
+    for (let i = 0; i < points.count; i += 1) {
+      p.fromBufferAttribute(points, i)
+      move(p)
+      points.setXYZ(i, p.x, p.y, p.z)
+    }
+    geometry.computeVertexNormals()
+    return geometry
+  }
+  // Each lung's own triangles.
+  const lung = chestLungs.getAttribute('position')
+  const order = chestLungs.index!
+  const right: number[] = []
+  const left: number[] = []
+  for (let i = 0; i < order.count; i += 3) {
+    const a = order.getX(i)
+    const b = order.getX(i + 1)
+    const c = order.getX(i + 2)
+    const x = (lung.getX(a) + lung.getX(b) + lung.getX(c)) / 3
+    const z = (lung.getZ(a) + lung.getZ(b) + lung.getZ(c)) / 3
+    // The CT's lung surface also wraps the air in the trachea. That is not lung.
+    const y = (lung.getY(a) + lung.getY(b) + lung.getY(c)) / 3
+    const level = chest.trachea[Math.floor((z - chest.carinaZ) / 4)]
+    if (level && Math.hypot(x - level.x, y - level.y) < 16) continue
+    ;(x < chest.midX ? right : left).push(a, b, c)
+  }
+  const part = (
+    geometry: THREE.BufferGeometry,
+    indices: number[] | null,
+    material: THREE.Material,
+    renderOrder: number,
+  ) => {
+    if (indices) geometry.setIndex(indices)
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.renderOrder = renderOrder
+    scene.add(mesh)
+  }
+  const leftEdge = chest.box.max.x
+  const rightEdge = chest.box.min.x
+  const lungLook = (opacity: number, color: string) =>
+    new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: 0.45,
+      clearcoat: 0.3,
+      transparent: true,
+      opacity,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+  // The left lung: its inner border moves with the middle of the chest, its outer border stays.
+  part(
+    reshape(chestLungs, (p) => {
+      p.x += push(p.z) * (1 - ease(p.x, chest.midX, leftEdge))
+    }),
+    left,
+    lungLook(0.5, '#e09a98'),
+    2,
+  )
+  if (spec.rightLung < 1) {
+    // The space the right lung filled, now holding air: its outline, empty.
+    part(
+      reshape(chestLungs, (p) => {
+        p.x += push(p.z) * (1 - ease(p.x, chest.midX, rightEdge))
+      }),
+      right,
+      new THREE.MeshPhysicalMaterial({
+        color: '#7fb4e6',
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.13,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+      1,
+    )
+  }
+  // The right lung, drawn in toward its hilum by the share it has lost.
+  part(
+    reshape(chestLungs, (p) => {
+      p.x += shift
+      fold(p, 1)
+    }),
+    right,
+    lungLook(spec.rightLung < 1 ? 0.82 : 0.5, spec.rightLung < 1 ? '#c9706f' : '#e09a98'),
+    3,
+  )
+  // The airways: the right lung's fold in with it, and the trachea bends with the push.
+  const airways = reshape(chestAirways, (p) => {
+    const inRightLung = ease(chest.carinaX - 15 - p.x, 0, 12)
+    p.x += push(p.z)
+    fold(p, inRightLung)
+  })
+  // A small airway that crosses the edge of the folded lung is pulled out into a thread. Leave
+  // those threads out.
+  const kept: number[] = []
+  {
+    const before = chestAirways.getAttribute('position')
+    const after = airways.getAttribute('position')
+    const corners = chestAirways.index!
+    const a = new THREE.Vector3()
+    const b = new THREE.Vector3()
+    const span = (
+      points: THREE.BufferAttribute | THREE.InterleavedBufferAttribute,
+      i: number,
+      j: number,
+    ) => a.fromBufferAttribute(points, i).distanceTo(b.fromBufferAttribute(points, j))
+    for (let i = 0; i < corners.count; i += 3) {
+      const ids = [corners.getX(i), corners.getX(i + 1), corners.getX(i + 2)]
+      const stretched = [0, 1, 2].some(
+        (k) =>
+          span(after, ids[k], ids[(k + 1) % 3]) >
+          2.2 * span(before, ids[k], ids[(k + 1) % 3]) + 0.5,
+      )
+      if (!stretched) kept.push(...ids)
+    }
+  }
+  part(
+    airways,
+    kept,
+    new THREE.MeshPhysicalMaterial({ color: '#d7f1f5', roughness: 0.35, clearcoat: 0.4 }),
+    4,
+  )
+  const center = new THREE.Vector3(
+    chest.midX,
+    (chest.box.min.y + chest.box.max.y) / 2,
+    (chest.box.min.z + chest.box.max.z) / 2 + 8,
+  )
+  camera.fov = 30
+  const distance = 172 / Math.tan((camera.fov * Math.PI) / 360)
+  camera.position.copy(center).addScaledVector(ANTERIOR, distance)
+  camera.up.copy(SUPERIOR)
+  camera.lookAt(center)
+  camera.updateProjectionMatrix()
+  scene.add(new THREE.HemisphereLight('#eaf2f8', '#3a2e30', 1.5))
+  const key = new THREE.DirectionalLight('#ffffff', 2.2)
+  key.position.copy(center).addScaledVector(ANTERIOR, 300).addScaledVector(SUPERIOR, 220)
+  key.target.position.copy(center)
+  scene.add(key, key.target)
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.autoClear = true
+  renderer.render(scene, camera)
+}
+
+// ── Monitor traces, drawn ─────────────────────────────────────────────────────────────────────────
+const drawing = document.createElement('canvas')
+drawing.width = WIDTH
+drawing.height = HEIGHT
+const pen = drawing.getContext('2d')!
+const drawingTexture = new THREE.CanvasTexture(drawing)
+drawingTexture.colorSpace = THREE.SRGBColorSpace
+const drawingScene = new THREE.Scene()
+drawingScene.add(
+  new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    new THREE.MeshBasicMaterial({ map: drawingTexture, toneMapped: false }),
+  ),
+)
+const drawingCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1)
+interface Strip {
+  readonly label: string
+  readonly color: string
+  /** The trace's height, 0 to 1, at a time in seconds. */
+  readonly at: (seconds: number) => number
+}
+const STRIP_SECONDS = 20
+/** Two or three traces on one time scale, each under its own line of words. */
+function renderStrips(strips: readonly Strip[]) {
+  pen.fillStyle = '#0c1824'
+  pen.fillRect(0, 0, WIDTH, HEIGHT)
+  const left = 70
+  const width = WIDTH - 2 * left
+  const slot = (HEIGHT - 60) / strips.length
+  strips.forEach((strip, row) => {
+    const top = 40 + row * slot
+    pen.font = '600 46px system-ui, -apple-system, "Segoe UI", sans-serif'
+    pen.textBaseline = 'top'
+    pen.fillStyle = '#e8eef4'
+    pen.fillText(strip.label, left, top)
+    const panelTop = top + 64
+    const panelHeight = slot - 96
+    pen.fillStyle = '#050b12'
+    pen.beginPath()
+    pen.roundRect(left, panelTop, width, panelHeight, 14)
+    pen.fill()
+    // One faint line each second, as a monitor's sweep has.
+    pen.strokeStyle = 'rgba(255,255,255,0.06)'
+    pen.lineWidth = 2
+    for (let s = 1; s < STRIP_SECONDS; s += 1) {
+      const x = left + (s / STRIP_SECONDS) * width
+      pen.beginPath()
+      pen.moveTo(x, panelTop + 10)
+      pen.lineTo(x, panelTop + panelHeight - 10)
+      pen.stroke()
+    }
+    const floor = panelTop + panelHeight - 30
+    const reach = panelHeight - 70
+    pen.strokeStyle = strip.color
+    pen.lineWidth = 6
+    pen.lineJoin = 'round'
+    pen.lineCap = 'round'
+    pen.beginPath()
+    for (let px = 16; px <= width - 16; px += 1) {
+      const y = floor - reach * strip.at((px / width) * STRIP_SECONDS)
+      if (px === 16) pen.moveTo(left + px, y)
+      else pen.lineTo(left + px, y)
+    }
+    pen.stroke()
+  })
+  drawingTexture.needsUpdate = true
+  renderer.toneMapping = THREE.NoToneMapping
+  renderer.autoClear = true
+  renderer.render(drawingScene, drawingCamera)
+}
+interface Breath {
+  readonly start: number
+  /** How long the breath out lasts, in seconds. */
+  readonly out: number
+  readonly height: number
+  /** A slow, sloping rise with no flat top: air leaving through narrowed bronchi. */
+  readonly sloping?: boolean
+}
+/** A capnography trace: carbon dioxide rises as each breath out arrives and falls with the breath in. */
+const capnogram =
+  (breaths: readonly Breath[]) =>
+  (seconds: number): number => {
+    for (const breath of breaths) {
+      const t = seconds - breath.start
+      if (t < 0 || t > breath.out + 0.3) continue
+      if (t > breath.out) return breath.height * (1 - (t - breath.out) / 0.3)
+      if (breath.sloping) return breath.height * (1 - Math.exp((-2.2 * t) / breath.out)) * 1.125
+      return t < 0.3
+        ? breath.height * 0.9 * (t / 0.3)
+        : breath.height * (0.9 + (0.1 * (t - 0.3)) / (breath.out - 0.3))
+    }
+    return 0
+  }
+const CO2 = '#f2d36b'
+const even = (count: number, every: number, breath: Omit<Breath, 'start'>): Breath[] =>
+  Array.from({ length: count }, (_, i) => ({ ...breath, start: 0.7 + i * every }))
 
 // ── The stills ────────────────────────────────────────────────────────────────────────────────────
 const TR = TRACHEA
@@ -495,6 +992,8 @@ const fromFront = ANTERIOR.clone()
 const basalStart = pointAt(BASAL, 0).point
 /** Where the tip sits when it is wedged: in the mouth of the basal trunk. */
 const wedged = { id: 34, mm: edge(34).lengthMm - 1 }
+/** The tip at the top of the right lower lobe bronchus, its segments ahead. */
+const lowerLobeView = { id: RLL, mm: 1 }
 
 const STILLS: Record<string, () => void> = {
   // Blood kept where it started: the tip wedged in the bleeding airway, blood beyond it only.
@@ -576,6 +1075,70 @@ const STILLS: Record<string, () => void> = {
       ],
       lens: 0.04,
     }),
+  // ── When the patient deteriorates ──
+  // A clear view in the lower lobe: the picture on the screen while the patient gets worse.
+  'deterioration-clear-view': () => renderScope(lowerLobeView),
+  // Where the scope was working, and where it goes when the saturation falls.
+  'deterioration-scope-in-lobe': () =>
+    renderOutside({ ...wholeTree, from: fromFront, scope: { id: BASAL, mm: 4 } }),
+  'deterioration-scope-in-trachea': () =>
+    renderOutside({
+      ...wholeTree,
+      from: fromFront,
+      scope: { id: TR, mm: edge(TR).lengthMm * 0.55 },
+    }),
+  'deterioration-trace-sedated': () =>
+    renderStrips([
+      {
+        label: 'Breathing well',
+        color: CO2,
+        at: capnogram(even(5, 4, { out: 2.1, height: 1 })),
+      },
+      {
+        label: 'Too sedated',
+        color: CO2,
+        at: capnogram([
+          { start: 0.7, out: 2.4, height: 0.74 },
+          { start: 6.3, out: 2.6, height: 0.52 },
+          { start: 12.6, out: 2.8, height: 0.34 },
+        ]),
+      },
+    ]),
+  'deterioration-cords-open': () => renderCords(0),
+  'deterioration-cords-shut': () => renderCords(1),
+  // The same place as the clear view, with every bronchus beyond the main bronchi narrowed.
+  'deterioration-bronchi-narrowed': () =>
+    renderScope({
+      ...lowerLobeView,
+      narrow: {
+        airways: edges.map((e) => e.id).filter((id) => ![TR, RMSB, LMSB].includes(id)),
+        to: 0.58,
+      },
+    }),
+  'deterioration-trace-spasm': () =>
+    renderStrips([
+      {
+        label: 'Laryngospasm',
+        color: CO2,
+        at: capnogram(even(2, 4, { out: 2.1, height: 1 })),
+      },
+      {
+        label: 'Bronchospasm',
+        color: CO2,
+        at: capnogram(even(4, 4.9, { out: 3.3, height: 1, sloping: true })),
+      },
+    ]),
+  'deterioration-pneumothorax': () => renderChest({ rightLung: 0.66 }),
+  'deterioration-tension': () => renderChest({ rightLung: 0.4, shiftMm: 20 }),
+  'deterioration-oximeter-plateau': () =>
+    renderStrips([
+      {
+        label: 'Oxygen, turned up in steps',
+        color: '#7fd4ee',
+        at: (s) => 0.16 + 0.2 * Math.min(4, Math.floor((s + 0.4) / 4.2)),
+      },
+      { label: 'Oximeter reading', color: '#9be29b', at: () => 0.42 },
+    ]),
 }
 
 declare global {
