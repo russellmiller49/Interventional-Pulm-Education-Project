@@ -201,7 +201,12 @@ const timing = round({
   task: 'Raise the set rate from 12 to 26/min, then compare the end of expiration over several breaths.',
   goals: [c('ratePerMin', 26)],
   seconds: 20,
-  watch: ['rate', 'expiratoryFlow', 'volume'],
+  /*
+   * Intrinsic PEEP is watched here as it is in this section's second part (owner, 2026-11-11), so
+   * the drawing of the lungs beside the console can shade the gas not exhaled: it draws that from
+   * this reading and from nothing else. Same place in the list as in the second part.
+   */
+  watch: ['rate', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
     'More breaths per minute can leave less time to exhale. Read the expiratory flow trace itself: whether flow reaches zero before the next breath, not the rate setting, tells you whether the lung emptied.',
 })

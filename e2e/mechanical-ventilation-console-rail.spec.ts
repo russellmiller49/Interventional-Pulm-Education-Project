@@ -164,10 +164,20 @@ test('while the clock runs the lungs are drawn from the newest sample', async ({
 test('trapped gas is drawn in the air-trapping section, from the intrinsic PEEP reading beside it', async ({
   page,
 }) => {
-  // Part 1 shows flow before the next breath, not intrinsic PEEP: nothing is drawn.
-  await openTask(page, 1600, 852, 'expiration-and-air-trapping', 3)
+  // The opening reading has no readings beside it: nothing is drawn.
+  await openTask(page, 1600, 852, 'expiration-and-air-trapping', 1)
   await expect(page.locator('[data-lung-figure]')).toBeVisible()
   await expect(page.locator('[data-lung-figure] [data-trapped-gas]')).toHaveCount(0)
+
+  // Part 1 watches intrinsic PEEP with the rate, and the drawing follows the reading as the
+  // learner raises the rate and the patient runs.
+  await openTask(page, 1600, 852, 'expiration-and-air-trapping', 3)
+  const partOne = page.locator('[data-lung-figure]')
+  const partOneTile = page.locator('[data-live-readings] [data-metric="intrinsicPeep"] dd')
+  const reading = async () => (await partOneTile.textContent())!.match(/^(-?\d+\.\d) cmH₂O/)![1]
+  await expect(partOne.locator('li', { hasText: 'Intrinsic PEEP' })).toHaveText(
+    `Intrinsic PEEP ${await reading()} cmH₂O · model estimate`,
+  )
 
   // Part 2 shows the reading, and the drawing shades the lungs' base from it.
   await openTask(page, 1600, 852, 'expiration-and-air-trapping', 6)

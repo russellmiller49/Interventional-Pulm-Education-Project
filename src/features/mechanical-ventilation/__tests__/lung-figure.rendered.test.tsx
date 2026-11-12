@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react'
 
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
-import { chooseStep } from '../test-support/stageHost'
+import { chooseStep, pressClock, runFor, setConsoleControl } from '../test-support/stageHost'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -124,7 +124,7 @@ describe('the lung figure against the cursor read-out, on every step', () => {
     // Not a vacuous pass: the drawing is on this section's screens, beside a read-out to hold it to.
     expect(drawn).toBeGreaterThan(0)
     expect(compared).toBeGreaterThan(0)
-    // Drawn on the second part of the air-trapping section, where the reading is, and nowhere else.
+    // Drawn in the air-trapping section, wherever its reading is on the screen, and nowhere else.
     expect(trappedSeen > 0).toBe(unitId === 'expiration-and-air-trapping')
   })
 
@@ -141,13 +141,48 @@ describe('the lung figure against the cursor read-out, on every step', () => {
 })
 
 describe('trapped gas in the air-trapping section', () => {
-  it('is not drawn in the first part, whose readings show flow before the next breath instead', () => {
+  it('is drawn in the first part too, where the owner had its reading added', () => {
+    // Part 1 watched rate, flow before the next breath and exhaled volume. Intrinsic PEEP was
+    // added to that list on 2026-11-11 so the drawing has a reading on the screen to draw from.
     mount('expiration-and-air-trapping')
     openStep(2)
-    expect(
-      document.querySelector('[data-live-readings] [data-metric="expiratoryFlow"]'),
-    ).not.toBeNull()
-    expect(document.querySelector('[data-live-readings] [data-metric="intrinsicPeep"]')).toBeNull()
+    const tiles = [...document.querySelectorAll('[data-live-readings] [data-metric]')].map((tile) =>
+      tile.getAttribute('data-metric'),
+    )
+    expect(tiles).toEqual(['rate', 'expiratoryFlow', 'intrinsicPeep', 'volume'])
+    const tile = document.querySelector('[data-live-readings] [data-metric="intrinsicPeep"]')!
+    const shown = tile.querySelector('dd')!.textContent!.match(/^(-?\d+\.\d) cmH₂O/)![1]
+    expect(lines()).toContain(`Intrinsic PEEP ${shown} cmH₂O · model estimate`)
+    expect(figure()).toHaveAttribute('data-trapped')
+    // The task's own words name the reading with the others it asks the learner to watch.
+    expect(document.querySelector('[data-flow-teaching]')!.textContent).toMatch(
+      /Flow before next breath, Intrinsic PEEP,? (and )?Exhaled volume/i,
+    )
+  })
+
+  it('follows the reading as the learner raises the rate and the patient runs', () => {
+    mount('expiration-and-air-trapping')
+    openStep(2)
+    const tileValue = () =>
+      Number(
+        document
+          .querySelector('[data-live-readings] [data-metric="intrinsicPeep"] dd')!
+          .textContent!.match(/^(-?\d+\.\d) cmH₂O/)![1],
+      )
+    const before = tileValue()
+    const shadedBefore = Number(figure()!.getAttribute('data-trapped'))
+    setConsoleControl('ratePerMin', 26)
+    pressClock('run')
+    runFor(25_000)
+    // Less time to exhale: the reading rises, and the drawing with it.
+    expect(tileValue()).toBeGreaterThan(before)
+    expect(Number(figure()!.getAttribute('data-trapped'))).toBeGreaterThan(shadedBefore)
+    expect(lines()).toContain(`Intrinsic PEEP ${tileValue().toFixed(1)} cmH₂O · model estimate`)
+  })
+
+  it('is not drawn on the section’s opening reading, which has no readings beside it', () => {
+    mount('expiration-and-air-trapping')
+    expect(document.querySelector('[data-live-readings]')).toBeNull()
     expect(figure()).not.toHaveAttribute('data-trapped')
     expect(figure()!.querySelector('[data-trapped-gas]')).toBeNull()
     expect(figure()!.querySelector('[data-trapped-note]')).toBeNull()
