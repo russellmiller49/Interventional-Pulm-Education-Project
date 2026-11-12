@@ -84,6 +84,7 @@ const unlistedModulePathPrefixes = [
   ...(!courseAvailability.socalEbusCourseOpen ? ['/socal-ebus-course'] : []),
   ...(!courseAvailability.pccmIntroCourseOpen ? ['/pccm-intro-course'] : []),
   '/ebus-guided',
+  '/eus-b-guided',
   '/eus-b-simulator',
   '/literature-atlas',
   '/medical-thoracoscopy/wolf-preview',

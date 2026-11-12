@@ -447,6 +447,8 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/ebus-guided',
     '/en/ebus-guided/learn?section=acoustic-contact',
     '/en/eus-b-simulator',
+    '/en/eus-b-guided',
+    '/en/eus-b-guided/learn?section=liver',
     '/en/bronchoscopy-foundations',
     '/en/dolphin-bronchoscopy',
     '/en/literature-atlas',
@@ -940,12 +942,12 @@ test('overall review: the form by track, the offer on leaving, the hub status an
     .toContain('user=6a1d1c5e-6c56-4a77-8a5b-111111111111')
 })
 
-test('all 11 visible hub wrappers resolve their catalog module and frame route', async ({
+test('all 12 visible hub wrappers resolve their catalog module and frame route', async ({
   page,
   context,
 }) => {
   test.setTimeout(90000)
-  expect(hubBetaModules).toHaveLength(11)
+  expect(hubBetaModules).toHaveLength(12)
   await context.addCookies([
     {
       name: 'ip_local_dev_auth',
