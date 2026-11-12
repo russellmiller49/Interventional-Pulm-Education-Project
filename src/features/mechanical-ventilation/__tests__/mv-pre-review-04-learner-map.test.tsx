@@ -290,7 +290,8 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     render(<VentilationStageHost unitId="mechanics-load-and-pressure" />)
     boot()
     const card = document.querySelector('[data-current-step]') as HTMLElement
-    expect(card.textContent).toMatch(/Task 1 of 7 · Part 1 of 2/)
+    // Seven tasks of its own, and the case it ends on.
+    expect(card.textContent).toMatch(/Task 1 of 8 · Part 1 of 2/)
     expect(document.querySelector('[data-stage-frame]')!.textContent).not.toMatch(/Application \d/)
     expect(document.querySelector('[data-part-setup]')?.textContent).toBe(
       ventilationPartSetupLine('mechanics-load-and-pressure', 0),

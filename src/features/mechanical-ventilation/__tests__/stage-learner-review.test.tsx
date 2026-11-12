@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
+import { ventilationSectionCase } from '../content/sectionCases'
 import {
   ventilationPresentedStepIndexes,
   ventilationStageLesson,
@@ -63,8 +64,12 @@ describe('self-paced task presentation and preserved device/measurement behavior
       // One console at most: the PEEP section opens on its worked comparison instead.
       expect(document.querySelectorAll('[data-ventilation-console]').length).toBeLessThanOrEqual(1)
       expect(document.querySelectorAll('[data-device]').length).toBeLessThanOrEqual(1)
-      expect(document.querySelectorAll('[data-step-list] li')).toHaveLength(
+      // The lesson's own tasks, and the case where the section ends on one.
+      expect(document.querySelectorAll('[data-step-list] li:not([data-case-row])')).toHaveLength(
         ventilationPresentedStepIndexes(lesson).length,
+      )
+      expect(document.querySelectorAll('[data-step-list] li[data-case-row]')).toHaveLength(
+        ventilationSectionCase(unitId) ? 1 : 0,
       )
       expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBeNull()
     },

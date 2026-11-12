@@ -29,6 +29,7 @@ import { BedsidePanel } from './BedsidePanel'
 import { SourcesPanel } from './SourcesPanel'
 import { PostActionCoachingPanel } from './PostActionCoachingPanel'
 import { VentilationReinforcement } from './VentilationReinforcement'
+import type { VentilationLocation } from '../engine/selfPacedProgress'
 import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
 import styles from './case-flow.module.css'
 import task from './stage/task-flow.module.css'
@@ -41,6 +42,16 @@ export interface MechanicalVentilationCaseActivityV2Props {
   readonly mode: CriticalCareActivityMode
   readonly section: VentilationCaseSection
   readonly seedToken?: string
+}
+/** A case run as the last task of a Learn section, inside that section. */
+export interface VentilationCaseEmbedding {
+  /** "Section 7 · Does the breath have time to finish?" */
+  readonly sectionLabel: string
+  readonly sectionNumber: number
+  /** Where the learner is, so that Resume reopens the section and not Practice. */
+  readonly returnLocation: VentilationLocation
+  /** Leaves the case and finishes the section. */
+  readonly onLeave: () => void
 }
 interface CaseSession {
   state: VentilationSimulationState
@@ -135,6 +146,35 @@ function LiveCase({
   deviceId,
   section,
 }: MechanicalVentilationCaseActivityV2Props) {
+  return (
+    <MechanicalVentilationModuleFrame
+      locale={locale}
+      activeHref={'/mechanical-ventilation/' + section}
+      taskFlow
+    >
+      <VentilationCaseWorkspace caseId={caseId} deviceId={deviceId} section={section} />
+    </MechanicalVentilationModuleFrame>
+  )
+}
+
+/**
+ * One case: its brief, the console, the actions and the worked explanation.
+ *
+ * Practice opens it on its own page. A Learn section opens the same case as its last task
+ * (`embedded`), on its own patient and clock, with a way back to the section where Practice has
+ * its links to other cases. Nothing else about the case differs between the two.
+ */
+export function VentilationCaseWorkspace({
+  caseId,
+  deviceId,
+  section,
+  embedded,
+}: {
+  readonly caseId: string
+  readonly deviceId: VentilatorDeviceId
+  readonly section: VentilationCaseSection
+  readonly embedded?: VentilationCaseEmbedding
+}) {
   const [session, dispatch] = useReducer(caseReducer, undefined, () =>
     initialCase(caseId, deviceId),
   )
@@ -147,9 +187,15 @@ function LiveCase({
   const { visit, storageAvailable } = useVentilationSelfPacedProgress()
   const validity = plateauReadingValidity(state)
   const resolution = branchResolution(caseId, state.branch)
+  const returnSection = embedded?.returnLocation.section
+  const returnId = embedded?.returnLocation.id
+  const returnStep = embedded?.returnLocation.step
   useEffect(() => {
     visit({ section, id: caseId, step: explanation ? 1 : 0 })
-  }, [visit, section, caseId, explanation])
+    // The case is recorded as opened, as Practice records it; the learner's place stays the section.
+    if (returnSection && returnId !== undefined && returnStep !== undefined)
+      visit({ section: returnSection, id: returnId, step: returnStep })
+  }, [visit, section, caseId, explanation, returnSection, returnId, returnStep])
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') dispatch({ type: 'TICK', seconds: 0.1 })
@@ -176,16 +222,22 @@ function LiveCase({
     setRepeat((current) => current + 1)
     if (anotherVariation) setVariation((current) => current + 1)
   }
+  const Title = embedded ? 'h2' : 'h1'
   return (
-    <MechanicalVentilationModuleFrame
-      locale={locale}
-      activeHref={'/mechanical-ventilation/' + section}
-      taskFlow
-    >
-      <div className={`${styles.flow} ${task.flow}`} data-case-flow="self-paced">
+    <>
+      <div
+        className={embedded ? styles.flow : `${styles.flow} ${task.flow}`}
+        data-case-flow="self-paced"
+        data-section-case={embedded ? caseId : undefined}
+      >
         <div className={styles.document}>
           <header className={task.block}>
-            <h1>{definition.title}</h1>
+            {embedded ? (
+              <p className={styles.caseStrip} data-case-strip>
+                Case · the last task of {embedded.sectionLabel}
+              </p>
+            ) : null}
+            <Title data-case-title>{definition.title}</Title>
             <p>{definition.patientDescription}</p>
             {casePresentationModelNote(state, definition) ? (
               <p className={task.note} data-case-model-note>
@@ -209,7 +261,13 @@ function LiveCase({
               <button type="button" onClick={() => restart(true)}>
                 Try another variation
               </button>
-              <Link href="/mechanical-ventilation/practice">Continue to another case</Link>
+              {embedded ? (
+                <button type="button" data-leave-case onClick={embedded.onLeave}>
+                  Leave the case
+                </button>
+              ) : (
+                <Link href="/mechanical-ventilation/practice">Continue to another case</Link>
+              )}
             </nav>
             {hint ? <p>{definition.hintLadder.join(' ')}</p> : null}
             <p className={task.note}>
@@ -394,9 +452,17 @@ function LiveCase({
             explanation={ventilationCaseExplanation(caseId)}
           />
           <SourcesPanel deviceId={deviceId} />
-          <Link href="/mechanical-ventilation/practice">Continue to another case</Link>
+          {embedded ? (
+            <div className={task.tools}>
+              <button type="button" data-finish-case onClick={embedded.onLeave}>
+                Finish the case · back to Section {embedded.sectionNumber}
+              </button>
+            </div>
+          ) : (
+            <Link href="/mechanical-ventilation/practice">Continue to another case</Link>
+          )}
         </div>
       </div>
-    </MechanicalVentilationModuleFrame>
+    </>
   )
 }
