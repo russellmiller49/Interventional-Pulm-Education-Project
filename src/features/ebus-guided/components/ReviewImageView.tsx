@@ -8,6 +8,7 @@ import { OUTLINE_NAMES } from '../content/node-features'
 import { Mark } from './ClipFigure'
 import { NodeImage } from './NodeFeatureFigures'
 import { STILL_COLOURS, stillAnnotation, stillRegionKind, stillRegionName } from './StationFigure'
+import { useHiddenImage } from './useHiddenImage'
 import styles from './chapter-review.module.css'
 
 /*
@@ -28,6 +29,32 @@ const NEEDLE_AT_STOP = [
 const NEEDLE_STATES: Record<'at-stop' | 'turned', NeedleState> = {
   'at-stop': NEEDLE_AT_STOP,
   turned: modelReducer(NEEDLE_AT_STOP, { type: 'rotate', value: 6 }) as NeedleState,
+}
+
+/**
+ * A picture whose address would name its station, shown from an object URL (`useHiddenImage`).
+ * The frame around it has the picture's shape already, so nothing moves when it arrives.
+ */
+function HiddenPicture({
+  path,
+  width,
+  height,
+  alt,
+}: {
+  path: string
+  width: number
+  height: number
+  alt: string
+}) {
+  const { url, failed } = useHiddenImage(path)
+  return url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={url} width={width} height={height} alt={alt} data-hidden-address />
+  ) : (
+    <p role="status" className={styles.loading}>
+      {failed ? 'This image could not load.' : 'Loading image…'}
+    </p>
+  )
 }
 
 export function ReviewImageView({ image, revealed }: { image: ReviewImage; revealed: boolean }) {
@@ -51,10 +78,12 @@ export function ReviewImageView({ image, revealed }: { image: ReviewImage; revea
     if (!asset || !outlines) return null
     return (
       <figure className={styles.figure} data-review-image="still">
-        <div className={styles.frame}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={'/socal-ebus-course/app' + asset.image}
+        <div
+          className={styles.frame}
+          style={{ aspectRatio: outlines.width + ' / ' + outlines.height }}
+        >
+          <HiddenPicture
+            path={'/socal-ebus-course/app' + asset.image}
             width={outlines.width}
             height={outlines.height}
             alt={
@@ -65,6 +94,7 @@ export function ReviewImageView({ image, revealed }: { image: ReviewImage; revea
             }
           />
           <svg
+            className={styles.overlay}
             viewBox={`0 0 ${outlines.width} ${outlines.height}`}
             preserveAspectRatio="none"
             aria-hidden="true"
@@ -151,7 +181,12 @@ export function ReviewImageView({ image, revealed }: { image: ReviewImage; revea
             alt={'A paused frame of a patient EBUS recording: ' + clip.title.toLowerCase() + '.'}
           />
           {revealed && (
-            <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+            <svg
+              className={styles.overlay}
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
               {stop.marks.map((mark, index) => (
                 <Mark key={index} mark={mark} number={index + 1} />
               ))}

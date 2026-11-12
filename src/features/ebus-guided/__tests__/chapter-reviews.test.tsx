@@ -235,6 +235,16 @@ describe('the review page', () => {
     expect(document.querySelector('[data-review-names]')).toHaveTextContent('Pulmonary artery')
   })
 
+  it('never puts a station still’s address, which names its station, in the page', () => {
+    render(<ChapterReviewPage chapterId="anatomy" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Continue without answering' }))
+    const figure = document.querySelector('[data-review-image="still"]')!
+    expect(figure.innerHTML).not.toMatch(/stations\/|4L/)
+    // No image arrives in this test environment; the frame says so and the outlines still draw.
+    expect(figure.querySelector('[role=status]')).toBeInTheDocument()
+    expect(figure.querySelectorAll('polygon')).toHaveLength(4)
+  })
+
   it('ends on a summary that names the lesson behind each image and the next lesson', () => {
     render(<ChapterReviewPage chapterId="anatomy" />)
     for (let step = 0; step < 2; step += 1)
