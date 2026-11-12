@@ -392,19 +392,31 @@
   font-size: 0.8rem;
   line-height: 1.4;
 }
-/* Two rows of pictures are held to the window's height, so the whole set sits above the
- * continuation bar; each picture opens larger when pressed. */
-.teachFigure > .stills[data-count='3'],
-.teachFigure > .stills[data-count='4'] {
-  max-width: max(21rem, min(38rem, calc((100dvh - 32rem) / 0.75)));
+/* A set of pictures is held to the window's height, so the whole set, captions and note included,
+ * sits above the continuation bar; each picture opens larger when pressed. One picture is as tall
+ * as the window allows; four, in two rows, are narrower still. */
+.teachFigure > .stills[data-count='1'] {
+  max-width: max(18rem, min(38rem, calc((100dvh - 29rem) / 0.75)));
 }
-/* On a short window three pictures go in one row at the figure's full width: the same size each as
- * two rows would give them there, in half the height. */
-@media (max-height: 820px) {
+.teachFigure > .stills[data-count='4'] {
+  max-width: max(21rem, min(38rem, calc((100dvh - 34rem) / 0.75)));
+}
+/* Three pictures go in one row beside the text, and on any short window: a third picture alone on
+ * a second row costs a row's height for one picture. */
+@media (min-width: 1050px), (max-height: 820px) {
   .stills[data-count='3'] .stillsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .teachFigure > .stills[data-count='3'] {
+    max-width: 38rem;
+  }
+}
+/* On a short window four go in one row too, at the figure's full width. */
+@media (max-height: 820px) {
+  .stills[data-count='4'] .stillsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .teachFigure > .stills[data-count='4'] {
     max-width: 38rem;
   }
 }

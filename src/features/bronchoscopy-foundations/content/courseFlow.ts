@@ -31,7 +31,7 @@ export type CourseVisual =
   | 'orientation-compass'
   /** The shared instrument lab: forceps, brush and needle, each worked from the handle. */
   | 'instrument-lab'
-  /** Pictures drawn from the course's 3D airway, named in the screen's `stills`. */
+  /** Pictures drawn from the course's 3D models, named in the screen's `stills`. */
   | 'stills'
 export interface CourseChunk {
   readonly id: string
@@ -692,27 +692,56 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
   deterioration: [
     hook('The saturation is falling'),
     check('check', 'Why is he restless?'),
-    screen('opening', 'Open every event the same way', 'Read the three moves that come first.', [
-      'opening-bundle',
-    ]),
+    screen(
+      'opening',
+      'Open every event the same way',
+      'Read the three moves that come first.',
+      ['opening-bundle'],
+      { visual: 'stills', stills: ['deterioration-clear-view'] },
+    ),
     screen(
       'breathing',
       'Low oxygen, and too much sedation',
       'Learn the two cards. Most events start here.',
       ['desaturation', 'oversedation'],
+      {
+        visual: 'stills',
+        stills: [
+          'deterioration-scope-in-lobe',
+          'deterioration-scope-in-trachea',
+          'deterioration-trace-sedated',
+        ],
+      },
     ),
-    screen('spasm', 'The larynx and the bronchi', 'Learn the two cards and how they differ.', [
-      'laryngospasm',
-      'bronchospasm',
-    ]),
-    screen('circulation', 'Pressure and pleura', 'Learn the two cards. One of them cannot wait.', [
-      'hypotension',
-      'pneumothorax',
-    ]),
-    screen('topical', 'When the topical drug is the cause', 'Learn the two cards.', [
-      'anesthetic-toxicity',
-      'methemoglobinemia',
-    ]),
+    screen(
+      'spasm',
+      'The larynx and the bronchi',
+      'Learn the two cards and how they differ.',
+      ['laryngospasm', 'bronchospasm'],
+      {
+        visual: 'stills',
+        stills: [
+          'deterioration-cords-open',
+          'deterioration-cords-shut',
+          'deterioration-bronchi-narrowed',
+          'deterioration-trace-spasm',
+        ],
+      },
+    ),
+    screen(
+      'circulation',
+      'Pressure and pleura',
+      'Learn the two cards. One of them cannot wait.',
+      ['hypotension', 'pneumothorax'],
+      { visual: 'stills', stills: ['deterioration-pneumothorax', 'deterioration-tension'] },
+    ),
+    screen(
+      'topical',
+      'When the topical drug is the cause',
+      'Learn the two cards.',
+      ['anesthetic-toxicity', 'methemoglobinemia'],
+      { visual: 'stills', stills: ['deterioration-oximeter-plateau'] },
+    ),
     practice(
       'One patient, four decisions',
       'case',

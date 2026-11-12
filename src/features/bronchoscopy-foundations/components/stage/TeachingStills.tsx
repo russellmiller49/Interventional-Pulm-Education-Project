@@ -12,7 +12,7 @@ import { MediaEnlargeDialog } from './MediaEnlargeDialog'
 import styles from './course-flow.module.css'
 
 /**
- * A teaching screen's pictures, drawn from the course's 3D airway: one picture, or a small grid,
+ * A teaching screen's pictures, drawn from the course's 3D models: one picture, or a small grid,
  * each with its caption. A picture opens larger when it is pressed.
  */
 export function TeachingStills({
@@ -58,9 +58,7 @@ export function TeachingStills({
           )
         })}
       </div>
-      <p className={styles.stillsNote}>
-        Drawn from the course’s 3D airway.{note ? ` ${note}` : ''}
-      </p>
+      <p className={styles.stillsNote}>{note}</p>
       <MediaEnlargeDialog
         open={open !== null}
         onClose={() => setOpen(null)}
