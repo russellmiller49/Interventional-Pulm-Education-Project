@@ -499,6 +499,18 @@ export function ventilationSectionSpecErrors(
           errors.push(`${spec.unitId}: "${line}" matches its own deny pattern ${pattern}`)
       }
     }
+    /*
+     * The Sections menu lists every section's topic word inside every section, before any answer.
+     * So a topic word is held to each section's deny list, not only its own.
+     */
+    for (const other of ventilationLearningUnits) {
+      for (const pattern of spec.precommitDenyPatterns) {
+        if (pattern.test(other.shortTitle))
+          errors.push(
+            `${spec.unitId}: the topic word "${other.shortTitle}" (${other.id}) matches deny pattern ${pattern}`,
+          )
+      }
+    }
   }
   for (const unit of ventilationLearningUnits) {
     if (!seen.has(unit.id)) errors.push(`Unit ${unit.id} has no section spec`)
