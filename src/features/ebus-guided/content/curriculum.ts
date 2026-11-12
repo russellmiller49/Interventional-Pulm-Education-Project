@@ -190,9 +190,10 @@ const MERGED: Record<
   'needle-safety': {
     title: 'The needle: assembly, tip visibility and a safe pass',
     objective:
-      'Identify the safety checks around a needle pass, and stop advancing when live tip guidance is lost.',
-    minutes: 14,
-    parts: ['needle-safety', 'needle-assembly-model'],
+      'Identify the safety checks around a needle pass, stop advancing when live tip guidance is lost, and choose what to change between passes.',
+    minutes: 20,
+    // Needle technique within the node was folded in on 2026-11-11 (owner decision).
+    parts: ['needle-safety', 'needle-technique', 'needle-assembly-model'],
   },
 }
 /** A unit that used to be a lesson of its own → the lesson that now holds it. */

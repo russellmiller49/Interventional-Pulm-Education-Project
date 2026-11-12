@@ -98,6 +98,124 @@ export const sampleLessons: Lesson[] = [
     ],
     sources: ['ics2023', 'chest2016'],
   },
+  /*
+   * Needle technique within the node (2026-11-11), folded into the needle lesson by the owner's
+   * decision. It teaches which choices are the operator's and what to change between passes.
+   *
+   * What is evidence and what is practice is kept apart in the text. The stylet and suction
+   * statements are two randomized trials. Slow pull is one randomized trial and one retrospective
+   * series, described as mixed. Taking the suction off after a bloody pass, and fanning, are the
+   * owner's practice points (his decisions of 2026-11-11) and are labelled as practice points to
+   * the learner. The fresh needle after a malignant node is AABIP 2025's own note under the
+   * ninth-edition TNM changes; that guideline makes no recommendation on needle technique.
+   */
+  {
+    id: 'needle-technique',
+    title: 'Needle technique within the node',
+    topic: 'Sample',
+    minutes: 6,
+    objective:
+      'Choose what to change between passes: the stylet, suction, and how the needle moves within the node.',
+    recall:
+      'The needle is in the node with its tip in the imaging plane, and the stop is set to the far side of the node.',
+    concept: 'Most of these choices are yours; know what each one changes',
+    paragraphs: [
+      'The stylet. Two randomized trials sampled the same nodes with and without the stylet and found no difference in specimen adequacy or diagnostic yield (Scholten 2017; Lin 2018). Using it is optional (ICS/IAB 2023).',
+      'Suction. In the second of those trials suction did not change adequacy or yield either, but passes with suction more often returned a tissue core. Suction is a choice, not a requirement. Slow pull, in which the stylet is drawn back slowly as the needle moves and no syringe is attached, is an alternative: one randomized trial found no difference in on-site adequacy against suction and one retrospective series favoured it for tissue cores, so the evidence is mixed (Kassirian 2022; He 2020).',
+      'A bloody pass. Practice point: when a pass made with suction returns mostly blood, take the suction off for the next pass.',
+      'Fanning. Practice point: change the angle of the needle a little between movements, so that successive movements sample different parts of the node and not one track. The only EBUS study of fanning found for this course was a bench study on a model (Mizumori 2023).',
+      'Between stations. Once a malignant node has been identified, a fresh needle may be used for the next station to reduce cross-contamination (AABIP 2025).',
+    ],
+    checklist: [
+      'Decide on the stylet and suction before the pass.',
+      'After a bloody pass, take the suction off.',
+      'Change the needle angle between movements.',
+    ],
+    worked: {
+      context: 'The first pass at a station was made with suction, and the smear is mostly blood.',
+      reasoning:
+        'Take the suction off for the next pass. In the randomized comparison, adequacy and diagnostic yield were the same with and without suction, so the next pass gives nothing up that the trial measured except the chance of a tissue core.',
+    },
+    question: q(
+      'technique-predict',
+      'A pass at this station was made with suction and returned mostly blood. What do you change for the next pass?',
+      [
+        'Take the suction off',
+        'Practice point: after a bloody pass with suction, the next pass is made without it. In a randomized comparison, adequacy and diagnostic yield were the same with and without suction (Lin 2018).',
+      ],
+      [
+        'Change to a larger needle',
+        `A larger needle is not the response to a bloody pass. For suspected malignancy the 2024 CHEST guideline suggests a ${N('needle-gauge')} needle.`,
+      ],
+      [
+        'Add the stylet to clear the needle',
+        'Two randomized trials found no difference in adequacy or yield with the stylet, and it does not change what suction draws into the needle.',
+      ],
+    ),
+    observation: q(
+      'technique-observe',
+      'Two randomized trials sampled the same nodes with and without the stylet. What did they find?',
+      [
+        'No difference in specimen adequacy or diagnostic yield',
+        'Using the stylet is a choice. One of the trials also found the pass a little quicker without it.',
+      ],
+      [
+        'More diagnostic samples with the stylet',
+        'Neither trial found a difference in diagnostic yield.',
+      ],
+      [
+        'More blood contamination without the stylet',
+        'Neither trial reported a difference of that kind; adequacy and yield were the same.',
+      ],
+    ),
+    transfer: q(
+      'technique-transfer',
+      'The pathologist asks for tissue cores from this station. Which choice does the randomized comparison support?',
+      [
+        'Make the passes with suction',
+        'Passes with suction more often returned a tissue core, although adequacy and yield were unchanged (Lin 2018).',
+      ],
+      [
+        'Use the stylet on every pass',
+        'The stylet made no difference to adequacy or yield in either trial, and neither reported that it changed tissue cores.',
+      ],
+      [
+        'Make fewer movements on each pass',
+        'Nothing in these trials supports fewer movements; the lesson’s guidance on movements per pass stands.',
+      ],
+    ),
+    matching: matching(
+      'Match the situation with the change.',
+      [
+        ['The last pass, made with suction, was mostly blood', 'Take the suction off'],
+        ['Tissue cores are wanted from this station', 'Make the passes with suction'],
+        [
+          'Every movement follows the same track through the node',
+          'Change the needle angle between movements',
+        ],
+        [
+          'A malignant node has just been sampled and another station is next',
+          'Consider a fresh needle',
+        ],
+      ],
+      'Suction raised tissue-core acquisition without changing adequacy or yield (Lin 2018). Taking the suction off after a bloody pass and fanning are practice points. A fresh needle after a malignant node is meant to reduce cross-contamination between stations (AABIP 2025).',
+    ),
+    takeaways: [
+      'The stylet and suction are choices: neither changed adequacy or yield in randomized trials.',
+      'After a bloody pass, take the suction off.',
+      'Vary the needle angle within the node.',
+    ],
+    sources: [
+      'scholten2017',
+      'lin2018',
+      'kassirian2022',
+      'he2020',
+      'mizumori2023',
+      'ics2023',
+      'chest2024',
+      'aabip2025',
+    ],
+  },
   {
     id: 'adequacy-rose',
     title: 'Adequacy, passes, and ROSE',
