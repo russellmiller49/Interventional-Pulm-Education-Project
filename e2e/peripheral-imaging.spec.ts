@@ -519,7 +519,7 @@ test('a practice case explains itself before an answer, repeats freely, moves on
   }
 })
 
-test('all nineteen sections render their authored explanation and visual, without architecture panels', async ({
+test('every section renders its authored explanation and visual, without architecture panels', async ({
   page,
 }, info) => {
   test.setTimeout(420_000)
@@ -2718,7 +2718,7 @@ test('report CW1: a reused closing question is labelled optional review with a l
   const origin = page.locator('[data-transfer-origin="projection"] [data-transfer-origin-link]')
   await expect(origin).toHaveAttribute('href', /section=projection/)
   await expect(page.locator('[data-now-focus]')).toContainText(
-    'it first appears at the end of Section 6',
+    'it first appears at the end of Section 7',
   )
   await capture(page, info, 'fellow3-cw1-review-1440.png')
   // The explanation opens before any answer.
@@ -3558,4 +3558,108 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   }
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', check.id)
   await expect(page.locator('[data-bone-depth-toggle]')).toHaveCount(0)
+})
+
+test('the bronchial tree is drawn and named on the frontal image, and withheld on its check', async ({
+  page,
+}, info) => {
+  // Owner request, 2026-11-11: bring FluoroView's airway anatomy into the course. The tree is drawn
+  // from the CT in one section, by lobe and by segment, and its names are hidden where they are asked.
+  test.setTimeout(480_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('airway-anatomy')
+  const goTo = async (stepId: string) => {
+    for (let guard = 0; guard < 12; guard++) {
+      if ((await page.locator('[data-stage]').getAttribute('data-stage')) === stepId) break
+      // Every step on the way is either a reading step or one whose checklist is already done.
+      await expect(primary(page)).toBeEnabled({ timeout: 90000 })
+      await primary(page).click()
+    }
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', stepId)
+  }
+  const ready = () =>
+    expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
+  const overlay = page.locator('[data-current-image] [data-airway-overlay]')
+  const labels = () =>
+    overlay
+      .locator('[data-airway-label]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-airway-label')))
+
+  await openSection(page, 'airway-anatomy')
+  await ready()
+  // The section opens on the image as fluoroscopy gives it: no bronchus is drawn, and no tool.
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-target-overlay]')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Frontal · whole tree by lobe' }).click()
+  await expect(overlay).toHaveAttribute('data-airway-show', 'all')
+  expect((await labels()).sort()).toEqual(
+    ['BI', 'LLL', 'LMB', 'LUL', 'RLL', 'RMB', 'RML', 'RUL', 'trachea'].sort(),
+  )
+  await expect(page.locator('[data-current-image] [data-airway-legend]')).toContainText(
+    'Fluoroscopy shows the trachea and the main bronchi',
+  )
+  // The trachea is drawn where the image shows it: over the midline, in the upper half.
+  const trachea = await overlay.locator('[data-airway-key="trachea"]').first().boundingBox()
+  const image = await page.locator('[data-current-image] canvas').boundingBox()
+  expect(Math.abs(trachea!.x + trachea!.width / 2 - (image!.x + image!.width / 2))).toBeLessThan(
+    image!.width * 0.06,
+  )
+  expect(trachea!.y + trachea!.height).toBeLessThan(image!.y + image!.height * 0.55)
+  await capture(page, info, 'airway-whole-tree.png')
+
+  // Hands-on: one lobe at a time, a colour and a name for each segmental bronchus.
+  const act = lesson.steps.find((step) => step.interaction.kind === 'lab-task')!
+  await goTo(act.id)
+  await ready()
+  // Until the checklist is done the step offers Skip, not Continue.
+  await expect(primary(page)).toHaveCount(0)
+  const airways = page.locator('#peripheral-imaging-control-airways')
+  await airways.selectOption('RLL')
+  await expect(overlay).toHaveAttribute('data-airway-show', 'RLL')
+  expect(await labels()).toEqual(expect.arrayContaining(['RB6', 'RB7', 'RB8', 'RB9', 'RB10']))
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('RB6')
+  // Each segmental bronchus has its first two centimetres drawn heavier, and RB6's is the shortest
+  // on the frontal image: it runs along the beam.
+  const stemLength = (key: string) =>
+    overlay
+      .locator(`[data-airway-stem="${key}"] path`)
+      .first()
+      .evaluate((node) => (node as SVGPathElement).getTotalLength())
+  const stems = await Promise.all(['RB6', 'RB7', 'RB8', 'RB9', 'RB10'].map(stemLength))
+  expect(stems[0]).toBe(Math.min(...stems))
+  await capture(page, info, 'airway-right-lower-lobe.png')
+  await airways.selectOption('LUL')
+  await expect(page.locator('[data-readout="airwaysDrawn"]')).toContainText('LB1+2, LB3, LB4, LB5')
+  await expect(primary(page)).toBeEnabled()
+
+  // Observe: a lobe from a second angle, then the names hidden.
+  const observe = lesson.steps.find((step) => step.interaction.kind === 'observe')!
+  await goTo(observe.id)
+  await ready()
+  await airways.selectOption('LLL')
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('LB6')
+  await controlRange(page, 'orbit', -30)
+  await expect(page.locator('[data-readout="airwayShortest"]')).not.toContainText('LB6')
+  await capture(page, info, 'airway-left-lower-lobe-lao.png')
+  await page.locator('#peripheral-imaging-control-airwayNames').setChecked(false)
+  await expect(overlay.locator('[data-airway-label]')).toHaveCount(0)
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('Names hidden')
+  await expect(primary(page)).toBeEnabled()
+
+  // The check: the left lower lobe drawn without a name anywhere on the screen.
+  const check = lesson.steps[lesson.predictionStepIndex]
+  await goTo(check.id)
+  await ready()
+  await expect(overlay).toHaveAttribute('data-airway-show', 'LLL')
+  await expect(overlay.locator('[data-airway-label]')).toHaveCount(0)
+  await expect(overlay.locator('[data-airway-stem]')).toHaveCount(4)
+  await expect(page.locator('#peripheral-imaging-control-airways')).toHaveCount(0)
+  const suite = page.locator('[data-suite-scene]')
+  await expect(suite).not.toContainText(/LB6|LB7\+8|LB9|LB10/)
+  await capture(page, info, 'airway-check.png')
 })

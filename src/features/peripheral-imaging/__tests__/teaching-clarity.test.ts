@@ -238,6 +238,7 @@ describe('report CW1 — a reused closing question is labelled as the optional r
       ['chain-walk', 'choose-1', 'imaging-questions', []],
       ['good-image', 'walk-1', 'chain-walk', ['chain-walk']],
       ['current-anatomy', 'choose-1', 'imaging-questions', ['chain-walk']],
+      ['airway-anatomy', 'walk-1', 'chain-walk', ['chain-walk', 'good-image']],
       ['projection', 'anatomy-1', 'current-anatomy', ['current-anatomy']],
       ['signal', 'geometry-1', 'projection', []],
       ['field', 'signal-1', 'signal', []],

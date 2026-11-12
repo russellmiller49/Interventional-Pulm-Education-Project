@@ -63,7 +63,7 @@ export function FixedMobileComparison() {
         {FIXED_MOBILE_MODEL_NOTE}
       </p>
       <p className={styles.note} data-comparison-limit>
-        {FIXED_MOBILE_LIMIT} Drawn from this course’s Sections 12 to 14 and{' '}
+        {FIXED_MOBILE_LIMIT} Drawn from this course’s Sections 13 to 15 and{' '}
         {sourceIds.map(shortCitation).join(', ')}.
       </p>
     </section>

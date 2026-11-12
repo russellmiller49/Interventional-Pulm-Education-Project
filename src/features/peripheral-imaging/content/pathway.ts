@@ -23,6 +23,7 @@ export const peripheralImagingSectionIds = [
   'chain-walk',
   'good-image',
   'current-anatomy',
+  'airway-anatomy',
   'projection',
   'signal',
   'field',

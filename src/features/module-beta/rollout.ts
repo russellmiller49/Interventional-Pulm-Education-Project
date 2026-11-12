@@ -131,11 +131,11 @@ export const betaRollout: BetaRollout = {
         'Pulmonary and interventional pulmonology fellows, bronchoscopists, and the radiologic technologists and imaging team who support them.',
       summary:
         'Imaging for peripheral bronchoscopy in one order: decide whether the lesion can be seen before the first frame, then fluoroscopy, tomosynthesis, cone-beam CT, confirmation and dose.',
-      estimate: { minutes: 207, basis: "19 sections, by the module's own count" },
+      estimate: { minutes: 217, basis: "20 sections, by the module's own count" },
       lookFor: [
         'Section 4, setting up before the first image: routine recruitment with anesthesia, and positioning the lesion side up.',
-        'The angle rules and the Section 19 wedge run-through, taken from the AABIP imaging session.',
-        'Whether the simulated check images in Sections 4 and 16 look like what your suite produces.',
+        'The angle rules and the Section 20 wedge run-through, taken from the AABIP imaging session.',
+        'Whether the simulated check images in Sections 4 and 17 look like what your suite produces.',
       ],
       knownLimits: [
         'Its 14 sourced teaching numbers are not yet signed off by the author.',

@@ -52,6 +52,7 @@ const PLAUSIBILITY_OVERRIDES: Readonly<Record<string, Readonly<Record<string, Pl
   'case-8-v2': { c: 'reasonable-but-incomplete' },
 
   // Practice cases.
+  'airway-anatomy-practice-1': { a: 'reasonable-but-incomplete' },
   'signal-practice-1': { c: 'reasonable-but-incomplete' },
   'signal-practice-2': { a: 'reasonable-but-incomplete' },
   'field-practice-1': { c: 'unsafe' },

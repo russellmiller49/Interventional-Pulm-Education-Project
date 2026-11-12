@@ -123,7 +123,7 @@ export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
     id: 'context',
     title: 'Understand the image and its context',
     description: 'Follow image formation, control effects and the relationship to planning CT.',
-    sectionIds: ['chain-walk', 'good-image', 'current-anatomy'],
+    sectionIds: ['chain-walk', 'good-image', 'current-anatomy', 'airway-anatomy'],
   },
   {
     id: 'fluoroscopy',
@@ -195,7 +195,7 @@ export function imagingPathwayComposition(): ImagingPathwayComposition {
   }
 }
 
-/** "19 sections in 6 chapters · 207 min". */
+/** "20 sections in 6 chapters · 217 min". */
 export function imagingCompositionLine(): string {
   const composition = imagingPathwayComposition()
   return `${composition.total} sections in ${composition.byPhase.length} chapters · ${composition.minutes} min`

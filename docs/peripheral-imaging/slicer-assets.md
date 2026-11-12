@@ -6,14 +6,15 @@ It does not require Slicer, an external image service or a clinical scanner at r
 
 ## Provenance
 
-| Delivered asset               | Source and processing                                                                                                                                    | Runtime use                                                                  |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `anatomy/thorax.glb`          | Existing `target_clean_ct.nrrd` and `Final_airway_target.vtk`; Slicer/VTK thresholding, surface extraction, smoothing, decimation and Draco compression  | Independently selectable airways, lungs, ribs/spine and thoracic envelope    |
-| `anatomy/ct-atlas.png`        | Same CT; 192³ samples with a baked authored part-solid nodule, quantized to 8-bit over −1100 to 1800 HU, packed into a 16 × 12 PNG atlas                 | Original FluoroView volume DRR renderer and linked CT slice context          |
-| `anatomy/fluoroview-carm.glb` | Existing `public/fluoroview/cases/patient-new/carm/c_arm_animation.glb`; Draco compression preserves its animation                                       | Original FluoroView C-arm motion reference                                   |
-| `anatomy/dts-projections.png` | Parallel projections of the derived CT with its baked part-solid target and a straight tool added to the volume; horizontal Gaussian high-pass filtering | Browser shift-and-add refocusing of 13 views at each of five authored sweeps |
-| `sampling-window.glb`         | Original procedural sphere and fictional side-window needle                                                                                              | Download of the geometry used in the sampling exercise                       |
-| `room-suite.png`              | Actual `room` mode: procedural suite, beam cone and patient figure around `anatomy/thorax.glb`; software WebGL capture and lossless PNG compression      | Static 2400 × 1000 hero asset; hub integration remains with the owner        |
+| Delivered asset               | Source and processing                                                                                                                                                                                     | Runtime use                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `anatomy/thorax.glb`          | Existing `target_clean_ct.nrrd` and `Final_airway_target.vtk`; Slicer/VTK thresholding, surface extraction, smoothing, decimation and Draco compression                                                   | Independently selectable airways, lungs, ribs/spine and thoracic envelope    |
+| `anatomy/ct-atlas.png`        | Same CT; 192³ samples with a baked authored part-solid nodule, quantized to 8-bit over −1100 to 1800 HU, packed into a 16 × 12 PNG atlas                                                                  | Original FluoroView volume DRR renderer and linked CT slice context          |
+| `anatomy/fluoroview-carm.glb` | Existing `public/fluoroview/cases/patient-new/carm/c_arm_animation.glb`; Draco compression preserves its animation                                                                                        | Original FluoroView C-arm motion reference                                   |
+| `anatomy/dts-projections.png` | Parallel projections of the derived CT with its baked part-solid target and a straight tool added to the volume; horizontal Gaussian high-pass filtering                                                  | Browser shift-and-add refocusing of 13 views at each of five authored sweeps |
+| `anatomy/airway-tree.json`    | Committed FluoroView airway graph of the same CT (centrelines, radii) and the owner's segment model `Full_airway_segments.glb`; a branch takes the name of the segment surface its centreline runs inside | Named bronchial tree drawn on the projection and in the 3D view (Section 5)  |
+| `sampling-window.glb`         | Original procedural sphere and fictional side-window needle                                                                                                                                               | Download of the geometry used in the sampling exercise                       |
+| `room-suite.png`              | Actual `room` mode: procedural suite, beam cone and patient figure around `anatomy/thorax.glb`; software WebGL capture and lossless PNG compression                                                       | Static 2400 × 1000 hero asset; hub integration remains with the owner        |
 
 The local source stays in the primary checkout's `fluoro_2/New_patient` directory.
 No raw NRRD, DICOM headers, local absolute path, name, or identifier is copied into
@@ -46,6 +47,7 @@ npx gltf-pipeline -i public/peripheral-imaging/anatomy/thorax.glb -o /tmp/imagin
 cp /tmp/imaging-thorax-compressed.glb public/peripheral-imaging/anatomy/thorax.glb
 npx gltf-pipeline -i public/fluoroview/cases/patient-new/carm/c_arm_animation.glb -o public/peripheral-imaging/anatomy/fluoroview-carm.glb -d
 npx tsx scripts/peripheral-imaging/export-models.ts
+IMAGING_SOURCE_DIR="$IMAGING_SOURCE_DIR" npx tsx scripts/peripheral-imaging/build-airway-tree.ts
 npx tsx scripts/peripheral-imaging/render-room-hero.ts
 npx tsx scripts/peripheral-imaging/write-asset-manifest.ts
 npx tsx scripts/peripheral-imaging/verify-nodule-assets.ts
@@ -55,6 +57,28 @@ Runtime dependencies already exist in the repository. The GLB decoder is served
 locally at `/fluoroview/draco/`. The optimized anatomy is approximately 457 KiB,
 the original gantry 955 KiB, the CT atlas 4 MiB and the DTS atlas 1.2 MiB. PNG
 atlases decode once per browser page and are shared between mounted views.
+
+## The named bronchial tree
+
+`build-airway-tree.ts` needs no Slicer. It reads the FluoroView airway graph already in the
+repository (`public/fluoroview/cases/patient-new/metadata/airway_graph.json`, 497 branches) and
+the segment model in the local source folder, converts both to the course frame, and writes
+`anatomy/airway-tree.json` (about 124 KiB).
+
+- **Frame.** The course centre is recomputed from the published FluoroView volume description and
+  must reproduce `anatomy/manifest.json`'s `originMm` to 0.01 mm, or the build stops.
+- **Names.** The segment model has one named surface per segmental bronchus (with everything
+  distal to it), both main bronchi and the bronchus intermedius. What the named surfaces leave of
+  the complete airway surface is the wall of the trachea and of the bronchi above the segments. A
+  branch is named by the surface most of its centreline is nearest; everything below a segmental
+  bronchus keeps that segment's name; a bronchus above the segments is named from what it leads to
+  (one lobe: that lobe's bronchus; the upper division and the lingula on the left).
+- **Check.** `__tests__/airway-tree.test.ts` decodes the CT atlas and requires the centrelines of
+  the wide airways to lie in air, and to stop doing so when the tree is mirrored or shifted 10 mm.
+  It also holds every sentence of Section 5 about a bronchus's course to the tree.
+- **Limits.** The names are those the owner assigned on this CT; lobar bronchi are grouped from
+  their segments because the segment model has no separate lobar surfaces. Subsegmental branches
+  carry their segment's name. It is a teaching map of one patient, not a diagnostic airway map.
 
 ## Geometry and interpretation contracts
 

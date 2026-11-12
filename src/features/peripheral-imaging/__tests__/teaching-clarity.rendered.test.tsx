@@ -178,7 +178,7 @@ describe('reports CW4 and 1.6 — the opening question is shown where it is aske
 })
 
 describe('report CW1 — a reused closing question is labelled review, links its section, and keeps every affordance', () => {
-  it('labels Section 10’s closing question as optional review of Section 5 with a link, unchanged in identity', () => {
+  it('labels the DTS acquisition section’s closing question as optional review of the projection section with a link, unchanged in identity', () => {
     const lesson = skipToTransfer('dts-acquisition')
     const origin = transferOrigin('dts-acquisition')!
     expect(document.querySelector('[data-now-focus] h2')?.textContent).toBe(
@@ -189,8 +189,9 @@ describe('report CW1 — a reused closing question is labelled review, links its
     )!
     expect(link.getAttribute('href')).toBe(sectionHref('projection'))
     expect(link.textContent).toContain(`Section ${origin.origin.number}`)
+    // The question belongs to the projection section and is first shown at the end of the next one.
     expect(document.querySelector('[data-now-focus] p')?.textContent).toMatch(
-      /it first appears at the end of Section 6/,
+      new RegExp(`it first appears at the end of Section ${origin.origin.number + 1}\\b`),
     )
     const step = lesson.steps[lesson.transferStepIndex]
     if (step.interaction.kind !== 'prediction') throw new Error('unreachable')

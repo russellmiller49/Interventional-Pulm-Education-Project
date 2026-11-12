@@ -25,6 +25,38 @@ const projection: readonly TeachingExample[] = [
     values: { orbit: 55, tilt: 0, depth: 30 },
   },
 ]
+const airways: readonly TeachingExample[] = [
+  {
+    title: 'Frontal · the image alone',
+    look: 'This is what fluoroscopy gives: the trachea and the main bronchi as lucent columns over the spine, and no bronchus beyond them. The amber contour marks the nodule.',
+    values: { orbit: 0, tilt: 0, airways: 'off', airwayNames: true },
+  },
+  {
+    title: 'Frontal · whole tree by lobe',
+    look: 'The same image with the bronchi drawn from the CT, one colour for each lobe. The upper lobes climb from the hila. The middle lobe, the lingula and the lower lobes all descend, and they overlap.',
+    values: { orbit: 0, tilt: 0, airways: 'all', airwayNames: true },
+  },
+  {
+    title: 'Frontal · right lower lobe',
+    look: 'One colour for each segmental bronchus; the heavy line is its first two centimetres. RB6 leaves the lower lobe bronchus first and runs posteriorly, along the beam: its heavy line is the shortest, and its branches seem to spring from one point. The basal bronchi fan toward the diaphragm, drawn nearer their full length.',
+    values: { orbit: 0, tilt: 0, airways: 'RLL', airwayNames: true },
+  },
+  {
+    title: 'Frontal · right middle lobe',
+    look: 'The middle lobe bronchus leaves the front of the bronchus intermedius at about the level where RB6 left the back. It runs anteriorly, so it too is drawn short, starting from the same place on the image.',
+    values: { orbit: 0, tilt: 0, airways: 'RML', airwayNames: true },
+  },
+  {
+    title: 'Frontal · left lower lobe',
+    look: 'The way to the nodule: left main bronchus, left lower lobe bronchus, then LB7+8, which runs laterally and is drawn long. LB6, the first bronchus off the lower lobe bronchus, is the short one.',
+    values: { orbit: 0, tilt: 0, airways: 'LLL', airwayNames: true },
+  },
+  {
+    title: 'LAO 30° · left lower lobe',
+    look: 'The same bronchi from a second angle. LB6 now runs more nearly across the beam and its heavy line has lengthened; nothing in the patient has moved.',
+    values: { orbit: -30, tilt: 0, airways: 'LLL', airwayNames: true },
+  },
+]
 const field: readonly TeachingExample[] = [
   {
     title: 'Baseline · full acquisition field',
@@ -275,6 +307,8 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
           },
         ],
       }
+    case 'airway-anatomy':
+      return { lab: 'geometry', examples: airways }
     case 'current-anatomy':
     case 'changing-anatomy':
       return { lab: 'registration', examples: registration }
@@ -422,6 +456,9 @@ const SECTION_FIXED_EXAMPLE: Readonly<Partial<Record<ImagingSectionId, LabValues
   // The stem describes a frontal image on which the tool and nodule are superimposed although they
   // are two centimetres apart along the X-ray path: zero obliquity, and 20 mm of depth offset.
   'chain-walk': { orbit: 0, tilt: 0, depth: 20 },
+  // The stem reads one lobe's bronchi on a frontal image without their names: the left lower lobe,
+  // drawn from the CT, names hidden on the image, in the key and in the readouts.
+  'airway-anatomy': { orbit: 0, tilt: 0, airways: 'LLL', airwayNames: false },
   // The stem reads a last-image-hold frame and asks which change alters what is acquired rather
   // than how it is displayed, so the example carries the section's own worked geometry with the
   // full acquired field and no display operation applied.

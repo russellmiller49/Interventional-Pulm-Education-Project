@@ -232,6 +232,49 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     // The check shows a new dependent opacity on its own image pair (`DependentOpacityPair`).
     ...finish('comparison'),
   ],
+  'airway-anatomy': [
+    read(
+      'map',
+      'Find the central airways and the lobes',
+      [
+        '@purpose',
+        'Fluoroscopy does not show the bronchi',
+        'Side and height: what the frontal image does show',
+      ],
+      'suite',
+      'comparison',
+      ['Frontal · the image alone', 'Frontal · whole tree by lobe'],
+      [],
+    ),
+    read(
+      'depth',
+      'Find the bronchi the frontal image draws short',
+      ['Depth: what the frontal image does not show'],
+      'suite',
+      'comparison',
+      ['Frontal · right lower lobe', 'Frontal · right middle lobe'],
+      [],
+    ),
+    read(
+      'route',
+      'Name the airway to the lesion',
+      ['Name the airway to the lesion before the procedure', '@worked'],
+      'suite',
+      'comparison',
+      ['Frontal · left lower lobe', 'LAO 30° · left lower lobe'],
+      [],
+    ),
+    work('Draw each lobe and find its short bronchi', 'comparison', 'suite', [
+      'airways',
+      'airwayNames',
+    ]),
+    compare('Rotate the C-arm and watch a lobe open out', 'comparison', [
+      'airways',
+      'airwayNames',
+      'orbit',
+    ]),
+    ...finish('comparison'),
+  ],
   projection: [
     read(
       'parallax',

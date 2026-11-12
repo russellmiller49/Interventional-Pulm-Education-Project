@@ -42,6 +42,7 @@ import { DoseView, DosePanels } from './views/DoseView'
 import { dosePlanes } from './doseModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
+import { AirwayTree3D } from './AirwayTree3D'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import { FieldView, FieldMask, FieldContextOverlay } from './views/FieldView'
 import { ProjectionView3D, projectionObjectLabels } from './views/ProjectionView3D'
@@ -83,6 +84,11 @@ const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | '
   head: 'Head: from the head of the table, to see how far the C-arm has rotated around the patient.',
   target: 'Target: close on the target lesion and the tool tip.',
 }
+
+/** Where the close view looks when a section is about the bronchial tree and no tool is drawn. */
+const CHEST_FOCUS: Point3 = [0, -30, 0]
+const CHEST_CLOSEUP_PURPOSE =
+  'Target: close on the chest, from the patient’s left and in front. Front and back are apart in this view, so a bronchus the frontal image draws short is seen at its length.'
 
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -428,6 +434,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     }
   }, [view.mode, frame, inputs.fieldPercent])
   const viewControls = visibleLabControls(view, props.independent)
+  // A section about the anatomy alone: the bronchial tree, with no tool in it yet.
+  const anatomyOnly = view.mode === 'projection' && !inputs.showTool
   // Where the learner is working the C-arm's angles on a projection, the image can colour bone by
   // depth. Not on a check (it has no controls), and not where the display range is being read from
   // the image itself.
@@ -581,6 +589,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                                 contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
                                 room={isRoom}
                               />
+                              {view.mode === 'projection' && (
+                                <AirwayTree3D show={inputs.airwayShow} offset={translation} />
+                              )}
                               {showPatient && (
                                 <PatientBody
                                   offset={isCbct ? translation : undefined}
@@ -702,9 +713,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           roomComposition={isRoom}
                           monitorOffset={monitorOffset}
                           overviewBounds={overviewBounds}
-                          focus={isCbct ? cbct.setup.target : undefined}
+                          focus={isCbct ? cbct.setup.target : anatomyOnly ? CHEST_FOCUS : undefined}
                           closeupDistance={
-                            view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
+                            view.mode === 'sampling'
+                              ? 120
+                              : isRegistration
+                                ? 180
+                                : anatomyOnly
+                                  ? 560
+                                  : undefined
                           }
                           command={cameraCommand}
                           rollDeg={roll}
@@ -832,8 +849,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     </span>
                     {displayCamera in CAMERA_PURPOSE && (
                       <p className={styles.cameraPurpose} data-camera-purpose={displayCamera}>
-                        {CAMERA_PURPOSE[displayCamera as keyof typeof CAMERA_PURPOSE]} Drag to
-                        rotate; the mouse wheel scrolls the page.
+                        {anatomyOnly && displayCamera === 'target'
+                          ? CHEST_CLOSEUP_PURPOSE
+                          : CAMERA_PURPOSE[displayCamera as keyof typeof CAMERA_PURPOSE]}{' '}
+                        Drag to rotate; the mouse wheel scrolls the page.
                       </p>
                     )}
                   </div>
@@ -866,6 +885,12 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 acquisitionField={inputs.fieldPercent}
                 fieldProcessing={fieldProcessing}
                 boneDepthAid={boneDepthAid}
+                showTool={inputs.showTool}
+                airways={
+                  view.mode === 'projection'
+                    ? { show: inputs.airwayShow, names: inputs.airwayNames }
+                    : undefined
+                }
                 displayMask={
                   fieldVisible && inputs.crop ? (
                     <FieldMask frame={frame} fieldPercent={inputs.cropWidth} crop />
@@ -923,7 +948,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     ? 'Amber: current target · teal: stored contour · white: tool'
                     : fieldVisible
                       ? 'Amber contour: target lesion · white mark: tool tip · numbered crosses: landmarks 1 and 2 · dashed teal line: planned tool path'
-                      : 'Amber contour: target lesion · white mark: tool tip'}
+                      : inputs.showTool
+                        ? 'Amber contour: target lesion · white mark: tool tip'
+                        : 'Amber contour: target lesion'}
               </p>
             </section>
           )}

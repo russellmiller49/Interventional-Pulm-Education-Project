@@ -98,6 +98,28 @@ export const QUESTIONS: Question[] = [
     ['setser', 'pritchett'],
   ),
   item(
+    'airway-1',
+    'optimize',
+    'The bronchi of one lobe are drawn from the CT on this frontal image, without their names; the heavy line is the first two centimetres of each. The bronchus that leaves the lobar bronchus first has the shortest heavy line. Which bronchus is it, and why is it drawn short?',
+    'b',
+    [
+      [
+        'The anteromedial basal bronchus (LB7+8): it is the shortest segmental bronchus of this lobe.',
+        'LB7+8 leaves the basal trunk lower down, and on this CT it runs laterally, across the beam, so the frontal image draws it at nearly its full length. A bronchus drawn short is not necessarily a short bronchus.',
+      ],
+      [
+        'The superior segmental bronchus (LB6): it runs posteriorly, nearly along the beam.',
+        'The lobe that descends over the cardiac silhouette to the diaphragm is the left lower lobe, and its first segmental bronchus is LB6. It runs posteriorly, so most of its length lies along the frontal beam and is not drawn as length.',
+      ],
+      [
+        'The superior lingular bronchus (LB4): it runs anteriorly, nearly along the beam.',
+        'LB4 does run anteriorly and a frontal image does draw it short. It arises from the lingular bronchus, off the left upper lobe bronchus; the lobe drawn here is the one that continues down to the diaphragm.',
+      ],
+    ],
+    'A bronchus is drawn at its true length only where it runs across the beam. On a frontal image the superior segmental bronchi run posteriorly, and the middle lobe, lingular and anterior segmental bronchi run anteriorly, so all are drawn short.',
+    ['chassagnon'],
+  ),
+  item(
     'signal-1',
     'optimize',
     'The image is stable, the tool is sharp and there is little noise, but the lesion is projected over the cardiac silhouette. Which adjustment most directly improves lesion conspicuity?',
@@ -1140,6 +1162,28 @@ export const QUESTIONS: Question[] = [
     ],
     'Prevent atelectasis and position the patient before the first image: recruit with anesthesia and lift the nodule side, rather than rescuing a nodule that has already been lost.',
     ['ilocate', 'vespa'],
+  ),
+  item(
+    'airway-anatomy-practice-1',
+    'optimize',
+    'Which reading of this image is justified?',
+    'c',
+    [
+      [
+        'The catheter is in the middle lobe bronchus, which is the bronchus that arises at this level.',
+        'The middle lobe bronchus does arise here, from the front of the airway. The superior segmental bronchus of the lower lobe arises from the back within about a centimetre of the same level, and a frontal image draws both starting from the same place.',
+      ],
+      [
+        'The catheter has met an obstruction, because it has stopped advancing on the image.',
+        'A catheter travelling along the beam moves little on the image however far it is advanced. Foreshortening explains the appearance without any obstruction; resistance at the hand, not the image, is the evidence for one.',
+      ],
+      [
+        'The catheter is running front to back, in the middle lobe bronchus or in the superior segment of the lower lobe.',
+        'Both arise at about this level, one anteriorly and one posteriorly, and both run largely along the frontal beam. The image places the catheter by side and height and cannot say front or back. A rotated projection, or the planning CT against the turns already taken, settles it.',
+      ],
+    ],
+    'The frontal image places a bronchus by side and by height. Front or back takes a second projection, the planning CT or direct vision.',
+    ['chassagnon', 'setser'],
   ),
   item(
     'projection-practice-1',

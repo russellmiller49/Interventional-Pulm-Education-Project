@@ -84,7 +84,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'primary-beam-callout',
     category: 'immediate-safety',
-    where: 'Section 17, "Keep hands out of the primary beam"',
+    where: 'Section 18, "Keep hands out of the primary beam"',
     selector: '[data-safety-callout]',
     treatment: 'kept',
     note: 'Report 7.4: set apart as its own callout rather than left inside the paragraph.',
@@ -108,7 +108,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'teaching-figure-model-label',
     category: 'figure-limitation',
-    where: 'The label on a Prompt 04 teaching figure (Sections 6, 9 and 16)',
+    where: 'The label on a Prompt 04 teaching figure (Sections 7, 10 and 17)',
     selector: '[data-teaching-figure] [data-model-label]',
     treatment: 'kept',
     note: 'A plain caption of what the figure shows.',
@@ -116,7 +116,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'fixed-mobile-model-note',
     category: 'figure-limitation',
-    where: 'Under the fixed and mobile comparison (Sections 13 and 14)',
+    where: 'Under the fixed and mobile comparison (Sections 14 and 15)',
     selector: '[data-fixed-mobile-comparison] [data-model-note]',
     treatment: 'kept',
     note: 'The scenes draw the same field for both, so a learner does not read a device difference into them.',
@@ -124,7 +124,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'readiness-aid-status',
     category: 'figure-limitation',
-    where: 'The first line of the team-readiness aid (Section 12)',
+    where: 'The first line of the team-readiness aid (Section 13)',
     selector: '[data-team-readiness] [data-readiness-status]',
     treatment: 'kept',
     note: 'One line: a team check by role, which a unit’s own checklist may add to.',

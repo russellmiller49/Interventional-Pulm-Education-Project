@@ -9,6 +9,8 @@ import {
   type FieldRect,
 } from '../../lib/fieldDisplay'
 import type { Point3 } from '../../lib/physics'
+import { AirwayOverlay } from './AirwayOverlay'
+import { airwayLegend, type AirwayShow } from '../../lib/airwayTree'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import type { ImagingSuitePaneProps } from './types'
 import styles from './suite-scene.module.css'
@@ -66,6 +68,8 @@ export function Monitor({
   fieldProcessing,
   wedgeDeg = 0,
   boneDepthAid = false,
+  showTool = true,
+  airways,
 }: {
   pose: DrrPose
   depth: number
@@ -98,6 +102,10 @@ export function Monitor({
    * offered only where the learner is working the angles, never on a check.
    */
   boneDepthAid?: boolean
+  /** False where the step is about the anatomy alone and no tool is in the airway. */
+  showTool?: boolean
+  /** The bronchi drawn from the CT over the projection, and whether they are named. */
+  airways?: { readonly show: AirwayShow; readonly names: boolean }
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -140,16 +148,32 @@ export function Monitor({
     wedgeDeg === 0
       ? `C-arm obliquity ${pose.orbit}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
       : `C-arm obliquity ${pose.orbit + wedgeDeg}° · wedge ${wedgeDeg}° · beam tilt ${pose.tilt}° · field ${acquisitionField}%`
-  const currentOverlay = overlay ?? (
-    <ProjectionOverlays
-      orbit={pose.orbit}
-      tilt={pose.tilt}
-      depth={depth}
-      geometry={pose.geometry}
-      offset={offset}
-      showCurrent={showCurrent}
-      targetFill={targetFill}
-    />
+  const airwayShow = airways?.show ?? 'off'
+  const currentOverlay = (
+    <>
+      {airwayShow !== 'off' && (
+        <AirwayOverlay
+          orbit={pose.orbit}
+          tilt={pose.tilt}
+          geometry={pose.geometry}
+          show={airwayShow}
+          names={airways?.names ?? true}
+          offset={offset}
+        />
+      )}
+      {overlay ?? (
+        <ProjectionOverlays
+          orbit={pose.orbit}
+          tilt={pose.tilt}
+          depth={depth}
+          geometry={pose.geometry}
+          offset={offset}
+          showCurrent={showCurrent}
+          targetFill={targetFill}
+          showTool={showTool}
+        />
+      )}
+    </>
   )
   function captureBaseline() {
     if (engine.current?.state !== 'ready') return
@@ -282,6 +306,26 @@ export function Monitor({
             </p>
           )}
         </div>
+        {airwayShow !== 'off' && (
+          <div className={styles.imageAids} data-airway-legend>
+            {(airways?.names ?? true) && (
+              <ul className={styles.airwayKey}>
+                {airwayLegend(airwayShow).map((entry) => (
+                  <li key={entry.key}>
+                    <span style={{ background: entry.color }} aria-hidden="true" />
+                    {entry.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p>
+              The bronchi are drawn from the CT of this patient. Fluoroscopy shows the trachea and
+              the main bronchi as lucent columns and no bronchus beyond them.
+              {airwayShow !== 'all' &&
+                ' The heavy line is the first two centimetres of each segmental bronchus, from the white dot where it arises.'}
+            </p>
+          </div>
+        )}
         {boneDepthAid && (
           <div className={styles.imageAids} data-image-aids>
             <button

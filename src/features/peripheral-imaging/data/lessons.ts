@@ -4,6 +4,7 @@ import {
   obliquityName,
   type ChestWallQuadrant,
 } from '../content/angleRules'
+import { AIRWAY_FACTS, airwayRouteText, frontalBeamShare } from '../content/airwayFacts'
 import { PI_NUMBERS } from '../content/teachingNumbers'
 import type { Lesson, ObjectiveId } from '../types'
 
@@ -312,6 +313,87 @@ export const LESSONS: Lesson[] = [
       'A lesion that cannot be found needs an explanation.',
     ],
     checkIds: ['anatomy-1', 'choose-1'],
+  },
+  {
+    id: 'airway-anatomy',
+    title: 'The bronchial tree on the frontal image',
+    shortTitle: 'Airway anatomy',
+    group: 'Localize and optimize',
+    stage: 'Foundation',
+    minutes: 10,
+    objective: 'optimize',
+    outcome:
+      'Locate the lobar and segmental bronchi on a frontal fluoroscopic image, and name the bronchi it draws short or on top of one another.',
+    concept: 'The frontal image sorts the bronchi by side and by height, not by depth',
+    prerequisites: ['chain-walk', 'current-anatomy'],
+    why: 'Fluoroscopy shows the catheter and not the bronchus it is in, so the operator supplies the airway map.',
+    recall: {
+      prompt: 'On the planning CT, what do you follow to the lesion before the procedure?',
+      answer:
+        'The bronchus that leads to it: the final airway, the direction of approach and the anatomy that must stay visible while the tool moves.',
+    },
+    blocks: [
+      {
+        title: 'Fluoroscopy does not show the bronchi',
+        body: 'The trachea and the main bronchi appear on a fluoroscopic image as lucent columns, because they are wide and the mediastinum around them is dense. Beyond them a bronchus is air inside aerated lung and has no contrast against it. In the periphery the image shows the bronchoscope, the catheter and the tool. Which bronchus they are in is read from where they lie and how they got there, against a map of the tree that comes from the planning CT. A navigation platform or a registered overlay draws that map on the image; without one, the operator carries it.',
+        points: [
+          'Seen on the image: the trachea, the carina and the main bronchi.',
+          'Not seen: every lobar and segmental bronchus beyond them.',
+          'The map comes from the CT, whether a system draws it or the operator remembers it.',
+        ],
+        sources: ['setser', 'pritchett'],
+      },
+      {
+        title: 'Side and height: what the frontal image does show',
+        body: `Start at the carina, which the image shows. On the CT used in this course the right main bronchus is ${AIRWAY_FACTS.rightMainMm} mm long and gives off the upper lobe bronchus almost at once; the left is ${AIRWAY_FACTS.leftMainMm} mm long before it divides. From the hila the tree fans out by height. The upper lobe bronchi turn upward: the apical bronchus on the right (RB1) and the upper division on the left run toward the apex in the plane of the image. The bronchus intermedius and the lower lobe bronchi continue downward, and the basal bronchi spread toward the diaphragm. A catheter that climbs from the hilum is in an upper lobe. One that descends is in the middle lobe, the lingula or a lower lobe, and the frontal image alone does not say which.`,
+        points: [
+          'Left or right: certain, once the orientation of the display has been confirmed.',
+          'Upward from the hilum: an upper lobe.',
+          'Downward: the middle lobe, the lingula or a lower lobe.',
+        ],
+        sources: ['chassagnon'],
+      },
+      {
+        title: 'Depth: what the frontal image does not show',
+        body: `A bronchus is drawn at its true length only where it runs across the beam. Several segmental bronchi run front to back. On this CT the superior segmental bronchi of the lower lobes run posteriorly, with ${frontalBeamShare('RB6')}% (RB6) and ${frontalBeamShare('LB6')}% (LB6) of their first two centimetres along the frontal beam. The anterior segmental bronchi (RB3, LB3), the medial bronchus of the middle lobe (RB5) and the superior lingular bronchus (LB4) run anteriorly by as much. Each is drawn as a short stub, or end-on as a ring. Bronchi at different depths are also drawn on top of one another: the middle lobe bronchus leaves the front of the bronchus intermedius and RB6 leaves the back of the lower lobe bronchus ${AIRWAY_FACTS.middleLobeAboveSuperiorMm} mm lower, so on the frontal image a catheter in either starts from the same place.`,
+        points: [
+          'Posterior: the superior segments (RB6, LB6) and the posterior segment of the right upper lobe (RB2).',
+          'Anterior: the anterior segments (RB3, LB3), the middle lobe and the lingula.',
+          'In the plane of the image: the apical bronchi and most of the basal bronchi.',
+        ],
+        sources: ['chassagnon'],
+        detail: {
+          title: 'Anatomy varies between patients',
+          body: 'A segmental bronchus can arise from a neighbouring trunk, share a stem with another or be absent. The names and directions given here are those of one CT. During a procedure the map is the patient’s own planning CT.',
+        },
+      },
+      {
+        title: 'Name the airway to the lesion before the procedure',
+        body: `The nodule in this course lies at the end of a branch of the anteromedial basal bronchus of the left lower lobe (LB7+8): the branch runs within ${AIRWAY_FACTS.noduleBronchusMm} mm of the nodule’s centre. The way to it is ${airwayRouteText(AIRWAY_FACTS.noduleRoute)}. On the frontal image that path descends to the patient’s left and ends over the cardiac silhouette, and the last bronchus runs laterally, across the beam, so a catheter in it is drawn at nearly its full length. A path described this way is what makes a frontal image readable: a catheter that turns at the top of the lower lobe bronchus and stops lengthening on the image has entered LB6, not the basal trunk.`,
+        points: [
+          'Lobe, then segment, then the branch that reaches the lesion.',
+          'At each turn: up or down, medial or lateral, front or back.',
+          'Front or back is the turn the frontal image will not confirm.',
+        ],
+        sources: ['chassagnon', 'setser'],
+      },
+    ],
+    worked: {
+      scenario:
+        'A catheter is advanced into the left lower lobe under frontal fluoroscopy, toward a nodule off LB7+8. Just below the upper lobe bronchus its tip turns laterally and a little upward. Two more centimetres are advanced and the tip moves only a few millimetres on the image.',
+      reasoning:
+        'The catheter has entered the superior segmental bronchus (LB6), which runs posteriorly: most of the advance is along the beam, so the image shows almost none of it. The planned path keeps descending in the plane of the image. Withdraw to the lower lobe bronchus and re-enter the basal trunk. An oblique projection would show the posterior course directly.',
+    },
+    lab: 'geometry',
+    labTask:
+      'Draw the bronchi of each lobe on the frontal image, find the ones it draws short, then rotate the C-arm and watch them lengthen.',
+    takeaway: [
+      'Fluoroscopy shows the central airways and the tool; the map of the bronchi comes from the CT.',
+      'The frontal image places a bronchus by side and by height.',
+      'Bronchi that run front to back are drawn short, and overlap the ones in front of or behind them.',
+      'Name the airway path to the lesion, turn by turn, before the procedure.',
+    ],
+    checkIds: ['airway-1', 'walk-1'],
   },
   {
     id: 'projection',
@@ -641,11 +723,11 @@ export const LESSONS: Lesson[] = [
         kind: 'after-commitment',
         body: 'Work the same sequence in every case. Whether the nodule can be seen is largely settled before the first frame, by the plan, the state of the lung and the projection; the controls after that refine an image that already shows it. When a step does not answer the question, go back a step before adding exposure.',
         points: [
-          'Plan on the CT (Sections 4 and 5): the airway to the nodule, what will lie over it, and the obliquity and cranial or caudal angle that should clear it.',
+          'Plan on the CT (Sections 4 to 6): the airway to the nodule, what will lie over it, and the obliquity and cranial or caudal angle that should clear it.',
           'Recruit and position (Section 4): a recruitment maneuver with anesthesia before the first image and again after airway inspection, with the lesion side up.',
-          'Project (Sections 5 and 6): the planned projection, then a few degrees of tilt to move the nodule off clutter or onto a rib.',
-          'Optimize (Sections 7 and 8): magnify for edge detail and collimate to pay for it, set the pulse for the motion, and change exposure factors last, where the system allows manual technique.',
-          'Align, confirm, sample (Sections 5, 9 and 10 to 14): the tool in profile on a second projection, and DTS or CBCT when depth or lesion identity is still open.',
+          'Project (Sections 6 and 7): the planned projection, then a few degrees of tilt to move the nodule off clutter or onto a rib.',
+          'Optimize (Sections 8 and 9): magnify for edge detail and collimate to pay for it, set the pulse for the motion, and change exposure factors last, where the system allows manual technique.',
+          'Align, confirm, sample (Sections 6, 10 and 11 to 15): the tool in profile on a second projection, and DTS or CBCT when depth or lesion identity is still open.',
         ],
         sources: ['setser', 'tg272', 'wabip'],
       },

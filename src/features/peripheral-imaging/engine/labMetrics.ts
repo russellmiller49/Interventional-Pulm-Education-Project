@@ -13,6 +13,8 @@ import {
   windowRelationship,
   type Point3,
 } from '../lib/physics'
+import { AIRWAY_LOBES, AIRWAY_LOBE_KEYS } from '../content/airwayNames'
+import { AIRWAY_SEGMENTS_BY_LOBE, isAirwayShow, mostForeshortened } from '../lib/airwayTree'
 import { tableCrossing } from '../lib/rayCrossingTable'
 import { rayCrossingLabel } from '../lib/rayStructures'
 
@@ -119,6 +121,22 @@ export const WEDGE_CONTROL: LabControlSpec = {
   default: 0,
 }
 
+/**
+ * The bronchial tree drawn on the image from the CT: hidden, the whole tree coloured by lobe, or
+ * one lobe with a colour and a name for each segmental bronchus.
+ */
+export const AIRWAYS_CONTROL: LabControlSpec = {
+  key: 'airways',
+  kind: 'select',
+  label: 'Bronchi drawn from the CT',
+  options: [
+    { value: 'off', label: 'None' },
+    { value: 'all', label: 'Whole tree, by lobe' },
+    ...AIRWAY_LOBE_KEYS.map((lobe) => ({ value: lobe, label: AIRWAY_LOBES[lobe].name })),
+  ],
+  default: (lessonId) => (lessonId === 'airway-anatomy' ? 'all' : 'off'),
+}
+
 /** The projection through the patient: the C-arm obliquity less the wedge. */
 export function viewObliquity(orbit: number, wedge: number): number {
   return orbit - wedge
@@ -158,6 +176,8 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       default: (lessonId) => (lessonId === 'signal' ? 0 : 22),
     },
     WEDGE_CONTROL,
+    AIRWAYS_CONTROL,
+    { key: 'airwayNames', kind: 'toggle', label: 'Name the bronchi', default: true },
     {
       key: 'resetGeometry',
       kind: 'action',
@@ -567,6 +587,8 @@ export type LabMetricId =
   | 'mediastinumOnRay'
   | 'diaphragmOnRay'
   | 'viewObliquityDeg'
+  | 'airwaysDrawn'
+  | 'airwayShortest'
   | 'spineInField'
   | 'zoomAddsExposure'
   | 'pulseRate'
@@ -610,6 +632,8 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   mediastinumOnRay: { label: 'Heart or mediastinum over the nodule' },
   diaphragmOnRay: { label: 'Diaphragm over the nodule' },
   viewObliquityDeg: { label: 'Projection through the patient', unit: '°', digits: 0 },
+  airwaysDrawn: { label: 'Bronchi drawn' },
+  airwayShortest: { label: 'Most foreshortened at this angle' },
   spineInField: { label: 'Spine in the field' },
   irradiatedAreaPct: { label: 'Irradiated area vs the open field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
@@ -664,6 +688,10 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
     'Whether the X-ray path through the centre of the nodule crosses the heart or mediastinum.',
   diaphragmOnRay:
     'Whether the X-ray path through the centre of the nodule passes below the diaphragm, through the upper abdomen.',
+  airwaysDrawn:
+    'Which bronchi are drawn over the image. They are taken from the CT of this patient; fluoroscopy itself does not show a bronchus beyond the central airways.',
+  airwayShortest:
+    'Of the segmental bronchi of the lobe shown, the one whose first two centimetres run most nearly along the X-ray beam at this angle, with the share of its length that the image cannot show as length.',
   viewObliquityDeg:
     'The C-arm obliquity less the wedge: rolling the patient 30° gives the same image as rotating the C-arm 30° the other way.',
   spineInField:
@@ -700,6 +728,28 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
   kapMicroGyM2: 'The same kerma–area product in µGy·m²: 1 Gy·cm² is 100 µGy·m².',
 }
 
+function airwayReadouts(show: LabValue, named: boolean, orbit: number, tilt: number): LabReadouts {
+  if (!isAirwayShow(show) || show === 'off')
+    return { airwaysDrawn: 'None', airwayShortest: 'Show one lobe to compare its bronchi' }
+  if (show === 'all')
+    return {
+      airwaysDrawn: 'Whole tree, by lobe',
+      airwayShortest: 'Show one lobe to compare its bronchi',
+    }
+  // With the names hidden the readouts do not print them either: hiding them is how the learner
+  // tests their own naming, and how a check withholds its answer.
+  if (!named)
+    return {
+      airwaysDrawn: `${AIRWAY_LOBES[show].name}, names hidden`,
+      airwayShortest: 'Names hidden',
+    }
+  const shortest = mostForeshortened(show, orbit, tilt)
+  return {
+    airwaysDrawn: `${AIRWAY_LOBES[show].name}: ${AIRWAY_SEGMENTS_BY_LOBE[show].join(', ')}`,
+    airwayShortest: `${shortest.key}, ${Math.round(shortest.along * 100)}% along the beam`,
+  }
+}
+
 export function formatReadout(metric: LabMetricId, value: LabValue | undefined): string {
   if (value === undefined) return '—'
   const spec = LAB_METRICS[metric]
@@ -732,6 +782,12 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         mediastinumOnRay: crossing.mediastinum,
         diaphragmOnRay: crossing.diaphragm,
         viewObliquityDeg: orbit,
+        ...airwayReadouts(
+          labValue(lab, values, 'airways', lessonId),
+          labValue(lab, values, 'airwayNames', lessonId) === true,
+          orbit,
+          tilt,
+        ),
       }
     }
     case 'field': {

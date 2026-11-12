@@ -10,6 +10,7 @@ original clinical source files remain outside Git in the primary checkout.
 | `anatomy/ct-atlas.png`        | 192³ quantized CT packed into a 16 × 12 PNG atlas, with a baked authored part-solid nodule                             |
 | `anatomy/dts-projections.png` | Thirteen parallel projections for each of five authored sweeps, using the same nodule plus a straight tool             |
 | `anatomy/fluoroview-carm.glb` | Retained original FluoroView gantry animation; retirement remains an owner decision                                    |
+| `anatomy/airway-tree.json`    | Centrelines and radii of the airways of the same CT, each branch named trachea to segmental bronchus (LAS mm)          |
 | `sampling-window.glb`         | Repository-authored sphere and fictional needle side window                                                            |
 | `room-suite.png`              | Text-free 2400 × 1000 room-mode still: patient figure, C-arm, table, beam and monitor cart, on `#061519`; about 290 KB |
 
