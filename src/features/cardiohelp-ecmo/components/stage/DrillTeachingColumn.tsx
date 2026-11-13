@@ -2,6 +2,7 @@
 
 import { cardiohelpScenarioById } from '../../content/scenarios'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoDrillLivePanel } from '../teaching/EcmoDrillLivePanel'
 import {
   EcmoDrillTeachingPanel,
   hasEcmoDrillTeachingPanel,
@@ -12,8 +13,9 @@ import type { StageStep } from './stageModel'
 import styles from './EcmoLessonStage.module.css'
 
 /**
- * The teaching pane for a drill: the authored live panel where one exists, and the data-driven
- * explanation everywhere, both scoped to the current step.
+ * The teaching pane for a drill: the authored panel where one exists, a live readings panel where
+ * the drill has that instead, and the data-driven explanation everywhere, all scoped to the
+ * current step.
  */
 export function DrillTeachingColumn({
   state,
@@ -34,7 +36,11 @@ export function DrillTeachingColumn({
           stepId: step.id,
         }}
       >
-        {hasPanel ? <EcmoDrillTeachingPanel state={state} /> : null}
+        {/*
+          A drill without an authored panel may carry a live readings panel instead. It goes above
+          the written explanation, which is rendered below exactly as it is for every such drill.
+        */}
+        {hasPanel ? <EcmoDrillTeachingPanel state={state} /> : <EcmoDrillLivePanel state={state} />}
         <DrillStepTeaching scenario={scenario} step={step} hasAuthoredPanel={hasPanel} />
       </StageTeachingScope>
     </div>
