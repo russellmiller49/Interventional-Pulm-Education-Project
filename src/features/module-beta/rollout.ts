@@ -68,18 +68,19 @@ export const betaRollout: BetaRollout = {
       audience:
         'Pulmonologists and interventional pulmonologists who already perform linear EBUS and are learning EUS-B.',
       summary:
-        'One systematic survey with the EBUS scope in the esophagus and stomach, taught landmark by landmark: predict, find the view yourself on a simulated image, then read it labeled.',
+        'One systematic survey with the EBUS scope in the esophagus and stomach, taught landmark by landmark: predict, find the view yourself on a simulated image, mark the landmarks that identify it, then read it labeled.',
       estimate: {
-        minutes: 24,
-        basis: "3 lessons, by the course's own count; 10 more are being built",
+        minutes: 55,
+        basis: "7 lessons, by the course's own count; 8 more are being built",
       },
       lookFor: [
         'Whether the survey order, and the neighbors used to confirm each landmark, are the ones you teach.',
         'The find-the-view tasks: whether the scope and the image respond the way your EUS-B images do, and whether the task says clearly what it is waiting for.',
         'Whether the first lesson gives an EBUS operator the right picture of what the esophagus adds and what it does not.',
+        'The station lessons and the station table: whether the landmarks listed for each nodal station are the ones you use to identify it.',
       ],
       knownLimits: [
-        'Three of 13 planned lessons are open: what the esophagus adds, the left lobe of the liver, and station 7. The other landmarks, the complete survey, sampling and the cases are still being built.',
+        'Seven of 15 planned lessons are open: what the esophagus adds, the left lobe of the liver, and stations 8, 9, 7, 4L and 2L. The abdominal landmarks, station 4R, the complete survey, sampling and the cases are still being built.',
         'The author has not yet reviewed the lesson text. Its 5 sourced numbers were checked against abstracts only and are not signed off.',
         'It is one CT case, and the ultrasound image is simulated from CT, not recorded ultrasound.',
         'The scope tasks need a desktop or tablet.',
@@ -271,7 +272,8 @@ export const betaRollout: BetaRollout = {
         'Fourteen short sections on a running ventilator: one breath from start to finish, the five main settings, then one mechanism at a time on a live patient: predict, change, watch, explain.',
       estimate: {
         minutes: 102,
-        basis: "14 sections, by the module's own count; the 15 cases in Practice are extra",
+        basis:
+          "14 sections, by the module's own count; the patient case that ends Sections 4 and 7 to 14, and the cases in Practice, are extra",
       },
       lookFor: [
         'Driving pressure: whether plateau minus total PEEP, and the evidence behind the reference value, are taught the way you would teach them.',
@@ -279,7 +281,7 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Its 20 sourced teaching numbers are not yet signed off by the author.',
-        'The console has no live driving-pressure readout; it is worked out from the plateau and total PEEP.',
+        'Driving pressure is worked out for you (plateau minus total PEEP) only in Section 6, after an inspiratory hold; the console itself has no readout.',
         'The text does not yet separate the pressure-control setting (ΔPcontrol) from driving pressure (ΔP).',
         'The chest-wall contribution to driving pressure (obesity, raised abdominal pressure) is not taught.',
       ],

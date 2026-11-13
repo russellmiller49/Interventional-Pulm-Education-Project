@@ -312,8 +312,9 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     expect(ventilationPartSetupLine('lung-protection', 1)).toContain(
       'a different simulated patient from Part 1: the simulated patient of case MV-01',
     )
-    expect(ventilationPartSetupLine('expiration-and-air-trapping', 0)).toContain(
-      'simulated airway resistance ×4 and rate 12/min',
+    // The limit is part of what this part starts from (60 since 2026-11-12), so it is said.
+    expect(ventilationPartSetupLine('expiration-and-air-trapping', 0)).toBe(
+      'Part 1 uses the passive teaching patient. It starts with simulated airway resistance ×4, rate 12/min and high-pressure alarm limit 60 cmH₂O.',
     )
   })
 

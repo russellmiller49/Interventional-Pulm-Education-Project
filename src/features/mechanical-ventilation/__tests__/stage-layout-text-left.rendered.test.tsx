@@ -231,7 +231,7 @@ describe('Learn layout: the stylesheet rules behind it', () => {
     const twoPanes = workspace.slice(workspace.indexOf('@container mv-task (min-width: 75rem)'))
     expect(twoPanes).toMatch(/^@container mv-task \(min-width: 75rem\) \{/)
     expect(twoPanes).toMatch(
-      /\[data-has-visual\] \{[^}]*grid-template-columns: minmax\(20rem, 0\.8fr\) minmax\(0, 1\.2fr\);[^}]*overflow: hidden;/,
+      /\[data-has-visual\] \{[^}]*grid-template-columns: clamp\(23rem, calc\(100cqw - 64rem\), 30rem\) minmax\(0, 1fr\);[^}]*overflow: hidden;/,
     )
     expect(flow).not.toMatch(/@media \(min-width: 1500px\)[^{]*\{\s*\.flow\[data-stage-frame\]/)
     const shell = read('mechanical-ventilation-module.module.css')

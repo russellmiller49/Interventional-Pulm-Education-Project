@@ -3,9 +3,10 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import type { EusbObservation } from '@/lib/eus-b-guided-bridge'
 import { LessonHost } from '../components/LessonHost'
 import type { StageRequest } from '../components/Workbench'
-import { LESSONS, lessonById } from '../content/curriculum'
+import { LESSONS, lessonById, nextLesson } from '../content/curriculum'
+import { stationById } from '../content/stations'
 import { PROGRESS_STORAGE_KEY, readProgress } from '../engine/progress'
-import { held, searching, shown } from '../testing/observations'
+import { held, marking, searching, shown } from '../testing/observations'
 
 const mockBench: {
   emit: (observation: EusbObservation) => void
@@ -266,10 +267,100 @@ describe('a lesson, task by task', () => {
     expect(finish).toHaveTextContent('whether you completed, skipped or only read its tasks')
     expect(finish.querySelector('[data-next-lesson]')).toHaveAttribute(
       'href',
-      '/eus-b-guided/learn?section=station-7',
+      '/eus-b-guided/learn?section=' + nextLesson('liver')!.id,
     )
     // Nothing about answers is stored.
     expect(window.localStorage.getItem(PROGRESS_STORAGE_KEY)).not.toMatch(/answer|selected|held/)
+  })
+
+  it('lists a station’s landmarks beside its labeled image, in the order of the lab list', () => {
+    const seven = lessonById('station-7')!
+    const { container, next } = open(seven)
+    expect(container.querySelector('[data-station-landmarks]')).toBeNull()
+    next()
+    const list = container.querySelector('[data-station-landmarks="station-7"]')!
+    expect(mockBench.stage).toMatchObject({ labId: 'station-7-view', names: 'shown' })
+    expect(
+      Array.from(list.querySelectorAll('[data-landmark]')).map((item) =>
+        item.getAttribute('data-landmark'),
+      ),
+    ).toEqual(stationById('station-7')!.landmarks.map((landmark) => landmark.key))
+    for (const landmark of stationById('station-7')!.landmarks)
+      expect(list).toHaveTextContent(landmark.name)
+  })
+
+  it('asks for each landmark on a still with nothing named, and the list is the gate', () => {
+    const seven = lessonById('station-7')!
+    const { container, flow, next, primary } = open(seven)
+    next()
+    next()
+    fireEvent.click(container.querySelector('[data-skip-lab]')!)
+    expect(flow()).toHaveAttribute('data-step-kind', 'identify')
+    expect(flow()).toHaveAttribute('data-arrange', 'console')
+    expect(mockBench.stage).toMatchObject({
+      labId: 'station-7-landmarks',
+      phase: 'work',
+      names: 'hidden',
+      panes: ['ultrasound'],
+    })
+    const items = () => Array.from(container.querySelectorAll('[data-requirement]'))
+    expect(items().map((item) => item.getAttribute('data-requirement'))).toEqual([
+      'mark-left_atrium',
+      'mark-pulmonary_artery',
+      'mark-station_7',
+    ])
+    expect(items()[0]).toHaveTextContent('Click the left atrium in the image.')
+    expect(primary()).toBeDisabled()
+
+    act(() => mockBench.emit(marking('station-7-landmarks', ['left_atrium'], [], 2)))
+    expect(items().map((item) => item.getAttribute('data-met'))).toEqual(['true', 'false', 'false'])
+    expect(primary()).toBeDisabled()
+    // Another station's answer opens nothing here.
+    act(() =>
+      mockBench.emit(marking('station-4l-landmarks', ['aorta', 'pulmonary_artery', 'station_4l'])),
+    )
+    expect(primary()).toBeDisabled()
+    // A landmark the learner asked to be shown is listed as shown, and still lets them go on.
+    act(() =>
+      mockBench.emit(
+        marking('station-7-landmarks', ['left_atrium', 'station_7'], ['pulmonary_artery']),
+      ),
+    )
+    expect(items()[1]).toHaveTextContent('You were shown the pulmonary artery.')
+    expect(items().map((item) => item.getAttribute('data-met'))).toEqual(['true', 'true', 'true'])
+    expect(primary()).toBeEnabled()
+    next()
+    expect(flow()).toHaveAttribute('data-step-kind', 'debrief')
+    expect(container.querySelector('[data-station-landmarks="station-7"]')).not.toBeNull()
+  })
+
+  it('starts the landmark task fresh each time it is entered', () => {
+    const seven = lessonById('station-7')!
+    const { container, flow, next } = open(seven)
+    next()
+    next()
+    fireEvent.click(container.querySelector('[data-skip-lab]')!)
+    expect(flow()).toHaveAttribute('data-step-kind', 'identify')
+    const session = mockBench.sessionId
+    fireEvent.click(container.querySelector('[data-restart-task]')!)
+    expect(mockBench.sessionId).not.toBe(session)
+  })
+
+  it('fills in a station in the table only once its landmarks have been taught', () => {
+    const seven = lessonById('station-7')!
+    const { container, next } = open(seven)
+    fireEvent.click(container.querySelector('[data-open-stations]')!)
+    const row = (id: string) => container.querySelector(`[data-station-row="${id}"]`)!
+    // On the prediction nothing of this lesson, or of any other, is in the table.
+    expect(row('station-7')).toHaveAttribute('data-open', 'false')
+    expect(row('station-4l')).toHaveAttribute('data-open', 'false')
+    for (const landmark of stationById('station-7')!.landmarks)
+      expect(row('station-7')).not.toHaveTextContent(landmark.where)
+    next()
+    // The task that lists the landmarks opens this station's row, and no other.
+    expect(row('station-7')).toHaveAttribute('data-open', 'true')
+    expect(row('station-7')).toHaveTextContent(stationById('station-7')!.mistakenFor)
+    expect(row('station-4l')).toHaveAttribute('data-open', 'false')
   })
 
   it('restarts the course from the first lesson with a clean record', () => {

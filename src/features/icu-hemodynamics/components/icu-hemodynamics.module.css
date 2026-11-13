@@ -1552,6 +1552,19 @@
 .heartKey i[data-key-mark='tubing'] {
   border-top: 2px solid #c7dde0;
 }
+
+/* The heart model's own two blood colours (its "CT Venous" and "CT Arterial" materials). */
+.heartKey i[data-key-mark='to-lungs'],
+.heartKey i[data-key-mark='from-lungs'] {
+  height: 0.7rem;
+  border: 0;
+  border-radius: 0.2rem;
+  background: #3579b8;
+}
+
+.heartKey i[data-key-mark='from-lungs'] {
+  background: #d44d3c;
+}
 .physiologyAnatomyHud {
   display: grid;
   gap: 0.25rem;

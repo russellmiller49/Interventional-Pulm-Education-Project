@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 import type { BetaModule } from './catalog'
 import type { BetaRollout, BetaTesterNote } from './rollout'
 import { ReviewStatus } from './HubReviewStatus'
+import { betaRouteForGroup, betaRoutePlace, inRouteOrder } from './route'
 
 const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
@@ -23,6 +24,20 @@ function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
       </Link>
       <ReviewStatus moduleId={entry.id} locale={locale} />
     </div>
+  )
+}
+
+/** "Critical care route · 2 of 5" and the one line on why the module sits there. */
+function RoutePlace({ moduleId }: { moduleId: string }) {
+  const place = betaRoutePlace(moduleId)
+  if (!place) return null
+  return (
+    <p className="text-sm leading-6" data-route-step={place.position}>
+      <span className="font-semibold">
+        {place.route.title} · {place.position} of {place.total}.
+      </span>{' '}
+      <span className="text-muted-foreground">{place.why}</span>
+    </p>
   )
 }
 
@@ -114,6 +129,7 @@ export function BetaHubSections({
                       {entry.group}
                     </p>
                     <h3 className="text-lg font-semibold">{entry.title}</h3>
+                    <RoutePlace moduleId={entry.id} />
                     <TesterNote note={note} />
                   </div>
                   <ModuleLinks entry={entry} locale={locale} />
@@ -135,11 +151,20 @@ export function BetaHubSections({
             </p>
           </div>
           {groups.map((group) => {
-            const entries = preview.filter((entry) => entry.group === group)
+            const route = betaRouteForGroup(group)
+            const entries = inRouteOrder(
+              preview.filter((entry) => entry.group === group),
+              route,
+            )
             if (entries.length === 0) return null
             return (
               <div key={group} className="space-y-4">
                 <h3 className="text-xl font-semibold">{group}</h3>
+                {route ? (
+                  <p className="max-w-3xl text-muted-foreground" data-route-intro>
+                    {route.intro}
+                  </p>
+                ) : null}
                 {/* Top-aligned, so a card without a note keeps its height beside one with a note. */}
                 <div className="grid items-start gap-4 md:grid-cols-2">
                   {entries.map((entry) => {
@@ -153,6 +178,7 @@ export function BetaHubSections({
                         {note ? (
                           <div className="space-y-3">
                             {title}
+                            <RoutePlace moduleId={entry.id} />
                             <TesterNote note={note} />
                           </div>
                         ) : (

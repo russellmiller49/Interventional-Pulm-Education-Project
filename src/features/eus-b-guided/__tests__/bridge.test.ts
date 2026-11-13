@@ -15,7 +15,7 @@ import {
   eusbLab,
   isEusbLabId,
 } from '@/lib/eus-b-guided-contract'
-import { held, searching, shown } from '../testing/observations'
+import { held, marking, searching, shown } from '../testing/observations'
 
 const config: EusbWorkbenchConfig = {
   sessionId: 'liver-0-1-abc',
@@ -78,6 +78,8 @@ describe('messages between the lesson and the lab', () => {
     const good = held('liver-reach')
     const seen = shown('liver-reach')
     expect(isEusbObservation(seen)).toBe(true)
+    const marked = marking('station-4l-landmarks', ['aorta'], ['pulmonary_artery'], 3)
+    expect(isEusbObservation(marked)).toBe(true)
     const bad: unknown[] = [
       { ...good, pose: { ...good.pose, sMm: Number.NaN } },
       { ...good, pose: { ...good.pose, rollDeg: 181 } },
@@ -94,6 +96,11 @@ describe('messages between the lesson and the lab', () => {
       { ...good, target: { ...good.target!, foundAt: undefined } },
       { ...good, target: { ...good.target!, areaRatio: -1 } },
       { ...good, panes: ['bronchoscope'] },
+      // A landmark is clicked or shown, never both, and both lists are always there.
+      { ...marked, identified: { keys: ['aorta'], shown: ['aorta'], wrong: 0 } },
+      { ...marked, identified: { keys: ['aorta'], wrong: 0 } },
+      { ...marked, identified: { keys: ['Aorta!'], shown: [], wrong: 0 } },
+      { ...marked, identified: { keys: [], shown: [], wrong: -1 } },
       // A found view is never also a shown one, and a shown view has the lab's own image.
       { ...good, target: { ...good.target!, shown: true, shownAt: seen.target!.shownAt } },
       { ...seen, target: { ...seen.target!, shownAt: undefined } },

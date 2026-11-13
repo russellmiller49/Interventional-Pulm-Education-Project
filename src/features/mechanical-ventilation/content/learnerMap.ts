@@ -160,6 +160,7 @@ const controlWords: Readonly<Record<string, readonly [string, string]>> = {
   inspiratoryTimeSeconds: ['inspiratory time', 's'],
   oxygenPercent: ['oxygen', '%'],
   peepCmH2O: ['PEEP', 'cmH₂O'],
+  highPressureLimitCmH2O: ['high-pressure alarm limit', 'cmH₂O'],
 }
 
 function setupPhrases(

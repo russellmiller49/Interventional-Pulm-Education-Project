@@ -23,7 +23,9 @@ import { EusbModuleFrame } from './ModuleFrame'
 import { QuestionBody } from './QuestionBody'
 import { ReachTable } from './ReachTable'
 import { SourceList } from './SourceList'
+import { StationLandmarkList, StationTable, stationsTaught } from './StationLandmarks'
 import { SurveyRoute } from './SurveyRoute'
+import { useCourseProgress } from './useCourseProgress'
 import { Workbench, type StageRequest } from './Workbench'
 import styles from './eus-b-guided.module.css'
 
@@ -32,6 +34,7 @@ export const STEP_KIND_LABEL: Record<StepKind, string> = {
   predict: 'Predict first',
   brief: 'Read',
   lab: 'Find the view',
+  identify: 'Mark the landmarks',
   debrief: 'Explanation',
   check: 'Check',
 }
@@ -80,6 +83,9 @@ function stageFor(
       phase: 'work',
       names: 'hidden',
     })
+  // A still with nothing named: the learner marks its landmarks.
+  if (step.kind === 'identify')
+    return numbered({ ...base, labId: step.lab, phase: 'work', names: 'hidden' })
   if (step.kind === 'debrief') {
     const lab = labStepFor(lesson, step)
     if (!lab) return null
@@ -139,8 +145,11 @@ function LessonRun({
   const [observation, setObservation] = useState<EusbObservation | null>(null)
   const [outlineOpen, setOutlineOpen] = useState(false)
   const [routeOpen, setRouteOpen] = useState(false)
+  const [stationsOpen, setStationsOpen] = useState(false)
   const outlineButton = useRef<HTMLButtonElement>(null)
   const routeButton = useRef<HTMLButtonElement>(null)
+  const stationsButton = useRef<HTMLButtonElement>(null)
+  const { progress } = useCourseProgress()
   const textPane = useRef<HTMLDivElement>(null)
   const more = useRef<HTMLDetailsElement>(null)
   const fixed = useFixedWorkspace()
@@ -178,6 +187,8 @@ function LessonRun({
           return rest
         })
       }
+      // Marking landmarks also starts fresh each time; the image held in the task before it stays.
+      if (next?.kind === 'identify') setLabRun((value) => value + 1)
       setObservation(null)
       setIndex(target)
       setFurthest((value) => Math.max(value, Math.min(target, steps.length - 1)))
@@ -206,7 +217,19 @@ function LessonRun({
     previous = stageFor(lesson, at, answers, explained, held)
   const stage = current ?? upcoming ?? previous
   const arrange: Arrange =
-    !current || finished ? 'hidden' : step?.kind === 'lab' ? 'console' : 'beside'
+    !current || finished
+      ? 'hidden'
+      : step?.kind === 'lab' || step?.kind === 'identify'
+        ? 'console'
+        : 'beside'
+  /*
+   * The station table fills in a station once its lesson has taught it: after a lesson the learner
+   * reached the end of, and in this lesson from the task that lists the station's landmarks.
+   */
+  const stationsKnown = stationsTaught(progress.reviewedLessonIds)
+  steps.forEach((task, at) => {
+    if (at <= furthest && 'station' in task && task.station) stationsKnown.add(task.station)
+  })
 
   const kicker = step
     ? `Task ${index + 1} of ${steps.length} · ${STEP_KIND_LABEL[step.kind]}`
@@ -317,6 +340,7 @@ function LessonRun({
             {rest.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
+            {step.station && <StationLandmarkList station={step.station} />}
           </div>
           {step.figure === 'survey-route' && <SurveyRoute current={lesson.stop} />}
           {step.figure === 'reach-table' && <ReachTable />}
@@ -340,6 +364,24 @@ function LessonRun({
           if (image) setHeld((all) => ({ ...all, [step.id]: image }))
           moveOn()
         }}
+        onSkip={moveOn}
+        onRestart={() => {
+          setObservation(null)
+          setLabRun((value) => value + 1)
+        }}
+      />
+    )
+  } else if (step?.kind === 'identify') {
+    const requirements = eusbRequirements(step.lab, observation)
+    body = (
+      <ConsoleStrip
+        kicker={kicker}
+        title={step.title}
+        instruction={step.instruction}
+        requirements={requirements}
+        met={eusbTaskMet(step.lab, observation)}
+        primaryLabel="Continue"
+        onContinue={moveOn}
         onSkip={moveOn}
         onRestart={() => {
           setObservation(null)
@@ -373,6 +415,7 @@ function LessonRun({
             {step.body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
+            {step.station && <StationLandmarkList station={step.station} />}
             {step.points && (
               <ul>
                 {step.points.map((point) => (
@@ -434,6 +477,15 @@ function LessonRun({
               onClick={() => setRouteOpen(true)}
             >
               Survey route
+            </button>
+            <button
+              type="button"
+              ref={stationsButton}
+              className={styles.secondary}
+              data-open-stations
+              onClick={() => setStationsOpen(true)}
+            >
+              Station landmarks
             </button>
             <details className={styles.more} ref={more}>
               <summary className={styles.secondary}>More</summary>
@@ -538,6 +590,14 @@ function LessonRun({
           returnFocusTo={routeButton}
         >
           <SurveyRoute current={lesson.stop} />
+        </HelpDialog>
+        <HelpDialog
+          open={stationsOpen}
+          onClose={() => setStationsOpen(false)}
+          title="Station landmarks"
+          returnFocusTo={stationsButton}
+        >
+          <StationTable open={stationsKnown} />
         </HelpDialog>
       </div>
     </EusbModuleFrame>

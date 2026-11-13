@@ -29,7 +29,7 @@ import { StageSourcesScope } from '@/features/learning-module/stage/StageSources
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
 import { mcsClaimChecksForSection } from '../../content/claimSourceMap'
 import { mcsExplainReflection } from '../../content/explainReflections'
@@ -39,6 +39,7 @@ import { mcsLearnControls, type McsLearnControlId } from '../../content/learnCon
 import { MCS_LVAD_PERFUSION_SECTION_ID } from '../../content/lvadPerfusionCase'
 import { mcsObserveFocus, mcsOrderObservedSignals } from '../../content/observeFocus'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
+import { mcsModuleHandOff } from '../../content/moduleHandOffs'
 import { mcsPathway } from '../../content/pathwayResolver'
 import { mcsSpineStop, MCS_SUPPORT_SPINE, type McsSpineStopId } from '../../content/supportSpine'
 import { mcsStageSources } from '../../content/stageSources'
@@ -236,6 +237,7 @@ function McsStageSession({
   const mount = useMemo(() => mcsMountStepIndex(lesson, requestedPhase), [lesson, requestedPhase])
   const pathway = mcsPathway()
   const nextSection = nextPathwaySection(pathway, sectionId)
+  const handOff = mcsModuleHandOff(sectionId)
 
   const [referenceViewed, setReferenceViewed] = useState(
     requestedPhase !== 'recognize' || !mcsHasPrerequisiteReference(sectionId),
@@ -1986,6 +1988,16 @@ function McsStageSession({
             {casesOpened.length > 0
               ? `The case is closed: ${lesson.practicePairing.title}. Nothing about it is saved.`
               : 'The case was skipped. Start it from this task whenever you like; Practice lists it too.'}
+          </p>
+        </section>
+      ) : null}
+      {handOff && isLastStep && !lookingBack ? (
+        <section className={styles.handOff} data-next-module={handOff.href}>
+          <p>
+            {handOff.line}{' '}
+            <Link className={styles.moduleLink} href={handOff.href}>
+              Open {handOff.moduleTitle}
+            </Link>
           </p>
         </section>
       ) : null}

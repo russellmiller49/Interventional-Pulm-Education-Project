@@ -47,7 +47,7 @@ import { drainageChatterActive } from './ecmo-circuit/chatter'
 import { ArterialPressureTrace } from './monitor/ArterialPressureTrace'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
-import { scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
+import { ecmoScrollOwner, scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
 import { EcmoCircuitControls } from './EcmoCircuitControls'
 
 /**
@@ -218,6 +218,31 @@ export function CircuitLiveReadings({
   )
 }
 
+/**
+ * Scroll the reading area just far enough that the foot of `node` clears the pinned action row.
+ *
+ * Downward only, and only by the overflow: what is above the node (its tab row) stays on screen as
+ * long as the whole stack fits, which the bedside scene's height is chosen for.
+ */
+function revealAbovePinnedRow(node: HTMLElement) {
+  const owner = ecmoScrollOwner(node)
+  if (!owner) return
+  const pinnedRow = node
+    .closest('[data-ecmo-shell]')
+    ?.querySelector<HTMLElement>("[data-now-footer='pinned']")
+  const pinnedTop =
+    pinnedRow && getComputedStyle(pinnedRow).position === 'sticky'
+      ? pinnedRow.getBoundingClientRect().top
+      : Infinity
+  const visibleBottom = Math.min(
+    window.innerHeight,
+    owner.getBoundingClientRect().bottom,
+    pinnedTop,
+  )
+  const overflow = node.getBoundingClientRect().bottom - visibleBottom + 12
+  if (overflow > 1) owner.scrollTo({ top: owner.scrollTop + overflow, behavior: 'auto' })
+}
+
 export function CircuitSchematic({
   state,
   dispatch,
@@ -316,6 +341,37 @@ export function CircuitSchematic({
     // Once per applied preference; the view itself is read from the preference, not tracked.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferenceKey, circuitAutoScroll])
+
+  /*
+   * A view the learner chose is brought fully into the reading area.
+   *
+   * The tab row sits several hundred pixels down a task, so pressing a tab could leave the view it
+   * opened running under the pinned Continue row. Only on the learner's own choice of tab, never on
+   * a step's own choice of view (the step owns scroll on entry), and only as far as is needed: a
+   * view already whole on screen is left where it is. The bedside scene mounts a moment after its
+   * tab is pressed, so the foot of the view is looked for twice.
+   */
+  const [chosenView, setChosenView] = useState<{ view: CircuitViewPreference; count: number }>()
+  const chooseCircuitView = (view: CircuitViewPreference) => {
+    setCircuitView(view)
+    setChosenView((current) => ({ view, count: (current?.count ?? 0) + 1 }))
+  }
+  useEffect(() => {
+    if (!chosenView) return undefined
+    const reveal = () => {
+      const foot = panelRef.current?.querySelector<HTMLElement>(
+        chosenView.view === 'bedside' ? '[data-scene-status]' : '[data-circuit-drawing]',
+      )
+      if (foot && foot.getClientRects().length > 0) revealAbovePinnedRow(foot)
+      return Boolean(foot)
+    }
+    const timers = [
+      window.setTimeout(() => {
+        if (!reveal()) timers.push(window.setTimeout(reveal, 600))
+      }, 80),
+    ]
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [chosenView])
 
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
@@ -506,7 +562,7 @@ export function CircuitSchematic({
           }
           if (!next) return
           event.preventDefault()
-          setCircuitView(next)
+          chooseCircuitView(next)
           document
             .getElementById(
               next === 'bedside' ? 'cardiohelp-bedside-view-tab' : 'cardiohelp-diagnostic-view-tab',
@@ -521,7 +577,7 @@ export function CircuitSchematic({
           aria-selected={circuitView === 'bedside'}
           aria-controls="cardiohelp-bedside-view"
           tabIndex={circuitView === 'bedside' ? 0 : -1}
-          onClick={() => setCircuitView('bedside')}
+          onClick={() => chooseCircuitView('bedside')}
         >
           Bedside 3D circuit
         </button>
@@ -532,7 +588,7 @@ export function CircuitSchematic({
           aria-selected={circuitView === 'diagnostic'}
           aria-controls="cardiohelp-diagnostic-view"
           tabIndex={circuitView === 'diagnostic' ? 0 : -1}
-          onClick={() => setCircuitView('diagnostic')}
+          onClick={() => chooseCircuitView('diagnostic')}
         >
           Pressure-zone map
         </button>

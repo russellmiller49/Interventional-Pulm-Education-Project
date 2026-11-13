@@ -315,6 +315,130 @@
   min-width: 0;
   padding: 0;
 }
+.landmarks {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.landmarks h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan-bright);
+}
+.prose .landmarks ol,
+.landmarks ol {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+  list-style: decimal;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.landmarks li::marker {
+  font-weight: 700;
+}
+.stationsWrap {
+  container-type: inline-size;
+}
+.stations {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.stations caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 8px;
+  color: var(--muted);
+}
+.stations th,
+.stations td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.stations thead th {
+  border-top: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stations tbody th {
+  white-space: nowrap;
+  font-weight: 700;
+}
+.stations tbody th small {
+  display: block;
+  max-width: 14ch;
+  white-space: normal;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.stations ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 3px;
+  list-style: decimal;
+}
+.stations p {
+  margin: 0 0 4px;
+}
+/* In a narrow place, such as a dialog, each station is a block with its three parts under it. */
+@container (max-width: 760px) {
+  .stations thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .stations,
+  .stations caption,
+  .stations tbody,
+  .stations tr,
+  .stations th,
+  .stations td {
+    display: block;
+  }
+  .stations tr {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  .stations tbody th,
+  .stations td {
+    padding: 2px 0;
+    border-top: 0;
+  }
+  .stations tbody th {
+    font-size: 16px;
+  }
+  .stations tbody th small {
+    display: inline;
+    max-width: none;
+    margin-left: 8px;
+  }
+  .stations td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
 .lessonBar {
   display: flex;
   flex-wrap: wrap;

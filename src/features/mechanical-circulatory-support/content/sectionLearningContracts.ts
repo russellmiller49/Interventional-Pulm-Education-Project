@@ -427,7 +427,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           'Blood is drained from a central vein and returned to an artery through an outside circuit',
         correct: false,
         feedback:
-          'That is venoarterial ECMO, an extracorporeal pathway. It is compared on the pathway cards below.',
+          'That is venoarterial ECMO, an extracorporeal pathway. The Overview compares it on its pathway cards, and the Cardiohelp ECMO module teaches it.',
       },
     ],
     predictionPrompt:

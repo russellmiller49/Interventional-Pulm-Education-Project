@@ -1562,6 +1562,38 @@
   overflow: visible;
 }
 
+/*
+ * A Learn lesson on a desktop is a workspace: the shell is the window (the site menu is hidden in
+ * a lesson, so that is the whole window), the page does not scroll, and the lesson lays out its
+ * text and picture panes inside it (`crrt-foundations.module.css`). Below 1024 by 700 the lesson
+ * keeps the document flow above. Practice and Challenge are not marked and are unchanged.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-focused-lesson='true'][data-lesson-workspace='true'] {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--site-header-height, 5rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moduleShell[data-focused-lesson='true'][data-lesson-workspace='true']
+    :global([data-activity-frame='true']) {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moduleShell[data-focused-lesson='true'][data-lesson-workspace='true']
+    :global([data-activity-frame='true'])
+    > div:last-child {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 /* X-04: a Practice case that Learn already walked through says so, and says what is new here. */
 .caseReuseNote {
   margin: 0.35rem 0 0;
