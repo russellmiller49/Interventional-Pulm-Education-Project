@@ -451,5 +451,19 @@ describe('F-15 membrane transport comparison', () => {
       }
       expect(container.querySelectorAll('animate, animateMotion, animateTransform')).toHaveLength(0)
     })
+
+    it('describes the drawing in its motion lines, and claims nothing the drawing cannot show', () => {
+      // Clinical review, 2026-11-13. A motion line says what is drawn. It does not say that no
+      // water crosses a membrane during diffusive therapy, that no solute leaves with
+      // ultrafiltrate, or how fast a solute travels relative to its water (a sieving claim).
+      for (const mechanism of crrtTransportMechanisms) {
+        expect(mechanism.motion).not.toMatch(/no water crosses|no solute/i)
+        expect(mechanism.motion).not.toMatch(/speed|faster|slower|rate|\d/i)
+      }
+      const diffusion = crrtTransportMechanisms.find((entry) => entry.id === 'diffusion')!
+      expect(diffusion.motion).toContain(
+        'No water movement is drawn: this panel shows diffusion alone.',
+      )
+    })
   })
 })

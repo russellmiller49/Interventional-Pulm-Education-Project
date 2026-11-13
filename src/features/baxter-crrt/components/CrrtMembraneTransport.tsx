@@ -30,8 +30,9 @@ export type CrrtTransportMechanism = 'diffusion' | 'convection' | 'ultrafiltrati
  * line says the panel is about fluid balance and where the solute is counted.
  *
  * The motion adds direction and nothing else. In diffusion the dots travel with their own stream
- * and single dots step across; no water crosses. In convection and in ultrafiltration the water
- * crosses and the dots travel in it at its speed. Speeds, counts and spacing are drawing choices:
+ * and single dots step across; no water movement is drawn, and the caption says that as a fact
+ * about the drawing, not about a diffusive treatment. In convection and in ultrafiltration the
+ * water crosses and the dots travel in it. Speeds, counts and spacing are drawing choices:
  * nothing is a clearance, a sieving coefficient or a flow, and the two water panels use the same
  * ones so that neither reads as carrying more.
  * One dot size only: this source set does not support a molecule-size or relative-clearance
@@ -63,7 +64,7 @@ export const crrtTransportMechanisms: readonly {
     drawing:
       'Drawn: more solute dots on the blood side than the fluid side, one arrow carrying solute across the membrane toward the fluid side, and blood and dialysate flowing in opposite directions.',
     motion:
-      'Moving: the solute dots travel with the blood, and single dots step across the membrane and leave with the dialysate, which runs the other way. No water crosses.',
+      'Moving: the solute dots travel with the blood, and single dots step across the membrane and leave with the dialysate, which runs the other way. No water movement is drawn: this panel shows diffusion alone.',
   },
   {
     id: 'convection',
@@ -73,7 +74,7 @@ export const crrtTransportMechanisms: readonly {
     drawing:
       'Drawn: a water arrow crossing the membrane with solute dots carried in it, and a replacement arrow entering the blood side.',
     motion:
-      'Moving: water streams across the membrane and the solute dots travel in it, at its speed. Replacement runs into the blood side.',
+      'Moving: water streams across the membrane and the solute dots travel in it. Replacement runs into the blood side.',
   },
   {
     id: 'ultrafiltration',
