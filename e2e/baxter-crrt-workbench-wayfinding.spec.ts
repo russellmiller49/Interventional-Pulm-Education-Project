@@ -334,6 +334,9 @@ test('Learn task: the exercise leads, the reason names what is left, one Skip un
 
 test('circuit expanded view: keyboard open, size, Escape back to the button', async ({ page }) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-circuit-pressures')
+  // The task's own drawing is moved into the picture pane once the page is live; until then the
+  // pane shows the reference circuit, whose button goes when the drawing arrives.
+  await expect(page.locator('[data-crrt-visual-slot] svg[data-overlay]')).toBeVisible()
   const expand = page.getByRole('button', { name: 'Expand circuit' })
   await expand.focus()
   await page.keyboard.press('Enter')
