@@ -185,12 +185,14 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
       'delivered-dose',
       'downtime',
       'urea-marker',
+      'filtration-fraction',
       'filter-pressure',
       'tmp',
     ],
     interpretation: [
-      'Only the pre- and post-filter flows differ. Total replacement, the effluent dose display, delivered dose, downtime, the small-solute marker, filter pressure and TMP are the same after six simulated hours.',
-      'This simulator holds the solute concentration reaching the filter and the filtration fraction constant, so it cannot reproduce the dilution effect. Identical clearance here is a limit of the simulator, not evidence that the split makes no difference.',
+      'The split changes the two replacement flows and the filtration fraction: moving 900 mL/h before the filter takes it from 21.0% to 18.3%, because that fluid now adds to the flow reaching the filter. Total replacement, the effluent dose display, delivered dose, downtime and the small-solute marker are the same after six simulated hours.',
+      'Filter pressure and TMP end within 0.1 mmHg of each other: a lower filtration fraction slows the build-up on the filter in this simulator, and six hours is too short for that to show.',
+      'This simulator holds the solute concentration reaching the filter constant, so it cannot reproduce the dilution effect on clearance. Identical clearance here is a limit of the simulator, not evidence that the split makes no difference.',
     ],
     runNote:
       'Your change from the start includes time passing; the modeled difference isolates the split. The flows in your run should move by the modeled difference, and any other change comes from time, not from the split.',
@@ -204,7 +206,7 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
       claimTopics: ['solute-transport-mechanisms'],
     },
     {
-      text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Work filtration fraction out by hand: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
+      text: 'Filtration fraction is fluid across the membrane divided by plasma flow plus pre-filter fluid; the simulator works it out from the flows. PrisMax presents total predilution and filtration fraction as its own calculations from the circuit flows.',
       sourceIds: ['MATH-PM-003'],
       claimTopics: [],
     },
@@ -559,7 +561,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         label: 'Filtration and concentration inside the filter',
         thisRun: (context) =>
           `${context.modalityLabel} with ${context.formatted['pre-replacement-flow']} replacement before and ${context.formatted['post-replacement-flow']} after the filter; hematocrit ${context.formatted.hematocrit}.`,
-        canVerify: `Yes, by hand: 850 mL/h across the membrane over about 5,400 mL/h of plasma and pre-filter fluid is 16%, under ${N('filtration-fraction-ceiling')}.`,
+        canVerify: `Yes: the simulator works it out from the flows. 850 mL/h across the membrane over about 5,400 mL/h of plasma and pre-filter fluid is 16%, under ${N('filtration-fraction-ceiling')}.`,
         decidedBy:
           'No change needed. Above the ceiling you would raise blood flow or move replacement before the filter.',
       },

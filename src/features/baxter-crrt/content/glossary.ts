@@ -145,7 +145,7 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
       'Post-filter replacement, which enters after the membrane.',
     ],
     openQuestion:
-      'This simulation does not model how the pre/post split changes clearance, filtration fraction or filter pressures; moving replacement between the two ports changes only the two flow settings here.',
+      'Moving replacement between the two ports changes the two flow settings and the filtration fraction, which the simulation works out from the flows. It does not model how the split changes clearance.',
     basis: [
       { kind: 'module-drawing', detail: CIRCUIT_DRAWING },
       {

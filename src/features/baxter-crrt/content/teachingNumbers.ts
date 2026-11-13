@@ -126,6 +126,14 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     ...CHECK,
     checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
   },
+  'filtration-fraction-ceiling-range': {
+    label: 'Filtration fraction ceiling, as a range',
+    value: '20%–25%',
+    class: 'expert-reference',
+    sources: [ajkd('Dose of Solute Clearance With CKRT, p. 778')],
+    note: 'The second of the two ceilings the module shows side by side (owner decision O03, 2026-11-10): the 2021 review gives 25% for post-dilution CVVH, this source gives a range. The value and its locator are the ones the `filtration-fraction-ceiling` row has carried since 2026-11-09.',
+    ...CHECK_AJKD,
+  },
   'postfilter-ica': {
     label: 'Post-filter ionized calcium on regional citrate',
     value: '0.25–0.35 mmol/L',

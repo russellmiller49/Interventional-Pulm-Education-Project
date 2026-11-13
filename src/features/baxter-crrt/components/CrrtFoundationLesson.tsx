@@ -62,7 +62,7 @@ import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import styles from './crrt-foundations.module.css'
-import { CRRT_NUMBERS } from '../content/teachingNumbers'
+import { CRRT_FILTRATION_FRACTION_CEILINGS } from '../content/filtrationFraction'
 
 /**
  * The eight lessons in the shape the shared Lessons menu reads, in the one authored order (F-10).
@@ -617,10 +617,13 @@ export function CrrtFoundationLesson({
         </p>
       ) : null}
       <p>
-        <strong>Two things this simulator does not compute.</strong> Filtration fraction is a fixed
-        value here and does not respond to the flows; work it out by hand and keep it under{' '}
-        {CRRT_NUMBERS.value('filtration-fraction-ceiling')}. When a makeup flow has run, cumulative
-        machine removal and whole-patient balance are not shown.
+        <strong>Filtration fraction</strong> is worked out from the flows: fluid across the membrane
+        divided by plasma flow plus pre-filter fluid. Moving replacement before the filter lowers
+        it; so does a higher blood flow. {CRRT_FILTRATION_FRACTION_CEILINGS}
+      </p>
+      <p>
+        <strong>One thing this simulator does not compute.</strong> When a makeup flow has run,
+        cumulative machine removal and whole-patient balance are not shown.
       </p>
       {lessonId === 'crrt-prescription-dosing' ? (
         <details onToggle={(event) => setFreeBuilderOpen(event.currentTarget.open)}>

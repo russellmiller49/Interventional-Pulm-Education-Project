@@ -114,12 +114,19 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     )
     const panel = screen.getByText('Sources', { selector: 'summary' }).closest('details')!
     fireEvent.click(within(panel).getByText('Sources', { selector: 'summary' }))
-    // The two model limits and their consequence stay visible, with the number to work to.
-    expect(panel).toHaveTextContent('Two things this simulator does not compute.')
-    expect(panel).toHaveTextContent('does not respond to the flows')
+    // Filtration fraction is worked out from the flows now (owner decision O03), and both
+    // ceilings are shown, each with its source. The one remaining model limit stays visible.
     expect(panel).toHaveTextContent(
-      `keep it under ${CRRT_NUMBERS.value('filtration-fraction-ceiling')}`,
+      'Filtration fraction is worked out from the flows: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
     )
+    expect(panel).toHaveTextContent(
+      `${CRRT_NUMBERS.value('filtration-fraction-ceiling')} for post-dilution CVVH (Claure-Del Granado and Clark, 2021)`,
+    )
+    expect(panel).toHaveTextContent(
+      `${CRRT_NUMBERS.value('filtration-fraction-ceiling-range')} (AJKD Core Curriculum, 2025)`,
+    )
+    expect(panel).not.toHaveTextContent('by hand')
+    expect(panel).toHaveTextContent('One thing this simulator does not compute.')
     expect(panel).toHaveTextContent(
       'cumulative machine removal and whole-patient balance are not shown',
     )

@@ -62,9 +62,15 @@ describe('CRRT foundation calculations and attempt identity', () => {
     ).toBeNull()
     const changed = { ...CRRT_FOUNDATION_CONSTRUCTION, downtimeHours: 6 }
     expect(validDowntimeComparison(CRRT_FOUNDATION_CONSTRUCTION, changed)).toBe(true)
-    expect(calculateCrrtPredictedConsequences(changed).filtrationBurden.quantitativeStatus).toBe(
-      'unavailable-source-limited',
-    )
+    // Filtration fraction is computed from the entries: 100 mL/h across the membrane over
+    // 120 × 60 × (1 − 0.30) = 5,040 mL/h of plasma, with no pre-filter fluid in this example.
+    const burden = calculateCrrtPredictedConsequences(changed).filtrationBurden
+    expect(burden.quantitativeStatus).toBe('computed')
+    expect(burden.filtrationFraction?.fraction).toBeCloseTo(100 / 5_040, 12)
+    // A makeup flow leaves it unstated, like every other quantity that needs the attribution.
+    expect(
+      calculateCrrtPredictedConsequences({ ...changed, makeupMlPerHour: 50 }).filtrationBurden,
+    ).toMatchObject({ quantitativeStatus: 'not-stated', filtrationFraction: null })
     for (const invalid of [
       null,
       CRRT_FOUNDATION_CONSTRUCTION,

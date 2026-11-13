@@ -247,12 +247,32 @@ describe('CRRT-02 explanations match the simulation', () => {
     const rows = rowsById('CRRT-05')
     expect(rows.get('pre-replacement-flow')).toMatchObject({ first: 0, second: 900 })
     expect(rows.get('post-replacement-flow')).toMatchObject({ first: 1_200, second: 300 })
+    // What the split moves: the two flows, the filtration fraction computed from them, and,
+    // through the filter's burden, a filter pressure and TMP difference too small to read.
+    const movedBySplit = new Set([
+      'pre-replacement-flow',
+      'post-replacement-flow',
+      'filtration-fraction',
+      'filter-pressure',
+      'tmp',
+    ])
     for (const [id, row] of rows) {
-      if (id === 'pre-replacement-flow' || id === 'post-replacement-flow') continue
+      if (movedBySplit.has(id)) continue
       expect({ id, difference: row.difference }).toEqual({ id, difference: expect.any(Number) })
       expect(Math.abs(row.difference ?? Number.NaN)).toBeLessThanOrEqual(
         CRRT_WORKED_EQUIVALENCE_TOLERANCE,
       )
+    }
+    // The numbers the explanation prints: 21.0% to 18.3%, and pressures within 0.1 mmHg.
+    expect(rows.get('filtration-fraction')?.first).toBeCloseTo(21.0, 1)
+    expect(rows.get('filtration-fraction')?.second).toBeCloseTo(18.3, 1)
+    const interpretation = exampleFor('CRRT-05').comparison.interpretation.join(' ')
+    expect(interpretation).toContain('from 21.0% to 18.3%')
+    expect(interpretation).toContain('within 0.1 mmHg')
+    for (const id of ['filter-pressure', 'tmp'] as const) {
+      const difference = rows.get(id)?.difference ?? Number.NaN
+      expect(difference).toBeLessThan(0)
+      expect(Math.abs(difference)).toBeLessThan(0.1)
     }
     expect(rows.get('delivered-dose')?.second).toBeCloseTo(1_250 / 76, 6)
     expect(rows.get('downtime')?.second).toBe(0)
@@ -260,8 +280,11 @@ describe('CRRT-02 explanations match the simulation', () => {
     // Values recorded from the case before the pre-filter source was added (probe, 2026-09-14).
     expect(rows.get('prescribed-dose')?.first).toBeCloseTo(16.447, 3)
     expect(rows.get('urea-marker')?.first).toBeCloseTo(23.213, 3)
-    expect(rows.get('filter-pressure')?.first).toBeCloseTo(80.099, 3)
-    expect(rows.get('tmp')?.first).toBeCloseTo(59.549, 3)
+    // The two pressures were 80.099 and 59.549 while filtration fraction was the scenario's
+    // fixed 0.10. With all replacement after the filter it is 21.0% here, so the filter loads a
+    // little faster over the six hours.
+    expect(rows.get('filter-pressure')?.first).toBeCloseTo(80.169, 3)
+    expect(rows.get('tmp')?.first).toBeCloseTo(59.584, 3)
   })
 
   it('CRRT-05: without a pre-filter source, the same split would have stopped all delivery', () => {
