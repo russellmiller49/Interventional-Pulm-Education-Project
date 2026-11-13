@@ -687,6 +687,10 @@
 .visualSlot > :global([data-crrt-lesson-visual]) {
   min-width: 0;
 }
+/* A figure brings its own page margin; in the pane the gap between cards is the spacing. */
+.visualSlot > :global([data-crrt-lesson-visual]) > :global(figure) {
+  margin-block: 0;
+}
 .visualSlot > :global([data-crrt-lesson-visual='lead']) {
   order: 0;
 }

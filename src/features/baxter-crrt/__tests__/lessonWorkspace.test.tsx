@@ -202,6 +202,21 @@ describe('two panes', () => {
     expect(picturePane().querySelectorAll('[data-crrt-lesson-visual="lead"]')).toHaveLength(1)
   })
 
+  it('the membrane task leads with the filter inset; the circuit follows it', () => {
+    renderLesson('crrt-solute-transport', 'two')
+    const lead = picturePane().querySelector('[data-crrt-lesson-visual="lead"]')!
+    const support = picturePane().querySelector('[data-crrt-lesson-visual="support"]')!
+    expect(lead.querySelector('[data-crrt-membrane-transport]')).not.toBeNull()
+    expect(support.querySelector('svg[data-overlay]')).not.toBeNull()
+    // Choosing a mechanism in the text changes both pictures in the pane.
+    fireEvent.click(within(textPane()).getByRole('button', { name: 'Convection' }))
+    expect(lead.querySelector('[data-crrt-membrane-transport]')).toHaveAttribute(
+      'data-selected',
+      'convection',
+    )
+    expect(support.querySelector('svg[data-overlay]')).toHaveAttribute('data-overlay', 'cvvh-post')
+  })
+
   it.each(BAXTER_CRRT_LEARN_LESSON_IDS)(
     '%s: no task opens on an empty pane, and no drawing is left in the text',
     (lessonId) => {
