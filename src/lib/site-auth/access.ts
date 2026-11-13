@@ -59,6 +59,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // library, in development. Reachable by direct link without an account, noindex.
   '/board-navigator',
   '/ebus-guided',
+  // The EUS-B guided course: reachable by direct link, noindex. Its lab is a public training
+  // embed of the EBUS course build, like the simulator's.
+  '/eus-b-guided',
   // The EUS-B simulator is a development preview: reachable by direct link, noindex. Its page
   // embeds a standalone entry of the EBUS course build, which is already a public training embed.
   '/eus-b-simulator',
@@ -109,6 +112,8 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // The IP Board Navigator (Today, knowledge map, repair lab, progress, curriculum).
   '/board-navigator',
   '/ebus-guided',
+  // The EUS-B guided course (overview, lessons).
+  '/eus-b-guided',
   '/literature-atlas',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
@@ -505,6 +510,8 @@ export function resolveSiteModuleId(pathname: string) {
   if (first === 'dolphin-bronchoscopy') return 'dolphin-bronchoscopy'
 
   if (first === 'ebus-guided') return 'ebus-guided'
+
+  if (first === 'eus-b-guided') return 'eus-b-guided'
 
   if (first === 'eus-b-simulator') return 'eus-b-simulator'
 

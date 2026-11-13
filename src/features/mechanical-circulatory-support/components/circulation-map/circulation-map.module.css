@@ -144,16 +144,31 @@
   stroke-width: 3;
 }
 
+/*
+ * A pump's inlet and outlet, in the colour of the blood the pump moves: red for a left-sided pump
+ * (ventricle to aorta), blue for a right-sided one (vena cava to pulmonary artery). The two are
+ * told apart by shape, an open ring for the inlet and a filled dot for the outlet. Until November
+ * 2026 every inlet was blue and every outlet red, so a left ventricular inlet was drawn venous
+ * and a pulmonary-artery outlet arterial.
+ */
 .inlet {
-  fill: var(--map-vessel-venous);
-  stroke: var(--map-ink);
-  stroke-width: 2;
+  fill: #0b2a30;
+  stroke: var(--map-vessel);
+  stroke-width: 4;
 }
 
 .outlet {
   fill: var(--map-vessel);
   stroke: var(--map-ink);
   stroke-width: 2;
+}
+
+.inlet[data-map-blood='venous'] {
+  stroke: var(--map-vessel-venous);
+}
+
+.outlet[data-map-blood='venous'] {
+  fill: var(--map-vessel-venous);
 }
 
 /* The pathway's letter, on its own component; its words are in the key below the drawing. */

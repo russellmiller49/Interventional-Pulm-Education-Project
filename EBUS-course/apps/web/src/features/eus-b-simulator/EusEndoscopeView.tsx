@@ -164,6 +164,11 @@ interface EusEndoscopeViewProps {
   depthLabel: string;
   /** The control that swaps this pane between the endoscope and the CT. */
   viewSwitch: ReactNode;
+  /**
+   * Draw the picture alone: no heading, no position readout and no caption. For a page that
+   * must not say in words which organ the scope is in. Off unless asked for.
+   */
+  imageOnly?: boolean;
 }
 
 /** Mean direction of a stretch of the scope path, in the web frame. */
@@ -188,6 +193,7 @@ export function EusEndoscopeView({
   sMm,
   depthLabel,
   viewSwitch,
+  imageOnly = false,
 }: EusEndoscopeViewProps) {
   const host = useRef<HTMLDivElement>(null);
   const draw = useRef<(() => void) | null>(null);
@@ -327,13 +333,15 @@ export function EusEndoscopeView({
 
   return (
     <section className="eus-pane eus-endoscope-pane" aria-label="Simulated endoscopic view">
-      <header className="eus-pane-header">
-        <div>
-          <span className="eus-eyebrow">Endoscope</span>
-          <h2>{pose.region === 'stomach' ? 'In the stomach' : 'In the esophagus'}</h2>
-        </div>
-        {viewSwitch}
-      </header>
+      {!imageOnly && (
+        <header className="eus-pane-header">
+          <div>
+            <span className="eus-eyebrow">Endoscope</span>
+            <h2>{pose.region === 'stomach' ? 'In the stomach' : 'In the esophagus'}</h2>
+          </div>
+          {viewSwitch}
+        </header>
+      )}
       <div className="eus-endoscope-image" ref={host} data-status={status}>
         {status !== 'ready' && (
           <div className="eus-image-message" role="status">
@@ -344,14 +352,19 @@ export function EusEndoscopeView({
         )}
         <span className="eus-endoscope-mark">Transducer side</span>
         <span className="eus-image-badge">Simulated</span>
-        <div className="eus-image-readout">
-          {depthLabel} · {pose.region}
-        </div>
+        {!imageOnly && (
+          <div className="eus-image-readout">
+            {depthLabel} · {pose.region}
+          </div>
+        )}
       </div>
-      <p className="eus-pane-caption">
-        The view through the EBUS endoscope’s lens. The lens looks forward and up toward the
-        transducer, so the lumen ahead sits low in the image and the scan plane runs up its middle.
-      </p>
+      {!imageOnly && (
+        <p className="eus-pane-caption">
+          The view through the EBUS endoscope’s lens. The lens looks forward and up toward the
+          transducer, so the lumen ahead sits low in the image and the scan plane runs up its
+          middle.
+        </p>
+      )}
     </section>
   );
 }

@@ -6,6 +6,8 @@ export const bronchNavigationTrainerAppPath = '/bronch-navigation-trainer/app/in
 export const socalEbusCourseAppPath = '/socal-ebus-course/app/index.html'
 /** Standalone EUS-B simulator entry of the same embedded build (EBUS-course/apps/web/eus-b.html). */
 export const socalEusBSimulatorAppPath = '/socal-ebus-course/app/eus-b.html'
+/** Lab frame of the EUS-B guided course, same build (EBUS-course/apps/web/eus-b-guided.html). */
+export const socalEusBGuidedAppPath = '/socal-ebus-course/app/eus-b-guided.html'
 
 export function normalizeEmbeddedAppLocale(locale: string | null | undefined): EmbeddedAppLocale {
   if (locale === 'es' || locale === 'zh-CN') {

@@ -49,6 +49,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'A guided linear EBUS course with required acquisition labs, station correlation, sampling and specimen decisions, and formative case assessment.',
   },
   {
+    path: '/eus-b-guided',
+    title: 'EUS-B: Guided Course',
+    group: 'Bronchoscopy',
+    summary:
+      'A guided course on the EBUS scope in the esophagus for operators who already perform linear EBUS: one six-landmark survey taught with predictions, find-the-view tasks on the EUS-B simulator case, and labeled debriefs. In the beta-testing hub; three of 13 planned lessons are open and the text awaits physician review.',
+  },
+  {
     path: '/eus-b-simulator',
     title: 'EUS-B Simulator',
     group: 'Bronchoscopy',

@@ -1024,3 +1024,11 @@
     flex-wrap: wrap;
   }
 }
+
+/* The link to the next critical care module, on the last section's "Section finished" card. */
+.moduleLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

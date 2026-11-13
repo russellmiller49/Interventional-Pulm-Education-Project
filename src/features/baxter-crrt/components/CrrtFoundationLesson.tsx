@@ -52,6 +52,7 @@ import {
   CrrtReferenceCircuit,
   type CrrtToolProgress,
 } from './CrrtFoundationTools'
+import { CrrtAccessSiteProvider } from './CrrtAccessSite'
 import { CrrtLessonMenu } from './CrrtLessonMenu'
 import {
   CrrtLessonVisual,
@@ -683,30 +684,32 @@ export function CrrtFoundationLesson({
         }
       >
         <div className={styles.activity} data-crrt-activity>
-          <CrrtLessonVisualProvider value={visualHost.value}>
-            <FlowContent
-              kind={attempt.finished ? 'complete' : task.kind}
-              teaching={
-                <>
-                  {card}
-                  {taskMap}
-                  {sources}
-                </>
-              }
-              visual={
-                <div className={styles.visualPane} data-crrt-visual-pane>
-                  {/* The task's own picture is drawn into this element (`CrrtLessonVisual`). */}
-                  <div ref={setPaneElement} className={styles.visualSlot} data-crrt-visual-slot />
-                  {/* A task that brings no picture keeps the circuit the lesson is about. */}
-                  {visualHost.ownVisuals === 0 ? (
-                    <div data-crrt-lesson-visual="reference">
-                      <CrrtReferenceCircuit />
-                    </div>
-                  ) : null}
-                </div>
-              }
-            />
-          </CrrtLessonVisualProvider>
+          <CrrtAccessSiteProvider>
+            <CrrtLessonVisualProvider value={visualHost.value}>
+              <FlowContent
+                kind={attempt.finished ? 'complete' : task.kind}
+                teaching={
+                  <>
+                    {card}
+                    {taskMap}
+                    {sources}
+                  </>
+                }
+                visual={
+                  <div className={styles.visualPane} data-crrt-visual-pane>
+                    {/* The task's own picture is drawn into this element (`CrrtLessonVisual`). */}
+                    <div ref={setPaneElement} className={styles.visualSlot} data-crrt-visual-slot />
+                    {/* A task that brings no picture keeps the circuit the lesson is about. */}
+                    {visualHost.ownVisuals === 0 ? (
+                      <div data-crrt-lesson-visual="reference">
+                        <CrrtReferenceCircuit />
+                      </div>
+                    ) : null}
+                  </div>
+                }
+              />
+            </CrrtLessonVisualProvider>
+          </CrrtAccessSiteProvider>
         </div>
       </LessonShell>
     </div>

@@ -29,6 +29,7 @@ describe('hub readiness record', () => {
       Object.fromEntries(betaModules.map((entry) => [entry.id, betaRollout[entry.id].stage])),
     ).toEqual({
       'ebus-guided': 'preview',
+      'eus-b-guided': 'preview',
       'eus-b-simulator': 'preview',
       'synchronized-anatomy': 'preview',
       'branch-tracing': 'preview',

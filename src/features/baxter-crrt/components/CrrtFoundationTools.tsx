@@ -17,6 +17,7 @@ import { CRRT_FOUNDATION_CONSTRUCTION, projectFoundationFluidBalance } from '../
 import { calculateCrrtMachineFluidLedger } from '../circuitFluidLedger'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import type { CrrtFoundationTool } from '../content/foundationLessons'
+import { CrrtAccessSiteButton, useCrrtAccessSite } from './CrrtAccessSite'
 import {
   CrrtLessonVisual,
   useCrrtLessonVisualPlacement,
@@ -124,12 +125,16 @@ function Circuit({
   paths?: readonly CrrtCircuitPathId[]
   pressure?: CrrtPilotPressureSignals
 }) {
+  // In a lesson, the picture behind the PATIENT circle: the catheter in its vein.
+  const accessSite = useCrrtAccessSite()
   return (
     <CrrtPilotCircuit
       presentation="focused"
       overlayId={overlay}
       highlightedNodeId={node}
       visiblePathIds={paths}
+      accessSite={accessSite?.site}
+      accessSiteControl={<CrrtAccessSiteButton />}
       running={false}
       setReady
       fluidsReady
@@ -232,6 +237,7 @@ export function CrrtFoundationToolView({
   onReady?: (response: string) => void
   onProgress?: (progress: CrrtToolProgress) => void
 }) {
+  const accessSite = useCrrtAccessSite()
   const [selected, setSelected] = useState<string | null>(null)
   const [visited, setVisited] = useState<readonly string[]>([])
   const [changed, setChanged] = useState(false)
@@ -412,6 +418,8 @@ export function CrrtFoundationToolView({
           <CrrtPilotCircuit
             presentation="focused"
             overlayId="pressure-profile"
+            accessSite={accessSite?.site}
+            accessSiteControl={<CrrtAccessSiteButton />}
             highlightedSignalId={detail?.id}
             running={false}
             setReady

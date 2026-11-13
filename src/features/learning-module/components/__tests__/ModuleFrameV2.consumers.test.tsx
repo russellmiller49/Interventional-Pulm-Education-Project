@@ -8,6 +8,7 @@ import { BronchoscopyFoundationsModuleFrame } from '@/features/bronchoscopy-foun
 import { CardiohelpModuleFrame } from '@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame'
 import { DolphinModuleFrame } from '@/features/dolphin-bronchoscopy/components/DolphinModuleFrame'
 import { EbusModuleFrame } from '@/features/ebus-guided/components/ModuleFrame'
+import { EusbModuleFrame } from '@/features/eus-b-guided/components/ModuleFrame'
 import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2'
 import { McsModuleFrame } from '@/features/mechanical-circulatory-support/components/McsModuleFrame'
 import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
@@ -160,6 +161,25 @@ const consumers: readonly FrameCase[] = [
     localeNotice: 'p[role=note]',
   },
   {
+    name: 'EUS-B guided course',
+    english: (
+      <EusbModuleFrame locale="en" active="Overview">
+        {body}
+      </EusbModuleFrame>
+    ),
+    otherLocale: (
+      <EusbModuleFrame locale="es" active="Overview">
+        {body}
+      </EusbModuleFrame>
+    ),
+    activity: (
+      <EusbModuleFrame locale="en" active="Learn" activity>
+        {body}
+      </EusbModuleFrame>
+    ),
+    localeNotice: 'p[role=note]',
+  },
+  {
     name: 'ICU Hemodynamics',
     english: (
       <IcuHemodynamicsModuleFrameV2 locale="en" activeHref="/icu-hemodynamics">
@@ -251,6 +271,7 @@ const consumerSources = [
   'src/features/cardiohelp-ecmo/components/CardiohelpModuleFrame.tsx',
   'src/features/dolphin-bronchoscopy/components/DolphinModuleFrame.tsx',
   'src/features/ebus-guided/components/ModuleFrame.tsx',
+  'src/features/eus-b-guided/components/ModuleFrame.tsx',
   'src/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2.tsx',
   'src/features/mechanical-circulatory-support/components/McsModuleFrame.tsx',
   'src/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame.tsx',
@@ -323,7 +344,7 @@ describe('shared module frame: what its consumers receive', () => {
   })
 
   it('lists every file that renders the shared frame', () => {
-    // An eleventh consumer must be added above, so it is characterised before the frame changes.
+    // A twelfth consumer must be added above, so it is characterised before the frame changes.
     const found = readdirSync(join(process.cwd(), 'src'), { recursive: true, encoding: 'utf8' })
       .filter((path) => path.endsWith('.tsx') && !path.endsWith('.test.tsx'))
       .map((path) => join('src', path))
