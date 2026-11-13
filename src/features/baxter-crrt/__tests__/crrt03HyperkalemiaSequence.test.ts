@@ -140,7 +140,16 @@ describe('CRRT-03 keys immediate potassium treatment, then controlled clearance'
 
   it('every number added for this case is traceable to a source the case cites', () => {
     const cited = new Set(definition.sourceBasis.map(({ id }) => id))
-    const rows = CRRT_NUMBERS.rows.filter(({ checkedOn }) => checkedOn === '2026-10-31')
+    // The case's rows are the ones that cite its three guidelines. They were first checked on
+    // 2026-10-31 and re-checked on 2026-11-13, so the date no longer picks them out.
+    const caseGuidelines = new Set([
+      'GUID-UKKA-HYPERKALEMIA-2023',
+      'CONSENSUS-KDIGO-ACUTE-HYPERKALEMIA-2020',
+      'GUID-EASL-ALF-2017',
+    ])
+    const rows = CRRT_NUMBERS.rows.filter(({ sources }) =>
+      sources.some(({ sourceId }) => caseGuidelines.has(sourceId)),
+    )
     expect(rows.length).toBeGreaterThan(0)
     for (const row of rows) {
       expect(row.sources.length).toBeGreaterThan(0)

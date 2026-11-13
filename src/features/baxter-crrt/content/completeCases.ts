@@ -1950,7 +1950,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     expectedResponse: `Your plan is recorded. The drugs act first: the fall in potassium after insulin peaks at ${N('insulin-peak')}. At 74 kg, 1,000 mL/h is about 13.5 mL/kg/h; delivering the target range takes roughly 1,500 to 1,850 mL/h. The machine beside the case keeps its settings, and its laboratory values are the case-start set.`,
     responseOptionLabel:
       'Potassium falls within the hour on the drugs, then CRRT holds it down over hours while urea falls slowly',
-    trendReview: `Check the arithmetic: effluent ÷ weight. Here 1,000 ÷ 74 is about 13.5 mL/kg/h, below the ${N('dose-delivered')} that KDIGO recommends as delivered dose, so raise the dialysate and confirm on the History screen that the dose is being delivered. Read the potassium on the dialysate bag too, because removal depends on the gradient as well as the flow. Recheck potassium ${N('potassium-recheck')} after treatment, with an ECG and a neurological examination at each check, and follow sodium and urea with them. If potassium is ${N('insulin-repeat')}, UKKA considers a further insulin-glucose dose. Sodium bicarbonate is not a routine potassium drug: UKKA suggests against routine use, and KDIGO keeps it for metabolic acidemia in a patient who can take the sodium load. Stay continuous unless the heart forces the question. IHD removes potassium faster, and the 2026 multidisciplinary guideline ties disequilibrium to the rate of osmotic shift, not to the modality alone. So if the ECG stays toxic or the potassium stays uncontrolled, take the modality decision to the ICU attending and nephrologist at once, with the brain in that decision.`,
+    trendReview: `Check the arithmetic: effluent ÷ weight. Here 1,000 ÷ 74 is about 13.5 mL/kg/h, below the ${N('dose-delivered')} that KDIGO recommends as delivered dose, so raise the dialysate and confirm on the History screen that the dose is being delivered. Read the potassium on the dialysate bag too, because removal depends on the gradient as well as the flow. Recheck potassium ${N('potassium-recheck')} after treatment, with an ECG and a neurological examination at each check, and follow sodium and urea with them. If potassium is ${N('insulin-repeat')}, UKKA says to consider a further insulin-glucose infusion after reassessing; repeated doses raise the risk of hypoglycemia. Sodium bicarbonate is not a routine potassium drug: UKKA suggests against routine use, and KDIGO keeps it for metabolic acidemia in a patient who can take the sodium load. Stay continuous unless the heart forces the question. IHD removes potassium faster, and the 2026 multidisciplinary guideline ties disequilibrium to the rate of osmotic shift, not to the modality alone. So if the ECG stays toxic or the potassium stays uncontrolled, take the modality decision to the ICU attending and nephrologist at once, with the brain in that decision.`,
     reassessment: `Recheck potassium and the ECG ${N('potassium-recheck')}, glucose ${N('glucose-checks')} after insulin, and sodium, urea and a neurological examination with each potassium`,
     openingFinding:
       'Potassium 6.9 mmol/L, pH 7.08, glucose 104 mg/dL, no ECG yet, and a brain that cannot tolerate swelling. Dose now: about 13.5 mL/kg/h.',
@@ -1958,9 +1958,9 @@ const authoredNarratives: readonly CaseNarrative[] = [
       `Potassium ${N('hyperkalemia-severe')} is severe hyperkalemia, and the heart is the first danger: 12-lead ECG and monitor now, because the ECG can be normal even at this level. Any ECG change gets ${N('calcium-dose')}. UKKA does not give calcium for a normal ECG.`,
       `Then shift potassium into cells: ${N('insulin-glucose')}, with ${N('salbutamol-dose')} added, never alone. The KDIGO algorithm uses ${N('insulin-low-dose')}; UKKA keeps 10 units until the evidence for fewer is stronger.`,
       `Liver failure with AKI makes hypoglycemia likely, and it can pass for worsening encephalopathy. Check glucose before insulin and ${N('glucose-checks')} after it. This patient starts ${N('post-insulin-glucose-trigger')}, so add ${N('post-insulin-glucose')}. EASL warns against rapid boluses of concentrated glucose because of the osmotic shift, so choose a dilute infusion for the 25 g.`,
-      `Those drugs remove nothing. The fall peaks at ${N('insulin-peak')} and rebound comes ${N('rebound-window')}, so CRRT has to do the removing, and it treats the acidosis too, over hours.`,
-      `The brain is the limit on speed: a fast fall in blood urea leaves the brain relatively hyperosmolar, and water follows. Sodium matters for the same reason. EASL recommends ${N('alf-sodium-recommendation')} and its raised-ICP section holds ${N('alf-sodium-icp')}, moving no faster than ${N('alf-sodium-rate')}, so 136 mmol/L is already low and should come up slowly.`,
-      `So keep the treatment continuous and make the dose adequate: ${N('dose-delivered')} delivered, which means prescribing ${N('dose-prescribed')}.`,
+      `Those drugs remove nothing. The fall peaks at ${N('insulin-peak')} and potassium can rebound ${N('rebound-window')} if it has not been removed, so CRRT has to do the removing, and it treats the acidosis too, over hours.`,
+      `The brain is the limit on speed: a fast fall in blood urea leaves the brain relatively hyperosmolar, and water follows. Sodium matters for the same reason. EASL recommends ${N('alf-sodium-recommendation')} and its raised-ICP section holds ${N('alf-sodium-icp')}, and it should change by no more than ${N('alf-sodium-rate')}, a limit rather than a target, so 136 mmol/L is already low and should come up slowly.`,
+      `So keep the treatment continuous and make the dose adequate: ${N('dose-delivered')} delivered, which usually means prescribing ${N('dose-prescribed')} and then checking what was delivered.`,
     ],
     transferQuestion:
       'The same patient has a sodium of 124 mmol/L. How does that change the fluids you hang and how often you check?',
@@ -2119,7 +2119,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'A 70 kg patient on CVVHD is turned for pressure care. Minutes later the return pressure starts to move. Work out from its direction whether blood is meeting an obstruction on the way back or leaving the circuit.',
     learningObjectives: [
       'Read the direction of a return-pressure change: up for obstruction, down for disconnection.',
-      `Know the two PrisMax limits: Return Extremely Positive ${N('return-high-limit')} and Return Disconnection ${N('return-disconnect-limit')}.`,
+      `Know the two PrisMax limits: Return Extremely Positive ${N('return-high-limit')} and Return Disconnection, initially ${N('return-disconnect-limit')}.`,
       'Trace the return line from the chamber to the catheter before touching the blood flow.',
     ],
     goal: 'Find where the return path is blocked or open, and fix it',
@@ -2138,7 +2138,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     unsafeWhy: `More flow through the same resistance raises the pressure further. Once return pressure is ${N('return-high-limit')} PrisMax stops the pump, and a forced return against a clot can dislodge it.`,
     expectedResponse:
       'With the kink relieved, return pressure falls back toward where it started and the alarm clears.',
-    trendReview: `Direction is the whole diagnosis here. A return pressure climbing toward the Return Extremely Positive limit (${N('return-high-limit')}) is resistance downstream: look for a kink under the patient, a closed clamp, or a clotting return lumen. A return pressure falling ${N('return-disconnect-limit')} is the Return Disconnection alarm: look at the connection and the bed for blood before anything else.`,
+    trendReview: `Direction is the whole diagnosis here. A return pressure climbing toward the Return Extremely Positive limit (${N('return-high-limit')}) is resistance downstream: look for a kink under the patient, a closed clamp, or a clotting return lumen. A return pressure falling ${N('return-disconnect-limit')} (the initial limit), or falling well below where it has been running, is the Return Disconnection alarm: look at the connection and the bed for blood before anything else.`,
     reassessment: 'Recheck the return pressure trend, the catheter site and the time off treatment',
     openingFinding: 'Return pressure changed within minutes of the patient being turned.',
     causalChain: [
@@ -2204,7 +2204,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     patientDescription:
       'A 68 kg patient in septic shock with ischemic hepatitis has been on regional citrate for 18 hours. The calcium infusion has been increased three times overnight. Now: systemic ionized calcium 0.88 mmol/L, total calcium 11.0 mg/dL (2.75 mmol/L), pH 7.22, bicarbonate 14 mmol/L with a widening anion gap, lactate 6.8 mmol/L and rising. Post-filter ionized calcium is 0.30 mmol/L.',
     learningObjectives: [
-      `Calculate the total-to-ionized calcium ratio and recognize accumulation ${N('calcium-ratio')}.`,
+      `Calculate the total-to-ionized calcium ratio in the same units, and read a ratio ${N('calcium-ratio')} with the acid–base and the calcium requirement.`,
       'Tell the two calcium samples apart: post-filter for the circuit, systemic for the patient.',
       'Reduce or stop citrate as the first move, and keep replacing calcium.',
     ],

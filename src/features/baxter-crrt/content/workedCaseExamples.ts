@@ -222,7 +222,7 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
   ],
   alternatives: [
     'Keeping all replacement after the filter, splitting it, or giving more before the filter can each be reasonable; the choice depends on filter life, blood flow, hematocrit and the clearance goal.',
-    `Pre-filter fluid dilutes the blood the filter sees, so each liter of effluent clears a little less; this is why ${N('dose-prescribed')} is prescribed to deliver ${N('dose-delivered')}.`,
+    `Pre-filter fluid dilutes the blood the filter sees, so each liter of effluent clears a little less; this is one reason ${N('dose-prescribed')} is prescribed to help deliver ${N('dose-delivered')}.`,
     'Keeping the original split and comparing filter life over the next day is also reasonable.',
   ],
   check: {

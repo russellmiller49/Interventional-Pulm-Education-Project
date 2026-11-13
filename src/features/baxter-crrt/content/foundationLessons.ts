@@ -454,7 +454,7 @@ export const crrtFoundationTasks: Partial<
           '12.5',
           '12.5 mL/kg/h; half of the effluent was produced.',
           true,
-          `2,000 × 12 ÷ 24 ÷ 80 = 12.5 mL/kg/h, about half the delivered target of ${N('dose-delivered')}. Downtime is the usual reason delivery falls short, which is why you prescribe ${N('dose-prescribed')}. Twelve hours down is far more than that margin covers, so find out why the circuit keeps stopping.`,
+          `2,000 × 12 ÷ 24 ÷ 80 = 12.5 mL/kg/h, about half the delivered target of ${N('dose-delivered')}. Downtime is the usual reason delivery falls short, which is why ${N('dose-prescribed')} is commonly prescribed. Twelve hours down is far more than that margin covers, so find out why the circuit keeps stopping.`,
         ),
         option(
           '50',

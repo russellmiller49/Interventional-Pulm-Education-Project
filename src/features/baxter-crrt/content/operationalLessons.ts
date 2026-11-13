@@ -90,7 +90,7 @@ export const crrtOperationalTasks: Partial<
           'recorded',
           'The effluent volume collected over the same 24 hours.',
           true,
-          `Delivered dose is the effluent actually collected, divided by weight and by the hours in the interval. For run B that is 1,900 × 18 ÷ 24 ÷ 80, about 17.8 mL/kg/h, which is under the delivered target of ${N('dose-delivered')}. Run A delivered its full 23.75. Losses like this are why you prescribe ${N('dose-prescribed')}.`,
+          `Delivered dose is the effluent actually collected, divided by weight and by the hours in the interval. For run B that is 1,900 × 18 ÷ 24 ÷ 80, about 17.8 mL/kg/h, which is under the delivered target of ${N('dose-delivered')}. Run A delivered its full 23.75. Losses like this are why ${N('dose-prescribed')} is commonly prescribed.`,
         ),
         choice(
           'pressure',
