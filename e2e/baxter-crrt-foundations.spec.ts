@@ -1,5 +1,12 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
 
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 type SavedProgress = {
   completedLessonIds: string[]
   selfPaced: { visitedLessonIds: string[] }
@@ -255,7 +262,9 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
   page,
 }, info) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
+  await openLessonMenu(page)
   await expect(page.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
+  await page.keyboard.press('Escape')
   await next(page)
   await next(page)
   await modalityWalk(page)
@@ -281,6 +290,7 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
   await expect(
     page.getByRole('heading', { name: 'One example, one denominator, one interval' }),
   ).toBeVisible()
+  await openLessonMenu(page)
   await click(page, 'Restart lesson')
   expect((await progress(page)).learnTaskHistory).toBeUndefined()
   await screenshot(page, info, 'history-restored-boundary')

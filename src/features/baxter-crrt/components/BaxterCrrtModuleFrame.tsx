@@ -15,6 +15,12 @@ interface BaxterCrrtModuleFrameProps {
   readonly activeHref: string
   readonly activityMode?: boolean
   readonly focusedLesson?: boolean
+  /**
+   * A Learn lesson on a desktop: the lesson has the window (the site menu is hidden), the page
+   * does not scroll, and the lesson's text and picture panes scroll on their own. Practice and
+   * Challenge keep scrolling the document.
+   */
+  readonly lessonWorkspace?: boolean
   readonly children: ReactNode
 }
 
@@ -23,6 +29,7 @@ export function BaxterCrrtModuleFrame({
   activeHref,
   activityMode = false,
   focusedLesson = false,
+  lessonWorkspace = false,
   children,
 }: BaxterCrrtModuleFrameProps) {
   return (
@@ -30,9 +37,10 @@ export function BaxterCrrtModuleFrame({
       <main
         className={styles.moduleShell}
         data-focused-lesson={focusedLesson || undefined}
-        // Every CRRT surface scrolls the document. Practice and Challenge used to scroll an
-        // inner workspace box; see the activity-mode rules in baxter-crrt.module.css.
-        data-learning-scroll-owner="document"
+        data-lesson-workspace={lessonWorkspace || undefined}
+        // Practice and Challenge scroll the document (they used to scroll an inner workspace
+        // box; see the activity-mode rules in baxter-crrt.module.css). A lesson is a workspace.
+        data-learning-scroll-owner={lessonWorkspace ? 'workspace' : 'document'}
         data-release-stage={baxterCrrtReleaseStage}
         data-publication-status={baxterCrrtPublicationStatus}
         data-analytics="allowlisted"
@@ -52,6 +60,7 @@ export function BaxterCrrtModuleFrame({
           navAriaLabel="CRRT module sections"
           theme="dark"
           activityMode={activityMode}
+          hideSiteHeader={lessonWorkspace}
           safetyNotice={
             <>
               <strong>A teaching simulator, not a clinical device.</strong>{' '}

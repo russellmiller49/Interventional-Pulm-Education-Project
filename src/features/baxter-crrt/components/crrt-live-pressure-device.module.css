@@ -483,3 +483,23 @@
     outline: 3px solid Highlight;
   }
 }
+
+/*
+ * In a lesson's picture pane (`crrt-foundations.module.css`) the circuit follows the six readings
+ * directly, so choosing a reading and seeing its site lit are on one screen; the selected
+ * reading's detail comes after the drawing. The markup and its reading order are unchanged.
+ */
+:global([data-crrt-visual-pane]) .livePanel {
+  display: flex;
+  flex-direction: column;
+}
+:global([data-crrt-visual-pane]) .livePanel > :global(section[data-presentation]) {
+  order: 1;
+  margin-top: 0.75rem;
+}
+:global([data-crrt-visual-pane]) .livePanel > .detailPanel {
+  order: 2;
+}
+:global([data-crrt-visual-pane]) .livePanel > .boundaryFooter {
+  order: 3;
+}
