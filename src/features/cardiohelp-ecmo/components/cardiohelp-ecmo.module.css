@@ -2982,6 +2982,62 @@
 }
 
 /*
+ * The physical controls as a picture (a reading-only section).
+ *
+ * Raised buttons at half strength read as buttons that had stopped working. Here the column is
+ * hatched and outlined, every control in it is a flat outline with no pointer, and a label says
+ * what it is. The control the lesson text points at still lights up (`data-guided-help`): a
+ * picture can be pointed at.
+ */
+.physicalPanel[data-console-picture='true'] {
+  border: 1px dashed rgba(163, 206, 209, 0.5);
+  border-radius: 10px;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(163, 206, 209, 0.06) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.consolePictureLabel {
+  margin: 0;
+  color: #c2d6d8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Flat outlines, at full strength so the labels stay readable; no raised face, no pointer. */
+.deviceShell[data-console-picture='true'] .physicalPanel :is(button, [role='slider']),
+.deviceShell[data-console-picture='true'] .screenToolbar button:disabled {
+  border-style: dashed;
+  color: #b4c7ca;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+  cursor: default;
+}
+
+.deviceShell[data-console-picture='true'] .physicalPanel :is(button, [role='slider']) {
+  pointer-events: none;
+}
+
+/* The dial is a thin ring, not a 5 px dashed one. */
+.deviceShell[data-console-picture='true'] .knob {
+  border-width: 2px;
+}
+
+/* The setting the picture shows as selected (RPM or LPM) keeps a quiet mark. */
+.deviceShell[data-console-picture='true'] .modeSwitch button[data-active='true'] {
+  border-style: solid;
+  color: #e9ffff;
+  background: rgba(113, 225, 229, 0.14);
+}
+
+/*
  * Operating notes and the tab key, under the facsimile at reading size (S4-1). Not part of the
  * device drawing: the device keeps its short on-screen labels, and this is the explanation of them.
  */
