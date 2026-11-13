@@ -510,9 +510,10 @@ export function McsAnatomy3D({
           ) : null}
           {state.device.kind === 'impella' ? (
             <>
-              <span>
-                When a pump is running, red particles converge into its inlet, travel through the
-                cannula, and accelerate outward from its outlet.
+              <span data-particle-note>
+                When a pump is running, particles converge into its inlet, travel through the
+                cannula, and accelerate outward from its outlet: red for a left-sided pump, blue for
+                a right-sided one, the colour of the blood it moves.
               </span>
               <span>
                 Path provenance: imaged vessel segments are centerline-derived and peripheral access

@@ -1,6 +1,9 @@
 /**
  * The circulation map: one geometry, every segment drawn, the answer a real radio group.
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { fireEvent, render } from '@testing-library/react'
 
 import {
@@ -14,6 +17,7 @@ import {
   CIRCULATION_MAP_VIEW_BOX,
   circulationMapSegment,
 } from '../components/circulation-map/circulationMapGeometry'
+import { IMPELLA_BLOOD_COLORS } from '../components/three/ImpellaBloodFlow'
 import { mcsMapAnswerTargets } from '../content/mapAnswerTargets'
 import { mcsSectionLearningContractById } from '../content/sectionLearningContracts'
 import { mcsMapPathwayIds, mcsMapSegmentIds } from '../content/supportSpine'
@@ -99,6 +103,102 @@ describe('the drawing', () => {
     expect(container.querySelector('desc')?.textContent).toContain(
       'You are here: The left ventricle.',
     )
+  })
+})
+
+/**
+ * A pump's inlet and outlet are drawn in the colour of the blood the pump moves.
+ *
+ * Every inlet used to be blue and every outlet red, so a left ventricular inlet was drawn venous
+ * and a pulmonary-artery outlet arterial. The colour now follows the blood, and the inlet and
+ * the outlet are told apart by shape (an open ring, a filled dot).
+ */
+describe('a pump’s inlet and outlet on the map', () => {
+  const css = readFileSync(
+    join(
+      process.cwd(),
+      'src/features/mechanical-circulatory-support/components/circulation-map/circulation-map.module.css',
+    ),
+    'utf8',
+  )
+
+  it('says which blood each pathway moves: arterial for the left-sided pumps, venous for the right', () => {
+    expect(
+      Object.fromEntries(CIRCULATION_MAP_PATHWAYS.map((pathway) => [pathway.id, pathway.blood])),
+    ).toEqual({
+      'iabp-balloon': undefined,
+      'left-pump': 'arterial',
+      'right-pump': 'venous',
+      'durable-pump': 'arterial',
+    })
+    // A pathway has the two marks exactly when it moves blood.
+    for (const pathway of CIRCULATION_MAP_PATHWAYS)
+      expect(Boolean(pathway.inletAt && pathway.outletAt)).toBe(pathway.blood !== undefined)
+  })
+
+  it('marks both ends of a pump with its blood, on every pump drawn', () => {
+    const both = mcsReducer(createInitialMcsState('learn', 'impella'), {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'rightEnabled',
+      value: true,
+    })
+    const { container, rerender } = render(<CirculationMap state={both} />)
+    const marks = (pathway: string) =>
+      ['[data-map-inlet]', '[data-map-outlet]'].map((mark) =>
+        container
+          .querySelector(`[data-map-pathway="${pathway}"] ${mark}`)!
+          .getAttribute('data-map-blood'),
+      )
+    expect(marks('left-pump')).toEqual(['arterial', 'arterial'])
+    expect(marks('right-pump')).toEqual(['venous', 'venous'])
+    rerender(<CirculationMap state={createInitialMcsState('learn', 'lvad')} />)
+    expect(marks('durable-pump')).toEqual(['arterial', 'arterial'])
+    rerender(<CirculationMap state={createInitialMcsState('learn', 'iabp')} />)
+    expect(container.querySelector('[data-map-inlet], [data-map-outlet]')).toBeNull()
+  })
+
+  it('draws the inlet as an open ring and the outlet as a filled dot, blue only for venous blood', () => {
+    expect(css).toMatch(/\.inlet \{\s*fill: #0b2a30;\s*stroke: var\(--map-vessel\);/)
+    expect(css).toMatch(/\.outlet \{\s*fill: var\(--map-vessel\);/)
+    expect(css).toMatch(
+      /\.inlet\[data-map-blood='venous'\] \{\s*stroke: var\(--map-vessel-venous\);/,
+    )
+    expect(css).toMatch(
+      /\.outlet\[data-map-blood='venous'\] \{\s*fill: var\(--map-vessel-venous\);/,
+    )
+  })
+
+  it('says so in the line key under the drawing', () => {
+    const { container } = render(
+      <CirculationMap state={createInitialMcsState('learn', 'impella')} />,
+    )
+    expect(container.querySelector('[data-map-line-key]')!.textContent).toMatch(
+      /A pump’s inlet is an open ring and its outlet a filled dot, in the colour of the blood it moves\.$|A pump's inlet is an open ring and its outlet a filled dot, in the colour of the blood it moves\.$/,
+    )
+  })
+})
+
+describe('the blood a pump moves, in the 3D view', () => {
+  const channels = (hex: string) =>
+    [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16))
+
+  it('is blue for a right-sided pump and red for a left-sided one', () => {
+    for (const hex of Object.values(IMPELLA_BLOOD_COLORS.right)) {
+      const [red, , blue] = channels(hex)
+      expect(blue).toBeGreaterThan(red)
+    }
+    for (const hex of Object.values(IMPELLA_BLOOD_COLORS.left)) {
+      const [red, , blue] = channels(hex)
+      expect(red).toBeGreaterThan(blue)
+    }
+  })
+
+  it('lightens from inlet to outlet on both sides, as the accelerating stream did before', () => {
+    const light = (hex: string) => channels(hex).reduce((sum, value) => sum + value, 0)
+    for (const side of [IMPELLA_BLOOD_COLORS.right, IMPELLA_BLOOD_COLORS.left]) {
+      expect(light(side.transit)).toBeGreaterThan(light(side.inlet))
+      expect(light(side.outlet)).toBeGreaterThan(light(side.transit))
+    }
   })
 })
 

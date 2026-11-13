@@ -684,6 +684,14 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
               <i data-key-mark="tubing" aria-hidden="true" />
               Pressure tubing to the transducer (the box)
             </li>
+            <li>
+              <i data-key-mark="to-lungs" aria-hidden="true" />
+              Blue: blood on its way to the lungs (venae cavae, right heart, pulmonary arteries)
+            </li>
+            <li>
+              <i data-key-mark="from-lungs" aria-hidden="true" />
+              Red: blood back from the lungs (pulmonary veins, left heart, aorta)
+            </li>
           </ul>
           <details data-heart-drawing-notes>
             <summary>How this view is drawn</summary>
