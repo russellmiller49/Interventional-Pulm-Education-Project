@@ -1,6 +1,7 @@
 import { reconcileEngineAlarms } from './alarms'
 import { getCrrtDeviceCalculationAdapter } from './deviceAdapters/calculations'
 import { advanceFilterProgression } from './filterModel'
+import { calculateCrrtFiltrationFraction } from './filtrationFraction'
 import {
   advanceBagCollection,
   advanceFluidLedger,
@@ -15,6 +16,7 @@ import {
   type ConfiguredAccessState,
   type CrrtDeviceState,
   type CrrtEngineFaultId,
+  type CrrtFlowRates,
   type CrrtScheduledEvent,
   type CrrtScheduledEventAction,
   type CrrtSimulationState,
@@ -387,6 +389,31 @@ function appendTrendIfDue(state: CrrtSimulationState): CrrtSimulationState {
   return { ...state, trends: trends.slice(-CRRT_MAX_TREND_SAMPLES) }
 }
 
+/**
+ * The filtration fraction of the flows as delivered over an interval, or null when there is none
+ * to state: no patient hematocrit, nothing delivered, or a makeup flow running (its volume cannot
+ * be attributed; see `CRRT_MAKEUP_ATTRIBUTION_CONFLICT`).
+ */
+function deliveredFiltrationFraction(
+  flows: CrrtFlowRates,
+  hematocritFraction: number | null,
+  deliveryFraction: number,
+): number | null {
+  if (hematocritFraction === null || deliveryFraction <= 0 || flows.makeupFlowMlHour !== 0)
+    return null
+  return (
+    calculateCrrtFiltrationFraction({
+      bloodFlowMlMin: flows.bloodFlowMlMin,
+      hematocritFraction,
+      preBloodPumpMlHour: flows.pbpFlowMlHour,
+      preFilterReplacementMlHour: flows.preReplacementFlowMlHour,
+      postFilterReplacementMlHour: flows.postReplacementFlowMlHour,
+      patientFluidRemovalMlHour: flows.patientFluidRemovalMlHour,
+      syringeMlHour: flows.syringeFlowMlHour,
+    })?.fraction ?? null
+  )
+}
+
 function advanceContinuous(
   state: CrrtSimulationState,
   durationSeconds: number,
@@ -476,17 +503,36 @@ function advanceContinuous(
 
   let nextFilter = state.circuit.filter
   const filterParameters = state.scenario.modelConfiguration.filter
-  const filtrationFraction = state.scenario.modelConfiguration.filtrationFraction
+  /*
+   * Filtration fraction is computed from the flows being delivered (owner decision O03,
+   * 2026-11-10), not read from the scenario. `modelConfiguration.filtrationFraction` used to be
+   * the value; it is now only the scenario's switch for carrying the quantity at all (null = the
+   * scenario does not model it), so every authored case keeps its meaning and none needs editing.
+   *
+   * While nothing is delivered there is no filtration and so no fraction: the reported value is
+   * null and the filter's burden gets no filtration term for that interval. Interrupted flow has
+   * its own term in the filter model.
+   */
+  const filtrationFraction =
+    state.scenario.modelConfiguration.filtrationFraction === null
+      ? null
+      : deliveredFiltrationFraction(
+          flows,
+          patient.status === 'configured' ? patient.hematocritFraction : null,
+          deliveryFraction,
+        )
   if (
     filterParameters &&
-    filtrationFraction !== null &&
+    state.scenario.modelConfiguration.filtrationFraction !== null &&
     patient.status === 'configured' &&
     state.access.status === 'configured'
   ) {
     nextFilter = advanceFilterProgression(
       state.circuit.filter,
       {
-        filtrationFraction,
+        // The filter model takes a share between 0 and 1; a prescription that asks for more
+        // than all the plasma water is carried as all of it.
+        filtrationFraction: Math.min(1, filtrationFraction ?? 0),
         bloodFlowInterruptionFraction: 1 - deliveryFraction,
         lowEffectiveBloodFlowFraction: state.circuit.filter.lowEffectiveBloodFlowFraction,
         accessDysfunctionFraction: accessDysfunctionFraction(state.access),

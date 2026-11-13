@@ -374,7 +374,7 @@ export const crrtFoundationTasks: Partial<
           'convection',
           'More water crosses the membrane, carrying solute by convection; replacement offsets part of that water.',
           true,
-          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it under ${N('filtration-fraction-ceiling')}.`,
+          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it at or below ${N('filtration-fraction-ceiling-range')}.`,
         ),
         option(
           'replacement-dialysate',
@@ -418,7 +418,7 @@ export const crrtFoundationTasks: Partial<
         'Use the three-stage builder. Increase only downtime from 3 to 6 hours, compare the result, then explain what changed and what stayed fixed.',
       teaching: [
         'The builder below is bound to the same 80 kg example. It does not send settings to a device. Blood flow is in mL/min; dialysate and removal are in mL/h. The time window and weight remain unchanged.',
-        'Advanced filtration fraction and makeup attribution retain their existing source gates. They are not prerequisites for this valid basic downtime calculation.',
+        'Filtration fraction is worked out from your entries, under Advanced calculations and limits; quantities that depend on a makeup flow are not stated. Neither is needed for this downtime calculation.',
       ],
     },
     {

@@ -76,14 +76,9 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
   {
     caseId: 'CRRT-05',
     headline:
-      'This case compares where replacement fluid enters the circuit. The flows change as you set them; the simulator does not change clearance or filter pressure with the split, so read those from the teaching below.',
+      'This case compares where replacement fluid enters the circuit. The flows and the filtration fraction change as you set them; the simulator does not change clearance with the split, so read that from the teaching below.',
     suppliedEvidenceFieldIds: [],
     absentEvidence: [
-      {
-        label: 'Filtration fraction for each split',
-        reason:
-          'The engine carries filtration fraction as a fixed model coefficient, not a quantity calculated from the flows, so it does not differ between the two splits here. Work it out by hand: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
-      },
       {
         label: 'Concentration of blood reaching the filter',
         reason:
@@ -92,11 +87,13 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
     ],
     modelCalculates: [
       'The pre- and post-filter replacement flows you set, and that their total is unchanged.',
+      'Filtration fraction for each split, from the flows: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
       'The effluent pump target and the prescribed effluent dose, from the flows and body weight.',
       'Delivered dose, downtime, the fluid ledger and the four measured circuit pressures.',
     ],
     modelDoesNotModel: [
-      'Any effect of pre-filter dilution on clearance, filter burden, filter pressure or TMP. After the split, those values are identical because nothing couples them to the split — not because the split makes no clinical difference.',
+      'Any effect of pre-filter dilution on clearance. After the split the clearance values are identical because nothing couples them to the split — not because the split makes no clinical difference.',
+      'A filter pressure or TMP you can read the split from. The filter builds up more slowly at a lower filtration fraction, but over the hours of this case the difference stays under 0.1 mmHg.',
     ],
     furtherTeaching: [
       {
@@ -104,7 +101,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
         sourceIds: [CORE_REVIEW],
       },
       {
-        text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Post-filter replacement raises filtration fraction; pre-filter replacement lowers it.',
+        text: 'PrisMax shows total predilution and two filtration-fraction values of its own, FF Blood % and FF Plasma %, each calculated from the circuit flows by the machine’s definition; neither is the estimate this module calculates. On every one of them, post-filter replacement raises the fraction and pre-filter replacement lowers it.',
         sourceIds: [PRISMAX_FF],
       },
     ],

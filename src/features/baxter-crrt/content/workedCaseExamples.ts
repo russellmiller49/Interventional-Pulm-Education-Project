@@ -185,12 +185,14 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
       'delivered-dose',
       'downtime',
       'urea-marker',
+      'filtration-fraction',
       'filter-pressure',
       'tmp',
     ],
     interpretation: [
-      'Only the pre- and post-filter flows differ. Total replacement, the effluent dose display, delivered dose, downtime, the small-solute marker, filter pressure and TMP are the same after six simulated hours.',
-      'This simulator holds the solute concentration reaching the filter and the filtration fraction constant, so it cannot reproduce the dilution effect. Identical clearance here is a limit of the simulator, not evidence that the split makes no difference.',
+      'The split changes the two replacement flows and the filtration fraction: moving 900 mL/h before the filter takes it from 21.0% to 18.3%, because that fluid now adds to the flow reaching the filter. Total replacement, the effluent dose display, delivered dose, downtime and the small-solute marker are the same after six simulated hours.',
+      'Filter pressure and TMP end within 0.1 mmHg of each other: a lower filtration fraction slows the build-up on the filter in this simulator, and six hours is too short for that to show.',
+      'This simulator holds the solute concentration reaching the filter constant, so it cannot reproduce the dilution effect on clearance. Identical clearance here is a limit of the simulator, not evidence that the split makes no difference.',
     ],
     runNote:
       'Your change from the start includes time passing; the modeled difference isolates the split. The flows in your run should move by the modeled difference, and any other change comes from time, not from the split.',
@@ -204,7 +206,7 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
       claimTopics: ['solute-transport-mechanisms'],
     },
     {
-      text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Work filtration fraction out by hand: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
+      text: 'Filtration fraction here is a calculated estimate: fluid across the membrane divided by plasma flow plus pre-filter fluid, worked out from the flows. PrisMax shows total predilution and its own FF Blood % and FF Plasma %, which are defined differently and are not this estimate.',
       sourceIds: ['MATH-PM-003'],
       claimTopics: [],
     },
@@ -489,7 +491,7 @@ const filterTrendExample: CrrtWorkedCaseExample = {
 
 const recurrentFilterLossExample: CrrtWorkedCaseExample = {
   caseId: 'CRRT-16',
-  learningPoint: `Filters clot early when blood stops, slows or is over-concentrated. Take the causes in a fixed order: access and blood flow, filtration fraction, interruptions and downtime, the pressure pattern across the filter, then anticoagulation. Fix what is mechanical first. Here the catheter is the problem and filtration fraction is about 16%, under the ${N('filtration-fraction-ceiling')} ceiling.`,
+  learningPoint: `Filters clot early when blood stops, slows or is over-concentrated. Take the causes in a fixed order: access and blood flow, filtration fraction, interruptions and downtime, the pressure pattern across the filter, then anticoagulation. Fix what is mechanical first. Here the catheter is the problem and filtration fraction is about 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling.`,
   readFirst: [
     'blood-flow',
     'access-pressure',
@@ -559,7 +561,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         label: 'Filtration and concentration inside the filter',
         thisRun: (context) =>
           `${context.modalityLabel} with ${context.formatted['pre-replacement-flow']} replacement before and ${context.formatted['post-replacement-flow']} after the filter; hematocrit ${context.formatted.hematocrit}.`,
-        canVerify: `Yes, by hand: 850 mL/h across the membrane over about 5,400 mL/h of plasma and pre-filter fluid is 16%, under ${N('filtration-fraction-ceiling')}.`,
+        canVerify: `Yes: the simulator works it out from the flows. 850 mL/h across the membrane over about 5,400 mL/h of plasma and pre-filter fluid is 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling.`,
         decidedBy:
           'No change needed. Above the ceiling you would raise blood flow or move replacement before the filter.',
       },
@@ -679,7 +681,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
     debrief: {
       summary:
         'Three early filter losses, worked cause by cause: the catheter and low blood flow explain them, and filtration fraction does not.',
-      trendReview: `Access: 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; 400 + 400 + 50 = 850 mL/h crosses the membrane; with the pre-filter fluid in the denominator the fraction is about 16%, under ${N('filtration-fraction-ceiling')}. Anticoagulation comes last, once the catheter works.`,
+      trendReview: `Access: 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; 400 + 400 + 50 = 850 mL/h crosses the membrane; with the pre-filter fluid in the denominator the fraction is about 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling. Anticoagulation comes last, once the catheter works.`,
       causalChain: [
         'The catheter cannot supply the set blood flow when the patient moves, so the pump stops repeatedly.',
         'Stopped blood clots in the fibers; each stop takes a little more of the filter.',

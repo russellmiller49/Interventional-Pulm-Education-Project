@@ -122,13 +122,16 @@ describe('the case states its evidence scope in the task', () => {
   it('CRRT-05 separates the conceptual tradeoff from what the simulation calculates', () => {
     render(<Player definition={getBaxterCrrtCase('CRRT-05')} />)
     const scope = sectionFor(/What this case can show you/)
-    expect(scope).toHaveTextContent('Filtration fraction for each split')
+    // Filtration fraction is something the simulation calculates now (owner decision O03); what
+    // it still does not model is the split's effect on clearance.
     expect(scope).toHaveTextContent(
-      'fixed model coefficient, not a quantity calculated from the flows',
+      'Filtration fraction for each split, from the flows: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
     )
+    expect(scope).not.toHaveTextContent('fixed model coefficient')
     expect(scope).toHaveTextContent(
-      'those values are identical because nothing couples them to the split',
+      'the clearance values are identical because nothing couples them to the split',
     )
+    expect(scope).toHaveTextContent('the difference stays under 0.1 mmHg')
     expect(scope).toHaveTextContent('Neither split is universally preferred')
   })
 

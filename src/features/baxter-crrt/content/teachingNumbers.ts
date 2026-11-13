@@ -9,8 +9,19 @@ import {
  * Guideline rows cite records already in the module's source map. Device rows were read from
  * the PrisMax Operator's Manual (AW8035 Rev B, program 2.XX) on 2026-10-08; locators are PDF
  * pages. Rows that cite a textbook the source map does not hold yet name it in
- * `CRRT_NUMBER_ONLY_SOURCES`. None is signed: `npm run numbers:signoff -- baxter-crrt`.
+ * `CRRT_NUMBER_ONLY_SOURCES`. Unsigned rows: `npm run numbers:signoff -- baxter-crrt`.
+ *
+ * Signatures. A signed row names the owner in `signedBy` and says how he signed it. On
+ * 2026-11-13 Russell Miller approved rows by name in a written decision; Claude applied each
+ * signature to its row alone, after checking the row against its source. The `checkedBy` line
+ * says who read the source; the signature does not claim the owner re-read it. The shared CHECK
+ * objects below stay unsigned, so no row is signed by inheritance.
  */
+const OWNER_DECISION_2026_11_13 = {
+  signedBy: 'Russell Miller, written decision of 2026-11-13 (sources checked by Claude)',
+  signedOn: '2026-11-13',
+} as const
+
 const CHECK = {
   checkedOn: '2026-10-08',
   checkedBy: 'Claude, against the source text',
@@ -122,9 +133,23 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
       },
       ajkd('Dose of Solute Clearance With CKRT, p. 778'),
     ],
-    note: 'Other texts teach 20%; AJKD 2025 gives 20%–25% and says regional citrate is anecdotally reported to tolerate a higher fraction. Above the ceiling the blood leaving the filter is concentrated enough to clot it.',
+    note: 'Scope: the usual maximum that guides prescription in post-dilution CVVH, with filtration fraction as ultrafiltration rate over plasma flow (2021 review, section 3.4.2, equation 7). A guide to prescription: exceeding it raises the risk of filter clotting and does not make clotting certain. AJKD 2025 (p. 778) gives at or below 20%–25% for any modality, with filtration fraction as its Table 5 writes it, and says regional citrate is anecdotally reported to tolerate a higher fraction. No flat 20% row exists: no source in this register gives one for this expression. Both sources re-read from their PDFs on 2026-11-13.',
     ...CHECK,
     checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
+    // Approved by name: 25% as the usual post-dilution CVVH maximum, Claure-Del Granado and Clark
+    // 2021, section 3.4.2.
+    ...OWNER_DECISION_2026_11_13,
+  },
+  'filtration-fraction-ceiling-range': {
+    label: 'Filtration fraction ceiling, as a range',
+    value: '20%–25%',
+    class: 'expert-reference',
+    sources: [ajkd('Dose of Solute Clearance With CKRT, p. 778')],
+    note: 'The ceiling the module teaches (clinical review, 2026-11-13): keep the fraction at or below this range to lower the risk of filter clotting, any modality, with regional citrate a possible exception. A range used to lower that risk; not a universal safety threshold and not a device alarm limit. The source writes filtration fraction as total ultrafiltration over plasma flow plus pre-filter replacement (Table 5, p. 778), which is the expression the module computes. Re-read from the PDF on 2026-11-13. The published erratum (Am J Kidney Dis 2025;86(3):422) corrects units in Table 2 and the initial presentation of Case 3 (p. 780); it does not name Table 5 or the filtration-fraction guidance.',
+    ...CHECK_AJKD,
+    // Approved by name: 20%–25% as source-specific guidance from Teixeira et al., AJKD Core
+    // Curriculum 2025, Table 5, p. 778.
+    ...OWNER_DECISION_2026_11_13,
   },
   'postfilter-ica': {
     label: 'Post-filter ionized calcium on regional citrate',

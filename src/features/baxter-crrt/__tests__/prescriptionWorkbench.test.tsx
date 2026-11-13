@@ -33,12 +33,10 @@ describe('learner prescription workbench model', () => {
     expect(result.unavailableOutputs.map((output) => output.id)).toEqual([
       'effective-clearance',
       'total-circuit-ultrafiltration',
-      'quantitative-ff',
       'whole-patient-net-removal',
     ])
     expect(result.unavailableOutputs[1]?.sourceRecordIds).toEqual(['MATH-PM-004'])
-    expect(result.unavailableOutputs[2]?.sourceRecordIds).toEqual(['MATH-PM-003', 'MATH-PM-006'])
-    expect(result.unavailableOutputs[3]?.sourceRecordIds).toEqual(['FLUID-PM-001', 'FLUID-PM-002'])
+    expect(result.unavailableOutputs[2]?.sourceRecordIds).toEqual(['FLUID-PM-001', 'FLUID-PM-002'])
     expect(result.sourceRecordIds).toEqual(
       expect.arrayContaining(['SYNTH-LAB-PRESCRIPTION-001', 'SYNTH-LAB-PREPOST-001']),
     )

@@ -6,6 +6,7 @@ import {
   type CrrtLearningSessionAction,
   type CrrtLearningSessionState,
 } from '../learningSession'
+import { selectCrrtFiltrationFraction } from '../circuitDelivery'
 
 /**
  * Matched-time behavior for the tolerance and access cases.
@@ -358,9 +359,8 @@ describe('CRRT-05 pre/post replacement split', () => {
     expect(split.simulation.deliveredTherapy.deliveredDoseMlKgHour).toBeGreaterThan(0)
     expect(split.simulation.deliveredTherapy.cumulativeDowntimeSeconds).toBe(0)
 
-    // Every other computed quantity is bit-identical, not merely close. The
-    // outputs match because nothing in the model couples them to the split — not
-    // because a difference is being lost to rounding.
+    // Dose, effluent and balance are bit-identical, not merely close: nothing in the model
+    // couples them to the split, so no difference is being lost to rounding.
     const after = split.simulation
     const before = baseline.simulation
     expect(after.deliveredTherapy.deliveredDoseMlKgHour).toBe(
@@ -375,14 +375,30 @@ describe('CRRT-05 pre/post replacement split', () => {
     expect(after.deliveredTherapy.cumulativeWholePatientBalanceMl).toBe(
       before.deliveredTherapy.cumulativeWholePatientBalanceMl,
     )
-    expect(after.deliveredTherapy.filtrationFraction).toBe(
-      before.deliveredTherapy.filtrationFraction,
+    // Filtration fraction is computed from the flows (owner decision O03, 2026-11-10), so the
+    // split moves it: 1,250 mL/h crosses the membrane in both arms, over 5,940 mL/h of plasma
+    // with all replacement after the filter and over 5,940 + 900 with 900 mL/h before it.
+    expect(before.deliveredTherapy.filtrationFraction).toBeCloseTo(1_250 / 5_940, 12)
+    expect(after.deliveredTherapy.filtrationFraction).toBeCloseTo(1_250 / (5_940 + 900), 12)
+    // The filter's burden follows it, and through the burden the filter pressure: lower after
+    // the split, and by a small amount over the hour.
+    expect(after.circuit.filter.foulingBurdenFraction).toBeLessThan(
+      before.circuit.filter.foulingBurdenFraction,
     )
-    expect(after.circuit.pressures).toEqual(before.circuit.pressures)
-    expect(after.circuit.filter).toEqual(before.circuit.filter)
+    const filterPressure = (state: typeof after) =>
+      state.circuit.pressures.filterPressureMmHg ?? NaN
+    expect(filterPressure(after)).toBeLessThan(filterPressure(before))
+    expect(filterPressure(before) - filterPressure(after)).toBeLessThan(0.1)
+    // The other three sites do not move.
+    for (const site of [
+      'accessPressureMmHg',
+      'returnPressureMmHg',
+      'effluentPressureMmHg',
+    ] as const)
+      expect(after.circuit.pressures[site]).toBe(before.circuit.pressures[site])
   })
 
-  it('reaches the same state whether the split precedes or follows the hour', () => {
+  it('delivers the same dose whichever comes first, and the hour spent at the lower fraction loads the filter less', () => {
     const splitFirst = run('CRRT-05', [
       perform('crrt05-action-assess'),
       perform('crrt05-action-safe-candidate'),
@@ -393,10 +409,28 @@ describe('CRRT-05 pre/post replacement split', () => {
       perform('crrt05-action-assess'),
       perform('crrt05-action-safe-candidate'),
     ])
-    expect(hourFirst.simulation.circuit.pressures).toEqual(splitFirst.simulation.circuit.pressures)
     expect(hourFirst.simulation.deliveredTherapy.deliveredDoseMlKgHour).toBe(
       splitFirst.simulation.deliveredTherapy.deliveredDoseMlKgHour,
     )
+    // Both end on the same split, so the circuit is working at the same fraction now. (The
+    // step's own record is of the last interval delivered, which for hour-first was before the
+    // split.)
+    expect(selectCrrtFiltrationFraction(hourFirst.simulation).fraction).toBe(
+      selectCrrtFiltrationFraction(splitFirst.simulation).fraction,
+    )
+    expect(hourFirst.simulation.deliveredTherapy.filtrationFraction).toBeCloseTo(1_250 / 5_940, 12)
+    expect(splitFirst.simulation.deliveredTherapy.filtrationFraction).toBeCloseTo(
+      1_250 / (5_940 + 900),
+      12,
+    )
+    // Split first: the hour runs at 18.3%. Hour first: it runs at 21.0%.
+    expect(splitFirst.simulation.circuit.filter.foulingBurdenFraction).toBeLessThan(
+      hourFirst.simulation.circuit.filter.foulingBurdenFraction,
+    )
+    expect(
+      (hourFirst.simulation.circuit.pressures.filterPressureMmHg ?? NaN) -
+        (splitFirst.simulation.circuit.pressures.filterPressureMmHg ?? NaN),
+    ).toBeGreaterThan(0)
   })
 })
 
@@ -438,6 +472,8 @@ describe('CRRT-15 and CRRT-16 history, plan and current run', () => {
     const before = start15.simulation.circuit.pressures.filterPressureMmHg ?? NaN
     const after = session.simulation.circuit.pressures.filterPressureMmHg ?? NaN
     expect(before).toBeCloseTo(70, 3)
-    expect(after - before).toBeCloseTo(0.3744, 4)
+    // 0.3744 while filtration fraction was the scenario's fixed 0.10; from the flows it is lower
+    // in this case, so the filtration term is smaller.
+    expect(after - before).toBeCloseTo(0.3513, 4)
   })
 })

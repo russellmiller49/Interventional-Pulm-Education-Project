@@ -2160,7 +2160,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'An 80 kg patient on CVVHDF without anticoagulant has lost three filters in 36 hours, none lasting 12. Blood flow is 130 mL/min through a catheter that alarms on access pressure when the patient is turned. Replacement runs 400 mL/h before the filter and 400 mL/h after it, net removal is 50 mL/h, and hematocrit is 36%.',
     learningObjectives: [
       'Work through early filter loss in a fixed order: access and blood flow, filtration fraction, downtime, then anticoagulation.',
-      `Calculate filtration fraction and compare it with the ${N('filtration-fraction-ceiling')} ceiling.`,
+      `Calculate filtration fraction and compare it with the ${N('filtration-fraction-ceiling-range')} ceiling.`,
       'Fix the mechanical causes before adding an anticoagulant.',
     ],
     goal: 'Find why the filters are clotting, mechanical causes first',
@@ -2181,7 +2181,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     expectedResponse:
       'The access-pressure alarms and stops point to the catheter. Filtration fraction here is about 16%, so over-concentration is not the cause.',
     // Replaced by the CRRT-16 worked-case revision.
-    trendReview: `Take the causes in order. Access: a blood flow of 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump, so blood sits in the fibers. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; fluid removed across the membrane is 400 + 400 + 50 = 850 mL/h; with the pre-filter fluid added to the denominator the fraction is about 16%, well under ${N('filtration-fraction-ceiling')}. Downtime: add up the stops. Anticoagulation comes last, once the catheter works.`,
+    trendReview: `Take the causes in order. Access: a blood flow of 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump, so blood sits in the fibers. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; fluid removed across the membrane is 400 + 400 + 50 = 850 mL/h; with the pre-filter fluid added to the denominator the fraction is about 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling. Downtime: add up the stops. Anticoagulation comes last, once the catheter works.`,
     reassessment:
       'With the next filter, watch access pressure, the number of pump stops, and the filter pressure drop and TMP trend',
     openingFinding:

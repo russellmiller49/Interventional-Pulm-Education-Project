@@ -48,6 +48,10 @@ import {
 } from './content/circuitModel'
 import { unresolvableCrrtSourceIds } from './content/learnerSourceMap'
 import { calculateEffluentDoseMlPerKgHour } from './engine/clinicalMath'
+import {
+  calculateCrrtFiltrationFraction,
+  type CrrtFiltrationFraction,
+} from './engine/filtrationFraction'
 import type { CrrtFlowRates, CrrtModality } from './engine/types'
 import {
   assertNonNegativeNumber,
@@ -56,11 +60,11 @@ import {
 } from './engine/units'
 import {
   calculatePrescriptionWorkbench,
-  PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS,
   type PrescriptionWorkbenchResult,
   type QualitativePrePostDilutionResult,
   type UnavailableWorkbenchOutput,
 } from './prescriptionWorkbenchModel'
+import { CRRT_FILTRATION_FRACTION_CEILINGS } from './content/filtrationFraction'
 import { CRRT_NUMBERS } from './content/teachingNumbers'
 
 const N = CRRT_NUMBERS.value
@@ -546,8 +550,14 @@ export interface CrrtPredictedPressureImplication {
 export interface CrrtPredictedFiltrationBurden {
   readonly qualitative: QualitativePrePostDilutionResult
   readonly printedTotalPredilutionFraction: number | null
-  readonly quantitativeStatus: 'unavailable-source-limited'
-  readonly quantitativeReason: string
+  /**
+   * Filtration fraction from the entries (`engine/filtrationFraction.ts`), with the three flows
+   * it is made of. Null only when a makeup flow is entered or no blood flow is.
+   */
+  readonly filtrationFraction: CrrtFiltrationFraction | null
+  readonly quantitativeStatus: 'computed' | 'not-stated'
+  /** Why there is no value. Null when computed. */
+  readonly quantitativeReason: string | null
   readonly sourceIds: readonly string[]
 }
 
@@ -856,19 +866,37 @@ function predictedIntensity(
 }
 
 function predictedFiltrationBurden(
+  construction: CrrtPrescriptionConstruction,
   workbench: PrescriptionWorkbenchResult,
 ): CrrtPredictedFiltrationBurden {
-  const quantitative = PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS.find(
-    (output) => output.id === 'quantitative-ff',
-  )
-  if (!quantitative) throw new Error('The quantitative filtration-fraction boundary is missing.')
-
+  const filtrationFraction =
+    construction.makeupMlPerHour === 0
+      ? calculateCrrtFiltrationFraction({
+          bloodFlowMlMin: construction.bloodFlowMlPerMinute,
+          hematocritFraction: construction.hematocritPercent / 100,
+          preBloodPumpMlHour: construction.preBloodPumpMlPerHour,
+          preFilterReplacementMlHour: construction.preReplacementMlPerHour,
+          postFilterReplacementMlHour: construction.postReplacementMlPerHour,
+          patientFluidRemovalMlHour: construction.patientFluidRemovalMlPerHour,
+        })
+      : null
   return Object.freeze({
     qualitative: workbench.prePostExperiment,
     printedTotalPredilutionFraction: workbench.totalPredilutionFraction,
-    quantitativeStatus: 'unavailable-source-limited' as const,
-    quantitativeReason: quantitative.reason,
-    sourceIds: Object.freeze([...quantitative.sourceRecordIds, 'SYNTH-LAB-PREPOST-001']),
+    filtrationFraction,
+    quantitativeStatus: filtrationFraction ? ('computed' as const) : ('not-stated' as const),
+    quantitativeReason: filtrationFraction
+      ? null
+      : construction.makeupMlPerHour !== 0
+        ? 'Not stated while a makeup flow is entered: its volume cannot be attributed.'
+        : 'Not stated without a blood flow: no plasma reaches the filter.',
+    sourceIds: Object.freeze([
+      'REVIEW-CKRT-CORE-2025',
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'MATH-PM-003',
+      'MATH-PM-005',
+      'SYNTH-LAB-PREPOST-001',
+    ]),
   })
 }
 
@@ -889,7 +917,7 @@ function predictedPressureImplications(): readonly CrrtPredictedPressureImplicat
 
 const MODEL_BOUNDARIES: readonly string[] = Object.freeze([
   `Guidelines recommend a delivered dose of ${N('dose-delivered')} (KDIGO 2012, grade 1A). Prescribe ${N('dose-prescribed')} to deliver it once downtime and pre-dilution are counted.`,
-  `Keep the filtration fraction under ${N('filtration-fraction-ceiling')}. Above that, the blood leaving the filter is concentrated enough to clot it.`,
+  CRRT_FILTRATION_FRACTION_CEILINGS,
   'The whole-patient fluid balance is not calculated here: it also needs the patient’s other inputs and outputs and the downtime, which are not entered.',
 ])
 
@@ -930,7 +958,7 @@ export function calculateCrrtPredictedConsequences(
     fluidValues: fluidValues(ledger),
     conservationChecks: checkCrrtFluidConservation(ledger),
     intensity: predictedIntensity(construction, ledger),
-    filtrationBurden: predictedFiltrationBurden(workbench),
+    filtrationBurden: predictedFiltrationBurden(construction, workbench),
     pressureImplications: predictedPressureImplications(),
     unavailableOutputs: workbench.unavailableOutputs,
     modelBoundaries: MODEL_BOUNDARIES,
