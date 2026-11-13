@@ -916,7 +916,7 @@ function predictedPressureImplications(): readonly CrrtPredictedPressureImplicat
 }
 
 const MODEL_BOUNDARIES: readonly string[] = Object.freeze([
-  `Guidelines recommend a delivered dose of ${N('dose-delivered')} (KDIGO 2012, grade 1A). Prescribe ${N('dose-prescribed')} to deliver it once downtime and pre-dilution are counted.`,
+  `Guidelines recommend a delivered dose of ${N('dose-delivered')} (KDIGO 2012, grade 1A). Prescribing ${N('dose-prescribed')} may help achieve that delivered target when downtime and pre-dilution are expected, but the delivered dose must still be checked.`,
   CRRT_FILTRATION_FRACTION_CEILINGS,
   'The whole-patient fluid balance is not calculated here: it also needs the patient’s other inputs and outputs and the downtime, which are not entered.',
 ])
