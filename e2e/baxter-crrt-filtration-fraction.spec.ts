@@ -91,6 +91,7 @@ test('the builder prints the estimate with its working, and says what it is and 
   await expect(note).toContainText('AJKD Core Curriculum 2025 (Table 5)')
   await expect(note).toContainText('It is not the PrisMax display.')
   await expect(note).toContainText('FF Blood % and FF Plasma % (operator’s manual, p. 218)')
+  await expect(note).toContainText('the manual’s effluent flow includes the dialysate (p. 217)')
   await expect(note).toContainText(
     'FF Blood % leaves the pre-filter fluid out of the numerator, so with any pre-filter fluid it reads lower than this estimate.',
   )

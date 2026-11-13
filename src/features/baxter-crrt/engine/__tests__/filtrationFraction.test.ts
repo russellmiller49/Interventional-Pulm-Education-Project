@@ -120,9 +120,11 @@ describe('the expression', () => {
  *   plasma flow         = blood flow × (1 − hematocrit)
  *   total ultrafiltration = pre-filter replacement + post-filter replacement + net ultrafiltration
  *   filtration fraction = total ultrafiltration ÷ (plasma flow + pre-filter replacement)
- * PrisMax operator's manual AW8035 Rev B, p. 218:
+ * PrisMax operator's manual AW8035 Rev B, printed p. 218 (PDF p. 219):
  *   FF Blood %  = 100 × (Qrep_post + Qpfr + Qsyr) / (Qplasma + Qpre)
  *   FF Plasma % = 100 × Qeff / (Qplasma × 0.95 + Qpre)
+ * and printed p. 217 (PDF p. 218):
+ *   Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup
  */
 describe('against its sources', () => {
   const table5 = (qb: number, hct: number, pre: number, post: number, net: number) =>
@@ -198,7 +200,7 @@ describe('against its sources', () => {
   })
 
   it('is not the PrisMax FF Plasma %: that multiplies the plasma term by 0.95', () => {
-    // With no dialysate the manual's effluent term is the total ultrafiltration.
+    // With no dialysate (and no makeup) the manual's effluent term is the total ultrafiltration.
     const plasma = 130 * 60 * (1 - 0.36)
     const estimate = (400 + 400 + 50) / (plasma + 400)
     const ffPlasma = (400 + 400 + 50) / (plasma * 0.95 + 400)
@@ -323,10 +325,16 @@ describe('the words', () => {
     expect(CRRT_FILTRATION_FRACTION_DEVICE_NOTE).toMatch(/^It is not the PrisMax display\./)
     expect(CRRT_FILTRATION_FRACTION_DEVICE_NOTE).toContain('FF Blood % and FF Plasma %')
     expect(CRRT_FILTRATION_FRACTION_DEVICE_NOTE).toContain('operator’s manual, p. 218')
+    // The manual's effluent flow counts the dialysate (Qeff, printed p. 217). The note says so and
+    // does not say the manual leaves it open.
+    expect(CRRT_FILTRATION_FRACTION_DEVICE_NOTE).toContain(
+      'the manual’s effluent flow includes the dialysate (p. 217), which this estimate does not count',
+    )
+    expect(CRRT_FILTRATION_FRACTION_DEVICE_NOTE).not.toMatch(/does not say|whether dialysate/i)
     // No machine value is printed: the manual's pre-infusion line is not readable as printed.
     expect(
       `${CRRT_FILTRATION_FRACTION_ESTIMATE_NOTE} ${CRRT_FILTRATION_FRACTION_DEVICE_NOTE}`.replace(
-        /2025|p\. 218|0\.95|Table 5/g,
+        /2025|p\. 21[78]|0\.95|Table 5/g,
         '',
       ),
     ).not.toMatch(/\d/)

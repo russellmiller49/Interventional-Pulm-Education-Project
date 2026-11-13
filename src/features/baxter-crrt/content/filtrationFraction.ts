@@ -10,14 +10,17 @@ import { CRRT_NUMBERS } from './teachingNumbers'
  * 1. **It is a calculated estimate, by a stated expression.** Total ultrafiltration ÷ (plasma
  *    flow + pre-filter fluid) is the expression in the AJKD Core Curriculum 2025, Table 5 (p. 778,
  *    read from the paper on 2026-11-13), with plasma flow as blood flow × (1 − hematocrit).
- * 2. **It is not the PrisMax display.** The operator's manual (AW8035 Rev B, p. 218) prints two
- *    values for the Information screen. `FF Blood %` has post-filter replacement, patient fluid
- *    removal and the syringe in its numerator and leaves the pre-filter fluid out, so with any
- *    pre-filter fluid it is lower than this estimate by pre-filter fluid ÷ (plasma + pre-filter
- *    fluid). `FF Plasma %` has the effluent flow over plasma × 0.95 plus pre-infusion flow. The
- *    module computes neither: the manual's own line for pre-infusion flow is not readable as
- *    printed (`PRISMAX_PRE_INFUSION_FLOW_GATE`), and it does not say whether the effluent term
- *    includes dialysate. So the difference is stated in words and no machine value is shown.
+ * 2. **It is not the PrisMax display.** The operator's manual (AW8035 Rev B, printed p. 218, PDF
+ *    p. 219) prints two values for the Information screen. `FF Blood %` has post-filter
+ *    replacement, patient fluid removal and the syringe in its numerator and leaves the pre-filter
+ *    fluid out, so with any pre-filter fluid it is lower than this estimate by pre-filter fluid ÷
+ *    (plasma + pre-filter fluid). `FF Plasma %` has the effluent flow over plasma × 0.95 plus
+ *    pre-infusion flow, and the manual defines that effluent flow as
+ *    `Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup` (printed p. 217, PDF p. 218): it counts
+ *    the dialysate, which this estimate does not. The module computes neither machine value,
+ *    because the manual's own line for pre-infusion flow is not readable as printed
+ *    (`PRISMAX_PRE_INFUSION_FLOW_GATE`). So the difference is stated in words and no machine value
+ *    is shown.
  * 3. **One ceiling statement, each number with its scope.** At or below 20%–25% to lower the risk
  *    of filter clotting, any modality, with regional citrate a possible exception (AJKD 2025,
  *    p. 778). 25% as the usual maximum for post-dilution CVVH (Claure-Del Granado and Clark 2021,
@@ -39,7 +42,7 @@ export const CRRT_FILTRATION_FRACTION_ESTIMATE_NOTE =
 
 /** What it is not, and how the machine's own two values differ. No machine value is computed. */
 export const CRRT_FILTRATION_FRACTION_DEVICE_NOTE =
-  'It is not the PrisMax display. The PrisMax Information screen shows two values of its own, FF Blood % and FF Plasma % (operator’s manual, p. 218). FF Blood % leaves the pre-filter fluid out of the numerator, so with any pre-filter fluid it reads lower than this estimate. FF Plasma % puts the effluent flow over plasma water, taken as plasma flow × 0.95, plus pre-filter fluid. Read a machine’s value against the machine’s own definition.'
+  'It is not the PrisMax display. The PrisMax Information screen shows two values of its own, FF Blood % and FF Plasma % (operator’s manual, p. 218). FF Blood % leaves the pre-filter fluid out of the numerator, so with any pre-filter fluid it reads lower than this estimate. FF Plasma % puts the effluent flow over plasma water, taken as plasma flow × 0.95, plus pre-filter fluid, and the manual’s effluent flow includes the dialysate (p. 217), which this estimate does not count. Read a machine’s value against the machine’s own definition.'
 
 /** What the estimate leaves out. Both are limits of this simulator, said where the value is. */
 export const CRRT_FILTRATION_FRACTION_LIMITS =

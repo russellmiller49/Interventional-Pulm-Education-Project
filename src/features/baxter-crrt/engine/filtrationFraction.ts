@@ -27,17 +27,22 @@ import { assertFiniteNumber, assertNonNegativeNumber } from './units'
  * - The ratio of ultrafiltration rate to plasma flow rate: Claure-Del Granado and Clark, Semin
  *   Dial 2021;34:398–405, section 3.4.2, equation 7 (`REVIEW-CRRT-PRINCIPLES-2021`).
  * - Pre-blood-pump fluid joining the plasma before the filter, and the syringe counted with what
- *   must be removed: PrisMax operator's manual AW8035 Rev B, p. 218 (`MATH-PM-003`, `MATH-PM-005`).
+ *   must be removed: PrisMax operator's manual AW8035 Rev B, printed p. 218, PDF p. 219
+ *   (`MATH-PM-003`, `MATH-PM-005`).
  *   These two are the module's additions to the table's expression.
  *
  * What this is not. It is neither of the two values the PrisMax Information screen shows (same
- * page of the manual):
+ * page of the manual; printed page numbers run one behind the PDF's):
  * - `FF Blood % = 100 × (Qrep_post + Qpfr + Qsyr) / (Qplasma + Qpre)` leaves the pre-filter fluid
  *   out of the numerator. For the same flows it is lower than this value by exactly
  *   pre-filter fluid ÷ (plasma flow + pre-filter fluid): 8.3% against 15.8% for CRRT-16.
  * - `FF Plasma % = 100 × Qeff / (Qplasma × 0.95 + Qpre)` multiplies the plasma term by a plasma
- *   water fraction of 0.95 and has the effluent flow as its numerator. With no dialysate that is
- *   16.5% for CRRT-16. The manual does not say whether dialysate is in that numerator.
+ *   water fraction of 0.95 and has the effluent flow as its numerator. The manual defines that
+ *   flow as `Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup` (printed p. 217, PDF p. 218,
+ *   `MATH-PM-001`), so it counts the dialysate and any makeup flow; this expression counts
+ *   neither. For CRRT-16's replacement and removal flows with no dialysate it would read 16.5%.
+ *   CRRT-16 runs CVVHDF and its case text gives no dialysate rate, so no FF Plasma % is stated for
+ *   it.
  * Neither is computed here: the manual's line for pre-infusion flow is not readable as printed
  * (`PRISMAX_PRE_INFUSION_FLOW_GATE`). No plasma-water factor is applied.
  *
