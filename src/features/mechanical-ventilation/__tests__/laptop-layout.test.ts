@@ -15,7 +15,7 @@ const read = (...parts: string[]) =>
  * and the teaching patient's sliders were under the console on every one of the 94 console tasks,
  * and a wrapped cue in the clock bar pushed the console's tab row below the window on one. From a
  * 1440 px window the pane now gets the width the console and the rail need, and the text column
- * takes what is left.
+ * takes what is left. The same now holds down to a 1280 px window.
  *
  * jsdom lays nothing out, so these tests hold the rules the stylesheet relies on; the positions
  * are measured in the browser (`e2e/mechanical-ventilation-laptop-layout.spec.ts`).
@@ -24,28 +24,54 @@ describe('the two panes at a laptop width', () => {
   const flow = read('stage', 'task-flow.module.css')
 
   it('gives the picture pane the rail’s width first, and the text column the rest', () => {
-    const band = flow.slice(flow.indexOf('@container mv-task (min-width: 86.5rem)'))
-    expect(band).toMatch(
-      /^@container mv-task \(min-width: 86\.5rem\) \{\s*\.flow\[data-stage-frame\] \.content > \[data-flow-content\]\[data-has-visual\] \{\s*grid-template-columns: clamp\(23rem, calc\(100cqw - 64rem\), 30rem\) minmax\(0, 1fr\);/,
-    )
-    // One rule from 1440 px up: the old 90rem rule gave the text 30rem at once and the pane the
-    // rest, which left the pane short of the rail until a 1600 px window.
-    expect(flow).not.toMatch(/@container mv-task \(min-width: 90rem\)/)
-  })
-
-  it('still makes two panes from a 75rem task body, text never under 20rem', () => {
+    // One rule for every two-pane width. Below a 1440 px window the text column used to take 0.8
+    // of the width (about 540 px at 1366 × 768) and left the pane 770 px: no rail.
     expect(flow).toMatch(
-      /@container mv-task \(min-width: 75rem\) \{[^}]*\{[^}]*grid-template-columns: minmax\(20rem, 0\.8fr\) minmax\(0, 1\.2fr\);/,
+      /@container mv-task \(min-width: 75rem\) \{\s*\.flow\[data-stage-frame\] \.content > \[data-flow-content\]\[data-has-visual\] \{\s*grid-template-columns: clamp\(23rem, calc\(100cqw - 64rem\), 30rem\) minmax\(0, 1fr\);/,
+    )
+    expect(flow.match(/@container mv-task/g)).toHaveLength(1)
+    expect(flow).not.toMatch(/0\.8fr/)
+  })
+
+  it('forms the rail once the pane has 50rem, a console of about 31rem beside 18.5rem', () => {
+    const rail = flow.slice(flow.indexOf('@container mv-visual'))
+    expect(rail).toMatch(/^@container mv-visual \(min-width: 50rem\)/)
+    expect(rail).toMatch(/grid-template-columns:\s*minmax\(0, 1fr\) 18\.5rem/)
+    // A 1280 px window: 23rem of text, the gap and both scrollbar gutters leave the pane about
+    // 50.9rem. The two-pane layout itself starts at 75rem, so only a sliver of widths (a task
+    // body of 75rem to about 77rem) has two panes and the rail under the console.
+    expect(23 + 2.25 + 50).toBeLessThan(77)
+  })
+})
+
+/**
+ * The console's tab row in a short window.
+ *
+ * With four traces the console is taller than its pane at 1366 × 768 and 1280 × 720, and the row
+ * (Monitoring, Modes, Controls …) ended 31 px and 59 px below the fold, under tasks that begin
+ * "Open Controls on the console". The row is pinned to the pane's bottom edge while the console
+ * runs past it. Positions are measured in the browser.
+ */
+describe('the console’s tab row in the two-pane workspace', () => {
+  const consoleCss = read('mechanical-ventilation.module.css')
+  const flow = read('stage', 'task-flow.module.css')
+  const pin = consoleCss.slice(consoleCss.indexOf('@container mv-task (min-width: 75rem)'))
+
+  it('is pinned to the bottom of its scrolling pane, in the compact console only', () => {
+    expect(pin).toMatch(
+      /\[data-mv-density='laptop'\] \.consoleNav \{[^}]*position: sticky;[^}]*bottom: 0;/,
+    )
+    // Only where the console has its own scrolling pane: in one pane, or on a phone, the pinned
+    // Continue bar already holds the bottom of the scroller.
+    expect(consoleCss.slice(0, consoleCss.indexOf('@container mv-task'))).not.toMatch(
+      /\.consoleNav \{[^}]*position: sticky/,
     )
   })
 
-  it('forms the rail once the pane has 60rem, a console of about 40rem beside 18.5rem', () => {
-    const rail = flow.slice(flow.indexOf('@container mv-visual'))
-    expect(rail).toMatch(/^@container mv-visual \(min-width: 60rem\)/)
-    expect(rail).toMatch(/grid-template-columns:\s*minmax\(0, 1fr\) 18\.5rem/)
-    // 23rem of text, the 1.25rem gap and the pane's 60rem fit the 86.5rem at which the split
-    // starts, with room for both panes' scrollbar gutters.
-    expect(23 + 1.25 + 60).toBeLessThan(86.5 - 2)
+  it('has no scroll container between the row and the pane', () => {
+    // `hidden` makes a box a scroll container, and the row would pin to that box instead.
+    expect(pin).toMatch(/\[data-mv-density='laptop'\] \.consoleBezel \{[^}]*overflow: clip;/)
+    expect(flow).toMatch(/\[data-flow-visual\] \.consoleFrame > div \{[^}]*overflow: clip;/)
   })
 })
 
