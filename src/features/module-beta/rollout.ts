@@ -271,7 +271,8 @@ export const betaRollout: BetaRollout = {
         'Fourteen short sections on a running ventilator: one breath from start to finish, the five main settings, then one mechanism at a time on a live patient: predict, change, watch, explain.',
       estimate: {
         minutes: 102,
-        basis: "14 sections, by the module's own count; the 15 cases in Practice are extra",
+        basis:
+          "14 sections, by the module's own count; the patient case that ends Sections 4 and 7 to 14, and the cases in Practice, are extra",
       },
       lookFor: [
         'Driving pressure: whether plateau minus total PEEP, and the evidence behind the reference value, are taught the way you would teach them.',
@@ -279,7 +280,7 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Its 20 sourced teaching numbers are not yet signed off by the author.',
-        'The console has no live driving-pressure readout; it is worked out from the plateau and total PEEP.',
+        'Driving pressure is worked out for you (plateau minus total PEEP) only in Section 6, after an inspiratory hold; the console itself has no readout.',
         'The text does not yet separate the pressure-control setting (ΔPcontrol) from driving pressure (ΔP).',
         'The chest-wall contribution to driving pressure (obesity, raised abdominal pressure) is not taught.',
       ],
