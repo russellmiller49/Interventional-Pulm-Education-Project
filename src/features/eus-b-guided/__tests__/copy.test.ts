@@ -1,6 +1,7 @@
 import { betaRollout } from '@/features/module-beta/rollout'
 import { REACH_ROWS } from '../components/ReachTable'
 import { COURSE_OBJECTIVES, LESSONS, SURVEY_STOPS } from '../content/curriculum'
+import { STATIONS } from '../content/stations'
 import { EUSB_NUMBERS } from '../content/teachingNumbers'
 
 /** Everything a learner reads that is written in the content files. */
@@ -12,6 +13,16 @@ const authored: { where: string; text: string }[] = [
     { where: 'reach table', text: row.airway },
     { where: 'reach table', text: row.esophagus },
   ]),
+  ...STATIONS.flatMap((station) =>
+    [
+      station.name,
+      station.called,
+      station.scope,
+      station.mistakenFor,
+      station.sampled,
+      ...station.landmarks.flatMap((landmark) => [landmark.name, landmark.where]),
+    ].map((text) => ({ where: 'station table: ' + station.id, text })),
+  ),
   ...LESSONS.flatMap((lesson) => [
     { where: lesson.id, text: lesson.title },
     { where: lesson.id, text: lesson.objective },
@@ -21,7 +32,7 @@ const authored: { where: string; text: string }[] = [
       const texts = [step.title]
       if ('stem' in step && step.stem) texts.push(step.stem)
       if ('body' in step) texts.push(...step.body, ...(step.points ?? []))
-      if (step.kind === 'lab') texts.push(step.instruction)
+      if (step.kind === 'lab' || step.kind === 'identify') texts.push(step.instruction)
       if ('question' in step)
         texts.push(
           step.question.prompt,

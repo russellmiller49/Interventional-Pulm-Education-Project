@@ -43,6 +43,19 @@ export function eusbRequirements(
       },
     ]
   }
+  if (lab.kind === 'identify') {
+    const done = live?.identified
+    return (lab.landmarks ?? []).map((key) => {
+      const shown = !!done?.shown.includes(key)
+      return {
+        id: 'mark-' + key,
+        met: shown || !!done?.keys.includes(key),
+        text: shown
+          ? `You were shown ${structureName(key)}.`
+          : `Click ${structureName(key)} in the image.`,
+      }
+    })
+  }
   return []
 }
 

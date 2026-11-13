@@ -60,8 +60,53 @@ body,
   pointer-events: none;
 }
 
-.eusg-image.is-named {
+.eusg-image.is-named,
+.eusg-image.is-pickable {
   cursor: crosshair;
+}
+
+/* A landmark's number, on the structure it stands for. */
+.eusg-badge {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  background: rgba(9, 14, 17, 0.88);
+  color: #f2f6f5;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* On a labeled image a number can be pointed at, to find its row. */
+.eusg-image.is-named .eusg-badge {
+  pointer-events: auto;
+  cursor: default;
+}
+
+.eusg-badge.is-shown {
+  border-style: dashed;
+}
+
+/* The keyboard's pointer in a mark-the-landmarks task. */
+.eusg-cross {
+  position: absolute;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background:
+    linear-gradient(#fff, #fff) center / 2px 100% no-repeat,
+    linear-gradient(#fff, #fff) center / 100% 2px no-repeat;
+  filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000);
 }
 
 .eusg-image:focus-visible,
@@ -197,6 +242,7 @@ body,
 
 .eusg-controls,
 .eusg-help,
+.eusg-ask,
 .eusg-legend {
   display: grid;
   gap: 14px;
@@ -232,6 +278,92 @@ body,
 
 .eusg-help {
   gap: 8px;
+}
+
+/* ---- The mark-the-landmarks task ---- */
+
+.eusg-ask {
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.eusg-ask__now {
+  margin: 0;
+  color: #c6d2cf;
+  font-size: 1.0625rem;
+}
+
+.eusg-ask__now strong {
+  color: #f2f6f5;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.eusg-ask ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eusg-ask li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: #9aa7a7;
+  font-size: 0.875rem;
+}
+
+.eusg-ask li[data-state='current'] {
+  background: #1d3440;
+  color: #f2f6f5;
+}
+
+.eusg-ask li[data-state='done'],
+.eusg-ask li[data-state='shown'] {
+  color: #dce3e8;
+}
+
+.eusg-ask__number,
+.eusg-legend__number {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(222, 232, 226, 0.4);
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.eusg-ask__state {
+  font-size: 0.8125rem;
+}
+
+.eusg-ask li[data-state='done'] .eusg-ask__state {
+  color: #8fe0c0;
+}
+
+.eusg-ask li[data-state='shown'] .eusg-ask__state {
+  color: #8bd4ff;
+}
+
+.eusg-ask .eus-step-button {
+  justify-self: start;
+  font-size: 0.875rem;
+}
+
+.eusg-ask__result {
+  min-height: 1.4em;
+  margin: 0;
+  color: #f0c98a;
+  font-size: 0.875rem;
 }
 
 .eusg-help__actions {
@@ -326,6 +458,7 @@ body,
 
 .eusg-view h2,
 .eusg-help h2,
+.eusg-ask h2,
 .eusg-legend h2 {
   margin: 0;
   color: #8bd4ff;
@@ -335,12 +468,21 @@ body,
   text-transform: uppercase;
 }
 
-.eusg-legend ul {
+.eusg-legend ul,
+.eusg-legend ol {
   display: grid;
   gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.eusg-legend li[data-present='false'] {
+  color: #9aa7a7;
+}
+
+.eusg-legend ol li {
+  align-items: center;
 }
 
 .eusg-legend li {
