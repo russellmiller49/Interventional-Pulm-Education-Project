@@ -182,7 +182,15 @@ const resistance = round({
 const timing = round({
   title: 'A higher rate in a patient who exhales slowly',
   hint: 'Each cycle lasts 60 seconds divided by the rate, and inspiration takes as long as it did before. Work out what is left.',
-  setup: [mechanics(1, 4), set('ratePerMin', 12)],
+  /*
+   * The high-pressure limit is 60 here, as it is for the other high-resistance patients (MV-06,
+   * MV-13, MV-14). At the teaching patient's 40 this round's peak starts at 37 cmH2O, and the
+   * trapped gas the task asks for (intrinsic PEEP 0.7 to 4.9) took it over the limit: the alarm
+   * sounded over a breath the simulator delivers in full, and the lesson then held the capture as
+   * "no longer isolates one change" on a learner who had done exactly what was asked (owner
+   * ruling, 2026-11-12).
+   */
+  setup: [mechanics(1, 4), set('ratePerMin', 12), set('highPressureLimitCmH2O', 60)],
   introduction:
     'This passive patient has high airway resistance and exhales slowly. Leave the tidal volume and inspiratory flow alone and change only the set rate.',
   look: 'Watch how close expiratory flow comes to zero before the next inspiration starts.',
