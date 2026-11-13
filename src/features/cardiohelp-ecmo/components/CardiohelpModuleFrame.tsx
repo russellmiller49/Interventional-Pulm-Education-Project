@@ -70,6 +70,13 @@ export function CardiohelpModuleFrame({
           navAriaLabel="ECMO Management module sections"
           theme="dark"
           activityMode={activityMode}
+          /*
+            A lesson, practice case or challenge takes the whole window: the site menu is hidden
+            while one is open (the rule is in `src/styles/globals.css`) and returns on the
+            module's own pages. The activity's bar stays on screen in its place; see
+            `EcmoActivityShell`.
+          */
+          hideSiteHeader
           headerExtra={
             headerExtra ? (
               <div className={styles.frameIdentity}>
