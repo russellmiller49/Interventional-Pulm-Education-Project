@@ -12,6 +12,7 @@ export default defineConfig({
     'baxter-crrt-workbench-wayfinding.spec.ts',
     'baxter-crrt-batch03-sanity.spec.ts',
     'baxter-crrt-fellow04.spec.ts',
+    'baxter-crrt-membrane-motion.spec.ts',
   ],
   workers: 1,
   retries: 0,
