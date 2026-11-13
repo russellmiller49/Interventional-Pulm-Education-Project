@@ -235,6 +235,11 @@ describe('rendered CRRT introductory pathway', () => {
     view.unmount()
     render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
     expect(readProgress()).toEqual(saved)
+    // What is kept on this device is said in the lesson bar's Menu, which starts closed.
+    expect(screen.getByText(/Each visit starts a fresh simulation/)).not.toBeVisible()
+    act(() => {
+      document.querySelector<HTMLDetailsElement>('[data-crrt-lesson-menu]')!.open = true
+    })
     expect(screen.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
     expect(screen.queryByText('Lesson selection restored')).not.toBeInTheDocument()
   })

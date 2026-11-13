@@ -1049,9 +1049,18 @@
   }
 }
 
+/*
+ * Two panes. The picture pane is given the width the console and the rail need side by side
+ * (64 rem with the gap and the two scrollbar gutters) and the text column takes what is left,
+ * between 23 rem and 30 rem: 23 rem up to a 1440 px window, its full 30 rem from about 1550 px.
+ * `cqw` is the task body's own width, so this follows the reader's text size.
+ *
+ * Until November 2026 the text column took 0.8 of the width below a 1440 px window (about 540 px
+ * at 1366 x 768), which left the pane 770 px: no rail, and a clock-bar cue wrapped to three lines.
+ */
 @container mv-task (min-width: 75rem) {
   .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
-    grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr);
+    grid-template-columns: clamp(23rem, calc(100cqw - 64rem), 30rem) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     align-items: stretch;
     overflow: hidden;
@@ -1072,14 +1081,22 @@
     scroll-padding-top: 5rem;
     container: mv-visual / inline-size;
   }
+  /*
+   * The console's tab row is pinned to this pane's bottom edge (`.consoleNav`, in the console's
+   * own stylesheet). The fit wrapper around the console must not be a scroll container for that.
+   */
+  .content > [data-flow-content][data-has-visual] > [data-flow-visual] .consoleFrame > div {
+    overflow: clip;
+  }
 }
 
 /*
- * The rail beside the console, once the picture pane can give the console about 40 rem and the
- * rail 18.5 rem beside it. The text column below gives up width so that a 1440 px window reaches
- * this; at 62 rem it took a 1600 px one.
+ * The rail beside the console, from a pane of 50 rem: a console of about 31 rem beside the rail's
+ * 18.5 rem, which is what a 1280 px window gives (measured: console 506 px, every screen of it
+ * still at scale 1). It was 60 rem, a 1440 px window; before that 62 rem, a 1600 px one. Narrower
+ * than 50 rem the rail stays under the console, what is operated first.
  */
-@container mv-visual (min-width: 60rem) {
+@container mv-visual (min-width: 50rem) {
   .consoleSurface[data-has-rail] {
     grid-template-columns: minmax(0, 1fr) 18.5rem;
     align-items: start;
@@ -1126,20 +1143,6 @@
     .readings
     > div:has([data-volume-step-note], [data-inspiratory-time-step-note]) {
     grid-column: 1 / -1;
-  }
-}
-
-/*
- * From a 1440 px window the picture pane is given the width it needs for the console and the rail
- * side by side (64 rem with the gap and the two scrollbar gutters), and the text column takes
- * what is left: 23 rem at 1440 px, its full 30 rem from about 1550 px. Measured at 1440 x 800
- * before this, the text column was 543 px and the pane 814 px: no rail, so the readings, the lung
- * drawing and the teaching patient's sliders were under the console on every task. `cqw` is the
- * task body's own width, so this follows the reader's text size as the rest of the workspace does.
- */
-@container mv-task (min-width: 86.5rem) {
-  .flow[data-stage-frame] .content > [data-flow-content][data-has-visual] {
-    grid-template-columns: clamp(23rem, calc(100cqw - 64rem), 30rem) minmax(0, 1fr);
   }
 }
 

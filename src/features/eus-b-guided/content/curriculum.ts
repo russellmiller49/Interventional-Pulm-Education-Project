@@ -1,5 +1,5 @@
 import { liver } from './abdomen'
-import { stationSeven } from './mediastinum'
+import { stationEight, stationFourL, stationNine, stationSeven, stationTwoL } from './mediastinum'
 import { whatEusBAdds } from './orientation'
 import type { Chapter, Lesson, Step } from './types'
 
@@ -9,7 +9,11 @@ export const BASE = '/eus-b-guided'
 export const CHAPTERS: Chapter[] = [
   { id: 'from-ebus', title: 'From EBUS to EUS-B', lessons: [whatEusBAdds] },
   { id: 'abdomen', title: 'Below the diaphragm', lessons: [liver] },
-  { id: 'mediastinum', title: 'The mediastinum on the way out', lessons: [stationSeven] },
+  {
+    id: 'mediastinum',
+    title: 'The mediastinum on the way out',
+    lessons: [stationEight, stationNine, stationSeven, stationFourL, stationTwoL],
+  },
 ]
 
 export const LESSONS: Lesson[] = CHAPTERS.flatMap((chapter) => chapter.lessons)
@@ -46,7 +50,11 @@ export function labStepFor(lesson: Lesson, debrief: Extract<Step, { kind: 'debri
 /** Whether any step of the lesson shows the ultrasound lab. */
 export function lessonUsesLab(lesson: Lesson) {
   return lesson.steps.some(
-    (step) => step.kind === 'lab' || step.kind === 'debrief' || ('view' in step && !!step.view),
+    (step) =>
+      step.kind === 'lab' ||
+      step.kind === 'identify' ||
+      step.kind === 'debrief' ||
+      ('view' in step && !!step.view),
   )
 }
 
@@ -70,5 +78,6 @@ export function lessonForStop(stop: number): Lesson | undefined {
 export const COURSE_OBJECTIVES = [
   'Say what an examination from the esophagus adds to airway EBUS, and what stays with the airway.',
   'Find each landmark of the survey on ultrasound and confirm it by its neighbors.',
+  'Name each nodal station seen from the esophagus by the landmarks around it.',
   'Use rotation to move around the scope at one level, and advancing or withdrawing to change level.',
 ]

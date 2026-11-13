@@ -242,10 +242,10 @@ test('a narrower pane keeps everything under the console, what is operated first
 }) => {
   await openTask(page, 1440, 800, 'mechanics-load-and-pressure', 3)
   // At the default text size a 1440 px window now has the rail
-  // (`mechanical-ventilation-laptop-layout.spec.ts`). The panes are measured in rem, so the same
-  // window with the text an eighth larger is the narrower pane: everything stays under the
-  // console, in the order it is used.
-  await page.addStyleTag({ content: 'html { font-size: 112.5%; }' })
+  // (`mechanical-ventilation-laptop-layout.spec.ts`), and so does every two-pane window down to
+  // 1280 px. The panes are measured in rem, so the same window with the text a quarter larger is
+  // one pane: everything stays under the console, in the order it is used.
+  await page.addStyleTag({ content: 'html { font-size: 125%; }' })
   await expect
     .poll(async () => {
       const consoleBox = await box(page, '[data-ventilation-console]')

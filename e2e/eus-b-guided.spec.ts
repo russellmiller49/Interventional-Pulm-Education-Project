@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import { LESSONS, lessonById } from '../src/features/eus-b-guided/content/curriculum'
 import { eusbLab } from '../src/lib/eus-b-guided-contract'
+import { stationById } from '../src/features/eus-b-guided/content/stations'
 import { goToActivity, lab } from './eus-b-guided-steps'
 
 const manifest = JSON.parse(
@@ -46,11 +47,30 @@ async function expectOneScreen(page: Page) {
   expect(inside).toEqual({ scrolls: false, image: true, controls: true, views: true })
 }
 
+/** Click a landmark in the lab's image, at the point the lab itself gives for it. */
+async function clickLandmark(page: Page, key: string) {
+  const frame = lab(page)
+  const point = await frame.locator('.eusg').evaluate(
+    (_, structure) =>
+      (
+        window as unknown as {
+          __eusgTest: { landmarkPoint(key: string): { x: number; y: number } | null }
+        }
+      ).__eusgTest.landmarkPoint(structure),
+    key,
+  )
+  expect(point, key).not.toBeNull()
+  const box = (await frame.locator('[data-eusg-image]').boundingBox())!
+  await page.mouse.click(box.x + point!.x * box.width, box.y + point!.y * box.height)
+}
+
+const scopeLessons = LESSONS.filter((lesson) => lesson.steps.some((step) => step.kind === 'lab'))
+
 for (const size of [
   { width: 1280, height: 800 },
   { width: 1440, height: 900 },
 ]) {
-  for (const lessonId of ['liver', 'station-7'] as const) {
+  for (const lessonId of scopeLessons.map((lesson) => lesson.id)) {
     test(`${lessonId}: find the view, then read it labeled, on one screen at ${size.width}x${size.height}`, async ({
       page,
     }) => {
@@ -98,6 +118,38 @@ for (const size of [
       await expectOneScreen(page)
 
       await primary.click()
+
+      // Where the lesson has one, the landmarks are marked next, on a still with nothing named.
+      const marking = lesson.steps[lesson.steps.indexOf(task) + 1]
+      if (marking.kind === 'identify') {
+        const landmarks = eusbLab(marking.lab).landmarks!
+        await expect(page.locator('[data-eusb-flow]')).toHaveAttribute(
+          'data-activity-id',
+          `${lessonId}:${marking.id}`,
+        )
+        await expect(root).toHaveAttribute('data-eusg-lab', marking.lab)
+        await expect(root).toHaveAttribute('data-names', 'hidden')
+        await expect(root).toHaveAttribute('data-frame-ready', 'true', { timeout: 30_000 })
+        await expect(frame.locator('[data-eusg-legend]')).toHaveCount(0)
+        await expect(frame.locator('input[type=range]')).toHaveCount(0)
+        await expect(frame.locator('[data-eusg-ask] li')).toHaveCount(landmarks.length)
+        await expect(page.locator('[data-requirement]')).toHaveCount(landmarks.length)
+        await expect(primary).toBeDisabled()
+        await expectOneScreen(page)
+        for (const [at, key] of landmarks.entries()) {
+          await expect(root).toHaveAttribute('data-eusg-asked', key)
+          await clickLandmark(page, key)
+          await expect(page.locator('[data-requirement]').nth(at)).toHaveAttribute(
+            'data-met',
+            'true',
+          )
+        }
+        await expect(root).toHaveAttribute('data-identify-done', 'true')
+        await expect(primary).toBeEnabled()
+        await expectOneScreen(page)
+        await primary.click()
+      }
+
       await expect(page.locator('[data-eusb-flow]')).toHaveAttribute(
         'data-activity-id',
         `${lessonId}:${debrief.id}`,
@@ -108,6 +160,21 @@ for (const size of [
       await expect(frame.locator('[data-eusg-legend] li').first()).toBeVisible()
       await expect(frame.locator('input[type=range]')).toHaveCount(0)
       await expect(page.locator('[data-debrief-reference]')).toHaveCount(0)
+      // The numbered landmarks beside the text are the numbered landmarks on the image.
+      if (debrief.kind === 'debrief' && debrief.station) {
+        const keys = stationById(debrief.station)!.landmarks.map((landmark) => landmark.key)
+        const listed = page.locator('[data-station-landmarks] [data-landmark]')
+        await expect(listed).toHaveCount(keys.length)
+        const onImage = frame.locator('[data-eusg-landmarks] li[data-structure]')
+        await expect(onImage).toHaveCount(keys.length)
+        for (const [at, key] of keys.entries()) {
+          await expect(listed.nth(at)).toHaveAttribute('data-landmark', key)
+          await expect(onImage.nth(at)).toHaveAttribute('data-structure', key)
+          await expect(onImage.nth(at)).toHaveAttribute('data-number', String(at + 1))
+        }
+        // The station itself was held, so its badge is on the image.
+        await expect(frame.locator(`[data-eusg-marker="${keys.at(-1)}"]`)).toBeVisible()
+      }
       await expectOneScreen(page)
     })
   }
@@ -115,8 +182,8 @@ for (const size of [
 
 test('a learner who is stuck can open the 3D view and be shown the view', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
-  await page.goto('/en/eus-b-guided/learn?section=station-7')
-  await goToActivity(page, 'station-7:find-station-7')
+  await page.goto('/en/eus-b-guided/learn?section=liver')
+  await goToActivity(page, 'liver:find-the-liver')
   const frame = lab(page)
   const root = frame.locator('.eusg')
   await expect(root).toHaveAttribute('data-frame-ready', 'true', { timeout: 60_000 })
@@ -143,7 +210,9 @@ test('a learner who is stuck can open the 3D view and be shown the view', async 
   await expect(root).toHaveAttribute('data-found', 'false')
   await expect(frame.locator('[data-eusg-hold]')).toHaveText('View shown')
   await expect(frame.locator('[data-eusg-help="show"]')).toHaveCount(0)
-  await expect(page.locator('[data-requirement]')).toHaveText(/You were shown station 7\./)
+  await expect(page.locator('[data-requirement]')).toHaveText(
+    /You were shown the left lobe of the liver\./,
+  )
   await expect(primary).toBeEnabled()
   await expect(primary).toHaveText('Continue with the view shown')
   await expectOneScreen(page)
@@ -162,6 +231,50 @@ test('a learner who is stuck can open the 3D view and be shown the view', async 
   await expect(root).toHaveAttribute('data-shown', 'false')
   await expect(frame.locator('[data-eusg-help="show"]')).toBeVisible()
   await expect(primary).toBeDisabled()
+})
+
+test('a missed landmark is not named, and one the learner is shown is recorded as shown', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/en/eus-b-guided/learn?section=station-4l')
+  await goToActivity(page, 'station-4l:mark-station-4l')
+  const frame = lab(page)
+  const root = frame.locator('.eusg')
+  await expect(root).toHaveAttribute('data-eusg-lab', 'station-4l-landmarks', { timeout: 60_000 })
+  await expect(root).toHaveAttribute('data-frame-ready', 'true', { timeout: 60_000 })
+  const [first, second, node] = eusbLab('station-4l-landmarks').landmarks!
+  const rows = page.locator('[data-requirement]')
+  const asked = frame.locator('[data-eusg-ask] li')
+
+  // Asked for the first landmark, the learner clicks the node: nothing is given away.
+  await expect(root).toHaveAttribute('data-eusg-asked', first)
+  await clickLandmark(page, node)
+  await expect(frame.locator('[data-eusg-identify-result]')).toContainText('Try again')
+  await expect(frame.locator('[data-eusg-identify-result]')).not.toContainText(/station 4L/i)
+  await expect(root).toHaveAttribute('data-eusg-asked', first)
+  await expect(rows.nth(0)).toHaveAttribute('data-met', 'false')
+  await expect(frame.locator('[data-eusg-marker]')).toHaveCount(0)
+
+  // Shown at the learner's request: listed as shown on both sides.
+  await frame.locator('[data-eusg-identify-show]').click()
+  await expect(asked.nth(0)).toHaveAttribute('data-state', 'shown')
+  await expect(rows.nth(0)).toHaveText(/You were shown the aorta\./)
+  await expect(rows.nth(0)).toHaveAttribute('data-met', 'true')
+
+  await expect(root).toHaveAttribute('data-eusg-asked', second)
+  await clickLandmark(page, second)
+  await expect(asked.nth(1)).toHaveAttribute('data-state', 'done')
+  await clickLandmark(page, node)
+  await expect(root).toHaveAttribute('data-identify-done', 'true')
+  await expect(page.locator('[data-now-primary]')).toBeEnabled()
+  await expectOneScreen(page)
+
+  // Starting again clears every mark.
+  await page.locator('[data-restart-task]').click()
+  await expect(root).toHaveAttribute('data-identify-done', 'false')
+  await expect(root).toHaveAttribute('data-eusg-asked', first)
+  await expect(page.locator('[data-now-primary]')).toBeDisabled()
 })
 
 test('a scope task left unfinished is explained on the landmark, and says so', async ({ page }) => {

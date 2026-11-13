@@ -63,6 +63,7 @@ export function BaxterCrrtLearn({
       activeHref={`${baxterCrrtNavBase}/learn`}
       activityMode
       focusedLesson
+      lessonWorkspace
     >
       <CrrtFoundationLesson
         key={key}

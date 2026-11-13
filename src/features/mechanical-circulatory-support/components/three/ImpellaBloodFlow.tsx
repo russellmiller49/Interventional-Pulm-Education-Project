@@ -113,6 +113,18 @@ function ParticleStream({
   )
 }
 
+/**
+ * The colour of the blood a pump moves, by the side of the heart it sits on. The heart it is drawn
+ * in is blue where blood is on its way to the lungs and red where it has come back from them, and
+ * the particles follow that: a right-sided pump takes blood from the vena cava to the pulmonary
+ * artery, so its particles are blue. They were a darker red until November 2026, red blood
+ * running through a blue right heart. Each set lightens from inlet to outlet, as before.
+ */
+export const IMPELLA_BLOOD_COLORS = {
+  right: { inlet: '#2f6fd8', transit: '#4f93ff', outlet: '#8fc0ff' },
+  left: { inlet: '#d72b3e', transit: '#ff3948', outlet: '#ff654f' },
+} as const
+
 export function ImpellaBloodFlow({
   points,
   flow,
@@ -129,10 +141,7 @@ export function ImpellaBloodFlow({
   revealAt: number
 }) {
   const paths = useMemo(() => createImpellaBloodFlowPaths(points), [points])
-  const colors =
-    side === 'right'
-      ? { inlet: '#a91f49', transit: '#d52c50', outlet: '#f04461' }
-      : { inlet: '#d72b3e', transit: '#ff3948', outlet: '#ff654f' }
+  const colors = IMPELLA_BLOOD_COLORS[side]
 
   return (
     <group>
