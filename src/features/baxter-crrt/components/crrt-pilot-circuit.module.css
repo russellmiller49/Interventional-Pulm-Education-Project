@@ -1477,6 +1477,12 @@
   line-height: 1.5;
 }
 
+/* The button that opens the enlarged access-site figure, under a focused drawing. */
+.accessSiteTools {
+  display: flex;
+  margin: 0.5rem 0.4rem 0;
+}
+
 /*
  * In a lesson's picture pane (`crrt-foundations.module.css`) the drawing is sized to the pane, so
  * it never needs to be swiped: the swipe hint goes, and the key and the Expand button share the
@@ -1485,7 +1491,7 @@
 :global([data-crrt-visual-pane]) .panel[data-presentation='focused'],
 :global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  grid-template-columns: max-content minmax(0, 1fr) max-content max-content;
   column-gap: 0.6rem;
   align-items: center;
 }
@@ -1511,6 +1517,12 @@
 }
 :global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .focusedTools,
 :global([data-crrt-visual-pane]) .panel[data-presentation='live-focused'] > .focusedTools {
+  grid-column: 4;
+  grid-row: 1;
+  margin: 0;
+}
+/* The access-site button stands beside Expand circuit, in the heading's row. */
+:global([data-crrt-visual-pane]) .panel[data-presentation='focused'] > .accessSiteTools {
   grid-column: 3;
   grid-row: 1;
   margin: 0;

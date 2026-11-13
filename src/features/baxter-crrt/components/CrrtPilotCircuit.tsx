@@ -1,7 +1,7 @@
 'use client'
 
 import { Maximize2 } from 'lucide-react'
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import {
   calculateCrrtMachineFluidLedger,
@@ -34,6 +34,8 @@ import {
 import type { CrrtBloodFlowState } from '../engine/circuitDelivery'
 import type { CrrtFlowRates } from '../engine/types'
 import { formatCrrtMmHg } from '../pressureArithmetic'
+import { crrtAccessSiteTextEquivalent, type CrrtAccessSiteId } from '../content/accessSite'
+import { CrrtAccessSiteInset } from './CrrtAccessSite'
 import { CrrtDialog } from './CrrtDialog'
 import styles from './crrt-pilot-circuit.module.css'
 import { CRRT_NUMBERS } from '../content/teachingNumbers'
@@ -81,6 +83,14 @@ export interface CrrtPilotCircuitProps {
   overlayId?: CrrtCircuitOverlayId
   visiblePathIds?: readonly CrrtCircuitPathId[]
   highlightedNodeId?: CrrtCircuitNodeId | null
+  /**
+   * Draw the access-site inset above the PATIENT circle: the catheter in its vein, for the site
+   * named. Left out (the default) the drawing is exactly as it was. A lesson passes it; Practice,
+   * Challenge and the live run circuits do not.
+   */
+  accessSite?: CrrtAccessSiteId | null
+  /** The control that opens the enlarged access-site figure, shown under a focused drawing. */
+  accessSiteControl?: ReactNode
 }
 
 /** Maps a pressure signal onto the prop that carries its value. */
@@ -455,6 +465,8 @@ export function CrrtPilotCircuit({
   overlayId: controlledOverlayId,
   visiblePathIds,
   highlightedNodeId = null,
+  accessSite = null,
+  accessSiteControl,
 }: CrrtPilotCircuitProps) {
   const idPrefix = `crrt-pilot-${useId().replaceAll(':', '')}`
   const summaryId = `${idPrefix}-summary`
@@ -471,13 +483,12 @@ export function CrrtPilotCircuit({
     [overlay, visiblePathIds],
   )
   const destinations = useMemo(() => crrtOverlayFluidDestinations(overlay), [overlay])
-  const textEquivalent = useMemo(
-    () =>
-      visiblePathIds
-        ? `Displayed paths: ${visiblePathIds.map((id) => crrtCircuitPath(id).textEquivalent).join(' ')}`
-        : crrtCircuitTextEquivalent(overlayId),
-    [overlayId, visiblePathIds],
-  )
+  const textEquivalent = useMemo(() => {
+    const circuit = visiblePathIds
+      ? `Displayed paths: ${visiblePathIds.map((id) => crrtCircuitPath(id).textEquivalent).join(' ')}`
+      : crrtCircuitTextEquivalent(overlayId)
+    return accessSite ? `${circuit} ${crrtAccessSiteTextEquivalent(accessSite)}` : circuit
+  }, [overlayId, visiblePathIds, accessSite])
 
   const ledgerFlows = flows ?? crrtWorkedLedgerExample.flows
   const ledgerIsLive = flows !== null
@@ -654,6 +665,18 @@ export function CrrtPilotCircuit({
         <text x="44" y="52" className={styles.sectionLabel}>
           {overlay.label.toUpperCase()}
         </text>
+        {accessSite ? (
+          <CrrtAccessSiteInset
+            site={accessSite}
+            highlight={
+              highlightedNodeId === 'access-lumen'
+                ? 'access'
+                : highlightedNodeId === 'return-lumen'
+                  ? 'return'
+                  : null
+            }
+          />
+        ) : null}
         {staticTeaching ? null : (
           <text x="1288" y="52" textAnchor="end" className={styles.motionStatus}>
             {running ? 'FLOW MOTION: ACTIVE' : 'FLOW MOTION: STOPPED'}
@@ -862,6 +885,9 @@ export function CrrtPilotCircuit({
           <p className={styles.legendNote}>
             Dimmed lines and parts belong to the same circuit but are not active in this view.
           </p>
+          {accessSite && accessSiteControl ? (
+            <div className={styles.accessSiteTools}>{accessSiteControl}</div>
+          ) : null}
         </>
       ) : null}
 
