@@ -14,6 +14,22 @@ import type { EusSessionLabelColors } from '@/features/eus-b-simulator/useEusSco
 const TOUCH_NAME_MS = 2600;
 /** Smallest size, in CSS pixels, the depth numbers drawn on the image may appear at. */
 const MIN_TICK_TEXT_PX = 13;
+/** How far one arrow key moves the crosshair, as a share of the image; Shift moves it further. */
+const CROSS_STEP = 0.01;
+const CROSS_STEP_LARGE = 0.05;
+const ARROWS: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+
+/** A place on the image: in the frame's own pixels, and as fractions of the image. */
+export interface SectorPick {
+  x: number;
+  y: number;
+  fraction: { x: number; y: number };
+}
 
 interface PointerAt {
   left: number;
@@ -42,6 +58,16 @@ interface EusGuidedSectorProps {
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   /** Whether the image takes keyboard focus for driving. */
   drivable: boolean;
+  /**
+   * Structures tinted in their color while names are withheld: the landmarks a learner has
+   * already marked. Nothing else is tinted, and still nothing is named under the pointer.
+   */
+  tintKeys?: readonly string[];
+  /**
+   * When set, the image can be clicked: with the pointer, or with a crosshair moved by the arrow
+   * keys and Enter or Space. It is told where.
+   */
+  onPick?: (at: SectorPick) => void;
   /** Drawn over the image, above both canvases. */
   children?: ReactNode;
 }
@@ -60,12 +86,20 @@ export function EusGuidedSector({
   onPointStructure,
   onKeyDown,
   drivable,
+  tintKeys,
+  onPick,
   children,
 }: EusGuidedSectorProps) {
   const canvas = useRef<HTMLCanvasElement>(null),
     overlay = useRef<HTMLCanvasElement>(null),
     touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pointer, setPointer] = useState<PointerAt | null>(null);
+  // The keyboard's stand-in for the pointer, as fractions of the image. Shown once a key moves it.
+  const [cross, setCross] = useState<{ x: number; y: number } | null>(null);
+  const pickable = !!onPick;
+  useEffect(() => {
+    if (!pickable) setCross(null);
+  }, [pickable]);
   // The size the image is shown at. It changes when the frame is resized, and when the lesson
   // page hides the lab and shows it again; the depth numbers are then drawn again to suit.
   const [shownWidth, setShownWidth] = useState(0);
@@ -152,6 +186,15 @@ export function EusGuidedSector({
 
   const outlinedKey = named ? (pointedKey ?? highlightKey) : null;
   const highlightId = outlinedKey ? (labelIds.get(outlinedKey) ?? null) : null;
+  // With names withheld, only the structures listed are given a color.
+  const tintList = named ? '' : (tintKeys ?? []).join(' ');
+  const tintOnly = useMemo(() => {
+    if (!tintList) return null;
+    const ids = new Set(tintList.split(' ').map((key) => labelIds.get(key)));
+    return labels.map((label) =>
+      ids.has(label.id) ? (labelColors[label.id] ?? ([255, 255, 255] as [number, number, number])) : null,
+    );
+  }, [tintList, labelIds, labels, labelColors]);
   useEffect(() => {
     const element = overlay.current;
     if (!element || !frame) return;
@@ -163,16 +206,42 @@ export function EusGuidedSector({
     if (!context) return;
     const image = context.createImageData(frame.width, frame.height);
     paintEusOverlay(image.data, volume, frame, {
-      colors: labelColors,
-      tint: named,
+      colors: tintOnly ?? labelColors,
+      tint: named || !!tintOnly,
       activeId: null,
       highlightId,
       fillHighlight: true,
     });
     context.putImageData(image, 0, 0);
-  }, [frame, named, labelColors, highlightId, volume]);
+  }, [frame, named, labelColors, tintOnly, highlightId, volume]);
+
+  const pickAt = (fx: number, fy: number) => {
+    if (!frame || !onPick) return;
+    const x = Math.min(frame.width - 1, Math.max(0, Math.floor(fx * frame.width))),
+      y = Math.min(frame.height - 1, Math.max(0, Math.floor(fy * frame.height)));
+    onPick({ x, y, fraction: { x: fx, y: fy } });
+  };
+  const crossKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    const arrow = ARROWS[event.key];
+    if (arrow) {
+      event.preventDefault();
+      const step = event.shiftKey ? CROSS_STEP_LARGE : CROSS_STEP;
+      const within = (value: number) => Math.min(0.99, Math.max(0.01, value));
+      // The first key shows the crosshair in the middle of the image; later ones move it.
+      setCross((at) =>
+        at ? { x: within(at.x + arrow[0] * step), y: within(at.y + arrow[1] * step) } : { x: 0.5, y: 0.5 },
+      );
+      return;
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    if (cross) pickAt(cross.x, cross.y);
+    else setCross({ x: 0.5, y: 0.5 });
+  };
 
   const track = (event: React.PointerEvent<HTMLDivElement>) => {
+    // The pointer takes over from the keyboard's crosshair.
+    if (cross && event.type === 'pointermove') setCross(null);
     if (!frame || !named) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const left = event.clientX - rect.left,
@@ -192,16 +261,31 @@ export function EusGuidedSector({
 
   return (
     <div
-      className={`eusg-image${named ? ' is-named' : ''}`}
+      className={`eusg-image${named ? ' is-named' : ''}${pickable ? ' is-pickable' : ''}`}
       data-eusg-image
-      tabIndex={drivable ? 0 : undefined}
+      tabIndex={drivable || pickable ? 0 : undefined}
       role="group"
       aria-label={
-        drivable
-          ? 'Ultrasound image. With the image focused, the arrow keys and brackets move the scope.'
-          : 'Ultrasound image'
+        pickable
+          ? 'Ultrasound image. With the image focused, the arrow keys move a crosshair and Enter marks the point under it.'
+          : drivable
+            ? 'Ultrasound image. With the image focused, the arrow keys and brackets move the scope.'
+            : 'Ultrasound image'
       }
-      onKeyDown={onKeyDown}
+      onKeyDown={pickable ? crossKey : onKeyDown}
+      onClick={
+        pickable
+          ? (event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              if (!rect.width || !rect.height) return;
+              setCross(null);
+              pickAt(
+                (event.clientX - rect.left) / rect.width,
+                (event.clientY - rect.top) / rect.height,
+              );
+            }
+          : undefined
+      }
       onPointerMove={track}
       onPointerDown={track}
       onPointerLeave={(event) => {
@@ -224,6 +308,14 @@ export function EusGuidedSector({
         </div>
       )}
       {children}
+      {pickable && cross && (
+        <span
+          className="eusg-cross"
+          aria-hidden="true"
+          data-eusg-cross
+          style={{ left: `${cross.x * 100}%`, top: `${cross.y * 100}%` }}
+        />
+      )}
       {pointed && pointer && (
         <EusHoverName
           left={pointer.left}

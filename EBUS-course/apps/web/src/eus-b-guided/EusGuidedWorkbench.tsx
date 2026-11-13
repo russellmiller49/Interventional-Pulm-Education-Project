@@ -36,7 +36,7 @@ import {
   type EusbLabSpec,
   type EusbPane,
 } from '../../../../../src/lib/eus-b-guided-contract';
-import { EusGuidedSector } from './EusGuidedSector';
+import { EusGuidedSector, type SectorPick } from './EusGuidedSector';
 import {
   DEMO_LEG_MS,
   DEMO_STEP_MS,
@@ -45,6 +45,23 @@ import {
   demoPoseAt,
   demoViewText,
 } from './guidedDemo';
+import {
+  IDENTIFY_START,
+  identifyAsked,
+  identifyDone,
+  identifyReducer,
+  identifyReport,
+  identifyRows,
+  type IdentifyEvent,
+  type IdentifyState,
+} from './guidedIdentify';
+import {
+  clickHits,
+  clickTolerancePx,
+  labelUnder,
+  landmarkPoint,
+  pointFraction,
+} from './guidedLandmarks';
 import {
   buildObservation,
   heldImage,
@@ -59,7 +76,12 @@ import {
   type ReachState,
 } from './guidedTask';
 import { labReviewPose, resolveStart, resolveTarget } from './guidedViews';
-import { blockingLabelIds, referenceVisibleAreaMm2, targetAreaRatio } from './visibleArea';
+import {
+  blockingLabelIds,
+  reachMask,
+  referenceVisibleAreaMm2,
+  targetAreaRatio,
+} from './visibleArea';
 import './eus-b-guided.css';
 
 /** Shortest gap between two reports to the lesson page. */
@@ -70,6 +92,13 @@ const FALLBACK_START: EusScopeState = { sMm: 20, rollDeg: 0, flexDeg: 0 };
 const NAMES_NOTHING = () => null;
 const NO_FRAMES = () => () => {};
 const IGNORE = () => {};
+const NO_LANDMARKS: readonly string[] = [];
+
+/** A structure's name as it reads inside a sentence: "the left atrium", "station 7". */
+function inSentence(label: string) {
+  const lowered = label.charAt(0).toLowerCase() + label.slice(1);
+  return /^station\b/i.test(label) ? lowered : `the ${lowered}`;
+}
 /**
  * What the 3D view draws when it is opened to locate a target: the airway a bronchoscopist
  * already knows, the nodes, the esophagus and stomach the scope lies in, and the abdominal organs.
@@ -130,6 +159,19 @@ interface OwnedReach {
 function ownedReachReducer(state: OwnedReach, event: ReachEvent & { labKey: string }): OwnedReach {
   const reach = state.labKey === event.labKey ? state.reach : REACH_START;
   return { labKey: event.labKey, reach: reachReducer(reach, event) };
+}
+
+/** A mark-the-landmarks task's state, owned by one lab of one session like the reach task's. */
+interface OwnedIdentify {
+  labKey: string;
+  state: IdentifyState;
+}
+function ownedIdentifyReducer(
+  owned: OwnedIdentify,
+  event: IdentifyEvent & { labKey: string; landmarks: readonly string[] },
+): OwnedIdentify {
+  const state = owned.labKey === event.labKey ? owned.state : IDENTIFY_START;
+  return { labKey: event.labKey, state: identifyReducer(state, event, event.landmarks) };
 }
 
 /** The help a learner has asked for in one task. A new task, or a fresh start of one, has none. */
@@ -249,6 +291,17 @@ function GuidedLab({
   // ---- The task --------------------------------------------------------------------------------
   const [owned, dispatch] = useReducer(ownedReachReducer, { labKey, reach: REACH_START });
   const reach = owned.labKey === labKey ? owned.reach : REACH_START;
+  // ---- The mark-the-landmarks task ---------------------------------------------------------------
+  const landmarks = lab.landmarks ?? NO_LANDMARKS;
+  const [ownedIdentify, dispatchIdentify] = useReducer(ownedIdentifyReducer, {
+    labKey,
+    state: IDENTIFY_START,
+  });
+  const marked = ownedIdentify.labKey === labKey ? ownedIdentify.state : IDENTIFY_START;
+  const identifying = lab.kind === 'identify' && phase === 'work';
+  const asked = identifying ? identifyAsked(marked, landmarks) : null;
+  const allMarked = lab.kind === 'identify' && identifyDone(marked, landmarks);
+
   const [helpState, setHelpState] = useState<HelpState>(() => noHelp(labKey));
   const help = helpState.labKey === labKey ? helpState : noHelp(labKey);
   const locked = reach.found || reach.shown;
@@ -357,7 +410,8 @@ function GuidedLab({
     }, DEMO_STEP_MS);
   };
 
-  const showEndoscope = config.panes.includes('endoscope');
+  // A mark-the-landmarks task is a still image: the lens view adds nothing to it.
+  const showEndoscope = config.panes.includes('endoscope') && lab.kind !== 'identify';
   const showAnatomy = help.anatomy && offered.includes('anatomy');
   const targetGroup = target ? session.structures.get(target.key)?.group : undefined;
   // The target's own kind of structure is always drawn, whatever else is hidden.
@@ -396,6 +450,56 @@ function GuidedLab({
   });
   const frameReady =
     !!frame && !!frameTag && frameTag.labKey === labKey && sameImage(frameTag, scope, depthMm, gainDb);
+
+  // ---- Landmarks in the image on screen ----------------------------------------------------------
+  // Read only from an image that is this lab's and current, and only when landmarks are drawn or
+  // asked for: on a labeled image, and in a mark-the-landmarks task.
+  const landmarkFrame = frameReady && landmarks.length > 0 && (named || identifying) ? frame : null;
+  const reached = useMemo(
+    () => (landmarkFrame ? reachMask(landmarkFrame, blocking) : null),
+    [landmarkFrame, blocking],
+  );
+  /** Where each landmark of the lab lies in this image, as fractions of it. Absent: not in it. */
+  const landmarkAt = useMemo(() => {
+    const points = new Map<string, { x: number; y: number }>();
+    if (!landmarkFrame || !reached) return points;
+    for (const key of landmarks) {
+      const id = session.labelIds.get(key);
+      const point = id === undefined ? null : landmarkPoint(landmarkFrame, reached, id);
+      if (point) points.set(key, pointFraction(landmarkFrame, point));
+    }
+    return points;
+  }, [landmarkFrame, reached, landmarks, session.labelIds]);
+
+  const pick = (at: SectorPick) => {
+    if (!identifying || !landmarkFrame || !reached || !asked) return;
+    const askedId = session.labelIds.get(asked);
+    let key: string | null = null;
+    if (
+      askedId !== undefined &&
+      clickHits(landmarkFrame, reached, askedId, at, clickTolerancePx(landmarkFrame))
+    )
+      key = asked;
+    else {
+      const under = labelUnder(landmarkFrame, reached, at);
+      const label = under === null ? undefined : volume.metadata.labels[under];
+      key = label?.reportable ? label.key : null;
+    }
+    dispatchIdentify({ type: 'click', labKey, landmarks, key, at: at.fraction });
+  };
+
+  // For browser tests only: where a landmark's point is in the image now on screen.
+  const landmarkAtRef = useRef(landmarkAt);
+  landmarkAtRef.current = landmarkAt;
+  useEffect(() => {
+    const host = window as unknown as {
+      __eusgTest?: { landmarkPoint: (key: string) => { x: number; y: number } | null };
+    };
+    host.__eusgTest = { landmarkPoint: (key) => landmarkAtRef.current.get(key) ?? null };
+    return () => {
+      delete host.__eusgTest;
+    };
+  }, []);
 
   useEffect(() => {
     if (!frame || !frameTag || !target) return;
@@ -445,6 +549,7 @@ function GuidedLab({
       lastAction: mine.last,
       target: target ? { key: target.key, reach } : null,
       views,
+      identified: lab.kind === 'identify' ? identifyReport(marked) : undefined,
       now: Date.now(),
     });
   };
@@ -464,6 +569,7 @@ function GuidedLab({
     frame,
     frameTag,
     reach,
+    marked,
     scope,
     depthMm,
     gainDb,
@@ -487,6 +593,27 @@ function GuidedLab({
     if (!named) setLegendKey(null);
   }, [named]);
 
+  const [badgeKey, setBadgeKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!named) setBadgeKey(null);
+  }, [named]);
+
+  const structureLabel = useCallback(
+    (key: string) =>
+      session.structures.get(key)?.label ??
+      volume.metadata.labels.find((label) => label.key === key)?.label ??
+      key.replace(/_/g, ' '),
+    [session.structures, volume],
+  );
+  const structureColor = useCallback(
+    (key: string) => {
+      const id = session.labelIds.get(key);
+      const color = id === undefined ? null : session.labelColors[id];
+      return color ? `rgb(${color.join(',')})` : '#94a3b8';
+    },
+    [session.labelIds, session.labelColors],
+  );
+
   const legend = useMemo(() => {
     if (!named || !frame) return [];
     const labels = volume.metadata.labels;
@@ -502,12 +629,50 @@ function GuidedLab({
           note: structure?.note,
           color: color ? `rgb(${color.join(',')})` : '#94a3b8',
         };
-      });
+      })
+      // A landmark of the view is listed with its number, above the rest.
+      .filter((row) => !landmarks.includes(row.key));
     // The structure the lab is about leads the list.
     const lead = target ? rows.findIndex((row) => row.key === target.key) : -1;
     if (lead > 0) rows.unshift(...rows.splice(lead, 1));
     return rows;
-  }, [named, frame, volume, session.structures, session.labelColors, target]);
+  }, [named, frame, volume, session.structures, session.labelColors, target, landmarks]);
+  /** The view's landmarks in their own order, each with its number, whether or not it is in the image. */
+  const landmarkRows = useMemo(
+    () =>
+      named
+        ? landmarks.map((key, index) => ({
+            key,
+            number: index + 1,
+            label: structureLabel(key),
+            note: session.structures.get(key)?.note,
+            color: structureColor(key),
+            // Until this lab's image is drawn there is nothing to say a landmark is missing from.
+            present: landmarkFrame ? landmarkAt.has(key) : true,
+          }))
+        : [],
+    [named, landmarks, structureLabel, structureColor, session.structures, landmarkAt, landmarkFrame],
+  );
+  const pointedRow = pointedKey ?? badgeKey ?? legendKey;
+
+  /** Numbers on the image: every landmark on a labeled image, the marked ones in a task. */
+  const badges = named
+    ? landmarkRows.flatMap((row) => {
+        const at = landmarkAt.get(row.key);
+        return at ? [{ key: row.key, number: row.number, at, kind: 'named' }] : [];
+      })
+    : identifying
+      ? identifyRows(marked, landmarks).flatMap((row) => {
+          const at =
+            row.state === 'done'
+              ? (marked.points[row.key] ?? landmarkAt.get(row.key))
+              : row.state === 'shown'
+                ? landmarkAt.get(row.key)
+                : undefined;
+          return at ? [{ key: row.key, number: row.number, at, kind: row.state }] : [];
+        })
+      : [];
+  const askRows = identifying ? identifyRows(marked, landmarks) : [];
 
   const level = eusLevelAt(manifest, scope.sMm);
   const facing = session.pose ? describeFacing(session.pose.depthAxisLps) : '';
@@ -526,6 +691,8 @@ function GuidedLab({
       data-shown={target ? (reach.shown ? 'true' : 'false') : undefined}
       data-demo={target ? help.demo : undefined}
       data-views={views.length > 0 ? views.join(' ') : undefined}
+      data-identify-done={lab.kind === 'identify' ? (allMarked ? 'true' : 'false') : undefined}
+      data-eusg-asked={lab.kind === 'identify' ? (asked ?? '') : undefined}
     >
       <EusGuidedSector
         volume={volume}
@@ -533,8 +700,10 @@ function GuidedLab({
         renderError={renderError}
         labelColors={session.labelColors}
         named={named}
-        highlightKey={legendKey}
+        highlightKey={legendKey ?? badgeKey}
         onPointStructure={setPointedKey}
+        tintKeys={identifying ? [...marked.keys, ...marked.shown] : undefined}
+        onPick={identifying && !allMarked ? pick : undefined}
         drivable={showControls && interactive}
         onKeyDown={(event) => {
           const action = scopeKeyChange(event.key, event.shiftKey, lab.controls);
@@ -572,6 +741,24 @@ function GuidedLab({
             )}
           </div>
         )}
+        {badges.map((badge) => (
+          <span
+            key={badge.key}
+            className={`eusg-badge is-${badge.kind}`}
+            aria-hidden="true"
+            data-eusg-marker={badge.key}
+            data-number={badge.number}
+            style={{
+              left: `${badge.at.x * 100}%`,
+              top: `${badge.at.y * 100}%`,
+              borderColor: structureColor(badge.key),
+            }}
+            onPointerEnter={named ? () => setBadgeKey(badge.key) : undefined}
+            onPointerLeave={named ? () => setBadgeKey(null) : undefined}
+          >
+            {badge.number}
+          </span>
+        ))}
       </EusGuidedSector>
 
       <div className="eusg-side">
@@ -640,20 +827,107 @@ function GuidedLab({
             </section>
           )}
 
+          {identifying && (
+            <section className="eusg-ask" aria-label="Mark the landmarks">
+              <h2>Mark the landmarks</h2>
+              <p className="eusg-ask__now" aria-live="polite" data-eusg-ask-now>
+                {asked ? (
+                  <>
+                    Click: <strong>{structureLabel(asked)}</strong>
+                  </>
+                ) : (
+                  'All landmarks marked.'
+                )}
+              </p>
+              <ol data-eusg-ask>
+                {askRows.map((row) => (
+                  <li key={row.key} data-structure={row.key} data-state={row.state}>
+                    <span className="eusg-ask__number" aria-hidden="true">
+                      {row.number}
+                    </span>
+                    <span>{structureLabel(row.key)}</span>
+                    <span className="eusg-ask__state">
+                      {row.state === 'done'
+                        ? '✓ Marked'
+                        : row.state === 'shown'
+                          ? 'Shown'
+                          : row.state === 'current'
+                            ? 'Now'
+                            : ''}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              {asked && (
+                <button
+                  type="button"
+                  className="eus-step-button"
+                  data-eusg-identify-show
+                  disabled={!landmarkFrame}
+                  onClick={() => dispatchIdentify({ type: 'show', labKey, landmarks })}
+                >
+                  Show me this one
+                </button>
+              )}
+              <p className="eusg-ask__result" role="status" data-eusg-identify-result>
+                {asked && marked.lastMiss === asked
+                  ? `Not ${inSentence(structureLabel(asked))}. Try again.`
+                  : ''}
+              </p>
+              {asked && (
+                <p className="eusg-keys">
+                  Keyboard: with the image focused, the arrow keys move a crosshair and Enter marks
+                  the point under it. Shift moves it further.
+                </p>
+              )}
+            </section>
+          )}
+
           {named && (
             <section className="eusg-legend" aria-label="In this image" data-eusg-legend>
-              <h2>In this image</h2>
+              {landmarkRows.length > 0 && (
+                <>
+                  <h2>Landmarks of this view</h2>
+                  <ol data-eusg-landmarks>
+                    {landmarkRows.map((row) => (
+                      <li
+                        key={row.key}
+                        data-structure={row.key}
+                        data-number={row.number}
+                        data-present={row.present ? 'true' : 'false'}
+                        className={
+                          row.present && row.key === pointedRow ? 'is-pointed' : undefined
+                        }
+                        onPointerEnter={row.present ? () => setLegendKey(row.key) : undefined}
+                        onPointerLeave={row.present ? () => setLegendKey(null) : undefined}
+                      >
+                        <span className="eusg-legend__number" aria-hidden="true">
+                          {row.number}
+                        </span>
+                        <span className="eusg-swatch" style={{ backgroundColor: row.color }} />
+                        <span>
+                          {row.label}
+                          {!row.present && <small>Not in this image</small>}
+                          {row.present && row.note && <small>{row.note}</small>}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+              {landmarkRows.length === 0 && <h2>In this image</h2>}
+              {landmarkRows.length > 0 && legend.length > 0 && <h2>Also in this image</h2>}
               {legend.length === 0 ? (
-                <p className="eusg-muted">Nothing in this image has a name.</p>
+                landmarkRows.length === 0 && (
+                  <p className="eusg-muted">Nothing in this image has a name.</p>
+                )
               ) : (
                 <ul>
                   {legend.map((row) => (
                     <li
                       key={row.key}
                       data-structure={row.key}
-                      className={
-                        row.key === (pointedKey ?? legendKey) ? 'is-pointed' : undefined
-                      }
+                      className={row.key === pointedRow ? 'is-pointed' : undefined}
                       onPointerEnter={() => setLegendKey(row.key)}
                       onPointerLeave={() => setLegendKey(null)}
                     >

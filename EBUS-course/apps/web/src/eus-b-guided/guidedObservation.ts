@@ -73,6 +73,8 @@ export interface ObservationInput {
   target: { key: string; reach: ReachState } | null;
   /** The views on screen beside the ultrasound image. */
   views?: readonly EusbPane[];
+  /** A mark-the-landmarks task: what the learner marked, what they were shown, and the misses. */
+  identified?: { keys: readonly string[]; shown: readonly string[]; wrong: number };
   now: number;
 }
 
@@ -111,5 +113,11 @@ export function buildObservation(input: ObservationInput): EusbObservation {
       ...(reach.shown && reach.shownAt ? { shown: true, shownAt: reach.shownAt } : {}),
     };
   }
+  if (input.identified)
+    observation.identified = {
+      keys: [...input.identified.keys],
+      shown: [...input.identified.shown],
+      wrong: Math.min(10000, Math.max(0, Math.round(input.identified.wrong))),
+    };
   return observation;
 }

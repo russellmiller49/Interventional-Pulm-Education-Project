@@ -1,7 +1,7 @@
 import { EMPTY_EUSB_OBSERVATION } from '@/lib/eus-b-guided-bridge'
 import { EUSB_LABS, EUSB_LAB_IDS, eusbLab } from '@/lib/eus-b-guided-contract'
 import { eusbOutstanding, eusbRequirements, eusbTaskMet, eusbViewShown } from '../content/tasks'
-import { held, searching, shown } from '../testing/observations'
+import { held, marking, searching, shown } from '../testing/observations'
 
 const reachLabs = EUSB_LAB_IDS.filter((id) => eusbLab(id).kind === 'reach')
 
@@ -80,6 +80,42 @@ describe('what a scope task asks for', () => {
       )
     },
   )
+
+  const identifyLabs = EUSB_LAB_IDS.filter((id) => eusbLab(id).kind === 'identify')
+
+  it.each(identifyLabs)('%s: one line per landmark, and every line is the gate', (labId) => {
+    const landmarks = [...eusbLab(labId).landmarks!]
+    expect(landmarks.length).toBeGreaterThan(1)
+    const none = eusbRequirements(labId, marking(labId))
+    expect(none.map((item) => item.id)).toEqual(landmarks.map((key) => 'mark-' + key))
+    expect(none.every((item) => !item.met)).toBe(true)
+    for (const item of none)
+      expect(item.text).toMatch(/^Click (the [a-z ]+|station \d+[A-Z]?) in the image\.$/)
+    expect(eusbTaskMet(labId, marking(labId))).toBe(false)
+    expect(eusbTaskMet(labId, null)).toBe(false)
+
+    // All but the last: not yet.
+    expect(eusbTaskMet(labId, marking(labId, landmarks.slice(0, -1)))).toBe(false)
+    // Every landmark clicked, or some of them shown: done, and a shown one says so.
+    expect(eusbTaskMet(labId, marking(labId, landmarks))).toBe(true)
+    const mixed = marking(labId, landmarks.slice(1), landmarks.slice(0, 1))
+    expect(eusbTaskMet(labId, mixed)).toBe(true)
+    const [first, ...rest] = eusbRequirements(labId, mixed)
+    expect(first.text).toMatch(/^You were shown /)
+    expect(rest.every((item) => item.text.startsWith('Click '))).toBe(true)
+    // Another lab's answer, or a lab that is not ready, meets nothing.
+    expect(eusbTaskMet(labId, { ...marking(labId, landmarks), labId: 'some-other-lab' })).toBe(
+      false,
+    )
+    expect(eusbTaskMet(labId, { ...marking(labId, landmarks), ready: false })).toBe(false)
+    for (const observation of [null, marking(labId), mixed, marking(labId, landmarks)]) {
+      const list = eusbRequirements(labId, observation)
+      expect(eusbTaskMet(labId, observation)).toBe(list.every((item) => item.met))
+      expect(eusbOutstanding(labId, observation)).toEqual(
+        list.filter((item) => !item.met).map((item) => item.text),
+      )
+    }
+  })
 
   it('asks nothing of a still image, and a still image is never "done"', () => {
     const stills = EUSB_LAB_IDS.filter((id) => EUSB_LABS[id].kind === 'explore')

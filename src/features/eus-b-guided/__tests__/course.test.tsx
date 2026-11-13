@@ -1,7 +1,9 @@
 import { render } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { teachingNumberErrors } from '@/features/learning-module/numbers/teachingNumbers'
 import { betaRollout } from '@/features/module-beta/rollout'
-import { EUSB_LABS, eusbLab } from '@/lib/eus-b-guided-contract'
+import { EUSB_LABS, EUSB_LAB_IDS, eusbLab } from '@/lib/eus-b-guided-contract'
+import { StationTable, stationsTaught } from '../components/StationLandmarks'
 import { REACH_ROWS } from '../components/ReachTable'
 import { SurveyRoute } from '../components/SurveyRoute'
 import {
@@ -16,9 +18,17 @@ import {
   lessonNumber,
   nextLesson,
 } from '../content/curriculum'
+import { structureName } from '../content/names'
 import { SOURCE_IDS } from '../content/sources'
+import { STATIONS, stationById } from '../content/stations'
 import { EUSB_NUMBERS } from '../content/teachingNumbers'
 import type { Question } from '../content/types'
+
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children }: { href: string; children: ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
 
 const questions: Question[] = LESSONS.flatMap((lesson) =>
   lesson.steps.flatMap((step) => ('question' in step ? [step.question] : [])),
@@ -116,12 +126,136 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
   })
 
   it('keeps text that sits beside the image short enough to read without scrolling', () => {
+    // The landmark list under the text is read beside the image too, so it counts.
+    const listed = (station?: string) =>
+      (stationById(station ?? '')?.landmarks ?? []).map(
+        (landmark) => landmark.name + ' ' + landmark.where,
+      )
     for (const step of lesson.steps) {
       if (step.kind === 'brief' && step.view)
-        expect(words([...step.body, ...(step.points ?? [])].join(' '))).toBeLessThanOrEqual(150)
+        expect(
+          words([...step.body, ...(step.points ?? []), ...listed(step.station)].join(' ')),
+        ).toBeLessThanOrEqual(150)
       if (step.kind === 'debrief')
-        expect(words([...step.body, ...(step.points ?? [])].join(' '))).toBeLessThanOrEqual(110)
-      if (step.kind === 'lab') expect(words(step.instruction)).toBeLessThanOrEqual(40)
+        expect(
+          words([...step.body, ...(step.points ?? []), ...listed(step.station)].join(' ')),
+        ).toBeLessThanOrEqual(110)
+      if (step.kind === 'lab' || step.kind === 'identify')
+        expect(words(step.instruction)).toBeLessThanOrEqual(40)
+    }
+  })
+
+  it('asks for landmarks only on a view it has already shown labeled, with those landmarks listed', () => {
+    lesson.steps.forEach((step, at) => {
+      if (step.kind !== 'identify') return
+      const lab = eusbLab(step.lab)
+      expect(lab.kind).toBe('identify')
+      expect(lab.controls).toEqual([])
+      const taught = lesson.steps.slice(0, at).some((earlier) => {
+        if (earlier.kind !== 'brief' || !earlier.view || !earlier.station) return false
+        const still = eusbLab(earlier.view)
+        return (
+          JSON.stringify(still.start) === JSON.stringify(lab.start) &&
+          JSON.stringify(still.landmarks) === JSON.stringify(lab.landmarks) &&
+          JSON.stringify(stationById(earlier.station)!.landmarks.map((entry) => entry.key)) ===
+            JSON.stringify(lab.landmarks)
+        )
+      })
+      expect(taught).toBe(true)
+    })
+  })
+
+  it('lists a station’s landmarks only beside an image that numbers the same structures', () => {
+    for (const step of lesson.steps) {
+      if (!('station' in step) || !step.station) continue
+      const station = stationById(step.station)
+      expect(station).toBeDefined()
+      const lab =
+        step.kind === 'brief'
+          ? step.view
+          : step.kind === 'debrief'
+            ? labStepFor(lesson, step)?.lab
+            : undefined
+      expect(lab).toBeDefined()
+      expect(eusbLab(lab!).landmarks).toEqual(station!.landmarks.map((entry) => entry.key))
+    }
+  })
+})
+
+describe('the station registry', () => {
+  it('lists each station once, taught by a lesson of the course', () => {
+    expect(new Set(STATIONS.map((station) => station.id)).size).toBe(STATIONS.length)
+    for (const station of STATIONS) {
+      expect(lessonById(station.lesson)).toBeDefined()
+      expect(station.landmarks.length).toBeGreaterThan(1)
+      // Landmarks first, the node last.
+      expect(station.landmarks.at(-1)!.key).toBe(station.id.replace('-', '_'))
+      expect(new Set(station.landmarks.map((entry) => entry.key)).size).toBe(
+        station.landmarks.length,
+      )
+      for (const text of [station.called, station.scope, station.mistakenFor, station.sampled])
+        expect(text.length).toBeGreaterThan(8)
+      // The lesson that is said to teach a station lists its landmarks somewhere.
+      expect(
+        lessonById(station.lesson)!.steps.some(
+          (step) => 'station' in step && step.station === station.id,
+        ) || !station.view,
+      ).toBe(true)
+    }
+  })
+
+  it.each(STATIONS.filter((station) => station.view))(
+    '$id: its landmarks are the ones the lab list numbers on its still, in the same order',
+    (station) => {
+      const still = eusbLab(station.view!)
+      expect(still.kind).toBe('explore')
+      expect(still.landmarks).toEqual(station.landmarks.map((entry) => entry.key))
+    },
+  )
+
+  it('gives every landmark a lab can ask for a name that reads in a sentence', () => {
+    for (const id of EUSB_LAB_IDS)
+      for (const key of eusbLab(id).landmarks ?? [])
+        expect(structureName(key)).not.toMatch(/_|^the [a-z]+ [a-z]+ [a-z]+ [a-z]+ [a-z]+$/)
+  })
+
+  it('covers every nodal station the lab list has a still for', () => {
+    const stills = EUSB_LAB_IDS.filter(
+      (id) => eusbLab(id).kind === 'explore' && /^station-/.test(id),
+    )
+    expect(stills.sort()).toEqual(
+      STATIONS.filter((station) => station.view)
+        .map((station) => station.view!)
+        .sort(),
+    )
+  })
+
+  it('fills in a station only when it is open, and names its lesson until then', () => {
+    const taught = stationsTaught(['station-7'])
+    expect([...taught]).toEqual(['station-7'])
+    // One lesson teaches several stations: they all open with it.
+    expect([...stationsTaught(['station-4l'])].sort()).toEqual([
+      'station-4l',
+      'station-4r',
+      'station-5',
+      'station-6',
+    ])
+    const { container, rerender } = render(<StationTable open={taught} />)
+    const row = (id: string) => container.querySelector(`[data-station-row="${id}"]`)!
+    expect(container.querySelectorAll('[data-station-row]')).toHaveLength(STATIONS.length)
+    for (const station of STATIONS) {
+      const open = station.id === 'station-7'
+      expect(row(station.id)).toHaveAttribute('data-open', String(open))
+      for (const landmark of station.landmarks)
+        if (open) expect(row(station.id)).toHaveTextContent(landmark.where)
+        else expect(row(station.id)).not.toHaveTextContent(landmark.where)
+      if (!open) expect(row(station.id)).not.toHaveTextContent(station.mistakenFor)
+    }
+    expect(row('station-8')).toHaveTextContent(lessonById('station-8')!.title)
+    rerender(<StationTable open="all" />)
+    for (const station of STATIONS) {
+      expect(row(station.id)).toHaveAttribute('data-open', 'true')
+      expect(row(station.id)).toHaveTextContent(station.mistakenFor)
     }
   })
 })
