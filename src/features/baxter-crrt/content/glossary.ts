@@ -324,7 +324,7 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
     group: 'prescribed-and-delivered',
     term: 'Prescribed dose and delivered dose',
     alsoCalled: ['Effluent dose (mL/kg/h)'],
-    definition: `Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. The target is a delivered dose of ${N('dose-delivered')}; prescribe ${N('dose-prescribed')} to reach it.`,
+    definition: `Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. The target is a delivered dose of ${N('dose-delivered')}; a prescription of ${N('dose-prescribed')} is commonly used to help reach it, and the delivered dose is still checked.`,
     notTheSameAs: ['Measured solute clearance: both are intensity proxies.'],
     basis: [
       {

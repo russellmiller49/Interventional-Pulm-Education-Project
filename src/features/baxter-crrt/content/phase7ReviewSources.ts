@@ -139,9 +139,10 @@ const candidateClinicalSources = [
       'Doses and schedules are recorded in the CRRT numbers register. The guideline does not address acute liver failure, cerebral edema or a patient already on CRRT.',
     sourceTitle: 'Clinical Practice Guidelines: Treatment of Acute Hyperkalaemia in Adults',
     sourceType: 'guideline' as const,
-    documentVersion: 'UK Kidney Association. Final version October 2023; review date October 2026',
+    documentVersion:
+      'UK Kidney Association. Updated version July 2026 (first final version October 2023); review date October 2026',
     pageOrSection:
-      'Guidelines 14.1–14.2, 16.1–16.5, 17.1–17.2, 18.2, 19.6 · https://ukkidney.org/sites/renal.org/files/FINAL%20VERSION%20-%20UKKA%20CLINICAL%20PRACTICE%20GUIDELINE%20-%20MANAGEMENT%20OF%20HYPERKALAEMIA%20IN%20ADULTS%20-%20191223.pdf',
+      'Guidelines 14.1–14.2, 16.1–16.5, 17.1–17.2, 18.2, 19.6 · https://www.ukkidney.org/sites/default/files/documents/FINAL%20VERSION%20-%20UKKA%20CLINICAL%20PRACTICE%20GUIDELINE%20-%20MANAGEMENT%20OF%20HYPERKALAEMIA%20IN%20ADULTS%20-%20UPDATED%20JULY%202026_0.pdf',
     implementationLocation: 'content/completeCases.ts · CRRT-03',
     reviewer: null,
     reviewStatus: PENDING,

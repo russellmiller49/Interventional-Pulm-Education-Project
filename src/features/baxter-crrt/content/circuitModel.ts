@@ -683,7 +683,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'While the return clamp is closing or the chamber level is being adjusted, the reading is transient.',
-    firstInspectionBoundary: `Check the return line for a kink or a clamp, then the catheter position and the return chamber for clot. A high return pressure with a clear line is a catheter problem. PrisMax alarms “Return Extremely Positive” ${N('return-high-limit')}, and “Return Disconnection” when the pressure falls ${N('return-disconnect-limit')}: for that one, look at the connection before anything else.`,
+    firstInspectionBoundary: `Check the return line for a kink or a clamp, then the catheter position and the return chamber for clot. A high return pressure with a clear line is a catheter problem. PrisMax alarms “Return Extremely Positive” ${N('return-high-limit')}, and “Return Disconnection” when the pressure falls ${N('return-disconnect-limit')}, the initial limit, which can move with the return pressure’s operating point. For that one, look at the connection before anything else.`,
     sourceIds: ['DEV-PM-009', 'SYNTH-LAB-PRESSURE-001'],
   },
   {
@@ -729,7 +729,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'Whenever any one of its three inputs is unreliable. A TMP built on a transient effluent reading is itself a transient. Treat TMP as a summary of three numbers you should look at individually.',
-    firstInspectionBoundary: `Read the three pressures behind it first. A rising TMP means the membrane is fouling, or that you are asking for more filtration than the blood flow supports. Lower the replacement, PBP or fluid-removal rate, or raise the blood flow: both lower the filtration fraction. PrisMax advises a clotting filter when TMP is ${N('clotting-advisory')}, and alarms ${N('tmp-alarm')}.`,
+    firstInspectionBoundary: `Read the three pressures behind it first. A rising TMP means the membrane is fouling, or that you are asking for more filtration than the blood flow supports. Lower the replacement, PBP or fluid-removal rate, or raise the blood flow: both lower the filtration fraction. PrisMax advises a clotting filter at ${N('clotting-advisory')}, and alarms ${N('tmp-alarm')}.`,
     sourceIds: ['MATH-PM-002'],
   },
   {
