@@ -337,8 +337,12 @@ describe('the strip says what it is', () => {
     expect(text).not.toMatch(/valve (is|was) (open|closed)|valve closing|confirms|proves|diagnos/i)
   })
 
-  it('keeps the first line on the shorter strip a teaching panel uses', () => {
+  it('keeps both lines on the shorter strip a teaching panel uses', () => {
+    // A panel draws the strip where it is nearly flat, which is where the second line matters.
     render(<ArterialPressureTrace patient={flat} compact />)
-    expect(noteOf()).toBe(ARTERIAL_TRACE_SCHEMATIC_NOTE)
+    expect(noteOf()).toBe(`${ARTERIAL_TRACE_SCHEMATIC_NOTE} ${ARTERIAL_TRACE_FLAT_NOTE}`)
+    cleanup()
+    render(<ArterialPressureTrace patient={pulsatile} compact />)
+    expect(noteOf()).toBe(`${ARTERIAL_TRACE_SCHEMATIC_NOTE} ${ARTERIAL_TRACE_FLAT_NOTE}`)
   })
 })

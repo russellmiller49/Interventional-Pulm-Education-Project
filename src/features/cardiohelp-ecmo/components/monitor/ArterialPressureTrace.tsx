@@ -27,7 +27,8 @@ import {
  * The strip is synthesized, and says so on its face (clinical review, 2026-11-13): it is labelled
  * schematic, a line under it says the upstroke and notch are illustrative and not measured, and a
  * second line says what a nearly flat strip does and does not show. Both lines are always there,
- * in every state, so neither tells a learner which state they are looking at.
+ * in every state and on the shorter strip too, so neither tells a learner which state they are
+ * looking at, and a teaching panel that draws a flat strip carries the caution with it.
  */
 export function ArterialPressureTrace({
   patient,
@@ -110,8 +111,7 @@ export function ArterialPressureTrace({
         </span>
       </div>
       <p className={styles.arterialTraceNote} data-trace-schematic-note>
-        {ARTERIAL_TRACE_SCHEMATIC_NOTE}
-        {compact ? null : <> {ARTERIAL_TRACE_FLAT_NOTE}</>}
+        {ARTERIAL_TRACE_SCHEMATIC_NOTE} {ARTERIAL_TRACE_FLAT_NOTE}
       </p>
     </figure>
   )
