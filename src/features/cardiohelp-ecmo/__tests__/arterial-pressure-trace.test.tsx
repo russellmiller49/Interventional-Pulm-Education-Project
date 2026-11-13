@@ -1,17 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { PatientMonitor } from '../components/CircuitAndMonitors'
 import { ArterialPressureTrace } from '../components/monitor/ArterialPressureTrace'
 import {
   ARTERIAL_TRACE_AXIS,
+  ARTERIAL_TRACE_FLAT_NOTE,
   ARTERIAL_TRACE_MEAN_FRACTION,
+  ARTERIAL_TRACE_SCHEMATIC_NOTE,
   ARTERIAL_TRACE_SECONDS,
-  LOW_PULSATILITY_BELOW_MMHG,
   arterialTraceDescription,
   arterialTracePath,
   arterialTracePoints,
   arterialTraceY,
+  LOW_PULSATILITY_BELOW_MMHG,
   type ArterialTraceInput,
 } from '../components/monitor/arterialTrace'
 import { cardiohelpScenarios } from '../content/scenarios'
@@ -194,9 +196,11 @@ describe('a ventricle that is not ejecting', () => {
     expect(figure).not.toHaveAttribute('data-notch')
     expect(screen.getByRole('img')).toHaveAccessibleName(arterialTraceDescription(loading.patient))
     expect(arterialTraceDescription(loading.patient)).toContain('nearly flat: low pulsatility')
+    // Described as drawn, with no cause given: the notch is part of the shape, not a finding.
     expect(arterialTraceDescription(loading.patient)).toContain(
-      'No notch is drawn, because aortic-valve opening is not observed.',
+      'Each beat is drawn without a notch.',
     )
+    expect(arterialTraceDescription(loading.patient)).not.toMatch(/because|not observed/)
   })
 
   it('opens as the model moves through the lesson: 5, then 8, then 12 mmHg', () => {
@@ -254,9 +258,87 @@ describe('on the bedside monitor', () => {
     expect(container).not.toHaveTextContent('Pulse pressure')
   })
 
-  it('adds no caveat, score word or builder word to the monitor', () => {
+  it('adds no score word or builder word to the monitor', () => {
     const { container } = monitor(createInitialSimulationState('va-lv-loading'))
     const text = container.querySelector('[data-arterial-trace]')!.textContent ?? ''
-    expect(text).not.toMatch(/model|simulat|schematic|illustrat|not to scale|score|points/i)
+    expect(text).not.toMatch(/score|points|not to scale|placeholder|todo/i)
+  })
+})
+
+/**
+ * What the strip is, said on the strip (clinical review, 2026-11-13).
+ *
+ * The trace is synthesized from mean pressure, pulse pressure, heart rate and the valve-opening
+ * state. Its upstroke and notch are one drawn shape and say nothing about the patient, so the
+ * strip is labelled schematic and says so; and a nearly flat strip is said to be a low pulse
+ * pressure and not, by itself, a statement about ejection.
+ */
+describe('the strip says what it is', () => {
+  const flat = createInitialSimulationState('va-lv-loading').patient
+  const pulsatile = { ...flat, pulsePressure: 35, aorticValveOpening: true }
+  const noteOf = () => document.querySelector('[data-trace-schematic-note]')!.textContent
+
+  it('is labelled schematic, with a visible line that its upstroke and notch are illustrative', () => {
+    render(<ArterialPressureTrace patient={flat} />)
+    const figure = document.querySelector('[data-arterial-trace]')!
+    expect(figure.querySelector('figcaption span')).toHaveTextContent('Arterial line · schematic')
+    expect(ARTERIAL_TRACE_SCHEMATIC_NOTE).toBe(
+      'Schematic simulated trace: its level and height follow MAP and pulse pressure; the upstroke and notch are illustrative, not measured.',
+    )
+    expect(figure).toHaveTextContent(ARTERIAL_TRACE_SCHEMATIC_NOTE)
+    // Visible text, not only a spoken name.
+    expect(figure.querySelector('[data-trace-schematic-note]')).not.toHaveAttribute('aria-hidden')
+  })
+
+  it('says a nearly flat trace is a low pulse pressure, not proof about ejection', () => {
+    render(<ArterialPressureTrace patient={flat} />)
+    expect(ARTERIAL_TRACE_FLAT_NOTE).toBe(
+      'A nearly flat trace is a low pulse pressure. It does not by itself show whether the ventricle is ejecting: read the aortic-valve opening row.',
+    )
+    expect(noteOf()).toBe(`${ARTERIAL_TRACE_SCHEMATIC_NOTE} ${ARTERIAL_TRACE_FLAT_NOTE}`)
+  })
+
+  it('says the same thing in every state, so the note tells nobody which state this is', () => {
+    render(<ArterialPressureTrace patient={flat} />)
+    const whenFlat = noteOf()
+    const label = document.querySelector('[data-arterial-trace] figcaption span')!.textContent
+    cleanup()
+    render(<ArterialPressureTrace patient={pulsatile} />)
+    expect(noteOf()).toBe(whenFlat)
+    expect(document.querySelector('[data-arterial-trace] figcaption span')!.textContent).toBe(label)
+    // And it is on the monitor of every VA scenario, opening state.
+    for (const scenario of vaScenarios) {
+      cleanup()
+      render(<PatientMonitor state={createInitialSimulationState(scenario.id)} />)
+      expect(noteOf()).toBe(whenFlat)
+    }
+  })
+
+  it('names the trace schematic for a reader who cannot see it, and gives the notch no cause', () => {
+    for (const patient of [flat, pulsatile]) {
+      const words = arterialTraceDescription(patient)
+      expect(words).toMatch(/^Schematic simulated arterial pressure trace over 4 seconds\./)
+      expect(words).toMatch(/The upstroke and notch are illustrative, not measured\.$/)
+      expect(words).not.toMatch(/because|valve|not observed|ejecting|closing/i)
+      // The numbers are still the monitor's own.
+      expect(words).toContain(
+        `Mean arterial pressure ${patient.meanArterialPressure} mmHg, pulse pressure ${patient.pulsePressure} mmHg, heart rate ${patient.heartRate} per minute.`,
+      )
+    }
+    expect(arterialTraceDescription(pulsatile)).toContain('Each beat is drawn with a notch.')
+  })
+
+  it('claims nothing about ejection or the valve from the shape, in any visible word', () => {
+    render(<ArterialPressureTrace patient={pulsatile} />)
+    const text = document.querySelector('[data-arterial-trace]')!.textContent ?? ''
+    // The only mention of ejection is the line that says the trace does not settle it.
+    expect(text.match(/eject/gi)).toHaveLength(1)
+    expect(text).toContain('does not by itself show whether the ventricle is ejecting')
+    expect(text).not.toMatch(/valve (is|was) (open|closed)|valve closing|confirms|proves|diagnos/i)
+  })
+
+  it('keeps the first line on the shorter strip a teaching panel uses', () => {
+    render(<ArterialPressureTrace patient={flat} compact />)
+    expect(noteOf()).toBe(ARTERIAL_TRACE_SCHEMATIC_NOTE)
   })
 })

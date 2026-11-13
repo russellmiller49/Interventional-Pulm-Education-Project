@@ -24,7 +24,8 @@ const ease = (t: number) => t * t * (3 - 2 * t)
 const between = (from: number, to: number, t: number) => from + (to - from) * ease(t)
 
 /**
- * One beat with an ejection: upstroke, systolic peak, the notch as the valve closes, runoff.
+ * One beat as drawn while the model reports the aortic valve opening: upstroke, peak, a notch,
+ * run-off. A drawing choice, the same in every such state; it is not derived from the patient.
  * Returns a height in 0..1 before normalising; `phase` is 0..1 through the beat.
  */
 function ejectingBeat(phase: number): number {
@@ -36,8 +37,9 @@ function ejectingBeat(phase: number): number {
 }
 
 /**
- * One beat with no ejection: a slow rise and fall and no notch, because the notch is the aortic
- * valve closing and the monitor reports the valve as not opening.
+ * One beat as drawn while the model reports the valve not opening: a slow rise and fall with no
+ * notch. Also a drawing choice. The model can still report a small pulse pressure in this state
+ * (5 mmHg in LV loading); the strip draws that ripple and the note beside it says what it is not.
  */
 function nonEjectingBeat(phase: number): number {
   if (phase < 0.3) return between(0, 1, phase / 0.3)
@@ -150,14 +152,37 @@ export function arterialTracePath(input: ArterialTraceInput): string {
  */
 export const LOW_PULSATILITY_BELOW_MMHG = 10
 
+/*
+ * What the strip is, said on the strip (clinical review, 2026-11-13).
+ *
+ * The trace is synthesized from four numbers of the patient model: mean arterial pressure, pulse
+ * pressure, heart rate and the aortic-valve-opening state. Its level, height and beat spacing are
+ * those numbers. Its upstroke, the position and depth of its notch and its run-off are one drawn
+ * shape, the same in every state, and carry no information about this patient. A learner who read
+ * the exact morphology as a measured signal would be reading the drawing.
+ *
+ * Two things follow, and both are on screen:
+ * - the strip is named schematic and simulated, and its upstroke and notch illustrative;
+ * - a nearly flat strip is a low pulse pressure and nothing more. The model's 5 mmHg with the
+ *   valve not opening is a ripple, not ejection; and a low pulse pressure on VA support is not by
+ *   itself proof that the heart is ejecting nothing. The row that says whether the valve opens is
+ *   the monitor's own "Aortic-valve opening" row, so the note sends the reader to it.
+ */
+export const ARTERIAL_TRACE_LABEL = 'Arterial line · schematic'
+export const ARTERIAL_TRACE_SCHEMATIC_NOTE =
+  'Schematic simulated trace: its level and height follow MAP and pulse pressure; the upstroke and notch are illustrative, not measured.'
+export const ARTERIAL_TRACE_FLAT_NOTE =
+  'A nearly flat trace is a low pulse pressure. It does not by itself show whether the ventricle is ejecting: read the aortic-valve opening row.'
+
 /** The trace in words, for a reader who cannot see it. */
 export function arterialTraceDescription(input: ArterialTraceInput): string {
   const shape =
     input.pulsePressure < LOW_PULSATILITY_BELOW_MMHG
       ? 'The trace is nearly flat: low pulsatility.'
       : 'The trace is pulsatile.'
+  // The notch is part of the drawn shape, not a finding: it is described as drawn, with no cause.
   const notch = input.aorticValveOpening
-    ? 'Each beat shows a notch.'
-    : 'No notch is drawn, because aortic-valve opening is not observed.'
-  return `Arterial pressure trace over ${ARTERIAL_TRACE_SECONDS} seconds. Mean arterial pressure ${input.meanArterialPressure} mmHg, pulse pressure ${input.pulsePressure} mmHg, heart rate ${input.heartRate} per minute. ${shape} ${notch}`
+    ? 'Each beat is drawn with a notch.'
+    : 'Each beat is drawn without a notch.'
+  return `Schematic simulated arterial pressure trace over ${ARTERIAL_TRACE_SECONDS} seconds. Mean arterial pressure ${input.meanArterialPressure} mmHg, pulse pressure ${input.pulsePressure} mmHg, heart rate ${input.heartRate} per minute. ${shape} ${notch} The upstroke and notch are illustrative, not measured.`
 }

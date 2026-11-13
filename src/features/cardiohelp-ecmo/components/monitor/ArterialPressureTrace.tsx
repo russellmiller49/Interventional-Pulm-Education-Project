@@ -3,7 +3,10 @@ import { useId } from 'react'
 import type { PatientState } from '../../engine/types'
 import styles from '../cardiohelp-ecmo.module.css'
 import {
+  ARTERIAL_TRACE_FLAT_NOTE,
   ARTERIAL_TRACE_GRID,
+  ARTERIAL_TRACE_LABEL,
+  ARTERIAL_TRACE_SCHEMATIC_NOTE,
   ARTERIAL_TRACE_SECONDS,
   ARTERIAL_TRACE_VIEW,
   LOW_PULSATILITY_BELOW_MMHG,
@@ -19,8 +22,12 @@ import {
  * This draws it: a strip whose mean is the monitor's mean arterial pressure and whose height is the
  * monitor's pulse pressure, at the monitor's heart rate, on a fixed pressure axis, so a ventricle
  * that stops ejecting flattens the trace and one that recovers opens it again. Every number comes
- * from the patient model (`arterialTrace.ts`); the notch is drawn only while the model reports the
- * aortic valve opening.
+ * from the patient model (`arterialTrace.ts`).
+ *
+ * The strip is synthesized, and says so on its face (clinical review, 2026-11-13): it is labelled
+ * schematic, a line under it says the upstroke and notch are illustrative and not measured, and a
+ * second line says what a nearly flat strip does and does not show. Both lines are always there,
+ * in every state, so neither tells a learner which state they are looking at.
  */
 export function ArterialPressureTrace({
   patient,
@@ -46,7 +53,7 @@ export function ArterialPressureTrace({
       data-notch={patient.aorticValveOpening || undefined}
     >
       <figcaption>
-        <span>Arterial line</span>
+        <span>{ARTERIAL_TRACE_LABEL}</span>
         <strong>
           MAP {patient.meanArterialPressure} mmHg · pulse pressure {patient.pulsePressure} mmHg
         </strong>
@@ -102,6 +109,10 @@ export function ArterialPressureTrace({
           mmHg · {ARTERIAL_TRACE_SECONDS} s
         </span>
       </div>
+      <p className={styles.arterialTraceNote} data-trace-schematic-note>
+        {ARTERIAL_TRACE_SCHEMATIC_NOTE}
+        {compact ? null : <> {ARTERIAL_TRACE_FLAT_NOTE}</>}
+      </p>
     </figure>
   )
 }
