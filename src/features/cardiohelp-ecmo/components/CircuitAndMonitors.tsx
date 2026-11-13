@@ -44,6 +44,7 @@ import {
 } from './circuit-map/circuitMapGeometry'
 import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
+import { ArterialPressureTrace } from './monitor/ArterialPressureTrace'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
 import { ecmoScrollOwner, scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
@@ -1633,6 +1634,11 @@ export function PatientMonitor({
           <h2 id="patient-monitor-heading">Bedside monitor & blood gas</h2>
         </div>
       </div>
+      {/*
+        The arterial line, on VA support, where the monitor already reports pulse pressure and
+        aortic-valve opening. Above the readings, as it sits on a bedside monitor.
+      */}
+      {state.supportMode === 'va' ? <ArterialPressureTrace patient={state.patient} /> : null}
       <div className={styles.patientGrid}>
         {state.supportMode === 'va' ? (
           <>

@@ -4558,6 +4558,110 @@
   padding: 1rem;
 }
 
+/*
+ * The arterial line on the bedside monitor: a strip above the readings. The line is the monitor's
+ * red; the mean is a dashed rule; the scale is fixed so a pulse is the same height in every state.
+ */
+.arterialTrace {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.65rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #04161a;
+}
+
+.arterialTrace figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.arterialTrace figcaption span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.arterialTrace figcaption strong {
+  color: #ff9ba2;
+  font-size: 0.875rem;
+}
+
+/* The axis numbers have their own gutter at the left, so the trace never runs through them. */
+.arterialTracePlot {
+  position: relative;
+  height: 6.9rem;
+  padding-left: 1.9rem;
+}
+
+.arterialTrace[data-compact='true'] .arterialTracePlot {
+  height: 5rem;
+}
+
+.arterialTracePlot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.arterialTraceGrid {
+  stroke: rgba(163, 206, 209, 0.16);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.arterialTraceMean {
+  stroke: rgba(255, 209, 102, 0.7);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.arterialTraceLine {
+  fill: none;
+  stroke: #ff6b73;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Axis numbers and the unit: labels on a drawing, set under the grid line they name. */
+.arterialTraceScale,
+.arterialTraceUnits {
+  position: absolute;
+  color: #9fb4b7;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.arterialTraceScale {
+  left: 0;
+  width: 1.6rem;
+  margin-top: -0.35rem;
+  text-align: right;
+}
+
+.arterialTraceUnits {
+  right: 0.25rem;
+  bottom: 0.15rem;
+}
+
+/* What the strip is: one line under it, at the monitor's own small-text size. */
+.arterialTraceNote {
+  margin: 0;
+  color: #c3d5d7;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .externalPanelHeader {
   display: flex;
   gap: 0.7rem;
