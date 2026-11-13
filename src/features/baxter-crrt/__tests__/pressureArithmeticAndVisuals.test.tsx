@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -297,19 +297,65 @@ describe('F-15 membrane transport comparison', () => {
       expect(figureOf(container)).toHaveAttribute('data-motion', 'playing')
     })
 
-    it('starts still where the device asks for reduced motion, until the learner presses Play', () => {
-      window.matchMedia = ((query: string) => ({
-        matches: query.includes('prefers-reduced-motion'),
-        media: query,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-      })) as unknown as typeof window.matchMedia
-      const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
-      expect(figureOf(container)).toHaveAttribute('data-motion', 'paused')
-      expect(figureOf(container)).not.toHaveAttribute('data-motion-chosen')
-      fireEvent.click(screen.getByRole('button', { name: 'Play motion' }))
-      expect(figureOf(container)).toHaveAttribute('data-motion', 'playing')
-      expect(figureOf(container)).toHaveAttribute('data-motion-chosen')
+    /*
+     * Found in the browser, 2026-11-13. This module's shell switches every animation off where
+     * the device asks for reduced motion, so the figure's Play button did nothing there, and the
+     * dots, which were placed by their paused animations, all sat at their start points: the
+     * diffusion panel showed none and each water panel one. The figure is now a still drawing
+     * there, every dot placed by its own coordinates, and no Play is offered.
+     */
+    describe('where the device asks for reduced motion', () => {
+      beforeEach(() => {
+        window.matchMedia = ((query: string) => ({
+          matches: query.includes('prefers-reduced-motion'),
+          media: query,
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        })) as unknown as typeof window.matchMedia
+      })
+
+      it('is a still drawing that says why, with no button that would do nothing', () => {
+        const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+        expect(figureOf(container)).toHaveAttribute('data-motion', 'still')
+        expect(screen.queryByRole('button', { name: /motion/ })).toBeNull()
+        expect(container.querySelector('[data-crrt-membrane-motion-off]')).toHaveTextContent(
+          'Shown still: this device asks for reduced motion.',
+        )
+      })
+
+      it('places every dot by its own coordinates, so the drawing is complete without animation', () => {
+        const { container } = render(<CrrtMembraneTransport selected="diffusion" />)
+        // No dot leans on an animation class or delay to be where it is.
+        for (const dot of container.querySelectorAll('circle')) {
+          expect((dot as SVGElement).style.animationDelay).toBe('')
+          expect(dot.getAttribute('class')).not.toMatch(/stream|crossing|carried/)
+        }
+        const diffusion = panel(container, 'diffusion')
+        const [blood, fluid] = [...diffusion.querySelectorAll('g[clip-path]')].map((group) =>
+          [...group.querySelectorAll('circle')].map((dot) => Number(dot.getAttribute('cy'))),
+        )
+        // Eight on the blood side and two on the fluid side, all inside the sides' own frame.
+        expect(blood).toHaveLength(8)
+        expect(fluid).toHaveLength(2)
+        for (const y of [...blood, ...fluid]) {
+          expect(y).toBeGreaterThanOrEqual(36)
+          expect(y).toBeLessThanOrEqual(204)
+        }
+        // One dot about to cross and one just across the membrane (drawn at x 150).
+        expect(
+          [...diffusion.querySelectorAll('[data-crrt-crossing]')].map((dot) =>
+            Number(dot.getAttribute('cx')),
+          ),
+        ).toEqual([118, 184])
+        // Three dots spread along the water arrow, the same in both water panels.
+        for (const id of ['convection', 'ultrafiltration']) {
+          expect(
+            [...panel(container, id).querySelectorAll('[data-crrt-carried]')].map((dot) =>
+              Number(dot.getAttribute('cx')),
+            ),
+          ).toEqual([76, 128, 180])
+        }
+      })
     })
 
     it('diffusion: dots step across with no water; more dots on the blood side than the fluid side', () => {
@@ -324,7 +370,7 @@ describe('F-15 membrane transport comparison', () => {
       expect(fluid).toBeGreaterThan(0)
     })
 
-    it('convection: the dots are carried in the water; ultrafiltration: water and no dots', () => {
+    it('convection: the dots are carried in the water, and replacement runs back in', () => {
       const { container } = render(<CrrtMembraneTransport selected="convection" />)
       const convection = panel(container, 'convection')
       expect(convection.querySelectorAll('[data-crrt-carried]')).toHaveLength(3)
@@ -334,7 +380,66 @@ describe('F-15 membrane transport comparison', () => {
         expect(dot).toHaveAttribute('cy', '128')
         expect(dot).toHaveAttribute('cx', '44')
       }
-      expect(panel(container, 'ultrafiltration').querySelectorAll('circle')).toHaveLength(0)
+      expect(convection.querySelectorAll('[data-crrt-replacement]')).toHaveLength(1)
+    })
+
+    /*
+     * Clinical review, 2026-11-13. The ultrafiltration panel drew water crossing with no solute,
+     * which read as a mechanism that carries none. Water pushed across the membrane takes
+     * permeable solute with it: that is what convection is. The panel now draws the same water
+     * and the same dots as the convection panel, and differs in the one way the two differ:
+     * nothing is run back in, so what crosses is net fluid removal.
+     */
+    it('ultrafiltration: the same water and solute as convection, with nothing replaced', () => {
+      const { container } = render(<CrrtMembraneTransport selected="ultrafiltration" />)
+      const convection = panel(container, 'convection')
+      const ultrafiltration = panel(container, 'ultrafiltration')
+      const carried = (element: HTMLElement) =>
+        [...element.querySelectorAll('[data-crrt-carried]')].map((dot) => [
+          dot.getAttribute('cx'),
+          dot.getAttribute('cy'),
+          dot.getAttribute('r'),
+          (dot as SVGElement).style.animationDelay,
+        ])
+      // Same count, place, size and timing: neither panel reads as carrying more solute.
+      expect(carried(ultrafiltration)).toEqual(carried(convection))
+      expect(carried(ultrafiltration)).toHaveLength(3)
+      expect(ultrafiltration.querySelectorAll('[data-crrt-replacement]')).toHaveLength(0)
+      expect(ultrafiltration).toHaveTextContent('water + solute')
+      expect(ultrafiltration).toHaveTextContent('net fluid removal')
+      expect(convection).not.toHaveTextContent('net fluid removal')
+    })
+
+    it('ultrafiltration: says the panel is about fluid balance and where the solute is counted', () => {
+      const entry = crrtTransportMechanisms.find((item) => item.id === 'ultrafiltration')!
+      expect(entry.scope).toBe(
+        'This panel is about fluid balance. The water that crosses carries dissolved solute with it, as in convection, and that solute is counted as convective clearance. What is not replaced is the net fluid removal.',
+      )
+      // Nothing in its words says or implies that no solute crosses.
+      for (const text of [entry.caption, entry.scope!, entry.drawing, entry.motion])
+        expect(text).not.toMatch(/no solute|without solute|water only|only water/i)
+      // No amount is claimed: the model has no sieving coefficient or solute clearance behind this.
+      expect(`${entry.scope} ${entry.drawing} ${entry.motion}`).not.toMatch(
+        /\d|small|little|negligible|less than|most/i,
+      )
+      // Only this panel needs the line; the other two say what they draw.
+      expect(crrtTransportMechanisms.filter((item) => item.scope).map((item) => item.id)).toEqual([
+        'ultrafiltration',
+      ])
+
+      const { container } = render(<CrrtMembraneTransport selected="ultrafiltration" />)
+      // Under the heading when the panel is the selected one, in the picture's spoken name, and
+      // in the text equivalent whichever panel is selected.
+      expect(container.querySelector('[data-crrt-membrane-scope]')).toHaveTextContent(entry.scope!)
+      expect(within(figureOf(container)).getByRole('img')).toHaveAccessibleName(
+        `${entry.caption} ${entry.scope}`,
+      )
+      cleanup()
+      const other = render(<CrrtMembraneTransport selected="diffusion" />)
+      expect(other.container.querySelector('[data-crrt-membrane-scope]')).toBeNull()
+      expect(screen.getByRole('region', { name: 'What each panel shows' })).toHaveTextContent(
+        entry.scope!,
+      )
     })
 
     it('says in words what moves in each panel, and uses no SMIL', () => {

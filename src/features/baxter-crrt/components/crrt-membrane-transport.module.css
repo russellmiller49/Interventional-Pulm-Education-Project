@@ -38,6 +38,13 @@
   cursor: pointer;
 }
 
+/* In place of the button where the figure is a still drawing. */
+.motionOff {
+  color: #c9dddb;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
 .motionButton svg {
   width: 1rem;
   height: 1rem;
@@ -212,8 +219,9 @@
  * ------------------------------------------------------------------ *
  * Every animation is declared paused and runs only while the figure says it is playing, so a
  * paused figure is a complete still drawing: each moving mark rests at the point its own start
- * phase puts it. Where the device asks for reduced motion the figure stays still until the
- * learner presses Play themselves.
+ * phase puts it. Where the device asks for reduced motion the module's shell switches every
+ * animation off, so the component draws its still drawing there (`data-motion='still'`, each dot
+ * placed by its own coordinates) and none of these classes is used.
  */
 .streamDown,
 .streamUp,
@@ -228,12 +236,6 @@
 .figure[data-motion='playing']
   :is(.streamDown, .streamUp, .crossing, .carried, .waterFlow, .replacementFlow) {
   animation-play-state: running;
-}
-@media (prefers-reduced-motion: reduce) {
-  .figure[data-motion='playing']:not([data-motion-chosen])
-    :is(.streamDown, .streamUp, .crossing, .carried, .waterFlow, .replacementFlow) {
-    animation-play-state: paused;
-  }
 }
 
 /* Blood, top to bottom of its side; dialysate, bottom to top of the other. */
