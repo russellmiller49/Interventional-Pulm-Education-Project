@@ -578,7 +578,7 @@ export const section: BronchSectionDefinition = {
       id: 'mc-unreleased-scope',
       presentationTitle: 'A bronchoscope found on the procedure cart',
       situation:
-        'An inspection is added at the end of the day. Your usual scope is away for repair. On the cart is a clean-looking reusable scope that works, with no reprocessing record. Beside it is a single-use scope, used this morning, still in its tray.',
+        'An inspection is added at the end of the day. Your usual scope is away for repair. On the cart is a clean-looking reusable scope that works. It has no tag and is not in the log. Beside it is a single-use scope, used this morning, still in its tray.',
       item: {
         id: 'mc-unreleased-scope',
         itemType: 'management-decision',
@@ -591,7 +591,7 @@ export const section: BronchSectionDefinition = {
             'Use the single-use scope again, since it still works',
           ],
           [
-            'With no record, nobody knows what this scope has been through. A released scope is the only one you can use.',
+            'With no tag and no log entry, nobody knows what this scope has been through. A released scope is the only one you can use.',
             'Looking clean and working are not release. The channel is where organisms survive.',
             'A wipe and a flush are not reprocessing, and a log entry is not a release.',
             'Single-use means one patient. Working does not make it clean.',

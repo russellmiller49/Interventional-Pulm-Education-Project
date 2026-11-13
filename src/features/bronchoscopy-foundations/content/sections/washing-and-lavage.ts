@@ -692,7 +692,7 @@ export const section: BronchSectionDefinition = {
       id: 'mc-lavage-site-selection',
       presentationTitle: 'Where the CT says to go',
       situation:
-        'A febrile man on chemotherapy has a new consolidation on CT. It lies in the posterior segment of the right upper lobe. The rest of both lungs is clear.',
+        'A febrile man on chemotherapy has a new consolidation on CT. It lies in the right upper lobe, against the back of the chest wall. The rest of both lungs is clear.',
       item: {
         id: 'mc-lavage-site-selection',
         itemType: 'management-decision',
@@ -702,33 +702,34 @@ export const section: BronchSectionDefinition = {
             id: 'a',
             label: 'RB2',
             rationale:
-              'RB2 is the posterior segment of the right upper lobe: the segment the CT shows.',
+              'RB2 is the posterior segment of the right upper lobe. It is the upper lobe segment that lies against the back of the chest.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label: 'RB4',
+            label: 'RB1',
             rationale:
-              'The middle lobe returns well, and the CT shows it is clear. Fluid from there answers nothing.',
+              'RB1 is the apical segment. It runs up to the apex, not back to the chest wall.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label: 'LB4',
-            rationale: 'The lingula is in the other lung, and that lung is clear on the CT.',
+            label: 'RB3',
+            rationale:
+              'RB3 is the anterior segment. It lies at the front of the upper lobe, away from this lesion.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
             label: 'RB6',
             rationale:
-              'RB6 is the superior segment of the lower lobe. It lies near the lesion on the CT and is a different segment.',
+              'RB6 also lies at the back, but it is the superior segment of the lower lobe, below the fissure.',
             plausibility: 'incorrect-mechanism',
           },
         ],
-        choiceAirways: { a: 'RB2', b: 'RB4', c: 'LB4', d: 'RB6' },
+        choiceAirways: { a: 'RB2', b: 'RB1', c: 'RB3', d: 'RB6' },
         explanation:
-          'Lavage the segment where the CT shows the disease. An easier wedge or a better return elsewhere samples healthy lung.',
+          'Lavage the segment where the CT shows the disease, and name it from where it lies. An easier wedge or a better return elsewhere samples healthy lung.',
         objectiveIds: ['M12-O2'],
         outcomeIds: ['run-a-bal'],
         claimClass: 'source',
