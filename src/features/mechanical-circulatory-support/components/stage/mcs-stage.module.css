@@ -1045,3 +1045,22 @@
   border-color: var(--cyan-bright, #71e1e5);
   background: #1f4249;
 }
+
+/*
+ * The hand-off to another critical care module, under the last task of a section that has one
+ * (`content/moduleHandOffs.ts`). A plain bordered line, not the green "Section finished" card.
+ */
+.handOff {
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 1rem;
+}
+.handOff p {
+  margin: 0;
+}
+.moduleLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
