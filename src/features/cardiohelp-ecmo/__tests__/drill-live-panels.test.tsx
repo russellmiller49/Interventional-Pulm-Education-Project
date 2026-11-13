@@ -14,6 +14,8 @@ import {
   hasEcmoDrillTeachingPanel,
 } from '../components/teaching/EcmoDrillTeachingPanel'
 import { arterialTracePath } from '../components/monitor/arterialTrace'
+import { StageTeachingScope } from '../components/stage/StageTeachingScope'
+import { STAGE_PHASES, type StagePhase } from '../components/stage/stageModel'
 import { ecmoDrillSpecs } from '../content/drillSpecs'
 import { cardiohelpLearnLessons } from '../content/learnLessons'
 import { cardiohelpScenarioById } from '../content/scenarios'
@@ -278,6 +280,201 @@ describe('the panels read the live circuit', () => {
     expect(
       trace().compareDocumentPosition(question) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
+  })
+})
+
+/**
+ * Clinical review, 2026-11-13: what a live panel has open before the learner has answered.
+ *
+ * A panel is on the page from the first step. At Recognize and Predict its open part may hold the
+ * readings and questions about them, and nothing of the response the drill asks the learner to
+ * choose. What a step folds to a heading is the stage's own rule and is left alone here; these
+ * tests read only what is open.
+ */
+describe('before the learner has answered', () => {
+  const atStep = (id: string, phase: StagePhase, state = settled(id)) =>
+    render(
+      <StageTeachingScope value={{ phase, predictionCommitted: false, stepId: `${id}.${phase}` }}>
+        <EcmoDrillLivePanel state={state} />
+      </StageTeachingScope>,
+    )
+
+  /** The words on the page at this step, without what the step folds to a heading. */
+  const openText = (container: HTMLElement) => {
+    const copy = container.cloneNode(true) as HTMLElement
+    for (const folded of copy.querySelectorAll('details[data-stage-collapsed]')) {
+      const heading = folded.querySelector(':scope > summary')?.textContent ?? ''
+      folded.replaceWith(document.createTextNode(` ${heading} `))
+    }
+    return copy.textContent ?? ''
+  }
+
+  /** The response the LV drill keys, in the words the panel could have used for it. */
+  const LV_RESPONSE =
+    /turn(?:ed|ing)?\s+(?:circuit\s+)?(?:flow\s+)?down|lower(?:ed|ing)?\s+(?:circuit\s+)?flow|inotrope|\bvent\b|volume removal|diure/i
+  /** The mechanism the LV drill explains after the answer. */
+  const LV_MECHANISM = /ejects against|into the aorta|toward the valve|afterload|retrograde/i
+
+  it.each(['recognize', 'predict'] as const)(
+    'LV loading at %s lists none of the moves the learner is asked to choose',
+    (phase) => {
+      const { container } = atStep('va-lv-loading', phase)
+      expect(container.querySelector('[data-lv-moves]')).toBeNull()
+      const text = openText(container)
+      expect(text).not.toMatch(LV_RESPONSE)
+      expect(text).not.toMatch(LV_MECHANISM)
+      // The readings and the strip are there: the panel is not emptied, only its moves held back.
+      expect(container.querySelector('[data-lv-arterial] [data-arterial-trace]')).not.toBeNull()
+      expect(container.querySelectorAll('[data-pattern-row]')).toHaveLength(3)
+    },
+  )
+
+  it.each(['act', 'observe', 'explain', 'transfer'] as const)(
+    'LV loading at %s shows which moves are in place',
+    (phase) => {
+      const { container } = atStep('va-lv-loading', phase)
+      expect(container.querySelector('[data-lv-moves]')).not.toBeNull()
+      expect(container.querySelectorAll('[data-lv-move]')).toHaveLength(3)
+    },
+  )
+
+  it('covers every step of the stage, so a new one cannot open the moves by default', () => {
+    expect([...STAGE_PHASES].sort()).toEqual(
+      ['act', 'explain', 'observe', 'predict', 'recognize', 'transfer'].sort(),
+    )
+  })
+
+  it('LV loading asks where to look and does not say what more flow would do', () => {
+    const { container } = atStep('va-lv-loading', 'predict')
+    const questions = [...container.querySelectorAll('[data-discriminator]')].map(
+      (item) => item.textContent ?? '',
+    )
+    expect(questions).toHaveLength(3)
+    for (const question of questions) {
+      expect(question).not.toMatch(LV_MECHANISM)
+      expect(question).not.toMatch(/more circuit flow|less circuit flow/i)
+    }
+    // The question that asks which readings cannot tell does not then name them.
+    const cannotTell = questions.find((question) => /would look the same/.test(question))!
+    expect(cannotTell).not.toMatch(/circuit flow|mean arterial pressure/i)
+  })
+
+  const RESISTANCE_IDS = LIVE_IDS.filter((id) => id !== 'va-lv-loading')
+
+  it.each(RESISTANCE_IDS)(
+    '%s does not say whether a setting is what the circuit is short of',
+    (id) => {
+      for (const phase of ['recognize', 'predict'] as const) {
+        const view = atStep(id, phase)
+        const text = openText(view.container)
+        expect(text).not.toMatch(/setting the circuit is short of/i)
+        // Nor where the problem is, nor which component, nor what to do about it.
+        for (const pattern of ecmoDrillSpecs[id].precommitDenyPatterns) {
+          expect(text).not.toMatch(pattern)
+        }
+        expect(text).not.toMatch(
+          /kink|clamp|clot|exchange|backup|perfusionist|raise the (?:pump )?speed/i,
+        )
+        expect(view.container.querySelector('[data-clinical-question]')?.textContent ?? '').toMatch(
+          /where the limitation is\?$/,
+        )
+        view.unmount()
+      }
+    },
+  )
+
+  it.each(RESISTANCE_IDS)('%s tells the learner to read the gradient at similar flow', (id) => {
+    const { container } = atStep(id, 'predict')
+    expect(container.textContent ?? '').toContain(
+      'Read it at similar blood flow, against this circuit’s own earlier value.',
+    )
+    // And the flow it is to be read against is on the same panel, live.
+    const state = settled(id)
+    expect(
+      container.querySelector('[data-pattern-row="Flow against speed"] [data-pattern-reading]'),
+    ).toHaveTextContent(`Flow ${state.circuit.bloodFlow.toFixed(2)} L/min`)
+  })
+})
+
+/**
+ * Clinical review, 2026-11-13: the LV drill's last action records a plan for volume removal and a
+ * vent. Neither is carried out in this simulation, so recording it must move no reading on the
+ * panel, on the monitor or on the circuit.
+ */
+describe('a plan that is recorded and not carried out', () => {
+  const readings = (state: EcmoSimulationState) => ({
+    flow: state.circuit.bloodFlow,
+    pVen: state.circuit.readouts.pVen.displayed,
+    pInt: state.circuit.readouts.pInt.displayed,
+    pArt: state.circuit.readouts.pArt.displayed,
+    deltaP: state.circuit.readouts.deltaP.displayed,
+    meanArterialPressure: state.patient.meanArterialPressure,
+    pulsePressure: state.patient.pulsePressure,
+    aorticValveOpening: state.patient.aorticValveOpening,
+    nativeCardiacOutputLpm: state.patient.nativeCardiacOutputLpm,
+    pulmonaryCongestion: state.patient.pulmonaryCongestion,
+    spo2: state.patient.spo2,
+  })
+
+  const run = (state: EcmoSimulationState, ticks: number) => {
+    let next = state
+    for (let tick = 0; tick < ticks; tick += 1) {
+      next = ecmoSimulationReducer(next, { type: 'STEP' })
+    }
+    return next
+  }
+
+  const panelRows = (state: EcmoSimulationState) => {
+    const view = render(<EcmoDrillLivePanel state={state} />)
+    const rows = [...view.container.querySelectorAll('[data-pattern-reading]')].map(
+      (row) => row.textContent,
+    )
+    const trace = view.container.querySelector('[data-trace-line]')?.getAttribute('d')
+    const plan = view.container.querySelector('[data-lv-move="plan"]')?.getAttribute('data-done')
+    const planText = view.container.querySelector('[data-lv-move="plan"] dd')?.textContent
+    view.unmount()
+    return { rows, trace, plan, planText }
+  }
+
+  it('changes no reading on an untreated ventricle', () => {
+    // Long enough for the opening state to settle, so the comparison is between two steady states.
+    const before = run(createInitialSimulationState('va-lv-loading', 'guided'), 72)
+    const control = run(before, 72)
+    const planned = run(
+      ecmoSimulationReducer(before, { type: 'CORRECT_FAULT', fault: 'lv-loading' }),
+      72,
+    )
+    expect(planned.scenario.correctedFaults).toContain('lv-loading')
+    expect(readings(planned)).toEqual(readings(control))
+
+    const withoutPlan = panelRows(control)
+    const withPlan = panelRows(planned)
+    expect(withPlan.rows).toEqual(withoutPlan.rows)
+    expect(withPlan.trace).toBe(withoutPlan.trace)
+    // The panel says the plan is a plan.
+    expect(withoutPlan.plan).toBe('false')
+    expect(withPlan.plan).toBe('true')
+    expect(withPlan.planText).toBe('planned, not carried out')
+    // The lungs are as the case opened them.
+    expect(planned.patient.pulmonaryCongestion).toBe('marked')
+  })
+
+  it('adds nothing to what lower flow and the inotrope have already done', () => {
+    let treated = run(createInitialSimulationState('va-lv-loading', 'guided'), 3)
+    treated = ecmoSimulationReducer(treated, { type: 'SET_RPM', rpm: 2400 })
+    treated = ecmoSimulationReducer(treated, { type: 'START_INOTROPE' })
+    treated = run(treated, 72)
+    const control = run(treated, 72)
+    const planned = run(
+      ecmoSimulationReducer(treated, { type: 'CORRECT_FAULT', fault: 'lv-loading' }),
+      72,
+    )
+    expect(readings(planned)).toEqual(readings(control))
+    expect(panelRows(planned).rows).toEqual(panelRows(control).rows)
+    // The two moves that are modelled did move the readings; the plan is what did not.
+    expect(control.patient.pulsePressure).toBe(
+      LV_UNLOADING_RESPONSE.settledByMoves[2].pulsePressure,
+    )
   })
 })
 

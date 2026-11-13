@@ -3,6 +3,7 @@
 import { LV_UNLOADING_RESPONSE } from '../../../engine'
 import type { EcmoSimulationState } from '../../../engine/types'
 import { ArterialPressureTrace } from '../../monitor/ArterialPressureTrace'
+import { useStageTeachingScope } from '../../stage/StageTeachingScope'
 import { TextEquivalent, styles } from '../shared'
 import { DrillLivePanelFrame } from './DrillLivePanelFrame'
 import { Discriminators, PatternReading } from './drillPanelPrimitives'
@@ -20,8 +21,12 @@ const SCENARIO_ID = 'va-lv-loading'
  * place on this circuit.
  *
  * Nothing here names the diagnosis or the response: those stay in the drill's written explanation
- * under this panel, exactly as they were. The sizes of the response are the engine's
- * (`LV_UNLOADING_RESPONSE`).
+ * under this panel, exactly as they were. That holds for the list of moves too: its rows are the
+ * response itself (flow, inotrope, volume removal, vent), so it is not rendered at Recognize or
+ * Predict, where the learner is still choosing among them, and appears from Act, where those moves
+ * are made. The questions separate the explanations the drill offers (the ventricle, the circuit)
+ * and say only where to look, never what more or less flow would do. The sizes of the response are
+ * the engine's (`LV_UNLOADING_RESPONSE`).
  */
 export function VaLvLoadingLivePanel({ state }: { readonly state: EcmoSimulationState }) {
   const { patient, circuit } = state
@@ -29,6 +34,9 @@ export function VaLvLoadingLivePanel({ state }: { readonly state: EcmoSimulation
   const flowLowered =
     circuit.bloodFlow > 0 && circuit.bloodFlow <= LV_UNLOADING_RESPONSE.loweredFlowLpm
   const inotropeRunning = Boolean(state.scenario.inotropeRunning)
+  // Outside a stage (a panel test, the render harness) there is no step, and the panel is whole.
+  const phase = useStageTeachingScope()?.phase
+  const beforeTheResponse = phase === 'recognize' || phase === 'predict'
 
   return (
     <DrillLivePanelFrame
@@ -73,25 +81,31 @@ export function VaLvLoadingLivePanel({ state }: { readonly state: EcmoSimulation
         summary="The readings are grouped by what each is evidence of: the circuit’s delivery, the ventricle’s own work, and the lungs behind it."
       />
 
-      <section className={styles.section} aria-labelledby="lv-moves-heading" data-lv-moves>
-        <h3 id="lv-moves-heading" className={styles.heading}>
-          What has been done on this circuit
-        </h3>
-        <dl className="mt-2 grid gap-1">
-          <div className="flex flex-wrap gap-1" data-lv-move="flow" data-done={flowLowered}>
-            <dt className="font-semibold">Circuit flow:</dt>
-            <dd>{flowLowered ? 'turned down' : 'not turned down'}</dd>
-          </div>
-          <div className="flex flex-wrap gap-1" data-lv-move="inotrope" data-done={inotropeRunning}>
-            <dt className="font-semibold">Inotrope:</dt>
-            <dd>{inotropeRunning ? 'running' : 'not started'}</dd>
-          </div>
-          <div className="flex flex-wrap gap-1" data-lv-move="plan" data-done={planRecorded}>
-            <dt className="font-semibold">Volume removal and vent:</dt>
-            <dd>{planRecorded ? 'planned, not carried out' : 'no plan recorded'}</dd>
-          </div>
-        </dl>
-      </section>
+      {beforeTheResponse ? null : (
+        <section className={styles.section} aria-labelledby="lv-moves-heading" data-lv-moves>
+          <h3 id="lv-moves-heading" className={styles.heading}>
+            What has been done on this circuit
+          </h3>
+          <dl className="mt-2 grid gap-1">
+            <div className="flex flex-wrap gap-1" data-lv-move="flow" data-done={flowLowered}>
+              <dt className="font-semibold">Circuit flow:</dt>
+              <dd>{flowLowered ? 'turned down' : 'not turned down'}</dd>
+            </div>
+            <div
+              className="flex flex-wrap gap-1"
+              data-lv-move="inotrope"
+              data-done={inotropeRunning}
+            >
+              <dt className="font-semibold">Inotrope:</dt>
+              <dd>{inotropeRunning ? 'running' : 'not started'}</dd>
+            </div>
+            <div className="flex flex-wrap gap-1" data-lv-move="plan" data-done={planRecorded}>
+              <dt className="font-semibold">Volume removal and vent:</dt>
+              <dd>{planRecorded ? 'planned, not carried out' : 'no plan recorded'}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       <Discriminators
         items={[
@@ -102,13 +116,12 @@ export function VaLvLoadingLivePanel({ state }: { readonly state: EcmoSimulation
           {
             question:
               'Which of these readings would look the same whether or not the ventricle were ejecting?',
-            whereToLook: 'Circuit flow and mean arterial pressure, in the first group.',
+            whereToLook: 'The three groups above. Ask it of each reading in turn.',
           },
           {
-            question:
-              'What would more circuit flow do to the pressure the ventricle ejects against?',
+            question: 'Is anything in the circuit itself resisting flow?',
             whereToLook:
-              'On peripheral VA the circuit returns blood into the aorta, toward the valve.',
+              'Circuit flow against the set speed, and the circuit pressures on the console.',
           },
         ]}
       />

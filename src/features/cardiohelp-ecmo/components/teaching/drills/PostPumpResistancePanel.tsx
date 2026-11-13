@@ -16,14 +16,15 @@ import { Discriminators, PatternReading, type DrillPatternRow } from './drillPan
  * questions of them. Nothing here says which way the pattern came out: the cause and the response
  * stay in the drill's written explanation under this panel, exactly as they were.
  *
- * The reading prompts and the first and last question are the drainage panel's own, word for word,
- * because they are the same channels read the same way; the model limit is the localization
- * row's. No sentence here uses the words the return drill's own question holds back
+ * The reading prompts and the first and last question are the drainage panel's own, because they
+ * are the same channels read the same way; the model limit is the localization row's. The last
+ * question says where to look and nothing more: whether a setting is what this circuit is short of
+ * is part of what the learner is asked to decide, so the panel does not say. No sentence here uses the words the return drill's own question holds back
  * (`precommitDenyPatterns`), since this panel is on the page before any answer.
  */
 
 const CLINICAL_QUESTION =
-  'Flow has fallen at an unchanged pump speed. Which of this circuit’s pressures moved with it, and what does the gradient across the membrane say about where the load is?'
+  'Flow has fallen at an unchanged pump speed. Which of this circuit’s pressures moved with it, and what does the gradient across the membrane say about where the limitation is?'
 
 function PostPumpResistanceLivePanel({
   state,
@@ -116,7 +117,7 @@ function PostPumpResistanceLivePanel({
             question:
               'If a setting were changed now, would that be a treatment for whatever is limiting this circuit, or something else?',
             whereToLook:
-              'Nothing listed above is a setting the circuit is short of. Ask what a change would and would not correct.',
+              'The settings on the console, beside the readings above. Ask what a change would and would not correct.',
           },
         ]}
       />
