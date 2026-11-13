@@ -10,7 +10,10 @@ import {
 import { CRRT_SIMULATED_ALERT_BOUNDARY, crrtSimulatedAlertLabel } from '../content/alertLabels'
 import { crrtHardwareFunctionTeaching } from '../content/operationalLessons'
 import { crrtDeliveryStateWords } from '../content/stateLabels'
-import { formatCrrtFiltrationFraction } from '../content/filtrationFraction'
+import {
+  CRRT_FILTRATION_FRACTION_SHORT_NAME,
+  formatCrrtFiltrationFraction,
+} from '../content/filtrationFraction'
 import { selectCrrtFiltrationFraction } from '../engine/circuitDelivery'
 import { totalExternalInputRateMlHour, totalExternalOutputRateMlHour } from '../engine/fluidModel'
 import type { CrrtLearnEvidence } from '../learnEvidence'
@@ -257,7 +260,7 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
           <dd>{number(f?.patientFluidRemovalMlHour ?? null)} mL/h</dd>
         </div>
         <div data-crrt-filtration-fraction={filtration.status}>
-          <dt>Filtration fraction</dt>
+          <dt>{CRRT_FILTRATION_FRACTION_SHORT_NAME}</dt>
           <dd>
             {filtration.fraction === null
               ? filtration.reason

@@ -374,7 +374,7 @@ export const crrtFoundationTasks: Partial<
           'convection',
           'More water crosses the membrane, carrying solute by convection; replacement offsets part of that water.',
           true,
-          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it under ${N('filtration-fraction-ceiling')}.`,
+          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it at or below ${N('filtration-fraction-ceiling-range')}.`,
         ),
         option(
           'replacement-dialysate',

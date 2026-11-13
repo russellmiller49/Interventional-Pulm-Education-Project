@@ -891,6 +891,7 @@ function predictedFiltrationBurden(
         ? 'Not stated while a makeup flow is entered: its volume cannot be attributed.'
         : 'Not stated without a blood flow: no plasma reaches the filter.',
     sourceIds: Object.freeze([
+      'REVIEW-CKRT-CORE-2025',
       'REVIEW-CRRT-PRINCIPLES-2021',
       'MATH-PM-003',
       'MATH-PM-005',

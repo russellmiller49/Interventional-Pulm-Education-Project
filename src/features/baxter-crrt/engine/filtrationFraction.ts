@@ -19,17 +19,32 @@ import { assertFiniteNumber, assertNonNegativeNumber } from './units'
  *   pre/post difference: the same replacement volume gives a higher fraction after the filter
  *   than before it.
  *
- * Sources. The ratio of ultrafiltration rate to plasma flow rate is Claure-Del Granado and Clark,
- * Semin Dial 2021;34:398–405, section 3.4.2, equation 7 (`REVIEW-CRRT-PRINCIPLES-2021`). Plasma
- * flow from blood flow and hematocrit, and the pre-infusion flow added to the plasma flow in the
- * denominator, are the PrisMax operator's manual AW8035 Rev B, page 218 (`MATH-PM-003`,
- * `MATH-PM-005`).
+ * Sources, each read from its PDF (2026-11-13).
+ * - The whole expression, with pre-filter replacement in the denominator: AJKD Core Curriculum
+ *   2025 (Teixeira et al, Am J Kidney Dis 2025;85:767–786), Table 5, p. 778
+ *   (`REVIEW-CKRT-CORE-2025`). Its total ultrafiltration is pre-filter replacement + post-filter
+ *   replacement + net ultrafiltration, and its plasma flow is blood flow × (1 − hematocrit).
+ * - The ratio of ultrafiltration rate to plasma flow rate: Claure-Del Granado and Clark, Semin
+ *   Dial 2021;34:398–405, section 3.4.2, equation 7 (`REVIEW-CRRT-PRINCIPLES-2021`).
+ * - Pre-blood-pump fluid joining the plasma before the filter, and the syringe counted with what
+ *   must be removed: PrisMax operator's manual AW8035 Rev B, p. 218 (`MATH-PM-003`, `MATH-PM-005`).
+ *   These two are the module's additions to the table's expression.
  *
- * What this is not. It is not the PrisMax "FF Blood %" display, whose numerator on that page is
- * post-filter replacement + patient fluid removal + syringe (it leaves the pre-filter fluid out of
- * the numerator), and it does not use that page's pre-infusion expression, which is ambiguous in
- * print (`PRISMAX_PRE_INFUSION_FLOW_GATE`). The pre-filter fluid here is read straight off the
- * two flow settings. No plasma-water factor is applied.
+ * What this is not. It is neither of the two values the PrisMax Information screen shows (same
+ * page of the manual):
+ * - `FF Blood % = 100 × (Qrep_post + Qpfr + Qsyr) / (Qplasma + Qpre)` leaves the pre-filter fluid
+ *   out of the numerator. For the same flows it is lower than this value by exactly
+ *   pre-filter fluid ÷ (plasma flow + pre-filter fluid): 8.3% against 15.8% for CRRT-16.
+ * - `FF Plasma % = 100 × Qeff / (Qplasma × 0.95 + Qpre)` multiplies the plasma term by a plasma
+ *   water fraction of 0.95 and has the effluent flow as its numerator. With no dialysate that is
+ *   16.5% for CRRT-16. The manual does not say whether dialysate is in that numerator.
+ * Neither is computed here: the manual's line for pre-infusion flow is not readable as printed
+ * (`PRISMAX_PRE_INFUSION_FLOW_GATE`). No plasma-water factor is applied.
+ *
+ * Limits of the model that uses it. Hematocrit is the case's fixed value, so the fraction does
+ * not creep up as fluid is removed (the 2021 review's first caveat). The solute model holds the
+ * concentration reaching the filter constant, so the pre/post split changes this fraction and the
+ * filter's burden but not clearance.
  */
 export interface CrrtFiltrationFractionInput {
   readonly bloodFlowMlMin: number

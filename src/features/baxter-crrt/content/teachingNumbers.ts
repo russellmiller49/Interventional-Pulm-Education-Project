@@ -122,7 +122,7 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
       },
       ajkd('Dose of Solute Clearance With CKRT, p. 778'),
     ],
-    note: 'Other texts teach 20%; AJKD 2025 gives 20%–25% and says regional citrate is anecdotally reported to tolerate a higher fraction. Above the ceiling the blood leaving the filter is concentrated enough to clot it.',
+    note: 'Scope: the usual maximum for post-dilution CVVH, with filtration fraction as ultrafiltration rate over plasma flow (2021 review, section 3.4.2, equation 7). AJKD 2025 (p. 778) gives at or below 20%–25% for any modality, with filtration fraction as its Table 5 writes it, and says regional citrate is anecdotally reported to tolerate a higher fraction. No flat 20% row exists: no source in this register gives one for this expression. Both sources re-read from their PDFs on 2026-11-13.',
     ...CHECK,
     checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
   },
@@ -131,7 +131,7 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     value: '20%–25%',
     class: 'expert-reference',
     sources: [ajkd('Dose of Solute Clearance With CKRT, p. 778')],
-    note: 'The second of the two ceilings the module shows side by side (owner decision O03, 2026-11-10): the 2021 review gives 25% for post-dilution CVVH, this source gives a range. The value and its locator are the ones the `filtration-fraction-ceiling` row has carried since 2026-11-09.',
+    note: 'The ceiling the module teaches (clinical review, 2026-11-13): keep the fraction at or below this range to lower the risk of filter clotting, any modality, with regional citrate a possible exception. The source writes filtration fraction as total ultrafiltration over plasma flow plus pre-filter replacement (Table 5, p. 778), which is the expression the module computes. Re-read from the PDF on 2026-11-13; the erratum (AJKD 2025;86:422) has not been read. Awaiting the author’s sign-off.',
     ...CHECK_AJKD,
   },
   'postfilter-ica': {

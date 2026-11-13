@@ -618,9 +618,11 @@ export function CrrtFoundationLesson({
         </p>
       ) : null}
       <p>
-        <strong>Filtration fraction</strong> is worked out from the flows: fluid across the membrane
-        divided by plasma flow plus pre-filter fluid. Moving replacement before the filter lowers
-        it; so does a higher blood flow. {CRRT_FILTRATION_FRACTION_CEILINGS}
+        <strong>Filtration fraction</strong> here is a calculated estimate, worked out from the
+        flows: fluid across the membrane divided by plasma flow plus pre-filter fluid. Moving
+        replacement before the filter lowers it; so does a higher blood flow. It is not the PrisMax
+        FF Blood % or FF Plasma % display, which the machine calculates by its own definitions.{' '}
+        {CRRT_FILTRATION_FRACTION_CEILINGS}
       </p>
       <p>
         <strong>One thing this simulator does not compute.</strong> When a makeup flow has run,

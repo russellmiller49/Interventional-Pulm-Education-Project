@@ -68,7 +68,7 @@ export const crrtWorkedSignals: Readonly<Record<CrrtWorkedSignalId, CrrtWorkedSi
     'filter-drop': { label: 'Filter pressure drop', unit: 'mmHg', decimals: 1 },
     'urea-marker': { label: 'Small-solute marker', unit: 'mmol/L', decimals: 1 },
     hematocrit: { label: 'Hematocrit', unit: '%', decimals: 0 },
-    'filtration-fraction': { label: 'Filtration fraction', unit: '%', decimals: 1 },
+    'filtration-fraction': { label: 'Filtration fraction (estimate)', unit: '%', decimals: 1 },
   })
 
 export interface CrrtWorkedSnapshot {

@@ -7,6 +7,7 @@ export default defineConfig({
     'baxter-crrt-self-paced.spec.ts',
     'baxter-crrt-operations.spec.ts',
     'baxter-crrt-advanced.spec.ts',
+    'baxter-crrt-filtration-fraction.spec.ts',
     'baxter-crrt-sanity-review.spec.ts',
     'baxter-crrt-workbench-wayfinding.spec.ts',
     'baxter-crrt-batch03-sanity.spec.ts',

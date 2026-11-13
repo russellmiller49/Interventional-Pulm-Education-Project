@@ -101,7 +101,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
         sourceIds: [CORE_REVIEW],
       },
       {
-        text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Post-filter replacement raises filtration fraction; pre-filter replacement lowers it.',
+        text: 'PrisMax shows total predilution and two filtration-fraction values of its own, FF Blood % and FF Plasma %, each calculated from the circuit flows by the machine’s definition; neither is the estimate this module calculates. On every one of them, post-filter replacement raises the fraction and pre-filter replacement lowers it.',
         sourceIds: [PRISMAX_FF],
       },
     ],
