@@ -153,6 +153,7 @@ export function EcmoCircuit3D({
       <div
         ref={viewportRef}
         className={styles.circuit3dViewport}
+        data-scene-viewport
         aria-hidden={webglReady && !contextLost ? true : undefined}
       >
         {webglReady && contextLost ? (

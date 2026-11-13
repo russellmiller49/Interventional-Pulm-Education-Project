@@ -11,8 +11,10 @@ const variants = [
 ]
 const scrollRoutes = [
   {
+    // A CRRT Practice case scrolls the document. (A CRRT lesson did until 2026-11-12; it is the
+    // last row now.) This row stays first: the document-ownership test below opens it by index.
     id: 'crrt',
-    route: '/en/baxter-crrt/learn?lesson=crrt-indications-modality',
+    route: '/en/baxter-crrt/practice?case=CRRT-01',
     owner: 'document',
   },
   {
@@ -35,6 +37,12 @@ const scrollRoutes = [
   {
     id: 'ecmo',
     route: '/en/cardiohelp-ecmo/learn?track=vv&lesson=why-extracorporeal-support',
+    owner: 'workspace',
+  },
+  {
+    // The same text-and-picture workspace as the other critical care lessons (2026-11-12).
+    id: 'crrt-learn',
+    route: '/en/baxter-crrt/learn?lesson=crrt-indications-modality',
     owner: 'workspace',
   },
 ] as const

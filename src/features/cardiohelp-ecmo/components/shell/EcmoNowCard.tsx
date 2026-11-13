@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 import styles from './EcmoActivityShell.module.css'
+import { ecmoPinnedLessonBarHeight } from './useEcmoLessonBar'
 
 export interface NowCardAction {
   readonly label: string
@@ -92,7 +93,7 @@ export function EcmoNowCard({
     const measure = () => {
       const height = Math.ceil(footer.getBoundingClientRect().height)
       // The room the learner reads in: the scrolling shell (or the window, when the document
-      // scrolls) less the context strip pinned above it.
+      // scrolls) less the lesson bar and the context strip pinned above it.
       const shell = footer.closest<HTMLElement>('[data-ecmo-shell]')
       const rootStyle = getComputedStyle(root)
       const shellScrolls = shell ? getComputedStyle(shell).overflowY === 'auto' : false
@@ -100,7 +101,8 @@ export function EcmoNowCard({
         shellScrolls && shell
           ? shell.clientHeight -
             (parseFloat(getComputedStyle(shell).getPropertyValue('--ecmo-sticky-strip-height')) ||
-              0)
+              0) -
+            ecmoPinnedLessonBarHeight(shell)
           : window.innerHeight -
             (parseFloat(rootStyle.getPropertyValue('--ecmo-document-focus-clearance')) || 0)
       // At least 22.5 rem of reading room must remain beside the row: at 200% text a 349 px clamp

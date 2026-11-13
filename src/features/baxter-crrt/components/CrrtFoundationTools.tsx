@@ -17,6 +17,12 @@ import { CRRT_FOUNDATION_CONSTRUCTION, projectFoundationFluidBalance } from '../
 import { calculateCrrtMachineFluidLedger } from '../circuitFluidLedger'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import type { CrrtFoundationTool } from '../content/foundationLessons'
+import { CrrtAccessSiteButton, useCrrtAccessSite } from './CrrtAccessSite'
+import {
+  CrrtLessonVisual,
+  useCrrtLessonVisualPlacement,
+  type CrrtLessonVisualSlot,
+} from './CrrtLessonVisual'
 import { CrrtPilotCircuit, type CrrtPilotPressureSignals } from './CrrtPilotCircuit'
 import { CrrtLivePressureStation } from './CrrtLivePressureStation'
 import { CrrtMembraneTransport, type CrrtTransportMechanism } from './CrrtMembraneTransport'
@@ -119,12 +125,16 @@ function Circuit({
   paths?: readonly CrrtCircuitPathId[]
   pressure?: CrrtPilotPressureSignals
 }) {
+  // In a lesson, the picture behind the PATIENT circle: the catheter in its vein.
+  const accessSite = useCrrtAccessSite()
   return (
     <CrrtPilotCircuit
       presentation="focused"
       overlayId={overlay}
       highlightedNodeId={node}
       visiblePathIds={paths}
+      accessSite={accessSite?.site}
+      accessSiteControl={<CrrtAccessSiteButton />}
       running={false}
       setReady
       fluidsReady
@@ -136,12 +146,38 @@ function Circuit({
   )
 }
 
-/** Local layout only: the existing circuit and selection state remain authoritative. */
-function CircuitWorkbench({ controls, children }: { controls: ReactNode; children: ReactNode }) {
+/** The circuit as lesson 1 introduces it: the blood path, no modality and no readings. */
+export function CrrtReferenceCircuit() {
+  return <Circuit />
+}
+
+/**
+ * Local layout only: the existing circuit and selection state remain authoritative.
+ *
+ * In a two-pane lesson the drawing goes to the right pane and the selections stay in the text,
+ * under the instruction; anywhere else the drawing follows its selections as it always has.
+ */
+function CircuitWorkbench({
+  controls,
+  slot = 'lead',
+  children,
+}: {
+  controls: ReactNode
+  /** Where the drawing stands in a lesson's picture pane; a task's subject leads. */
+  slot?: CrrtLessonVisualSlot
+  children: ReactNode
+}) {
+  const placement = useCrrtLessonVisualPlacement()
   return (
-    <div className={styles.circuitWorkbench} data-crrt-circuit-workbench>
+    <div
+      className={styles.circuitWorkbench}
+      data-crrt-circuit-workbench
+      data-crrt-drawing={placement}
+    >
       <div className={styles.circuitControls}>{controls}</div>
-      <div className={styles.circuitVisual}>{children}</div>
+      <CrrtLessonVisual slot={slot}>
+        <div className={styles.circuitVisual}>{children}</div>
+      </CrrtLessonVisual>
     </div>
   )
 }
@@ -201,6 +237,7 @@ export function CrrtFoundationToolView({
   onReady?: (response: string) => void
   onProgress?: (progress: CrrtToolProgress) => void
 }) {
+  const accessSite = useCrrtAccessSite()
   const [selected, setSelected] = useState<string | null>(null)
   const [visited, setVisited] = useState<readonly string[]>([])
   const [changed, setChanged] = useState(false)
@@ -297,7 +334,9 @@ export function CrrtFoundationToolView({
         <p className={styles.caption}>
           Follow the blood: access lumen → blood pump → filter → return lumen.
         </p>
-        <Circuit />
+        <CrrtLessonVisual>
+          <Circuit />
+        </CrrtLessonVisual>
       </>
     )
   if (tool === 'blood-walk' || tool === 'fluid-walk') {
@@ -379,6 +418,8 @@ export function CrrtFoundationToolView({
           <CrrtPilotCircuit
             presentation="focused"
             overlayId="pressure-profile"
+            accessSite={accessSite?.site}
+            accessSiteControl={<CrrtAccessSiteButton />}
             highlightedSignalId={detail?.id}
             running={false}
             setReady
@@ -464,7 +505,9 @@ export function CrrtFoundationToolView({
             ))}
           </tbody>
         </table>
-        <Circuit overlay="pressure-profile" />
+        <CrrtLessonVisual>
+          <Circuit overlay="pressure-profile" />
+        </CrrtLessonVisual>
         <p>
           No fault label or physical finding is supplied. Localize only as far as these readings
           support.
@@ -474,8 +517,11 @@ export function CrrtFoundationToolView({
   }
   if (tool === 'mechanisms') {
     return (
+      // The task is about the membrane, so in the picture pane the filter inset leads and the
+      // circuit, which shows where that filter sits, follows it.
       <div className={styles.mechanismWorkbench}>
         <CircuitWorkbench
+          slot="support"
           controls={controls([
             { id: 'diffusion', label: 'Diffusion' },
             { id: 'convection', label: 'Convection' },
@@ -489,9 +535,11 @@ export function CrrtFoundationToolView({
             node="filter"
           />
         </CircuitWorkbench>
-        <CrrtMembraneTransport
-          selected={(selected as CrrtTransportMechanism | null) ?? 'diffusion'}
-        />
+        <CrrtLessonVisual slot="lead">
+          <CrrtMembraneTransport
+            selected={(selected as CrrtTransportMechanism | null) ?? 'diffusion'}
+          />
+        </CrrtLessonVisual>
       </div>
     )
   }
@@ -564,12 +612,14 @@ export function CrrtFoundationToolView({
             ))}
           </tbody>
         </table>
-        <Circuit
-          overlay="cvvhdf"
-          paths={crrtCircuitOverlay('cvvhdf').activePathIds.filter(
-            (id) => id !== 'pre-filter-replacement',
-          )}
-        />
+        <CrrtLessonVisual>
+          <Circuit
+            overlay="cvvhdf"
+            paths={crrtCircuitOverlay('cvvhdf').activePathIds.filter(
+              (id) => id !== 'pre-filter-replacement',
+            )}
+          />
+        </CrrtLessonVisual>
       </>
     )
   }
@@ -613,7 +663,9 @@ export function CrrtFoundationToolView({
           contributes only during the assumed 21 running hours. All results are projected from
           entered assumptions.
         </p>
-        <Circuit overlay="cvvhd" />
+        <CrrtLessonVisual>
+          <Circuit overlay="cvvhd" />
+        </CrrtLessonVisual>
       </>
     )
   }

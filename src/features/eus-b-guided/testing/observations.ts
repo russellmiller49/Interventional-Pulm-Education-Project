@@ -18,6 +18,20 @@ export function searching(labId: EusbLabId): EusbObservation {
   }
 }
 
+/** A mark-the-landmarks lab with some landmarks clicked and some shown at the learner's request. */
+export function marking(
+  labId: EusbLabId,
+  keys: string[] = [],
+  shownKeys: string[] = [],
+  wrong = 0,
+): EusbObservation {
+  return {
+    ...searching(labId),
+    target: undefined,
+    identified: { keys, shown: shownKeys, wrong },
+  }
+}
+
 /** The same lab after the learner asked to be shown the view and the lab drove the scope to it. */
 export function shown(labId: EusbLabId): EusbObservation {
   const lab = eusbLab(labId)

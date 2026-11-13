@@ -30,6 +30,12 @@ async function geometry(page: Page) {
       site.getBoundingClientRect().bottom,
       desktop ? shell.getBoundingClientRect().top : 0,
     )
+    // The lesson bar is pinned on a desktop window; focus below it starts under it.
+    const bar = shell.firstElementChild as HTMLElement
+    if (getComputedStyle(bar).position === 'sticky' && !bar.contains(focus)) {
+      const barRect = bar.getBoundingClientRect()
+      if (barRect.top <= visibleTop + 1 && barRect.bottom > visibleTop) visibleTop = barRect.bottom
+    }
     // A strip below the viewport top is still in normal flow. Only count it when pinned.
     if (getComputedStyle(strip).position === 'sticky' && !strip.contains(focus)) {
       const stripRect = strip.getBoundingClientRect()
@@ -328,19 +334,36 @@ test('Prompt03: the enlarged phone launch gate keeps its action inside the panel
   await expect(page.locator('[data-gate-reason]')).toHaveCount(0)
 })
 
-test('Prompt03: header controls retain focus across the phone breakpoint', async ({ page }) => {
-  await page.setViewportSize({ width: 610, height: 844 })
+test('Prompt03: header controls retain focus across the fold breakpoint', async ({ page }) => {
+  // The fold was phone-only (600 px). Since the lesson bar was pinned it is every window under
+  // 1500 px, so the bar is one row; the same focus rules hold at the new width.
+  await page.setViewportSize({ width: 1510, height: 844 })
   await open(page, 'circuit-flow-path')
   const restart = page.locator('[data-ecmo-restart]')
+  // The fold is decided after hydration, and the lesson then takes entry focus, up to two seconds
+  // after load on a dev server. Wait both out, or the first resize below finds a bar that has not
+  // folded yet and a task that takes the focus back.
+  await expect
+    .poll(() =>
+      restart.evaluate((node) => Object.keys(node).some((key) => key.startsWith('__reactProps'))),
+    )
+    .toBe(true)
+  await page.waitForTimeout(2500)
   await restart.focus()
-  for (const width of [590, 610, 590]) {
+  for (const width of [1490, 1510, 1490]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(restart).toBeFocused()
+    await expect(restart).toBeVisible()
+  }
+  // Open with focus inside, the menu stays open and usable down to a phone and back.
+  for (const width of [610, 590, 610]) {
     await page.setViewportSize({ width, height: 844 })
     await expect(restart).toBeFocused()
     await expect(restart).toBeVisible()
   }
   const summary = page.locator('[data-ecmo-header-more] > summary')
   await summary.focus()
-  await page.setViewportSize({ width: 610, height: 844 })
+  await page.setViewportSize({ width: 1510, height: 844 })
   await expect(page.locator('[data-ecmo-main-menu]')).toBeFocused()
 })
 
@@ -349,9 +372,13 @@ test('Main menu replaces the in-activity track switch and opens Learn on the cur
 }) => {
   await page.setViewportSize({ width: 1280, height: 961 })
   await open(page, 'circuit-flow-path')
-  // No inert summary on a desktop, and no VV/VA switch inside the activity.
-  await expect(page.locator('[data-ecmo-header-more] > summary')).toBeHidden()
+  // No VV/VA switch inside the activity. At this width the main menu and the restarts are one
+  // menu in the bar, and its button opens it (it was once an inert summary on a desktop).
   await expect(page.getByRole('radiogroup', { name: 'ECMO support mode' })).toHaveCount(0)
+  const more = page.locator('[data-ecmo-header-more] > summary')
+  await expect(more).toBeVisible()
+  await expect(page.locator('[data-ecmo-restart]')).toBeHidden()
+  await more.click()
   await expect(page.locator('[data-ecmo-restart]')).toBeVisible()
   await page.getByRole('button', { name: 'Main menu', exact: true }).click()
   await expect(page).toHaveURL(/\/en\/cardiohelp-ecmo\/learn\?track=vv$/)

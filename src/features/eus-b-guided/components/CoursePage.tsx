@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import {
   BASE,
@@ -11,6 +12,7 @@ import {
 } from '../content/curriculum'
 import { clearProgress, recommendedLesson } from '../engine/progress'
 import { EusbModuleFrame } from './ModuleFrame'
+import { StationTable, stationsTaught } from './StationLandmarks'
 import { SurveyRoute } from './SurveyRoute'
 import { useCourseProgress } from './useCourseProgress'
 import styles from './eus-b-guided.module.css'
@@ -30,6 +32,7 @@ export function CoursePage({
   unknownSection?: string
 }) {
   const { progress, status } = useCourseProgress()
+  const [everyStation, setEveryStation] = useState(false)
   const next = recommendedLesson(progress)
   const reviewed = progress.reviewedLessonIds.length
   const opened = progress.visitedLessonIds.length
@@ -135,6 +138,26 @@ export function CoursePage({
             </section>
           ))}
         </div>
+        <section className={styles.card} id="station-landmarks" data-course-stations>
+          <h2>Station landmarks</h2>
+          <p className={styles.muted}>
+            Each nodal station seen from the esophagus, with the landmarks that identify it. A
+            station is filled in when you reach the end of the lesson that teaches it, so the table
+            does not answer a question before you have met it.
+          </p>
+          <StationTable open={everyStation ? 'all' : stationsTaught(progress.reviewedLessonIds)} />
+          <p>
+            <button
+              type="button"
+              className={styles.secondary}
+              aria-pressed={everyStation}
+              data-show-every-station
+              onClick={() => setEveryStation((value) => !value)}
+            >
+              Show every station now
+            </button>
+          </p>
+        </section>
         <p className={styles.muted} data-course-marks-legend>
           <strong>What the marks mean.</strong> Opened: you have started the lesson. Reviewed: you
           reached its end; it does not record which tasks you completed or how you answered. Both

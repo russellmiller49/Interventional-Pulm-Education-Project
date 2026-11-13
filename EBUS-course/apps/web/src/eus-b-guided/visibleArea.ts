@@ -31,18 +31,10 @@ export function blockingLabelIds(volume: EusAcousticVolume): number[] {
 }
 
 /**
- * Area of one structure that the beam actually reaches, in mm² of the scan plane.
- *
- * The simulator's find rule counts every pixel of the structure in the sector, including tissue
- * that lies behind air or bone and so cannot be seen. Here each beam is followed out from the
- * transducer and the count stops at the first air or bone it meets. Where nothing blocks the
- * beam the two measures are the same.
+ * Where the beam is stopped, for one frame: the distance from the transducer to the nearest air
+ * or bone along each beam direction. `reaches` says whether the beam gets to a pixel.
  */
-export function visibleAreaMm2(
-  frame: LabelFrame,
-  labelId: number,
-  blockingIds: readonly number[],
-): number {
+function beamShadow(frame: LabelFrame, blockingIds: readonly number[]) {
   const { labelImage, width, height, controls } = frame;
   const { halfAngle, radius, apexX, apexY } = sectorGeometry(
     width,
@@ -56,7 +48,6 @@ export function visibleAreaMm2(
   // In the label image 0 is outside the sector and 255 stands for label 0 inside it.
   const blocking = new Uint8Array(256);
   for (const id of blockingIds) blocking[id === 0 ? 255 : id] = 1;
-  const target = labelId === 0 ? 255 : labelId;
 
   // Nearest blocking tissue along each beam direction. A near pixel spans several directions.
   const blockedFrom = new Float32Array(bins).fill(Infinity);
@@ -73,16 +64,49 @@ export function visibleAreaMm2(
       for (let bin = binOf(angle - halfWidth); bin <= binOf(angle + halfWidth); bin++)
         if (near < blockedFrom[bin]) blockedFrom[bin] = near;
     }
+  const reaches = (x: number, y: number) => {
+    const px = x - apexX,
+      py = y - apexY;
+    return Math.hypot(px, py) < blockedFrom[binOf(Math.atan2(px, py))];
+  };
+  return { reaches, radius };
+}
 
+/**
+ * Area of one structure that the beam actually reaches, in mm² of the scan plane.
+ *
+ * The simulator's find rule counts every pixel of the structure in the sector, including tissue
+ * that lies behind air or bone and so cannot be seen. Here each beam is followed out from the
+ * transducer and the count stops at the first air or bone it meets. Where nothing blocks the
+ * beam the two measures are the same.
+ */
+export function visibleAreaMm2(
+  frame: LabelFrame,
+  labelId: number,
+  blockingIds: readonly number[],
+): number {
+  const { labelImage, width, height, controls } = frame;
+  const { reaches, radius } = beamShadow(frame, blockingIds);
+  const target = labelId === 0 ? 255 : labelId;
   let count = 0;
   for (let y = 0; y < height; y++)
-    for (let x = 0; x < width; x++) {
-      if (labelImage[y * width + x] !== target) continue;
-      const px = x - apexX,
-        py = y - apexY;
-      if (Math.hypot(px, py) < blockedFrom[binOf(Math.atan2(px, py))]) count++;
-    }
+    for (let x = 0; x < width; x++)
+      if (labelImage[y * width + x] === target && reaches(x, y)) count++;
   return count * (controls.depthMm / radius) ** 2;
+}
+
+/**
+ * One byte per pixel of a frame: 1 where the pixel is inside the sector and the beam reaches it,
+ * 0 outside the sector and behind air or bone. The same rule `visibleAreaMm2` counts by.
+ */
+export function reachMask(frame: LabelFrame, blockingIds: readonly number[]): Uint8Array {
+  const { labelImage, width, height } = frame;
+  const { reaches } = beamShadow(frame, blockingIds);
+  const mask = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++)
+      if (labelImage[y * width + x] !== 0 && reaches(x, y)) mask[y * width + x] = 1;
+  return mask;
 }
 
 /**

@@ -43,8 +43,12 @@ export type Step =
       figure?: FigureKind
       /** A labeled still shown beside the text. */
       view?: EusbLabId
+      /** A station whose numbered landmarks are listed under the text, as on the still. */
+      station?: string
     }
   | { kind: 'lab'; id: string; title: string; instruction: string; lab: EusbLabId }
+  /** Mark each landmark of a view on a still with nothing named. */
+  | { kind: 'identify'; id: string; title: string; instruction: string; lab: EusbLabId }
   | {
       kind: 'debrief'
       id: string
@@ -53,6 +57,8 @@ export type Step =
       of: string
       body: string[]
       points?: string[]
+      /** A station whose numbered landmarks are listed under the text, as on the image. */
+      station?: string
     }
   | {
       kind: 'check'

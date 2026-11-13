@@ -56,6 +56,17 @@ async function settle() {
 
 beforeEach(() => window.localStorage.clear())
 
+/** "Lesson 4 of 8", as the lesson bar prints it above the lesson's title. */
+function lessonBarNumber() {
+  return document.querySelector('[data-lesson-shell] h1')!.previousElementSibling
+}
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu, closed. */
+function openLessonMenu() {
+  act(() => {
+    document.querySelector<HTMLDetailsElement>('[data-crrt-lesson-menu]')!.open = true
+  })
+}
+
 describe('one canonical Learn order (F-10)', () => {
   it('the registry, the lesson list and the pathway carry the same eight lessons in one order', () => {
     expect(baxterCrrtLearnLessons.map((lesson) => lesson.id)).toEqual([
@@ -85,9 +96,7 @@ describe('one canonical Learn order (F-10)', () => {
 
   it('the lesson picker, the header number and previous/next agree on the middle lesson', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
-    expect(
-      screen.getByText('Lesson 4 of 8', { selector: '[data-crrt-lesson-number]' }),
-    ).toBeInTheDocument()
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 4 of 8')
     const picker = screen.getByRole('navigation', { name: 'CRRT lessons sections' })
     expect(
       within(picker)
@@ -101,11 +110,11 @@ describe('one canonical Learn order (F-10)', () => {
       'Lessons4 of 8',
     )
     const steps = screen.getByRole('navigation', { name: 'Previous and next lesson' })
+    expect(within(steps).getByRole('button', { name: /^Previous lesson: 3\. / })).not.toBeVisible()
+    openLessonMenu()
     expect(within(steps).getByRole('button', { name: /^Previous lesson: 3\. / })).toBeVisible()
     fireEvent.click(within(steps).getByRole('button', { name: /^Next lesson: 5\. / }))
-    expect(
-      screen.getByText('Lesson 5 of 8', { selector: '[data-crrt-lesson-number]' }),
-    ).toBeInTheDocument()
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 5 of 8')
     expect(new URL(window.location.href).searchParams.get('lesson')).toBe(
       'crrt-alarms-troubleshooting',
     )
@@ -117,9 +126,7 @@ describe('one canonical Learn order (F-10)', () => {
     first.unmount()
     render(<BaxterCrrtLearn initialLessonId={BAXTER_CRRT_LEARN_LESSON_IDS[7]} />)
     expect(screen.getByText('Last lesson')).toBeInTheDocument()
-    expect(
-      screen.getByText('Lesson 8 of 8', { selector: '[data-crrt-lesson-number]' }),
-    ).toBeInTheDocument()
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 8 of 8')
   })
 
   it('the hub keeps one numbered lesson list, each lesson with a line on what it teaches', async () => {

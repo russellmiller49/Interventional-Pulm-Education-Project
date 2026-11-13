@@ -2982,6 +2982,62 @@
 }
 
 /*
+ * The physical controls as a picture (a reading-only section).
+ *
+ * Raised buttons at half strength read as buttons that had stopped working. Here the column is
+ * hatched and outlined, every control in it is a flat outline with no pointer, and a label says
+ * what it is. The control the lesson text points at still lights up (`data-guided-help`): a
+ * picture can be pointed at.
+ */
+.physicalPanel[data-console-picture='true'] {
+  border: 1px dashed rgba(163, 206, 209, 0.5);
+  border-radius: 10px;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(163, 206, 209, 0.06) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.consolePictureLabel {
+  margin: 0;
+  color: #c2d6d8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Flat outlines, at full strength so the labels stay readable; no raised face, no pointer. */
+.deviceShell[data-console-picture='true'] .physicalPanel :is(button, [role='slider']),
+.deviceShell[data-console-picture='true'] .screenToolbar button:disabled {
+  border-style: dashed;
+  color: #b4c7ca;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+  cursor: default;
+}
+
+.deviceShell[data-console-picture='true'] .physicalPanel :is(button, [role='slider']) {
+  pointer-events: none;
+}
+
+/* The dial is a thin ring, not a 5 px dashed one. */
+.deviceShell[data-console-picture='true'] .knob {
+  border-width: 2px;
+}
+
+/* The setting the picture shows as selected (RPM or LPM) keeps a quiet mark. */
+.deviceShell[data-console-picture='true'] .modeSwitch button[data-active='true'] {
+  border-style: solid;
+  color: #e9ffff;
+  background: rgba(113, 225, 229, 0.14);
+}
+
+/*
  * Operating notes and the tab key, under the facsimile at reading size (S4-1). Not part of the
  * device drawing: the device keeps its short on-screen labels, and this is the explanation of them.
  */
@@ -3244,14 +3300,36 @@
   box-shadow: 0 6px 18px rgba(54, 195, 202, 0.18);
 }
 
+/*
+ * The bedside scene, its status row and its label switch.
+ *
+ * Two columns so the status row and the label switch share one line under the scene; everything
+ * else spans both. They were stacked, 190 px of chrome under a canvas that already ran past the
+ * foot of the window.
+ */
 .circuit3dShell {
   position: relative;
   display: grid;
-  gap: 0.7rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem 0.6rem;
+  align-items: center;
+}
+
+.circuit3dShell > * {
+  grid-column: 1 / -1;
+}
+
+.circuit3dShell > .circuit3dHud {
+  grid-column: 1;
+}
+
+.circuit3dShell > .circuit3dLabelsToggle {
+  grid-column: 2;
 }
 
 .circuit3dLabelsToggle {
   justify-self: start;
+  min-height: 2.25rem;
   padding: 0.32rem 0.75rem;
   border: 1px solid rgba(113, 225, 229, 0.4);
   border-radius: 999px;
@@ -3268,10 +3346,27 @@
   background: rgba(10, 39, 45, 0.92);
 }
 
+/*
+ * The scene is as tall as the room it has, not as tall as the window is wide.
+ *
+ * It was `clamp(420px, 46vw, 610px)`: on a 1600 × 852 window, 610 px of canvas in about 700 px of
+ * view, with the view tabs above it and the pinned Continue row over its foot. The height is now
+ * what is left of the window under whatever is pinned (the site menu where it is shown, the lesson
+ * bar, an urgent status strip, the pinned action row), less the tab row above the scene and the
+ * status row under it, so tabs, scene and status are on screen together. Each term is zero where
+ * that thing is not pinned. Never under 20 rem, never over the 610 px it was drawn for.
+ */
 .circuit3dViewport {
   position: relative;
-  height: clamp(420px, 46vw, 610px);
-  min-height: 420px;
+  height: clamp(
+    20rem,
+    calc(
+      100dvh - var(--site-header-height, 0px) - var(--ecmo-lesson-bar-height, 0px) -
+        var(--ecmo-sticky-strip-height, 0px) - var(--ecmo-pinned-footer-height, 0px) - 10rem
+    ),
+    610px
+  );
+  min-height: 20rem;
   overflow: hidden;
   border: 1px solid rgba(113, 225, 229, 0.24);
   border-radius: 18px;
@@ -3305,10 +3400,12 @@
 
 .circuit3dHud {
   position: static;
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   max-width: 100%;
-  gap: 0.14rem;
-  padding: 0.7rem 0.8rem;
+  gap: 0.25rem 0.6rem;
+  padding: 0.4rem 0.7rem;
   border: 1px solid rgba(113, 225, 229, 0.26);
   border-radius: 12px;
   background: rgba(3, 20, 24, 0.86);
@@ -3368,12 +3465,13 @@
 }
 
 .circuit3dHud strong {
-  margin-top: 0.18rem;
   color: #e9ffff;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 }
 
+/* How to move the view: the rest of the row, or a line of its own where the row is short. */
 .circuit3dHud small {
+  flex: 1 1 18rem;
   color: #bcd0d2;
   font-size: 0.75rem;
   line-height: 1.35;
@@ -6565,6 +6663,31 @@
 /* Placed below its anchor: the leader runs up from the pill's top edge. */
 .circuit3dSceneLabel[data-leader='below']::after {
   top: 0;
+}
+
+/*
+ * On a rail the pill is off the model and its leader crosses it, so the line is drawn lighter than
+ * the short leader of a pill resting on its object.
+ */
+.circuit3dSceneLabel[data-rail]::after {
+  background: rgba(113, 225, 229, 0.6);
+}
+
+/* The end of a leader: a dot on the object the pill names. Its box is the pill's, centred there. */
+.circuit3dSceneAnchor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1.5px solid rgba(6, 22, 26, 0.92);
+  border-radius: 50%;
+  background: var(--cyan-bright);
+  transform: translate(-50%, -50%);
+}
+
+.circuit3dSceneAnchor[data-dimmed] {
+  opacity: 0.08;
 }
 
 .circuit3dSceneLabel[data-dimmed] {

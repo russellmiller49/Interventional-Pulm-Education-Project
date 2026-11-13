@@ -77,7 +77,12 @@ export interface EusbObservation {
     shown?: boolean
     shownAt?: EusbHeld
   }
-  identified?: { keys: string[]; wrong: number }
+  /**
+   * An identify lab. `keys` are the landmarks the learner clicked correctly, in the order asked.
+   * `shown` are the ones the lab outlined because the learner asked to be shown them; a landmark
+   * is never in both. `wrong` counts clicks that missed the landmark being asked for.
+   */
+  identified?: { keys: string[]; shown: string[]; wrong: number }
   survey?: { found: (EusbHeld & { key: string })[] }
   /** Views actually drawn. */
   panes: EusbPane[]
@@ -208,6 +213,10 @@ export function isEusbObservation(v: unknown): v is EusbObservation {
         Array.isArray(identified.keys) &&
         identified.keys.length <= 12 &&
         identified.keys.every(key) &&
+        Array.isArray(identified.shown) &&
+        identified.shown.length <= 12 &&
+        identified.shown.every(key) &&
+        !identified.shown.some((entry) => (identified.keys as unknown[]).includes(entry)) &&
         count(identified.wrong, 10000))) &&
     (survey === undefined ||
       (object(survey) &&

@@ -28,13 +28,14 @@ import { StageSourcesScope } from '@/features/learning-module/stage/StageSources
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
 import {
   pawpPlausibilityCommitment,
   pawpRecoveryCommitment,
   pawpRecoveryOutcomes,
 } from '../../content/pawpCaptureSequence'
+import { HEMODYNAMICS_NEXT_MODULE } from '../../content/moduleHandOffs'
 import { hemodynamicsPathway } from '../../content/pathwayResolver'
 import { hemodynamicCaseById } from '../../content/cases'
 import { isOffMapTarget } from '../../content/mapAnswerTargets'
@@ -1901,6 +1902,18 @@ function HemodynamicsStageSession({
               >
                 A second case on this mechanism: {secondCase.title}
               </button>
+            </p>
+          ) : null}
+          {/*
+            The course's hand-off (critical care plan, round 3): the last section says where its
+            readings are used next. Not offered while a simulation is held, like the buttons below.
+          */}
+          {!nextSection && !held ? (
+            <p data-next-module={HEMODYNAMICS_NEXT_MODULE.href}>
+              {HEMODYNAMICS_NEXT_MODULE.line}{' '}
+              <Link className={styles.moduleLink} href={HEMODYNAMICS_NEXT_MODULE.href}>
+                Open {HEMODYNAMICS_NEXT_MODULE.moduleTitle}
+              </Link>
             </p>
           ) : null}
           <div className={stageStyles.completionActions}>

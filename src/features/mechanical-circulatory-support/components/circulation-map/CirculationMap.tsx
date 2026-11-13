@@ -303,6 +303,8 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                     cy={shape.inletAt.y}
                     r={7}
                     className={styles.inlet}
+                    data-map-inlet
+                    data-map-blood={shape.blood}
                   />
                 ) : null}
                 {shape.outletAt ? (
@@ -311,6 +313,8 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                     cy={shape.outletAt.y}
                     r={7}
                     className={styles.outlet}
+                    data-map-outlet
+                    data-map-blood={shape.blood}
                   />
                 ) : null}
                 {/*
@@ -434,7 +438,8 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
             Line key: the thick pale line is the device pathway — solid when the device is in place,
             dashed when it is drawn but not in place; moving dashes along it mean it is running.
             Each vessel and chamber is named on the drawing; the blue limb is the venous side before
-            the lungs and the red limb the arterial side after them.
+            the lungs and the red limb the arterial side after them. A pump&apos;s inlet is an open
+            ring and its outlet a filled dot, in the colour of the blood it moves.
           </p>
         </div>
       ) : null}

@@ -1990,6 +1990,27 @@
   padding-block: 6px;
 }
 
+/*
+ * The tab row stays on screen. In the two-pane Learn workspace the console scrolls inside its own
+ * pane, and with four traces it is taller than the pane of a 1366 x 768 or 1280 x 720 window: the
+ * row (Monitoring, Modes, Controls ...) ended 31 px and 59 px below the fold there, under a task
+ * that begins "Open Controls on the console". The row is pinned to the pane's bottom edge while
+ * the console runs past it, and sits in its own place once the console is scrolled into view.
+ * `clip`, not `hidden`, on the bezel: a `hidden` box is a scroll container, and the row would pin
+ * to the bezel it is already at the bottom of.
+ */
+@container mv-task (min-width: 75rem) {
+  [data-mv-density='laptop'] .consoleBezel {
+    overflow: clip;
+  }
+  [data-mv-density='laptop'] .consoleNav {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    box-shadow: 0 -0.6rem 0.8rem -0.6rem rgba(0, 0, 0, 0.6);
+  }
+}
+
 .workflowLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);

@@ -47,7 +47,7 @@ describe('the heart view around its canvas', () => {
     expect(toggle.textContent).toBe('Hide chamber names')
   })
 
-  it('gives a key of four marks in place of the legend paragraph', () => {
+  it('gives a key of marks in place of the legend paragraph, the heart’s two colours among them', () => {
     const legend = mount().querySelector('[data-heart-legend]')!
     const items = [...legend.querySelectorAll('li')]
     expect(items.map((item) => item.textContent!.trim())).toEqual([
@@ -55,8 +55,15 @@ describe('the heart view around its canvas', () => {
       'The structure the tip is in',
       'Phlebostatic reference',
       'Pressure tubing to the transducer (the box)',
+      // The heart was blue and red with nothing saying why (November 2026). The model colours
+      // by oxygenation, so the pulmonary arteries are blue and the pulmonary veins red.
+      'Blue: blood on its way to the lungs (venae cavae, right heart, pulmonary arteries)',
+      'Red: blood back from the lungs (pulmonary veins, left heart, aorta)',
     ])
     for (const item of items) expect(item.querySelector('[data-key-mark]')).not.toBeNull()
+    expect(
+      items.map((item) => item.querySelector('[data-key-mark]')!.getAttribute('data-key-mark')),
+    ).toEqual(['course', 'structure', 'axis', 'tubing', 'to-lungs', 'from-lungs'])
   })
 
   it('keeps how the view is drawn, one press away', () => {

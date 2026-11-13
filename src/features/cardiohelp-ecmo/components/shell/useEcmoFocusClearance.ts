@@ -2,6 +2,8 @@
 
 import { useLayoutEffect, type RefObject } from 'react'
 
+import { ecmoPinnedLessonBarHeight } from './useEcmoLessonBar'
+
 /** Publish chrome sizes for native focus scrolling; never move focus or scroll from an event. */
 export function useEcmoFocusClearance(
   shellRef: RefObject<HTMLElement | null>,
@@ -18,11 +20,16 @@ export function useEcmoFocusClearance(
     const documentToken = '--ecmo-document-focus-clearance'
     const previous = root.style.getPropertyValue(documentToken)
     const measure = () => {
-      const availableHeight = window.innerHeight - siteHeader.getBoundingClientRect().height
+      // The room under the pinned chrome: the site menu where it is shown, and the lesson bar
+      // where it is pinned.
+      const availableHeight =
+        window.innerHeight -
+        siteHeader.getBoundingClientRect().height -
+        ecmoPinnedLessonBarHeight(strip)
       strip.dataset.stickyUnfits = String(
         strip.getBoundingClientRect().height > availableHeight / 3,
       )
-      // Only the operational strip is sticky. The activity title and ordinary context flow away.
+      // Of the context strips only the operational one is sticky; ordinary context flows away.
       const stripHeight =
         getComputedStyle(strip).position === 'sticky' ? strip.getBoundingClientRect().height : 0
       shell.style.setProperty('--ecmo-sticky-strip-height', `${stripHeight}px`)
@@ -35,6 +42,8 @@ export function useEcmoFocusClearance(
     const observer = new ResizeObserver(measure)
     observer.observe(siteHeader)
     observer.observe(strip)
+    const bar = shell.querySelector<HTMLElement>(':scope > [data-ecmo-lesson-bar]')
+    if (bar) observer.observe(bar)
     // The scroll owner/sticky offset can switch without either observed element changing size.
     window.addEventListener('resize', measure)
     return () => {

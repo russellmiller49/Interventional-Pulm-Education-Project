@@ -8,6 +8,20 @@ export const SOURCES = [
     type: 'Technique description',
   },
   {
+    id: 'bugalho2018',
+    title:
+      'Bugalho A, de Santis M, Szlubowski A, Rozman A, Eberhardt R. Trans-esophageal endobronchial ultrasound-guided needle aspiration (EUS-B-NA): a road map for the chest physician. Pulmonology 2018',
+    url: 'https://doi.org/10.1016/j.rppnen.2017.10.004',
+    type: 'Review and technique description',
+  },
+  {
+    id: 'nayahangan2022',
+    title:
+      'Nayahangan LJ, Clementsen PF, Doubleday A, Riddle J, Annema JT, Konge L. Developing a simulation-based training curriculum in transesophageal ultrasound with the use of the endobronchial ultrasound-endoscope. Endosc Ultrasound 2022',
+    url: 'https://doi.org/10.4103/EUS-D-21-00126',
+    type: 'Curriculum description',
+  },
+  {
     id: 'ers2026',
     title:
       'ERS/ESGE/ESTS clinical practice guidelines on endobronchial and oesophageal endosonography for the diagnosis and staging of lung cancer (2026)',

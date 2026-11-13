@@ -356,6 +356,24 @@
   overflow-wrap: anywhere;
 }
 
+/*
+ * The rail hides each entry's full title because a horizontal rail has no room for it. The drawer
+ * is a list with room: it shows the topic (the short title) and, under it, the section's own
+ * title, so a learner looking for "Differential hypoxemia" finds it by name and sees the same
+ * title the lesson bar prints. The same rule the other critical care modules' drawers carry.
+ */
+.sectionsPanel nav button small {
+  display: block;
+  margin-top: 0.1rem;
+  /* The button's own ink at reduced strength, so it reads on the current row's filled background
+     as well as on the dark rows. */
+  color: inherit;
+  opacity: 0.8;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 /* ------------------------------------------------------------------ *
  * Task column cards
  * ------------------------------------------------------------------ */
