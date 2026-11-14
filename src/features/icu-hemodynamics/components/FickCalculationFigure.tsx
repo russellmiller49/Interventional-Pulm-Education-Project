@@ -7,6 +7,7 @@ import {
   CARDIAC_OUTPUT_MODEL_CONSTANTS,
   fickCardiacOutput,
   fickVenousSampleSiteLabels,
+  fickVenousSpecimenWords,
   type FickResult,
 } from '../engine/fick'
 import { FICK_EPISODES } from './FickMethodWorkbench'
@@ -82,15 +83,18 @@ export function FickCalculationFigure({ episodeId }: { readonly episodeId?: stri
             data-provenance={'provenance' in row ? row.provenance : undefined}
           >
             <b>{row.label}</b>
-            {row.value ? <span data-fick-input-value>{row.value}</span> : null}
-            {row.status ? <small>{row.status}</small> : null}
+            {row.value ? (
+              <span className={styles.fickFigureValue}>
+                <span data-fick-input-value>{row.value}</span>
+                {row.status ? <small>{row.status}</small> : null}
+              </span>
+            ) : null}
           </li>
         ))}
       </ul>
-      <p className={styles.derivedValueArrow} aria-hidden="true">
-        ↓
+      <p className={styles.derivedValueStage} data-fick-follows>
+        Formula
       </p>
-      <p className={styles.derivedValueStage}>Formula</p>
       <div className={styles.fickFigureFormula} data-fick-formula>
         <p>
           Oxygen content = {BINDING} mL/g × hemoglobin × saturation
@@ -102,10 +106,9 @@ export function FickCalculationFigure({ episodeId }: { readonly episodeId?: stri
         </p>
         {result && episode ? <PlacedFormula result={result} inputs={episode.inputs} /> : null}
       </div>
-      <p className={styles.derivedValueArrow} aria-hidden="true">
-        ↓
+      <p className={styles.derivedValueStage} data-fick-follows>
+        Result
       </p>
-      <p className={styles.derivedValueStage}>Result</p>
       <div
         className={styles.derivedValueResult}
         data-fick-result={result?.status ?? 'not-shown'}
@@ -145,7 +148,10 @@ function PlacedFormula({
   const arterial = result.arterialOxygenContentMlDl
   const venous = result.mixedVenousOxygenContentMlDl
   const difference = result.contentDifferenceMlDl
-  const venousLabel = result.trace.find((row) => row.id === 'mixed-venous-content')!.label
+  // Short names, so each step keeps to one line: "Mixed-venous content", "Central venous (superior
+  // vena cava) content". The input above names the specimen in full.
+  const short = fickVenousSpecimenWords(inputs.venousSampleSite).short
+  const venousLabel = `${short.charAt(0).toUpperCase()}${short.slice(1)} content`
   if (arterial === null || venous === null || difference === null)
     return (
       <p data-fick-placed="not-computed">
@@ -163,7 +169,7 @@ function PlacedFormula({
   return (
     <ul className={styles.fickFigurePlaced} data-fick-placed="shown">
       <li>
-        Arterial oxygen content: {BINDING} × {hemoglobin} ×{' '}
+        Arterial content: {BINDING} × {hemoglobin} ×{' '}
         {roundTo(inputs.arterialSaturationFraction!, 2)} = {arterial.toFixed(2)} mL/dL
       </li>
       <li>

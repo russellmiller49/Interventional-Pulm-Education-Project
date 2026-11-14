@@ -6197,6 +6197,19 @@
 .derivedValueResult[data-fick-result='not-shown'] {
   border-color: var(--line, rgba(163, 206, 209, 0.45));
 }
+.derivedValueStage[data-fick-follows]::before {
+  /* The arrow from the stage above, on the stage's own line; not read aloud. */
+  content: '↓  ' / '';
+}
+.fickFigureValue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  align-items: baseline;
+}
+[data-fick-figure] .derivedValueInputs li {
+  padding: 0.45rem 0.6rem;
+}
 .fickFigureFormula {
   display: grid;
   gap: 0.45rem;
@@ -6210,6 +6223,13 @@
   margin: 0;
   font-weight: 700;
   text-align: center;
+}
+.fickFigureFormula > p[data-fick-placed] {
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  font-size: 0.92rem;
+  font-weight: 400;
+  text-align: left;
 }
 .fickFigurePlaced {
   display: grid;
