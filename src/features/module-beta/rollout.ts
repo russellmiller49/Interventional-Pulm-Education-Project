@@ -56,7 +56,7 @@ export const betaRollout: BetaRollout = {
         'The find-the-structure task: whether it asks for the structures you would expect a fellow to identify, and whether the hint after a wrong pick helps.',
       ],
       knownLimits: [
-        'Its 22 sourced teaching numbers are not yet signed off by the author.',
+        'Its 26 sourced teaching numbers are not yet signed off by the author.',
         'The bleeding sequence is written from practice rather than a cited source, and the AQuIRE figures were checked against the abstract only.',
         'The labs need a desktop or tablet; below about 1,100 px wide they fall back to a reading layout.',
       ],
@@ -103,7 +103,6 @@ export const betaRollout: BetaRollout = {
         'The ultrasound image and the controls that move the scope do not fit on one screen at common laptop and phone sizes; expect to scroll between them.',
         'It is one CT case, and the image is simulated from CT, not recorded ultrasound; the page lists the model’s other limits.',
         'There are no lessons, cases or scored questions yet: it is a free-exploration simulator.',
-        'Its teaching notes are not yet signed off by the author.',
       ],
     },
   },
@@ -142,7 +141,6 @@ export const betaRollout: BetaRollout = {
         'Whether the lesions in Practice are ones you would plan a navigation route to.',
       ],
       knownLimits: [
-        'The CT slice used for the first fork is not yet confirmed by the author.',
         'Only lessons 1 and 2 ask for the openings to be marked on the CT; on whole routes the CT is read while planning, and each fork asks only for the branch.',
         "The model map does not yet draw the next generation inside the branches the route does not take, the method's tip for recognizing a branch that leads away.",
       ],
@@ -188,7 +186,6 @@ export const betaRollout: BetaRollout = {
       knownLimits: [
         '62 of its 75 teaching numbers, the lidocaine ceiling among them, are not yet signed off by the author.',
         'The orientation rule and the clock table are derived for the bedside views; no published source states them.',
-        'An unreachable segment is taught and asked about but not practised in the simulator.',
       ],
     },
   },
@@ -235,7 +232,7 @@ export const betaRollout: BetaRollout = {
         'Whether the prescriptions and delivered doses in the cases look realistic.',
       ],
       knownLimits: [
-        'Its 35 sourced teaching numbers are not yet signed off by the author.',
+        'Of its 54 sourced teaching numbers, 32 are signed off by the author and 22 are not yet.',
         'Several recorded disagreements between sources and the simulation are not yet settled by the author.',
         'The machine steps follow one PrisMax software version (2.xx).',
       ],
