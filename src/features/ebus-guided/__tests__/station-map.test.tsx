@@ -5,7 +5,7 @@ import media from '../../../../EBUS-course/apps/web/src/content/station-media.js
 import { CoursePage } from '../components/CoursePage'
 import { LessonHost } from '../components/LessonHost'
 import { StationMap } from '../components/StationMap'
-import { contentById, lessonById } from '../content/curriculum'
+import { LESSONS, contentById, lessonById } from '../content/curriculum'
 import { activitiesForLesson } from '../content/stage'
 import { MAP_STATIONS, SAMPLING_ORDER, mapStation, nCategory } from '../content/station-map'
 
@@ -249,6 +249,8 @@ describe('where the map is used', () => {
 
   it('is one press away in every lesson, opening on stations, not N categories', () => {
     render(<LessonHost lesson={lessonById('needle-safety')!} />)
+    // The lesson opens on a prediction, where the map is withheld (see below); move past it.
+    fireEvent.click(primary())
     expect(document.querySelector('[data-station-map-dialog]')).toBeNull()
     press('Station map')
     const dialog = document.querySelector('[data-station-map-dialog]') as HTMLElement
@@ -256,6 +258,94 @@ describe('where the map is used', () => {
     expect(screen.getAllByRole('heading', { name: 'Nodal station map' })).toHaveLength(1)
     expect(within(dialog).queryByRole('heading', { name: 'Nodal station map' })).toBeNull()
     expect(dialog.querySelector('[data-station-map]')).toHaveAttribute('data-view', 'stations')
+  })
+
+  /*
+   * The owner's ruling of 2026-11-12 ("Hide during predictions"): the N-category view answers the
+   * staging prediction, so the header's map is withheld while any "Predict first" check is open.
+   */
+  describe('during a prediction', () => {
+    const mapButton = () => screen.queryByRole('button', { name: 'Station map' })
+    const withheld = () => document.querySelector('[data-station-map-withheld]')
+    const predictionLessons = LESSONS.filter((lesson) =>
+      activitiesForLesson(lesson).some((activity) => activity.kind === 'prediction'),
+    )
+    /** Render the lesson and walk forward to its prediction. */
+    function openPrediction(id: string) {
+      render(<LessonHost lesson={lessonById(id)!} />)
+      const activities = activitiesForLesson(lessonById(id)!)
+      const index = activities.findIndex((activity) => activity.kind === 'prediction')
+      for (let step = 0; step < index; step++) fireEvent.click(primary())
+      expect(document.querySelector('[data-activity-kind]')).toHaveAttribute(
+        'data-activity-kind',
+        'prediction',
+      )
+    }
+
+    it('covers every lesson that opens with a prediction', () => {
+      expect(predictionLessons.map((lesson) => lesson.id)).toContain('systematic-staging')
+      expect(predictionLessons.length).toBeGreaterThan(5)
+    })
+
+    it.each(predictionLessons.map((lesson) => lesson.id))(
+      '%s: withholds the map until the prediction is answered',
+      (id) => {
+        openPrediction(id)
+        expect(mapButton()).toBeNull()
+        expect(document.querySelector('[data-open-station-map]')).toBeNull()
+        // The space is kept, but nothing there can be focused or read out.
+        expect(withheld()).toHaveAttribute('aria-hidden', 'true')
+        expect(withheld()!.tagName).toBe('SPAN')
+        expect(withheld()).not.toHaveAttribute('tabindex')
+        fireEvent.click(screen.getAllByRole('radio')[0])
+        fireEvent.click(screen.getByRole('button', { name: 'Check response' }))
+        expect(withheld()).toBeNull()
+        press('Station map')
+        expect(document.querySelector('[data-station-map-dialog]')).not.toBeNull()
+      },
+    )
+
+    it('returns the map when the explanation is opened, as the other reveal gates do', () => {
+      openPrediction('systematic-staging')
+      expect(mapButton()).toBeNull()
+      press('Show explanation')
+      expect(mapButton()).not.toBeNull()
+      press('Hide explanation')
+      expect(mapButton()).toBeNull()
+    })
+
+    it('returns the map on the next screen after continuing without answering', () => {
+      openPrediction('systematic-staging')
+      expect(mapButton()).toBeNull()
+      fireEvent.click(primary())
+      expect(document.querySelector('[data-activity-kind]')).not.toHaveAttribute(
+        'data-activity-kind',
+        'prediction',
+      )
+      expect(mapButton()).not.toBeNull()
+      // Going back to the passed prediction to reread it keeps the map: the teaching is out.
+      press('Back')
+      expect(document.querySelector('[data-activity-kind]')).toHaveAttribute(
+        'data-activity-kind',
+        'prediction',
+      )
+      expect(mapButton()).not.toBeNull()
+    })
+
+    it('withholds it again after the learner clears an answer to try again', () => {
+      openPrediction('systematic-staging')
+      const id = document.querySelector('[data-question-id]')!.getAttribute('data-question-id')!
+      // The prediction's own check, whichever content slot holds it.
+      const item = Object.values(contentById('systematic-staging')!).find(
+        (value) => (value as { id?: string } | undefined)?.id === id,
+      ) as { choices: { id: string; correct?: boolean }[] }
+      const index = item.choices.findIndex((choice) => !choice.correct)
+      fireEvent.click(screen.getAllByRole('radio')[index])
+      fireEvent.click(screen.getByRole('button', { name: 'Check response' }))
+      expect(mapButton()).not.toBeNull()
+      press('Try again')
+      expect(mapButton()).toBeNull()
+    })
   })
 
   it('opens from the hub without putting a diagram on the Overview', () => {
