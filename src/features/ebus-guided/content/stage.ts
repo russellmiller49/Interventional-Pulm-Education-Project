@@ -1,6 +1,7 @@
 import type { Lesson } from './types'
+import type { LinkedVariant } from '@/lib/ebus-linked-contract'
 import type { ExaminationCase, RecordTask } from '../engine/examination'
-import { DESCRIPTION_CASE, EXAMINATION_CASE, MODEL_WINDOW_CASE } from './examination-cases'
+import { EXAMINATION_CASE, MODEL_WINDOW_CASE } from './examination-cases'
 
 export type QuestionSlot = 'question' | 'observation' | 'transfer'
 export type Presentation =
@@ -19,20 +20,35 @@ export interface ActivitySpec {
   title: string
   instruction: string
   kind:
+    | 'prediction'
     | 'briefing'
     | 'demonstration'
     | 'application'
     | 'acquisition'
     | 'interpretation'
     | 'transfer'
+    | 'debrief'
     | 'record'
   presentation: Presentation
   image: EvidenceView
   interaction: Interaction
   teaching: TeachingPart[]
   questions: QuestionSlot[]
-  task?: 'guided' | 'changed-window'
+  task?: LinkedVariant
+  /**
+   * This acquisition uses the unit's second lab (`Lesson.transferLab`) although it is an ordinary
+   * guided task: a second station in the same lesson, with its own preset and landmarks. A task
+   * other than 'guided' always uses the second lab.
+   */
+  secondLab?: boolean
+  /**
+   * The content unit this step draws on, in a lesson built from two (`Lesson.parts`). Its text,
+   * lab, checks and boundary are that unit's. Absent: the unit with the lesson's own id.
+   */
+  from?: string
   companion?: string
+  /** The figure this activity shows when `image` is 'diagram', if not the lesson's own. */
+  figure?: Lesson['diagram']
   note?: string
   /**
    * What the activity is for, said plainly where the task is scaffolded (EBUS-PRE-REVIEW-04, part
@@ -69,7 +85,10 @@ const brief = (
   image,
   kind: 'briefing',
   interaction: 'read',
-  instruction: 'Use this explanation to prepare for the task that follows.',
+  instruction:
+    image === 'demonstration'
+      ? 'Read the lead, then try the controls in the lab under it. The detail continues below the lab.'
+      : 'Read this before the task that follows.',
   teaching: worked ? ['foundation', 'worked'] : ['foundation'],
   questions: [],
 })
@@ -104,11 +123,40 @@ const decide = (
       ? 'This is the image you continued with. Interpret it, or open the explanation first.'
       : 'Use the stated situation to make your decision.',
 })
+/**
+ * The lesson's first screen: one decision, committed before any teaching (owner-approved plan of
+ * 2026-11-10, section A). The briefing and its worked example follow it, so neither can state the
+ * answer first. Nothing is scored and nothing waits on it.
+ */
+const predict = (id: string, title: string, slot: QuestionSlot = 'question'): ActivitySpec => ({
+  ...decide(id, title, [slot]),
+  kind: 'prediction',
+  instruction:
+    'Commit to an answer from what you already know. The teaching on the next screen explains it.',
+})
+/**
+ * The learner's own image after an acquisition, with its structures named and the lesson's key
+ * points beside it. It replaces a second check that asked the prediction again in other words.
+ */
+const explain = (
+  title = 'Read your image',
+  presentation: Presentation = 'ultrasound',
+): ActivitySpec => ({
+  id: 'review-acquisition',
+  title,
+  presentation,
+  image: 'held',
+  kind: 'debrief',
+  interaction: 'read',
+  teaching: ['takeaways'],
+  questions: [],
+  instruction: 'Compare your image with the key points beside it.',
+})
 const acquire = (
   id: string,
   title: string,
   presentation: Presentation,
-  task: 'guided' | 'changed-window' = 'guided',
+  task: LinkedVariant = 'guided',
 ): ActivitySpec => ({
   id,
   title,
@@ -122,13 +170,26 @@ const acquire = (
   instruction:
     task === 'changed-window'
       ? 'The scope has moved. Find the same node again from the new position.'
-      : 'Now try it yourself.',
+      : task === 'along-airway'
+        ? 'The rotation is set. Now move the scope along the airway.'
+        : task === 'airway-view'
+          ? 'Now find both views yourself, one after the other.'
+          : 'Now try it yourself.',
 })
+/** The lab an acquisition step works in: the unit's own, or its second one. */
+export function labForActivity(
+  unit: Lesson,
+  activity: Pick<ActivitySpec, 'task' | 'secondLab'> | undefined,
+) {
+  return activity?.secondLab || (activity?.task && activity.task !== 'guided')
+    ? unit.transferLab
+    : unit.lab
+}
 const apply = (
   id: string,
   title: string,
   interaction: 'sequence' | 'matching',
-  questions: QuestionSlot[] = ['question', 'observation'],
+  questions: QuestionSlot[] = [],
   presentation: Presentation = 'case',
 ): ActivitySpec => ({
   id,
@@ -139,7 +200,9 @@ const apply = (
   kind: 'application',
   image: 'none',
   teaching: [],
-  instruction: 'Complete the task, then interpret what your decisions establish.',
+  instruction: questions.length
+    ? 'Complete the task, then answer the check that follows it.'
+    : 'Complete the task. Its explanation opens when you finish.',
 })
 const transfer = (
   title: string,
@@ -196,6 +259,7 @@ const KEY_POINTS_PURPOSE: Record<'transfer' | 'review', string> = {
 /** Deliberate lesson flows, not a positional seven-stage adapter. Missing coverage is an error. */
 export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'clinical-question': [
+    predict('first-decision', 'Decide what one result settles'),
     {
       ...brief('clinical-request', 'Define what the examination must answer', 'briefing', 'none'),
       note: 'An examination record connects the clinical request, planned coverage, specimens and unanswered questions. Sampling one target may provide a diagnosis while leaving staging or ancillary-testing needs unresolved. A non-lung-cancer adenopathy case does not automatically receive an N category.',
@@ -203,37 +267,70 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     apply('information-needs', 'State the information needed', 'matching'),
     transfer('Consider a different diagnostic request'),
   ],
+  /*
+   * The scope itself (added 2026-11-10). The live example is ungated: the unit teaches what the
+   * oblique lens and the tip-mounted transducer mean for driving, and its task is the matching.
+   */
+  'ebus-scope': [
+    predict('first-decision', 'Decide why the tip missed'),
+    {
+      ...brief('scope-tip', 'See what the tip sees', 'linked', 'demonstration'),
+      // Says which control to move and what to watch, since this lab is the lesson's point.
+      instruction:
+        'Read the lead, then move Tip flexion both ways in the lab under it and watch the white-light view and the ultrasound image trade places. The detail continues below the lab.',
+    },
+    // The two views, found in turn with flexion alone: the airway ahead, then the image.
+    acquire(
+      'airway-then-wall',
+      'Look along the airway, then bring back the image',
+      'ultrasound',
+      'airway-view',
+    ),
+    apply('tip-parts', 'Match each part of the tip to what it does', 'matching'),
+    transfer('Keep the image or the airway view'),
+  ],
   'scope-orientation': [
+    predict('plane-interpretation', 'Interpret a change in plane'),
     brief('distal-scope', 'Relate the scope to the ultrasound plane', 'linked', 'demonstration'),
-    decide('plane-interpretation', 'Interpret a change in plane', ['question']),
     acquire('acquire-sweep', 'Sweep through the node', 'ultrasound'),
-    held(),
+    // The second movement: the plane slides along the airway and the node crosses the image.
+    acquire('slide-plane', 'Slide the plane along the airway', 'ultrasound', 'along-airway'),
+    explain(),
     transfer('Review a different apparent size'),
   ],
+  /*
+   * Consolidated lessons (owner decision of 2026-11-10). Each is one lesson with two labs: the
+   * steps marked `from` draw on the unit that used to be a separate lesson. One prediction opens
+   * the lesson and one transfer closes it; the absorbed unit's prediction and transfer repeated
+   * the parent's and stay in its content, unasked.
+   */
   'acoustic-contact': [
-    {
-      ...brief('contact-example', 'Compare contact and brightness', 'linked', 'demonstration'),
-      companion: 'contact-cutaway-model',
-    },
-    decide('contact-decision', 'Identify the acquisition problem', ['question']),
+    predict('contact-decision', 'Identify the acquisition problem'),
+    brief('contact-example', 'Compare contact and brightness', 'linked', 'demonstration'),
     acquire('restore-window', 'Restore the acoustic window', 'linked'),
-    held('Compare the acquired images', 'linked'),
+    explain('Compare the acquired images', 'linked'),
+    {
+      ...brief('contact-mechanism', 'Relate the wall, transducer and air gap', 'briefing'),
+      from: 'contact-cutaway-model',
+    },
+    {
+      ...acquire('contact-states', 'Compare the contact conditions', 'linked'),
+      from: 'contact-cutaway-model',
+    },
+    // The one check that reads the learner's own model image: air gap against shadowing reflector.
+    { ...held('Explain the contact comparison', 'linked'), from: 'contact-cutaway-model' },
     transfer('Reassess another window'),
   ],
   'station-seven': [
+    predict('station-decision', 'Separate approach from station'),
     brief('subcarinal-region', 'Locate the subcarinal region', 'regional', 'reference', false),
     demo('assisted-window', 'Compare the two bronchial approaches', 'linked'),
-    {
-      ...decide('station-decision', 'Separate approach from station', ['question']),
-      purpose:
-        'This check separates the approach from the station. The stem names the node’s compartment; what it asks is whether the bronchus the scope is in changes the station you record.',
-    },
     {
       ...acquire('bronchial-sweeps', 'Acquire both bronchial windows', 'linked'),
       purpose:
         'Two approaches, one target: this acquisition asks for your own rotation sweep from each main bronchus, so you can compare the two windows onto the same subcarinal node.',
     },
-    held('Interpret the acquired window'),
+    explain('Read the acquired window'),
     {
       ...acquire('changed-position', 'Compare another window', 'ultrasound', 'changed-window'),
       purpose: CHANGED_WINDOW_PURPOSE,
@@ -248,6 +345,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     ),
   ],
   preparation: [
+    predict('first-decision', 'Decide the next step before starting'),
     {
       ...brief('readiness', 'Resolve the readiness issue', 'briefing', 'none'),
       note: 'A readiness checklist records a team declaration; it does not certify patient safety. Pausing to resolve an unanswered medication, airway, equipment or specimen question is an appropriate outcome.',
@@ -255,78 +353,101 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     apply('team-check', 'Agree on the next safe step', 'sequence'),
     transfer('Decide when to pause'),
   ],
-  'contact-cutaway-model': [
-    {
-      ...brief('contact-mechanism', 'Relate the wall, transducer and air gap', 'briefing'),
-      companion: 'acoustic-contact',
-    },
-    acquire('contact-states', 'Compare the supported contact states', 'linked'),
-    { ...held('Explain the contact comparison', 'linked'), questions: ['question', 'observation'] },
-    transfer('Apply the contact principle'),
-  ],
   'image-depth': [
+    predict('field-decision', 'Choose the control for the field'),
     brief('depth-example', 'Compare the displayed fields', 'ultrasound', 'demonstration'),
-    decide('field-decision', 'Choose the control for the field', ['question']),
     {
       ...acquire('depth-comparison', 'Frame the target and surrounding tissue', 'ultrasound'),
       purpose: EXAMPLE_SETTINGS_PURPOSE,
     },
-    held('Interpret the two recorded fields'),
+    explain('Compare the two recorded fields'),
     transfer('Preserve the anatomy beyond another target'),
-  ],
-  'gain-contrast': [
-    brief('detail-example', 'Compare brightness and tissue detail', 'ultrasound', 'demonstration'),
-    decide('brightness-decision', 'Explain a brightness change', ['question']),
+    {
+      ...brief(
+        'detail-example',
+        'Compare brightness and tissue detail',
+        'ultrasound',
+        'demonstration',
+      ),
+      from: 'gain-contrast',
+    },
     {
       ...acquire('detail-comparison', 'Adjust one image control at a time', 'ultrasound'),
       purpose: EXAMPLE_SETTINGS_PURPOSE,
+      from: 'gain-contrast',
     },
-    held('Compare the retained detail'),
-    transfer('Distinguish poor contact from low gain'),
+    { ...explain('Compare the retained detail'), from: 'gain-contrast' },
+    // Gain against contact: the two are confused at the bedside, so this transfer is kept.
+    { ...transfer('Distinguish poor contact from low gain'), from: 'gain-contrast' },
   ],
+  /*
+   * No prediction here: the lesson's title names the answer to its first check. The lesson is
+   * rebuilt on a recorded node-and-vessel clip, where the prediction is asked on a paused frame.
+   */
   doppler: [
     brief('flow-example', 'Use flow and anatomy together', 'ultrasound', 'demonstration'),
-    decide('path-assessment', 'Choose the additional assessment', ['question']),
     acquire('flow-comparison', 'Compare grayscale and color recordings', 'ultrasound'),
-    held('Interpret the recorded flow'),
+    explain('Compare the two recordings'),
+    // The owner's patient recording (2026-11-11): the node, the small vessels around it and the
+    // pleura beyond it, read on a paused frame before anything is labelled.
+    {
+      ...decide(
+        'patient-flow',
+        'Read colour flow around a node on a patient recording',
+        ['observation'],
+        'ultrasound',
+        'diagram',
+      ),
+      figure: 'clip-doppler',
+      instruction:
+        'Play the recording, then open the frame with colour flow and answer. Its labels open after you answer.',
+    },
     transfer('Resolve an uncertain vascular structure'),
   ],
-  'measurement-phantoms': [
-    brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
-    acquire('phantom-comparison', 'Sweep and measure the analytic shapes', 'linked'),
-    {
-      ...held('Explain the dimension in this plane', 'linked'),
-      questions: ['question', 'observation'],
-    },
-    transfer('Apply the axis limitation to a node'),
-  ],
   capture: [
+    {
+      ...predict('size-decision', 'Explain a change in apparent size'),
+      from: 'measurement-phantoms',
+    },
+    {
+      ...brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
+      from: 'measurement-phantoms',
+    },
+    {
+      ...acquire('phantom-comparison', 'Sweep and measure the elongated shape', 'linked'),
+      from: 'measurement-phantoms',
+    },
+    { ...explain('Read the dimension in this plane', 'linked'), from: 'measurement-phantoms' },
     brief(
       'capture-context',
       'Choose the image before the measurement',
       'ultrasound',
       'demonstration',
     ),
-    decide('plane-decision', 'Explain the choice of plane', ['question']),
     acquire('capture-frame', 'Freeze, place calipers and save the frame', 'ultrasound'),
-    held('Inspect the capture record'),
+    explain('Inspect the capture record'),
     transfer('Return to live guidance before needle movement'),
   ],
   'ct-map': [
-    brief(
-      'regional-map',
-      'Relate the target to its anatomical region',
-      'regional',
-      'reference',
-      false,
-    ),
+    predict('map-decision', 'Identify the basis of a station assignment'),
+    // The nodal map itself, opening on station 7; its CT, airway and ultrasound views open from it.
+    {
+      ...brief(
+        'regional-map',
+        'Relate the target to its anatomical region',
+        'regional',
+        'diagram',
+        false,
+      ),
+      figure: 'station-map',
+    },
     demo('section-comparison', 'Compare the model section and ultrasound plane', 'linked'),
-    decide('map-decision', 'Identify the basis of a station assignment', ['question']),
     acquire('section-sweep', 'Check landmarks and acquire a section', 'linked'),
-    held('Identify what determines a station name'),
+    explain('Read the acquired section'),
     transfer('Reconsider a target near a boundary'),
   ],
   'right-paratracheal': [
+    predict('right-boundary', 'Identify the relevant boundary'),
     brief(
       'right-region',
       'Locate the right paratracheal compartment',
@@ -335,9 +456,8 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       false,
     ),
     demo('right-landmarks', 'Use the trachea, SVC and azygos relationship', 'linked'),
-    decide('right-boundary', 'Identify the relevant boundary', ['question']),
     acquire('right-sweep', 'Acquire the right paratracheal window', 'linked'),
-    held('Interpret the acquired compartment'),
+    explain('Read the acquired compartment'),
     {
       ...acquire(
         'right-changed',
@@ -350,21 +470,21 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Compare the changed window', 'held', 'ultrasound'),
   ],
   'left-paratracheal': [
+    predict('left-boundary', 'Distinguish the left-sided compartments'),
     brief('left-region', 'Locate 4L beside its vascular landmarks', 'regional', 'reference'),
-    decide('left-boundary', 'Distinguish the left-sided compartments', ['question']),
-    acquire('left-assisted', 'Explore the supported 4L window', 'regional'),
+    // A linked lab since 2026-11-10: the arch, the left pulmonary artery, then the node.
+    acquire('left-assisted', 'Find 4L between the arch and the pulmonary artery', 'linked'),
+    explain('Read the acquired compartment'),
+    // The same lesson's upper station, from its own position in the trachea.
     {
-      ...decide(
-        'left-relationships',
-        'Interpret the vascular relationships',
-        ['observation'],
-        'regional',
-      ),
-      teaching: ['takeaways'],
+      ...acquire('left-upper', 'Find 2L above the arch', 'ultrasound'),
+      secondLab: true,
+      instruction: 'Now the station above it, from a higher position in the trachea.',
     },
     transfer('Consider a lateral subaortic target'),
   ],
   'hilar-interlobar': [
+    predict('first-decision', 'Name a station from its bronchi'),
     brief(
       'bronchial-relations',
       'Locate targets by bronchial relationships',
@@ -375,28 +495,37 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       'regional-identity',
       'Match bronchial relationships to interlobar stations',
       'matching',
-      ['question', 'observation'],
+      [],
       'regional',
     ),
+    // One interlobar station on ultrasound (2026-11-10): the white-light view shows the lobar
+    // bronchi that name it.
+    acquire('interlobar-scan', 'Find 11Ri between the lobar bronchi', 'linked'),
+    explain('Read the interlobar window'),
     transfer('Apply the primary side to another case'),
   ],
   'node-characterization': [
-    brief(
-      'description-evidence',
-      'Describe the appearance before its implications',
-      'briefing',
-      'none',
-    ),
-    record(
-      'node-description',
-      'Choose the description the vignette supports',
-      'node-description',
-      DESCRIPTION_CASE,
-    ),
-    apply('description-reasoning', 'Separate description from pathology', 'matching'),
+    {
+      ...brief('description-evidence', 'Learn the six features on real images', 'briefing'),
+      figure: 'node-features',
+    },
+    {
+      id: 'feature-reading',
+      title: 'Read the features on eight nodes',
+      kind: 'interpretation',
+      presentation: 'ultrasound',
+      image: 'diagram',
+      figure: 'node-reading',
+      interaction: 'read',
+      teaching: [],
+      questions: [],
+      instruction:
+        'Each image was chosen to show one or two features. Answer the question beside it; the outlines appear when you check your answer.',
+    },
     transfer('Interpret a different morphology report'),
   ],
   'systematic-staging': [
+    predict('first-decision', 'Rank the targets by N category'),
     brief('staging-purpose', 'Define the coverage needed for staging', 'case'),
     record('case-plan', 'Plan the examination for this primary side', 'plan', EXAMINATION_CASE),
     {
@@ -407,55 +536,81 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Count stations and nodes separately'),
   ],
   'eus-b': [
-    {
-      ...brief('complementary-route', 'Identify what a second route can add', 'regional'),
-      companion: 'eus-b-route-model',
-    },
+    predict('first-decision', 'Choose the target for a second route'),
+    brief('complementary-route', 'Identify what a second route can add', 'regional'),
     apply(
       'route-coverage',
       'Match the route to the remaining question',
       'matching',
-      ['question', 'observation'],
+      [],
       'regional',
     ),
-    transfer('Identify an unresolved regional gap'),
-  ],
-  'eus-b-route-model': [
     {
       ...brief('route-orientation', 'Compare the approach to the same target', 'briefing'),
-      companion: 'eus-b',
+      from: 'eus-b-route-model',
     },
-    acquire('route-comparison', 'Compare supported and unsupported locators', 'linked'),
-    { ...held('Explain the route comparison', 'linked'), questions: ['question', 'observation'] },
-    transfer('Preserve an unexamined region in the plan'),
+    {
+      ...acquire('route-comparison', 'Compare the airway and esophageal routes', 'linked'),
+      from: 'eus-b-route-model',
+    },
+    { ...explain('Read the route comparison', 'linked'), from: 'eus-b-route-model' },
+    transfer('Identify an unresolved regional gap'),
   ],
   'needle-safety': [
+    predict('first-decision', 'Decide what to do when the tip is lost'),
+    brief('sampling-states', 'Follow the sampling sequence', 'sampling'),
+    apply('safe-sequence', 'Link needle actions to current guidance', 'sequence', [], 'sampling'),
+    // The owner's patient recording of a pass (2026-11-11): what the needle and the stylet look
+    // like on ultrasound, read on a paused frame before anything is labelled.
     {
-      ...brief('sampling-states', 'Follow the sampling sequence', 'sampling'),
-      companion: 'needle-assembly-model',
+      ...decide(
+        'needle-on-ultrasound',
+        'Read the needle on a patient recording',
+        ['observation'],
+        'sampling',
+        'diagram',
+      ),
+      figure: 'clip-needle',
+      instruction:
+        'Play the recording, then open the frame early in the pass and answer. Its labels open after you answer.',
     },
-    apply(
-      'safe-sequence',
-      'Link needle actions to current guidance',
-      'sequence',
-      ['question', 'observation'],
-      'sampling',
-    ),
+    // Needle technique within the node (2026-11-11): a decision first, then which choices are the
+    // operator's, then matching a situation to the change. The decision is asked before its
+    // teaching, as a check and not a second "predict first": one prediction opens a lesson.
+    {
+      ...decide('next-pass', 'Decide what to change on the next pass', ['question'], 'sampling'),
+      from: 'needle-technique',
+    },
+    {
+      ...brief('technique-choices', 'Know which choices are yours', 'briefing', 'none'),
+      from: 'needle-technique',
+    },
+    {
+      ...apply('technique-match', 'Match the situation to the change', 'matching', [], 'sampling'),
+      from: 'needle-technique',
+    },
+    {
+      ...brief('needle-components', 'Know what each control on the handle does', 'briefing'),
+      from: 'needle-assembly-model',
+    },
+    {
+      ...acquire('needle-states', 'Make one needle pass', 'sampling'),
+      from: 'needle-assembly-model',
+    },
+    // The lab ends with the assembly out, so the learner's own last picture shows no needle. The
+    // explanation is read on the two pictures the lab is about: the tip in the image, and the tip
+    // turned out of it with the line still on the screen.
+    {
+      ...explain('Explain why the needle was held still', 'sampling'),
+      from: 'needle-assembly-model',
+      image: 'diagram',
+      figure: 'needle-tip',
+      instruction: 'Compare the two pictures with the key points beside them.',
+    },
     transfer('Respond to resistance at a calcified target'),
   ],
-  'needle-assembly-model': [
-    {
-      ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
-      companion: 'needle-safety',
-    },
-    acquire('needle-states', 'Practice the supported assembly states', 'sampling'),
-    {
-      ...held('Interpret the live-tip limitation', 'sampling'),
-      questions: ['question', 'observation'],
-    },
-    transfer('Respond to resistance with the tip visible'),
-  ],
   'adequacy-rose': [
+    predict('first-decision', 'Separate what ROSE has settled'),
     brief(
       'adequacy-endpoints',
       'Separate representation, diagnosis and study suitability',
@@ -471,28 +626,24 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       'adequacy-reasoning',
       'Identify which endpoint remains unresolved',
       'matching',
-      ['question', 'observation'],
+      [],
       'sampling',
     ),
     transfer('Plan when ROSE is unavailable'),
   ],
   'specimen-triage': [
+    predict('first-decision', 'Explain why specimens stay separate'),
     brief('specimen-request', 'Connect each specimen to the requested studies', 'sampling'),
     {
       ...record('allocation-plan', 'Allocate the case specimens', 'allocation', EXAMINATION_CASE),
       purpose:
         'Guided record: each requested study shows the laboratory’s instruction for it, or says that none was supplied. Record the handling plan each one supports.',
     },
-    apply(
-      'traceability',
-      'Preserve the source through processing',
-      'matching',
-      ['question', 'observation'],
-      'sampling',
-    ),
+    apply('traceability', 'Preserve the source through processing', 'matching', [], 'sampling'),
     transfer('Discuss granulomas when microbiology was not sent'),
   ],
   'difficult-acquisition': [
+    predict('first-decision', 'Choose the first adjustment'),
     brief('acquisition-problem', 'Classify the problem before changing controls', 'case'),
     {
       ...apply('problem-action', 'Choose the first response to each problem', 'matching'),
@@ -501,61 +652,134 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     },
     transfer('Recognize the limit of the current window'),
   ],
+  /* Both checks stay: the first is the immediate response, the second a separate later decision. */
   'complications-recovery': [
+    predict('first-decision', 'Respond to bleeding during a pass'),
     brief(
       'patient-response',
       'Respond to the patient and communicate the limitation',
       'case',
       'none',
     ),
-    apply('recovery-sequence', 'Prioritize the patient during deterioration', 'sequence'),
+    apply('recovery-sequence', 'Prioritize the patient during deterioration', 'sequence', [
+      'observation',
+    ]),
     transfer('Plan recovery and escalation'),
   ],
   'results-reporting': [
+    predict('first-decision', 'Interpret a bloody aspirate'),
     brief('report-evidence', 'Build the conclusion from the evidence', 'record', 'none'),
     record('reconciled-report', 'Construct the case report', 'report', EXAMINATION_CASE),
     apply('result-meaning', 'Reconcile the result with the clinical question', 'matching'),
     transfer('Close the loop on unresolved findings'),
+  ],
+  /*
+   * The capstone (2026-11-11). The order is committed to before the case is laid out, each station
+   * is scanned in the lab the learner already knows and then read for what its sample settles, and
+   * the lesson ends on the record of the examination.
+   */
+  'staging-examination': [
+    predict('first-station', 'Choose the first station to sample'),
+    {
+      ...brief('case-plan', 'Read the case and the plan', 'regional', 'diagram'),
+      figure: 'station-map-n',
+    },
+    decide('plan-check', 'Check the plan', ['observation'], 'regional'),
+    ...['4l', '7', '4r', '11ri'].flatMap((station): ActivitySpec[] => {
+      const from = 'staging-exam-' + station
+      const name = station === '11ri' ? '11Ri' : station.toUpperCase()
+      return [
+        {
+          ...acquire('scan', 'Scan station ' + name, 'linked'),
+          from,
+          instruction: 'Scan the node as you did when you first met this station.',
+        },
+        {
+          ...decide(
+            'sample',
+            'Sample station ' + name + ' and read the result',
+            ['observation', 'question'],
+            'ultrasound',
+            'held',
+          ),
+          from,
+        },
+      ]
+    }),
+    apply('report-lines', 'Match each result to its line in the report', 'matching', [], 'record'),
+    {
+      ...transfer('State what the examination supports'),
+      teaching: [],
+    },
+    {
+      ...explain('Read the record of your examination', 'record'),
+      id: 'examination-record',
+      image: 'diagram',
+      figure: 'staging-summary',
+      instruction:
+        'This is the examination you have just carried out. Nothing on this page is stored.',
+    },
   ],
 }
 
 export function activitiesForLesson(lesson: Lesson): LessonActivity[] {
   const specs = ACTIVITY_FLOWS[lesson.id]
   if (!specs) throw new Error('EBUS lesson has no activity flow: ' + lesson.id)
-  return specs.map((spec, index) => ({
-    ...spec,
-    id: lesson.id + ':' + spec.id,
-    lessonId: lesson.id,
-    contentVersion: 1,
-    objective: lesson.objective,
-    sourceIds: lesson.sources,
-    limitation: lesson.boundary ?? '',
-    purpose:
-      spec.purpose ??
-      (spec.teaching.includes('takeaways') && spec.questions.length
-        ? KEY_POINTS_PURPOSE[spec.kind === 'transfer' ? 'transfer' : 'review']
-        : undefined),
-    /*
-     * A check with the key points beside it, or with a stated purpose, is guided: it used to be
-     * called independent whenever it had questions (EBUS-PRE-REVIEW-04, H). Descriptive only.
-     */
-    support:
-      spec.image === 'demonstration'
-        ? 'worked'
-        : spec.purpose || spec.teaching.includes('takeaways')
-          ? 'guided'
-          : spec.image === 'held' && lesson.lab?.kind === 'model'
+  /** The unit a step draws on: its text, lab, checks, sources and boundary are that unit's. */
+  const unitFor = (spec: ActivitySpec): Lesson => {
+    const id = spec.from ?? lesson.id
+    const unit = (lesson.parts ?? [lesson]).find((part) => part.id === id)
+    if (!unit) throw new Error('EBUS lesson ' + lesson.id + ' has no unit ' + id)
+    return unit
+  }
+  const idOf = (spec: ActivitySpec) => unitFor(spec).id + ':' + spec.id
+  return specs.map((spec, index) => {
+    const unit = unitFor(spec)
+    return {
+      ...spec,
+      id: idOf(spec),
+      lessonId: unit.id,
+      contentVersion: 1,
+      objective: unit.objective,
+      sourceIds: unit.sources,
+      limitation: unit.boundary ?? '',
+      purpose:
+        spec.purpose ??
+        (spec.teaching.includes('takeaways') && spec.questions.length
+          ? KEY_POINTS_PURPOSE[spec.kind === 'transfer' ? 'transfer' : 'review']
+          : undefined),
+      /*
+       * A check with the key points beside it, or with a stated purpose, is guided: it used to be
+       * called independent whenever it had questions (EBUS-PRE-REVIEW-04, H). Descriptive only.
+       */
+      support:
+        spec.image === 'demonstration'
+          ? 'worked'
+          : spec.purpose || spec.teaching.includes('takeaways')
             ? 'guided'
-            : spec.questions.length
-              ? 'independent'
-              : 'guided',
-    completion: { action: spec.interaction, responses: spec.questions },
-    transitions: {
-      next: specs[index + 1] ? lesson.id + ':' + specs[index + 1].id : null,
-      retry: lesson.id + ':' + spec.id,
-      review: 'read-only',
-    },
-  }))
+            : spec.image === 'held' && unit.lab?.kind === 'model'
+              ? 'guided'
+              : spec.questions.length
+                ? 'independent'
+                : 'guided',
+      completion: { action: spec.interaction, responses: spec.questions },
+      transitions: {
+        next: specs[index + 1] ? idOf(specs[index + 1]) : null,
+        retry: idOf(spec),
+        review: 'read-only',
+      },
+    }
+  })
 }
 
-export const flowAuthoring = { brief, demo, decide, acquire, apply, transfer, held }
+export const flowAuthoring = {
+  predict,
+  brief,
+  demo,
+  decide,
+  acquire,
+  apply,
+  explain,
+  transfer,
+  held,
+}

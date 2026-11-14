@@ -58,6 +58,11 @@ export interface LabRound {
    * S12-1). Printed above the part so a repeat reads as a revisit and an early use as a preview.
    */
   readonly relation?: LabRoundRelation
+  /**
+   * The teaching patient's changed mechanics are what this part asks the learner to find (MV-L5),
+   * so the part-setup line above the first task does not name them.
+   */
+  readonly mechanicsWithheld?: true
 }
 export type LabQuestionKind = 'predict' | 'identify' | 'interpret' | 'reflect'
 export interface LabRoundRelation {
@@ -105,8 +110,8 @@ const stiffVolume = round({
   title: 'Change the lung, keep the volume',
   hint: 'Volume control holds one of the two things you are comparing. Decide which trace the machine is holding, then ask what a stiffer system does to the other.',
   introduction:
-    'This passive patient is receiving volume-controlled breaths. You can change the lung while the ventilator keeps its settings.',
-  look: 'Compare the top of the pressure trace with the height of the volume trace.',
+    'This passive patient is on volume control. You will make the respiratory system stiffer; the ventilator settings stay as they are.',
+  look: 'Compare peak pressure with the height of the volume trace.',
   prompt:
     'At the same volume and flow settings, what will a stiffer respiratory system do to the next breaths?',
   choices: [
@@ -116,15 +121,15 @@ const stiffVolume = round({
   ],
   correct: 0,
   rationales: [
-    'Volume is the controlled variable. More pressure is needed to deliver it into a less compliant system.',
-    'That is the pressure-control prediction. Here the machine is still targeting volume.',
+    'In volume control, tidal volume is the control variable. A less compliant system needs more pressure to take the same volume.',
+    'That would be pressure control. Here the ventilator is still delivering a set volume.',
     'A stiffer system requires more pressure for a given volume, not less.',
   ],
-  task: 'Move compliance to 0.5× and watch several new breaths. Leave the ventilator settings unchanged.',
+  task: 'Set the teaching patient’s compliance to 0.5× and watch several breaths. Leave the ventilator settings alone.',
   goals: [m('complianceScale', 0.5)],
   watch: ['peak', 'volume', 'plateau'],
   explanation:
-    'The volume target stays the same, while the pressure cost changes. Check that the pressure limit has not interrupted delivery before interpreting the comparison.',
+    'The tidal volume stays the same and the pressure needed to deliver it rises. Before you read anything into that, check that the high-pressure limit did not cut the breath short.',
 })
 const stiffPressure = round({
   ...stiffVolume,
@@ -132,8 +137,9 @@ const stiffPressure = round({
   hint: 'This mode holds a different trace from the one before. Find the trace that is held, then follow the one that is free to move.',
   setup: pressureMode,
   introduction:
-    'The same passive model is now receiving pressure-controlled breaths. Repeat the change in lung stiffness.',
-  prompt: 'With pressure and inspiratory time held constant, what will stiffening this system do?',
+    'The same passive patient is now on pressure control. Make the same stiffness change.',
+  prompt:
+    'With inspiratory pressure and inspiratory time held constant, what will a stiffer respiratory system do?',
   choices: [
     'Pressure rises while volume stays fixed',
     'Pressure stays similar while volume falls',
@@ -141,20 +147,20 @@ const stiffPressure = round({
   ],
   correct: 1,
   rationales: [
-    'That describes volume-targeted delivery. This machine is holding inspiratory pressure.',
-    'The pressure target is unchanged; the stiffer respiratory system takes a smaller volume.',
-    'A mode controls a variable. It does not remove the effects of lung mechanics.',
+    'That is volume control. In pressure control the ventilator holds the inspiratory pressure.',
+    'The set pressure is unchanged, so the stiffer respiratory system takes a smaller tidal volume.',
+    'A mode chooses which variable is controlled. It does not cancel the effect of the lung’s mechanics.',
   ],
   explanation:
-    'The same change in the lung now appears mainly in delivered volume. A mode name is a starting point for deciding what to monitor.',
+    'In pressure control the same stiffening shows up mainly as a smaller delivered tidal volume. The mode tells you which reading to watch.',
 })
 const resistance = round({
   title: 'Find the pressure spent moving gas',
   hint: 'A hold stops flow. Ask which part of the airway pressure exists only while gas is moving.',
   introduction:
-    'The muscles are quiet. Compare flowing pressure with the pressure during an actual occlusion.',
-  look: 'Find the peak on a delivered breath. An inspiratory hold will stop flow at the end of inspiration.',
-  prompt: 'After increasing resistance, which pattern should an inspiratory hold help reveal?',
+    'This patient is passive: no respiratory effort. Compare airway pressure while gas is flowing with the pressure during an inspiratory hold.',
+  look: 'Find peak pressure on a delivered breath. An inspiratory hold stops flow at end-inspiration.',
+  prompt: 'After airway resistance rises, what should an inspiratory hold show?',
   choices: [
     'A larger peak-to-plateau gap',
     'A smaller peak-to-plateau gap',
@@ -162,25 +168,33 @@ const resistance = round({
   ],
   correct: 0,
   rationales: [
-    'Resistance adds a pressure cost while gas flows. The hold removes that flowing component.',
-    'More resistance increases the flowing pressure cost; it does not make the gap smaller.',
-    'The volume target is a ventilator setting and has not changed.',
+    'Resistance adds pressure only while gas is flowing. The hold stops flow, so that part falls away and the plateau is left.',
+    'More resistance raises the pressure needed to move gas; it does not make the gap smaller.',
+    'The set tidal volume is a ventilator setting, and it has not changed.',
   ],
-  task: 'Set resistance to 2×, then perform an inspiratory hold. Watch it occur at a breath boundary.',
+  task: 'Set the teaching patient’s airway resistance to 2×, then perform an inspiratory hold. The hold happens at the end of the next inspiration.',
   goals: [m('resistanceScale', 2), hold],
   seconds: 12,
   watch: ['peak', 'plateau', 'volume'],
   explanation:
-    'Use the actual hold, together with the effort signal. Separating resistance from elastic load requires a valid passive measurement.',
+    'Peak minus plateau is the pressure spent on airway resistance, and it widens when resistance rises. Splitting resistive from elastic pressure needs a valid hold in a passive patient: check the effort trace before you trust the plateau.',
 })
 const timing = round({
-  title: 'Give expiration less time',
+  title: 'A higher rate in a patient who exhales slowly',
   hint: 'Each cycle lasts 60 seconds divided by the rate, and inspiration takes as long as it did before. Work out what is left.',
-  setup: [mechanics(1, 4), set('ratePerMin', 12)],
+  /*
+   * The high-pressure limit is 60 here, as it is for the other high-resistance patients (MV-06,
+   * MV-13, MV-14). At the teaching patient's 40 this round's peak starts at 37 cmH2O, and the
+   * trapped gas the task asks for (intrinsic PEEP 0.7 to 4.9) took it over the limit: the alarm
+   * sounded over a breath the simulator delivers in full, and the lesson then held the capture as
+   * "no longer isolates one change" on a learner who had done exactly what was asked (owner
+   * ruling, 2026-11-12).
+   */
+  setup: [mechanics(1, 4), set('ratePerMin', 12), set('highPressureLimitCmH2O', 60)],
   introduction:
-    'This passive model has increased resistance. Leave breath size and flow alone and change only how often a breath starts.',
-  look: 'Watch how close expiratory flow gets to zero before the next inspiration.',
-  prompt: 'What should increasing the mandatory rate do to this patient’s opportunity to empty?',
+    'This passive patient has high airway resistance and exhales slowly. Leave the tidal volume and inspiratory flow alone and change only the set rate.',
+  look: 'Watch how close expiratory flow comes to zero before the next inspiration starts.',
+  prompt: 'If you raise the set rate, what happens to the time this patient has to empty?',
   choices: [
     'More time for passive emptying',
     'Unchanged time between breaths',
@@ -188,26 +202,31 @@ const timing = round({
   ],
   correct: 2,
   rationales: [
-    'A higher rate shortens the cycle when inspiratory delivery is unchanged.',
-    'The cycle duration changes when the rate changes.',
-    'The next inspiration starts sooner. Check the remaining outward flow rather than assuming the lung emptied.',
+    'A higher rate shortens each breath cycle. With inspiration unchanged, the time left for expiration gets shorter, not longer.',
+    'Each cycle lasts 60 seconds divided by the rate, so the time between breaths changes whenever the rate does.',
+    'The next inspiration starts sooner, so expiration is cut short. Check whether expiratory flow has reached zero rather than assuming the lung emptied.',
   ],
-  task: 'Raise rate from 12 to 26/min. Compare the end of expiration across several breaths.',
+  task: 'Raise the set rate from 12 to 26/min, then compare the end of expiration over several breaths.',
   goals: [c('ratePerMin', 26)],
   seconds: 20,
-  watch: ['rate', 'expiratoryFlow', 'volume'],
+  /*
+   * Intrinsic PEEP is watched here as it is in this section's second part (owner, 2026-11-11), so
+   * the drawing of the lungs beside the console can shade the gas not exhaled: it draws that from
+   * this reading and from nothing else. Same place in the list as in the second part.
+   */
+  watch: ['rate', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'More breaths per minute can leave less time for gas to leave. In this simplified patient, read the actual expiratory trace; a setting alone does not establish complete emptying.',
+    'More breaths per minute can leave less time to exhale. Read the expiratory flow trace itself: whether flow reaches zero before the next breath, not the rate setting, tells you whether the lung emptied.',
 })
 const earlierCycle = round({
   title: 'Give expiration time back',
   hint: 'Inspiratory flow falls from its peak during a supported breath. Ask whether a higher percentage of that peak is reached earlier or later.',
   caseId: 'MV-10',
   introduction:
-    'A different simulated patient: the obstructive patient of case MV-10, breathing on pressure support. On pressure support the patient starts each breath, and the ventilator ends it when inspiratory flow has fallen to a set percentage of its peak: the cycle-off threshold (expiratory trigger sensitivity, ETS).',
-  look: 'Compare the end of machine inspiration with the effort trace, then inspect outward flow.',
+    'This patient has COPD and is on pressure support. The patient triggers each breath, and the ventilator cycles to expiration when inspiratory flow has decayed to a set percentage of its peak: the cycle-off threshold (expiratory trigger sensitivity, ETS).',
+  look: 'Compare where the machine breath ends with the patient’s effort trace, then look at expiratory flow.',
   prompt:
-    'You raise the cycle-off threshold on this supported breath. Which immediate change on the traces should you look for?',
+    'If you raise the cycle-off threshold (ETS) on these pressure-support breaths, what immediate change should you look for on the traces?',
   choices: [
     'A longer machine inspiration',
     'Shorter machine inspiration',
@@ -215,23 +234,24 @@ const earlierCycle = round({
   ],
   correct: 1,
   rationales: [
-    'A higher threshold is met sooner on the decaying inspiratory flow, so support ends earlier, not later.',
-    'A higher flow-cycle threshold is reached sooner on the decaying inspiratory flow, so support ends earlier — provided flow cycling, and not the time cap, is what ends this breath. Watch the measured inspiratory time and the expiratory limb; the clinical response still needs reassessment.',
-    'Ending support sooner gives each breath less time to fill, so the delivered volume tends to fall rather than rise.',
+    'A higher threshold is reached sooner as inspiratory flow decays, so the breath cycles off earlier, not later.',
+    'A higher threshold is reached sooner as inspiratory flow decays, so support ends earlier — provided flow cycling, not the maximum inspiratory time, is what ends this breath. Watch the measured inspiratory time and expiratory flow, then reassess the patient.',
+    'Ending support sooner gives the breath less time to fill, so the delivered tidal volume tends to fall, not rise.',
   ],
-  task: 'Raise cycling sensitivity (ETS) to 50%. Compare measured inspiratory time and emptying.',
+  task: 'Raise the cycle-off threshold (ETS) to 50%, then compare the measured inspiratory time and expiratory flow.',
   goals: [c('etsPercent', 50)],
   seconds: 25,
   watch: ['ti', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'The setting must cross the point where flow cycling, rather than the time cap, ends this breath. The response belongs to this patient; the cycle-off value used here is set for this comparison, not a universal prescription.',
+    'Raising ETS changes the breath only when flow cycling, not the maximum inspiratory time, is what ends it. The response is this patient’s: the threshold used here suits this comparison and is not a setting for every patient.',
 })
 const flow = round({
   title: 'Move the gas faster',
   hint: 'Flow is a rate and tidal volume is an amount. Hold the amount fixed and ask how long it takes at the new rate.',
-  introduction: 'You can change inspiratory flow without changing the selected tidal volume.',
-  look: 'Follow the flow rectangle and the time taken for the volume trace to reach its peak.',
-  prompt: 'If flow rises while the tidal-volume target stays fixed, what should happen?',
+  introduction:
+    'In volume control, inspiratory flow and tidal volume are separate settings: you can change one without the other.',
+  look: 'Follow the square flow wave, and how long the volume trace takes to reach its peak.',
+  prompt: 'If inspiratory flow rises and the set tidal volume stays the same, what happens?',
   choices: [
     'The same volume arrives sooner',
     'The selected volume must rise',
@@ -239,23 +259,24 @@ const flow = round({
   ],
   correct: 0,
   rationales: [
-    'A higher rate of delivery reaches the same total sooner. Pressure during flow can also change.',
-    'Flow is a rate; the separate volume target stays fixed.',
+    'Faster flow delivers the same volume in less time. Pressure during flow can also change.',
+    'Flow is a rate; the set tidal volume is a separate setting and stays where it is.',
     'Faster delivery shortens the time needed for the same volume.',
   ],
-  task: 'Increase peak flow to 60 L/min. Watch the flow, volume, and pressure traces together.',
+  task: 'Set peak inspiratory flow to 60 L/min, then watch flow, volume and pressure together.',
   goals: [c('peakFlowLMin', 60)],
   watch: ['ti', 'volume', 'peak'],
   explanation:
-    'Flow describes how fast gas moves. Volume describes how much has moved. Their relationship becomes visible when you change one and watch the other.',
+    'Flow is how fast gas moves; volume is how much has moved. At the same tidal volume, higher flow fills the breath sooner and shortens inspiratory time.',
 })
 const oxygen = round({
   title: 'Separate oxygen from breath delivery',
   hint: 'Ask on which of the three traces — pressure, flow or volume — the oxygen setting appears at all.',
   asks: 'identify',
-  introduction: 'Keep this passive patient’s volume, rate, flow, and PEEP unchanged.',
-  look: 'Use the three tracings for breath delivery and SpO₂ for the oxygenation response.',
-  prompt: 'What does an increase in the oxygen control directly change?',
+  introduction:
+    'The same passive patient. Leave the tidal volume, rate, flow and PEEP where they are.',
+  look: 'Read breath delivery on the three traces, and oxygenation on the SpO₂.',
+  prompt: 'What does raising the set oxygen fraction (FiO₂) change directly?',
   choices: [
     'The volume delivered with each machine inflation',
     'The gas mixture entering the circuit',
@@ -263,24 +284,24 @@ const oxygen = round({
   ],
   correct: 1,
   rationales: [
-    'Volume is a separate setting.',
-    'The oxygen fraction changes immediately at the device. The patient response evolves with simulated time.',
-    'The respiratory cycle is set by other controls.',
+    'Tidal volume is a separate setting.',
+    'The FiO₂ changes at the ventilator at once; the patient’s response develops over time.',
+    'Rate and breath timing are set by other controls.',
   ],
-  task: 'Increase oxygen from 40% to 60%. Let the patient run and compare gas exchange with the breath traces.',
+  task: 'Raise FiO₂ from 40% to 60%. Let the patient run, then compare oxygenation and CO₂ with the breath traces.',
   goals: [c('oxygenPercent', 60)],
   seconds: 30,
   watch: ['spo2', 'volume', 'rate', 'co2'],
   explanation:
-    'A change in gas composition does not directly select a different tidal volume or rate. Oxygenation, CO₂ clearance, and mechanical delivery need distinct observations.',
+    'Changing FiO₂ changes the gas mixture, not the tidal volume or the rate. Oxygenation, CO₂ clearance and breath delivery each have their own reading.',
 })
 const effortHold = round({
-  title: 'Test the measurement in an active patient',
+  title: 'An inspiratory hold in a patient making efforts',
   hint: 'Find the dashed effort trace during the hold. Ask which way a patient who is pulling in moves the airway pressure.',
   caseId: 'MV-01',
   introduction:
-    'A different simulated patient: the patient of case MV-01, who has stiffer lungs and is making inspiratory efforts. Inspect the effort trace during the hold.',
-  look: 'Use the dashed effort signal with pressure and flow. A displayed plateau is not automatically a passive mechanics measurement.',
+    'This patient has stiffer lungs and is making inspiratory efforts. Watch the effort trace during the hold.',
+  look: 'Read the dashed effort trace with pressure and flow. A plateau on the screen is not automatically a passive measurement of lung mechanics.',
   prompt: 'What could make a low airway pressure during the hold misleading?',
   choices: [
     'Airway pressure elevated by residual flow',
@@ -289,15 +310,15 @@ const effortHold = round({
   ],
   correct: 2,
   rationales: [
-    'Residual flow can add resistive pressure; it does not explain an effort-related underestimate.',
-    'A stable pressure during a passive no-flow hold supports the measurement rather than making it misleading.',
-    'Patient effort can lower airway pressure while adding to the distending pressure. Inspect the effort before using the number.',
+    'Flow that has not stopped can add resistive pressure and raise the reading; it does not explain a reading pulled down by effort.',
+    'A stable pressure during a no-flow hold in a passive patient supports the measurement; it does not make it misleading.',
+    'An inspiratory effort can lower airway pressure while adding to the pressure that distends the lung. Check the effort trace before you use the number.',
   ],
-  task: 'Perform an inspiratory hold and inspect whether the effort signal is quiet.',
+  task: 'Perform an inspiratory hold and check whether the effort trace is quiet during it.',
   goals: [hold],
   watch: ['peak', 'plateau', 'effort'],
   explanation:
-    'Compare the validity flag and the live effort signal with the earlier passive hold. Do not interpret an effort-contaminated reading as reassuring lung mechanics.',
+    'Compare the hold’s validity flag and the effort trace with the passive hold in Part 1. A plateau read during an inspiratory effort can be falsely low: do not take it as reassuring lung mechanics.',
 })
 
 export const ventilationLearningExperiments: readonly LearningExperiment[] = [
@@ -306,46 +327,46 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'waveform-anatomy',
     rounds: [
       round({
-        title: 'Identify expiration on a captured breath',
+        title: 'Reading interval A',
         hint: 'Look at which side of the zero line the flow trace is on at interval A, and which way the volume trace is heading.',
-        introduction: 'Use the marked interval A on the captured complete breath.',
-        look: 'Read all three traces at interval A, marked on the captured breath below. The phase label under the figure can be hidden while you decide and brought back at any time.',
-        prompt: 'Which phase is shown at interval A?',
+        introduction: 'Interval A is marked on one complete breath, held still on the console.',
+        look: 'Read pressure, flow and volume at interval A on the frozen breath.',
+        prompt: 'Which phase is marked at interval A?',
         choices: ['Expiration', 'Inspiration', 'A no-flow occlusion'],
         correct: 0,
         rationales: [
-          'Interval A lies after inspiratory delivery: flow there is negative and breath-relative volume is coming down.',
-          'In this passive example, inspiration has inward flow and accumulating volume.',
-          'A no-flow occlusion would show zero flow and nearly constant volume; pausing the display does not create one.',
+          'Interval A falls after inspiratory flow has ended: flow is below zero and the volume above baseline is falling.',
+          'During inspiration in this passive breath, flow is above zero and volume rises.',
+          'An occlusion would show zero flow and a flat volume trace. Freezing the display is not an occlusion.',
         ],
-        task: 'Try Pause and Run on the live display. You can either pause during outward flow after a full breath, or inspect expiration on the captured complete breath and choose Use this captured interval. The captured alternative needs no timed click.',
+        task: 'Press Run, then Pause while gas is flowing out. Or, on the frozen breath, move the cursor into expiration and choose Use this captured interval.',
         goals: [{ type: 'pause-expiration' }],
         seconds: 0,
         watch: [],
         explanation:
-          'Identifying the phase is a separate answer from operating a playback control. At interval A gas is leaving and the breath-relative volume trace is coming down, which is what identifies expiration in this passive example.',
+          'At interval A gas is leaving the lungs: flow is below zero and volume is falling back toward its starting level. That pattern, not the moment you pressed Pause, identifies expiration in a passive breath.',
       }),
       round({
-        title: 'Read another interval of a complete breath',
+        title: 'Reading interval B',
         hint: 'At interval B, check the sign of flow and whether the volume trace is rising or falling.',
         setup: [set('ratePerMin', 12)],
         introduction:
-          'A second complete breath is captured on a longer respiratory cycle, with the mandatory rate set to 12/min for this part. Inspect interval B.',
-        look: 'Read all three traces at interval B, marked on the captured breath below; do not change a ventilator setting.',
-        prompt: 'Which phase is shown at interval B?',
+          'For this part the set rate is 12/min, so each breath lasts longer. Interval B is marked on one complete breath, held still on the console.',
+        look: 'Read pressure, flow and volume at interval B on the frozen breath. No setting changes in this part.',
+        prompt: 'Which phase is marked at interval B?',
         choices: ['A no-flow occlusion', 'Expiration', 'Inspiration'],
         correct: 2,
         rationales: [
           'Flow is not zero at interval B.',
-          'Expiration in this passive breath has negative flow with falling volume.',
-          'Positive flow accompanies accumulating volume during inspiration.',
+          'During expiration in this passive breath, flow is below zero and volume falls.',
+          'During inspiration, flow is above zero and volume rises.',
         ],
-        task: 'Inspect inspiration on this captured complete breath, then choose Use this captured interval. The exploration cursor moves with the arrow keys and interval B stays where it is. This changes only the view.',
+        task: 'On the frozen breath, move the cursor into inspiration and choose Use this captured interval. The cursor moves with the arrow keys; interval B stays where it is.',
         goals: [{ type: 'inspect-inspiration' }],
         seconds: 0,
         watch: [],
         explanation:
-          'The cycle duration changed, but inspiration still shows gas entering and breath-relative volume rising. Timing the Pause button is not the identification skill.',
+          'A slower rate makes the whole cycle longer, but inspiration still looks the same: flow above zero and volume rising. Reading the traces, not timing a Pause, is the skill.',
       }),
     ],
   },
@@ -356,13 +377,13 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       flow,
       {
         ...flow,
-        title: 'Retrieve flow and volume on a slower inspiration',
+        title: 'Lower inspiratory flow, same tidal volume',
         hint: 'The same amount is delivered at a slower rate: compare the slope of the volume trace and the length of inspiration.',
         setup: [set('peakFlowLMin', 60)],
         introduction:
-          'Retrieve the relationship on a new baseline with inspiratory flow initially 60 L/min; selected tidal volume is unchanged.',
+          'A new starting point: inspiratory flow is 60 L/min and the set tidal volume is unchanged.',
         prompt:
-          'When flow decreases at the same selected tidal volume, which trace comparison should you expect?',
+          'If inspiratory flow falls and the set tidal volume stays the same, how will the volume trace compare?',
         choices: [
           'A steeper volume rise over less time',
           'A slower volume rise over more time',
@@ -372,9 +393,9 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         rationales: [
           'A steeper rise represents faster inward flow.',
           'At lower flow the same volume accumulates over a longer inspiration.',
-          'Flow and selected tidal volume are separate settings.',
+          'Flow and set tidal volume are separate settings.',
         ],
-        task: 'Reduce inspiratory flow to 30 L/min. Keep selected tidal volume fixed and compare the captured traces.',
+        task: 'Set inspiratory flow to 30 L/min, leave the tidal volume where it is, and compare the captured breaths.',
         goals: [c('peakFlowLMin', 30)],
       },
     ],
@@ -384,14 +405,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'modes-and-breath-delivery',
     rounds: [
       round({
-        title: 'A setting and its consequences',
+        title: 'A setting and the measurement that checks it',
         hint: 'One value is what you asked for and one is what came back. Find the one on the monitoring side of the screen.',
         asks: 'identify',
         introduction:
-          'Start from the five main settings: mode, breath size, rate, PEEP and oxygen. Here the breath size is a tidal volume.',
-        look: 'Distinguish the selected volume from the measured exhaled volume and the pressure needed to deliver it.',
+          'Start from the five main settings: mode, breath size, rate, PEEP and oxygen. In volume control, breath size is the set tidal volume.',
+        look: 'Find the set tidal volume, the exhaled volume the ventilator reports, and the peak pressure it took to deliver the breath.',
         prompt:
-          'After increasing selected tidal volume, which separate value tells you the delivered result?',
+          'After you raise the set tidal volume, which value tells you what the patient actually received?',
         choices: [
           'The tidal volume selected on the console',
           'The measured exhaled tidal volume',
@@ -399,15 +420,15 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 1,
         rationales: [
-          'The selected value is the request, not evidence of delivery.',
-          'Exhaled tidal volume is a separate reported result. Compare it with the requested volume.',
-          'Oxygen fraction describes the gas mixture rather than breath size.',
+          'The set value is the request, not proof of delivery.',
+          'Exhaled tidal volume is measured. Compare it with the set volume.',
+          'The oxygen fraction (FiO₂) describes the gas mixture, not breath size.',
         ],
-        task: 'Increase the volume target to 500 mL, then inspect the measured result.',
+        task: 'Set the tidal volume to 500 mL, then read the measured exhaled volume.',
         goals: [c('vtMl', 500)],
         watch: ['volume', 'peak'],
         explanation:
-          'Compare selected tidal volume with measured exhaled tidal volume. Pressure is also worth checking; the mechanics lesson develops that pressure cost.',
+          'The set tidal volume is the request; the measured exhaled tidal volume is the result. Check the peak pressure too: Section 4 explains what that pressure is made of.',
       }),
       oxygen,
     ],
@@ -420,10 +441,10 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffVolume,
         title: 'Separate stiffness from resistance',
-        task: 'Set compliance to 0.5×, then perform an inspiratory hold.',
+        task: 'Set the teaching patient’s compliance to 0.5×, then perform an inspiratory hold.',
         goals: [m('complianceScale', 0.5), hold],
         explanation:
-          'Compare this pressure pattern with the resistance experiment. The elastic component persists when flow stops.',
+          'Compare this with the resistance experiment. Elastic pressure does not go away when flow stops, so a stiffer system shows on the plateau.',
       },
     ],
   },
@@ -434,7 +455,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffVolume,
         introduction:
-          'Retrieve the stiffness experiment from mechanics, now focusing on what conventional VC holds constant. Selected volume and flow stay fixed.',
+          'The stiffness experiment from Section 4, read here for what volume control (VC) holds constant. The set tidal volume and flow stay fixed.',
         relation: {
           kind: 'revisit',
           unitId: 'mechanics-load-and-pressure',
@@ -445,7 +466,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       {
         ...stiffPressure,
         introduction:
-          'The mode has explicitly switched from conventional VC to conventional PC. The same passive baseline patient now receives fixed pressure above PEEP and fixed inspiratory time. Repeat the stiffness change.',
+          'The mode is now pressure control (PC). The same passive patient receives a set pressure above PEEP for a set inspiratory time. Make the same stiffness change.',
       },
     ],
   },
@@ -454,14 +475,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'mechanics-load-and-pressure',
     rounds: [
       round({
-        title: 'Reduce the size of the breath',
+        title: 'Size the breath to predicted body weight',
         hint: 'Elastic pressure is the delivered volume divided by the compliance, and the compliance has not changed here.',
         setup: [set('vtMl', 600)],
         introduction:
-          'This passive adult, set for this simulation, has a predicted body weight of 70 kg. Compare breath size and pressure together.',
-        look: 'Read delivered volume relative to predicted body weight, then measure pressure during a hold.',
+          'This passive adult has a predicted body weight of 70 kg. Read the size of the breath and the pressure it takes together.',
+        look: 'Read the exhaled tidal volume against predicted body weight, then the plateau pressure on an inspiratory hold.',
         prompt:
-          'What should reducing volume at the same compliance do to the elastic pressure requirement?',
+          'If you lower the set tidal volume and compliance is unchanged, what happens to the elastic pressure the breath requires?',
         choices: [
           'A larger pressure requirement',
           'An unchanged pressure requirement',
@@ -469,14 +490,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'A smaller breath does not cost more elastic pressure: at the same compliance, less volume stretches the system less.',
-          'Elastic pressure depends on the delivered volume as well as compliance.',
-          'A smaller passive volume requires less elastic pressure. Gas exchange still needs separate follow-up.',
+          'At the same compliance, a smaller tidal volume stretches the respiratory system less, so it cannot need more elastic pressure.',
+          'Elastic pressure depends on the delivered tidal volume as well as on compliance, so a smaller breath changes it.',
+          'In a passive patient, a smaller tidal volume needs less elastic pressure. Gas exchange still needs its own check.',
         ],
-        task: 'Reduce volume to 420 mL, which is 6 mL/kg for this patient’s predicted body weight of 70 kg, then perform an inspiratory hold.',
+        task: 'Lower the set tidal volume to 420 mL — 6 mL/kg at this patient’s predicted body weight of 70 kg — then perform an inspiratory hold.',
         goals: [c('vtMl', 420), hold],
         watch: ['volume', 'plateau', 'co2'],
-        explanation: `Size the breath by predicted body weight and judge it by a valid plateau. In ARDS the goal is ${N('vt-ards-goal')} with a plateau ${N('pplat-limit')}; a smaller breath lowers the plateau and raises PaCO₂, so recheck the gas.`,
+        explanation: `Size the breath by predicted body weight and judge it by a valid plateau. In ARDS the goal is ${N('vt-ards-goal')} with a plateau ${N('pplat-limit')}; a smaller breath lowers the plateau and raises PaCO₂, so recheck the blood gas.`,
       }),
       effortHold,
     ],
@@ -501,14 +522,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'triggering-and-cycling',
     rounds: [
       round({
-        title: 'Help an effort start a breath',
+        title: 'Trigger sensitivity and unanswered efforts',
         hint: 'Count the efforts on the dashed trace and count the machine breaths. The change is aimed at the efforts with no breath after them.',
         caseId: 'MV-07',
         introduction:
-          'A different simulated patient from the earlier sections, the patient of case MV-07, who makes more efforts than the machine delivers breaths.',
-        look: 'Look for effort without a following machine inflation.',
+          'This patient makes more inspiratory efforts than the ventilator delivers breaths.',
+        look: 'Look for efforts on the dashed trace that are not followed by a machine breath.',
         prompt:
-          'If the trigger threshold is easier to cross, what response would support the intended mechanism?',
+          'If you make the flow trigger more sensitive, which response would show it is doing what you intended?',
         choices: [
           'More efforts followed by a delivered breath',
           'Fewer efforts followed by a delivered breath',
@@ -516,26 +537,26 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 0,
         rationales: [
-          'Look for improved capture, then check that false breaths have not appeared.',
-          'A harder trigger can miss more efforts. That is the opposite of the intended change.',
+          'More of the patient’s efforts now trigger a breath. Then check that no breaths have appeared without an effort before them.',
+          'A less sensitive trigger can miss more efforts: the opposite of the intended change.',
           'The trigger decides whether a breath starts, not how large it is; breath size is set elsewhere.',
         ],
-        task: 'Set the flow-trigger threshold to 1.5 L/min. Compare efforts with delivered breaths.',
+        task: 'Set the flow trigger to 1.5 L/min, then compare the efforts on the dashed trace with the breaths delivered.',
         goals: [c('triggerThreshold', 1.5)],
         seconds: 20,
         watch: ['missed', 'rate', 'effort'],
         explanation:
-          'The useful result is capture without false triggering. The number is set for this comparison; assess the pattern after every adjustment.',
+          'The result you want is efforts that trigger breaths, without breaths that start with no effort behind them. This threshold is set for this comparison; reassess the pattern after every adjustment.',
       }),
       round({
-        title: 'Help support last through inspiration',
+        title: 'Effort that outlasts the machine breath',
         hint: 'The breath ends when inspiratory flow has decayed to the set percentage of its peak. Ask whether a lower percentage is reached sooner or later.',
         caseId: 'MV-09',
         introduction:
-          'A different simulated patient again, the patient of case MV-09, who starts the breath, but machine inspiration ends early.',
-        look: 'Watch the effort that persists when the machine cycles.',
+          'This patient triggers each pressure-support breath, but the ventilator cycles to expiration before the patient’s effort has ended.',
+        look: 'Watch the effort that is still going when the ventilator cycles.',
         prompt:
-          'What should lowering the flow-cycling threshold do when that criterion ends the breath?',
+          'If you lower the cycle-off threshold (ETS), and flow cycling is what ends these breaths, what changes?',
         choices: [
           'A shorter machine inspiration',
           'A longer machine inspiration',
@@ -543,16 +564,16 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 1,
         rationales: [
-          'That is what raising the threshold does: a higher fraction of peak flow is reached earlier on the decaying flow. Lowering it does the reverse.',
-          'A lower fraction is reached later, extending support until another limit intervenes.',
-          'A breath that starts without an effort is a trigger matter. The cycling control decides only how the push ends.',
+          'That is what raising the threshold does: a higher percentage of peak flow is reached earlier as flow decays. Lowering it does the reverse.',
+          'A lower percentage of peak flow is reached later as flow decays, so support lasts longer, until another limit ends the breath.',
+          'A breath that starts without an effort is a triggering problem. The cycle-off decides only when inspiration ends.',
         ],
-        task: 'Lower ETS to 15%, then compare machine inspiratory time and delivered volume.',
+        task: 'Lower the cycle-off threshold (ETS) to 15%, then compare the measured inspiratory time and the tidal volume.',
         goals: [c('etsPercent', 15)],
         seconds: 20,
         watch: ['ti', 'volume', 'dyspnea'],
         explanation:
-          'Triggering starts support; cycling ends it. Extending support can also change volume, so inspect both timing and delivery.',
+          'Triggering starts the breath; cycling ends it. Lengthening inspiration can also change the tidal volume, so check both the timing and the volume delivered.',
       }),
     ],
   },
@@ -561,15 +582,15 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'oxygenation-response',
     rounds: [
       round({
-        title: 'Compare oxygenation with pressure and circulation',
+        title: 'Oxygenation against airway pressure and blood pressure',
         hint: 'Three readings are named. Decide which one, if it moved the wrong way, would be a cost and not a benefit.',
         asks: 'interpret',
         caseId: 'MV-01',
         introduction:
-          'The worked comparison keeps case, time, volume, flow and FiO₂ matched. Your separate patient below can also be used for an optional PEEP experiment.',
-        look: 'Keep SpO₂, airway pressure, and MAP together.',
+          'In the matched comparison the patient, the elapsed time, the tidal volume, the flow and the FiO₂ are the same in both arms. Your own patient on the console is separate, and you can make the same PEEP change there.',
+        look: 'Read SpO₂, airway pressure and mean arterial pressure (MAP) together.',
         prompt:
-          'Which response would make an oxygenation improvement incomplete evidence of benefit?',
+          'SpO₂ rises after the PEEP change. Which accompanying finding means that rise is not, by itself, evidence of benefit?',
         choices: [
           'SpO₂ rises with unchanged exhaled volume',
           'SpO₂ rises with stable arterial pressure',
@@ -577,16 +598,16 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'Stable delivery adds context but does not identify a circulatory cost.',
-          'Stable circulation is reassuring context; worsening circulation is the concern.',
-          'An oxygenation gain can coexist with a circulatory cost. Check the actual response rather than assuming benefit.',
+          'An unchanged exhaled volume is useful context, but it does not show a circulatory cost.',
+          'A stable blood pressure is reassuring context; a falling one is the concern.',
+          'A better SpO₂ can come with a circulatory cost. Read the whole response before you call it a benefit.',
         ],
-        task: 'On your separate patient, change PEEP from 5 to 10 cmH₂O and watch 45 simulated seconds.',
+        task: 'On your own patient, raise PEEP from 5 to 10 cmH₂O and watch for 45 simulated seconds.',
         goals: [c('peepCmH2O', 10)],
         seconds: 45,
         watch: ['spo2', 'map', 'peak', 'volume'],
         explanation:
-          'Compare your response with the matched worked example. Waiting alone changes oxygenation in this case. The model assigns a different compliance at this PEEP; the effort-affected plateau estimate does not establish measured static compliance. Review oxygenation, delivery, pressure and MAP together.',
+          'Compare your patient’s response with the matched comparison. This patient’s compliance is different at the new PEEP, but a plateau read during inspiratory effort does not establish static compliance. Read oxygenation, tidal volume, airway pressure and MAP together.',
       }),
       oxygen,
     ],
@@ -596,35 +617,35 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'ventilation-and-co2',
     rounds: [
       round({
-        title: 'Follow the two response clocks',
+        title: 'A rate change and the blood gas',
         hint: 'Carbon dioxide follows the ventilation that reaches exchanging lung, relative to production. Production is unchanged here.',
         introduction:
-          'Keep volume and lung mechanics unchanged. Watch breath timing immediately and blood gas over simulated time.',
-        look: 'Read total rate and minute ventilation alongside CO₂.',
+          'Leave the tidal volume and the lung mechanics as they are. Breath timing changes at once; the blood gas changes over time.',
+        look: 'Read the total rate and the minute ventilation alongside the CO₂.',
         prompt:
-          'With preserved delivery and emptying, what direction should more effective ventilation drive CO₂ over time?',
+          'With the delivered tidal volume and expiratory emptying preserved, which way should more effective ventilation move the CO₂ over time?',
         choices: ['Toward a lower value', 'Toward a higher value', 'No relation to ventilation'],
         correct: 0,
         rationales: [
-          'CO₂ clearance increases relative to unchanged production. The gas response follows the mechanical change.',
-          'That would fit reduced effective ventilation relative to production.',
+          'CO₂ clearance rises while CO₂ production is unchanged, and the blood gas follows the ventilator change after a delay.',
+          'That would fit less effective ventilation relative to CO₂ production.',
           'Effective alveolar ventilation is central to CO₂ clearance.',
         ],
-        task: 'Increase rate to 20/min and follow 90 simulated seconds. Inspect expiration as well as CO₂.',
+        task: 'Raise the set rate to 20/min and follow the patient for 90 simulated seconds. Check expiration as well as the CO₂.',
         goals: [c('ratePerMin', 20)],
         seconds: 90,
         watch: ['rate', 'minute', 'co2', 'expiratoryFlow'],
         explanation:
-          'A changed control and a changed blood gas have different clocks. The gas result is meaningful only with verified delivery, emptying, and clinical context.',
+          'A setting changes at once; the blood gas follows over time. The CO₂ means something only once you have checked the delivered volume, complete emptying and the clinical context.',
       }),
       round({
         ...stiffPressure,
-        title: 'Same rate, a different delivered breath',
+        title: 'The same set rate on pressure control',
         hint: 'Minute ventilation is the rate times the delivered volume. The rate is unchanged; find what pressure control leaves free to move.',
         introduction:
-          'Return to the passive patient on pressure control. Keep the rate unchanged and follow gas exchange when the lung becomes stiffer.',
+          'The same passive patient, now on pressure control. Leave the rate where it is and follow gas exchange as the respiratory system becomes stiffer.',
         prompt:
-          'At an unchanged rate, what should happen if pressure control now delivers smaller breaths?',
+          'The set rate is unchanged and pressure control now delivers smaller tidal volumes. What happens to the CO₂?',
         choices: [
           'CO₂ stays similar because the selected rate is unchanged',
           'CO₂ falls because the pressure target is held constant',
@@ -632,15 +653,15 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'The rate alone does not establish effective ventilation; delivered breath size also matters.',
-          'A constant pressure target does not guarantee volume delivery or CO₂ clearance.',
-          'With other model conditions unchanged, smaller delivered breaths reduce ventilation and CO₂ rises over time.',
+          'The rate alone does not determine effective ventilation; the delivered tidal volume matters too.',
+          'A constant set pressure does not guarantee the tidal volume or CO₂ clearance.',
+          'With everything else unchanged, smaller tidal volumes reduce ventilation, and CO₂ rises over time.',
         ],
-        task: 'Reduce compliance to 0.5×. Keep the settings unchanged and follow 90 simulated seconds.',
+        task: 'Set the teaching patient’s compliance to 0.5×, leave the ventilator settings alone, and follow the patient for 90 simulated seconds.',
         seconds: 90,
         watch: ['volume', 'minute', 'co2', 'rate'],
         explanation:
-          'The same set rate can accompany very different effective ventilation. Follow delivered volume and minute ventilation, then reassess the slower gas response.',
+          'The same set rate can come with very different effective ventilation. Follow the delivered tidal volume and minute ventilation, then recheck the CO₂, which changes more slowly.',
       }),
     ],
   },
@@ -649,14 +670,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'waveform-reading-sequence',
     rounds: [
       round({
-        title: 'Follow extra breaths back to the circuit',
+        title: 'Breaths above the set rate',
         hint: 'If the extra breaths were started by the circuit and not by the patient, ask what becomes of them once the circuit is corrected.',
         caseId: 'MV-08',
         introduction:
-          'This is the patient of case MV-08. Compare effort, machine breaths, and the circuit.',
-        look: 'Read timing across all three traces before attributing the rate to patient drive.',
+          'This patient’s total rate is above the set rate. Compare the patient’s efforts, the machine breaths and the circuit.',
+        look: 'Read the timing on all three traces against the effort trace before you put the high rate down to the patient’s drive.',
         prompt:
-          'If a circuit artifact is triggering breaths, what finding would support that explanation after correction?',
+          'If the circuit, not the patient, is triggering breaths, what finding after the correction would support that?',
         choices: [
           'Larger volumes in the delivered breaths',
           'Fewer extra machine breaths',
@@ -664,20 +685,20 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 1,
         rationales: [
-          'Volume selection is a separate action.',
-          'Look for fewer unsupported machine triggers and a rate closer to actual patient effort.',
-          'Higher pressure does not by itself identify the triggering source.',
+          'Setting the tidal volume is a separate action.',
+          'Expect fewer breaths with no effort before them, and a total rate closer to the rate of the patient’s own efforts.',
+          'A higher pressure does not, by itself, tell you what triggered the breath.',
         ],
-        task: 'Inspect the circuit, then clear the observed condensate. Compare the rate.',
+        task: 'Inspect the circuit, then clear the condensate you find. Compare the total rate with the patient’s efforts.',
         goals: [action('inspect-circuit'), action('drain-condensate')],
         seconds: 25,
         watch: ['rate', 'effort', 'volume'],
         explanation:
-          'A waveform pattern raises a mechanism; patient and circuit findings confirm or refute it. The modeled correction takes effect with elapsed simulation time.',
+          'The waveform suggests a mechanism; examining the patient and the circuit confirms or refutes it. Clearing the condensate takes a little time to show in the rate.',
       }),
       round({
         ...flow,
-        title: 'Distinguish an inspiratory delivery problem',
+        title: 'Inspiratory flow in a patient pulling hard',
         caseId: 'MV-02',
         relation: {
           kind: 'revisit',
@@ -686,10 +707,10 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           note: 'The same flow question, asked here of a patient who is pulling hard during inspiration.',
         },
         introduction:
-          'A different simulated patient, the patient of case MV-02, who has strong effort during machine inspiration. Read the sequence again.',
-        task: 'Increase peak flow to 60 L/min while preserving the volume target. Watch the inspiratory pressure shape.',
+          'This patient makes a strong inspiratory effort during machine inspiration. Read the breath in order again, from the trigger to expiration.',
+        task: 'Raise peak inspiratory flow to 60 L/min, leave the set tidal volume alone, and watch the shape of airway pressure during inspiration.',
         explanation:
-          'The same flow control now sits in a patient with high demand. Read effort and pressure deformation as well as breath size.',
+          'The same flow setting, now in a patient with a high inspiratory demand. Read the effort trace and how it pulls the pressure trace down, as well as the tidal volume.',
       }),
     ],
   },
@@ -698,13 +719,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'dyssynchrony-mechanisms',
     rounds: [
       round({
-        title: 'Test the speed of pressurization',
+        title: 'Rise time on pressure support',
         hint: 'Read the first part of each push: the pressure contour and the patient’s comfort together, not either one alone.',
         caseId: 'MV-11',
         introduction:
-          'Pressure support starts, but the patient is uncomfortable with slow pressurization.',
-        look: 'Look at the early inspiratory pressure shape and the effort/comfort response.',
-        prompt: 'What would support that the original rise time was too slow?',
+          'This patient triggers each pressure-support breath but is uncomfortable while airway pressure rises slowly to the set level.',
+        look: 'Watch the shape of airway pressure early in inspiration, and the patient’s effort and comfort.',
+        prompt:
+          'Which response to a shorter rise time would support that the original rise time was too slow?',
         choices: [
           'Faster rise with increasing pressure overshoot',
           'Faster rise with larger uncomfortable breaths',
@@ -712,16 +734,16 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'Overshoot raises concern that pressurization is too aggressive; more support is not automatically better.',
-          'Larger breaths alone do not establish a better match with patient demand.',
-          'Judge the early pressure shape and comfort together, and check for overshoot.',
+          'Pressure overshoot suggests the rise is now too fast; a faster rise is not automatically better.',
+          'Larger tidal volumes alone do not show a better match to the patient’s demand.',
+          'A faster rise that leaves the patient more comfortable fits a rise time that was too slow. Judge the early pressure shape and comfort together, and check for overshoot.',
         ],
-        task: 'Shorten P-ramp to 100 ms. Compare the early pressure contour and dyspnea.',
+        task: 'Shorten the rise time (P-ramp) to 100 ms, then compare the early pressure contour and the patient’s dyspnea.',
         goals: [c('pRampMs', 100)],
         seconds: 20,
         watch: ['dyspnea', 'peak', 'volume'],
         explanation:
-          'A more comfortable response still needs a check for excessive pressure and volume. “Faster” is not an unlimited goal.',
+          'Even when the patient is more comfortable, check for pressure overshoot and an excessive tidal volume. A faster rise is not better without limit.',
       }),
       {
         ...earlierCycle,
@@ -739,15 +761,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'safety-reassessment-and-human-factors',
     rounds: [
       round({
-        title: 'Use the patient’s account',
+        title: 'A distressed patient who can communicate',
         hint: 'Two of the choices describe what was done or recorded. One finds out something about the patient.',
         asks: 'reflect',
         caseId: 'MV-15',
-        introduction:
-          'The distressed patient of case MV-15 can communicate. Start with their experience of breathing.',
-        look: 'Keep discomfort, effort, and delivered support in view.',
+        introduction: 'This patient is awake, distressed and able to communicate.',
+        look: 'Keep the patient’s distress, breathing effort and the support being delivered in view.',
         prompt:
-          'What can make the next action better targeted before you change ventilator support?',
+          'Before you change ventilator support, what would best help you target the next step?',
         choices: [
           'Ask what is making breathing difficult',
           'Use silence of the alarm to judge recovery',
@@ -755,25 +776,25 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 0,
         rationales: [
-          'Communication can reveal a reversible contributor. It does not by itself prove physiologic recovery.',
-          'Acknowledgment changes alarm handling, not its cause.',
-          'A written plan needs an actual intervention and reassessment.',
+          'The patient’s answer can reveal a reversible cause. It does not by itself show physiologic recovery.',
+          'Silencing an alarm changes how the alarm is handled, not what caused it.',
+          'A written plan still needs an intervention and a reassessment of the patient.',
         ],
-        task: 'Assess the patient and establish communication. Observe the modeled comfort response.',
+        task: 'Assess the patient and establish communication, then watch how their comfort changes.',
         goals: [action('assess-patient'), action('communication-board')],
         seconds: 30,
         watch: ['anxiety', 'dyspnea', 'rate'],
         explanation:
-          'Connect the intervention to what actually changes. Do not infer a physiologic improvement from task completion.',
+          'Tie each intervention to what actually changes in the patient. Completing a task is not evidence that the patient improved.',
       }),
       round({
-        title: 'Reassess a reversible contributor',
+        title: 'Treating the documented pain',
         hint: 'An intervention being recorded and a patient improving are different observations. Ask which one tests the other.',
         asks: 'interpret',
         caseId: 'MV-15',
-        introduction: 'Now address the documented pain in the same patient.',
-        look: 'Observe pain, dyspnea, and respiratory effort over time.',
-        prompt: 'Which evidence best tests whether the modeled comfort intervention helped?',
+        introduction: 'Now treat the documented pain in the same patient.',
+        look: 'Follow pain, dyspnea and respiratory effort over time.',
+        prompt: 'Which observation best shows whether treating the pain helped?',
         choices: [
           'An intervention appearing in the action record',
           'Patient findings improving over time',
@@ -781,11 +802,11 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 1,
         rationales: [
-          'The action record proves that it was selected, not that it helped.',
-          'Reassessment connects an intervention with its delayed patient response.',
-          'Alarm sound is not a substitute for patient findings.',
+          'The action record shows that the treatment was given, not that it helped.',
+          'Reassessing the patient links the treatment to its response, which comes after a delay.',
+          'Whether the alarm is sounding is no substitute for examining the patient.',
         ],
-        task: 'Select the modeled pain intervention. Allow its 120-second delay, then follow the response for 150 simulated seconds. Use 5× time if helpful.',
+        task: 'Choose Treat the pain in Bedside actions. Allow for its 120-second delay, then follow the response for 150 simulated seconds; 5× time is fine.',
         goals: [action('treat-pain')],
         seconds: 150,
         watch: ['pain', 'dyspnea', 'effort', 'rate'],
@@ -803,10 +824,11 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'One high-pressure presentation',
         hint: 'During the hold flow is zero. Ask what happens to the part of the pressure that was there only because gas was moving.',
         setup: [mechanics(1, 3)],
+        mechanicsWithheld: true,
         introduction:
-          'A passive patient has a high peak pressure. The cause is not supplied. Measure before deciding.',
+          'This passive patient has a high peak pressure, and the cause is not given. Measure before you decide.',
         prompt:
-          'What observation during an inspiratory hold would support a large flowing-pressure component?',
+          'What finding on an inspiratory hold would show that much of this peak pressure is spent moving gas?',
         choices: [
           'Pressure that remains close to its flowing peak',
           'A wider swing on the volume trace',
@@ -814,11 +836,11 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'A pressure that persists during no flow indicates the elastic and baseline contribution.',
-          'The hold does not change the delivered volume; the split is read on the pressure trace.',
-          'A substantial fall after flow stops supports a large resistive contribution, if the patient is passive.',
+          'Pressure that persists once flow has stopped reflects the elastic and baseline (end-expiratory) pressure.',
+          'The hold does not change the delivered volume; the split between the two pressures is read on the pressure trace.',
+          'A large drop from peak to plateau once flow stops supports a large resistive component, provided the patient is passive.',
         ],
-        task: 'Perform an inspiratory hold. Use the measured split and the quiet effort signal to explain the pattern.',
+        task: 'Perform an inspiratory hold. Read peak and plateau pressure, confirm that the effort trace is quiet, and explain the pattern.',
         goals: [hold],
       }),
       round({
@@ -826,9 +848,11 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Same presentation, a different patient',
         hint: 'Ask which part of the pressure remains once flow has stopped, and what that part depends on.',
         setup: [mechanics(0.4, 1)],
+        mechanicsWithheld: true,
         introduction:
-          'The next passive patient also has a high peak pressure. Start the measurement again.',
-        prompt: 'What finding would support a larger elastic component in this patient?',
+          'A second passive patient also has a high peak pressure. Measure again from the start.',
+        prompt:
+          'What finding on the hold would support a larger elastic component in this patient?',
         choices: [
           'Higher pressure persisting after flow stops',
           'A large fall from the peak as soon as flow stops',
@@ -836,14 +860,14 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 0,
         rationales: [
-          'Pressure that persists during a valid no-flow hold reflects elastic and baseline load.',
-          'A large fall once flow stops is the flowing, resistive pattern — the previous patient’s, not this one’s.',
+          'Pressure that persists during a valid no-flow hold reflects the elastic and baseline pressure.',
+          'A large drop once flow stops is the resistive pattern: the first patient’s, not this one’s.',
           'The delivered volume is set and does not change with a hold; the split is read on the pressure trace.',
         ],
-        task: 'Perform the hold and compare the measured pattern with the previous patient.',
+        task: 'Perform an inspiratory hold and compare peak and plateau with the first patient’s.',
         goals: [hold],
         explanation:
-          'Similar peak pressures can come from different mechanisms. Bring the measured split, baseline, expiration, effort, and patient together before choosing the clinical action.',
+          'The same peak pressure can come from different mechanisms. Put the peak-to-plateau difference, the baseline pressure, expiration, the effort trace and the patient together before you choose the clinical action.',
       }),
     ],
   },

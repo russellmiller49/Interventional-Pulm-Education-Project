@@ -15,6 +15,7 @@ it('always saves deployed feedback to the server, even with a stale owner-local 
   expect(feedbackMode()).toBe('server')
   expect(isOwnerLocalFeedbackPage('/en/development-beta')).toBe(false)
   expect(isOwnerLocalFeedbackPage('/en/admin/module-feedback')).toBe(false)
+  expect(isOwnerLocalFeedbackPage('/en/development-beta/live-anatomy/lesson')).toBe(false)
 })
 it.each([undefined, '', 'server', 'typo'])('defaults conservatively for %s', (value) => {
   if (value === undefined) delete process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE
@@ -27,6 +28,7 @@ it('allows only local UI shells, never feedback APIs or other admin resources', 
   for (const path of [
     '/en/development-beta',
     '/en/development-beta/peripheral-imaging',
+    '/en/development-beta/live-anatomy/lesson',
     '/es/admin/module-feedback',
   ])
     expect(isOwnerLocalFeedbackPage(path)).toBe(true)
@@ -38,6 +40,8 @@ it('allows only local UI shells, never feedback APIs or other admin resources', 
     '/admin/modules',
     '/development-beta/unknown',
     '/development-beta/devices/extra',
+    '/development-beta/devices/lesson',
+    '/development-beta/live-anatomy/lesson/extra',
   ])
     expect(isOwnerLocalFeedbackPage(path)).toBe(false)
 })

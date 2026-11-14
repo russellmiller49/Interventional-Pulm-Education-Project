@@ -34,6 +34,7 @@ import {
   installDom,
   mountSection,
   nowPrimary,
+  skipCase,
 } from '../test-support/stageHarness'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -220,8 +221,10 @@ describe('the §5 ending the report reproduced (Figure 29)', () => {
 
   it('records no performed work and no after-snapshot for a task that was skipped', () => {
     const lesson = mountSection('pawp-capture').lesson
+    // The section's own last step, the one before its case.
+    const lastLessonStep = lesson.steps[lesson.caseStepIndex - 1]
     let remaining = 20
-    while (currentStepId() !== lesson.steps[lesson.steps.length - 1].id && remaining-- > 0) {
+    while (currentStepId() !== lastLessonStep.id && remaining-- > 0) {
       clickPrimary()
     }
     // Straight through, touching nothing: the Explain step says there is nothing to compare.
@@ -232,6 +235,7 @@ describe('the §5 ending the report reproduced (Figure 29)', () => {
       ),
     ).toBe(false)
     clickPrimary()
+    skipCase()
     expect(storedRecord()?.reviewedSectionIds).toEqual(['pawp-capture'])
   })
 })
@@ -247,7 +251,8 @@ describe('leaving without performing, and abandoning what was started', () => {
         (row) => row.getAttribute('data-step-state') === 'done',
       ),
     ).toBe(false)
-    clickPrimary()
+    // The final task is the section's case; skipping it finishes the section.
+    skipCase()
     // Content reviewed; nothing about the procedure claimed.
     expect(storedRecord()?.reviewedSectionIds).toEqual(['catheter-advancement'])
     expect(

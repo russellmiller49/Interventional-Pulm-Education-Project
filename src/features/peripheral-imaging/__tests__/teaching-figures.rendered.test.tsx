@@ -10,7 +10,8 @@ import {
   targetRayGeometry,
   TOOL_VIEW_FRAME,
 } from '../components/figures/teachingFigureModel'
-import { SignalComparison, TeachingPanels } from '../components/stage/TeachingPanels'
+import { WedgeDependencyFigure, ConspicuityPair } from '../components/figures/CheckImages'
+import { TeachingPanels } from '../components/stage/TeachingPanels'
 import {
   FIXED_MOBILE_COMPARISON,
   REMOVED_ORGANIZATIONAL_SUGGESTIONS,
@@ -91,6 +92,7 @@ describe('the teaching figures are declared data and validate at import', () => 
         .concat(
           ...(
             [
+              'current-anatomy',
               'two-dimensional',
               'changing-anatomy',
               'cbct-acquisition',
@@ -101,6 +103,7 @@ describe('the teaching figures are declared data and validate at import', () => 
         )
         .filter((activity) => activity.content.includes(ref))
         .map((activity) => activity.id)
+    expect(placed('@wedge-dependency')).toEqual(['current-anatomy:setup'])
     expect(placed('@two-axis-example')).toEqual(['two-dimensional:case'])
     expect(placed('@artifact-strip')).toEqual(['changing-anatomy:timeline'])
     expect(placed('@team-readiness')).toEqual(['cbct-acquisition:scouts'])
@@ -114,21 +117,31 @@ describe('the teaching figures are declared data and validate at import', () => 
         '@fixed-mobile-comparison',
         '@team-readiness',
         '@two-axis-example',
+        '@wedge-dependency',
       ].sort(),
     )
     // Each figure follows the block it illustrates.
+    const setup = imagingLearningActivities('current-anatomy').find(
+      (activity) => activity.id === 'current-anatomy:setup',
+    )!
+    expect(setup.content.indexOf('@wedge-dependency')).toBe(
+      setup.content.indexOf('Position the patient so the lesion side is up') + 1,
+    )
     const step = imagingLearningActivities('two-dimensional')[0]
     expect(step.content.indexOf('@two-axis-example')).toBe(
-      step.content.indexOf('A two-axis fluoroscopy technique') + 1,
+      step.content.indexOf('The 2D workflow, in order') + 1,
     )
   })
 
-  it('names every simulated panel as simulated and every placeholder as having no image', () => {
+  it('captions every panel with what it shows, in plain words', () => {
+    // Teaching-first rules (2026-10-08) and owner direction (2026-10-11): no per-panel "simulated"
+    // or "no image here" label. A text-only panel is still declared as one, and draws nothing.
     for (const declaration of teachingFigureDeclarations())
       for (const panel of declaration.panels) {
-        if (panel.medium === 'simulated-on-model')
-          expect(`${panel.title} ${panel.caption}`).toMatch(/simulated|drawn|drawing/i)
-        if (panel.medium === 'placeholder') expect(panel.caption).toMatch(/^No image here/)
+        expect(`${panel.title} ${panel.caption}`).not.toMatch(
+          /simulated|teaching model|model(ed|led)?\b|No image here/i,
+        )
+        expect(panel.caption.trim().length).toBeGreaterThan(30)
       }
   })
 
@@ -150,7 +163,7 @@ describe('the teaching figures are declared data and validate at import', () => 
 })
 
 describe('OD4-06 · Section 6 compares three causes on the course’s CT', () => {
-  it('shows the CT-derived set on the reading steps and keeps the check’s fixed Images A and B', async () => {
+  it('shows the CT-derived set on the reading steps and the check’s Images A and B from the same CT', async () => {
     render(<TeachingPanels sectionId="signal" />)
     expect(document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')).not.toBeNull()
     expect(document.querySelector('[data-signal-comparison]')).toBeNull()
@@ -159,29 +172,37 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     const check = document.querySelector('[data-signal-comparison]')!
     expect(check).toHaveTextContent('Image A')
     expect(check).toHaveTextContent('Image B')
+    // Owner feedback, 2026-10-11: the two images are projections of the course's CT, not drawings,
+    // and carry no note about what a drawing does not calculate.
+    expect(check.querySelectorAll('canvas')).toHaveLength(2)
+    expect(check).not.toHaveTextContent(/conceptual|drawing|do not calculate/i)
     // Review status is project metadata and does not render (teaching-first rules, 2026-10-08).
-    expect(check).toHaveTextContent('Matched conceptual images')
     expect(check.querySelector('[data-draft-status]')).toBeNull()
     expect(check).not.toHaveTextContent(/draft/i)
     expect(document.querySelector('[data-teaching-figure]')).toBeNull()
     cleanup()
-    render(<SignalComparison />)
+    render(<ConspicuityPair />)
     expect(document.querySelectorAll('[data-signal-comparison] button')).toHaveLength(0)
   })
 
-  it('labels the model and each simulated effect, and prints the ray numbers it computed', async () => {
+  it('captions the set and each effect plainly, and names the anatomy over the nodule', async () => {
     render(<ConspicuityComparison />)
     await ready('[data-teaching-figure="signal:conspicuity-set"]')
     const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
-    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(/^Teaching model:/)
-    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(/no panel is a dose level/)
-    expect(figure.querySelector('[data-figure-panel="noise"]')).toHaveTextContent('simulated')
+    expect(figure.querySelector('[data-model-label]')).toHaveTextContent(
+      'One frontal projection of the same chest, changed one way in each panel.',
+    )
+    expect(figure.querySelector('[data-figure-panel="noise"]')).toHaveTextContent(
+      /square root of the photon count/,
+    )
     expect(figure.querySelector('[data-figure-panel="scatter"]')).toHaveTextContent(
-      /does not calculate scatter/,
+      /scatter adds a uniform veil/,
     )
+    expect(figure.textContent).not.toMatch(/simulated|teaching model|model(ed|led)?\b/i)
     expect(figure.querySelector('[data-ray-readout]')).toHaveTextContent(
-      /C-arm obliquity is −20° \(detector toward the patient’s left\)\. Soft-tissue-like CT on the ray through the lesion: \d+ mm frontal, \d+ mm at −20°\./,
+      'Here the C-arm obliquity is −20° (detector toward the patient’s left). Over the nodule frontally: Heart and mediastinum, rib. At −20°: Rib.',
     )
+    expect(figure.textContent).not.toMatch(/\d+ mm/)
     expect(figure.textContent).not.toMatch(/\b(LAO|RAO)\b/)
     expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(4)
   }, 30_000)
@@ -191,34 +212,34 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     render(<ConspicuityComparison />)
     await ready('[data-teaching-figure="signal:conspicuity-set"]')
     const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
-    const [frontal, changed] = (
-      figure.querySelector('[data-ray-readout]')!.textContent!.match(/\d+ mm/g) ?? []
-    ).map((value) => Number.parseInt(value, 10))
-    // The note is conditional on the shortening it describes; the synthetic chest here has it.
-    expect(changed).toBeLessThan(frontal)
     const note = figure.querySelector('[data-later-example-note]')
     expect(note).toHaveTextContent(
-      'This −20° comparison shortens the model’s soft-tissue path on the target ray; the later −35° example shows a different pattern, with the overlap redistributed along the ray.',
+      'The later −35° example shows a different overlap. Over the nodule at −35°: Spine.',
     )
     expect(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY).toBe(-35)
     expect(note!.textContent).not.toMatch(/best|optimal|ideal|recommend|always|should|choose/i)
   }, 30_000)
 })
 
-describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion or opacity', () => {
-  it('has one model image and two text placeholders that say why', async () => {
+describe('OD4-06 · Section 16 shows all three appearances as images', () => {
+  it('draws motion, truncation and a new dependent opacity, each with its caption', async () => {
     render(<ArtifactCauseStrip />)
     await ready('[data-teaching-figure="changing-anatomy:artifact-strip"]')
     const figure = document.querySelector(
       '[data-teaching-figure="changing-anatomy:artifact-strip"]',
     )!
-    expect(figure.querySelectorAll('canvas')).toHaveLength(1)
+    // Owner decision, 2026-10-12: motion and the opacity are simulated on the course's CT, where
+    // they were text panels waiting for authentic media.
+    expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(3)
     expect(figure.querySelector('[data-figure-panel="truncation"] canvas')).not.toBeNull()
-    for (const id of ['motion', 'opacity']) {
+    for (const [id, words] of [
+      ['motion', /each appear twice, a small distance apart/],
+      ['opacity', /ill-defined region in dependent lung/],
+    ] as const) {
       const panel = figure.querySelector(`[data-figure-panel="${id}"]`)!
-      expect(panel).toHaveAttribute('data-panel-medium', 'placeholder')
-      expect(panel.querySelector('canvas, svg, img')).toBeNull()
-      expect(panel).toHaveTextContent(/No image here/)
+      expect(panel).toHaveAttribute('data-panel-medium', 'simulated-on-model')
+      expect(panel.querySelector('canvas')!.getAttribute('aria-label')!.length).toBeGreaterThan(40)
+      expect(panel.querySelector('figcaption')).toHaveTextContent(words)
     }
     expect(figure.querySelector('[data-truncation-readout]')).toHaveTextContent(
       /about half of it lies inside the volume/,
@@ -240,7 +261,7 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
     expect(convention).toHaveTextContent(
       /positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation/,
     )
-    expect(convention).not.toHaveTextContent(/held for owner review/)
+    expect(convention).not.toHaveTextContent(/held for owner review|model’s own/)
     // Beam lines carry signed model values; the strip and tilt tables carry the same set.
     expect(
       [...figure.querySelectorAll('[data-beam-line]')].map((line) =>
@@ -270,13 +291,20 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
       'After: C-arm obliquity −20°, detector toward the patient’s left',
     )
     expect(figure.querySelector('[data-tool-view="-20"]')).toHaveTextContent('C-arm obliquity −20°')
-    // Every number the reading paragraph prints is a number in the strip table.
-    const strip = [...figure.querySelectorAll('[data-target-ray] td')].map(
-      (cell) => cell.textContent,
+    // The reading names what the strip table names, and prints no millimetres.
+    const row = (obliquity: number) =>
+      figure.querySelector(`[data-target-ray="${obliquity}"] td`)!.textContent
+    expect(row(0)).toBe('Heart and mediastinum, rib')
+    expect(row(-20)).toBe('Rib')
+    const reading = figure.querySelector('[data-two-axis-reading]')!.textContent!
+    expect(reading).toMatch(
+      /Frontally, the X-ray path through the nodule crosses the heart and mediastinum plus a rib\./,
     )
-    const printed =
-      figure.querySelector('[data-two-axis-reading]')!.textContent!.match(/\d+ mm/g) ?? []
-    for (const value of printed) expect(strip.join(' ')).toContain(value)
+    expect(reading).toMatch(/the heart comes off the path; it now crosses a rib\./)
+    expect(figure.textContent).not.toMatch(/\d+ mm|soft[- ]tissue density/)
+    expect(figure.querySelector('[data-tilt-reading]')).toHaveTextContent(
+      'At C-arm obliquity −20° none of these tilts brings the heart or the diaphragm over the nodule, so this lesion needs no tilt to clear them. Tilting to −10° or +20° brings the spine over it instead.',
+    )
   }, 30_000)
 
   it('draws each beam as the axial projection of the target ray from the tube, and says so (F1)', async () => {
@@ -295,7 +323,7 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles and st
       )
     }
     const caption = figure.querySelector('[data-figure-panel="axial"] figcaption')!
-    expect(caption).toHaveTextContent(/the target ray whose path lengths the table gives/)
+    expect(caption).toHaveTextContent(/the target ray the table reads/)
     expect(caption).toHaveTextContent(/from the X-ray tube’s focal spot/)
     expect(caption).toHaveTextContent(/drawn as its projection onto this axial image/)
     expect(caption).toHaveTextContent(/crosses this slice only at the lesion/)
@@ -364,7 +392,7 @@ describe('OD4-09 · the fixed/mobile comparison and the equalised field', () => 
       expect(numbered[0]).toHaveTextContent(PI_NUMBERS.value(id))
     expect(cells).not.toMatch(/better|superior|inferior|equivalent|always|never has/i)
     expect(table.querySelector('[data-model-note]')).toHaveTextContent(
-      /draw the same detector field and the same field of view; they differ only in how they are mounted/,
+      /drawn here with the same detector field and the same field of view; only the mounting differs/,
     )
   })
 
@@ -420,4 +448,22 @@ describe('OD4-10 · the team-readiness aid', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(teamReadinessText()))
     expect(teamReadinessText().split('\n')[1]).toBe(TEAM_READINESS_STATUS)
   })
+})
+
+describe('the wedge figure shows dependency moving with position', () => {
+  it('draws the supine and wedged levels with captions that say where the nodule lies', async () => {
+    render(<WedgeDependencyFigure />)
+    await ready('[data-teaching-figure="current-anatomy:wedge-dependency"]')
+    const figure = document.querySelector(
+      '[data-teaching-figure="current-anatomy:wedge-dependency"]',
+    )!
+    expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(2)
+    // The vertebral-body line needs bone the synthetic chest here does not have; model-truth holds
+    // it to the real CT.
+    expect(figure.querySelector('[data-figure-panel="supine"]')).toHaveTextContent(/inside it/)
+    expect(figure.querySelector('[data-figure-panel="wedged"]')).toHaveTextContent(
+      /risen above the dashed line and is clear of it/,
+    )
+    expect(figure.textContent).not.toMatch(/simulated|teaching model|model(ed|led)?\b/i)
+  }, 30_000)
 })

@@ -1912,9 +1912,9 @@
  *
  * These sizes were authored for the legacy lab workspace and were reachable only from it, so the
  * Learn workspace always paid full price for the console — an 888px stack in a pane that a
- * standard laptop can only make about 260px tall. `[data-mv-density='laptop']` is set by
- * `useVentilationWorkspaceDensity` from the Learn viewport's measured box, so the same compaction
- * now applies wherever the workspace is genuinely short. Nothing here scales or transforms: traces
+ * standard laptop can only make about 260px tall. `[data-mv-density='laptop']` is set by the Learn
+ * host on the console surface in the desktop workspace, where the console shares a viewport-tall
+ * pane with its clock bar (2026-10-15). Nothing here scales or transforms: traces
  * and labels stay real text and real vectors at a smaller but still readable size, so a screen
  * reader and a magnifier see what the screen shows.
  */
@@ -1961,6 +1961,54 @@
 [data-mv-density='laptop'] .waveformTextEquivalent {
   padding-block: 0.42rem;
   margin-top: 0.45rem;
+}
+
+/*
+ * The monitored-value column at a device's own line spacing rather than the reading text's 1.6,
+ * which it inherits from the Learn flow. The column's rows are flexible, so its content sets the
+ * screen's height: at 1.6 the C6's five values made a 534px screen around a 437px trace.
+ */
+[data-mv-density='laptop'] .mmpPanel,
+[data-mv-density='laptop'] .patientDataBanner {
+  line-height: 1.2;
+}
+
+/*
+ * The bezel, header and alarm bar at the sizes the live course's laptop view already used
+ * (`[data-live-learning='true']`, below). The screen keeps its content height, so a frozen breath
+ * with its effort row is never clipped.
+ */
+[data-mv-density='laptop'] .consoleShell {
+  padding: 8px;
+}
+[data-mv-density='laptop'] .consoleHeader {
+  min-height: 36px;
+  padding-block: 7px;
+}
+[data-mv-density='laptop'] .alarmBar {
+  min-height: 30px;
+  padding-block: 6px;
+}
+
+/*
+ * The tab row stays on screen. In the two-pane Learn workspace the console scrolls inside its own
+ * pane, and with four traces it is taller than the pane of a 1366 x 768 or 1280 x 720 window: the
+ * row (Monitoring, Modes, Controls ...) ended 31 px and 59 px below the fold there, under a task
+ * that begins "Open Controls on the console". The row is pinned to the pane's bottom edge while
+ * the console runs past it, and sits in its own place once the console is scrolled into view.
+ * `clip`, not `hidden`, on the bezel: a `hidden` box is a scroll container, and the row would pin
+ * to the bezel it is already at the bottom of.
+ */
+@container mv-task (min-width: 75rem) {
+  [data-mv-density='laptop'] .consoleBezel {
+    overflow: clip;
+  }
+  [data-mv-density='laptop'] .consoleNav {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    box-shadow: 0 -0.6rem 0.8rem -0.6rem rgba(0, 0, 0, 0.6);
+  }
 }
 
 .workflowLayout {
@@ -4079,6 +4127,48 @@ line.waveformAnnotation {
   [data-live-learning='true'] .monitoringScreen {
     height: 345px;
   }
+}
+
+/*
+ * "Show me where": the one control a Learn task is waiting for, marked on the console itself
+ * (ported from the ECMO console). The Evita's white screen takes a dark ring instead of a white one.
+ */
+.consoleShell [data-guided-help='true'] {
+  position: relative;
+  z-index: 8;
+  outline: 4px solid #fff !important;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 8px rgba(113, 225, 229, 0.32),
+    0 0 30px rgba(113, 225, 229, 0.58) !important;
+  animation: mvGuidedHelpPulse 1.1s ease-in-out infinite;
+  scroll-margin: 25vh 0;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] [data-guided-help='true'] {
+  outline-color: #0b3954 !important;
+  box-shadow:
+    0 0 0 8px rgba(23, 107, 162, 0.28),
+    0 0 26px rgba(23, 107, 162, 0.5) !important;
+}
+
+@keyframes mvGuidedHelpPulse {
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consoleShell [data-guided-help='true'] {
+    animation: none;
+  }
+}
+
+/* The frozen breath fills the trace slot on the main screen. */
+.waveformStack[data-frozen-breath] {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  overflow: visible;
 }
 
 /*

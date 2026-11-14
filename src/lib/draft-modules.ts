@@ -9,6 +9,8 @@ import { ICU_SIMULATION_RELEASE_STAGE } from '@/features/icu-simulation/content'
 import { MCS_RELEASE_STAGE } from '@/features/mechanical-circulatory-support/content'
 import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '@/features/peripheral-imaging/content/release'
 import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '@/features/bronchoscopy-foundations/content/release'
+import { DOLPHIN_BRONCHOSCOPY_RELEASE_STAGE } from '@/features/dolphin-bronchoscopy/content/release'
+import { BOARD_NAVIGATOR_RELEASE_STAGE } from '@/features/board-navigator/content/release'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
@@ -49,6 +51,16 @@ const bronchoscopyFoundationsUnlistedPathPrefixes =
     ? (['/bronchoscopy-foundations'] as const)
     : ([] as const)
 
+const dolphinBronchoscopyUnlistedPathPrefixes =
+  DOLPHIN_BRONCHOSCOPY_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/dolphin-bronchoscopy'] as const)
+    : ([] as const)
+
+const boardNavigatorUnlistedPathPrefixes =
+  BOARD_NAVIGATOR_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/board-navigator'] as const)
+    : ([] as const)
+
 const icuSimulationDraftPathPrefixes =
   ICU_SIMULATION_RELEASE_STAGE === 'published' ? ([] as const) : (['/icu-simulation'] as const)
 
@@ -63,7 +75,6 @@ const draftModulePathPrefixes = [
   ...icuSimulationDraftPathPrefixes,
   '/education/chest-drainage',
   '/intro-bronchoscopy',
-  '/learn/anatomy/airway',
   '/literature',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
@@ -73,7 +84,9 @@ const unlistedModulePathPrefixes = [
   ...(!courseAvailability.socalEbusCourseOpen ? ['/socal-ebus-course'] : []),
   ...(!courseAvailability.pccmIntroCourseOpen ? ['/pccm-intro-course'] : []),
   '/ebus-guided',
+  '/eus-b-guided',
   '/eus-b-simulator',
+  '/literature-atlas',
   '/medical-thoracoscopy/wolf-preview',
   '/development-beta',
   '/admin/module-feedback',
@@ -81,12 +94,16 @@ const unlistedModulePathPrefixes = [
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
+  '/learn/anatomy/dolphin-airway',
+  '/learn/anatomy/dolphin',
   ...baxterCrrtUnlistedPathPrefixes,
   ...icuHemodynamicsUnlistedPathPrefixes,
   ...icuSimulationUnlistedPathPrefixes,
   ...mechanicalCirculatorySupportUnlistedPathPrefixes,
   ...peripheralImagingUnlistedPathPrefixes,
   ...bronchoscopyFoundationsUnlistedPathPrefixes,
+  ...dolphinBronchoscopyUnlistedPathPrefixes,
+  ...boardNavigatorUnlistedPathPrefixes,
   // Phase D1 device-intelligence routes stay absent from all site navigation
   // (decision D-03 as modified): reachable by direct link only.
   '/clinical-roles',

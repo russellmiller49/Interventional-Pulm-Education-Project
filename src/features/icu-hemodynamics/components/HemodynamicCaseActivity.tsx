@@ -1,7 +1,7 @@
 'use client'
 
 import type { Route } from 'next'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { criticalCareReferences } from '@/features/critical-care/content/references'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
@@ -58,8 +58,16 @@ import {
   latentPhysiologicalEstimates,
 } from '../engine/simulation'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
-import { hemodynamicCaseShockProfile } from '../content/cases'
-import { HEMODYNAMICS_SHOCK_PROFILES } from '../content/teachingNumbers'
+import {
+  hemodynamicCaseCardiogenicSide,
+  hemodynamicCaseObstructiveCause,
+  hemodynamicCaseShockProfile,
+} from '../content/cases'
+import {
+  HEMODYNAMICS_NUMBERS,
+  HEMODYNAMICS_SHOCK_PROFILES,
+  PLR_POSITIVE_RISE_PERCENT,
+} from '../content/teachingNumbers'
 import { HemodynamicsShockProfiles } from './HemodynamicsReferenceValues'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
@@ -132,6 +140,26 @@ const TRANSFER_OPTIONS = [
 ] as const
 
 /**
+ * How a case sits inside a Learn section when it runs there rather than on its own page.
+ *
+ * A section paired to a case ends on it (owner direction, 2026-10-14): the case is the section's
+ * last task, embedded in the section's task card, and the way out goes back to the section rather
+ * than to Practice. Section eight also offers a second case on its mechanism once it is finished.
+ */
+export interface HemodynamicCaseEmbedding {
+  readonly sectionId: string
+  readonly sectionTitle: string
+  /** One-based position of the section on the pathway. */
+  readonly sectionNumber: number
+  /** The section's last task (the default), or the further case its completion card offers. */
+  readonly relation?: 'last-task' | 'second-case'
+  /** Exit case, and Save for later on the device check: close the case and go back to the section. */
+  readonly onReturnToSection: () => void
+  /** The end of the case: back to the section, which is then finished. */
+  readonly onCaseFinished: () => void
+}
+
+/**
  * One Practice case, or the applied case opened from the former Assess page.
  *
  * Self-paced (HD-01): every checkpoint opens at any point — a working frame is optional, actions do
@@ -140,18 +168,24 @@ const TRANSFER_OPTIONS = [
  * bundled-credit refusal, the modeled response needs model time, and the transfer is marked done only
  * when the line has actually been re-levelled and its flush response classified and corrected.
  * Nothing about a run is written: no attempts, scores, hints, mastery or resume checkpoints. The only
- * record is that the case was opened on this device.
+ * record is that the case was opened on this device, in either variant.
+ *
+ * `embedded` runs the same case inside a Learn section, as its last task. The section's stage is
+ * then the frame (no module frame of its own), a strip names the case and its section in place of
+ * the Practice breadcrumb and title, and Exit case and the end of the case go back to the section.
+ * The section pauses its own patient while the case is its current task, so this case's engine is
+ * the only one running.
  */
 export function HemodynamicCaseActivity({
   caseId,
   mode,
   locale = 'en',
-  nextLearn,
+  embedded,
 }: {
   readonly caseId: string
   readonly mode: CaseMode
   readonly locale?: string
-  readonly nextLearn?: string
+  readonly embedded?: HemodynamicCaseEmbedding
 }) {
   const definition = requireValue(
     hemodynamicCaseById.get(caseId),
@@ -517,8 +551,14 @@ export function HemodynamicCaseActivity({
   }
 
   function exitCase() {
+    if (embedded) {
+      embedded.onReturnToSection()
+      return
+    }
     router.push(`/icu-hemodynamics/${section}` as Route)
   }
+  // Inside a section the case's headings sit under the section task card's own heading.
+  const Heading = embedded ? 'h3' : 'h2'
 
   const requiredCompleted = definition.requiredInterventionIds.filter((id) =>
     state.completedInterventionIds.includes(id),
@@ -889,7 +929,7 @@ export function HemodynamicCaseActivity({
   )
   const currentTask = (
     <section className={flowStyles.caseTask} aria-label="Current case task">
-      <h2>{objectives[phase]}</h2>
+      <Heading data-case-heading>{objectives[phase]}</Heading>
       {taskControls}
       {hintVisible ? <p data-case-hint>{definition.guidedPrompt}</p> : null}
       {feedback}
@@ -897,32 +937,43 @@ export function HemodynamicCaseActivity({
   )
 
   return (
-    <IcuHemodynamicsModuleFrameV2
-      locale={locale}
-      activeHref={`/icu-hemodynamics/${section}`}
-      activityMode
-      documentFlow
-    >
+    <CaseFrame embedded={embedded !== undefined} locale={locale} section={section}>
       <SimulationLaunchGate
         activityTitle={definition.title}
         minimumViewport="tablet"
         bandwidthClass="standard"
         estimatedSizeLabel="Under 2 MB after shared application assets"
-        lightweightAlternativeHref={`/icu-hemodynamics/${section}`}
+        /*
+         * Inside a section there is no lighter page to send a learner to — the section is the page
+         * they are on — so the device check offers Continue and Save for later, back to the section.
+         */
+        lightweightAlternativeHref={embedded ? undefined : `/icu-hemodynamics/${section}`}
         onSaveForLater={exitCase}
         theme="dark"
       >
         <div
           className={flowStyles.caseFlow}
           data-case-flow
+          data-embedded={embedded ? (embedded.relation ?? 'last-task') : undefined}
           data-phase={phase}
           data-feedback-mode={holdFeedback ? 'deferred' : 'immediate'}
         >
           <header>
-            <Link href={`/icu-hemodynamics/${section}` as Route}>
-              {mode === 'challenge' ? 'Applied case' : 'Practice'} · <span>{caseId}</span>
-            </Link>
-            <h1>{definition.title}</h1>
+            {embedded ? (
+              <p className={flowStyles.caseStrip} data-case-strip>
+                Case · {definition.title} ·{' '}
+                {embedded.relation === 'second-case'
+                  ? `a second case on the mechanism of Section ${embedded.sectionNumber}`
+                  : `the last task of Section ${embedded.sectionNumber}`}
+              </p>
+            ) : (
+              <>
+                <Link href={`/icu-hemodynamics/${section}` as Route}>
+                  {mode === 'challenge' ? 'Applied case' : 'Practice'} · <span>{caseId}</span>
+                </Link>
+                <h1>{definition.title}</h1>
+              </>
+            )}
             <div className={flowStyles.caseActions}>
               <button
                 type="button"
@@ -974,7 +1025,7 @@ export function HemodynamicCaseActivity({
             </div>
           </header>
           <section className={flowStyles.caseBrief} aria-label="Patient brief">
-            <h2>Patient brief</h2>
+            <Heading data-case-heading>Patient brief</Heading>
             <p>{definition.presentation}</p>
             <p>
               Adult ICU · HR {metricValue(state.measurements.heartRateBpm)} /min · PEEP{' '}
@@ -1001,7 +1052,7 @@ export function HemodynamicCaseActivity({
           ) : null}
           {phase === 'explain' ? (
             <section className={flowStyles.caseDebrief} aria-label="Case debrief">
-              <h2>{objectives.explain}</h2>
+              <Heading data-case-heading>{objectives.explain}</Heading>
               {taskControls}
               {!state.completed ? (
                 <p data-debrief-before-reassessment>
@@ -1035,7 +1086,11 @@ export function HemodynamicCaseActivity({
                     </strong>{' '}
                     Hold its numbers against the row.
                   </p>
-                  <HemodynamicsShockProfiles highlight={shockProfileId} />
+                  <HemodynamicsShockProfiles
+                    highlight={shockProfileId}
+                    highlightSide={hemodynamicCaseCardiogenicSide[definition.id] ?? null}
+                    highlightCause={hemodynamicCaseObstructiveCause[definition.id] ?? null}
+                  />
                 </div>
               ) : null}
               <CaseRunSummary
@@ -1090,6 +1145,7 @@ export function HemodynamicCaseActivity({
                   before={observedSystemState(baseline)}
                   now={observedNow}
                   elapsedSeconds={state.timeSeconds - baseline.timeSeconds}
+                  heading={Heading}
                 />
               ) : null}
               <HemodynamicNativeWorkspace
@@ -1105,22 +1161,52 @@ export function HemodynamicCaseActivity({
             </>
           )}
           {message ? <p role="status">{message}</p> : null}
-          {transferComplete ? (
+          {transferComplete && embedded ? (
+            <div data-transfer-complete data-case-finished>
+              <p role="status">Case finished.</p>
+              <div className={flowStyles.caseActions}>
+                <button type="button" onClick={embedded.onCaseFinished}>
+                  Back to Section {embedded.sectionNumber}: {embedded.sectionTitle}
+                </button>
+              </div>
+            </div>
+          ) : transferComplete ? (
             <p role="status" data-transfer-complete>
               Transfer line revalidated in this visit. Nothing about the run is saved.{' '}
-              <Link
-                href={
-                  nextLearn
-                    ? { pathname: '/icu-hemodynamics/learn', query: { activity: nextLearn } }
-                    : '/icu-hemodynamics/learn'
-                }
-              >
-                Continue learning
-              </Link>
+              {mode === 'challenge' ? (
+                <Link href="/icu-hemodynamics/learn">Continue learning</Link>
+              ) : (
+                <Link href="/icu-hemodynamics/practice">Back to all cases</Link>
+              )}
             </p>
           ) : null}
         </div>
       </SimulationLaunchGate>
+    </CaseFrame>
+  )
+}
+
+/** The module's frame for a case on its own page; inside a section the stage host is the frame. */
+function CaseFrame({
+  embedded,
+  locale,
+  section,
+  children,
+}: {
+  readonly embedded: boolean
+  readonly locale: string
+  readonly section: 'practice' | 'assess'
+  readonly children: ReactNode
+}) {
+  if (embedded) return <>{children}</>
+  return (
+    <IcuHemodynamicsModuleFrameV2
+      locale={locale}
+      activeHref={`/icu-hemodynamics/${section}`}
+      activityMode
+      documentFlow
+    >
+      {children}
     </IcuHemodynamicsModuleFrameV2>
   )
 }
@@ -1157,14 +1243,16 @@ function BeforeAndCurrent({
   before,
   now,
   elapsedSeconds,
+  heading: Heading = 'h2',
 }: {
   readonly before: ObservedSystemState
   readonly now: ObservedSystemState
   readonly elapsedSeconds: number
+  readonly heading?: 'h2' | 'h3'
 }) {
   return (
     <section className={flowStyles.comparison} aria-label="Retained case observations">
-      <h2>Before action and current response</h2>
+      <Heading data-case-heading>Before action and current response</Heading>
       <p>
         Recorded just before your first recorded frame or action, and now,{' '}
         {elapsedSeconds.toFixed(0)} model seconds later. MAP is the monitor’s last beat at each
@@ -1224,13 +1312,18 @@ function BeforeAndCurrent({
   )
 }
 
+const signedPercent = (value: number) => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(1)}%`
+
+/** How long after a leg raise the model has let its effect fade. A model-time choice. */
+const LEG_RAISE_RETURN_MODEL_SECONDS = 150
+
 /**
  * The leg raise's flow response, as the model has it (report P-04).
  *
- * The monitor has no continuous flow channel, so a learner who performed a leg raise saw no flow
- * response unless they acquired a thermodilution series while it lasted. The model's own flow does
- * respond, and this shows it — as a model-only teaching value, labelled so, never recorded in the
- * decision trace, and never called a cardiac output, stroke volume or VTI measurement.
+ * The monitor has no real-time flow channel, and a thermodilution series is too slow for a leg raise
+ * at the bedside. The model's own flow does respond, and this shows it — as a model-only teaching
+ * value, labelled so, never recorded in the decision trace, and never called a cardiac output,
+ * stroke volume or VTI measurement.
  */
 function LegRaiseModelOnly({
   record,
@@ -1242,19 +1335,20 @@ function LegRaiseModelOnly({
   const atStart = latentPhysiologicalEstimates(record.before).cardiacOutputLMin
   const now = latentPhysiologicalEstimates(state).cardiacOutputLMin
   const elapsed = state.timeSeconds - record.atSeconds
+  const change = ((now - atStart) / atStart) * 100
   return (
     <details className="rounded-xl border p-3 text-sm leading-6" data-model-only-flow>
       <summary>Model-only flow during the leg raise — not a measurement</summary>
       <p>
         The simulation’s internal cardiac output, which no channel on this monitor displays:{' '}
-        {atStart.toFixed(2)} L/min when the leg raise began, {now.toFixed(2)} L/min now,{' '}
-        {elapsed.toFixed(0)} model seconds later.
+        {atStart.toFixed(2)} L/min when the leg raise began, {now.toFixed(2)} L/min now (
+        {signedPercent(change)}), {elapsed.toFixed(0)} model seconds later.
       </p>
       <p>
         This is the model’s own value, shown for teaching. It is not a cardiac-output, stroke-volume
-        or VTI measurement, and it is not recorded in your decision trace. A measured response needs
-        a thermodilution series acquired while the leg raise lasts; a series from before it cannot
-        show one.
+        or VTI measurement, and it is not recorded in your decision trace. At the bedside a
+        real-time flow measure gives this reading, at baseline, during the raise and back at
+        baseline. A positive test is {HEMODYNAMICS_NUMBERS.value('plr-response')}.
       </p>
     </details>
   )
@@ -1363,8 +1457,9 @@ function flowSentence(state: HemodynamicSimulationState): string {
 }
 
 /**
- * What this run measured around a leg raise (report P-04). The authored expert path reads "flow
- * rises during passive leg raise"; this says whether this run acquired anything that could show it.
+ * What this run measured around a leg raise (report P-04), and the baseline, raise and return the
+ * bedside test reads, on the model's own flow. A series the model fits inside the effect is named
+ * for what it is: possible here because model seconds are compressed, not a bedside method.
  */
 function LegRaiseSummary({
   definition,
@@ -1389,8 +1484,19 @@ function LegRaiseSummary({
         : null,
     [record],
   )
+  const returned = useMemo(
+    () =>
+      record
+        ? modelOnlyMatchedComparison(
+            record.before,
+            record.intervention,
+            LEG_RAISE_RETURN_MODEL_SECONDS,
+          )
+        : null,
+    [record],
+  )
   if (!definition.interventions.some((item) => item.id === 'passive-leg-raise')) return null
-  if (!record || !comparison) {
+  if (!record || !comparison || !returned) {
     return (
       <p data-leg-raise-summary="not-performed">
         Leg raise: not performed in this run, so there is no leg-raise response to read.
@@ -1405,19 +1511,34 @@ function LegRaiseSummary({
     episodeBefore: record.before.physiologicalEpisode.index,
   })
   const noMeasuredResponse =
-    'The monitor has no continuous flow channel, so this run holds no measured flow response to the leg raise. The expert path below describes one; this run did not measure it.'
+    'This monitor has no real-time flow channel, so this run holds no measured flow response to the leg raise. A thermodilution series is too slow to catch one at the bedside. The expert path below describes what a real-time measure shows.'
+  const baselineFlow = comparison.atAction.cardiacOutputLMin
+  const raisedFlow = comparison.withAction.cardiacOutputLMin
+  const rise = ((raisedFlow - baselineFlow) / baselineFlow) * 100
   return (
     <div className="grid gap-2" data-leg-raise-summary="performed">
       <p>
         <strong>Leg raise at {record.atSeconds.toFixed(0)} model seconds.</strong>{' '}
         {around.kind === 'under-its-conditions'
-          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. That is the measured response in this run.`
+          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. Model seconds are compressed, which lets a series land inside the effect. At the bedside a series is too slow for it; use a real-time flow measure.`
           : around.kind === 'no-modeled-change'
             ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no response to measure.'
             : around.kind === 'only-after-a-later-change'
               ? `No series was acquired while its modeled effect was building. The first series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it is not the leg-raise response. ${noMeasuredResponse}`
-              : `No thermodilution series was acquired while it lasted. ${noMeasuredResponse}`}
+              : noMeasuredResponse}
       </p>
+      {around.kind === 'no-modeled-change' ? null : (
+        <p data-leg-raise-sequence>
+          <strong>Baseline, raise, return, on the model’s own flow:</strong>{' '}
+          {baselineFlow.toFixed(2)} L/min at baseline, {raisedFlow.toFixed(2)} L/min during the
+          raise ({signedPercent(rise)}), {returned.withAction.cardiacOutputLMin.toFixed(2)} L/min{' '}
+          {LEG_RAISE_RETURN_MODEL_SECONDS} model seconds later. A positive test is{' '}
+          {HEMODYNAMICS_NUMBERS.value('plr-response')}, so this one{' '}
+          {rise >= PLR_POSITIVE_RISE_PERCENT ? 'meets that' : 'falls short of it'}. The model lets
+          the effect fade on its own; at the bedside you return the bed and confirm that flow is
+          back at baseline.
+        </p>
+      )}
       <ModelOnlyTable comparison={comparison} label="the leg raise" />
     </div>
   )

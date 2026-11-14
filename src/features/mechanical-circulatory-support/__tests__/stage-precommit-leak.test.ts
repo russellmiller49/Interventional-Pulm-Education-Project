@@ -25,7 +25,9 @@ it.each(mcsSectionLearningContracts)(
     const lesson = buildMcsStageLesson(contract.sectionId)
     expect(lesson.steps.every((step) => step.gate === 'open')).toBe(true)
     expect(lesson.steps[lesson.predictionStepIndex].interaction.kind).toBe('prediction')
-    expect(lesson.steps.at(-1)?.interaction.kind).toBe('transfer')
+    // A section ends on its transfer, or, where it is paired to a case, on the case after it.
+    expect(lesson.steps.at(-1)?.interaction.kind).toBe(lesson.practicePairing ? 'case' : 'transfer')
+    expect(lesson.steps.at(-1)?.phase).toBe('transfer')
     expect(lesson.steps.every((step) => step.title.trim() && step.lookIn?.landmark)).toBe(true)
     const sources = mcsStageSources(contract.sectionId).sourceIds
     for (const source of contract.predictionItem.evidenceIds) expect(sources).toContain(source)

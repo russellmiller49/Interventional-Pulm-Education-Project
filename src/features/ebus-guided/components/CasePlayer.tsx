@@ -4,13 +4,14 @@ import { Link } from '@/i18n/navigation'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type { EbusCase, Question } from '../content/types'
-import { lessonHref, LESSONS } from '../content/curriculum'
+import { lessonById, lessonHref } from '../content/curriculum'
 import { recordLocation } from '../engine/selfPacedProgress'
 import { QuestionBody } from './QuestionBody'
 import { QuestionExplanation } from './QuestionExplanation'
 import { SourceList } from './SourceList'
 import { DecisionImage } from './DecisionImage'
 import { StationFigure } from './StationFigure'
+import { ReviewImageView } from './ReviewImageView'
 import styles from './course.module.css'
 
 function learningItem(question: Question): ClinicalLearningItem {
@@ -60,7 +61,8 @@ export function CasePlayer({
   const unsafe = !!q.choices.find((c) => c.id === committed)?.unsafe
   const last = index === item.questions.length - 1
   const lessons = useMemo(
-    () => item.lessonIds.map((id) => LESSONS.find((l) => l.id === id)).filter(Boolean),
+    // A case may name a unit that now sits inside another lesson: show that lesson, once.
+    () => [...new Set(item.lessonIds.map((id) => lessonById(id)).filter(Boolean))],
     [item.lessonIds],
   )
   /*
@@ -74,6 +76,14 @@ export function CasePlayer({
    */
   const caseStation =
     q.imageStation ?? item.questions.find((entry) => entry.imageStation)?.imageStation
+  /*
+   * A case about something other than one station's views has a picture of its own, read the
+   * same way: it belongs to the case, so it stays up across the checks, and what it shows is
+   * named once the check it came with has been answered or explained.
+   */
+  const figureOwner = q.imageFigure ? q : item.questions.find((entry) => entry.imageFigure)
+  const [explained, setExplained] = useState<Record<string, boolean>>({})
+  const figureRevealed = !!figureOwner && (!!answers[figureOwner.id] || !!explained[figureOwner.id])
   function advance() {
     if (last) {
       setDebrief(true)
@@ -105,6 +115,14 @@ export function CasePlayer({
             <h2>Clinical situation</h2>
             <p>{item.context}</p>
             {caseStation && <DecisionImage key={caseStation} station={caseStation} />}
+            {!caseStation && figureOwner?.imageFigure && (
+              <div data-case-figure>
+                <ReviewImageView image={figureOwner.imageFigure} revealed={figureRevealed} />
+                {!figureRevealed && (
+                  <p className={styles.muted}>What this picture shows is named after you answer.</p>
+                )}
+              </div>
+            )}
             <p className={styles.muted}>
               Feedback appears when you check a response. You can open the hint or the explanation
               first, try again after any response, or continue without answering. An unsafe choice
@@ -149,6 +167,9 @@ export function CasePlayer({
                 })
                 setSelected((value) => ({ ...value, [q.id]: '' }))
               }}
+              onExplanationChange={(open) =>
+                setExplained((value) => (open ? { ...value, [q.id]: true } : value))
+              }
             />
           </NowCard>
         </div>
@@ -177,6 +198,7 @@ export function CasePlayer({
                 </p>
                 <QuestionExplanation item={learningItem(question)} />
                 {question.imageStation && <StationFigure station={question.imageStation} />}
+                {question.imageFigure && <ReviewImageView image={question.imageFigure} revealed />}
               </section>
             )
           })}

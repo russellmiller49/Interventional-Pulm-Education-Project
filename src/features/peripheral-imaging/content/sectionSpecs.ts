@@ -89,7 +89,7 @@ const noneOf = (extra: Partial<Strip> = {}): Strip => ({
  * the closing screen of the last section, and nowhere else (teaching-first rules, 2026-10-08).
  */
 export const IMAGING_SHARED_BOUNDARY =
-  'This is a teaching simulator. The CT supplies the anatomy; the target, the instruments and the exposure values are modeled for teaching. They are not equipment settings or patient measurements, they do not predict dose, tool placement or diagnostic yield on a particular system, and the course does not replace supervised C-arm operation or radiation safety training.'
+  'This is a teaching simulator. The anatomy comes from a CT; the lesion, the instruments and the exposure values were chosen for teaching. They are not equipment settings or patient measurements, they do not predict dose, tool placement or diagnostic yield on a particular system, and the course does not replace supervised C-arm operation or radiation safety training.'
 
 export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze([
   {
@@ -208,6 +208,31 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     sourceIds: ['setser', 'ilocate', 'vespa', 'pritchett'],
   },
   {
+    id: 'airway-anatomy',
+    recognizeTitle: 'A catheter, and no bronchus to see it in',
+    newConcept:
+      'The frontal image places a bronchus by side and by height; it draws short, or on top of one another, the bronchi that run front to back.',
+    objective:
+      'Locate the lobar and segmental bronchi on a frontal fluoroscopic image, and name the bronchi it draws short or on top of one another.',
+    incrementSentence:
+      'This section adds one idea: the frontal image places a bronchus by side and by height, and cannot place it front to back.',
+    prerequisiteSectionIds: ['chain-walk', 'current-anatomy'],
+    chainStops: ['patient', 'detector'],
+    grammarRowIds: ['overlap-depth'],
+    act: { kind: 'lab' },
+    controlStrip: {
+      verdict: 'this-control',
+      states: oneOf('angle', { display: 'not-this-one' }),
+      sentence:
+        'This control: the C-arm projection, which changes which bronchi run across the beam. Not this one: the display, which enlarges a foreshortened bronchus without lengthening it.',
+    },
+    precommitDenyPatterns: [/has entered LB6/i, /front or back takes a second projection/i],
+    modelBoundary:
+      'The bronchi are the centrelines of the airways on this CT, drawn at the width of each lumen through the same projection as the image, with the names assigned on this CT. Fluoroscopy does not show them, and segmental anatomy varies between patients.',
+    capstoneCaseId: null,
+    sourceIds: ['chassagnon', 'setser'],
+  },
+  {
     id: 'projection',
     recognizeTitle: 'A needle that appears to be on the lesion',
     newConcept:
@@ -229,7 +254,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     precommitDenyPatterns: [/only superimposed/i, /projection change (did|does) not move/i],
     modelBoundary:
       'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions.',
-    capstoneCaseId: null,
+    capstoneCaseId: 'case-9',
     sourceIds: ['setser', 'tg272', 'pritchett'],
   },
   {
@@ -571,12 +596,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
   },
   {
     id: 'suite-cases',
-    recognizeTitle: 'One suite, every troubleshooting row',
+    recognizeTitle: 'One nodule, the whole workflow',
     newConcept:
       'Every finding in the suite arises at one component of image formation, and naming it guides the next step.',
     objective: 'Apply the imaging and radiation-safety principles to new procedural decisions.',
     incrementSentence:
-      'This section adds nothing new. Every row of the troubleshooting table, in the order the suite presents them.',
+      'This section adds nothing new. It runs one nodule through the 2D workflow in order, then applies the course to new decisions.',
     prerequisiteSectionIds: [
       'two-dimensional',
       'dts-interpretation',
@@ -589,12 +614,12 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     ],
     chainStops: ['source', 'beam', 'patient', 'detector', 'reconstruction', 'display'],
     grammarRowIds: [],
-    act: { kind: 'sort', sortId: 'where-it-lives' },
+    act: { kind: 'lab' },
     controlStrip: {
       verdict: 'no-control-change-the-question',
       states: allMonitoring,
       sentence:
-        'Every row of the table. Name where the problem arises before reaching for a control.',
+        'Every control in its place in the workflow. Name where a problem arises before reaching for one.',
     },
     precommitDenyPatterns: [
       /superimposition or lesion identity/i,
@@ -602,7 +627,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anatomy in the X-ray path or/i,
     ],
     modelBoundary:
-      'The findings in this section are the troubleshooting table’s rows, written for teaching; the eight integrated cases on their own page are teaching scenarios, not patient records.',
+      'The run-through uses the course CT with its authored nodule and tool, and the wedge rolls that CT about its long axis; the room’s limit on C-arm rotation is part of the teaching scenario. The integrated cases on their own page are teaching scenarios, not patient records.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'aapm12'],
   },

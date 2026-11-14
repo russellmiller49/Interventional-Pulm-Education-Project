@@ -27,6 +27,8 @@ export interface SceneLabelPlacement {
   readonly offsetX: number
   /** False when no truthful, non-overlapping placement fits; the finder still exposes its name. */
   readonly visible: boolean
+  /** On a rail: 0 for the row against the canvas edge, 1 for the second row inside it. */
+  readonly row?: 0 | 1
 }
 
 export interface SceneLabelLayoutOptions {
@@ -166,6 +168,147 @@ export function placeSceneLabels(
       leaders.push(line(candidate, choice.side))
     }
     placements.set(box.id, { side: choice.side, leader, offsetY, offsetX, visible })
+  }
+  return placements
+}
+
+/* ------------------------------------------------------------------ *
+ * Rails: the overview's labels, off the model
+ * ------------------------------------------------------------------ */
+
+export interface SceneLabelRailOptions {
+  readonly priorityIds?: readonly string[]
+  readonly obstacles?: readonly SceneRect[]
+  /** The canvas size. Rails run along its top and bottom edges. */
+  readonly bounds: { readonly width: number; readonly height: number }
+  /** Clear space between pills, and between a pill and the canvas edge. */
+  readonly gap?: number
+  /** The shortest leader worth drawing: a pill never sits closer than this to its object. */
+  readonly minLeader?: number
+}
+
+/** Clear space between two pills on a rail. Wider than the stacked gap: they sit side by side. */
+export const SCENE_LABEL_RAIL_GAP_PX = 6
+
+interface RailItem {
+  readonly box: SceneLabelBox
+  left: number
+}
+
+/** Lay one rail's pills left to right, each as near its object as the others allow. */
+function spreadAlongRail(items: RailItem[], width: number, gap: number): void {
+  items.sort((a, b) => a.box.x - b.box.x || a.box.id.localeCompare(b.box.id))
+  let cursor = gap
+  for (const item of items) {
+    const wanted = item.box.x - item.box.width / 2
+    item.left = Math.max(cursor, Math.min(wanted, width - gap - item.box.width))
+    cursor = item.left + item.box.width + gap
+  }
+  // The pass above only pushes right. Pull back from the right edge whatever ran past it.
+  let limit = width - gap
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const item = items[index]
+    item.left = Math.min(item.left, limit - item.box.width)
+    limit = item.left - gap
+  }
+}
+
+const railWidth = (items: readonly RailItem[], gap: number) =>
+  items.reduce((total, item) => total + item.box.width + gap, gap)
+
+/**
+ * The overview's labels in two rails, along the top and the bottom of the view.
+ *
+ * Resting on its object, every pill covered part of the model it named: eight pills over a scene
+ * that took the middle of the pane hid the patient's groin and the pump head (learner review,
+ * November 2026). Here no pill is on the model. Each goes to the rail nearer its object, the pills
+ * of a row keep the left-to-right order of their objects so their leaders fan out without
+ * crossing, and a thin leader runs from each pill to the object itself.
+ *
+ * A row holds what its width holds. When the nearer rail's row is full a pill takes the other
+ * rail's, and when both are full it starts a second row inside the first (nine names on a 690 px
+ * pane need it; eight do not). When all four rows are full the remaining pills are left out, as
+ * before, and stay reachable by name in the finder. A pill the current step points at is placed
+ * first, so it is the last to be left out.
+ */
+export function placeSceneLabelsOnRails(
+  boxes: readonly SceneLabelBox[],
+  {
+    priorityIds = [],
+    obstacles = [],
+    bounds,
+    gap = SCENE_LABEL_RAIL_GAP_PX,
+    minLeader = 10,
+  }: SceneLabelRailOptions,
+): Map<string, SceneLabelPlacement> {
+  const priority = new Set(priorityIds)
+  const placements = new Map<string, SceneLabelPlacement>()
+  const hidden = (box: SceneLabelBox): SceneLabelPlacement => ({
+    side: 'above',
+    leader: minLeader,
+    offsetY: -(minLeader + box.height / 2),
+    offsetX: 0,
+    visible: false,
+  })
+
+  // Row 0 is against the canvas edge; row 1 is the second row, inside it.
+  const rows = { above: [[], []] as RailItem[][], below: [[], []] as RailItem[][] }
+  const middle = bounds.height / 2
+  const eligible: SceneLabelBox[] = []
+  for (const box of boxes) {
+    const onCanvas = box.x >= 0 && box.x <= bounds.width && box.y >= 0 && box.y <= bounds.height
+    if (!onCanvas || box.width > bounds.width - 2 * gap) placements.set(box.id, hidden(box))
+    else eligible.push(box)
+  }
+  // The pill a step points at first, then the pills that most clearly belong to one rail.
+  eligible.sort(
+    (a, b) =>
+      Number(priority.has(b.id)) - Number(priority.has(a.id)) ||
+      Math.abs(b.y - middle) - Math.abs(a.y - middle) ||
+      a.id.localeCompare(b.id),
+  )
+  for (const box of eligible) {
+    const near = box.y <= middle ? 'above' : 'below'
+    const far = near === 'above' ? 'below' : 'above'
+    const row = [rows[near][0], rows[far][0], rows[near][1], rows[far][1]].find(
+      (candidate) => railWidth(candidate, gap) + box.width + gap <= bounds.width,
+    )
+    if (row) row.push({ box, left: 0 })
+    else placements.set(box.id, hidden(box))
+  }
+
+  for (const side of ['above', 'below'] as const) {
+    let edge = gap
+    rows[side].forEach((row, rowIndex) => {
+      if (row.length === 0) return
+      spreadAlongRail(row, bounds.width, gap)
+      const rowHeight = Math.max(...row.map((item) => item.box.height))
+      for (const item of row) {
+        const { box } = item
+        const pillTop = side === 'above' ? edge : bounds.height - edge - box.height
+        const rect: SceneRect = {
+          left: item.left,
+          right: item.left + box.width,
+          top: pillTop,
+          bottom: pillTop + box.height,
+        }
+        const leader = side === 'above' ? box.y - rect.bottom : rect.top - box.y
+        // Its object has to be clear of the pill by a leader, and no overlay may sit over it.
+        if (leader < minLeader || obstacles.some((obstacle) => intersects(rect, obstacle, gap))) {
+          placements.set(box.id, hidden(box))
+          continue
+        }
+        placements.set(box.id, {
+          side,
+          leader,
+          offsetY: side === 'above' ? -(leader + box.height / 2) : leader + box.height / 2,
+          offsetX: item.left + box.width / 2 - box.x,
+          visible: true,
+          row: rowIndex === 0 ? 0 : 1,
+        })
+      }
+      edge += rowHeight + gap
+    })
   }
   return placements
 }

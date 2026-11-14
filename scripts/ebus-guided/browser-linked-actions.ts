@@ -1,6 +1,19 @@
 import { expect, type Page } from '@playwright/test'
 import type { EbusObservation } from '../../src/lib/ebus-guided-bridge'
-import { LINKED_LANDMARKS, type LinkedLesson } from '../../src/lib/ebus-linked-contract'
+import {
+  LINKED_LANDMARKS,
+  LINKED_SWEEP_TOLERANCES,
+  linkedLandmarkName,
+  linkedLateralPosition,
+  linkedOpticView,
+  type LinkedLesson,
+  type LinkedVariant,
+} from '../../src/lib/ebus-linked-contract'
+
+const WORKBENCH = 'iframe[title="EBUS workbench"]'
+const SECTOR = 'section[data-sector-source="acoustic-volume"]'
+/** Rotations tried, in order, when looking for a structure or the node: the whole slider range. */
+const SEARCH_ROLLS = [90, 75, 60, 45, 30, 15, 0, -15, -30, -45, -60, -75, -90]
 
 export async function observeLinked(page: Page) {
   await page.addInitScript(() => {
@@ -21,70 +34,230 @@ export const linkedObservation = (page: Page) =>
         window as unknown as { linkedMessages: { observation: EbusObservation }[] }
       ).linkedMessages.at(-1)?.observation,
   )
-export async function identifyLandmarks(page: Page, lesson: LinkedLesson) {
-  const frame = page.frameLocator('iframe[title="EBUS workbench"]')
-  const selector = frame.getByLabel('Select an unnamed structure', { exact: true })
-  await expect(selector).toBeVisible({ timeout: 60000 })
-  // Try the visible unnamed candidates and use the activity's actual feedback. No direct state writes.
-  for (let count = 0; count < LINKED_LANDMARKS[lesson].length; count++) {
-    let identified = false
-    const values = await selector
-      .locator('option')
-      .evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value).filter(Boolean))
-    for (const value of values) {
-      await selector.selectOption(value)
-      await frame.getByRole('button', { name: 'Check landmark', exact: true }).click()
-      const feedback = frame.locator('.linked-landmark-task [role="status"]')
-      if (
-        !(await frame.locator('.linked-landmark-task').count()) ||
-        (await feedback.textContent())?.startsWith('Identified:')
-      ) {
-        identified = true
-        break
-      }
-      await expect(feedback).toContainText('Try another structure.')
-    }
-    expect(identified).toBe(true)
-    await expect
-      .poll(async () => (await linkedObservation(page))?.linked?.identifiedStructures?.length)
-      .toBe(count + 1)
-  }
-}
-export async function sweepLinked(page: Page) {
-  const frame = page.frameLocator('iframe[title="EBUS workbench"]')
+
+/** Move the Scope rotation slider and wait for the ultrasound frame rendered at that rotation. */
+async function rotateTo(page: Page, roll: number) {
+  const frame = page.frameLocator(WORKBENCH)
   const input = frame.getByLabel('Scope rotation', { exact: true })
   await expect(input).toBeEnabled({ timeout: 60000 })
-  for (let roll = 90; roll >= -90; roll -= 10) {
-    await input.fill(String(roll))
-    await expect
-      .poll(
-        async () => {
-          const observation = await linkedObservation(page)
-          return (
-            observation?.frameReady && observation.roll === roll && !!observation.linked?.source
-          )
-        },
-        { timeout: 30000 },
-      )
-      .toBe(true)
-  }
-  await expect(frame.locator('.linked-sweep')).toContainText('Sweep recorded')
-  await input.fill('0')
+  await input.fill(String(roll))
+  let frameId = ''
   await expect
     .poll(
       async () => {
         const observation = await linkedObservation(page)
-        return observation?.frameReady && observation.roll === 0 && observation.targetVisible
+        const source = observation?.linked?.source
+        frameId = observation?.linked?.frameId ?? ''
+        return (
+          !!observation?.frameReady &&
+          observation.roll === roll &&
+          source?.scope.roll === roll &&
+          source.frameId === frameId
+        )
       },
       { timeout: 30000 },
     )
     .toBe(true)
+  // The drawn image is the reported frame before anything is read from or clicked on it.
+  await expect(frame.locator(SECTOR)).toHaveAttribute('data-frame-id', frameId, { timeout: 30000 })
+  return (await linkedObservation(page))!
 }
-export async function performLinked(page: Page, lesson: LinkedLesson, changed = false) {
-  const frame = page.frameLocator('iframe[title="EBUS workbench"]')
+
+/**
+ * Find each requested structure on the ultrasound image the way a learner does: rotate until it
+ * is in the image, then click it. The click point comes from the workbench's own label centroids
+ * (`data-label-centroids`, fractions of the square image drawn inside the canvas); the lesson's
+ * state is never written directly, and the workbench's own evidence decides whether it counted.
+ */
+export async function identifyLandmarks(page: Page, lesson: LinkedLesson) {
+  const frame = page.frameLocator(WORKBENCH)
+  const expected = LINKED_LANDMARKS[lesson]
+  if (!expected.length) return
+  const task = frame.locator('.linked-landmark-task')
+  const identified = async () => (await linkedObservation(page))?.linked?.identifiedStructures ?? []
+  await expect(frame.getByLabel('Scope rotation', { exact: true })).toBeEnabled({ timeout: 60000 })
+  for (let count = (await identified()).length; count < expected.length; count++) {
+    await expect(task).toBeVisible({ timeout: 60000 })
+    const target = (await task.getAttribute('data-landmark-target'))!
+    expect(expected).toContain(target)
+    await expect(task.getByRole('heading')).toContainText(linkedLandmarkName(lesson, target))
+    let found = false
+    for (const roll of SEARCH_ROLLS) {
+      await rotateTo(page, roll)
+      const centroids = JSON.parse(
+        (await frame.locator(SECTOR).getAttribute('data-label-centroids')) || '{}',
+      ) as Record<string, [number, number]>
+      const point = centroids[target]
+      if (!point) continue
+      const canvas = frame.locator('.simulator-continuous-ultrasound canvas').first()
+      await canvas.scrollIntoViewIfNeeded()
+      const box = (await canvas.boundingBox())!
+      const side = Math.min(box.width, box.height)
+      await canvas.click({
+        position: {
+          x: (box.width - side) / 2 + point[0] * side,
+          y: (box.height - side) / 2 + point[1] * side,
+        },
+      })
+      found = await expect
+        .poll(async () => (await identified()).includes(target), { timeout: 5000 })
+        .toBe(true)
+        .then(
+          () => true,
+          () => false,
+        )
+      if (found) break
+    }
+    expect(found, 'clicked ' + target + ' on the ultrasound image').toBe(true)
+    await expect.poll(async () => (await identified()).length).toBe(count + 1)
+  }
+  await expect(task).toHaveCount(0)
+  await expect(frame.locator('[data-landmarks-identified]')).toContainText('Found on ultrasound')
+  expect([...(await identified())].sort()).toEqual([...expected].sort())
+}
+
+/** Rotate to a position where the node is in the image, as the lab asks for at the end. */
+async function finishOnTarget(page: Page) {
+  for (const roll of [0, 15, 30, -15, 45, -30, 60, -45, 75, -60, 90, -75, -90])
+    if ((await rotateTo(page, roll)).targetVisible) return roll
+  throw new Error('The node was not in the image at any scope rotation.')
+}
+
+/**
+ * The rotation sweep for the approach in use. The rule is the workbench's: at least
+ * `minSpanDeg` of rotation sampled with the node seen at least once; no step, count or direction
+ * rule. Looking for landmarks rotates the scope too, so the sweep may already be complete.
+ */
+export async function sweepLinked(page: Page) {
+  const frame = page.frameLocator(WORKBENCH)
+  const panel = frame.locator('.linked-sweep')
+  await expect(panel).toBeVisible({ timeout: 60000 })
+  const read = async () => ({
+    complete: ((await panel.getAttribute('data-sweep-state')) ?? '').startsWith('complete'),
+    span: Number(await panel.getAttribute('data-sweep-span')),
+    samples: Number(await panel.getAttribute('data-sweep-samples')),
+  })
+  for (const roll of SEARCH_ROLLS) {
+    if ((await read()).complete) break
+    await rotateTo(page, roll)
+    // At every position the panel follows the rule and nothing else.
+    await expect
+      .poll(async () => {
+        const now = await read()
+        return now.complete === (now.span >= LINKED_SWEEP_TOLERANCES.minSpanDeg && now.samples >= 1)
+      })
+      .toBe(true)
+  }
+  await expect(panel).toHaveAttribute('data-sweep-state', /^complete/)
+  expect(Number(await panel.getAttribute('data-sweep-span'))).toBeGreaterThanOrEqual(
+    LINKED_SWEEP_TOLERANCES.minSpanDeg,
+  )
+  expect(Number(await panel.getAttribute('data-sweep-samples'))).toBeGreaterThanOrEqual(1)
+  const observation = await linkedObservation(page)
+  expect(observation?.linked?.sweeps?.[observation.linked.approach]?.phase).toBe('complete')
+  // The lab also wants the node in the image at the end.
+  await finishOnTarget(page)
+  await expect(panel).toHaveAttribute('data-sweep-state', 'complete')
+}
+
+/**
+ * The advance-and-withdraw task: the node starts to one side of the middle and the gate is shut.
+ * The scope is moved one millimetre at a time the way the lesson teaches (a node on the side of
+ * the orientation dot comes back by withdrawing, one on the tip side by advancing) until the
+ * panel reports the middle; the gate then opens and the observation agrees with the panel.
+ */
+export async function slideToMiddle(page: Page) {
+  const frame = page.frameLocator(WORKBENCH)
+  const primary = page.locator('[data-now-primary]')
+  const panel = frame.locator('[data-along-airway-state]')
+  const slider = frame.getByRole('slider', { name: /^Scope position/ })
+  await expect(panel).toHaveAttribute('data-along-airway-state', /^(left|right)$/, {
+    timeout: 60000,
+  })
+  await expect(frame.locator('[data-along-airway-task]')).toBeVisible()
+  // No landmark task and no sweep panel in this task, and rotation is not offered.
+  await expect(frame.locator('[data-landmark-target]')).toHaveCount(0)
+  await expect(frame.locator('[data-sweep-state]')).toHaveCount(0)
+  await expect(frame.getByLabel('Scope rotation', { exact: true })).toHaveCount(0)
+  await expect(primary).toBeDisabled()
+  await expect(page.locator('[data-requirement="centre-position"]')).toBeVisible()
+  for (let guard = 0; guard < 40; guard++) {
+    const state = await panel.getAttribute('data-along-airway-state')
+    if (state === 'centre') break
+    if (state !== 'left' && state !== 'right') {
+      // A frame is arriving; read again.
+      await page.waitForTimeout(200)
+      continue
+    }
+    const value = Number(await slider.inputValue())
+    const next = String(value + (state === 'right' ? -1 : 1))
+    await slider.fill(next)
+    await expect(slider).toHaveValue(next)
+    await expect(panel).not.toHaveAttribute('data-along-airway-state', 'pending')
+  }
+  await expect(panel).toHaveAttribute('data-along-airway-state', 'centre')
+  await expect
+    .poll(async () => {
+      const observation = await linkedObservation(page)
+      return (
+        !!observation?.usedControls.includes('advance') &&
+        linkedLateralPosition(observation.targetLateral)
+      )
+    })
+    .toBe('centre')
+  await expect(primary).toBeEnabled({ timeout: 30000 })
+}
+
+/**
+ * The scope lesson's task: tip flexion alone. Flexing up first does not open the gate; the lens
+ * has to look along the airway once (the panel says so and the ultrasound image goes), and then
+ * come back onto the wall with tissue echoes.
+ */
+export async function findBothViews(page: Page) {
+  const frame = page.frameLocator(WORKBENCH)
+  const primary = page.locator('[data-now-primary]')
+  const panel = frame.locator('[data-airway-view-state]')
+  const flexion = frame.getByLabel('Tip flexion', { exact: true })
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'find-airway', { timeout: 60000 })
+  await expect(frame.locator('[data-airway-view-task]')).toBeVisible()
+  await expect(frame.getByLabel('Scope rotation', { exact: true })).toHaveCount(0)
+  await expect(primary).toBeDisabled()
+  // Onto the wall without having looked along the airway: an image, and the gate still shut.
+  await flexion.fill('20')
+  await expect
+    .poll(async () => (await linkedObservation(page))?.contactQuality, { timeout: 30000 })
+    .toBeGreaterThanOrEqual(0.8)
+  await expect(panel).toHaveAttribute('data-airway-viewed', 'false')
+  await expect(primary).toBeDisabled()
+  await expect(page.locator('[data-requirement="airway-seen"]')).toBeVisible()
+  // Down: the lens looks along the airway.
+  await flexion.fill('-20')
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'airway')
+  await expect(panel).toHaveAttribute('data-airway-viewed', 'true')
+  await expect
+    .poll(async () => linkedOpticView((await linkedObservation(page))?.opticalWallMm, 0))
+    .toBe('lumen')
+  await expect(primary).toBeDisabled()
+  // Up again: the wall, and the image.
+  await flexion.fill('20')
+  await expect(panel).toHaveAttribute('data-airway-view-state', 'wall')
+  await expect.poll(async () => (await linkedObservation(page))?.linked?.airwayViewed).toBe(true)
+  await expect(primary).toBeEnabled({ timeout: 30000 })
+}
+
+export async function performLinked(
+  page: Page,
+  lesson: LinkedLesson,
+  variant: LinkedVariant = 'guided',
+) {
+  const frame = page.frameLocator(WORKBENCH)
+  const primary = page.locator('[data-now-primary]')
+  const changed = variant === 'changed-window'
   await expect
     .poll(async () => (await linkedObservation(page))?.linked?.source?.variant, { timeout: 60000 })
-    .toBe(changed ? 'changed-window' : 'guided')
+    .toBe(variant)
+  if (variant === 'along-airway') return slideToMiddle(page)
+  if (variant === 'airway-view') return findBothViews(page)
   if (lesson === 'acoustic-contact') {
     await frame.getByLabel('Tip flexion', { exact: true }).fill('10')
     await expect
@@ -93,16 +266,32 @@ export async function performLinked(page: Page, lesson: LinkedLesson, changed = 
   } else {
     await identifyLandmarks(page, lesson)
     if (lesson === 'ct-map') {
-      await frame.getByRole('button', { name: 'Model section', exact: true }).click()
-      await frame.getByRole('button', { name: 'Coronal', exact: true }).click()
-      await expect(frame.locator('.linked-image-hint')).toHaveCount(0)
-    }
-    await sweepLinked(page)
-    if (lesson === 'station-seven' && !changed) {
-      await frame.getByRole('button', { name: 'Left main bronchus', exact: true }).click()
-      await expect(page.locator('[data-now-primary]')).toBeDisabled()
+      // This lesson asks for the model section, not a sweep, and shows no sweep panel.
+      await expect(frame.locator('.linked-sweep')).toHaveCount(0)
+      await expect(primary).toBeDisabled()
+      await expect(page.locator('[data-requirement="linked-section"]')).toBeVisible()
+      await frame.locator('[data-open-model-section]').click()
+      await expect
+        .poll(async () => (await linkedObservation(page))?.linked?.modelSectionViewed)
+        .toBe(true)
+      await expect(frame.locator('[data-landmarks-identified]')).toContainText(
+        'Model section opened',
+      )
+      await finishOnTarget(page)
+    } else {
       await sweepLinked(page)
+      if (lesson === 'station-seven' && !changed) {
+        // Both bronchial approaches need their own sweep.
+        await frame.getByRole('button', { name: /^Left main bronchus/ }).click()
+        await expect(frame.locator('.linked-sweep')).not.toHaveAttribute(
+          'data-sweep-state',
+          /^complete/,
+        )
+        await expect(primary).toBeDisabled()
+        await expect(page.locator('[data-requirement="linked-sweep"]')).toBeVisible()
+        await sweepLinked(page)
+      }
     }
   }
-  await expect(page.locator('[data-now-primary]')).toBeEnabled({ timeout: 30000 })
+  await expect(primary).toBeEnabled({ timeout: 30000 })
 }

@@ -1,6 +1,5 @@
 import {
   PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE,
-  PRISMAX_PRE_INFUSION_FLOW_GATE,
   calculateEffluentDoseMlPerKgHour,
   calculatePlasmaFlowMlPerHour,
   calculatePrismaxEffluentPumpTargetMlPerHour,
@@ -138,17 +137,6 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
       sourceRecordIds: Object.freeze([PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.sourceRecordId]),
       reason:
         'The available references do not support calculating total-circuit ultrafiltration from the entries shown.',
-    }),
-    Object.freeze({
-      id: 'quantitative-ff',
-      label: 'Quantitative filtration fraction',
-      status: 'unavailable-source-limited',
-      sourceRecordIds: Object.freeze([
-        'MATH-PM-003',
-        PRISMAX_PRE_INFUSION_FLOW_GATE.sourceRecordId,
-      ]),
-      reason:
-        'A verified pre-infusion circuit-flow term is not available, so quantitative filtration fraction is not calculated.',
     }),
     Object.freeze({
       id: 'whole-patient-net-removal',

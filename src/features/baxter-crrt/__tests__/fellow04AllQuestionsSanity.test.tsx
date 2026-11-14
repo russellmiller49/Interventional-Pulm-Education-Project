@@ -57,7 +57,7 @@ it.each(items)(
       // Existing real-run prerequisites must stay visible; they do not gate reveal or skip.
       expect(question).toHaveTextContent(/observation|run|before|complete/i)
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Continue without this exercise' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Skip this task' }))
     const stored = JSON.parse(localStorage.getItem(BAXTER_CRRT_PROGRESS_STORAGE_KEY)!)
     expect(stored.completedLessonIds).toEqual([])
     expect(stored.attempts).toEqual({})

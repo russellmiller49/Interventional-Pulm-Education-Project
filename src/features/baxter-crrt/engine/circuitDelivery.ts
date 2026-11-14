@@ -1,4 +1,5 @@
 import type { CrrtPressureSignalId, CrrtPressureSignalKind } from '../content/circuitModel'
+import { calculateCrrtFiltrationFraction } from './filtrationFraction'
 import type { CrrtSimulationState } from './types'
 
 /**
@@ -127,3 +128,81 @@ export const crrtCalculatedPressureSignalIds: readonly CrrtPressureSignalId[] = 
 
 export const CRRT_PRESSURE_HISTORY_VALIDITY_NOTE =
   'Blood-flow validity was not recorded with each historical pressure sample. Calculated TMP values during zero flow are not interpretable; this series alone cannot establish a filter-pressure change.' as const
+
+/**
+ * The filtration fraction the circuit is working at now, with the three flows it is made of.
+ *
+ * The same expression the simulation step uses (`engine/filtrationFraction.ts`), read off the
+ * current prescription, so a display and the filter model cannot disagree. It follows blood flow,
+ * hematocrit and the pre/post split at once: moving replacement from after the filter to before
+ * it lowers the fraction, and raising blood flow lowers it.
+ *
+ * Not stated (`fraction: null`, with the reason) when blood is not moving through the circuit,
+ * when no patient or prescription is set, or while a makeup flow runs.
+ */
+export type CrrtFiltrationFractionStatus =
+  | 'stated'
+  | 'not-delivering'
+  | 'not-set'
+  | 'makeup-running'
+
+export interface CrrtFiltrationFractionState {
+  readonly status: CrrtFiltrationFractionStatus
+  readonly fraction: number | null
+  readonly plasmaFlowMlHour: number | null
+  readonly acrossMembraneMlHour: number | null
+  readonly preFilterFluidMlHour: number | null
+  /** Why there is no value, in words a learner can read. Null when stated. */
+  readonly reason: string | null
+}
+
+const noFiltrationFraction = (
+  status: Exclude<CrrtFiltrationFractionStatus, 'stated'>,
+  reason: string,
+): CrrtFiltrationFractionState =>
+  Object.freeze({
+    status,
+    fraction: null,
+    plasmaFlowMlHour: null,
+    acrossMembraneMlHour: null,
+    preFilterFluidMlHour: null,
+    reason,
+  })
+
+export function selectCrrtFiltrationFraction(
+  state: CrrtSimulationState,
+): CrrtFiltrationFractionState {
+  if (state.prescription.status !== 'configured' || state.patient.status !== 'configured') {
+    return noFiltrationFraction('not-set', 'No prescription is applied yet.')
+  }
+  const bloodFlow = selectCrrtBloodFlowState(state)
+  if (bloodFlow.status !== 'delivering' || state.device.deliveryState !== 'running') {
+    return noFiltrationFraction(
+      'not-delivering',
+      'Nothing is being filtered while the circuit is not running.',
+    )
+  }
+  const flows = state.prescription.flows
+  if (flows.makeupFlowMlHour !== 0) {
+    return noFiltrationFraction(
+      'makeup-running',
+      'Not stated while a makeup flow runs: its volume cannot be attributed.',
+    )
+  }
+  const result = calculateCrrtFiltrationFraction({
+    bloodFlowMlMin: flows.bloodFlowMlMin,
+    hematocritFraction: state.patient.hematocritFraction,
+    preBloodPumpMlHour: flows.pbpFlowMlHour,
+    preFilterReplacementMlHour: flows.preReplacementFlowMlHour,
+    postFilterReplacementMlHour: flows.postReplacementFlowMlHour,
+    patientFluidRemovalMlHour: flows.patientFluidRemovalMlHour,
+    syringeMlHour: flows.syringeFlowMlHour,
+  })
+  if (!result) {
+    return noFiltrationFraction(
+      'not-delivering',
+      'Nothing is being filtered while the circuit is not running.',
+    )
+  }
+  return Object.freeze({ status: 'stated', ...result, reason: null })
+}

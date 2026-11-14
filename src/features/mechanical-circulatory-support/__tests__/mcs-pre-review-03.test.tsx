@@ -102,30 +102,36 @@ function ruleBody(sheet: string, selector: string): string {
  * ------------------------------------------------------------------ */
 
 describe('F03 · what a step asks, where its control is, and where its evidence is', () => {
-  it('puts a Continue ahead of the step body, doing what the Continue at its foot does', () => {
+  /*
+   * The step bar's second Continue, above the step heading, went with the step bar in the
+   * text-left layout: the task card's own Continue is pinned to the foot of the text pane, so it is
+   * in the same place on every task however long the card is. What this protects is that there is
+   * one way on, where the card says, and that it moves the task on.
+   */
+  it('has one Continue, pinned at the foot of the task card, that moves the task on', () => {
     mountSection('mcs-foundations-signals')
     const heading = within(nowCard()).getAllByRole('heading')[0]
     const continues = screen
       .getAllByRole('button')
       .filter((button) => /^Continue\b/.test(button.textContent ?? ''))
-    expect(continues.length).toBeGreaterThanOrEqual(2)
-    const first = continues[0]
-    // The first Continue in reading order is above the step's own heading, not under its body.
-    expect(first.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(continues).toHaveLength(1)
+    const [only] = continues
+    expect(only).toHaveAttribute('data-now-primary')
+    expect(only.closest('[data-now-footer="pinned"]')).not.toBeNull()
+    // It follows the step's heading and body: the card's foot, not its head.
+    expect(heading.compareDocumentPosition(only) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     const before = currentStepId()
-    fireEvent.click(first)
+    fireEvent.click(only)
     expect(currentStepId()).not.toBe(before)
   })
 
-  it('keeps the run identity and simulated time in view and shows no seed or example number', () => {
+  it('keeps the simulated time in view and shows no seed or example number', () => {
     mountSection('mcs-foundations-signals')
-    const identity = document.querySelector('[data-session-identity]')?.textContent ?? ''
-    expect(identity).toMatch(/Guided reference/)
-    expect(identity).toMatch(/simulated seconds/)
-    expect(identity).not.toMatch(/seed \d+/i)
-    const runDetails = document.querySelector<HTMLDetailsElement>('[data-run-details]')
-    expect(runDetails).not.toBeNull()
-    expect(runDetails?.open).toBe(false)
+    // The one clock heads the simulator column.
+    const time = document.querySelector('[data-flow-visual] [data-clock-bar] [data-clock-time]')
+    expect(time?.textContent).toMatch(/\d+\.\d s$/)
+    expect(document.querySelector('[data-clock-bar]')?.textContent).not.toMatch(/seed \d+/i)
+    expect(document.querySelector('[data-run-details]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/Example number \d+|\bseed \d+/i)
   })
 
@@ -160,9 +166,11 @@ describe('F03 · what a step asks, where its control is, and where its evidence 
 
   it('draws one circulation, not two, on the step read beside the circulation map', () => {
     mountSection('mcs-foundations-signals')
-    const card = nowCard()
-    expect(card.querySelector('[data-circulation-map]')).not.toBeNull()
-    const sketches = [...card.querySelectorAll('svg[role="img"]')].filter((svg) =>
+    // The map is the simulator column's; the task card beside it draws no second circulation.
+    expect(document.querySelectorAll('[data-circulation-map]')).toHaveLength(1)
+    expect(document.querySelector('[data-flow-visual] [data-circulation-map]')).not.toBeNull()
+    const stage = document.querySelector<HTMLElement>('[data-mcs-stage]')!
+    const sketches = [...stage.querySelectorAll('svg[role="img"]')].filter((svg) =>
       /^Conceptual circulation/.test(svg.getAttribute('aria-label') ?? ''),
     )
     expect(sketches).toHaveLength(0)

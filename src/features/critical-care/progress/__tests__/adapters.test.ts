@@ -10,6 +10,7 @@ import {
   ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY,
   ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY,
 } from '@/features/icu-hemodynamics/engine/progress'
+import { ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY } from '@/features/icu-hemodynamics/engine/selfPacedProgress'
 import {
   ICU_SIMULATION_PROGRESS_STORAGE_KEY,
   ICU_SIMULATION_SESSION_STORAGE_KEY,
@@ -25,6 +26,7 @@ import {
   corruptProgressFixture,
   emptyLegacyProgressFixtures,
   everyLegacyProgressStorageKey,
+  everyProgressStorageKeyRead,
   incompatibleLegacyProgressFixtures,
   masteredLegacyProgressFixtures,
   partialLegacyProgressFixtures,
@@ -64,7 +66,7 @@ describe('critical-care legacy progress adapters', () => {
     expect(results).toHaveLength(6)
     expect(results.every((result) => result.status === 'empty')).toBe(true)
     expect(results.flatMap((result) => result.activities)).toEqual([])
-    expect(storage.reads).toEqual(everyLegacyProgressStorageKey)
+    expect(storage.reads).toEqual(everyProgressStorageKeyRead)
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
@@ -326,6 +328,11 @@ describe('critical-care legacy progress adapters', () => {
   })
 
   it.each([
+    [
+      'hemodynamics self-paced',
+      ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY,
+      readHemodynamicsLegacyProgress,
+    ],
     ['hemodynamics', ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY, readHemodynamicsLegacyProgress],
     [
       'hemodynamics V1',

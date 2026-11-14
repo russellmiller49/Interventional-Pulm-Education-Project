@@ -17,11 +17,13 @@ import {
   currentStepId,
   goalStates,
   installDom,
+  leaveTask,
   mountSection,
   nowPrimary,
   nowStatus,
   readAndRepairFlush,
   setLevel,
+  skipCase,
 } from '../test-support/stageHarness'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -167,15 +169,25 @@ describe('a section on the stage', () => {
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[p + 6].id)
     expect(storedRecord()?.reviewedSectionIds).toEqual([])
+    expect(nowPrimary()?.textContent).toMatch(/Continue to the case/)
     clickPrimary()
+
+    // The last task is the section's case; skipping it finishes the section.
+    expect(currentStepId()).toBe(lesson.steps[lesson.caseStepIndex].id)
+    expect(lesson.caseStepIndex).toBe(p + 7)
+    expect(nowPrimary()?.textContent).toMatch(/Start the case/)
+    expect(storedRecord()?.reviewedSectionIds).toEqual([])
+    skipCase()
 
     // Finished: marked reviewed, with an undo. The legacy Learn record is never written.
     expect(screen.getByRole('heading', { name: 'Section finished' })).toBeInTheDocument()
     expect(storedRecord()?.reviewedSectionIds).toEqual(['pressure-system'])
     expect(localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)).toBeNull()
+    // The completion goes on to the next section; nothing sends the learner to Practice.
     expect(
-      document.querySelector('[data-practice-pairing]')?.getAttribute('data-practice-pairing'),
-    ).toBe('mechanism-match')
+      document.querySelector('[data-stage-completion] [data-next-section]')?.textContent,
+    ).toMatch(/^Continue to the next section: Identify the chamber from the waveform/)
+    expect(document.querySelector('[data-practice-pairing]')).toBeNull()
     const rows = stepRows()
     expect(rows[0]).toBe('done')
     expect(rows.slice(1, p).every((row) => row === 'passed')).toBe(true)
@@ -184,6 +196,7 @@ describe('a section on the stage', () => {
     expect(rows[p + 2]).toBe('done')
     expect(rows[p + 4]).toBe('answered')
     expect(rows[p + 5]).toBe('done')
+    expect(rows[p + 6]).toBe('passed')
     expect(rows.at(-1)).toBe('current')
     expect(document.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(1)
     fireEvent.click(document.querySelector('[data-reviewed-toggle]')!)
@@ -209,9 +222,7 @@ describe('a section on the stage', () => {
           document.querySelector('[data-explain-recap]')?.getAttribute('data-explain-recap'),
         ).toBe('not-answered')
       }
-      const skip = document.querySelector<HTMLButtonElement>('[data-skip-task]')
-      if (skip) fireEvent.click(skip)
-      else clickPrimary()
+      leaveTask()
     }
     expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
     const rows = stepRows()

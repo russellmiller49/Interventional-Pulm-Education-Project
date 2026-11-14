@@ -4,12 +4,15 @@ import type { BronchSectionDefinition } from '../types'
 /**
  * The systematic survey (rewrite, brief 9). The fellow watches one whole survey on the annotated
  * video, learns the fixed order, the presumed normal side first and the three statuses, and then
- * surveys the whole tree in the simulator, both lungs, recording every segment as seen, not seen
- * or not reachable. One segment, RB10, is narrowed so that "not reachable" has a use.
+ * surveys the whole tree in the simulator, both lungs, naming every segment from inside it.
  *
- * The record's three words are this view's own (`ledger.record`); the rules for when a status may
- * be recorded are the simulator's. Sources: the course textbook's anatomy and inspection chapters
- * (S1) and the training manual's inspection pages (S2).
+ * The simulator task was a record kept through a menu under the view: seen, not seen or not
+ * reachable, with RB10 narrowed. On educator feedback (2026-10-13) it is now a naming record
+ * (`ledger.naming`): the learner drives into a segment, a list of the names still left opens
+ * beside the controls, and the right name takes that segment off the list. The task is finished
+ * when no name is left. The three statuses are still taught on the screen before it and asked for
+ * in the section's questions. Sources: the course textbook's anatomy and inspection chapters (S1)
+ * and the training manual's inspection pages (S2).
  */
 const INSPECTION = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
@@ -20,11 +23,22 @@ const RECORD = [
   { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 163 } },
 ] as const
 
-const RIGHT_SEEN = ['RB1', 'RB2', 'RB3', 'RB4', 'RB5', 'RB6', 'RB7', 'RB8', 'RB9'] as const
-const LEFT_SEEN = ['LB1+2', 'LB3', 'LB4', 'LB5', 'LB6', 'LB7+8', 'LB9', 'LB10'] as const
-const seen = (airways: readonly AirwayLabel[]): ScopeGoalTest => ({
+const RIGHT_SEGMENTS = [
+  'RB1',
+  'RB2',
+  'RB3',
+  'RB4',
+  'RB5',
+  'RB6',
+  'RB7',
+  'RB8',
+  'RB9',
+  'RB10',
+] as const
+const LEFT_SEGMENTS = ['LB1+2', 'LB3', 'LB4', 'LB5', 'LB6', 'LB7+8', 'LB9', 'LB10'] as const
+const named = (airways: readonly AirwayLabel[]): ScopeGoalTest => ({
   type: 'all',
-  tests: airways.map((airway) => ({ type: 'ledger', airway, status: 'inspected' })),
+  tests: airways.map((airway) => ({ type: 'ledger', airway, status: 'identified' })),
 })
 
 export const section: BronchSectionDefinition = {
@@ -188,62 +202,24 @@ export const section: BronchSectionDefinition = {
       mode: 'guided-walk',
       profile: 'adult-teaching-combined-left-basal-v1',
       start: { kind: 'airway', label: 'TR', at: 'distal' },
-      controls: [
-        'advance',
-        'withdraw',
-        'rotate',
-        'deflect',
-        'declare',
-        'recenter',
-        'branchLabels',
-        'reset',
-      ],
-      assists: {
-        'centerline-lock': true,
-        'aim-guard': true,
-        'branch-labels': true,
-        recenter: true,
-      },
+      // Opening names are not offered here: naming the segments is the task.
+      controls: ['advance', 'withdraw', 'rotate', 'deflect', 'declare', 'recenter', 'reset'],
+      assists: { 'centerline-lock': true, 'aim-guard': true, recenter: true },
       defaults: { branchLabels: false },
-      readouts: ['currentAirway', 'parentage'],
-      ledger: {
-        expected: 'segmental',
-        record: {
-          offer: [
-            { status: 'inspected', word: 'Seen' },
-            { status: 'not-observed', word: 'Not seen' },
-            { status: 'not-safely-accessible', word: 'Not reachable' },
-          ],
-          open: 'To do',
-          withoutView: 'go further in before it counts as seen',
-          note: 'Seen needs a clear view from inside the segment.',
-        },
-      },
-      inaccessible: ['RB10'],
+      ledger: { expected: 'segmental', naming: true },
       litAirways: [],
-      boundary: 'Guided travel: the scope follows the lumen. RB10 is narrowed for practice.',
+      boundary: 'Guided travel: the scope follows the lumen.',
     },
     goals: [
       {
-        id: 'right-lung-seen',
-        label: 'Right lung: enter RB1 to RB9 and record each one as seen',
-        test: seen(RIGHT_SEEN),
+        id: 'right-lung-named',
+        label: 'Right lung: drive into each segment, RB1 to RB10, and name it',
+        test: named(RIGHT_SEGMENTS),
       },
       {
-        id: 'narrowed-segment',
-        label: 'RB10 is narrowed: look in from its opening and record it as not reachable',
-        test: {
-          type: 'all',
-          tests: [
-            { type: 'ledger', airway: 'RB10', status: 'not-safely-accessible' },
-            { type: 'without', event: 'entry-refused' },
-          ],
-        },
-      },
-      {
-        id: 'left-lung-seen',
-        label: 'Left lung: enter each segment, LB1+2 to LB10, and record it as seen',
-        test: seen(LEFT_SEEN),
+        id: 'left-lung-named',
+        label: 'Left lung: drive into each segment, LB1+2 to LB10, and name it',
+        test: named(LEFT_SEGMENTS),
       },
     ],
   },

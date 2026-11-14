@@ -171,6 +171,11 @@ publication or release. "Partial" means one variant or one decision point depend
 | Next action after approval     | Media build per the chosen option                                                                                                                                                                                                                                                                                                                                                      |
 | Blocks                         | Media; the image variants of QS-3 and QS-4                                                                                                                                                                                                                                                                                                                                             |
 
+**Changed by the owner, 2026-10-12.** Motion and a new dependent opacity are no longer deferred:
+both are simulated on the course's CT (`components/figures/simulatedFindings.ts`) and shown in the
+Section 16 strip and beside the Section 4 and Section 16 checks. Authentic banding (D7) stays
+deferred.
+
 ### OD4-07 · Connected cases
 
 | Field                          | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |

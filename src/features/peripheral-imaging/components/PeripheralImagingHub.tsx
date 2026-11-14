@@ -147,7 +147,6 @@ export function PeripheralImagingHub() {
               </li>
             ))}
           </ol>
-          <p className={styles.heroBoundary}>{IMAGING_HUB_HERO.boundary}</p>
         </figcaption>
       </figure>
 
@@ -393,13 +392,13 @@ export function PeripheralImagingHub() {
           ))}
         </ol>
         <p className="mt-5 text-sm text-muted-foreground">
-          Teaching models for download:{' '}
+          3D models for download:{' '}
           <a href="/peripheral-imaging/sampling-window.glb" className="font-semibold text-primary">
             the sampling-window geometry
           </a>{' '}
           and{' '}
           <a href="/peripheral-imaging/anatomy/thorax.glb" className="font-semibold text-primary">
-            the CT-derived thorax
+            the thorax, segmented from CT
           </a>
           . Sources and limits are recorded with the assets.
         </p>

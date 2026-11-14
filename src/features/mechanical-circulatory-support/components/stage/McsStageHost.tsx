@@ -12,37 +12,34 @@ import {
 import { ArrowRight, Check } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
-import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
+import { FlowContent } from '@/features/learning-module/stage/FlowContent'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
-import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
-import {
-  STAGE_PHASE_LABELS,
-  compactPaneForLocation,
-  type StagePaneId,
-  type StagePhase,
-} from '@/features/learning-module/stage/stageModel'
+import type { StagePhase } from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
-import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
 import { mcsClaimChecksForSection } from '../../content/claimSourceMap'
-import { mcsDeviceStatusLabel } from '../../content/deviceNaming'
 import { mcsExplainReflection } from '../../content/explainReflections'
 
 import { mcsStepHint } from '../../content/stepHints'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
+import { MCS_LVAD_PERFUSION_SECTION_ID } from '../../content/lvadPerfusionCase'
+import { mcsObserveFocus, mcsOrderObservedSignals } from '../../content/observeFocus'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
+import { mcsModuleHandOff } from '../../content/moduleHandOffs'
 import { mcsPathway } from '../../content/pathwayResolver'
 import { mcsSpineStop, MCS_SUPPORT_SPINE, type McsSpineStopId } from '../../content/supportSpine'
 import { mcsStageSources } from '../../content/stageSources'
@@ -56,7 +53,7 @@ import {
 import { createInitialMcsState, mcsReducer } from '../../engine'
 import { recordMcsVisit } from '../../engine/learningProgress'
 import { McsControls } from '../McsControls'
-import { McsClaimSourceChecks, McsSourceReviewNotice } from '../McsClaimSourceChecks'
+import { McsClaimSourceChecks } from '../McsClaimSourceChecks'
 import { McsGlossary } from '../McsGlossary'
 import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../../engine/types'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
@@ -65,7 +62,9 @@ import type {
   CirculationMapEmphasis,
 } from '../circulation-map/CirculationMap'
 import { McsModuleFrame } from '../McsModuleFrame'
+import { McsLvadPerfusionCase } from './McsLvadPerfusionCase'
 import { McsSimulatorPane } from './McsSimulatorPane'
+import { McsSectionCase } from './McsSectionCase'
 import { McsSectionRecap } from './McsSectionRecap'
 import { McsSourceList } from './McsSourceList'
 import { McsStoryProblems } from './McsStoryProblems'
@@ -88,64 +87,32 @@ import {
 } from '../../engine/learningSession'
 import styles from './mcs-stage.module.css'
 import flowStyles from './mcs-flow.module.css'
+import { McsClockBar } from './McsClockBar'
+import { mcsClockContext } from './mcsClockContext'
 import { McsPrerequisiteReference, mcsHasPrerequisiteReference } from './McsPrerequisiteReference'
 import { McsTaskPresentation } from './McsTaskPresentation'
-import { MCS_TASK_PRESENTATIONS_ENABLED } from '../../content/taskPresentation'
+import { useWorkspaceLayout } from './useWorkspaceLayout'
+import type { McsPointedPlace } from '../../content/readingPlaces'
 
 /** MCS-local self-paced host. Answers and observations live only in this mounted session.
  * Navigation never manufactures a response, performed action, capture or achievement.
  * Historical grading records are read-only; only topic visits and location are saved.
- */
-
-/*
- * One line under each step saying what kind of step it is.
  *
- * It read "Optional activity · explanations and navigation are always available." on all
- * seventy-odd screens, which told a learner nothing about the step in front of them and let a step
- * whose explanation was already on the page pass as "predict, then reveal" (F07, F39). Each kind of
- * step now says what it is: a reading step, an optional self-check beside a worked explanation, an
- * optional model exercise, a worked comparison, an optional reflection. None of them is required
- * and none of them is counted — the line says so where a learner might wonder.
- */
-const STEP_STATUS = {
-  teaching: 'Reading step · nothing to answer here.',
-  walk: 'Reading step · one stop at a time, or Continue to move on.',
-  identify:
-    'Optional self-check · the worked explanation is already on this page, and nothing is counted.',
-  prediction:
-    'Optional self-check · the worked explanation is already on this page, and nothing is counted.',
-  action: 'Optional model exercise · Continue works whether or not you change anything.',
-  observe: 'Worked comparison · the read-back question is optional.',
-  explain:
-    'Optional reflection · its worked response opens at any time. Nothing is typed or saved.',
-  transfer:
-    'Optional self-check on a new patient · the explanation is available without answering.',
-} as const
-
-const LOOKING_BACK =
-  'Review: captured state from this earlier task. The current patient is preserved; controls are locked. Return to the current task to continue.'
-
-/*
- * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
- * for, and the simulator kept the widest of the three.
+ * The section is laid out the way the ICU hemodynamics and mechanical ventilation sections are
+ * (owner, 2026-10-15 and 2026-10-16): the text on the left — the task card with its teaching and
+ * its question, then the section's purpose and task list — and the simulator on the right, each
+ * scrolling on its own in a desktop workspace that does not scroll as a page. The task card's way
+ * forward is pinned to the foot of the text pane. On a narrower window, or with enlarged text,
+ * the two stack: text first, then the simulator.
  *
- * The stage was adopted with the simulator first and the steps last, and with no visible pane
- * names at all. A learner review of the ECMO module in September 2026 asked for the prompts and
- * questions on the left "for a more natural read" and reported guessing which of three unnamed
- * panes each instruction meant; this module had the same shape, and one more cost: a compact
- * viewport opens on the first pane, which was the monitor while every answer control but two sat
- * in the pane it could not show. The monitor and the map are never scaled, so the fractions keep
- * the simulator the widest pane whatever end of the row it sits at. Recorded in the module's
- * learner-review record, which amends the flow-rebuild record's measured order.
+ * A section paired to a case ends on it (owner, 2026-10-17, as ICU hemodynamics did): the case is
+ * the last task, run inside the task card on the case's own engine at the task's full width. While
+ * that task is current the section's patient is paused and its simulator is not mounted, so two
+ * simulations never run at once; Exit case, the end of the case and Skip the case all finish the
+ * section and bring its completion card up.
  */
-const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
-const PANE_CAPTIONS = {
-  steps: 'what to do',
-  teaching: 'what to read',
-  simulator: 'the monitor, the map and the controls',
-} as const
-const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
-const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
+
+const LOOKING_BACK = 'An earlier task, as you left it. Return to the current task to go on.'
 
 /*
  * The sentence after the outcome, in this module's own words.
@@ -270,11 +237,10 @@ function McsStageSession({
   const mount = useMemo(() => mcsMountStepIndex(lesson, requestedPhase), [lesson, requestedPhase])
   const pathway = mcsPathway()
   const nextSection = nextPathwaySection(pathway, sectionId)
+  const handOff = mcsModuleHandOff(sectionId)
 
   const [referenceViewed, setReferenceViewed] = useState(
-    requestedPhase !== 'recognize' ||
-      !MCS_TASK_PRESENTATIONS_ENABLED ||
-      !mcsHasPrerequisiteReference(sectionId),
+    requestedPhase !== 'recognize' || !mcsHasPrerequisiteReference(sectionId),
   )
   const [liveState, sendModel] = useReducer(sessionReducer, lesson, (definition) => {
     const step = definition.steps[mount.index]
@@ -308,26 +274,47 @@ function McsStageSession({
     transferLoaded: lesson.steps[mount.index].interaction.kind === 'transfer',
   }))
   const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
+  /** The reading being pointed at, and the step it was pointed at on: display only. */
+  const [pointedAt, setPointedAt] = useState<{
+    readonly stepId: string
+    readonly place: McsPointedPlace
+  } | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [explorationOpen, setExplorationOpen] = useState(false)
   const [revealedStepIds, setRevealedStepIds] = useState<readonly string[]>([])
+  // The case open on the section's last task, the cases opened in this visit, and whether the
+  // section was finished there (the case closed, or skipped).
+  const [openCaseId, setOpenCaseId] = useState<string | null>(null)
+  const [casesOpened, setCasesOpened] = useState<readonly string[]>([])
+  const [caseFinished, setCaseFinished] = useState(false)
+  const [completionFocusRequest, setCompletionFocusRequest] = useState(0)
+  const completionRef = useRef<HTMLElement>(null)
+  const previousCaseId = useRef<string | null>(null)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const hintButtonRef = useRef<HTMLButtonElement>(null)
   const glossaryButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
-  const stepBarRef = useRef<HTMLDivElement>(null)
+  const focusedTask = useRef<string | null>(null)
+  const workspace = useWorkspaceLayout()
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
   const unloadingExample = activeStep.presentation === 'unloading-comparison'
+  /*
+   * The surfaces a step opens on, until the learner opens or closes one. They are the step's own,
+   * less the three-dimensional view on a window below the desktop workspace: there it would open
+   * on a "larger screen recommended" notice instead of a picture, so it waits to be asked for and
+   * the circulation map stands in.
+   */
+  const defaultSurfaces = useMemo(
+    () => (workspace ? activeStep.surfaces : activeStep.surfaces.filter((id) => id !== 'anatomy')),
+    [activeStep.surfaces, workspace],
+  )
   const performedIds = useMemo(() => new Set(progression.performedIds), [progression.performedIds])
   const stepPerformed = performedIds.has(activeStep.id)
   const isLastStep = activeIndex === lesson.steps.length - 1
-  const predictionStep = lesson.steps[lesson.predictionStepIndex]
-  const predictionCommitted =
-    predictionStep !== undefined && progression.committedByStepId[predictionStep.id] !== undefined
   const lookingBack = progression.review !== null
   const reviewSnapshot = lookingBack ? progression.snapshots[activeStep.id] : undefined
   const state = reviewSnapshot?.state ?? liveState
@@ -335,6 +322,13 @@ function McsStageSession({
   const beforeMetrics = capturedBefore?.metrics ?? progression.beforeMetrics
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
   const committedChoiceId = progression.committedByStepId[activeStep.id] ?? null
+  /*
+   * One engine at a time. On the case step the case owns the only simulation: the section's patient
+   * stops ticking and its simulator is not mounted. Moving to any other task resumes it from where
+   * it stopped.
+   */
+  const onCaseStep = activeStep.interaction.kind === 'case'
+  const runningCaseId = onCaseStep && !lookingBack ? openCaseId : null
 
   const allowedActionIds = lookingBack
     ? []
@@ -401,7 +395,7 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   useEffect(() => {
-    if (!playbackRunning || lookingBack || !referenceViewed) return
+    if (!playbackRunning || lookingBack || !referenceViewed || onCaseStep) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 500 : 250
     const timer = window.setInterval(
@@ -409,19 +403,28 @@ function McsStageSession({
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [playbackRunning, lookingBack, referenceViewed])
+  }, [playbackRunning, lookingBack, referenceViewed, onCaseStep])
 
   useEffect(() => {
     recordMcsVisit(sectionId, 'learn', lesson.startingDevice, activeStep.phase)
   }, [sectionId, lesson.startingDevice, activeStep.phase])
 
   useEffect(() => {
+    const key = `${activeStep.id}:${referenceViewed}`
+    const previous = focusedTask.current
+    focusedTask.current = key
+    if (previous === null) return
     const node = nowFocusRef.current
     if (!node) return
     node.focus({ preventScroll: true })
-    // The flowing lesson uses document scroll. Resetting an ancestor region alone leaves the
-    // new task thousands of pixels above a learner who used the bottom Continue.
-    stepBarRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    // The card's top, in whichever scroller holds it: the text pane in the desktop workspace, the
+    // one pane below it, or the page. A learner who used the pinned Continue is at the card's foot.
+    node.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    // In the desktop workspace the simulator pane scrolls on its own; a new task starts at its top.
+    const visualPane = node
+      .closest('[data-flow-content]')
+      ?.querySelector<HTMLElement>(':scope > [data-flow-visual]')
+    if (visualPane) visualPane.scrollTop = 0
   }, [activeStep.id, referenceViewed])
 
   useEffect(() => {
@@ -550,7 +553,7 @@ function McsStageSession({
 
   function goToStep(index: number) {
     const target = lesson.steps[index]
-    if (!target || index === progression.index) return
+    if (!target || index === progression.index || runningCaseId) return
     setReferenceViewed(true)
     if (index === progression.review) {
       setProgression((current) => ({ ...current, index, review: null }))
@@ -589,7 +592,7 @@ function McsStageSession({
   function toggleSurface(surface: McsStageSurfaceId, open: boolean) {
     const stepId = activeStep.id
     setProgression((current) => {
-      const next = new Set(current.surfacesByStepId[stepId] ?? activeStep.surfaces)
+      const next = new Set(current.surfacesByStepId[stepId] ?? defaultSurfaces)
       if (open) next.add(surface)
       else next.delete(surface)
       return { ...current, surfacesByStepId: { ...current.surfacesByStepId, [stepId]: [...next] } }
@@ -604,12 +607,73 @@ function McsStageSession({
     })
   }
 
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const firstId = firstPathwaySectionId(pathway)
+    if (firstId !== sectionId) {
+      goToSection(firstId)
+      return
+    }
+    // Drop a saved phase so the section reopens at its first task, not where it was resumed.
+    if (requestedPhase !== 'recognize')
+      router.push({
+        pathname: `${mechanicalCirculatorySupportNavBase}/learn`,
+        query: { lesson: firstId },
+      })
+    else onRestart()
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The case: the section's last task
+   * ---------------------------------------------------------------- */
+
+  function openCase(caseId: string) {
+    setOpenCaseId(caseId)
+    setCasesOpened((current) => (current.includes(caseId) ? current : [...current, caseId]))
+  }
+
+  /** Exit case, the end of the case and Skip the case: the section is finished either way. */
+  function closeCase() {
+    setOpenCaseId(null)
+    setCaseFinished(true)
+    setCompletionFocusRequest((count) => count + 1)
+  }
+
+  useEffect(() => {
+    const previous = previousCaseId.current
+    previousCaseId.current = runningCaseId
+    // The case fills the task card under its heading; the card's top is where reading resumes.
+    if (runningCaseId && !previous) {
+      nowFocusRef.current?.focus({ preventScroll: true })
+      nowFocusRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    }
+  }, [runningCaseId])
+
+  useEffect(() => {
+    if (completionFocusRequest === 0) return
+    completionRef.current?.focus({ preventScroll: true })
+    completionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [completionFocusRequest])
+
+  /*
+   * On an Observe task the live readings beside the picture carry the comparison too: the readings
+   * the instruction names are marked, and each reading says where it stood before the change. Not
+   * where nothing was changed (an inspection, or three devices compared with each other), and not
+   * before a run has been captured.
+   */
+  const observing = activeStep.interaction.kind === 'observe'
+  const observedFrom =
+    observing &&
+    lesson.contract.actionMode !== 'inspect-only' &&
+    sectionId !== 'mcs-foundations-mechanisms' &&
+    (reviewSnapshot || progression.capturedAfter)
+      ? beforeMetrics
+      : null
+
   const openSurfaces = useMemo(
     () =>
-      new Set<McsStageSurfaceId>(
-        progression.surfacesByStepId[activeStep.id] ?? activeStep.surfaces,
-      ),
-    [activeStep.id, activeStep.surfaces, progression.surfacesByStepId],
+      new Set<McsStageSurfaceId>(progression.surfacesByStepId[activeStep.id] ?? defaultSurfaces),
+    [activeStep.id, defaultSurfaces, progression.surfacesByStepId],
   )
 
   /* ---------------------------------------------------------------- *
@@ -681,23 +745,12 @@ function McsStageSession({
         }
       : null
 
-  /*
-   * Which pane a compact viewport opens on for this step.
-   *
-   * A map-answered identification's only answer control is the set of pins on the circulation
-   * map, in the simulator pane, and at a compact width exactly one pane is on screen — so that
-   * step opens there whatever its authored location says. Everything else follows the location
-   * the Now card prints, so the pane the learner is sent to is the pane they are shown.
-   */
-  const compactPane: StagePaneId = identifyOnMap
-    ? 'simulator'
-    : compactPaneForLocation(activeStep.lookIn)
-
   const litStopIds: readonly McsSpineStopId[] =
     walking && walkStop ? [walkStop.id] : activeStep.stopIds
   const emphasis: CirculationMapEmphasis | null = (() => {
-    // While a place is the question, nothing on the map is lit: a lit stop is a hint.
-    if (litStopIds.length === 0) return null
+    // While a place is the question, nothing on the map is lit: a lit stop is a hint, and its
+    // numbers would sit beside the answer pins' numbers.
+    if (litStopIds.length === 0 || (identifyOnMap && committedChoiceId === null)) return null
     const stops = litStopIds.map((id) => mcsSpineStop(id))
     const segmentIds = stops.flatMap((stop) => stop.segmentIds)
     const names = stops.map((stop) => stop.plainName).join(' · ')
@@ -723,21 +776,12 @@ function McsStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
 
-  const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
-  /*
-   * Where this step's work is done, said in the same words the pane caption carries.
-   *
-   * One line, under the instruction, on every step; the help dialog repeats it. The lessons
-   * registry refuses at import to author a step without a location, so the caption on the pane
-   * and the line on the card cannot drift apart.
-   */
-  const lookInLine = activeStep.lookIn ? <LookInLine location={activeStep.lookIn} /> : undefined
-  const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
-  const canGoBack = previousStep !== undefined
+  const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
+  const canGoBack = activeIndex > 0 && !runningCaseId
 
   function handleContinue(event?: MouseEvent<HTMLButtonElement>) {
-    // A native double-click is one navigation intent, even when the top button stays put.
-    // Both Continue controls use this handler; keyboard activation has detail zero.
+    // A native double-click is one navigation intent: the pinned button stays where it is while
+    // the next task loads under it. Keyboard activation has detail zero.
     if (event && event.detail > 1) {
       event.currentTarget
         .closest('[data-critical-care-activity-shell]')
@@ -751,44 +795,115 @@ function McsStageSession({
     } else advance()
   }
 
+  /*
+   * One way forward, in the same place on every task: the foot of the card, pinned to the bottom
+   * of the text pane while the card is taller than it (`NowCardModel.pinActions`, from the ECMO
+   * tester's report that she could not find it). On the walk it moves one stop at a time; on the
+   * last task it is the next section.
+   */
   const continueAction = {
     label: lookingBack
       ? 'Return to current task'
-      : isLastStep
-        ? nextSection
-          ? `Continue to next section: ${nextSection.title}`
-          : 'Return to lesson map'
-        : 'Continue',
-    onActivate: handleContinue,
+      : walking && !walkIsLast
+        ? 'Next stop'
+        : isLastStep
+          ? nextSection
+            ? `Continue to the next section: ${nextSection.title}`
+            : 'Back to the Learn page'
+          : lesson.steps[activeIndex + 1]?.interaction.kind === 'case'
+            ? 'Continue to the case'
+            : 'Continue',
+    onActivate: lookingBack || !walking || walkIsLast ? handleContinue : nextWalkStop,
     icon: <ArrowRight aria-hidden="true" />,
   }
 
-  const nowModel: NowCardModel = (() => {
-    const base = {
+  function doTaskAgain() {
+    retryQuestion()
+    enterStep(
+      activeIndex,
+      progression.performedIds.filter((id) => id !== activeStep.id),
+      true,
+    )
+  }
+
+  const nowModel: NowCardModel = onCaseStep && !lookingBack ? caseNowModel() : stepNowModel()
+
+  /*
+   * The case step's card. Before the case: start it, or skip it and finish the section. While it
+   * runs, the case below is the work and its own exits lead back; the card only names it. After it,
+   * the section is finished and the way on is the next section.
+   */
+  function caseNowModel(): NowCardModel {
+    if (activeStep.interaction.kind !== 'case') return stepNowModel()
+    const { sectionCase } = activeStep.interaction
+    const heading = `Apply it: ${sectionCase.title}`
+    if (runningCaseId) {
+      return {
+        kicker: stepPosition,
+        heading,
+        body: 'The case runs below, on its own patient. Exit case, or the end of the case, brings you back to this task.',
+      }
+    }
+    const start = {
+      label: casesOpened.includes(sectionCase.caseId)
+        ? 'Run the case again'
+        : activeStep.actionLabel,
+      // The pinned button stays where it is while the case task loads under it, so the second
+      // click of a double-click on Continue to the case lands here; it is one intent, not two.
+      onActivate: (event?: MouseEvent<HTMLButtonElement>) => {
+        if (event && event.detail > 1) return
+        openCase(sectionCase.caseId)
+      },
+      icon: <ArrowRight aria-hidden="true" />,
+    }
+    const back = canGoBack
+      ? { back: { label: 'Back to previous task', onActivate: () => goToStep(activeIndex - 1) } }
+      : {}
+    if (caseFinished) {
+      return {
+        kicker: stepPosition,
+        heading,
+        body: activeStep.instruction,
+        pinActions: true,
+        ...back,
+        status: 'Section finished.',
+        primary: continueAction,
+        secondary: start,
+      }
+    }
+    return {
+      kicker: stepPosition,
+      heading,
+      body: activeStep.instruction,
+      pinActions: true,
+      ...back,
+      primary: start,
+      secondary: { label: 'Skip the case · finish the section', onActivate: closeCase },
+    }
+  }
+
+  function stepNowModel(): NowCardModel {
+    return {
       kicker: stepPosition,
       heading:
         walking && walkStop
           ? `Stop ${walkStop.ordinal} of ${MCS_SUPPORT_SPINE.stops.length}: ${walkStop.plainName}`
           : activeStep.title,
       body: walking && walkStop ? walkStop.whereYouAre : activeStep.instruction,
-      where: lookInLine,
       why: activeStep.rationale,
-      ...(canGoBack && previousStep
+      pinActions: true,
+      ...(canGoBack
+        ? { back: { label: 'Back to previous task', onActivate: () => goToStep(activeIndex - 1) } }
+        : {}),
+      ...(lookingBack
         ? {
-            back: {
-              label: `Back to ${STAGE_PHASE_LABELS[previousStep.phase]}`,
-              onActivate: () => goToStep(activeIndex - 1),
-            },
+            status: LOOKING_BACK,
+            secondary: { label: 'Do this task again', onActivate: doTaskAgain },
           }
         : {}),
-      ...(lookingBack ? { status: LOOKING_BACK } : {}),
-    }
-    return {
-      ...base,
-      status: lookingBack ? LOOKING_BACK : STEP_STATUS[activeStep.interaction.kind],
       primary: continueAction,
     }
-  })()
+  }
 
   /* ---------------------------------------------------------------- *
    * The Now card's body: the interaction
@@ -862,13 +977,7 @@ function McsStageSession({
               onClick={() => dispatch(GUIDED_ACTION_IDS[control.actionId])}
             >
               {done ? <Check aria-hidden="true" /> : null}
-              <span>
-                {control.label}
-                {sectionId === 'mcs-foundations-mechanisms' &&
-                activeStep.interaction.kind === 'action'
-                  ? ' · observe and retain 8 s'
-                  : ''}
-              </span>
+              <span>{control.label}</span>
             </button>
           )
         })}
@@ -914,10 +1023,6 @@ function McsStageSession({
               <div className={styles.mapAnswerPrompt} data-map-answer-prompt>
                 <p id="identify-heading" className={styles.visuallyHidden}>
                   {interaction.prompt}
-                </p>
-                <p>
-                  Choose the place on the circulation map. The candidates are pinned on the drawing
-                  and named under it.
                 </p>
                 {selectedChoiceId ? (
                   <p data-map-answer-chosen>
@@ -1004,7 +1109,7 @@ function McsStageSession({
                 <strong>{target.label}.</strong>{' '}
                 {target.location === 'guided-actions'
                   ? 'Use the button below.'
-                  : 'Use the highlighted control beside the current observations.'}
+                  : 'Use the highlighted control under Controls for this task.'}
               </p>
             ) : null}
             {guidedActionButtons(
@@ -1014,17 +1119,10 @@ function McsStageSession({
             {lesson.introductory && sectionId === 'mcs-foundations-mechanisms' ? (
               <McsDeviceComparisonTable records={progression.comparisons} />
             ) : null}
-            {lesson.introductory ? (
-              <>
-                <button type="button" onClick={repeatExercise} disabled={lookingBack}>
-                  Reset this model exercise
-                </button>
-                <p className={styles.footnote}>
-                  Restores the task baseline and clears this exercise’s actions and captures.
-                  Earlier answers and topic visits are preserved. This is a model reset, not
-                  clinical repositioning.
-                </p>
-              </>
+            {lesson.introductory && !lookingBack ? (
+              <button type="button" onClick={repeatExercise} data-repeat-exercise>
+                Start this exercise again
+              </button>
             ) : null}
             {state.responseMessage ? (
               <p className={styles.response} role="status" aria-live="polite" data-response-message>
@@ -1039,10 +1137,10 @@ function McsStageSession({
           return (
             <div data-no-observation>
               <p>
-                No observation was captured in this run. You can return to the action, read the
-                expected response below, or continue.
+                Nothing was captured on the last task, so there is nothing to compare yet. Go back
+                to it, or read what the change does:
               </p>
-              <h3>Provided explanation</h3>
+              <h3>What the change does</h3>
               <p>{lesson.contract.teaching.howTheActionAffectsTheModel}</p>
               <p>{lesson.contract.teaching.flowAccountNote}</p>
             </div>
@@ -1063,12 +1161,12 @@ function McsStageSession({
                 : 'deviceFlowLMin'
           const label =
             sectionId === 'mcs-foundations-mechanisms'
-              ? 'modeled effective systemic flow from captured IABP to captured LVAD'
+              ? 'effective systemic flow, from the IABP run to the LVAD run,'
               : key === 'timingQualityPercent'
                 ? 'timing synchrony'
                 : key === 'effectiveSystemicFlowLMin'
-                  ? 'modeled effective flow'
-                  : 'pump-flow estimate'
+                  ? 'effective systemic flow'
+                  : 'the pump-flow estimate'
           const first = reference?.metrics[key]
           const last = result?.metrics[key]
           const expected =
@@ -1084,8 +1182,8 @@ function McsStageSession({
           if (!expected)
             return (
               <p data-no-observation>
-                Both comparison runs are needed to interpret a change. Read the provided explanation
-                or return to the model.
+                The comparison needs both runs from the last task. Go back to it to run the one that
+                is missing.
               </p>
             )
           return (
@@ -1098,10 +1196,11 @@ function McsStageSession({
                   after={after}
                   signals={interaction.signals}
                   inspectOnly={lesson.contract.actionMode === 'inspect-only'}
+                  focus={mcsObserveFocus(sectionId)}
                 />
               )}
               {choiceFieldset(
-                `Optional read-back: in these captured results, how did ${label} change?`,
+                `In these results, how did ${label} change?`,
                 ['increased', 'decreased', 'unchanged'].map((id) => ({
                   id,
                   label:
@@ -1126,10 +1225,9 @@ function McsStageSession({
                       ? committedChoiceId === expected
                         ? 'Correct.'
                         : 'Not correct.'
-                      : 'Observed direction.'}
+                      : 'Answer.'}
                   </strong>{' '}
-                  The captured quantity {expected}. This records an interpretation of modeled
-                  results, not adequate patient perfusion.
+                  {directionSentence(expected)}
                 </p>
               ) : null}
             </>
@@ -1149,7 +1247,7 @@ function McsStageSession({
             <div className={styles.beforeAfter} data-before-after-labels>
               <div>
                 <p className={styles.kicker} id="before-labels-heading">
-                  Provided reference account
+                  Before the change
                 </p>
                 <ul aria-labelledby="before-labels-heading" data-before-labels>
                   {interaction.beforeLabels.map((label) => (
@@ -1159,7 +1257,7 @@ function McsStageSession({
               </div>
               <div>
                 <p className={styles.kicker} id="after-labels-heading">
-                  Expected response account
+                  After the change
                 </p>
                 <ul aria-labelledby="after-labels-heading" data-after-labels>
                   {interaction.afterLabels.map((label) => (
@@ -1179,8 +1277,12 @@ function McsStageSession({
                   <th scope="col">Now</th>
                 </tr>
               </thead>
-              <tbody>
-                {interaction.signals.map((signal) => {
+              {(() => {
+                const groups = mcsOrderObservedSignals(
+                  interaction.signals,
+                  mcsObserveFocus(sectionId),
+                )
+                const row = (signal: (typeof interaction.signals)[number], named: boolean) => {
                   const before = beforeMetrics?.[signal.key] ?? null
                   const now = state.metrics[signal.key]
                   const format = (value: number | boolean | null) =>
@@ -1199,18 +1301,54 @@ function McsStageSession({
                           ? 'down'
                           : 'flat'
                       : undefined
+                  // The rows that moved are lit and the rest dimmed, so the eye goes to the change
+                  // (the ECMO comparison tables, tester 2026-10-14).
+                  const changed = direction === 'up' || direction === 'down'
                   return (
-                    <tr key={signal.key} data-signal={signal.key} data-level={signal.level}>
+                    <tr
+                      key={signal.key}
+                      data-signal={signal.key}
+                      data-level={signal.level}
+                      data-changed={direction === undefined ? undefined : changed}
+                      data-named={named || undefined}
+                    >
                       <th scope="row">
                         {signal.label}
                         {signal.unit ? <small> {signal.unit}</small> : null}
                       </th>
                       <td>{format(before)}</td>
-                      <td data-direction={direction}>{format(now)}</td>
+                      <td data-direction={direction}>
+                        {format(now)}
+                        {named && direction === 'flat' ? <small> unchanged</small> : null}
+                      </td>
                     </tr>
                   )
-                })}
-              </tbody>
+                }
+                // The readings the instruction names come first, under their own heading, and are
+                // never dimmed: one of them is often named because it does not move.
+                return (
+                  <>
+                    <tbody data-named-readings>
+                      <tr data-group-heading>
+                        <th colSpan={3} scope="rowgroup">
+                          Named in this task
+                        </th>
+                      </tr>
+                      {groups.named.map((signal) => row(signal, true))}
+                    </tbody>
+                    {groups.others.length ? (
+                      <tbody data-other-readings>
+                        <tr data-group-heading>
+                          <th colSpan={3} scope="rowgroup">
+                            Other readings
+                          </th>
+                        </tr>
+                        {groups.others.map((signal) => row(signal, false))}
+                      </tbody>
+                    ) : null}
+                  </>
+                )
+              })()}
             </table>
           </>
         )
@@ -1227,11 +1365,10 @@ function McsStageSession({
         const reflection = mcsExplainReflection(sectionId)
         const reflectionBlock = (
           <section className={styles.reflection} data-optional-reflection>
-            <p className={styles.kicker}>Optional reflection · nothing to type, nothing saved</p>
+            <p className={styles.kicker}>Reflection</p>
             <p className={styles.stem} data-reflection-prompt>
               {reflection.promptOverride ?? interaction.prompt}
             </p>
-            <p>Think it through if that helps, or open the worked response straight away.</p>
             <details data-worked-response>
               <summary>Show a worked response</summary>
               {reflection.workedResponse.map((line) => (
@@ -1240,9 +1377,6 @@ function McsStageSession({
               {sectionId === 'mcs-foundations-mechanisms' ? (
                 <McsFlowArithmetic records={progression.comparisons} />
               ) : null}
-              <p className={styles.footnote} data-worked-response-provenance>
-                Drawn from: {reflection.drawnFrom}
-              </p>
             </details>
           </section>
         )
@@ -1375,14 +1509,11 @@ function McsStageSession({
             ) : null}
             <div className={styles.transferWork} data-transfer-work data-met={transferWorkDone}>
               <p>
-                <strong>Optional model exercise.</strong> {transfer.requiredActionLabel}
+                <strong>On this patient:</strong> {transfer.requiredActionLabel}
               </p>
               {guidedActionButtons(transfer.requiredActionIds)}
               {needsControls ? (
-                <p>
-                  The control to use is in the Controls, in the Simulator panel, and it is
-                  highlighted.
-                </p>
+                <p>Its control is highlighted under Controls for this task.</p>
               ) : null}
               {transfer.observation && transferActionsDone && progression.capturedAfter ? (
                 <div data-transfer-observation>
@@ -1397,7 +1528,7 @@ function McsStageSession({
                     }
                   >
                     <legend>
-                      Compared with this transfer patient’s baseline, how did{' '}
+                      Compared with this patient’s starting readings, how did{' '}
                       {transfer.observation.label.toLowerCase()} change?
                     </legend>
                     {(['increased', 'decreased', 'unchanged'] as const).map((direction) => (
@@ -1435,19 +1566,18 @@ function McsStageSession({
                       )
                         ? 'Correct.'
                         : 'Not correct.'}{' '}
-                      The captured quantity{' '}
-                      {mcsObservedDirection(
-                        Number(capturedBefore?.metrics[transfer.observation.key]),
-                        Number(progression.capturedAfter.metrics[transfer.observation.key]),
-                        transfer.observation.digits,
+                      {directionSentence(
+                        mcsObservedDirection(
+                          Number(capturedBefore?.metrics[transfer.observation.key]),
+                          Number(progression.capturedAfter.metrics[transfer.observation.key]),
+                          transfer.observation.digits,
+                        ),
                       )}
-                      . This is a model observation, not a clinical device-selection or
-                      trigger-source recommendation.
                     </p>
-                  ) : (
+                  ) : !lookingBack && progression.choiceByStepId[transferObservationId] ? (
                     <button
                       type="button"
-                      disabled={lookingBack || !progression.choiceByStepId[transferObservationId]}
+                      data-transfer-observation-check
                       onClick={() =>
                         setProgression((current) => ({
                           ...current,
@@ -1458,15 +1588,13 @@ function McsStageSession({
                         }))
                       }
                     >
-                      Record transfer observation
+                      Check answer
                     </button>
-                  )}
+                  ) : null}
                 </div>
               ) : null}
               <p role="status" aria-live="polite" data-transfer-work-status>
-                {transferWorkDone
-                  ? 'The suggested model exercise was performed in this run.'
-                  : 'You can explore any controls or continue without performing the suggested exercise.'}
+                {transferWorkDone ? 'Done on this patient.' : ''}
               </p>
             </div>
           </>
@@ -1478,40 +1606,11 @@ function McsStageSession({
   })()
 
   /* ---------------------------------------------------------------- *
-   * Panes
+   * The simulator: one clock, then the map, the readings, the monitor and the controls
    * ---------------------------------------------------------------- */
 
-  const activeAlarm =
-    state.alarms.find((alarm) => alarm.active && alarm.priority === 'critical') ??
-    state.alarms.find((alarm) => alarm.active)
   const teachingStep = activeStep.interaction.kind === 'teaching'
-  const pendingTimingIdentification = false
-  const flowAccountWithheld = false
-  const contextItems: ContextStripItem[] = [
-    { label: 'Device · mechanism', value: mcsDeviceStatusLabel(state) },
-    { label: 'Setting', value: settingLabel(state) },
-    {
-      label: 'Displayed flow',
-      value: flowAccountWithheld ? 'covered until you commit' : displayedFlowLabel(state),
-    },
-    { label: 'Mean pressure', value: `${state.metrics.mapMmHg} mm Hg` },
-  ]
-  /*
-   * The context strip may not say "No active alarm" on its own while the trigger rating is held.
-   *
-   * In atrial fibrillation the engine's trigger alarm is quiet on arterial pressure and on nothing
-   * else, so the strip answered a switch to the warned-against source with an all-clear (F19). The
-   * strip still reports every alarm the model raises; it just cannot report silence as the whole
-   * story here.
-   */
-  const afTriggerLimitHeld = mcsAfTriggerLimitApplies(state)
-  const alarm = pendingTimingIdentification
-    ? { priority: 'none' as const, text: 'Timing interpretation pending · support running' }
-    : activeAlarm
-      ? { priority: alarmPriority(activeAlarm.priority), text: activeAlarm.label }
-      : afTriggerLimitHeld
-        ? { priority: 'medium' as const, text: MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear }
-        : { priority: 'none' as const, text: 'No active alarm' }
+  const clockContext = mcsClockContext(state)
 
   const highlightControl: McsLearnControlId | undefined =
     activeStep.interaction.kind === 'action'
@@ -1533,18 +1632,46 @@ function McsStageSession({
       (!lesson.introductory &&
         (activeStep.phase === 'recognize' || activeStep.phase === 'predict')))
 
+  const clockBar = (
+    <McsClockBar
+      running={playbackRunning && !lookingBack}
+      held={lookingBack}
+      timeSeconds={state.timeSeconds}
+      onToggle={() => setPlaybackRunning((running) => !running)}
+      onStepCycle={() => {
+        setPlaybackRunning(false)
+        sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
+      }}
+      items={clockContext.items}
+      alarm={clockContext.alarm}
+    />
+  )
+
+  /*
+   * A question about a place is asked over the map it is answered on (the ECMO map questions,
+   * tester 2026-10-14): in the two panes the map is beside the card, and stacked it is a screen
+   * below it, so the question goes with the pins.
+   */
+  const mapQuestion =
+    identifyOnMap && activeStep.interaction.kind === 'identify' ? (
+      <div className={flowStyles.mapQuestion} data-map-question-callout>
+        <p className={flowStyles.mapQuestionKicker}>Answer on the map</p>
+        <p className={flowStyles.mapQuestionStem}>{activeStep.interaction.prompt}</p>
+      </div>
+    ) : null
+
   const simulator = (
     <McsSimulatorPane
       lesson={lesson}
-      presentation={MCS_TASK_PRESENTATIONS_ENABLED ? activeStep.presentation : undefined}
+      presentation={activeStep.presentation}
+      leadVisual={activeStep.leadVisual}
       state={state}
       dispatch={dispatch}
       predictionCommitted={true}
       teachingAvailable={teachingStep || walking}
-      timingIdentification={pendingTimingIdentification}
       allowedActionIds={teachingStep ? [] : allowedActionIds}
-      focusedControls={MCS_TASK_PRESENTATIONS_ENABLED || lesson.introductory}
-      flowAccountWithheld={flowAccountWithheld}
+      focusedControls
+      flowAccountWithheld={false}
       emphasis={emphasis}
       mapAnswer={mapAnswer}
       highlightControl={highlightControl}
@@ -1559,39 +1686,83 @@ function McsStageSession({
         )
       }}
       stepKey={activeStep.id}
+      pointed={pointedAt?.stepId === activeStep.id ? pointedAt.place : null}
+      readingsFocus={observing ? mcsObserveFocus(sectionId) : undefined}
+      readingsBefore={observedFrom}
+      // A lit place is a hint. While a place on the map is the question, the readings do not point.
+      onPoint={
+        identifyOnMap && committedChoiceId === null
+          ? undefined
+          : (place) => setPointedAt(place ? { stepId: activeStep.id, place } : null)
+      }
     />
   )
 
-  const teachingPreview =
-    !MCS_TASK_PRESENTATIONS_ENABLED &&
-    !lesson.introductory &&
-    !predictionCommitted &&
-    (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
-  const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
-  const teaching = (
-    <div
-      className={styles.teachingColumn}
-      data-teaching-column
-      data-teaching-preview={teachingPreview && !teachingExpanded ? 'true' : undefined}
-    >
-      {teachingPreview ? (
-        <button
-          type="button"
-          className={styles.teachingRevealToggle}
-          aria-expanded={teachingExpanded}
-          data-teaching-reveal
-          onClick={() =>
-            setProgression((current) => ({
-              ...current,
-              expandedTeachingStepId: teachingExpanded ? null : activeStep.id,
-            }))
-          }
-        >
-          {teachingExpanded
-            ? 'Show only the first part of the teaching'
-            : 'Show the rest of the teaching for this section'}
-        </button>
+  /*
+   * Every control the device has, for a learner who wants to try something the task did not ask
+   * for. It sits with the simulator it changes, under the task's own controls, and mounts only when
+   * opened: several of its labels name a section's answer.
+   */
+  const allControls = lookingBack ? null : (
+    <section className={flowStyles.allControls} data-full-exploration>
+      <button
+        type="button"
+        aria-expanded={explorationOpen}
+        onClick={() => setExplorationOpen((open) => !open)}
+      >
+        All device controls
+      </button>
+      {explorationOpen ? (
+        <>
+          <p>Changes here apply to this patient and clear the results captured on this task.</p>
+          <McsControls
+            state={state}
+            dispatch={(action) => {
+              const next = mcsReducer(liveState, action)
+              sendModel({ type: 'RESTORE_TEACHING_STATE', state: next })
+              setProgression((current) => ({
+                ...current,
+                capturedAfter: null,
+                comparisons: {},
+              }))
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const observed = advanceMcsSimulation(liveState, MCS_OBSERVATION_SECONDS)
+              sendModel({ type: 'RESTORE_TEACHING_STATE', state: observed })
+              setProgression((current) => ({ ...current, capturedAfter: observed }))
+              setPlaybackRunning(false)
+            }}
+          >
+            Run {MCS_OBSERVATION_SECONDS} s and capture
+          </button>
+        </>
       ) : null}
+    </section>
+  )
+
+  /*
+   * The worked comparison of the unloading section is its own figure, read in the text; it has no
+   * live patient, so it has no simulator beside it. Every other task does, on the right.
+   */
+  const visual =
+    unloadingExample || onCaseStep ? undefined : (
+      <div className={flowStyles.visualPane} data-mcs-visual>
+        {clockBar}
+        {mapQuestion}
+        {simulator}
+        {allControls}
+      </div>
+    )
+
+  /* ---------------------------------------------------------------- *
+   * The text: the task card, then the section around it
+   * ---------------------------------------------------------------- */
+
+  const teaching = (
+    <div className={styles.teachingColumn} data-teaching-column>
       <StageTeachingScope
         value={{ phase: activeStep.phase, predictionCommitted: true, stepId: activeStep.id }}
       >
@@ -1607,7 +1778,7 @@ function McsStageSession({
             step={activeStep}
             state={state}
             predictionCommitted={true}
-            flowAccountWithheld={flowAccountWithheld}
+            flowAccountWithheld={false}
             beforeMetrics={beforeMetrics}
             walkStop={walkStop}
             litStopIds={litStopIds}
@@ -1634,14 +1805,13 @@ function McsStageSession({
           ? question.transfer.item.explanation
           : lesson.contract.teaching.howTheActionAffectsTheModel
   /*
-   * Hint, Show explanation and Try again, each only where it means something (F11).
+   * The answer row: only the buttons that can act on this task, now (the ECMO tester's rule — a
+   * control that cannot do anything is not drawn).
    *
-   * Hint opened the navigational "What do I do now?" dialog, which repeats the instruction. It now
-   * opens this item's own nudge, and Help stays in the header for navigation. Show explanation is
-   * offered where there is an explanation of this step to show — not on a reading step, and not on
-   * the reflection, whose worked response is its own disclosure. Try again appears once an answer
-   * has been compared, because until then there is nothing to try again; it clears that answer and
-   * nothing else, and says so.
+   * Check answer appears once a choice is made. Show answer is offered on a question until it is
+   * answered, and hides again; Try again appears once there is an answer to clear. Hint opens this
+   * item's own nudge while the question is open. The way on is the card's pinned Continue, so
+   * there is no separate Skip.
    */
   const hintKind =
     question.kind === 'explain'
@@ -1655,46 +1825,54 @@ function McsStageSession({
           question.kind === 'transfer'
         ? question.kind
         : undefined
-  const hint = hintKind ? mcsStepHint(sectionId, hintKind) : undefined
-  const explanationOffered =
-    question.kind !== 'teaching' && question.kind !== 'walk' && question.kind !== 'explain'
+  const sortCommitted = progression.sortCommittedStepIds.includes(activeStep.id)
+  const answered = committedChoiceId !== null || sortCommitted
+  const hint = hintKind && !answered ? mcsStepHint(sectionId, hintKind) : undefined
+  const explanationOffered = canAnswer && question.kind !== 'observe' && !committedChoiceId
   const somethingToRetry =
     (question.kind === 'explain' && Boolean(question.sort) && showExplanation) ||
     committedChoiceId !== null ||
-    progression.sortCommittedStepIds.includes(activeStep.id) ||
+    sortCommitted ||
     progression.committedByStepId[`${activeStep.id}-observation`] !== undefined
-  const optionalActions = (
-    <div className={styles.optionalActions}>
-      {canAnswer && !committedChoiceId ? (
-        <button type="button" disabled={!selectedChoiceId || lookingBack} onClick={commitChoice}>
-          Compare answer
-        </button>
-      ) : null}
-      {question.kind === 'explain' &&
-      question.sort &&
-      !showExplanation &&
-      !progression.sortCommittedStepIds.includes(activeStep.id) ? (
-        <button type="button" onClick={commitSort}>
-          Compare classifications
-        </button>
-      ) : null}
-      {question.kind === 'explain' && question.sort && !showExplanation ? (
+  const sortComplete =
+    question.kind === 'explain' && question.sort
+      ? question.sort.candidates.every(
+          (candidate) => (progression.sortByStepId[activeStep.id] ?? {})[candidate.id],
+        )
+      : false
+  const answerButtons = lookingBack ? null : (
+    <>
+      {canAnswer && !committedChoiceId && selectedChoiceId ? (
         <button
           type="button"
-          onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
+          className={shellStyles.nowSecondary}
+          data-question-check
+          onClick={commitChoice}
         >
-          Show example classifications
+          Check answer
         </button>
       ) : null}
-      {walking && !walkIsLast ? (
-        <button type="button" onClick={nextWalkStop}>
-          Next stop
-        </button>
+      {question.kind === 'explain' && question.sort && !showExplanation && !sortCommitted ? (
+        <>
+          {sortComplete ? (
+            <button type="button" className={shellStyles.nowSecondary} onClick={commitSort}>
+              Check the sort
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={shellStyles.nowSecondary}
+            onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
+          >
+            Show the sort
+          </button>
+        </>
       ) : null}
       {hint ? (
         <button
           ref={hintButtonRef}
           type="button"
+          className={shellStyles.nowSecondary}
           data-step-hint-trigger
           onClick={() => setHintOpen(true)}
         >
@@ -1704,232 +1882,124 @@ function McsStageSession({
       {explanationOffered ? (
         <button
           type="button"
-          onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
+          className={shellStyles.nowSecondary}
+          aria-expanded={showExplanation}
+          data-show-answer
+          onClick={() =>
+            setRevealedStepIds((ids) =>
+              showExplanation
+                ? ids.filter((id) => id !== activeStep.id)
+                : [...new Set([...ids, activeStep.id])],
+            )
+          }
         >
-          Show explanation
+          {showExplanation ? 'Hide answer' : 'Show answer'}
         </button>
       ) : null}
       {somethingToRetry ? (
-        <button type="button" onClick={retryQuestion} disabled={lookingBack} data-try-again>
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          onClick={retryQuestion}
+          data-try-again
+        >
           Try again
         </button>
       ) : null}
-      {lookingBack ? (
-        <button
-          type="button"
-          onClick={() => {
-            retryQuestion()
-            enterStep(
-              activeIndex,
-              progression.performedIds.filter((id) => id !== activeStep.id),
-              true,
-            )
-          }}
-        >
-          Explore this task again
-        </button>
-      ) : null}
-      {somethingToRetry ? (
-        <p className={styles.footnote} data-try-again-note>
-          Trying again clears your answer to this question only. Model actions, captures and the
-          steps you have visited are kept.
-        </p>
-      ) : null}
-    </div>
+    </>
   )
-
-  /*
-   * The step bar: which run is on screen, and the way on.
-   *
-   * On arrival the brightest control was Save & exit in the header, and Continue sat at the foot
-   * of the step — 1,100 to 8,700 px down depending on the step — so the first thing a learner met
-   * was the way out (F03). The bar puts the same Continue, with the same handler, at the top of
-   * the step, beside the run's identity; the one at the foot is unchanged. Both are always enabled,
-   * so neither moves or changes under the pointer. Save & exit stays in the header, styled as the
-   * secondary control it is.
-   *
-   * The identity keeps what a learner needs to know — which run this is and the simulated time
-   * it is at — and moves the seed, which is provenance rather than something to read, into a
-   * disclosure. Opening it is not an action: it changes nothing in the model or the progress.
-   */
-  const runLabel = unloadingExample
-    ? null
-    : lookingBack
-      ? 'Captured review'
-      : progression.transferLoaded
-        ? 'Transfer patient'
-        : teachingStep
-          ? 'Guided reference'
-          : 'Current exercise'
-  const stepBar = (
-    <div ref={stepBarRef} className={styles.stepBar} data-step-bar>
-      <div className={styles.stepBarIdentity}>
-        <p className={styles.footnote} data-session-identity>
-          {runLabel === null
-            ? 'Worked comparison · observation times are shown with each example.'
-            : `${runLabel} · ${state.timeSeconds.toFixed(2)} simulated seconds.`}
-        </p>
-        {runLabel === null ? null : (
-          <details className={styles.runDetails} data-run-details>
-            <summary>Run details</summary>
-            <p>
-              The simulated clock moves only while display playback runs or a step runs the model.
-            </p>
-          </details>
-        )}
+  const answerRow =
+    answerButtons && (canAnswer || question.kind === 'explain' || hint) ? (
+      <div className={styles.optionalActions} data-answer-row>
+        {answerButtons}
       </div>
-      {/*
-       * The glossary, from inside the lesson (F42). It opens over the step and closes back to this
-       * button: the step, its answers, the model and the scroll position are exactly as they were.
-       */}
-      <button
-        ref={glossaryButtonRef}
-        type="button"
-        className={shellStyles.nowSecondary}
-        data-glossary-trigger
-        onClick={() => setGlossaryOpen(true)}
+    ) : null
+
+  const sources = (
+    <footer className={flowStyles.references}>
+      <StageSourcesFooter
+        count={stageSources.sourceIds.length}
+        label="Sources for this section"
+        claimsVisible={true}
       >
-        Glossary
-      </button>
-      <button
-        type="button"
-        className={shellStyles.nowPrimary}
-        data-step-bar-continue
-        onClick={continueAction.onActivate}
-      >
-        {continueAction.icon}
-        {continueAction.label}
-        {!lookingBack && !isLastStep ? (
-          <span className={styles.visuallyHidden}>
-            {' '}
-            to step {activeStep.ordinal + 1} of {lesson.steps.length}
-          </span>
-        ) : null}
-      </button>
-    </div>
+        <McsSourceList sourceIds={stageSources.sourceIds} claimsVisible={true} />
+        <McsClaimSourceChecks claims={mcsClaimChecksForSection(sectionId)} context="this section" />
+      </StageSourcesFooter>
+    </footer>
   )
 
-  const task = (
+  const textColumn = (
     <>
-      {stepBar}
-      <McsSourceReviewNotice />
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
-        <NowCard
-          model={
-            MCS_TASK_PRESENTATIONS_ENABLED
-              ? {
-                  ...nowModel,
-                  where: undefined,
-                  body: nowModel.body
-                    ?.replaceAll('in Teaching', 'below')
-                    .replaceAll('in Steps', 'below')
-                    .replaceAll(
-                      'in the Teaching panel, under On the loop',
-                      'beside the map, under On the loop',
-                    )
-                    .replaceAll('in the Simulator panel', 'beside the observations'),
-                }
-              : nowModel
-          }
-        >
-          {MCS_TASK_PRESENTATIONS_ENABLED ? (
-            <McsTaskPresentation
-              kind={activeStep.presentation}
-              teaching={teaching}
-              visual={simulator}
-              action={nowBody}
-              explaining={
-                activeStep.interaction.kind === 'explain' ||
-                activeStep.interaction.kind === 'observe'
-              }
-              reference={teachingStep || walking}
-            />
+        <NowCard model={nowModel}>
+          {onCaseStep ? (
+            runningCaseId && activeStep.interaction.kind === 'case' ? (
+              <McsSectionCase
+                key={runningCaseId}
+                caseId={runningCaseId}
+                sectionId={sectionId}
+                embedded={{
+                  sectionTitle: lesson.title,
+                  sectionNumber: lesson.index + 1,
+                  applies: activeStep.interaction.sectionCase.applies,
+                  onReturnToSection: closeCase,
+                  onCaseFinished: closeCase,
+                }}
+              />
+            ) : null
           ) : (
-            nowBody
+            <div className={flowStyles.taskContent}>
+              <McsTaskPresentation
+                kind={activeStep.presentation}
+                teaching={teaching}
+                action={nowBody}
+                explaining={
+                  activeStep.interaction.kind === 'explain' ||
+                  activeStep.interaction.kind === 'observe'
+                }
+                reference={teachingStep || walking}
+              />
+              {answerRow}
+              {showExplanation && explanationOffered ? (
+                <section className={styles.block} data-provided-explanation>
+                  <h3>Answer</h3>
+                  <p>{explanation}</p>
+                </section>
+              ) : null}
+            </div>
           )}
-          {optionalActions}
-          {showExplanation ? (
-            <section className={styles.block} data-provided-explanation>
-              <h3>Provided explanation</h3>
-              <p>{explanation}</p>
-              <p>Viewing this explanation does not submit an answer or run the model.</p>
-            </section>
-          ) : null}
         </NowCard>
       </div>
-      {!unloadingExample ? (
-        <>
-          <section className={styles.block} data-full-exploration>
-            <button
-              type="button"
-              aria-expanded={explorationOpen}
-              onClick={() => setExplorationOpen((open) => !open)}
-            >
-              Explore all supported controls
-            </button>
-            {explorationOpen ? (
-              <>
-                <p>
-                  Changes apply to the current simulated patient. These controls extend the
-                  suggested exercise. Reset this section to restore its starting configuration;
-                  current answers and captures then clear.
-                </p>
-                <fieldset disabled={lookingBack}>
-                  <McsControls
-                    state={state}
-                    dispatch={(action) => {
-                      if (lookingBack) return
-                      const next = mcsReducer(liveState, action)
-                      sendModel({ type: 'RESTORE_TEACHING_STATE', state: next })
-                      setProgression((current) => ({
-                        ...current,
-                        capturedAfter: null,
-                        comparisons: {},
-                      }))
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const observed = advanceMcsSimulation(liveState, MCS_OBSERVATION_SECONDS)
-                      sendModel({ type: 'RESTORE_TEACHING_STATE', state: observed })
-                      setProgression((current) => ({ ...current, capturedAfter: observed }))
-                      setPlaybackRunning(false)
-                    }}
-                  >
-                    Observe and capture 8 simulated seconds
-                  </button>
-                </fieldset>
-                {lookingBack ? <p>{LOOKING_BACK}</p> : null}
-              </>
-            ) : null}
-          </section>
-          <details className={styles.block}>
-            <summary>Display playback</summary>
-            <button
-              type="button"
-              className={shellStyles.nowSecondary}
-              disabled={lookingBack || pendingTimingIdentification}
-              onClick={() => setPlaybackRunning((running) => !running)}
-            >
-              {playbackRunning ? 'Pause display playback' : 'Play display playback'}
-            </button>
-            <button
-              type="button"
-              disabled={lookingBack || pendingTimingIdentification}
-              onClick={() => {
-                setPlaybackRunning(false)
-                sendModel({ type: 'TICK', seconds: 60 / liveState.patient.heartRateBpm })
-              }}
-            >
-              Step one cardiac cycle
-            </button>
-            <p className={styles.footnote}>
-              Playback changes the model clock; it does not stop device support. Captured
-              comparisons stay fixed.
-            </p>
-          </details>
-        </>
+      {/*
+       * The section's end, once the case is closed or skipped: where focus lands on the way back
+       * from the case. The way on is the card's own Continue, pinned at its foot.
+       */}
+      {onCaseStep && caseFinished && !runningCaseId && lesson.practicePairing ? (
+        <section
+          ref={completionRef}
+          tabIndex={-1}
+          className={stageStyles.completion}
+          role="status"
+          aria-live="polite"
+          data-stage-completion
+        >
+          <h3>Section finished</h3>
+          <p data-case-outcome={casesOpened.length > 0 ? 'ran' : 'skipped'}>
+            {casesOpened.length > 0
+              ? `The case is closed: ${lesson.practicePairing.title}. Nothing about it is saved.`
+              : 'The case was skipped. Start it from this task whenever you like; Practice lists it too.'}
+          </p>
+        </section>
+      ) : null}
+      {handOff && isLastStep && !lookingBack ? (
+        <section className={styles.handOff} data-next-module={handOff.href}>
+          <p>
+            {handOff.line}{' '}
+            <Link className={styles.moduleLink} href={handOff.href}>
+              Open {handOff.moduleTitle}
+            </Link>
+          </p>
+        </section>
       ) : null}
       {!lesson.introductory &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
@@ -1945,57 +2015,66 @@ function McsStageSession({
           </p>
         </details>
       ) : null}
-      <details className={flowStyles.taskMap}>
-        <summary>Task history and lesson map</summary>
-        <ol aria-label="All lesson tasks">
+      <details className={flowStyles.taskMap} data-task-map>
+        <summary>Tasks in this section</summary>
+        <ol data-step-list>
           {lesson.steps.map((step, index) => (
-            <li key={step.id}>
+            <li
+              key={step.id}
+              data-step-state={
+                index === activeIndex
+                  ? 'current'
+                  : progression.visitedStepIds.includes(step.id)
+                    ? 'visited'
+                    : 'open'
+              }
+            >
               <button
                 type="button"
                 aria-current={index === activeIndex ? 'step' : undefined}
+                disabled={index === activeIndex || runningCaseId !== null}
                 onClick={() => goToStep(index)}
               >
-                {step.title}
+                {step.ordinal}. {step.title}
+                {index !== activeIndex && progression.visitedStepIds.includes(step.id)
+                  ? ' · visited'
+                  : ''}
               </button>
-              {progression.visitedStepIds.includes(step.id) ? <span> · visited</span> : null}
             </li>
           ))}
         </ol>
       </details>
-      {isLastStep ? <McsSectionRecap lesson={lesson} onRevisit={goToStep} /> : null}
-      {isLastStep ? (
-        <section
-          className={stageStyles.completion}
-          role="status"
-          aria-live="polite"
-          data-stage-completion
-        >
-          <h3>More to explore</h3>
-          <p>
-            Continue to another topic or try a related case. Only your location and topic visit are
-            saved; skipped exercises are not recorded as performed.
-          </p>
-          <div className={stageStyles.completionActions}>
-            {lesson.practicePairing ? (
-              <button
-                type="button"
-                className={shellStyles.nowSecondary}
-                data-practice-pairing={lesson.practicePairing.kind}
-                onClick={() =>
-                  router.push({
-                    pathname: `${mechanicalCirculatorySupportNavBase}/practice`,
-                    query: { case: lesson.practicePairing?.caseId ?? '' },
-                  })
-                }
-              >
-                {lesson.practicePairing.kind === 'mechanism-match'
-                  ? `Apply it in a case: ${lesson.practicePairing.title}`
-                  : `Next case in this unit (a different mechanism): ${lesson.practicePairing.title}`}
-              </button>
-            ) : null}
-          </div>
-        </section>
+      {/*
+       * The recap closes the section, so it sits on the last task: the case where the section has
+       * one. It waits under its heading until the closing answer is committed or the case is closed.
+       */}
+      {isLastStep && !runningCaseId ? (
+        <McsSectionRecap
+          lesson={lesson}
+          onRevisit={goToStep}
+          folded={!transferCommitted && !caseFinished}
+        />
       ) : null}
+      {/* Section 8's two patients stay with the closing question; the case is the task after it. */}
+      {activeStep.interaction.kind === 'transfer' && sectionId === MCS_LVAD_PERFUSION_SECTION_ID ? (
+        <McsLvadPerfusionCase />
+      ) : null}
+      {/*
+       * The glossary, from inside the lesson (F42). It opens over the task and closes back to this
+       * button: the task, its answers, the model and the scroll position are exactly as they were.
+       */}
+      <p className={flowStyles.sectionTools}>
+        <button
+          ref={glossaryButtonRef}
+          type="button"
+          className={shellStyles.nowSecondary}
+          data-glossary-trigger
+          onClick={() => setGlossaryOpen(true)}
+        >
+          Glossary
+        </button>
+      </p>
+      {workspace ? sources : null}
     </>
   )
 
@@ -2022,39 +2101,37 @@ function McsStageSession({
       }}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       saveAndExitHref={mechanicalCirculatorySupportNavBase}
       resumedNote={
         mount.index > 0
-          ? `Opened at ${requestedPhase} with the starting patient. Earlier answers, actions and observations were not restored.`
+          ? 'Reopened at the task you left, with the patient as it starts. Answers from last time are not kept.'
           : undefined
       }
     />
   )
 
-  const helpDialog = (
-    <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} returnFocusTo={helpButtonRef}>
-      <p className={shellStyles.kicker}>{stepPosition}</p>
-      <p>
-        <strong>{activeStep.title}</strong>
-      </p>
-      <p>
-        {MCS_TASK_PRESENTATIONS_ENABLED
-          ? activeStep.instruction
-              .replaceAll(
-                'in the Teaching panel, under On the loop',
-                'beside the map, under On the loop',
-              )
-              .replaceAll('in the Simulator panel', 'beside the observations')
-          : activeStep.instruction}
-      </p>
-      {!MCS_TASK_PRESENTATIONS_ENABLED && lookInLine ? <p>{lookInLine}</p> : null}
-      {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
-    </HelpDialog>
-  )
-
   const dialogs = (
     <>
-      {helpDialog}
+      <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} returnFocusTo={helpButtonRef}>
+        <p className={shellStyles.kicker}>{stepPosition}</p>
+        <p>
+          <strong>{activeStep.title}</strong>
+        </p>
+        <p>{activeStep.instruction}</p>
+        {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
+        {runningCaseId ? (
+          <p>
+            The case runs inside this task. Exit case, or the end of the case, brings you back here,
+            and the other tasks open again from Tasks in this section.
+          </p>
+        ) : (
+          <p>
+            Every task in this section is optional: open any of them from Tasks in this section, and
+            continue without answering or acting whenever you like.
+          </p>
+        )}
+      </HelpDialog>
       <HelpDialog
         open={hintOpen && hint !== undefined}
         onClose={() => setHintOpen(false)}
@@ -2063,10 +2140,6 @@ function McsStageSession({
       >
         <p className={shellStyles.kicker}>{stepPosition}</p>
         <p data-step-hint>{hint}</p>
-        <p className={styles.footnote}>
-          A hint points at what is on the screen. For what the step is and where it is worked, use
-          Help in the header; for the reasoning itself, use Show explanation.
-        </p>
       </HelpDialog>
       <HelpDialog
         open={glossaryOpen}
@@ -2084,83 +2157,39 @@ function McsStageSession({
       locale={locale}
       activeHref={`${mechanicalCirculatorySupportNavBase}/learn`}
       activityMode
-      flowing={MCS_TASK_PRESENTATIONS_ENABLED}
     >
       <StageSourcesScope>
         <div className={styles.stage} data-mcs-stage data-section-id={sectionId}>
-          {MCS_TASK_PRESENTATIONS_ENABLED ? (
+          <div
+            className={`${shellStyles.shell} ${flowStyles.flow}`}
+            data-lesson-shell
+            data-critical-care-activity-shell="true"
+            data-stage={activeStep.id}
+            data-presentation={activeStep.presentation}
+            data-mcs-task-flow
+            aria-label="Mechanical circulatory support section"
+          >
+            <header className={shellStyles.header}>{header}</header>
             <div
-              className={flowStyles.flow}
-              data-critical-care-activity-shell
-              data-stage={activeStep.id}
-              data-mcs-task-flow
+              className={flowStyles.activity}
+              data-single-column={
+                onCaseStep ? 'case' : referenceViewed && visual ? undefined : 'reading'
+              }
             >
-              {header}
-              {referenceViewed && !(teachingStep || walking) ? (
-                <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
-              ) : null}
               {referenceViewed ? (
-                task
+                <FlowContent kind={activeStep.presentation} teaching={textColumn} visual={visual} />
               ) : (
-                <>
-                  <McsSourceReviewNotice />
+                <div className={flowStyles.reference} data-prerequisite-pane>
                   <McsPrerequisiteReference
                     sectionId={sectionId}
                     onContinue={() => setReferenceViewed(true)}
                   />
-                </>
+                </div>
               )}
-              <footer>
-                <StageSourcesFooter
-                  count={stageSources.sourceIds.length}
-                  label="Sources for this section"
-                  claimsVisible={true}
-                >
-                  <McsSourceList sourceIds={stageSources.sourceIds} claimsVisible={true} />
-                  <McsClaimSourceChecks
-                    claims={mcsClaimChecksForSection(sectionId)}
-                    context="this section"
-                  />
-                </StageSourcesFooter>
-              </footer>
-              {dialogs}
             </div>
-          ) : (
-            <StageLayout
-              stageId={activeStep.id}
-              label="Mechanical circulatory support section"
-              module="mechanical-circulatory-support"
-              workspaceLabel="Mechanical circulatory support lesson workspace: steps, teaching, and simulator"
-              header={header}
-              contextStrip={
-                <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
-              }
-              simulator={simulator}
-              teaching={teaching}
-              task={task}
-              paneOrder={PANE_ORDER}
-              paneCaptions={PANE_CAPTIONS}
-              defaultWidthFractions={PANE_WIDTH_FRACTIONS}
-              paneMinimums={PANE_MINIMUMS}
-              compactPane={compactPane}
-              footer={
-                <>
-                  <StageSourcesFooter
-                    count={stageSources.sourceIds.length}
-                    label="Sources for this section"
-                    claimsVisible={true}
-                  >
-                    <McsSourceList sourceIds={stageSources.sourceIds} claimsVisible={true} />
-                    <McsClaimSourceChecks
-                      claims={mcsClaimChecksForSection(sectionId)}
-                      context="this section"
-                    />
-                  </StageSourcesFooter>
-                </>
-              }
-              overlay={dialogs}
-            />
-          )}
+            {workspace && referenceViewed ? null : sources}
+            {dialogs}
+          </div>
         </div>
       </StageSourcesScope>
     </McsModuleFrame>
@@ -2168,34 +2197,14 @@ function McsStageSession({
 }
 
 /* -------------------------------------------------------------------- *
- * Context-strip derivations
+ * Helpers (the clock bar's console line is `mcsClockContext`)
  * -------------------------------------------------------------------- */
 
-function settingLabel(state: McsSimulationState): string {
-  if (state.device.kind === 'iabp') {
-    return `1:${state.device.assistRatio} · ${state.device.triggerSource.toUpperCase()} trigger`
-  }
-  if (state.device.kind === 'lvad') return `${state.device.speedRpm} rpm`
-  const { left, right } = state.device
-  const parts: string[] = []
-  if (left.enabled) parts.push(`${left.variant === '55' ? '5.5' : 'CP'} P${left.performanceLevel}`)
-  if (right.enabled) parts.push(`RP P${right.performanceLevel}`)
-  return parts.join(' · ') || 'no pump in place'
-}
-
-function displayedFlowLabel(state: McsSimulationState): string {
-  if (state.device.kind === 'iabp') return 'none reported'
-  if (state.device.kind === 'lvad')
-    return `${(state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(1)} L/min`
-  const { left, right } = state.device
-  const parts: string[] = []
-  if (left.enabled) parts.push(`left ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min`)
-  if (right.enabled) parts.push(`right ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min`)
-  return parts.join(' · ') || 'none reported'
-}
-
-function alarmPriority(priority: 'advisory' | 'warning' | 'critical'): 'low' | 'medium' | 'high' {
-  return priority === 'critical' ? 'high' : priority === 'warning' ? 'medium' : 'low'
+/** The read-back answer as a sentence: "It increased.", or that it held within the shown precision. */
+function directionSentence(direction: 'increased' | 'decreased' | 'unchanged'): string {
+  return direction === 'unchanged'
+    ? 'It did not change within the displayed precision.'
+    : `It ${direction}.`
 }
 
 /** The first required transfer action that is not a guided button, resolved back to its control. */

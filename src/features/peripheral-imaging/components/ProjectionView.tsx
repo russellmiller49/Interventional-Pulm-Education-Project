@@ -144,7 +144,7 @@ export function Projection({
     <div
       className={styles.radiograph}
       role="img"
-      aria-label={`CT-derived teaching projection at ${orbit} degrees obliquity and ${tilt} degrees cranial/caudal angulation. Model target and tool are overlaid in the same cone geometry.`}
+      aria-label={`Fluoroscopic projection at ${orbit} degrees obliquity and ${tilt} degrees cranial/caudal angulation, with the target lesion and the tool.`}
       data-projection-state={status}
     >
       <div className={styles.radiographImage} style={{ transform: `scale(${zoom})` }}>
@@ -233,21 +233,18 @@ export function Projection({
         </svg>
       )}
       <div className={styles.imageHeader}>
-        <span>CT-derived DRR</span>
+        <span>Projection</span>
         <span>
           {orbit}° / {tilt}°
         </span>
       </div>
-      <span
-        className={styles.orientationL}
-        title="Image-right direction in the teaching coordinate frame"
-      >
+      <span className={styles.orientationL} title="The patient side shown at image right">
         {rightDirection}
       </span>
       <div className={styles.imageFooter}>
         {registration
           ? 'Amber: current target · teal: stored contour'
-          : 'Existing FluoroView CT · model target / tool'}
+          : 'Dotted contour: target lesion · cross: tool tip'}
       </div>
       {status === 'loading' && (
         <div className={styles.imageStatus}>Preparing CT-derived projection…</div>

@@ -4,13 +4,13 @@ jest.mock('@/features/icu-hemodynamics/components/HemodynamicCaseActivity', () =
   HemodynamicCaseActivity: ({
     caseId,
     mode,
-    nextLearn,
+    ...rest
   }: {
     caseId: string
     mode: string
-    nextLearn?: string
+    [key: string]: unknown
   }) => (
-    <div data-testid="case-activity" data-next-learn={nextLearn}>
+    <div data-testid="case-activity" data-props={Object.keys(rest).sort().join(',')}>
       {caseId}:{mode}
     </div>
   ),
@@ -44,23 +44,12 @@ describe('ICU hemodynamics practice route', () => {
     const { rerender } = render(
       await IcuHemodynamicsPracticePage({
         params: Promise.resolve({ locale: 'en' }),
-        searchParams: Promise.resolve({ case: 'HD-08', nextLearn: 'catheter-advancement' }),
+        searchParams: Promise.resolve({ case: 'HD-08' }),
       }),
     )
     expect(screen.getByTestId('case-activity')).toHaveTextContent('HD-08:practice')
-    expect(screen.getByTestId('case-activity')).toHaveAttribute(
-      'data-next-learn',
-      'catheter-advancement',
-    )
-    for (const nextLearn of ['unknown-section', ['pressure-system', 'why-measure']]) {
-      rerender(
-        await IcuHemodynamicsPracticePage({
-          params: Promise.resolve({ locale: 'en' }),
-          searchParams: Promise.resolve({ case: 'HD-08', nextLearn }),
-        }),
-      )
-      expect(screen.getByTestId('case-activity')).not.toHaveAttribute('data-next-learn')
-    }
+    // On its own page the case is not embedded in a section and is handed nothing about one.
+    expect(screen.getByTestId('case-activity')).toHaveAttribute('data-props', 'locale')
 
     rerender(
       await IcuHemodynamicsPracticePage({

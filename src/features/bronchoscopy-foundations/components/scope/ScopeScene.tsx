@@ -14,11 +14,13 @@ import { WebGLRenderer, type WebGLRendererParameters } from 'three'
 import { PerspectiveCamera, View } from '@react-three/drei'
 import { BronchLabelOverlay } from '@/components/airway-anatomy/scope-primitives'
 import type { OstiumLabel } from '@/lib/airway-anatomy/ostia'
-import { OPTICAL_ASPECT } from '../../engine/scope/scopeOstia'
+import { BENCH_AIM_TOLERANCE_DEG } from '../../engine/scope/scopeBenchTarget'
+import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { ScopeOpticalView } from './ScopeOpticalView'
 import { ObserverView } from './ObserverView'
 import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
 import { isDetailedBench, type BenchPresentation } from './useBenchPresentation'
+import { BenchFluidView } from './BenchFluidView'
 import { benchOffCardNote, benchTipOrientation } from '../../engine/scope/benchOrientation'
 import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
 import {
@@ -34,6 +36,16 @@ import {
   projectScenePins,
 } from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
+import { HeadDragLayer, headDragHint } from './HeadDragLayer'
+import { OutsideTurnLayer } from './OutsideTurnLayer'
+import {
+  LARYNX_ORBIT_PRESETS,
+  LARYNX_ORBIT_START,
+  larynxOrbitDescription,
+  turnLarynxOrbit,
+  type LarynxOrbit,
+  type LarynxOutsideLook,
+} from './larynxOutsideView'
 import styles from './scope-scene.module.css'
 
 type SceneStatus = 'loading' | 'ready' | 'failed'
@@ -42,6 +54,13 @@ interface SceneProps extends ScopePaneProps {
   onStatus: (status: SceneStatus) => void
   /** The bench as it is being shown; the pane owns it so the drawings outside this scene agree. */
   presentation: BenchPresentation
+  /**
+   * Draw the outside view beside the scope view on a step that drives through the airways: the
+   * see-through tree with the scope in it. The pane offers it in place of the flat map.
+   */
+  positionView?: boolean
+  /** Back to the flat map, from the outside view's own corner. */
+  onShowMap?: () => void
 }
 
 class SceneBoundary extends Component<
@@ -90,8 +109,9 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
   const { invalidate, gl } = useThree()
   const drawn = useRef(false)
   useEffect(() => {
+    // The outside view coming or going moves the views without a scroll or a resize.
     invalidate(8)
-  }, [props.state, props.visible, invalidate])
+  }, [props.state, props.visible, props.positionView, invalidate])
   useEffect(() => {
     // View updates its offscreen flag in React, then clears its scissor in a layout effect.
     // Leave frames after that effect to repaint newly revealed close-ups on compact layouts.
@@ -134,6 +154,9 @@ export default function ScopeScene(props: SceneProps) {
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
   const [opticalSize, setOpticalSize] = useState({ width: 320, height: 240 })
+  // Where the learner has turned the outside model of the larynx to.
+  const [larynxOrbit, setLarynxOrbit] = useState<LarynxOrbit>(LARYNX_ORBIT_START)
+  const [larynxLook, setLarynxLook] = useState<LarynxOutsideLook>('solid')
   useEffect(() => {
     onStatus(status)
   }, [status, onStatus])
@@ -189,7 +212,9 @@ export default function ScopeScene(props: SceneProps) {
       cancelled = true
     }
   }, [view.mode, view.profile, detailedBench, generation, failed])
-  const observer = ['controls-isolated', 'larynx-entry', 'tube', 'accessory'].includes(view.mode)
+  const observer =
+    ['controls-isolated', 'larynx-entry', 'tube', 'accessory'].includes(view.mode) ||
+    props.positionView === true
   const optical = view.mode !== 'idle'
   useEffect(() => {
     const element = opticalRoot.current
@@ -232,6 +257,7 @@ export default function ScopeScene(props: SceneProps) {
       <div
         className={styles.views}
         ref={root}
+        data-bench-suction={view.benchSuction || undefined}
         data-three-state={status}
         data-three-attempt={generation}
         data-three-failure={load.failure ?? undefined}
@@ -284,12 +310,25 @@ export default function ScopeScene(props: SceneProps) {
                 )}
               </View>
               <span className={styles.viewHeading}>{optical ? 'Scope view' : 'Airway model'}</span>
+              {view.benchSuction ? <BenchFluidView state={state} optical overlay /> : null}
               {view.benchTarget ? (
-                <span className={styles.targetReticle} aria-hidden="true" data-bench-reticle>
+                <span
+                  className={styles.targetReticle}
+                  aria-hidden="true"
+                  data-bench-reticle
+                  style={{
+                    width:
+                      (opticalSize.height * Math.tan((BENCH_AIM_TOLERANCE_DEG * Math.PI) / 180)) /
+                      Math.tan((OPTICAL_FOV_DEG * Math.PI) / 360),
+                    height:
+                      (opticalSize.height * Math.tan((BENCH_AIM_TOLERANCE_DEG * Math.PI) / 180)) /
+                      Math.tan((OPTICAL_FOV_DEG * Math.PI) / 360),
+                  }}
+                >
                   +
                 </span>
               ) : null}
-              {benchOffCard ? (
+              {benchOffCard && !view.benchSuction ? (
                 // Hidden from assistive technology here: the end-on drawing under the controls
                 // carries the same sentence for it, read from the same displayed state.
                 <span className={styles.benchOffCard} aria-hidden="true" data-bench-off-card>
@@ -447,9 +486,21 @@ export default function ScopeScene(props: SceneProps) {
                 aria-label={
                   detailedBench
                     ? 'Outside view: bronchoscope control head and enlarged distal bending section'
-                    : 'Outside view of the authored teaching model'
+                    : view.mode === 'tube'
+                      ? 'Tube cutaway: the scope inside the tube'
+                      : props.positionView
+                        ? 'Outside view from the front: the airway tree with the scope in it, and the tip marked'
+                        : view.mode === 'larynx-entry'
+                          ? larynxLook === 'inside'
+                            ? `Outside view of the larynx ${larynxOrbitDescription(larynxOrbit)}: the hyoid, the thyroid and cricoid cartilages drawn see-through, with the vocal folds and the scope inside them`
+                            : `Outside view of the larynx ${larynxOrbitDescription(larynxOrbit)}: the hyoid, the thyroid and cricoid cartilages and the first tracheal rings, with the scope passing down inside them and its tip marked`
+                          : 'Outside view: the scope in the airway'
                 }
                 data-control-closeups={detailedBench ? 'true' : undefined}
+                data-larynx-look={view.mode === 'larynx-entry' ? larynxLook : undefined}
+                data-larynx-yaw={
+                  view.mode === 'larynx-entry' ? Math.round(larynxOrbit.yawDeg) : undefined
+                }
               >
                 {detailedBench ? (
                   <>
@@ -468,7 +519,18 @@ export default function ScopeScene(props: SceneProps) {
                           suctionTravel={presentation.suctionTravel}
                         />
                       </View>
+                      <HeadDragLayer
+                        deflectionDeg={state.inputs.deflectionDeg}
+                        controls={view.controls}
+                        enabled={props.controlsEnabled}
+                        onCommand={props.onCommand}
+                      />
                       <span className={styles.closeupHeading}>Outside view · control head</span>
+                      {props.controlsEnabled && headDragHint(view.controls) ? (
+                        <span className={styles.closeupHint} data-head-drag-hint>
+                          {headDragHint(view.controls)}
+                        </span>
+                      ) : null}
                       <span className={styles.closeupState}>
                         {state.inputs.suction
                           ? 'Suction valve pressed'
@@ -484,22 +546,95 @@ export default function ScopeScene(props: SceneProps) {
                         <PerspectiveCamera makeDefault near={0.1} far={1400} fov={38} />
                         <DistalTipCloseup state={presentation.state} />
                       </View>
-                      <span className={styles.closeupHeading}>Distal bending section</span>
-                      <span className={styles.closeupState}>Enlarged · middle tube omitted</span>
+                      {view.benchSuction ? (
+                        <BenchFluidView state={state} overlay />
+                      ) : (
+                        <>
+                          <span className={styles.closeupHeading}>Distal bending section</span>
+                          <span className={styles.closeupState}>
+                            Enlarged · middle tube omitted
+                          </span>
+                        </>
+                      )}
                     </div>
                   </>
                 ) : (
                   <>
                     <View className={styles.observerViewport} index={2}>
                       <PerspectiveCamera makeDefault near={0.05} far={1400} fov={48} />
-                      <ObserverView assets={assets} props={props} />
+                      <ObserverView
+                        assets={assets}
+                        props={props}
+                        larynxOrbit={larynxOrbit}
+                        larynxLook={larynxLook}
+                      />
                     </View>
+                    {view.mode === 'larynx-entry' ? (
+                      <OutsideTurnLayer
+                        onTurn={(dx, dy) =>
+                          setLarynxOrbit((orbit) => turnLarynxOrbit(orbit, dx, dy))
+                        }
+                      />
+                    ) : null}
                     <span className={styles.viewHeading}>
-                      {view.mode === 'tube' ? 'Tube cutaway' : 'Outside view'} · authored model
+                      {view.mode === 'tube'
+                        ? 'Tube cutaway'
+                        : view.mode === 'larynx-entry'
+                          ? `Outside view · ${larynxOrbitDescription(larynxOrbit)}`
+                          : 'Outside view'}
                     </span>
+                    {view.mode === 'larynx-entry' ? (
+                      <span className={styles.turnHint}>
+                        Drag to turn the model. The yellow dot is the tip.
+                      </span>
+                    ) : null}
+                    {props.positionView ? (
+                      <span className={styles.positionNote} data-position-note>
+                        From the front: the patient’s right is on the left. The yellow dot is the
+                        tip.
+                      </span>
+                    ) : null}
                   </>
                 )}
               </div>
+            ) : null}
+            {observer && view.mode === 'larynx-entry' ? (
+              // Outside the picture's own element, so each button is a button to every reader.
+              <div className={styles.turnButtons} role="group" aria-label="Outside view">
+                <button
+                  type="button"
+                  onClick={() => setLarynxLook((look) => (look === 'solid' ? 'inside' : 'solid'))}
+                  aria-pressed={larynxLook === 'inside'}
+                  data-larynx-see-inside
+                >
+                  See inside
+                </button>
+                {LARYNX_ORBIT_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setLarynxOrbit(preset.orbit)}
+                    aria-pressed={
+                      larynxOrbit.yawDeg === preset.orbit.yawDeg &&
+                      larynxOrbit.pitchDeg === preset.orbit.pitchDeg
+                    }
+                    data-larynx-view={preset.id}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {props.positionView && props.onShowMap ? (
+              // Outside the picture's own element, so the button is a button to every reader.
+              <button
+                type="button"
+                className={styles.viewSwitch}
+                onClick={props.onShowMap}
+                data-show-flat-map
+              >
+                Flat map
+              </button>
             ) : null}
           </SceneBoundary>
         ) : null}
@@ -513,12 +648,13 @@ export default function ScopeScene(props: SceneProps) {
                 </button>
               </>
             ) : (
-              'Loading the teaching model…'
+              'Loading the 3D view…'
             )}
           </div>
         ) : null}
       </div>
-      {state.message ? (
+      {/* A step with a tool prints the reply under the tool's own controls instead. */}
+      {state.message && !view.controls.includes('accessory') ? (
         <p className={styles.message} role="status" data-scope-message>
           {state.message}
         </p>

@@ -44,9 +44,10 @@ import {
 } from './circuit-map/circuitMapGeometry'
 import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
+import { ArterialPressureTrace } from './monitor/ArterialPressureTrace'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
-import { scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
+import { ecmoScrollOwner, scrollEcmoTargetIntoView } from './stage/scrollTaskPaneToTop'
 import { EcmoCircuitControls } from './EcmoCircuitControls'
 
 /**
@@ -81,6 +82,11 @@ export interface SimulationPanelProps {
   guidedControlId?: GuidedControlId | null
   /** See {@link CircuitLocationDisclosure}. Defaults to `full`. */
   locationDisclosure?: CircuitLocationDisclosure
+  /**
+   * Whether the live-readings grid beside the map starts open. A teaching step whose own text
+   * carries the reading it is about asks for it closed, so the eye stays on that text.
+   */
+  liveReadings?: 'open' | 'closed'
   /** Essential measurement identity supplied by introductory Learn tasks. */
   circuitMeasurementNote?: string
   /**
@@ -212,6 +218,31 @@ export function CircuitLiveReadings({
   )
 }
 
+/**
+ * Scroll the reading area just far enough that the foot of `node` clears the pinned action row.
+ *
+ * Downward only, and only by the overflow: what is above the node (its tab row) stays on screen as
+ * long as the whole stack fits, which the bedside scene's height is chosen for.
+ */
+function revealAbovePinnedRow(node: HTMLElement) {
+  const owner = ecmoScrollOwner(node)
+  if (!owner) return
+  const pinnedRow = node
+    .closest('[data-ecmo-shell]')
+    ?.querySelector<HTMLElement>("[data-now-footer='pinned']")
+  const pinnedTop =
+    pinnedRow && getComputedStyle(pinnedRow).position === 'sticky'
+      ? pinnedRow.getBoundingClientRect().top
+      : Infinity
+  const visibleBottom = Math.min(
+    window.innerHeight,
+    owner.getBoundingClientRect().bottom,
+    pinnedTop,
+  )
+  const overflow = node.getBoundingClientRect().bottom - visibleBottom + 12
+  if (overflow > 1) owner.scrollTo({ top: owner.scrollTop + overflow, behavior: 'auto' })
+}
+
 export function CircuitSchematic({
   state,
   dispatch,
@@ -224,6 +255,7 @@ export function CircuitSchematic({
   circuitFrame = 'whole',
   circuitFit = 'poster',
   circuitAutoScroll = true,
+  liveReadings = 'open',
   mapAnswer = null,
   onSaveForLater,
   locationDisclosure = 'full',
@@ -309,6 +341,37 @@ export function CircuitSchematic({
     // Once per applied preference; the view itself is read from the preference, not tracked.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferenceKey, circuitAutoScroll])
+
+  /*
+   * A view the learner chose is brought fully into the reading area.
+   *
+   * The tab row sits several hundred pixels down a task, so pressing a tab could leave the view it
+   * opened running under the pinned Continue row. Only on the learner's own choice of tab, never on
+   * a step's own choice of view (the step owns scroll on entry), and only as far as is needed: a
+   * view already whole on screen is left where it is. The bedside scene mounts a moment after its
+   * tab is pressed, so the foot of the view is looked for twice.
+   */
+  const [chosenView, setChosenView] = useState<{ view: CircuitViewPreference; count: number }>()
+  const chooseCircuitView = (view: CircuitViewPreference) => {
+    setCircuitView(view)
+    setChosenView((current) => ({ view, count: (current?.count ?? 0) + 1 }))
+  }
+  useEffect(() => {
+    if (!chosenView) return undefined
+    const reveal = () => {
+      const foot = panelRef.current?.querySelector<HTMLElement>(
+        chosenView.view === 'bedside' ? '[data-scene-status]' : '[data-circuit-drawing]',
+      )
+      if (foot && foot.getClientRects().length > 0) revealAbovePinnedRow(foot)
+      return Boolean(foot)
+    }
+    const timers = [
+      window.setTimeout(() => {
+        if (!reveal()) timers.push(window.setTimeout(reveal, 600))
+      }, 80),
+    ]
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [chosenView])
 
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
@@ -427,7 +490,11 @@ export function CircuitSchematic({
           ? 'Preload-limited drainage pattern'
           : 'No resistance pattern present'
 
-  const readingsBlock = <CircuitLiveReadings state={state} open={!answerable} />
+  // Beside a map question the grid is left out: the question is about a place, and a column of
+  // numbers next to it only competed for attention (tester feedback, 2026-10-14).
+  const readingsBlock = answerable ? null : (
+    <CircuitLiveReadings state={state} open={liveReadings !== 'closed'} />
+  )
 
   return (
     <section
@@ -446,12 +513,18 @@ export function CircuitSchematic({
           <span aria-hidden="true">●</span> Guided focus: circuit and sensors
         </div>
       ) : null}
+      {/*
+        The heading only. A "BOUNDED MODEL" badge and a boxed "VV femoral-femoral configuration"
+        line (drainage → pump → oxygenator → return, with a mode pill) used to sit beside it on every
+        task. A tester (2026-10-23) asked for the configuration box to go and its sentence to open
+        the module instead; the circuit walk now says it where the learner first meets the circuit
+        (`data-circuit-configuration`), the map draws it, and the mode is in the context strip.
+      */}
       <div className={styles.panelHeading}>
         <div>
           <span className={styles.kicker}>Circuit model</span>
           <h2 id="circuit-heading">Pressure zones and sensor orientation</h2>
         </div>
-        <span className={styles.simulatedBadge}>BOUNDED MODEL</span>
       </div>
 
       {circuitMeasurementNote ? (
@@ -459,20 +532,6 @@ export function CircuitSchematic({
           {circuitMeasurementNote}
         </p>
       ) : null}
-      <div
-        className={styles.circuitModeSummary}
-        role="group"
-        aria-label={`${supportModeLabel} femoral-femoral circuit configuration`}
-      >
-        <div>
-          <strong>{supportModeLabel} femoral-femoral configuration</strong>
-          <span>
-            Drainage: femoral vein → centrifugal pump → membrane oxygenator. Return:{' '}
-            {returnVesselLabel} → {returnDestinationLabel}.
-          </span>
-        </div>
-        <span className={styles.modePill}>{supportModeLabel}</span>
-      </div>
       {readingsFirst ? (
         <div className={styles.circuitReadingsFirst} data-circuit-readings-first>
           {readingsBlock}
@@ -503,7 +562,7 @@ export function CircuitSchematic({
           }
           if (!next) return
           event.preventDefault()
-          setCircuitView(next)
+          chooseCircuitView(next)
           document
             .getElementById(
               next === 'bedside' ? 'cardiohelp-bedside-view-tab' : 'cardiohelp-diagnostic-view-tab',
@@ -518,7 +577,7 @@ export function CircuitSchematic({
           aria-selected={circuitView === 'bedside'}
           aria-controls="cardiohelp-bedside-view"
           tabIndex={circuitView === 'bedside' ? 0 : -1}
-          onClick={() => setCircuitView('bedside')}
+          onClick={() => chooseCircuitView('bedside')}
         >
           Bedside 3D circuit
         </button>
@@ -529,7 +588,7 @@ export function CircuitSchematic({
           aria-selected={circuitView === 'diagnostic'}
           aria-controls="cardiohelp-diagnostic-view"
           tabIndex={circuitView === 'diagnostic' ? 0 : -1}
-          onClick={() => setCircuitView('diagnostic')}
+          onClick={() => chooseCircuitView('diagnostic')}
         >
           Pressure-zone map
         </button>
@@ -561,7 +620,9 @@ export function CircuitSchematic({
         */}
         {answerPending ? (
           <p className={styles.circuitAnswerElsewhere} data-answer-elsewhere>
-            This step is answered on the pressure-zone map.{' '}
+            {answerable?.choicesOutsideMap
+              ? 'The numbered places in this question are on the pressure-zone map.'
+              : 'This step is answered on the pressure-zone map.'}{' '}
             <button type="button" onClick={() => setCircuitView('diagnostic')}>
               Show the pressure-zone map
             </button>
@@ -1131,8 +1192,7 @@ export function CircuitSchematic({
         */}
         {locationsDisclosed ? null : (
           <p className={styles.circuitWithheldNote} data-location-withheld-note>
-            Where each pressure channel is taken is what this lesson asks you to place, so the
-            sensor markers appear on this map once you have committed your prediction.
+            Sensor labels are hidden until you answer.
           </p>
         )}
         {fitted ? null : (
@@ -1146,10 +1206,9 @@ export function CircuitSchematic({
           // boundary — the one sentence saying the drawn mixing region is not computed — at every
           // desktop width (VA11-1).
           <p className={styles.circuitMapNote} data-local-model-boundary="va-mixing-fixed">
-            Model boundary: the mixing region is drawn where this diagram places it and does not
-            move. In a real VA circuit its position shifts with the balance between native ejection
-            and circuit flow, and that shift is what decides which beds each side supplies. This
-            simulation does not derive it, so nothing you change here will move the label.
+            The mixing region is drawn in one place. In a patient it moves with the balance between
+            native ejection and circuit flow, and where it sits decides which arterial branches
+            receive blood from the native lungs and which receive blood from the circuit.
           </p>
         ) : null}
         {mixingCueWithheld ? (
@@ -1256,24 +1315,31 @@ export function CircuitSchematic({
         </div>
       </div>
 
-      <button
-        id="cardiohelp-circuit-check"
-        type="button"
-        className={styles.primaryAction}
-        disabled={!controlsEnabled || state.circuit.circuitInspected}
-        data-guided-help={guidedControlId === 'cardiohelp-circuit-check'}
-        onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
-      >
-        {state.circuit.circuitInspected ? (
-          <>
-            <CheckCircle2 aria-hidden="true" /> Tip-to-tip check documented
-          </>
-        ) : (
-          <>
-            <Inspect aria-hidden="true" /> Perform tip-to-tip circuit and sensor check
-          </>
-        )}
-      </button>
+      {/*
+        Left out where the circuit is shown for reading only. Drawn disabled it was a full-width
+        button under the map that nothing on the step could enable, and a tester (2026-10-13) asked
+        why it was there.
+      */}
+      {controlsEnabled ? (
+        <button
+          id="cardiohelp-circuit-check"
+          type="button"
+          className={styles.primaryAction}
+          disabled={state.circuit.circuitInspected}
+          data-guided-help={guidedControlId === 'cardiohelp-circuit-check'}
+          onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
+        >
+          {state.circuit.circuitInspected ? (
+            <>
+              <CheckCircle2 aria-hidden="true" /> Tip-to-tip check documented
+            </>
+          ) : (
+            <>
+              <Inspect aria-hidden="true" /> Perform tip-to-tip circuit and sensor check
+            </>
+          )}
+        </button>
+      ) : null}
       {state.circuit.circuitInspected ? (
         <div className={styles.inspectionFeedback} role="status" aria-live="polite">
           <CheckCircle2 aria-hidden="true" />
@@ -1538,10 +1604,15 @@ export function PatientMonitor({
   state,
   guidedTarget,
   guidedControlId,
-}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
+  emphasis,
+}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'> & {
+  /** The reading a teaching step is about, highlighted in the map's yellow. */
+  readonly emphasis?: 'map'
+}) {
   const limbStoryDriven =
     state.scenario.activeFaults.includes('distal-limb-ischemia') ||
     state.scenario.correctedFaults.includes('distal-limb-ischemia')
+  const { differentialResponse } = state.scenario
   return (
     <section
       id="cardiohelp-patient-monitor"
@@ -1563,6 +1634,11 @@ export function PatientMonitor({
           <h2 id="patient-monitor-heading">Bedside monitor & blood gas</h2>
         </div>
       </div>
+      {/*
+        The arterial line, on VA support, where the monitor already reports pulse pressure and
+        aortic-valve opening. Above the readings, as it sits on a bedside monitor.
+      */}
+      {state.supportMode === 'va' ? <ArterialPressureTrace patient={state.patient} /> : null}
       <div className={styles.patientGrid}>
         {state.supportMode === 'va' ? (
           <>
@@ -1625,7 +1701,7 @@ export function PatientMonitor({
               : 'Not modeled: held at the value the case set.'}
           </small>
         </div>
-        <div>
+        <div data-patient-signal="map" data-emphasis={emphasis === 'map' || undefined}>
           <span>MAP</span>
           <strong>{state.patient.meanArterialPressure} mmHg</strong>
         </div>
@@ -1692,6 +1768,40 @@ export function PatientMonitor({
               <span>Pulmonary congestion</span>
               <strong>{state.patient.pulmonaryCongestion}</strong>
             </div>
+            {state.scenario.inotropeRunning ? (
+              <div data-lv-treatment="inotrope">
+                <span>Inotrope</span>
+                <strong>Running</strong>
+              </div>
+            ) : null}
+            {state.scenario.correctedFaults.includes('lv-loading') ? (
+              <div data-lv-treatment="planned">
+                <span>Volume removal and vent</span>
+                <strong>Planned, not carried out</strong>
+              </div>
+            ) : null}
+            {differentialResponse?.rightRadialGas ? (
+              <div data-differential-response="right-radial-gas">
+                <span>Right radial gas</span>
+                <strong>
+                  SaO₂ {differentialResponse.rightRadialGas.saturation.toFixed(1)}% at{' '}
+                  {differentialResponse.rightRadialGas.drawnAt} s
+                </strong>
+              </div>
+            ) : null}
+            {differentialResponse?.ventilatorRaised ? (
+              <div data-differential-response="ventilator">
+                <span>Ventilator FiO₂ and PEEP</span>
+                <strong>Raised</strong>
+              </div>
+            ) : null}
+            {differentialResponse &&
+            state.scenario.correctedFaults.includes('differential-hypoxemia') ? (
+              <div data-differential-response="planned">
+                <span>Lung cause, V-AV or VV</span>
+                <strong>Planned, not carried out</strong>
+              </div>
+            ) : null}
             {state.scenario.clinical ? (
               <div data-alert={state.patient.distalLimbPerfusion !== 'normal'}>
                 <span>Cannulated-limb perfusion</span>

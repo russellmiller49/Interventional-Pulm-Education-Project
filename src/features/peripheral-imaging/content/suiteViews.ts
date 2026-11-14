@@ -35,7 +35,10 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
   geometry: [
     { input: 'orbit', control: 'orbit' },
     { input: 'tilt', control: 'tilt' },
+    { input: 'wedgeDeg', control: 'wedge' },
     { input: 'toolDepth', control: 'depth' },
+    { input: 'airwayShow', control: 'airways' },
+    { input: 'airwayNames', control: 'airwayNames' },
     { input: 'fieldPercent', control: 'field' },
     { input: 'crop', control: 'crop' },
     { input: 'cropWidth', control: 'cropWidth' },
@@ -54,6 +57,7 @@ const bindingsFor: Readonly<Record<LabId, readonly SuiteBinding[]>> = {
   ],
   dts: [
     { input: 'sweepDeg', control: 'sweep' },
+    { input: 'sweepCenterDeg', control: 'sweepCenter' },
     { input: 'planeDepth', control: 'plane' },
   ],
   acquisition: [
@@ -160,21 +164,38 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     layers: [...ANATOMY, 'table', 'fieldGenerator', 'labels', 'monitor'],
     readouts: ['storedShiftMm', 'currentShiftMm', 'contourStale'],
   }),
+  'airway-anatomy': view('airway-anatomy', {
+    mode: 'projection',
+    litStop: 'patient',
+    // Close on the chest from the patient's left and in front: front and back are apart in this
+    // view, so a bronchus the frontal image draws short is seen at its length.
+    camera: 'target',
+    layers: [...ANATOMY, ...SUITE, 'monitor'],
+    // The section is about the anatomy; no tool is in the airway yet.
+    defaults: { showTool: false },
+    controls: ['airways', 'airwayNames'],
+    readouts: ['airwaysDrawn', 'airwayShortest'],
+  }),
   projection: view('projection', {
     mode: 'projection',
     litStop: 'beam',
-    camera: 'beam',
+    // From the head of the table: obliquity is the C-arm swinging round the patient, toward the
+    // side the lesson's hand-on-the-chest rule names. The beam's own view stays one press away.
+    camera: 'head',
     layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: ['separationMm', 'depthMm'],
+    // The anatomy readout sits second so that, with the two controls, it stays above the action bar.
+    readouts: ['separationMm', 'rayCrosses', 'depthMm'],
   }),
   signal: view('signal', {
     mode: 'signal',
     litStop: 'patient',
-    camera: 'beam',
+    // The coloured path through the nodule is a line from tube to detector; seen along the beam it
+    // would be a point, so this section opens across it.
+    camera: 'head',
     layers: [...ANATOMY, 'Ribs and spine', ...SUITE, 'ray', 'monitor'],
     controls: ['orbit', 'tilt'],
-    readouts: [],
+    readouts: ['rayCrosses'],
     defaults: { toolDepth: 0 },
   }),
   field: view('field', {
@@ -182,7 +203,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     litStop: 'beam',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
-    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    readouts: ['irradiatedAreaPct', 'contextRetained', 'spineInField', 'zoomAddsExposure'],
     defaults: { orbit: 25, toolDepth: 12 },
   }),
   time: view('time', {
@@ -196,7 +217,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   'two-dimensional': view('two-dimensional', {
     mode: 'projection',
     controls: ['orbit', 'tilt', 'field', 'crop', 'cropWidth', 'zoom'],
-    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    readouts: ['rayCrosses', 'irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
     litStop: 'display',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
@@ -207,7 +228,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
     animation: { kind: 'sweep', autoplay: true, loop: false },
-    readouts: ['sweepDeg', 'planeMm'],
+    controls: ['sweep', 'plane', 'planeTool', 'planeLesion', 'planeDeeper'],
+    readouts: ['sweepDeg', 'planeMm', 'rayCrossesAtCentre'],
   }),
   'dts-interpretation': view('dts-interpretation', {
     mode: 'dts-prior',
@@ -234,7 +256,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     layers: [...ANATOMY, ...SUITE, 'fov', 'monitor'],
     variant: 'fixed',
     animation: { kind: 'orbit', autoplay: false, loop: false },
-    readouts: ['centered', 'ready', 'captured'],
+    // This section sets up and moves; the readiness checks and the capture are Section 12's.
+    readouts: ['centered'],
   }),
   'mobile-suite': view('mobile-suite', {
     mode: 'cbct',
@@ -243,7 +266,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     layers: [...ANATOMY, ...SUITE, 'fov', 'monitor'],
     variant: 'mobile',
     animation: { kind: 'orbit', autoplay: false, loop: false },
-    readouts: ['centered', 'ready', 'captured'],
+    // This section sets up and moves; the readiness checks and the capture are Section 12's.
+    readouts: ['centered'],
   }),
   'tool-confirmation': view('tool-confirmation', {
     mode: 'sampling',
@@ -277,7 +301,10 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     mode: 'projection',
     litStop: 'display',
     camera: 'suite',
-    layers: [...ANATOMY, ...SUITE, 'monitor'],
+    layers: [...ANATOMY, ...SUITE, 'ray', 'monitor'],
+    controls: ['wedge', 'orbit', 'tilt', 'field', 'zoom'],
+    // Five controls already fill the dock; the anatomy readout comes first so it stays in view.
+    readouts: ['rayCrosses', 'viewObliquityDeg', 'contextRetained'],
   }),
 }
 
@@ -286,6 +313,8 @@ export interface SuiteViewOverrides {
   readonly camera?: SuiteViewSpec['camera']
   readonly controls?: readonly string[]
   readonly readouts?: readonly LabMetricId[]
+  /** Inputs no control is bound to, for this step only: the tool hidden, for one. */
+  readonly defaults?: SuiteViewSpec['defaults']
   readonly chainAnswer?: boolean
   readonly autoplay?: boolean
 }
@@ -307,6 +336,7 @@ export function suiteViewForStep(
     camera: overrides.camera ?? base.camera,
     controls: overrides.controls ?? base.controls,
     readouts: overrides.readouts ?? base.readouts,
+    defaults: overrides.defaults ? { ...base.defaults, ...overrides.defaults } : base.defaults,
     chainAnswer: overrides.chainAnswer ?? false,
     animation:
       base.animation && overrides.autoplay !== undefined

@@ -48,6 +48,8 @@ export const reviewSchema = z.object({
 })
 export type FeedbackEntry = {
   id: string
+  /** The sender's account; returned to the admin workspace, absent from older exports. */
+  user_id?: string | null
   module_id: string
   page_path: string
   comment: string

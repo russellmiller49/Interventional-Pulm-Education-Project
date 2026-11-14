@@ -9,8 +9,9 @@ import {
   writeCriticalCareProgress,
 } from '@/features/learning-module/activity/progress'
 import { BranchTracingOverview } from '../components/BranchTracingOverview'
-import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
-import { NAV_LESSONS } from '../content/nav-lessons'
+import { METHOD_STEPS } from '../content/course-guide'
+import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
+import { ALL_LESSONS, NAV_LESSONS, ORIENTATION_CHECK } from '../content/nav-lessons'
 import { NAV_STORAGE_KEY } from '../engine/nav-storage'
 import {
   emptySelfPacedRecord,
@@ -73,7 +74,11 @@ function expectNoGradeWording(root: HTMLElement) {
 
 describe('self-paced record', () => {
   it('stores only declared place fields, writes idempotently and never overwrites an unreadable value', () => {
-    expect([FIRST, SECOND, THIRD]).toEqual(['carina-orientation', 'two-levels', 'middle-lobe-flat'])
+    expect([FIRST, SECOND, THIRD]).toEqual([
+      'start-at-the-lesion',
+      'stand-at-the-ostium',
+      'nested-arcs',
+    ])
     expect(readSelfPacedRecord(localStorage).status).toBe('empty')
     expect(recordLessonOpened(FIRST, localStorage)).toBe(true)
     const once = localStorage.getItem(SELF_PACED_STORAGE_KEY)
@@ -226,11 +231,14 @@ describe('storage boundary', () => {
       )
   it('no course source writes the shared activity envelope, imports the legacy readers, or writes storage outside the declared owners', () => {
     // Each file that writes to this device, and the one key it writes: the course place, the
-    // place within a trip, and whether the bench's primer has been seen. Nothing else is stored.
+    // place within a trip, whether the bench's primer has been seen, how the drive runs, and what
+    // happened the last time each whole lesion was reached. Nothing else is stored.
     const writers: Record<string, string> = {
       'engine/selfPacedProgress.ts': 'SELF_PACED_STORAGE_KEY',
       'engine/nav-storage.ts': 'NAV_STORAGE_KEY',
       'components/NavigationBench.tsx': 'PRIMER_SEEN_KEY',
+      'engine/prefs-storage.ts': 'PREFS_STORAGE_KEY',
+      'engine/results-storage.ts': 'RESULTS_STORAGE_KEY',
     }
     const files = sourceFiles(featureRoot)
     expect(files.length).toBeGreaterThan(20)
@@ -257,10 +265,12 @@ describe('storage boundary', () => {
       keys.push(text.match(new RegExp(`export const ${writers[rel]} = '([^']+)'`))![1])
     }
     expect(found.sort()).toEqual(Object.keys(writers).sort())
-    // Three keys, each the module's own.
+    // Five keys, each the module's own.
     expect(keys.sort()).toEqual([
-      'branch-tracing.nav-v1',
+      'branch-tracing.nav-v2',
+      'branch-tracing.prefs-v1',
       'branch-tracing.primer-seen-v1',
+      'branch-tracing.results-v1',
       'branch-tracing.self-paced-v1',
     ])
     expect(keys).toContain(NAV_STORAGE_KEY)
@@ -269,19 +279,46 @@ describe('storage boundary', () => {
 })
 
 describe('Overview', () => {
-  it('opens every lesson, starts at lesson 1, cites the named source and shows no grade', async () => {
+  it('opens every lesson, starts at the optional check with planning one link away, cites the named source and shows no grade', async () => {
     const { container } = render(<BranchTracingOverview />)
-    const start = await screen.findByRole('link', { name: 'Start lesson 1' })
-    expect(start).toHaveAttribute('href', lessonHref(FIRST))
+    const start = await screen.findByRole('link', { name: 'Start with the orientation check' })
+    expect(start).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
+    // The check is on nobody's way: lesson 1, planning, is one link from the start button.
+    expect(screen.getByRole('link', { name: 'Skip to planning: lesson 1' })).toHaveAttribute(
+      'href',
+      lessonHref(FIRST),
+    )
+    expect(container.querySelector('[data-skip-check]')!.textContent).toMatch(/It is optional\./)
     expect(lessonHref(FIRST)).toBe(`${BASE_PATH}/learn?lesson=${FIRST}`)
-    for (const lesson of NAV_LESSONS) {
+    // How the drive runs is one choice, off by default: the central airways are flown through.
+    const everyFork = container.querySelector('[data-cruise-choice] input') as HTMLInputElement
+    expect(everyFork.checked).toBe(false)
+    for (const lesson of ALL_LESSONS) {
       const link = Array.from(container.querySelectorAll('[data-lesson-group] a')).find(
         (a) => a.getAttribute('href') === lessonHref(lesson.id),
       )
       expect([lesson.id, link?.textContent]).toEqual([lesson.id, lesson.title])
     }
-    expect(container.querySelectorAll('[data-lesson-group] a')).toHaveLength(NAV_LESSONS.length)
+    expect(container.querySelectorAll('[data-lesson-group] a')).toHaveLength(ALL_LESSONS.length)
+    // The numbered course is the seven lessons; the check and the refreshers carry no number.
+    expect(
+      Array.from(container.querySelectorAll('[data-lesson-group] li > span:first-child')).map(
+        (cell) => cell.textContent,
+      ),
+    ).toEqual(['·', '01', '02', '03', '04', '05', '06', '07', '·', '·'])
     expect(screen.getByRole('link', { name: SOURCE.title })).toHaveAttribute('href', SOURCE.url)
+    expect(screen.getByRole('link', { name: METHOD_SOURCE.title })).toHaveAttribute(
+      'href',
+      METHOD_SOURCE.url,
+    )
+    // The method's steps are listed in order, each with what it asks for.
+    const steps = Array.from(container.querySelectorAll('[data-method-steps] li'))
+    expect(steps.map((li) => li.textContent)).toEqual(
+      METHOD_STEPS.map((step) => `${step.name}. ${step.what}`),
+    )
+    // The earlier course's fork-pattern tags are gone from the lesson list.
+    expect(container.querySelector('[data-lesson-group]')!.textContent).not.toMatch(/Pattern:/)
+    expect(container.textContent).not.toMatch(/fork patterns?/i)
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'))
     expect(hrefs).toContain(`${BASE_PATH}/practice`)
     expect(hrefs).toContain(`${BASE_PATH}/assess`)
@@ -309,8 +346,18 @@ describe('Overview', () => {
     const bytes = localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)
     expect(bytes).not.toBeNull()
     render(<BranchTracingOverview />)
-    expect(await screen.findByRole('link', { name: 'Start lesson 1' })).toBeVisible()
+    expect(
+      await screen.findByRole('link', { name: 'Start with the orientation check' }),
+    ).toBeVisible()
     expect(screen.queryByText('Reached the end')).toBeNull()
+    // The check, once opened and not finished, is where the course resumes.
+    act(() => {
+      recordLessonOpened(ORIENTATION_CHECK.id)
+    })
+    expect(
+      screen.getByRole('link', { name: `Resume: ${ORIENTATION_CHECK.title}` }),
+    ).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
+    expect(screen.queryByRole('link', { name: 'Skip to planning: lesson 1' })).toBeNull()
     act(() => {
       recordLessonOpened(FIRST)
       setLessonReviewed(FIRST, true)
@@ -333,10 +380,9 @@ describe('Overview', () => {
   it('leaves a saved place it cannot read untouched, and still opens the course', async () => {
     localStorage.setItem(SELF_PACED_STORAGE_KEY, '{"version":2}')
     render(<BranchTracingOverview />)
-    expect(await screen.findByRole('link', { name: 'Start lesson 1' })).toHaveAttribute(
-      'href',
-      lessonHref(FIRST),
-    )
+    expect(
+      await screen.findByRole('link', { name: 'Start with the orientation check' }),
+    ).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
     expect(localStorage.getItem(SELF_PACED_STORAGE_KEY)).toBe('{"version":2}')
   })
 })

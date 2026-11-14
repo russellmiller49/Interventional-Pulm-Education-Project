@@ -9,9 +9,9 @@ type Edge = { id: number; startNodeId: number; endNodeId: number; pointsLps: num
 const graph: { edges: Edge[] } = JSON.parse(source.toString())
 const edges = new Map(graph.edges.map((e) => [e.id, e]))
 
-test('all 17 routes include every fork from the trachea, every actual sibling, and the separate distal approach', () => {
+test('all 22 routes include every fork from the trachea, every actual sibling, and the separate distal approach', () => {
   expect(createHash('sha256').update(source).digest('hex')).toBe(decisions.sourceGraphSha256)
-  expect(CT_TRACES).toHaveLength(17)
+  expect(CT_TRACES).toHaveLength(22)
   for (const trace of CT_TRACES) {
     const ancestors: number[] = []
     let edge: Edge | undefined = edges.get(trace.sourceEdgeIds.at(-1)!)
@@ -76,8 +76,8 @@ test('every division of a route is the same division on every route that passes 
       expect(point.id).toBe(`junction-${point.decision.nodeId}`)
     }
   // 128 forks along 17 routes are 57 distinct divisions: 56 bifurcations and one trifurcation.
-  expect(CT_TRACES.flatMap((t) => t.checkpoints.filter((p) => p.decision))).toHaveLength(128)
-  expect(byId.size).toBe(57)
+  expect(CT_TRACES.flatMap((t) => t.checkpoints.filter((p) => p.decision))).toHaveLength(164)
+  expect(byId.size).toBe(71)
   expect(
     [...byId.values()]
       .map((signature) => JSON.parse(signature).options.length)

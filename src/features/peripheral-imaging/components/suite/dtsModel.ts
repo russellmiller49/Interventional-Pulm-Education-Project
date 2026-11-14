@@ -1,31 +1,48 @@
 /** Parallel teaching projections are distinct from the cone-geometry orientation arc. */
-import { DTS } from '../../lib/tomosynthesis'
+import { DTS, dtsPlaneAxes, dtsSweepAngles } from '../../lib/tomosynthesis'
 import { DEFAULT_GEOMETRY, dtsShift, LESION_CENTER, type Point3 } from '../../lib/physics'
 import { add, suiteFrame } from './suiteModel'
-export function dtsArc(sweep: number, geometry = DEFAULT_GEOMETRY) {
-  return Array.from({ length: DTS.viewsPerSweep }, (_, i) => {
-    const angle = -sweep / 2 + (sweep * i) / (DTS.viewsPerSweep - 1)
-    return { angle, source: suiteFrame(angle, 0, geometry).source }
-  })
+export function dtsArc(sweep: number, geometry = DEFAULT_GEOMETRY, centre = 0) {
+  return dtsSweepAngles(sweep, centre).map((angle) => ({
+    angle,
+    source: suiteFrame(angle, 0, geometry).source,
+  }))
 }
-export function dtsPlaneQuad(depth: number): Point3[] {
+/** A point on the reconstructed plane: `across` along the image, `depth` along the beam at the centre. */
+export function dtsPlanePoint(across: number, depth: number, z: number, centre = 0): Point3 {
+  const axes = dtsPlaneAxes(centre)
+  return add(LESION_CENTER, [
+    across * axes.across[0] + depth * axes.depth[0],
+    across * axes.across[1] + depth * axes.depth[1],
+    z,
+  ])
+}
+export function dtsPlaneQuad(depth: number, centre = 0): Point3[] {
   return [
     [-70, -70],
     [70, -70],
     [70, 70],
     [-70, 70],
-  ].map(([x, z]) => add(LESION_CENTER, [x - 20, depth, z]))
+  ].map(([x, z]) => dtsPlanePoint(x - 20, depth, z, centre))
 }
 export function smearWidth(objectDepth: number, planeDepth: number, sweep: number) {
   return Math.abs(
     dtsShift(objectDepth, planeDepth, sweep / 2) - dtsShift(objectDepth, planeDepth, -sweep / 2),
   )
 }
-export function missingWedge(sweep: number) {
+export function missingWedge(sweep: number, centre = 0) {
   return [
-    [sweep / 2, 180 - sweep / 2],
-    [180 + sweep / 2, 360 - sweep / 2],
+    [centre + sweep / 2, centre + 180 - sweep / 2],
+    [centre + 180 + sweep / 2, centre + 360 - sweep / 2],
   ] as const
+}
+/**
+ * The tool tip's depth from the target's plane, along the beam at the arc's centre. The authored
+ * tool lies parallel to the frontal detector, so in a tilted plane only part of it is in focus;
+ * its tip is the point a fellow scrolls to.
+ */
+export function toolTipDepth(centre = 0) {
+  return DTS.toolPlaneRelativeMm * Math.cos((centre * Math.PI) / 180)
 }
 
 /**

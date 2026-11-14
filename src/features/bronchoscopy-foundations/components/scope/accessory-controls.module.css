@@ -1,0 +1,83 @@
+/*
+ * The tool in the working channel: where it is, what to tell the assistant, the check, and the
+ * reply under them. The buttons take the look of the dock they sit in (3D dock or DOM fallback);
+ * only the grouping and the pressed state are drawn here.
+ */
+.accessory {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 1.25rem;
+  width: 100%;
+  min-width: 0;
+  border-radius: 0.5rem;
+}
+.accessory:focus-visible,
+.group:focus-visible {
+  outline: 2px solid #9ef5e5;
+  outline-offset: 3px;
+}
+.group {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  border-radius: 0.4rem;
+}
+.groupLabel {
+  color: #b1c3d2;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.buttons button[aria-pressed='true'] {
+  color: #b2f7eb;
+  border-color: #68d7c9;
+  background: #183c42;
+  box-shadow: inset 0 0 0 1px #68d7c9;
+  font-weight: 600;
+}
+/* The check starts its own row, with the line about what it settles beside it. */
+.check {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.checkButton {
+  border-radius: 0.5rem;
+}
+.checkButton[data-spotlight='true'] {
+  outline: 2px solid #eac074;
+  outline-offset: 4px;
+}
+.note,
+.reply {
+  flex-basis: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.note {
+  color: #b1c3d2;
+  font-size: 0.78rem;
+}
+.check .note {
+  flex: 1 1 16rem;
+}
+.reply {
+  min-height: 1.9rem;
+  padding: 0.35rem 0.6rem;
+  border-left: 3px solid #75d9d0;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.reply:empty {
+  border-left-color: transparent;
+}

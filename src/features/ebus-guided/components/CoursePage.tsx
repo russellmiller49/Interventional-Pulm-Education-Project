@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import {
   BASE,
@@ -10,9 +10,12 @@ import {
   lessonHref,
 } from '../content/curriculum'
 import { legacyRecordPresent, recommendedLesson } from '../engine/selfPacedProgress'
+import { chapterReview, reviewHref } from '../content/chapter-reviews'
 import { EbusModuleFrame } from './ModuleFrame'
 import { useCourseProgress } from './useCourseProgress'
 import { StorageNotice } from './StorageNotice'
+import { StationMap } from './StationMap'
+import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import styles from './course.module.css'
 
 /**
@@ -31,6 +34,9 @@ export function CoursePage({
 }) {
   const { progress, status } = useCourseProgress()
   const [legacy, setLegacy] = useState(false)
+  // The nodal map opens from the hub too; it is the same map the lessons use.
+  const [stationsOpen, setStationsOpen] = useState(false)
+  const stationsButton = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     // The old record is browser state; its presence is read after mounting and its bytes untouched.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -95,7 +101,26 @@ export function CoursePage({
                 <Link className={styles.secondary} href={BASE + '/assess'}>
                   Integrated cases
                 </Link>
+                <button
+                  type="button"
+                  ref={stationsButton}
+                  className={styles.secondary}
+                  data-open-station-map
+                  onClick={() => setStationsOpen(true)}
+                >
+                  Station map
+                </button>
               </div>
+              <HelpDialog
+                open={stationsOpen}
+                onClose={() => setStationsOpen(false)}
+                title="Nodal station map"
+                returnFocusTo={stationsButton}
+              >
+                <div className={styles.outline} data-station-map-dialog>
+                  <StationMap inDialog />
+                </div>
+              </HelpDialog>
               <p className={styles.muted} data-course-marks>
                 {reviewed} of {LESSONS.length} lessons reviewed · {opened} opened · about{' '}
                 {remainingMinutes} estimated minutes in lessons not yet reviewed
@@ -186,6 +211,15 @@ export function CoursePage({
                     </li>
                   ))}
                 </ol>
+                {chapterReview(chapter.id) && (
+                  <p data-chapter-review-link>
+                    <Link href={reviewHref(chapter.id)}>Chapter review</Link>{' '}
+                    <span className={styles.muted}>
+                      · {chapterReview(chapter.id)!.items.length} image questions from the lessons
+                      so far
+                    </span>
+                  </p>
+                )}
               </section>
             )
           })}

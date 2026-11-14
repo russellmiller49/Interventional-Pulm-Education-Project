@@ -78,9 +78,21 @@ export type SuiteAnimationKind = 'pulse' | 'sweep' | 'orbit' | 'transducer' | 'e
  * the acquisition offsets match the lab control keys one for one.
  */
 export interface SuiteInputs {
+  /** The C-arm's own obliquity, in the room. */
   readonly orbit: number
   readonly tilt: number
+  /**
+   * The patient rolled about the long axis, left side lifted (a wedge). The scene draws the chest
+   * rolled and the gantry where the C-arm is; every projection is through the patient, at
+   * `orbit − wedgeDeg`.
+   */
+  readonly wedgeDeg: number
   readonly toolDepth: number
+  /** False where the section is about the anatomy alone: no tool is drawn on the image or in 3D. */
+  readonly showTool: boolean
+  /** The bronchi drawn from the CT, on the image and in the 3D view (`lib/airwayTree.ts`). */
+  readonly airwayShow: import('../../lib/airwayTree').AirwayShow
+  readonly airwayNames: boolean
   /** Source–isocenter, source–detector, detector field; defaults 720 / 1200 / 640 (the DRR's config). */
   readonly geometry: { readonly sod: number; readonly sid: number; readonly field: number }
   readonly fieldPercent: number
@@ -94,6 +106,8 @@ export interface SuiteInputs {
   /** Clock seconds for the time view. */
   readonly phase: number
   readonly sweepDeg: number
+  /** The C-arm obliquity at the middle of the DTS arc; 0 is a frontal arc. */
+  readonly sweepCenterDeg: number
   readonly planeDepth: number
   readonly priorLayer: 'measured' | 'prior' | 'blend'
   readonly orbitSpanDeg: number
@@ -210,8 +224,7 @@ export interface ImagingSuitePaneProps {
   readonly onLabChange: (patch: LabValues) => void
   readonly onLabReset: () => void
   readonly controlsEnabled: boolean
-  /** Printed on the scene when the controls are locked (deciding) or paused (looking back). */
-  readonly lockedReason?: string
+  /** Printed on the scene when the controls are put away because the learner is looking back. */
   readonly pausedReason?: string
   readonly goals: readonly { readonly goal: LabGoal; readonly met: boolean }[]
   /** `chainCaption(view.litStop)`, printed verbatim. */
@@ -221,6 +234,12 @@ export interface ImagingSuitePaneProps {
   readonly spotlightKey?: string
   /** Learn keeps independent geometry/answer cues separate from foundational teaching. */
   readonly independent?: boolean
+  /**
+   * The host can change the image by something other than a dock control — a demonstration with
+   * more than one example. With neither that nor a control, the monitor shows one image and offers
+   * no baseline to compare it with.
+   */
+  readonly comparable?: boolean
   readonly onRepresentationReady?: (ready: boolean) => void
   readonly children?: ReactNode
 }

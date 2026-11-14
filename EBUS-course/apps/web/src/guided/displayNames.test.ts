@@ -47,10 +47,13 @@ describe('structure names on the retained image use the course spelling', () => 
   it('keeps every id the evidence keys on', () => {
     expect(volume.labels.find((entry) => entry.key === 'azygous')).toBeTruthy()
     expect(LINKED_LANDMARKS['right-paratracheal']).toEqual([
-      'azygous',
       'superior_vena_cava',
-      'left_brachiocephalic_vein',
+      'azygous',
+      'station_4r',
     ])
+    // Every structure a lesson asks for is a label of the acoustic volume: it is found on ultrasound.
+    for (const ids of Object.values(LINKED_LANDMARKS))
+      for (const id of ids) expect(volume.labels.find((entry) => entry.key === id)).toBeTruthy()
     for (const id of Object.keys(STRUCTURE_DISPLAY_NAMES)) expect(id).toMatch(/^[a-z0-9_]+$/)
   })
 })

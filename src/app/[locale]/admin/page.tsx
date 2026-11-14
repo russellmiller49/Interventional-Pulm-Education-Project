@@ -1567,7 +1567,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href={'/socrates-builder' as Route}>SOCRATES builder</Link>
+                <Link href={'/socrates-library' as Route}>SOCRATES Library</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href={'/admin/pccm-intro-course' as Route}>All PCCM cohorts</Link>

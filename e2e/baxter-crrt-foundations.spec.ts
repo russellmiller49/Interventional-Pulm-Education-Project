@@ -1,5 +1,12 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
 
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 type SavedProgress = {
   completedLessonIds: string[]
   selfPaced: { visitedLessonIds: string[] }
@@ -73,8 +80,16 @@ const review = (page: Page) => click(page, 'Review feedback and continue')
 async function selectAll(page: Page, names: string[]) {
   for (const name of names) await click(page, name)
 }
+// Each modality button spells out its abbreviation under it (tester report, 2026-11-05), so its
+// accessible name is the abbreviation followed by the full name.
+const modalityButtons = [
+  'SCUF Slow continuous ultrafiltration',
+  'CVVH Continuous venovenous hemofiltration',
+  'CVVHD Continuous venovenous hemodialysis',
+  'CVVHDF Continuous venovenous hemodiafiltration',
+]
 async function modalityWalk(page: Page) {
-  await selectAll(page, ['SCUF', 'CVVH', 'CVVHD', 'CVVHDF'])
+  await selectAll(page, modalityButtons)
   await click(page, 'Review observations and continue')
 }
 async function answer(page: Page, name: RegExp) {
@@ -93,7 +108,9 @@ async function noOverflow(page: Page) {
   ).toBe(true)
 }
 async function toLesson(page: Page, id: string) {
-  await page.getByRole('combobox', { name: 'CRRT lesson' }).selectOption(id)
+  // The Lessons menu (the shared numbered list) replaced the lesson dropdown on 2026-11-04.
+  await page.locator('[data-sections-drawer] summary').click()
+  await page.locator(`[data-sections-drawer] button[data-section="${id}"]`).click()
 }
 
 for (const keyboardOnly of [false, true]) {
@@ -245,7 +262,9 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
   page,
 }, info) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
+  await openLessonMenu(page)
   await expect(page.getByText(/Each visit starts a fresh simulation/)).toBeVisible()
+  await page.keyboard.press('Escape')
   await next(page)
   await next(page)
   await modalityWalk(page)
@@ -271,6 +290,7 @@ test('Back/Forward, direct links, reload and repeat restart transient work and p
   await expect(
     page.getByRole('heading', { name: 'One example, one denominator, one interval' }),
   ).toBeVisible()
+  await openLessonMenu(page)
   await click(page, 'Restart lesson')
   expect((await progress(page)).learnTaskHistory).toBeUndefined()
   await screenshot(page, info, 'history-restored-boundary')
@@ -307,7 +327,7 @@ test('compact reduced-motion keyboard-only introductory journey and reflow', asy
   await screenshot(page, info, 'phone-orientation')
   await keyboardActivate('Continue')
   await keyboardActivate('Continue')
-  for (const name of ['SCUF', 'CVVH', 'CVVHD', 'CVVHDF']) await keyboardActivate(name)
+  for (const name of modalityButtons) await keyboardActivate(name)
   await screenshot(page, info, 'phone-modality-selection')
   await keyboardActivate('Review observations and continue')
   await keyboardActivate(/Solute\/acid-base support and fluid management/, 'radio')

@@ -27,6 +27,13 @@ export interface ModuleFrameV2Props {
   readonly children: ReactNode
   readonly theme?: 'light' | 'dark'
   readonly activityMode?: boolean
+  /**
+   * Lesson mode: while an activity is open, hide the site's own menu so the lesson has the whole
+   * window. The lesson's bar (Sections, Save & exit) is then the only chrome above the work, and
+   * the site menu returns on the module's overview. Opt-in per module; it does nothing outside
+   * activity mode. The rule that acts on the marker is in `src/styles/globals.css`.
+   */
+  readonly hideSiteHeader?: boolean
 }
 
 export function ModuleFrameV2({
@@ -43,6 +50,7 @@ export function ModuleFrameV2({
   children,
   theme = 'light',
   activityMode = false,
+  hideSiteHeader = false,
 }: ModuleFrameV2Props) {
   const showSponsorNotice =
     !activityMode &&
@@ -57,6 +65,7 @@ export function ModuleFrameV2({
       data-learning-module-v2-theme-root
       data-theme={theme}
       data-activity-frame={activityMode || undefined}
+      data-site-header={activityMode && hideSiteHeader ? 'hidden' : undefined}
     >
       <header className={styles.moduleHeader}>
         <div className={styles.moduleIdentity}>

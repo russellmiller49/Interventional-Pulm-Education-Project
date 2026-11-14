@@ -1,4 +1,5 @@
 import type { CtMark, CtTrace } from '../content/ct-types'
+import { astrayPath } from '../geometry/astray'
 import {
   STANDARD_ORIENTATION,
   sameOrientation,
@@ -27,10 +28,32 @@ import {
  * out is done by the bench: the CT is turned for the learner, the openings are named, the scope
  * takes the route's own branch. Every step can also be shown on request, so nothing here blocks.
  *
+ * Once the learner has shown they can turn the CT to match the scope, a plan can make that turn
+ * optional (`matchOptional`): the CT stays however the learner left it, and a check of the match
+ * is answered without holding the fork.
+ *
+ * A plan can mark its first forks as a fly-through (`cruise`): the scope drives through them
+ * without stopping, asks nothing and logs nothing as asked, and stops at the first fork that is
+ * not marked. The central airways are flown this way on a drive that follows a map: the learner
+ * knows them, and the work begins where the segment's bronchus leaves. A fly-through fork that the
+ * learner asks to stop at (`arrive` with `hold`) is an ordinary fork with its own steps.
+ *
+ * Choosing an opening that leads away from the lesion drives the scope into it, one generation,
+ * to just short of that branch's own next division (`astray-in`, `astray`). The learner backs out
+ * (`astray-out`) to the fork, where that opening is greyed.
+ *
  * Pure: the reducer reads only the route geometry and returns the same object when nothing changed.
  */
 export type NavStep = 'match' | 'identify' | 'choose'
-export type NavPhase = NavStep | 'ready' | 'drive' | 'arrived' | 'done'
+export type NavPhase =
+  | NavStep
+  | 'ready'
+  | 'drive'
+  | 'astray-in'
+  | 'astray'
+  | 'astray-out'
+  | 'arrived'
+  | 'done'
 
 export interface NavStation {
   /** Index into `trace.checkpoints`; always a checkpoint with a division. */
@@ -38,6 +61,8 @@ export interface NavStation {
   steps: readonly NavStep[]
   /** The bench demonstrates this fork: "Show me" is the main action for each step. */
   worked?: boolean
+  /** Flown through without stopping, unless the learner asks to stop here. */
+  cruise?: boolean
 }
 export interface NavPlan {
   traceId: string
@@ -45,6 +70,8 @@ export interface NavPlan {
   stations: readonly NavStation[]
   /** After the last fork, drive on to the end of the route beside the lesion. */
   arrive: boolean
+  /** Turning the CT is the learner's choice: no fork waits for it. */
+  matchOptional?: boolean
 }
 
 export interface IdentifiedMark {
@@ -66,12 +93,20 @@ export interface StationLog {
   chooseAsked: boolean
   chooseMisses: number
   chooseShown: boolean
+  /** Openings driven into that lead away from the lesion, and how many were backed out of. */
+  wrongTurns: number
+  backedOut: number
+  /** The openings driven into that led away, in the order entered. Absent in older records. */
+  away?: number[]
 }
-/** How the CT came to face the scope here: asked of the learner, already so, or turned by the bench. */
-export type MatchNote = 'asked' | 'kept' | 'set'
+/**
+ * How the CT came to face the scope here: asked of the learner, already so, turned by the bench,
+ * or left to the learner because turning it is now optional.
+ */
+export type MatchNote = 'asked' | 'kept' | 'set' | 'optional'
 
 export interface NavSession {
-  version: 1
+  version: 2
   traceId: string
   /** Index into `plan.stations`. */
   station: number
@@ -80,13 +115,17 @@ export interface NavSession {
   matchNote: MatchNote
   /** The display last checked that did not match; cleared by the next turn. */
   matchChecked: CtOrientation | null
+  /** Where turning is optional: the display last checked, and whether it matched. */
+  optionalCheck: { orientation: CtOrientation; ok: boolean } | null
   /** The opening being identified. */
   identifyOption: number
   /** By opening, in the division's own order. */
   marks: (IdentifiedMark | null)[]
-  /** Openings chosen at this fork that lead away from the lesion. */
+  /** Openings chosen at this fork that lead away from the lesion, once backed out of. */
   declined: number[]
   choice: number | null
+  /** The opening the scope is in, or on its way into or out of, that leads away. */
+  astray: number | null
   log: StationLog[]
 }
 
@@ -99,7 +138,11 @@ export type NavAction =
   | { type: 'choose'; option: number }
   | { type: 'show-choice' }
   | { type: 'drive' }
-  | { type: 'arrive' }
+  /** The scope reaches the next fork. `hold`: stop there even if it is a fly-through fork. */
+  | { type: 'arrive'; hold?: boolean }
+  | { type: 'astray-arrive' }
+  | { type: 'back-out' }
+  | { type: 'astray-return' }
   | { type: 'restart' }
 
 const emptyLog = (): StationLog => ({
@@ -112,6 +155,8 @@ const emptyLog = (): StationLog => ({
   chooseAsked: false,
   chooseMisses: 0,
   chooseShown: false,
+  wrongTurns: 0,
+  backedOut: 0,
 })
 
 export const stationCheckpoint = (trace: CtTrace, plan: NavPlan, station: number) =>
@@ -162,6 +207,21 @@ function afterMatch(plan: NavPlan, station: number): NavPhase {
 }
 const hasOnward = (plan: NavPlan, station: number) =>
   station < plan.stations.length - 1 || plan.arrive
+/** The scope is moving: nothing on the CT changes until it stops. */
+export const moving = (phase: NavPhase) =>
+  phase === 'drive' || phase === 'astray-in' || phase === 'astray-out'
+
+/** The scope is flying through this fork: it is marked for it and nothing was asked here. */
+export function flyingThrough(plan: NavPlan, state: NavSession): boolean {
+  const entry = state.log[state.station]
+  return (
+    state.phase === 'drive' &&
+    Boolean(plan.stations[state.station]?.cruise) &&
+    !entry?.matchAsked &&
+    !entry?.identifyAsked &&
+    !entry?.chooseAsked
+  )
+}
 
 function enterStation(
   trace: CtTrace,
@@ -169,26 +229,50 @@ function enterStation(
   station: number,
   orientation: CtOrientation,
   log: StationLog[],
+  hold = false,
 ): NavSession {
   const planned = plan.stations[station]
   const checkpoint = trace.checkpoints[planned.checkpointIndex]
   const match = stationMatch(trace, planned.checkpointIndex)
   const options = checkpoint.decision?.options.length ?? 0
   const base = {
-    version: 1 as const,
+    version: 2 as const,
     traceId: trace.id,
     station,
     matchChecked: null,
+    optionalCheck: null,
     identifyOption: 0,
     marks: Array.from({ length: options }, () => null),
     declined: [],
     choice: null,
+    astray: null,
+  }
+  // A fly-through fork is passed without stopping: the scope takes the route's own branch, and
+  // the fork's log holds nothing asked, so it never counts toward a first-try tally.
+  if (planned.cruise && !hold && hasOnward(plan, station)) {
+    const kept = !match || isAccepted(match, orientation)
+    return {
+      ...base,
+      phase: 'drive',
+      orientation:
+        plan.matchOptional || !match ? orientation : benchOrientation(match, orientation),
+      matchNote: plan.matchOptional ? 'optional' : kept ? 'kept' : 'set',
+      log: withLog(log, station, {}),
+    }
   }
   const asks = planned.steps
   const startLog = withLog(log, station, {
     identifyAsked: asks.includes('identify'),
     chooseAsked: asks.includes('choose'),
   })
+  if (plan.matchOptional && asks.includes('match'))
+    return {
+      ...base,
+      phase: afterMatch(plan, station),
+      orientation,
+      matchNote: 'optional',
+      log: startLog,
+    }
   if (match && asks.includes('match') && matchable(match) && !isAccepted(match, orientation))
     return {
       ...base,
@@ -230,15 +314,35 @@ export function navReducer(trace: CtTrace, plan: NavPlan) {
     switch (action.type) {
       case 'turn': {
         // The CT can be turned at any time except while the scope is moving.
-        if (state.phase === 'drive') return state
+        if (moving(state.phase)) return state
         const orientation = turnCt(state.orientation, action.operation)
-        if (sameOrientation(orientation, state.orientation) && !state.matchChecked) return state
-        return { ...state, orientation, matchChecked: null }
+        if (
+          sameOrientation(orientation, state.orientation) &&
+          !state.matchChecked &&
+          !state.optionalCheck
+        )
+          return state
+        return { ...state, orientation, matchChecked: null, optionalCheck: null }
       }
       case 'check-match': {
-        if (state.phase !== 'match') return state
         const match = stationMatch(trace, checkpointIndex)
         if (!match) return state
+        if (state.phase !== 'match') {
+          // Turning is optional here: answer the check, and hold nothing.
+          if (state.matchNote !== 'optional' || moving(state.phase)) return state
+          if (
+            state.optionalCheck &&
+            sameOrientation(state.optionalCheck.orientation, state.orientation)
+          )
+            return state
+          return {
+            ...state,
+            optionalCheck: {
+              orientation: state.orientation,
+              ok: isAccepted(match, state.orientation),
+            },
+          }
+        }
         if (isAccepted(match, state.orientation))
           return { ...state, phase: afterMatch(plan, state.station), matchChecked: null }
         if (state.matchChecked && sameOrientation(state.matchChecked, state.orientation))
@@ -307,10 +411,36 @@ export function navReducer(trace: CtTrace, plan: NavPlan) {
             phase: hasOnward(plan, state.station) ? 'ready' : 'done',
           }
         if (state.declined.includes(action.option)) return state
+        // Into the branch that leads away, where it has a centreline; refused at the fork if not.
+        if (astrayPath(trace, checkpointIndex, action.option))
+          return {
+            ...state,
+            phase: 'astray-in',
+            astray: action.option,
+            log: log({
+              chooseMisses: here.chooseMisses + 1,
+              wrongTurns: here.wrongTurns + 1,
+              away: [...(here.away ?? []), action.option],
+            }),
+          }
         return {
           ...state,
           declined: [...state.declined, action.option],
           log: log({ chooseMisses: here.chooseMisses + 1 }),
+        }
+      }
+      case 'astray-arrive':
+        return state.phase === 'astray-in' ? { ...state, phase: 'astray' } : state
+      case 'back-out':
+        return state.phase === 'astray' ? { ...state, phase: 'astray-out' } : state
+      case 'astray-return': {
+        if (state.phase !== 'astray-out' || state.astray === null) return state
+        return {
+          ...state,
+          phase: 'choose',
+          declined: [...state.declined, state.astray],
+          astray: null,
+          log: log({ backedOut: here.backedOut + 1 }),
         }
       }
       case 'show-choice': {
@@ -327,7 +457,14 @@ export function navReducer(trace: CtTrace, plan: NavPlan) {
       case 'arrive': {
         if (state.phase !== 'drive') return state
         if (state.station < plan.stations.length - 1)
-          return enterStation(trace, plan, state.station + 1, state.orientation, state.log)
+          return enterStation(
+            trace,
+            plan,
+            state.station + 1,
+            state.orientation,
+            state.log,
+            Boolean(action.hold),
+          )
         return { ...state, phase: 'arrived' }
       }
     }
@@ -344,6 +481,9 @@ export interface NavSummary {
   match: { asked: number; firstTry: number }
   identify: { asked: number; firstTry: number }
   choose: { asked: number; firstTry: number }
+  /** Branches driven into that lead away, and how many of them were backed out of. */
+  wrongTurns: number
+  backedOut: number
   /** The fork that took the most tries, when any took more than one. */
   slowest: { station: number; tries: number } | null
 }
@@ -372,6 +512,8 @@ export function summarize(session: NavSession): NavSummary {
       (l) => l.chooseAsked,
       (l) => !l.chooseMisses && !l.chooseShown,
     ),
+    wrongTurns: session.log.reduce((sum, l) => sum + l.wrongTurns, 0),
+    backedOut: session.log.reduce((sum, l) => sum + l.backedOut, 0),
     slowest,
   }
 }

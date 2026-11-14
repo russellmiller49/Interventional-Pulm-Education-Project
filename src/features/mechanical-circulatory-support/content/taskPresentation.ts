@@ -8,6 +8,8 @@ export type McsPresentationKind =
   | 'unloading-comparison'
   | 'parameter-reader'
   | 'patient-case'
+  /** The section's last task: its paired case, which brings its own monitor, controls and clock. */
+  | 'section-case'
 
 /** Renderer metadata only. No patient, scoring, clock, or progress state lives here. */
 const sections: Readonly<Record<string, McsPresentationKind>> = {
@@ -30,6 +32,7 @@ export function mcsTaskPresentation(
     return 'unloading-comparison'
   const kind = sections[sectionId]
   if (!kind) throw new Error(`Missing MCS presentation: ${sectionId}`)
+  if (interaction.kind === 'case') return 'section-case'
   if (interaction.kind === 'transfer') return 'patient-case'
   if (interaction.kind === 'walk') return 'circulation-reader'
   if (sectionId === 'iabp-efficacy-limits' && interaction.kind === 'identify') return 'timing-lab'
@@ -38,5 +41,35 @@ export function mcsTaskPresentation(
   return kind
 }
 
-/** Deployment rollback changes the host presentation only; the same reducer and content remain. */
-export const MCS_TASK_PRESENTATIONS_ENABLED = true
+/**
+ * The picture a task opens on.
+ *
+ * Every task has one, so the simulator pane is never a column of folded disclosures beside a text
+ * that talks about a device. The timing lab leads with its timing figure and the tasks read on
+ * the loop lead with the circulation map, as before. The rest (a task about a patient on a
+ * device, the controller's readings, the three pathways) used to open on numbers alone or on
+ * nothing; they lead with the heart and the device in three dimensions. The unloading comparison
+ * is its own full-width figure and has no simulator pane. Nor has the section's closing case: it
+ * runs on its own monitor and console inside the task card.
+ *
+ * It mirrors the pane's own rule for where the map leads, so the two cannot disagree.
+ */
+export type McsLeadVisual = 'comparison' | 'timing' | 'map' | 'anatomy' | 'case'
+
+export function mcsLeadVisual(
+  presentation: McsPresentationKind,
+  interaction: McsStageInteraction,
+): McsLeadVisual {
+  if (presentation === 'unloading-comparison') return 'comparison'
+  if (presentation === 'section-case') return 'case'
+  if (presentation === 'timing-lab') return 'timing'
+  const teaching = interaction.kind === 'teaching' || interaction.kind === 'walk'
+  if (
+    presentation === 'circulation-reader' ||
+    presentation === 'pump-loading-lab' ||
+    (presentation === 'mechanism-comparison' && !teaching) ||
+    (interaction.kind === 'identify' && interaction.onMap)
+  )
+    return 'map'
+  return 'anatomy'
+}

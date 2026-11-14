@@ -26,3 +26,10 @@ export {
   type StageBlockVisibility,
 } from './StageTeachingScope'
 export { StageBlock } from './StageBlock'
+export { FlowContent } from './FlowContent'
+export {
+  FitWidthSurface,
+  fitWidthScale,
+  type FitWidthMetrics,
+  type FitWidthMode,
+} from './FitWidthSurface'

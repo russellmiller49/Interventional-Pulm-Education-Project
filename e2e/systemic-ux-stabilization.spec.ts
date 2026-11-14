@@ -11,19 +11,23 @@ const variants = [
 ]
 const scrollRoutes = [
   {
+    // A CRRT Practice case scrolls the document. (A CRRT lesson did until 2026-11-12; it is the
+    // last row now.) This row stays first: the document-ownership test below opens it by index.
     id: 'crrt',
-    route: '/en/baxter-crrt/learn?lesson=crrt-indications-modality',
+    route: '/en/baxter-crrt/practice?case=CRRT-01',
     owner: 'document',
   },
   {
+    // Text and console panes that scroll on their own on a desktop (owner, 2026-10-15).
     id: 'mv',
     route: '/en/mechanical-ventilation/learn?activity=ventilation-and-co2',
-    owner: 'document',
+    owner: 'workspace',
   },
   {
+    // The same text-and-simulator workspace as mechanical ventilation and hemodynamics (2026-10-17).
     id: 'mcs',
     route: '/en/mechanical-circulatory-support/learn?lesson=iabp-timing-triggering',
-    owner: 'document',
+    owner: 'workspace',
   },
   {
     id: 'bbt',
@@ -33,6 +37,12 @@ const scrollRoutes = [
   {
     id: 'ecmo',
     route: '/en/cardiohelp-ecmo/learn?track=vv&lesson=why-extracorporeal-support',
+    owner: 'workspace',
+  },
+  {
+    // The same text-and-picture workspace as the other critical care lessons (2026-11-12).
+    id: 'crrt-learn',
+    route: '/en/baxter-crrt/learn?lesson=crrt-indications-modality',
     owner: 'workspace',
   },
 ] as const
@@ -339,6 +349,8 @@ async function nativeWorkspaceScroll(page: Page) {
     elements.findIndex((el) => {
       const r = el.getBoundingClientRect()
       return (
+        // A closed disclosure's content keeps a layout box in Chrome; it is not on screen.
+        !el.closest('details:not([open])') &&
         ['auto', 'scroll'].includes(getComputedStyle(el).overflowY) &&
         el.scrollHeight > el.clientHeight + 80 &&
         r.height > 100 &&

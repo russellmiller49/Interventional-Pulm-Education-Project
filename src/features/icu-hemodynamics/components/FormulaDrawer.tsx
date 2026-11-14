@@ -6,10 +6,13 @@ import {
   HEMODYNAMIC_CLINICAL_THRESHOLDS,
   hemodynamicDerivedValueGuides,
   hemodynamicDerivedValueIds,
+  requireDerivedInputDefinition,
   type DerivedValueGuide,
 } from '../content'
 import {
   calculateDerivedHemodynamics,
+  faultsWithStoredWedge,
+  pressureSignalFaults,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type InterpretationValue,
@@ -37,14 +40,13 @@ function DerivedValue({
   return (
     <>
       {value.status === 'not-interpretable' ? (
-        <span className={styles.notInterpretable} title={value.reason}>
-          Not interpretable
-        </span>
+        <span className={styles.notInterpretable}>Not interpretable</span>
       ) : (
         <strong>
           {value.value} <small>{value.unit}</small>
         </strong>
       )}
+      {value.reason ? <p>{value.reason}</p> : null}
       <dl>
         <div>
           <dt>How to read it</dt>
@@ -84,6 +86,16 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
       ? `the stored wedge was read ${physiologicalEpisodeWords(storedWedge.episode)}`
       : null,
   ].filter((item): item is string => item !== null)
+  /*
+   * The wedge in use is a stored number, so it answers to the signal it was read from. Every other
+   * pressure is read now and answers to the line as it stands.
+   */
+  const liveFaults = pressureSignalFaults(state.measurementSystem)
+  const storedWedgeFaults = storedWedge?.record?.signalFaults
+  const signalFaults =
+    observedInputsOnly && storedWedgeFaults
+      ? faultsWithStoredWedge(liveFaults, storedWedgeFaults)
+      : liveFaults
   const derived = calculateDerivedHemodynamics({
     measurements: observedInputsOnly
       ? {
@@ -93,7 +105,7 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
         }
       : state.measurements,
     bodySurfaceAreaM2: state.parameters.bodySurfaceAreaM2,
-    inputsStale: !state.measurementSystem.zeroed || state.measurementSystem.artifact !== 'none',
+    signalFaults,
     ppvContext: {
       controlledMechanicalVentilation: state.parameters.spontaneousBreathingFraction === 0,
       regularRhythm:
@@ -102,12 +114,16 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
       noSpontaneousEffort: state.parameters.spontaneousBreathingFraction === 0,
       tidalVolumeMlKg: 8,
       closedChest: true,
-      validArterialWaveform:
-        state.measurementSystem.zeroed && state.measurementSystem.artifact === 'none',
+      validArterialWaveform: !signalFaults.some((fault) =>
+        fault.inputIds.includes('pulsePressureMaxMmHg'),
+      ),
       rightVentricularFailure: state.parameters.rightVentricularContractility < 0.6,
       intraAbdominalPressureElevated: false,
     },
   })
+  const stillAvailable = hemodynamicDerivedValueIds.filter(
+    (key) => derived[key].status === 'interpretable',
+  )
 
   return (
     <details className={styles.formulaDrawer}>
@@ -117,8 +133,8 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
           {observedInputsOnly
             ? 'Flow-dependent results use the accepted thermodilution series for the current conditions; wedge-dependent results require a value stored under those conditions. The other pressures are the simulation’s current estimates. '
             : 'Every value is calculated from the simulation’s current estimates. '}
-          Stale, unzeroed, artifact-contaminated, or physiologically invalid inputs remain
-          explicitly uninterpretable.
+          A result appears only when every measurement it needs is reliable. A fault withholds the
+          results that depend on it and leaves the others.
         </p>
         {observedInputsOnly && staleInputs.length > 0 ? (
           <p data-derived-stale-inputs>
@@ -129,6 +145,25 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
         ) : null}
         <span>Current BSA: {state.parameters.bodySurfaceAreaM2.toFixed(2)} m²</span>
       </div>
+      {signalFaults.length > 0 ? (
+        <div className={styles.formulaFaults} data-derived-signal-faults>
+          {signalFaults.map((fault) => (
+            <p key={fault.id}>
+              {fault.reason} Affects:{' '}
+              {fault.inputIds
+                .map((inputId) => requireDerivedInputDefinition(inputId).label)
+                .join(', ')}
+              .
+            </p>
+          ))}
+          {stillAvailable.length > 0 ? (
+            <p>
+              Still available, because they need none of these measurements:{' '}
+              {stillAvailable.map((key) => hemodynamicDerivedValueGuides[key].label).join(', ')}.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles.formulaGrid}>
         {hemodynamicDerivedValueIds.map((key) => {
           const result = derived[key]
@@ -140,7 +175,6 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
                 <code>{guide.formula}</code>
               </div>
               <DerivedValue value={result} guide={guide} />
-              {result.reason && <p>{result.reason}</p>}
             </article>
           )
         })}

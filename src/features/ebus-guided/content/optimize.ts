@@ -180,7 +180,7 @@ export const optimizeLessons: Lesson[] = [
     id: 'doppler',
     title: 'Doppler and the intended needle path',
     topic: 'Optimize',
-    minutes: 7,
+    minutes: 9,
     objective:
       'Use Doppler as part of a vascular-path assessment without treating absent color as proof of safety.',
     recall:

@@ -9,7 +9,6 @@ import { EcmoLocalizationCard } from './EcmoLocalizationCard'
 import { EcmoCircuitPressureReference } from './EcmoReferenceValues'
 import {
   ChannelValue,
-  CircuitPressureIdentity,
   FoundationTeachingBlock,
   VaConfigurationLabel,
   GuidedValue,
@@ -86,8 +85,7 @@ export function PumpPressureZonesPanel({
               resistance changes.
             </p>
             <p className="mt-2 text-sm leading-6">
-              This reference is settled and has unrestricted drainage. Its values are set for
-              teaching, not clinical targets.
+              This circuit is settled, with drainage to spare.
             </p>
           </section>
         </FoundationTeachingBlock>
@@ -96,29 +94,33 @@ export function PumpPressureZonesPanel({
             <h3 id="speed-comparison-heading" className={styles.heading}>
               The speed comparison
             </h3>
-            <p className="mt-3 text-sm leading-6">
-              With loading unchanged and blood available at the inlet, increasing speed can increase
-              circuit flow. Read the drainage pressure at the same time: moving more blood requires
-              more suction.
-            </p>
             {/*
-             * S3-2 (ECMO-FELLOW-02): the suction change at this speed is about one mmHg, which is
-             * the honest size of it in this model. Said plainly rather than enlarged.
-             */}
+              Three short paragraphs where there were four and a separate task. A tester
+              (2026-10-13) found this step "way too much text" and the next one, which printed the
+              same table again with two lines on how to read it, "the same as the previous task".
+              The reading guidance is folded in here and that task is gone.
+
+              S3-2 (ECMO-FELLOW-02) is kept: the suction change here is about one mmHg, the honest
+              size of it on this circuit, said plainly rather than enlarged.
+            */}
+            <p className="mt-3 text-sm leading-6">
+              With loading unchanged and blood available at the inlet, more speed gives more flow.
+              Drawing that extra blood takes more suction, so pVen becomes a little more negative (a
+              Change of −1 means more negative).
+            </p>
             <p className="mt-2 text-sm leading-6" data-small-change-note>
-              On this unrestricted reference the extra suction is small: the saved comparison moves
-              drainage pressure by about one mmHg for three hundred more rpm. The direction is the
-              point here; a drainage limit, on another circuit, is where it grows large.
+              The change is small here, about one mmHg for three hundred more rpm, because this
+              circuit has drainage to spare. Drainage runs short when less blood reaches the
+              drainage cannula than the pump is asking for: hypovolemia or bleeding, a cannula that
+              is malpositioned, too small or sucked against the vessel wall, a kinked or clotted
+              drainage limb, or raised intrathoracic or intra-abdominal pressure such as tamponade
+              or tension pneumothorax. Then the same speed increase pulls pVen far more negative for
+              little extra flow, and the answer is to find and treat the cause, not to add speed.
             </p>
-            {/* S3-4 (ECMO-FELLOW-04): named for the control on screen, which is not labelled "Run". */}
             <p className="mt-2 text-sm leading-6">
-              Use the “Increase pump speed by 300 rpm” control for this task. The saved readings
-              come from the model.
-            </p>
-            <p className="mt-2 text-sm leading-6">
-              This reference does not model drainage collapse or chatter at the offered speeds. A
-              poor flow response with increasingly negative drainage pressure on another circuit
-              would require assessment of drainage, not an automatic further speed increase.
+              After the pump, pInt and pArt rise with the extra flow, and so does Δp: it depends on
+              flow through the oxygenator, so a rise after a speed change is not, by itself, new
+              membrane resistance.
             </p>
           </section>
         </FoundationTeachingBlock>
@@ -152,22 +154,25 @@ export function PumpPressureZonesPanel({
             </p>
           </section>
         </FoundationTeachingBlock>
-        <CircuitPressureIdentity />
-        <details className={styles.section}>
-          <summary className="cursor-pointer font-semibold">More about pressure patterns</summary>
-          <EcmoCircuitWalk
-            {...navigation}
-            pastPrediction
-            onRunComparison={undefined}
-            state={state}
-          />
-          <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.transmembraneDeltaP}
-            value={circuit.readouts.deltaP.displayed}
-            headingLevel={3}
-          />
-        </details>
+        {/*
+          Reference material for the two tasks it is about (the settled reference and the loading
+          comparison), rather than a disclosure under every task of the section. The pArt line that
+          stood above it is said by the comparison table and the circuit panel already.
+        */}
+        {/*
+          Reference material for the loading task only, said to be optional, and only the part that
+          task is about. On the first task it held a second walk card and a device-specification
+          card under the pressure-pattern table, and a tester (2026-10-14) opened it and asked
+          whether she was supposed to read all of it.
+        */}
+        {scope.foundationBlock === 'pump-load' ? (
+          <details className={styles.section} data-pressure-patterns>
+            <summary className="cursor-pointer font-semibold">
+              Optional: the four pressure patterns
+            </summary>
+            <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
+          </details>
+        ) : null}
       </div>
     )
 

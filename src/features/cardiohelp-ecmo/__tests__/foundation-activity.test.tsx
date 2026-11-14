@@ -1080,10 +1080,16 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     expect(stopId()).toBe('walk-membrane')
   })
 
-  it('offers no way back from the first stop, and says so rather than dead-ending', () => {
+  /*
+   * Changed 2026-10-13. The card used to add "This is the first stop in this section." under the
+   * stop, and a tester read it as text repeated from the card's own heading, which already counts
+   * "stop 1 of 4". The count is what says where the learner is; the sentence is gone.
+   */
+  it('offers no way back from the first stop, and lets the count say it is the first', () => {
     mount('circuit-flow-path')
     expect(document.querySelector('[data-now-back]')).toBeNull()
-    expect(walkCard().textContent).toMatch(/first stop in this section/i)
+    expect(walkCard().textContent).toMatch(/stop 1 of 4/i)
+    expect(walkCard().textContent).not.toMatch(/first stop in this section/i)
   })
 
   it('moves focus to the stop heading, so a keyboard lands where the content changed', () => {
@@ -1124,18 +1130,24 @@ describe('the circuit walk, driven the way a learner drives it', () => {
    * card shows is this section's, so every denominator on screen is reachable from where the learner
    * is standing.
    */
-  it('counts this section’s stops, and says the walk is longer than the section', () => {
+  /*
+   * Revised 2026-10-14. The pump section's two stops no longer print a walk card: a tester read the
+   * card as repetition of the first section's walk ("Where is the new information I'm learning?"),
+   * so the section's stops now only mark the map, and the count lives in the first section.
+   */
+  it('marks the pump section’s stops on the map without a second walk card', () => {
     mount('pump-and-pressure-zones')
-    expect(walkCard().textContent).toMatch(/stop 1 of 2/i)
-    expect(walkCard().textContent).toMatch(/began in the previous section/i)
+    expect(document.querySelector('[data-circuit-walk]')).toBeNull()
+    // Stop five rings the drainage reading the speed change is read against.
+    expect(ringedSensorSites()).toEqual(['pVen'])
+    // The loading task is read in its comparison table, with no map and no walk card.
     reachFoundationStep('pump-and-pressure-zones', 'loading')
-    expect(walkCard().textContent).toMatch(/stop 2 of 2/i)
+    expect(document.querySelector('[data-circuit-walk]')).toBeNull()
   })
 
   it('says so on the last stop of a section the walk continues past', () => {
     mount('circuit-flow-path')
     expect(walkCard().textContent).toMatch(/stop 1 of 4/i)
-    expect(walkCard().textContent).toMatch(/first stop in this section/i)
     for (let step = 0; step < 3; step += 1) press('[data-walk-next]')
     expect(walkCard().textContent).toMatch(/stop 4 of 4/i)
     expect(walkCard().textContent).toMatch(/carries on in the next section/i)
@@ -1149,13 +1161,14 @@ describe('the circuit walk, driven the way a learner drives it', () => {
       cleanup()
 
       mount('pump-and-pressure-zones', supportMode)
-      expect(stopId()).toBe('walk-pump-under-load')
+      // No walk card here (see above); the map rings the section's first stop's reading.
+      expect(ringedSensorSites()).toEqual(['pVen'])
     },
   )
 
-  it('keeps learned locations available during optional retrieval', () => {
+  it('teaches locations on the walk, then withholds the labels for the map question', () => {
     mount('circuit-flow-path')
-    expect(walkCard().textContent).toMatch(/Reported here.*drainage pressure/i)
+    expect(walkCard().textContent).toMatch(/Measured here: pVen \(drainage pressure\)/i)
     expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
     expect(ringedSensorSites()).toEqual(['pVen'])
     reachFoundationStep('circuit-flow-path', 'pressure-sites')
@@ -1165,7 +1178,9 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     ).toHaveTextContent('Between pump and oxygenator')
     expect(ringedSensorSites()).toEqual(['pInt'])
     reachFoundationStep('circuit-flow-path', 'predict')
-    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'full')
+    // Revised 2026-10-14 (tester feedback, "The circuit was still labeled when I answered the
+    // question"): the map question's sensor labels are withheld until the answer is in.
+    expect(circuitMap()).toHaveAttribute('data-location-disclosure', 'withheld')
     expect(circuitMap()).toHaveAttribute('data-presentation-kind', 'none')
     expect(document.querySelector('[data-circuit-walk]')).toBeNull()
   })
@@ -1202,7 +1217,8 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     reachFoundationStep('pump-and-pressure-zones', 'act')
     expect(nowPrimary()).toHaveTextContent('Increase pump speed by 300 rpm')
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
-    expect(walkCard().querySelectorAll('[data-walk-beat]')).toHaveLength(0)
+    // No second door into the comparison: no walk beat anywhere on the task.
+    expect(document.querySelectorAll('[data-walk-beat]')).toHaveLength(0)
     fireEvent.click(nowPrimary())
     expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
   })
@@ -1212,13 +1228,14 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     reachFoundationStep('pump-and-pressure-zones', 'loading')
     fireEvent.click(nowPrimary())
     expect(loadedVariantId()).toBe('return-resistance-preview')
-    expect(loadedStateCard()).toMatch(/Return-side resistance — mechanism preview/i)
+    // The comparison names the preview it loaded beside its table (the separate label line under
+    // the table was removed with the other notes a tester flagged on 2026-10-13).
+    expect(loadedStateCard()).toMatch(/the existing return-resistance preview/i)
   })
 
   it('offers no comparison beats on a stop that is not a comparison', () => {
     mount('pump-and-pressure-zones')
-    expect(stopId()).toBe('walk-pump-under-load')
-    expect(walkCard().querySelector('[data-walk-comparison]')).toBeNull()
+    expect(document.querySelector('[data-walk-comparison]')).toBeNull()
   })
 
   it('leaves the loaded state alone when the learner only changes stop', () => {

@@ -92,6 +92,37 @@
   bottom: 0.45rem;
   color: #3e535a;
 }
+/* What the hand can do on the control head, under its heading. */
+.closeupHint {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 0.55rem;
+  /* Left of the insertion tube, which hangs down the middle of the picture. */
+  max-width: 44%;
+  color: #3e535a;
+  font-size: 0.67rem;
+  line-height: 1.25;
+  pointer-events: none;
+}
+/* The control head worked by hand: a drag surface over the close-up, under its captions. */
+.headDrag {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+}
+.headDrag[data-head-drag='lever'] {
+  cursor: ns-resize;
+}
+.headDrag[data-head-drag='wrist'] {
+  cursor: ew-resize;
+}
+.headDrag:active {
+  cursor: grabbing;
+}
+.headDrag[data-head-drag-enabled='false'] {
+  cursor: default;
+}
 .views[data-pilot-bench='true'][data-observer='true'] .observer {
   border-top: 0;
   border-left: 1px solid #34475c;
@@ -334,7 +365,8 @@
 .control[data-control='deflect'] {
   flex: 1 1 10rem;
 }
-.control[data-control='accessory'] {
+.control[data-control='accessory'],
+.control[data-control='declare'] {
   width: 100%;
 }
 .control label {
@@ -400,12 +432,6 @@
   color: #b1c3d2;
   font-size: 0.78rem;
 }
-.commandNote {
-  margin: 0 0 0.35rem;
-  color: #b1c3d2;
-  font-size: 0.78rem;
-  overflow-wrap: anywhere;
-}
 .scriptClock {
   margin: 0.45rem 0 0;
   color: #b1c3d2;
@@ -429,11 +455,12 @@
 }
 .visualWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: 0.65rem;
   align-items: start;
 }
-.visualWorkspace[data-bench='true'] {
+.visualWorkspace[data-bench='true'],
+.visualWorkspace[data-map='none'] {
   grid-template-columns: minmax(0, 1fr);
 }
 .visualTabs {
@@ -442,6 +469,170 @@
 .scopeColumn,
 .mapColumn {
   min-width: 0;
+}
+/*
+ * The map beside the view, held to the view's height (owner feedback, 2026-11-03: a map taller than
+ * the view pushed the controls below the fold). Size containment keeps the map out of the row's
+ * height, so the row is as tall as the view; the map then fits that height, keeping its aspect so
+ * its pins stay on their airways.
+ */
+/*
+ * Without the map the view would take the whole width and push its controls below the fold at
+ * 1440×900. Cap its height (about 44% of the window, at most 24rem), keeping the 4:3 field. On a
+ * narrow pane the views stack as before.
+ */
+@container (min-width: 500px) {
+  .visualWorkspace[data-map='none']:not([data-bench]) .views[data-observer='true'] {
+    grid-template-columns: minmax(0, min(calc(min(44vh, 24rem) * 4 / 3), 62%)) minmax(0, 1fr);
+  }
+  .visualWorkspace[data-map='none']:not([data-bench]) .views:not([data-observer='true']) {
+    max-width: calc(min(44vh, 24rem) * 4 / 3);
+  }
+}
+/*
+ * In the course's two-column scope task the view is also held to the window's height, so on a
+ * 768-pixel-high laptop the goal, the view and the controls under it stay on one screen. The map
+ * follows the view's height, as above.
+ */
+@media (min-width: 1050px) {
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='skill'])
+    .visualWorkspace:not([data-map='none']):not([data-bench='true']),
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='inspection'])
+    .visualWorkspace:not([data-map='none']):not([data-bench='true']) {
+    grid-template-columns:
+      minmax(0, min(61.5%, max(16rem, calc((100dvh - 29rem) * 4 / 3))))
+      minmax(0, 1fr);
+  }
+  /* The same hold for the outside 3D view, which sits beside the scope view inside one frame. */
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='skill'])
+    .visualWorkspace[data-position-view='true']
+    .views[data-observer='true'],
+  :global([data-module='bronchoscopy-foundations'][data-course-presentation='inspection'])
+    .visualWorkspace[data-position-view='true']
+    .views[data-observer='true'] {
+    grid-template-columns:
+      minmax(0, min(61.5%, max(16rem, calc((100dvh - 29rem) * 4 / 3))))
+      minmax(0, 1fr);
+  }
+}
+.mapColumn {
+  position: relative;
+  contain: size;
+  align-self: stretch;
+  min-height: 12rem;
+}
+/* The switch between the flat map and the outside 3D view, in the corner of whichever is showing.
+ * It costs no row of height above the view. On a narrow pane the tabs above the view do this. */
+.viewSwitch {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 2;
+  min-height: 32px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #45616d;
+  border-radius: 0.4rem;
+  color: #d6e6ee;
+  background: rgba(13, 31, 42, 0.9);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Turning the outside model of the larynx: a drag layer over the picture, and view buttons. */
+.outsideTurn {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+}
+.outsideTurn:active {
+  cursor: grabbing;
+}
+.turnHint {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  left: 0.65rem;
+  top: 2.2rem;
+  color: #c2d4e5;
+  font-size: 0.7rem;
+  pointer-events: none;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #07111cc9;
+}
+@media (hover: hover) and (pointer: fine) {
+  .turnHint {
+    display: block;
+  }
+}
+.turnButtons {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  max-width: calc(100% - 0.8rem);
+}
+.turnButtons button {
+  min-height: 32px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #45616d;
+  border-radius: 0.4rem;
+  color: #d6e6ee;
+  background: rgba(13, 31, 42, 0.9);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.turnButtons button[aria-pressed='true'] {
+  border-color: #68d7c9;
+  color: #fff;
+}
+.turnButtons button:hover {
+  border-color: #68d7c9;
+}
+.turnButtons button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.positionNote {
+  position: absolute;
+  z-index: 2;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.5rem;
+  color: #c2d4e5;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  pointer-events: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #07111cc9;
+}
+.viewSwitch:hover {
+  border-color: #68d7c9;
+}
+.viewSwitch:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.mapColumn > :global([data-airway-map]) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.mapColumn :global([data-map-stage]) {
+  flex: 1 1 0;
+  min-height: 0;
+  container-type: size;
+}
+.mapColumn :global([data-map-stage]) > * {
+  max-width: min(22rem, 100cqh * 360 / 420);
 }
 .views[data-observer='true'] {
   display: grid;
@@ -482,6 +673,22 @@
   .visualWorkspace[data-visual-tab='scope'] .mapColumn {
     display: none;
   }
+  .viewSwitch {
+    display: none;
+  }
+  /* On its own tab the map takes its natural height again. */
+  .mapColumn {
+    contain: none;
+    align-self: auto;
+    min-height: 0;
+  }
+  .mapColumn > :global([data-airway-map]) {
+    display: block;
+    height: auto;
+  }
+  .mapColumn :global([data-map-stage]) {
+    container-type: normal;
+  }
   .visualWorkspace[data-visual-tab='map'] .scopeColumn {
     display: none;
   }
@@ -496,6 +703,10 @@
     height: auto;
     aspect-ratio: 16 / 7;
   }
+  /* The whole tree needs more height than a cutaway does. */
+  .visualWorkspace[data-position-view='true'] .views[data-observer='true'] .observerViewport {
+    aspect-ratio: 16 / 10;
+  }
 }
 
 .reviewStatus {
@@ -507,6 +718,10 @@
 /* The device needs enough space to see the thumb lever. At narrow pane widths put
    the scope image above two close-ups, instead of shrinking the control head. */
 @container (max-width: 560px) {
+  /* The close-ups are too narrow for the line, and a finger works the sliders there. */
+  .closeupHint {
+    display: none;
+  }
   .views[data-pilot-bench='true'][data-observer='true'] {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
@@ -524,5 +739,42 @@
   .tipCloseup {
     border-top: 0;
     border-left: 1px solid #b6c4c9;
+  }
+}
+
+/* Give the falling fluid surface enough space to be compared with the tip. */
+.views[data-bench-suction='true'] .observer {
+  grid-template-rows: minmax(160px, 1fr) minmax(160px, 1fr);
+}
+.targetReticle {
+  display: grid;
+  place-items: center;
+  border: 1px dashed #b0e3e7;
+  border-radius: 50%;
+}
+@container (max-width: 560px) {
+  .views[data-bench-suction='true'][data-pilot-bench='true'] .observer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 160px 180px;
+  }
+  .views[data-bench-suction='true'] .tipCloseup {
+    border-left: 0;
+    border-top: 1px solid #b6c4c9;
+  }
+}
+
+/* Names and rim ticks travel with the eased picture instead of jumping ahead of it. */
+.ostium,
+.ostiumAnchor,
+.patientTick {
+  transition:
+    left 150ms ease-out,
+    top 150ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ostium,
+  .ostiumAnchor,
+  .patientTick {
+    transition: none;
   }
 }

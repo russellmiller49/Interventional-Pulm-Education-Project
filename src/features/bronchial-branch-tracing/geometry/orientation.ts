@@ -53,6 +53,26 @@ export function orientationLabels(o: CtOrientation) {
   }
   return out
 }
+/**
+ * The plane a CT picture shows. Axial is seen from the feet, coronal from the front and sagittal
+ * from the patient's left, so untransformed the screen reads: axial A/L/P/R, coronal S/L/I/R,
+ * sagittal S/P/I/A (top/right/bottom/left).
+ */
+export type CtPlane = 'axial' | 'coronal' | 'sagittal'
+const PLANE_DIRECTIONS: Record<CtPlane, Record<string, [number, number]>> = {
+  axial: { A: [0, -1], L: [1, 0], P: [0, 1], R: [-1, 0] },
+  coronal: { S: [0, -1], L: [1, 0], I: [0, 1], R: [-1, 0] },
+  sagittal: { S: [0, -1], P: [1, 0], I: [0, 1], A: [-1, 0] },
+}
+/** Edge letters for any plane, including S/I, after the same image operations as the axial CT. */
+export function planeLabels(plane: CtPlane, o: CtOrientation = STANDARD_ORIENTATION) {
+  const out = { top: '', right: '', bottom: '', left: '' }
+  for (const [letter, point] of Object.entries(PLANE_DIRECTIONS[plane])) {
+    const [x, y] = orientPoint(point, o)
+    out[x === 1 ? 'right' : x === -1 ? 'left' : y === 1 ? 'bottom' : 'top'] = letter
+  }
+  return out
+}
 export function orientedPixel(
   pixel: readonly number[],
   center: readonly number[],

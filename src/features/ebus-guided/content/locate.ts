@@ -53,7 +53,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and superior vena cava in the unnamed Anatomy model, checking each selection. Open Model section to compare the airway and vascular level. Then slowly sweep through the target until it leaves the sector on the far side and return to a visible section.',
+        'Find the subcarinal node and the pulmonary artery on the ultrasound image: rotate until each is in view and click it. Then open Model section to see the same level as a slice, and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -90,7 +90,7 @@ export const locateLessons: Lesson[] = [
       ),
       imagePolicy: 'none',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '7',
     takeaways: [
       'Multiplanar anatomy resolves station boundaries.',
@@ -147,7 +147,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the main carina and each main bronchus in the unnamed Anatomy model. From each main bronchus, sweep slowly from outside the target, through several sections, and beyond its other edge; then return to a visible section. Pause for each image. The same node remains between the main bronchi.',
+        'Find the subcarinal node, the pulmonary artery and the esophagus on the ultrasound image: rotate until each is in view and click it. Then, from each main bronchus in turn, move the Scope rotation slider through at least 20° and watch the same node cross the image. Finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -196,9 +196,9 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'Image the same target from a different position in the left main bronchus. Identify the carina and both main bronchi again, then make a new gradual sweep and return to a visible section. Continue with this image before answering.',
+        'The scope is now at a different position in the left main bronchus. Find the node, the pulmonary artery and the esophagus again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '7',
     takeaways: [
       'Station 7 is an anatomical compartment, not an approach.',
@@ -257,7 +257,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the azygos vein, superior vena cava and left brachiocephalic vein in the unnamed Anatomy model. Check each selection. Slowly sweep through the paratracheal target until it leaves on the far side, then return to a visible section.',
+        'Find the superior vena cava, the azygos vein and the right lower paratracheal node on the ultrasound image: rotate until each is in view and click it. Sweep the rotation through at least 20° and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -306,9 +306,9 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'The scope now starts at a different longitudinal position in the same anatomy. Re-identify the three vein landmarks and make a fresh gradual sweep through the target. Return to a visible section and continue with that image before interpreting the new position.',
+        'The scope now starts higher or lower in the same airway. Find the superior vena cava, the azygos vein and the node again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '4R',
     takeaways: [
       'Use vein landmarks to distinguish 2R, 4R, and 10R.',
@@ -320,7 +320,7 @@ export const locateLessons: Lesson[] = [
     id: 'left-paratracheal',
     title: 'Left paratracheal stations: 2L and 4L',
     topic: 'Locate',
-    minutes: 8,
+    minutes: 11,
     objective:
       'Identify the left paratracheal window using the aortic arch and left pulmonary artery.',
     recall: 'The side boundary of stations 2 and 4 follows the left lateral tracheal wall.',
@@ -354,14 +354,26 @@ export const locateLessons: Lesson[] = [
         'That is the upper boundary of 4L, separating it from 2L.',
       ],
     ),
+    // Linked labs since 2026-11-10: 4L between its two vascular boundaries, then 2L above the arch.
     lab: {
       kind: 'simulator',
+      linkedLesson: 'left-paratracheal',
       goal: 'scan',
       presetKey: 'station_4l_node_a::default',
       controls: ['roll'],
-      initialRoll: 55,
+      initialRoll: 85,
       instruction:
-        'Use Anatomy to inspect the left paratracheal target and adjacent vessels. Return to Ultrasound and adjust Scope rotation to bring the target into the sector.',
+        'Rotate the scope to find, in turn, the aortic arch, the left main pulmonary artery and the 4L node, and click each on the ultrasound image. Then sweep through the node and finish with it in view.',
+    },
+    transferLab: {
+      kind: 'simulator',
+      linkedLesson: 'left-upper-paratracheal',
+      goal: 'scan',
+      presetKey: 'station_2l_node_a::default',
+      controls: ['roll'],
+      initialRoll: 85,
+      instruction:
+        'The scope is now higher in the trachea. Find the aortic arch and click it, then find the 2L node and click it. Sweep through the node and finish with it in view.',
     },
     observation: q(
       'left-observe',
@@ -395,7 +407,7 @@ export const locateLessons: Lesson[] = [
         'Routine transvascular sampling is outside this introductory course and is not a default solution.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '4L',
     takeaways: [
       'The arch and left pulmonary artery define key levels.',
@@ -407,7 +419,7 @@ export const locateLessons: Lesson[] = [
     id: 'hilar-interlobar',
     title: 'Hilar and interlobar stations',
     topic: 'Locate',
-    minutes: 7,
+    minutes: 9,
     objective: 'Distinguish hilar from interlobar compartments using bronchial landmarks.',
     recall: 'Medial subcarinal nodes remain station 7; mainstem adjacency alone is insufficient.',
     concept: 'Follow the bronchial branching level',
@@ -443,6 +455,17 @@ export const locateLessons: Lesson[] = [
       ],
       'The named lobar branches distinguish these interlobar compartments.',
     ),
+    // One interlobar station on ultrasound (2026-11-10), after the matching that names them.
+    lab: {
+      kind: 'simulator',
+      linkedLesson: 'interlobar',
+      goal: 'scan',
+      presetKey: 'station_11ri_node_a::default',
+      controls: ['roll'],
+      initialRoll: 85,
+      instruction:
+        'The scope is in the right lower airway at the level of 11Ri. Rotate it to find the 11Ri node on the ultrasound image and click it. Then sweep through the node and finish with it in view.',
+    },
     observation: q(
       'hilar-observe',
       'What information made these interlobar assignments possible?',
@@ -472,12 +495,12 @@ export const locateLessons: Lesson[] = [
         'N2a counts a single ipsilateral mediastinal or subcarinal station; 11L is interlobar, which is N1.',
       ],
     ),
-    diagram: 'stations',
+    diagram: 'station-map',
     station: '11Rs',
     takeaways: [
       'Branching landmarks distinguish interlobar stations.',
       'An accessible node is not necessarily a mediastinal node.',
     ],
-    sources: ['atlas', 'iaslc9'],
+    sources: ['atlas', 'iaslc9', 'simulation'],
   },
 ]

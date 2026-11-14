@@ -11,6 +11,7 @@ import { XR } from '@react-three/xr'
 import { createAnatomyXRStore } from '@/components/3d/xr/xrStore'
 import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
 import { ctIndexToLps, lpsToCtIndex } from '@/lib/airway-anatomy/geometry'
+import { renderOffscreen } from '@/lib/airway-anatomy/offscreen'
 import { buildScopePathLps } from '@/lib/airway-anatomy/scope-state'
 import {
   createBronchoscopyMaterial,
@@ -473,14 +474,7 @@ function EndoluminalPanel({
     scopeCamera.updateMatrixWorld()
 
     if (!scopeGeometry) return
-    // Render the endoluminal view as a normal mono frame: disable XR for this off-screen pass so
-    // three doesn't try to use the headset's stereo cameras, then restore it for the main render.
-    const xrWasEnabled = renderer.xr.enabled
-    renderer.xr.enabled = false
-    renderer.setRenderTarget(fbo)
-    renderer.render(scopeScene, scopeCamera)
-    renderer.setRenderTarget(null)
-    renderer.xr.enabled = xrWasEnabled
+    renderOffscreen(renderer, scopeScene, scopeCamera, fbo)
   })
 
   // Place the panel once to the user's front-right at eye level; afterwards it billboards to face

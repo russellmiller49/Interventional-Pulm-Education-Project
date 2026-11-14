@@ -1,5 +1,7 @@
 # Mechanical ventilation: task presentation redesign
 
+> **Superseded (October 2026).** The Learn host described here — the workbench, the experiment panel, the slider teaching interface, the hidden full-console toggle and the `renderer` rollback prop — was replaced by one console with one clock on the shared flowing stage. See `docs/critical-care/mv-hemodynamics-ecmo-format-2026-10.md`. This page is kept as history.
+
 ## Scope and baseline
 
 Branch `codex/mv-task-flow` starts at `c2371c01`, the fetched main on September 13, 2026. The brief’s reference `8e16b69c` is an ancestor; the first-five-unit repair `7c5ea36d` was already merged. This work preserves those repaired tasks and intervening main changes. It covers all 14 Learn units, their 123 task identities and 28 experiment rounds, all 15 Practice cases, the seeded Challenge, and the contrasting transfer workflow. No merge, deployment, authentication change, backend operation, or release-state change is included.

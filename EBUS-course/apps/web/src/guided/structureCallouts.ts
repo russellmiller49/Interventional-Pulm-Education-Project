@@ -161,7 +161,7 @@ export function createStructureCallouts(
     name.className = 'linked-structure-name'
     name.hidden = true
     button.append(glyph, name)
-    button.setAttribute('aria-label', 'Structure ' + letter)
+    button.setAttribute('aria-label', letter ? 'Structure ' + letter : 'Structure')
     const line = document.createElementNS(svg.namespaceURI, 'path')
     const dot = document.createElementNS(svg.namespaceURI, 'circle')
     dot.setAttribute('r', '3.5')
@@ -239,7 +239,10 @@ export function createStructureCallouts(
           marker.button.classList.toggle('is-visible', marker.visible)
           marker.button.setAttribute(
             'aria-label',
-            'Structure ' + marker.letter + (named && names![marker.mesh.name] ? ': ' + names![marker.mesh.name] : ''),
+            // A view that names its markers without lettering them is announced by name alone.
+            marker.letter
+              ? 'Structure ' + marker.letter + (named && names![marker.mesh.name] ? ': ' + names![marker.mesh.name] : '')
+              : (named && names![marker.mesh.name]) || 'Structure',
           )
           // Named pills hang from the canvas edge; letters sit centred on their column line.
           const buttonWidth = named ? marker.button.offsetWidth || glyphSize : glyphSize

@@ -167,6 +167,8 @@ Thumbs.db
 !public/socal-ebus-course/app/**/*.mp4
 !public/module-assets/v1/pleural-ultrasound/video/*.mp4
 !public/airway-lesson/airway-survey-cropped.mp4
+!public/bronchoscopy-instruments/clips/*.mp4
+!public/ebus-guided/clips/*.mp4
 *.avi
 *.mov
 *.wmv
@@ -189,6 +191,7 @@ Thumbs.db
 *.eps
 *.raw
 !public/airway-anatomy/case-001/ct/*.raw
+!public/airway-anatomy/dolphin-001/ct/*.raw
 !public/bronch-navigation-trainer/app/**/*.raw
 !public/fluoroview/cases/**/ct/ct_preview_uint8.raw
 *.cr2
@@ -307,3 +310,8 @@ Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 # Embedded apps are built automatically from the in-repository sources.
 /public/bronch-navigation-trainer/app/
 /public/socal-ebus-course/app/
+
+# Publisher full text never belongs in this repository. PDFs and XML are not blanket-ignored: the site has its own.
+*.jats
+*.dtd
+*fulltext*

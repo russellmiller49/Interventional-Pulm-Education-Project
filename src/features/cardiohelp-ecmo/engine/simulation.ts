@@ -1432,8 +1432,9 @@ type PatientTargetMap = Record<RateLimitedPatientField, number>
  *
  * Includes the relationships a circuit fault acts through (recirculation and a resisted membrane
  * reduce the circuit's oxygen contribution; the hypercapnia drills change how PaCO₂ follows sweep;
- * differential hypoxemia sets the right-arm level the VA model reads). Excludes the story targets in
- * `faultPatientTargets`. Numbers are the engine's existing ones, unchanged.
+ * differential hypoxemia sets the right-arm level the VA model reads, and raised ventilator support
+ * sets the level in `DIFFERENTIAL_VENTILATOR_RESPONSE`). Excludes the story targets in
+ * `faultPatientTargets`. The other numbers are the engine's existing ones, unchanged.
  */
 export function genericPatientTargets(state: EcmoSimulationState, flow: number): PatientTargetMap {
   const gasAvailable = state.gas.sourceConnected && state.gas.sweepLpm > 0
@@ -1452,9 +1453,15 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
   if (hasFault(state, 'oxygenator-resistance')) spo2 -= 8
 
   const va = state.supportMode === 'va'
+  const differential = va && hasFault(state, 'differential-hypoxemia')
+  const ventilator = differential
+    ? state.scenario.differentialResponse?.ventilatorRaised
+    : undefined
   const rightRadialSpo2 = va
-    ? hasFault(state, 'differential-hypoxemia')
-      ? 82
+    ? differential
+      ? ventilator
+        ? DIFFERENTIAL_VENTILATOR_RESPONSE.rightArmSpo2
+        : 82
       : gasAvailable
         ? 96
         : 80
@@ -1465,8 +1472,8 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
     spo2: va ? rightRadialSpo2 : spo2,
     rightRadialSpo2,
     femoralArterialSpo2,
-    nativeCardiacOutputLpm: va ? 2.4 : 4.5,
-    pulsePressure: va ? 18 : 35,
+    nativeCardiacOutputLpm: ventilator?.nativeCardiacOutputLpm ?? (va ? 2.4 : 4.5),
+    pulsePressure: ventilator?.pulsePressure ?? (va ? 18 : 35),
     meanArterialPressure: va
       ? clamp(55 + flow * 4, 60, 80)
       : // VV has no generic MAP relationship: MAP stays where it is unless a story target moves it.
@@ -1480,18 +1487,76 @@ export function genericPatientTargets(state: EcmoSimulationState, flow: number):
 }
 
 /**
+ * How a differential-hypoxemia patient answers more ventilator support.
+ *
+ * The right arm reads blood that came through the native lungs, so raising ventilator FiO₂ and PEEP
+ * lifts the right arm and leaves the femoral and post-oxygenator saturations alone. The direction
+ * is sourced; the size is not, and it is registered as `differential-ventilator-right-arm`. The
+ * right arm stops short of normal so that it stays low, and the case's own ventilator card lands on
+ * the same 86%.
+ *
+ * The native stream holds while the ventilator is up, because this model does not couple the
+ * ventilator to native output, and its drift toward the generic VA values would read as a PEEP
+ * effect. The mixing point does not move either.
+ *
+ * Treating the lung cause, V-AV and VV are not moves here. They are a recorded plan, so the fault
+ * stays active.
+ *
+ * Evidence boundary: bounded-educational-model. This is a teaching quantity and not a threshold.
+ */
+export const DIFFERENTIAL_VENTILATOR_RESPONSE = Object.freeze({
+  rightArmSpo2: 86,
+})
+
+/**
+ * How a loading left ventricle answers the two medical moves this module carries out.
+ *
+ * Lowering VA flow takes afterload off the ventricle and an inotrope helps it eject, so either move
+ * widens the pulse and the two together let the valve open. The direction and the 10 mmHg line are
+ * sourced (`lv-ejection-pulsatility` and `lv-vent-pulsatility` in the numbers register). The sizes
+ * are not: `lv-unloading-flow` and `lv-unloading-response` are teaching conventions, set so that
+ * either move alone stays under the line and the two together cross it.
+ *
+ * Volume removal and a vent are not moves here. They are a recorded plan, so the lungs stay as they
+ * are and the fault stays active.
+ *
+ * Evidence boundary: bounded-educational-model. These are teaching quantities and not thresholds.
+ */
+export const LV_UNLOADING_RESPONSE = Object.freeze({
+  /** Forward circuit flow at or below this counts as turned down. A stopped pump does not. */
+  loweredFlowLpm: 3.1,
+  /** Where the patient settles with no, one or both moves in place. */
+  settledByMoves: Object.freeze([
+    Object.freeze({ nativeCardiacOutputLpm: 0.8, pulsePressure: 5 }),
+    Object.freeze({ nativeCardiacOutputLpm: 1.2, pulsePressure: 8 }),
+    Object.freeze({ nativeCardiacOutputLpm: 1.6, pulsePressure: 12 }),
+  ]),
+  /** The valve is read as opening once a treated ventricle's pulse reaches this. */
+  ejectingPulsePressure: 10,
+})
+
+/** How many of the two medical moves are in place for a loading ventricle at this flow. */
+function lvUnloadingMoves(state: EcmoSimulationState, flow: number): 0 | 1 | 2 {
+  const flowLowered = flow > 0 && flow <= LV_UNLOADING_RESPONSE.loweredFlowLpm
+  if (flowLowered && state.scenario.inotropeRunning) return 2
+  return flowLowered || state.scenario.inotropeRunning ? 1 : 0
+}
+
+/**
  * The story targets: where an untreated fault takes the patient.
  *
  * Deterioration endpoints (a bleeding patient's MAP, a tension pneumothorax's CVP and airway
  * pressure, the shock faults' lactate and urine output, an unstarted circuit's gas exchange) and the
  * two faults that fix a value outright (LV loading's pulsatility, the ischemic limb's NIRS). Keyed
- * on the support mode and the active faults only, so `faultPatientTargets(mode, [fault])` also
- * answers which fields a single fault owns. Precedence where two faults target one field is the
- * engine's existing precedence. Numbers are the engine's existing ones, unchanged.
+ * on the support mode and the active faults, so `faultPatientTargets(mode, [fault])` also answers
+ * which fields a single fault owns; a loading ventricle's targets also take the medical moves in
+ * place. Precedence where two faults target one field is the engine's existing precedence. Numbers
+ * are the engine's existing ones, unchanged.
  */
 export function faultPatientTargets(
   supportMode: EcmoSimulationState['supportMode'],
   activeFaults: readonly FaultId[],
+  lvMoves: 0 | 1 | 2 = 0,
 ): Partial<PatientTargetMap> {
   const has = (fault: FaultId) => activeFaults.includes(fault)
   const va = supportMode === 'va'
@@ -1509,8 +1574,9 @@ export function faultPatientTargets(
     targets.paCO2 = va ? 58 : 76
   }
   if (va && has('lv-loading')) {
-    targets.nativeCardiacOutputLpm = 0.8
-    targets.pulsePressure = 5
+    const settled = LV_UNLOADING_RESPONSE.settledByMoves[lvMoves]
+    targets.nativeCardiacOutputLpm = settled.nativeCardiacOutputLpm
+    targets.pulsePressure = settled.pulsePressure
   }
   // Mean arterial pressure: the last applicable fault wins, as it always has.
   if (has('hemorrhagic-hypovolemia')) targets.meanArterialPressure = 46
@@ -1595,7 +1661,11 @@ export function resolvePatientTargets(
   flow: number,
 ): ResolvedPatientTargets {
   const generic = genericPatientTargets(state, flow)
-  const story = faultPatientTargets(state.supportMode, state.scenario.activeFaults)
+  const story = faultPatientTargets(
+    state.supportMode,
+    state.scenario.activeFaults,
+    lvUnloadingMoves(state, flow),
+  )
   const targets = {} as PatientTargetMap
   const owners = {} as Record<RateLimitedPatientField, PatientTargetOwner>
   for (const field of RATE_LIMITED_PATIENT_FIELDS) {
@@ -1689,6 +1759,11 @@ function derivePatient(
   )
   const workOfBreathing = deriveWorkOfBreathing(state, moved.paCO2)
   const lvLoading = state.supportMode === 'va' && hasFault(state, 'lv-loading')
+  // Read off the pulse the monitor shows, so the valve and the pressure cannot disagree.
+  const lvEjecting =
+    lvLoading &&
+    lvUnloadingMoves(state, flow) > 0 &&
+    moved.pulsePressure >= LV_UNLOADING_RESPONSE.ejectingPulsePressure
 
   return {
     ...state.patient,
@@ -1701,7 +1776,7 @@ function derivePatient(
       workOfBreathing === state.patient.workOfBreathing
         ? state.patient.respiratoryRate
         : RESPIRATORY_RATE_BY_WORK_OF_BREATHING[workOfBreathing],
-    aorticValveOpening: state.supportMode === 'va' ? !lvLoading : true,
+    aorticValveOpening: state.supportMode === 'va' ? !lvLoading || lvEjecting : true,
     pulmonaryCongestion: state.supportMode === 'va' ? (lvLoading ? 'marked' : 'mild') : 'none',
     lungSliding: hasFault(state, 'tension-pneumothorax')
       ? state.patient.lungSliding === 'absent-left'

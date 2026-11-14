@@ -100,6 +100,31 @@ const server = createServer(async (req, res) => {
     }
     let body = ''
     for await (const chunk of req) body += chunk
+    // Current main-site middleware checks registration before SOCRATES access.
+    // These records belong only to the disposable synthetic identities above;
+    // the rehearsal database deliberately has no production profile data.
+    if (url.pathname === '/rest/v1/site_profiles' && req.method === 'GET') {
+      const profiles = Object.values(sessions)
+        .filter((session) => claims.role === 'service_role' || session.user.id === claims.sub)
+        .filter(
+          (session) =>
+            !url.searchParams.has('id') || url.searchParams.get('id') === `eq.${session.user.id}`,
+        )
+        .map((session) => ({
+          id: session.user.id,
+          onboarding_completed_at: '2026-09-27T00:00:00Z',
+          agreement_accepted_at: '2026-09-27T00:00:00Z',
+          agreement_version: 'main_site_user_agreement_v1_2026_06_05',
+          performance_research_consent: true,
+        }))
+      send(
+        200,
+        req.headers.accept?.includes('application/vnd.pgrst.object+json')
+          ? (profiles[0] ?? null)
+          : profiles,
+      )
+      return
+    }
     if (url.pathname.startsWith('/rest/v1/rpc/')) {
       const name = identifier(url.pathname.split('/').at(-1))
       const args = body ? JSON.parse(body) : {}

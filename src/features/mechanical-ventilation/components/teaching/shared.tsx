@@ -147,7 +147,11 @@ function shortSource(sourceId: string, year: number): string {
     'ardsnet-arma-2000': 'ARDS Network',
     'ardsnet-alveoli-2004': 'ARDS Network ALVEOLI',
     'ats-esicm-sccm-ards-2017': 'ATS/ESICM/SCCM',
+    'aarc-assessment-2024': 'AARC',
     'amato-driving-pressure-2015': 'Amato',
+    'aoyama-driving-pressure-2018': 'Aoyama',
+    'bugedo-driving-pressure-2017': 'Bugedo',
+    'agrafiotis-driving-pressure-rcts-2026': 'Agrafiotis',
     'tobin-3e-severe-asthma': 'Leatherman, in Tobin',
   }
   const name = names[sourceId] ?? ventilationEvidenceById.get(sourceId)?.title ?? sourceId

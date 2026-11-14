@@ -1,8 +1,9 @@
 /**
  * MCS-PRE-REVIEW-03 — presentation never moves the model.
  *
- * Every operation this slice made more prominent or added — opening the monitor, the run details,
- * the Sections drawer, the trend table, the case's Current task and jump links — and the ones a
+ * Every operation this slice made more prominent or added — opening the monitor, the Sections
+ * drawer, the trend table, the case's Current task and jump links, and since the text-left layout
+ * the simulator's All device controls (which took over from the run details) — and the ones a
  * learner does to the page itself — changing the theme, resizing, moving focus, enlarging the text —
  * is performed on a live section and a live case, and after each one nothing that belongs to the
  * model or the learner's progress has moved: the simulated time, the step, the chosen answer, the
@@ -58,7 +59,7 @@ afterEach(() => {
 
 interface Snapshot {
   readonly modelState: string
-  readonly identity: string
+  readonly clock: string
   readonly step: string
   readonly checked: readonly string[]
   readonly explanationShown: boolean
@@ -71,8 +72,10 @@ function snapshot(): Snapshot {
   expect(mockMonitorState).not.toBeNull()
   return {
     modelState: JSON.stringify(mockMonitorState),
-    // The identity line carries the run and its simulated time.
-    identity: document.querySelector('[data-session-identity]')?.textContent ?? '',
+    // The clock bar carries whether the circulation runs and its simulated time.
+    clock: `${document.querySelector('[data-clock-bar]')?.getAttribute('data-clock-state') ?? ''} · ${
+      document.querySelector('[data-clock-time]')?.textContent ?? ''
+    }`,
     step: currentStepId(),
     checked: [...document.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')].map(
       (radio) => `${radio.name}=${radio.value}`,
@@ -105,13 +108,13 @@ describe('a live Learn section: presentation operations change nothing the model
         document.querySelector<HTMLElement>('fieldset[data-prediction-choices]')!,
       ).getByLabelText(choice.label),
     )
-    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show explanation' }))
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show answer' }))
     const taken = snapshot()
-    // Not vacuous: there is an answer, an explanation, a clock and a run identity to lose.
+    // Not vacuous: there is an answer, an explanation and a running clock to lose.
     expect(taken.checked).toHaveLength(1)
     expect(taken.explanationShown).toBe(true)
     expect(taken.monitorTime).toMatch(/\d+\.\d s/)
-    expect(taken.identity).toMatch(/Current exercise · \d+\.\d\d simulated seconds/)
+    expect(taken.clock).toMatch(/^running · Time \d+\.\d s$/)
     return taken
   }
 
@@ -127,11 +130,15 @@ describe('a live Learn section: presentation operations change nothing the model
       },
     ],
     [
-      'opening and closing Run details',
+      'opening and closing All device controls',
       () => {
-        const details = document.querySelector<HTMLDetailsElement>('[data-run-details]')!
-        toggle(details)
-        toggle(details)
+        const button = within(
+          document.querySelector<HTMLElement>('[data-full-exploration]')!,
+        ).getByRole('button', { name: 'All device controls' })
+        fireEvent.click(button)
+        expect(button).toHaveAttribute('aria-expanded', 'true')
+        fireEvent.click(button)
+        expect(button).toHaveAttribute('aria-expanded', 'false')
       },
     ],
     [
@@ -178,13 +185,14 @@ describe('a live Learn section: presentation operations change nothing the model
       },
     ],
     [
-      'moving focus through the step bar, the header and the Now card',
+      'moving focus through the header, the Now card and the clock bar',
       () => {
         for (const element of [
-          document.querySelector<HTMLElement>('[data-step-bar-continue]'),
           document.querySelector<HTMLElement>('[data-sections-drawer] summary'),
           document.querySelector<HTMLElement>('[data-stage-help]'),
           nowCard().querySelector<HTMLElement>('button'),
+          document.querySelector<HTMLElement>('[data-now-primary]'),
+          document.querySelector<HTMLElement>('[data-clock-run]'),
         ]) {
           element?.focus()
           if (element) fireEvent.blur(element)
@@ -201,12 +209,12 @@ describe('a live Learn section: presentation operations change nothing the model
 
   it('control: a real model operation — stepping one cardiac cycle — does move the clock', () => {
     const before = prepared()
-    const playback = [...document.querySelectorAll<HTMLDetailsElement>('main details')].find(
-      (details) => details.querySelector('summary')?.textContent === 'Display playback',
-    )!
-    toggle(playback)
-    fireEvent.click(within(playback).getByRole('button', { name: 'Step one cardiac cycle' }))
-    expect(snapshot().monitorTime).not.toBe(before.monitorTime)
+    const clockBar = document.querySelector<HTMLElement>('[data-clock-bar]')!
+    fireEvent.click(within(clockBar).getByRole('button', { name: 'One cardiac cycle' }))
+    const after = snapshot()
+    expect(after.monitorTime).not.toBe(before.monitorTime)
+    // Stepping one cycle pauses the circulation where the step ends.
+    expect(after.clock).toMatch(/^paused · Paused at \d+\.\d s$/)
   })
 
   it('all of them in sequence', () => {

@@ -8,23 +8,20 @@ import {
   type ModelPackage,
 } from './ebus-model-contract'
 import {
+  LINKED_LESSONS,
   LINKED_TASK_VERSION,
   LINKED_VARIANTS,
   isLinkedFrameSource,
   type LinkedFrameSource,
+  type LinkedLesson,
   type LinkedVariant,
   type LinkedSweep,
 } from './ebus-linked-contract'
 /** Shared by the Next lesson host and the dedicated Vite workbench; no React or storage. */
 export const EBUS_BRIDGE_VERSION = 1 as const
-export const EBUS_LINKED_LESSONS = [
-  'scope-orientation',
-  'acoustic-contact',
-  'ct-map',
-  'station-seven',
-  'right-paratracheal',
-] as const
-export type EbusLinkedLesson = (typeof EBUS_LINKED_LESSONS)[number]
+/** The linked labs, as the contract lists them: one list, so the two cannot drift apart. */
+export const EBUS_LINKED_LESSONS = LINKED_LESSONS
+export type EbusLinkedLesson = LinkedLesson
 export interface EbusLinkedEvidence {
   assetsReady: boolean
   selectedStructure: string
@@ -37,6 +34,8 @@ export interface EbusLinkedEvidence {
   sweeps?: Partial<Record<'rms' | 'lms' | 'default', LinkedSweep>>
   source?: LinkedFrameSource
   baselineFrameId?: string
+  /** The airway-view task: the lens has looked along the airway at least once in this session. */
+  airwayViewed?: boolean
 }
 export type EbusControl =
   | 'roll'
@@ -53,6 +52,8 @@ export interface EbusWorkbenchConfig {
   sessionId: string
   kind: 'simulator' | 'knobology' | 'model'
   modelPackage?: ModelPackage
+  /** Movements within the node the needle lab asks for (the lesson's sourced number). */
+  needleMovements?: number
   presetKey: string
   controls: EbusControl[]
   locked: boolean
@@ -79,6 +80,10 @@ export interface EbusObservation {
   frameReady: boolean
   contactQuality: number
   targetVisible: boolean
+  /** Where the target sits across the image, 0 (tip side) to 1 (dot side); absent when not seen. */
+  targetLateral?: number
+  /** Lens to the first airway wall along the optical axis, in millimetres; absent with no hit. */
+  opticalWallMm?: number
   roll: number
   flexion: number
   depth: number
@@ -173,6 +178,10 @@ export function isEbusConfig(v: unknown): v is EbusWorkbenchConfig {
     (v.kind === 'simulator' || v.kind === 'knobology' || v.kind === 'model') &&
     (v.kind !== 'model' || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
     (v.modelPackage === undefined || MODEL_PACKAGES.includes(v.modelPackage as ModelPackage)) &&
+    (v.needleMovements === undefined ||
+      (Number.isInteger(v.needleMovements) &&
+        Number(v.needleMovements) >= 1 &&
+        Number(v.needleMovements) <= 20)) &&
     typeof v.presetKey === 'string' &&
     v.presetKey.length < 120 &&
     Array.isArray(v.controls) &&
@@ -213,6 +222,12 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
     ) &&
     typeof v.lastAction === 'string' &&
     v.lastAction.length < 120 &&
+    (v.opticalWallMm === undefined ||
+      (finite(v.opticalWallMm) &&
+        Number(v.opticalWallMm) >= 0 &&
+        Number(v.opticalWallMm) <= 400)) &&
+    (v.targetLateral === undefined ||
+      (finite(v.targetLateral) && Number(v.targetLateral) >= 0 && Number(v.targetLateral) <= 1)) &&
     (v.acquisitionSession === undefined ||
       (typeof v.acquisitionSession === 'string' && v.acquisitionSession.length < 180)) &&
     (v.recorded === undefined || isRecordedFrameSource(v.recorded)) &&
@@ -255,6 +270,7 @@ export function isEbusObservation(v: unknown): v is EbusObservation {
           (typeof v.linked.baselineFrameId === 'string' &&
             v.linked.baselineFrameId.length < 160)) &&
         (v.linked.source === undefined || isLinkedFrameSource(v.linked.source)) &&
+        (v.linked.airwayViewed === undefined || typeof v.linked.airwayViewed === 'boolean') &&
         (v.linked.identifiedStructures === undefined ||
           (Array.isArray(v.linked.identifiedStructures) &&
             v.linked.identifiedStructures.length <= 8 &&

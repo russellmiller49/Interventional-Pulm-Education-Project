@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { mucosaVertexShader, mucosaFragmentShader } from '../bronchoscopy-core/mucosa'
+import {
+  MUCOSA_ANATOMY_DEFINE,
+  MUCOSA_PALE_WALL_DEFINE,
+  mucosaVertexShader,
+  mucosaFragmentShader,
+} from '../bronchoscopy-core/mucosa'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -74,17 +79,59 @@ export function loadAirwayStlGeometry(
  * with distance, and a wet specular sheen. Rendered on the BackSide so the camera sits inside the
  * lumen. `toneMapped: false` keeps it consistent whether the scene uses ACES tone mapping or not.
  */
-export function createBronchoscopyMaterial(): THREE.ShaderMaterial {
+export interface MucosaTint {
+  /** The shader's two base tones in linear RGB, darker and lighter; the noise mixes between them. */
+  readonly low: readonly [number, number, number]
+  readonly high: readonly [number, number, number]
+}
+
+const MUCOSA_BASE_LINE = 'vec3 base=mix(vec3(0.51,0.205,0.19),vec3(0.76,0.395,0.36),broad);'
+
+/** The mucosa shader with a case's own base tones; without a tint it is the shared shader. */
+export function tintedMucosaFragmentShader(tint?: MucosaTint): string {
+  if (!tint) return mucosaFragmentShader
+  const vec = (c: readonly number[]) => `vec3(${c.map((x) => x.toFixed(3)).join(',')})`
+  return mucosaFragmentShader.replace(
+    MUCOSA_BASE_LINE,
+    `vec3 base=mix(${vec(tint.low)},${vec(tint.high)},broad);`,
+  )
+}
+
+export interface BronchoscopyMaterialOptions {
+  /**
+   * Draw the wall's anatomy (cartilage rings, membranous posterior strip, vessels). The geometry
+   * must carry `MUCOSA_ANATOMY_ATTRIBUTE`; omitted, the material is the shared one, unchanged.
+   */
+  readonly anatomy?: boolean
+  /**
+   * With `anatomy`: the paler, warmer, wetter wall of Bronchoscopy Foundations' own stills. A
+   * viewer that asks for `anatomy` alone is unchanged.
+   */
+  readonly paleWall?: boolean
+}
+
+export function createBronchoscopyMaterial(
+  tint?: MucosaTint,
+  options?: BronchoscopyMaterialOptions,
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     toneMapped: false,
+    ...(options?.anatomy
+      ? {
+          defines: {
+            [MUCOSA_ANATOMY_DEFINE]: '',
+            ...(options.paleWall ? { [MUCOSA_PALE_WALL_DEFINE]: '' } : {}),
+          },
+        }
+      : {}),
     uniforms: {
       uWallAlpha: { value: 1 },
       uHeadlightAxis: { value: new THREE.Vector3(0, 0, -1) },
       uHeadlightFalloff: { value: 0 },
     },
     vertexShader: mucosaVertexShader,
-    fragmentShader: mucosaFragmentShader,
+    fragmentShader: tintedMucosaFragmentShader(tint),
   })
 }
 

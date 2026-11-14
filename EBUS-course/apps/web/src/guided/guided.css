@@ -654,6 +654,44 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/*
+ * A workbench too narrow to hold the controls beside the recording (a phone). The controls
+ * column used to drop below both stacked images, which left the depth slider about 800 px from
+ * the image it changes. Here the image controls sit directly under the current recording, the
+ * previous recording follows them for comparison, and the display and playback buttons come
+ * last. The order is visual only; the document and keyboard order are those of the wide layout.
+ *
+ * 43em is where `.recorded-workspace` wraps (26em + 17em), measured on the workbench itself so
+ * that enlarged text moves the two together. Wider workbenches are untouched.
+ */
+.guided-recording {
+  container: recorded-workbench / inline-size;
+}
+@container recorded-workbench (max-width: 43em) {
+  .recorded-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .recorded-images,
+  .recorded-controls {
+    display: contents;
+  }
+  .recorded-workspace .recorded-current,
+  .recorded-workspace .recorded-baseline,
+  .recorded-workspace .recorded-controls > * {
+    margin-block: 0;
+  }
+  .recorded-controls > fieldset {
+    order: 1;
+  }
+  .recorded-workspace .recorded-baseline {
+    order: 2;
+  }
+  .recorded-controls > :not(fieldset) {
+    order: 3;
+  }
+}
 .guided-workbench fieldset[hidden] {
   display: none;
 }
@@ -768,6 +806,13 @@ body,
   flex: 1 1 220px;
   margin: 0;
 }
+/* The two ends of the scope-position slider, named under it: left withdraws, right advances. */
+.guided-range-ends {
+  display: flex;
+  justify-content: space-between;
+  font: 600 13px/1.2 system-ui, sans-serif;
+  color: #9fb6bd;
+}
 @media (max-width: 1000px) {
   .linked-trio {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -819,6 +864,11 @@ body,
 .linked-console .linked-pair {
   flex: 1 1 auto;
   min-height: 270px;
+}
+/* The three-view row alone may go shorter, so the views and their controls share an 800 px tall
+   screen. The two-view model labs keep 270 px: their route arrows are sized from this height. */
+.linked-console .linked-trio {
+  min-height: 240px;
 }
 .linked-console .linked-trio .linked-canvas,
 .linked-console .linked-trio .guided-anatomy,
@@ -1062,4 +1112,68 @@ body,
 }
 .model-steps li[data-done='true'] {
   color: #8fd9c4;
+}
+
+/*
+ * Model section (owner feedback of 2026-10-12): a heading, a paragraph and a row of tabs stood
+ * above the image, so in a console pane the image ran off the bottom. Controls are one row, the
+ * image takes whatever height is left, and the key is one line under it.
+ */
+.linked-section {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 6px 8px 8px;
+}
+.linked-section-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+.linked-section-bar .guided-tabs {
+  margin: 0;
+}
+.linked-section-bar label {
+  display: flex;
+  flex: 1 1 140px;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.linked-section-bar label input {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+.linked-section-bar button {
+  min-height: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.linked-section-fit {
+  display: flex;
+  justify-content: center;
+}
+.linked-console .linked-section-fit {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.linked-console .linked-section-image {
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+  aspect-ratio: 1;
+}
+.linked-console .linked-section canvas {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+.linked-section-key {
+  margin: 0;
+  font-size: 11px;
 }

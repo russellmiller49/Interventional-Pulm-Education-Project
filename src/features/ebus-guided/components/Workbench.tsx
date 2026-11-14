@@ -62,6 +62,7 @@ export function Workbench({
       sessionId: sessionId + '-' + generation,
       kind: lab.kind,
       modelPackage: lab.modelPackage,
+      needleMovements: lab.needleMovements,
       presetKey: lab.presetKey,
       controls: lab.controls,
       locked: locked || compact,

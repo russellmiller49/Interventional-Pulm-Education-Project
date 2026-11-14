@@ -33,10 +33,10 @@ test('replays provided outputs, resets, skips and preserves the placement exerci
   await openExample(page)
   await expect(page.getByRole('heading', { name: 'How to read the comparison' })).toBeVisible()
   await expect(page.getByRole('radio')).toHaveCount(0)
-  await expect(page.getByText(/Suction remains present at both settings/)).toBeVisible()
+  await expect(page.getByText(/Suction is present at both settings/)).toBeVisible()
   await expect(
     page.locator('[data-unloading-condition="filled"] [data-unloading-signal="lvedvMl"]'),
-  ).toContainText('118')
+  ).toContainText('116')
   await expect(
     page.locator('[data-unloading-condition="filled"] [data-unloading-signal="lvedvMl"]'),
   ).toContainText('114')
@@ -71,15 +71,18 @@ test('replays provided outputs, resets, skips and preserves the placement exerci
     'data-stage',
     'impella-unloading-placement-recognize',
   )
-  await page.getByRole('button', { name: 'Show explanation', exact: true }).click()
+  await page.getByRole('button', { name: 'Show answer', exact: true }).click()
   await expect(page.locator('[data-provided-explanation]')).toBeVisible()
-  await page.getByText('Task history and lesson map', { exact: true }).click()
+  await page.locator('[data-task-map] > summary').click()
   await page
-    .getByRole('list', { name: 'All lesson tasks' })
-    .getByRole('button', { name: 'Move the inlet out of position' })
+    .locator('[data-step-list]')
+    .getByRole('button', { name: /Move the inlet out of position/ })
     .click()
   await expect(page.getByRole('combobox', { name: 'Placement state' })).toHaveValue('correct')
-  await expect(page.getByRole('button', { name: 'Explore all supported controls' })).toBeVisible()
+  // Every control the device has sits with the simulator, closed until asked for.
+  await expect(
+    page.locator('[data-mcs-visual]').getByRole('button', { name: 'All device controls' }),
+  ).toBeVisible()
   expect(errors).toEqual([])
 })
 
@@ -100,12 +103,15 @@ test('reload and return use the topic boundary without retaining an invented mod
   )
   await expect(page.locator('[data-captured-results]')).toHaveCount(0)
   await page.locator('[data-now-primary]').click()
-  await page.getByText('Task history and lesson map', { exact: true }).click()
+  await page.locator('[data-task-map] > summary').click()
   await page
-    .getByRole('list', { name: 'All lesson tasks' })
-    .getByRole('button', { name: 'Guided example: ventricular unloading' })
+    .locator('[data-step-list]')
+    .getByRole('button', { name: /Guided example: ventricular unloading/ })
     .click()
-  await expect(page.locator('[data-session-identity]')).toContainText('Worked comparison')
+  // The provided example again: its own figure, read in the text, with no live patient beside it.
+  await expect(page.locator('[data-unloading-comparison]')).toBeVisible()
+  await expect(page.locator('[data-flow-visual]')).toHaveCount(0)
+  await expect(page.locator('[data-clock-bar]')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'P6', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -125,6 +131,8 @@ for (const [width, height] of [
     await openExample(page)
     await expect(page.getByRole('table')).toHaveCount(2)
     for (const cell of await page.locator('[data-unloading-comparison] td').all()) {
+      // Numbers only: a cell that is a phrase ("No resolvable displayed change") may wrap.
+      if (!/\d/.test((await cell.textContent()) ?? '')) continue
       const lines = await cell.evaluate((element) => {
         const range = document.createRange()
         range.selectNodeContents(element)

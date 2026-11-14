@@ -7,8 +7,10 @@ import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProg
 import { inspectionReport } from '../engine/inspectionReport'
 import {
   availableSurveySnapshot,
+  BRONCH_PLACE_STORAGE_KEY,
   BRONCH_SELF_PACED_STORAGE_KEY,
   parseBronchSelfPacedRecord,
+  readBronchSectionPlace,
   readBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
@@ -333,10 +335,12 @@ describe('a sort section on the stage', () => {
     expect(storedRecord()?.reviewedSectionIds).toEqual([])
   })
 
-  it('opens at the first step whatever phase the address names, and restores no answer after a reload', async () => {
+  it('returns to the screen reached whatever phase the address names, and restores no answer after a reload', async () => {
     const { lesson } = await mountSection('ventilated-patient')
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
-    commitById(otherChoiceId(lesson.steps[lesson.predictionStepIndex]))
+    const check = lesson.steps[lesson.predictionStepIndex]
+    await reachCourseStep(lesson, check)
+    commitById(otherChoiceId(check))
+    expect(readBronchSectionPlace('ventilated-patient')).toBe(check.id)
     cleanup()
 
     window.history.replaceState(
@@ -345,11 +349,38 @@ describe('a sort section on the stage', () => {
       '/bronchoscopy-foundations/learn?section=ventilated-patient&phase=explain',
     )
     await mountSection('ventilated-patient')
-    expect(currentStepId()).toBe(lesson.steps[0].id)
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
+    await settle()
+    // The place comes back; the answer does not, and nothing before it is marked done.
+    expect(currentStepId()).toBe(check.id)
     expect(verdictOutcome()).toBeNull()
     expect(document.querySelector('[data-prediction-choices] input:checked')).toBeNull()
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+    expect(storedRecord()?.reviewedSectionIds).toEqual([])
+
+    // Restarting the section forgets the place, on this visit and the next.
+    fireEvent.click(screen.getByRole('button', { name: /Restart section/ }))
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    expect(readBronchSectionPlace('ventilated-patient')).toBeNull()
+    cleanup()
+    await mountSection('ventilated-patient')
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+  })
+
+  it('keeps no place for a finished section, and does not list resumed screens as skipped', async () => {
+    const { lesson } = await mountSection('ventilated-patient')
+    const check = lesson.steps[lesson.predictionStepIndex]
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex + 1])
+    cleanup()
+    await mountSection('ventilated-patient')
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
+    await finishSection(lesson)
+    const movedPast = document.querySelector('[data-completion-moved-past]')?.textContent ?? ''
+    expect(movedPast).not.toContain(check.title)
+    expect(readBronchSectionPlace('ventilated-patient')).toBeNull()
+    expect(localStorage.getItem(BRONCH_PLACE_STORAGE_KEY)).toBeNull()
   })
 })
 

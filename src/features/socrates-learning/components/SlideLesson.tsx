@@ -107,7 +107,12 @@ export function SlideLesson({
                   : 'Teaching regions will be added later'}
             </span>
           </div>
-          {!testing && <AnnotationKey legend={document.caseContent.annotationLegend} />}
+          {!testing && (
+            <AnnotationKey
+              legend={document.caseContent.annotationLegend}
+              descriptorUrl={document.slide.descriptorUrl}
+            />
+          )}
         </div>
         {testing ? (
           <section className={styles.lessonPanel} aria-label="Testing response">

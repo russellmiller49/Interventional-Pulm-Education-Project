@@ -57,16 +57,12 @@ for (const condition of [
   test(`RA detail to RV/PA preserves plot coordinates at ${condition.width}, ${condition.theme}, ${condition.rootText}% root text`, async ({
     page,
   }) => {
+    // A lesson on a desktop window hides the site menu, and its theme toggle with it. The site
+    // theme follows the system setting when the learner has stored no choice, so set that.
+    await page.emulateMedia({ colorScheme: condition.theme })
     await page.setViewportSize(condition)
     await page.goto('/en/icu-hemodynamics/learn?activity=waveform-interpretation')
     const root = page.locator('html')
-    // The theme class is set once the page has hydrated. Read before that, it is empty, and the
-    // toggle is then pressed on a page that is about to choose the wanted theme by itself
-    // (seen on a freshly started server during HD-PRE-REVIEW-03's base comparison).
-    await page.waitForFunction(() => /\b(dark|light)\b/.test(document.documentElement.className))
-    if (!(await root.getAttribute('class'))?.split(' ').includes(condition.theme)) {
-      await page.getByRole('button', { name: /Toggle dark mode/i }).click()
-    }
     await expect(root).toHaveClass(new RegExp(`\\b${condition.theme}\\b`))
     if (condition.rootText === 200) {
       await page.evaluate(() => (document.documentElement.style.fontSize = '200%'))

@@ -2,40 +2,59 @@
 
 import { useEffect, useRef, type PointerEvent } from 'react'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
-import { ACCESSORY_POSITION_WORDS, ACCESSORY_STATE_WORDS } from '../../engine/scope/scopeMetrics'
+import { ACCESSORY_CHECK_WORDS } from '../../engine/scope/scopeMetrics'
 import {
   scopeControlId,
   type ScopePaneProps,
   type ScopeCommand,
   type ScopeControlKey,
   type ScopeInputMode,
-  type AccessoryState,
-  type AccessoryPosition,
 } from './types'
 import styles from './scope-scene.module.css'
-import { accessoryKind } from '../../engine/scope/scopeAccessory'
+import { isForkWaitMessage } from '../../engine/scope/scopeMessages'
+import {
+  dockKeyOrder,
+  HELD_INTERVAL_MS,
+  HELD_STEP_MM,
+  HOLD_DELAY_MS,
+  HOLD_RELEASE_MS,
+} from './scopeKeyMap'
+import { NameSegment } from './NameSegment'
+import { AccessoryControls } from './AccessoryControls'
 
 /**
- * Choosing a state here is a command to the assistant, not the state itself (SUP-16).
- *
- * The accessory is in the assistant's hands: the operator asks, the assistant answers, and only
- * the image settles what the accessory is actually doing — which is the whole point of the
- * misreport the section teaches. The selects therefore show the state the model is in, and this
- * note says that choosing one asks for a change rather than making it true.
+ * A press of Advance or Withdraw is one step. Held, it becomes a glide: ordinary advance commands
+ * in fine increments at a steady rate (`scopeKeyMap.ts`), and the release adds no step of its own.
  */
-const ACCESSORY_COMMAND_NOTE =
-  'Choosing here commands the assistant; the image settles what the accessory is doing.'
-const ACCESSORY_COMMAND_NOTE_ID = scopeControlId('accessory-command-note')
-
-/** Held insertion is a sequence of ordinary commands, capped at 24 authored mm/s. */
 export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
   const { view, state, controlsEnabled, onCommand, onReset, spotlightKey } = props
   const inputMode = useRef<ScopeInputMode>('pointer')
   const hold = useRef<ReturnType<typeof setInterval> | null>(null)
+  const holdDelay = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const held = useRef(false)
+  // Until when a click belongs to the hold that just ended, and so adds no step of its own.
+  const releaseUntil = useRef(0)
+  // A hold that ended itself at a fork while the button was still down: the click its release
+  // sends belongs to it too, however long the learner keeps the button pressed.
+  const pressed = useRef(false)
+  const ownsNextClick = useRef(false)
   const repeat = useRef<() => void>(() => {})
+  // The latest message, read by a running hold: the glide ends where the scope waits at a fork.
+  const message = useRef(state.message)
+  useEffect(() => {
+    message.current = state.message
+  }, [state.message])
   const stop = () => {
+    if (holdDelay.current) clearTimeout(holdDelay.current)
+    holdDelay.current = null
     if (hold.current) clearInterval(hold.current)
     hold.current = null
+    if (held.current) {
+      // Only the click that follows this release at once: a hold the browser cancelled is
+      // followed by none, and must not swallow the learner's next press.
+      held.current = false
+      releaseUntil.current = performance.now() + HOLD_RELEASE_MS
+    }
   }
   useEffect(() => {
     const release = () => stop()
@@ -57,13 +76,23 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
     if (!controlsEnabled || event.button !== 0) return
     event.currentTarget.setPointerCapture(event.pointerId)
     stop()
-    // The click supplies the initial step. Only a sustained hold starts repetition.
+    releaseUntil.current = 0
+    pressed.current = true
+    ownsNextClick.current = false
+    // A short press is the click's one step. Only a sustained hold starts the glide.
     repeat.current = () =>
-      onCommand({ type: 'advance', mm: direction * state.inputs.stepMm }, inputMode.current)
-    hold.current = setInterval(
-      () => repeat.current(),
-      Math.max(160, (state.inputs.stepMm / 24) * 1000),
-    )
+      onCommand({ type: 'advance', mm: direction * HELD_STEP_MM }, inputMode.current)
+    holdDelay.current = setTimeout(() => {
+      held.current = true
+      repeat.current()
+      hold.current = setInterval(() => {
+        // Forward only: the scope has stopped to show a fork, and a new press goes on from there.
+        if (direction > 0 && isForkWaitMessage(message.current)) {
+          stop()
+          ownsNextClick.current = pressed.current
+        } else repeat.current()
+      }, HELD_INTERVAL_MS)
+    }, HOLD_DELAY_MS)
   }
   const button = (key: ScopeControlKey, text: string, command: ScopeCommand) => (
     <button id={scopeControlId(key)} type="button" onClick={() => send(command)}>
@@ -82,10 +111,29 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
             type="button"
             aria-label={key === 'advance' ? 'Advance' : 'Withdraw'}
             onPointerDown={(event) => start(event, direction)}
-            onPointerUp={stop}
-            onPointerCancel={stop}
-            onLostPointerCapture={stop}
-            onClick={() => send({ type: 'advance', mm: direction * state.inputs.stepMm })}
+            onPointerUp={() => {
+              pressed.current = false
+              stop()
+            }}
+            onPointerCancel={() => {
+              // A cancelled press sends no click, so it leaves none to be swallowed.
+              pressed.current = false
+              ownsNextClick.current = false
+              stop()
+            }}
+            onLostPointerCapture={() => {
+              pressed.current = false
+              stop()
+            }}
+            onClick={() => {
+              // The release of a hold has already travelled; it is not one more step.
+              if (ownsNextClick.current || performance.now() < releaseUntil.current) {
+                ownsNextClick.current = false
+                releaseUntil.current = 0
+                return
+              }
+              send({ type: 'advance', mm: direction * state.inputs.stepMm })
+            }}
           >
             {key === 'advance' ? 'Advance' : 'Withdraw'}
             {view.physicalControlLabels ? (
@@ -138,53 +186,12 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
         )
       case 'accessory':
         return (
-          <>
-            <p id={ACCESSORY_COMMAND_NOTE_ID} className={styles.commandNote}>
-              {ACCESSORY_COMMAND_NOTE}
-            </p>
-            <label htmlFor={id}>
-              Accessory
-              <select
-                id={id}
-                aria-label="Accessory"
-                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
-                value={state.inputs.accessory}
-                onChange={(event) =>
-                  send({ type: 'accessory', state: event.target.value as AccessoryState })
-                }
-              >
-                {Object.entries(ACCESSORY_STATE_WORDS)
-                  .filter(
-                    ([value]) =>
-                      accessoryKind(value as AccessoryState) ===
-                      accessoryKind(state.inputs.accessory),
-                  )
-                  .map(([value, text]) => (
-                    <option key={value} value={value}>
-                      {text}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label htmlFor={scopeControlId('accessory-move')}>
-              Accessory position
-              <select
-                id={scopeControlId('accessory-move')}
-                aria-label="Accessory position"
-                aria-describedby={ACCESSORY_COMMAND_NOTE_ID}
-                value={state.inputs.accessoryPosition}
-                onChange={(event) =>
-                  send({ type: 'accessory-move', to: event.target.value as AccessoryPosition })
-                }
-              >
-                {Object.entries(ACCESSORY_POSITION_WORDS).map(([value, text]) => (
-                  <option key={value} value={value}>
-                    {text}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
+          <AccessoryControls
+            state={state}
+            send={send}
+            offerCheck={view.controls.includes('verifyAccessory')}
+            spotlightKey={spotlightKey}
+          />
         )
       case 'capture':
         return button(key, 'Capture an image', { type: 'capture' })
@@ -209,21 +216,22 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
               checked={state.inputs.branchLabels}
               onChange={(event) => send({ type: 'branch-labels', on: event.target.checked })}
             />
-            In-view labels
+            Show the opening names
           </label>
         )
       case 'clearLens':
         return button(key, 'Clear the lens', { type: 'clear-lens' })
       case 'verifyAccessory':
-        return button(key, 'Check the accessory against the image', { type: 'verify-accessory' })
+        return button(key, ACCESSORY_CHECK_WORDS, { type: 'verify-accessory' })
       case 'step':
         return button(key, 'Step one second', { type: 'tick', seconds: 1 })
       case 'declare':
-        return null
+        return <NameSegment view={view} state={state} disabled={!controlsEnabled} onName={send} />
     }
   }
-  const keys = [...view.controls.filter((key) => key !== 'declare')]
-  if (props.needsStep && !keys.includes('step')) keys.push('step')
+  // A naming record asks its question in a row of its own, under the movement controls.
+  const keys = dockKeyOrder(view.controls, props.needsStep ? ['step'] : [])
+  if (view.controls.includes('declare') && view.ledger?.naming) keys.push('declare')
   if (!keys.length) return null
   return (
     <fieldset
@@ -235,6 +243,8 @@ export function ScopeDock(props: ScopePaneProps & { needsStep: boolean }) {
         inputMode.current = event.pointerType === 'touch' ? 'touch' : 'pointer'
       }}
       onKeyDownCapture={() => {
+        // A key press is its own action: no pointer hold's release is still owed a click.
+        ownsNextClick.current = false
         inputMode.current = 'keyboard'
       }}
     >

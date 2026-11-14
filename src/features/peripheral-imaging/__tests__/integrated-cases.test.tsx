@@ -59,7 +59,7 @@ function checkChoice(choiceId: string) {
  * feedback included — on any answer, repeats freely, and records nothing but the visit.
  */
 describe('the integrated cases', () => {
-  it('keep the eight cases, their stable item ids and the item bank’s safety flags', () => {
+  it('keep the nine cases, their stable item ids and the item bank’s safety flags', () => {
     expect(validateImagingCases()).toEqual([])
     // Prompt 04 (OD4-05, 2026-09-22) replaced the fourth, fifth and eighth slots with revised
     // cases under new ids; the earlier items stay in the bank and their addresses redirect.
@@ -72,6 +72,8 @@ describe('the integrated cases', () => {
       'case-6',
       'case-7',
       'case-8-v2',
+      // Expert-session round, part 2: planning the projection from the CT.
+      'case-9',
     ])
     expect(imagingCases.map((imagingCase) => imagingCase.item.id)).toEqual(
       imagingCases.map((imagingCase) => `capstone:${imagingCase.id}`),
@@ -211,6 +213,6 @@ describe('the integrated cases', () => {
     cleanup()
     render(<PeripheralImagingIntegratedCasesLanding unknownCase="case-99" />)
     expect(document.querySelector('[data-unknown-case="case-99"]')).not.toBeNull()
-    expect(document.querySelectorAll('[data-integrated-case-link]')).toHaveLength(8)
+    expect(document.querySelectorAll('[data-integrated-case-link]')).toHaveLength(9)
   })
 })

@@ -223,13 +223,320 @@
 .model-reference-toggle {
   margin-top: 8px;
 }
-.additional-models[data-model-package='needle'] .model-controls fieldset {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
+/*
+ * The needle lab (rebuild of 2026-11-11): the handle across the top, the ultrasound picture and
+ * the scope tip under it, the steps and their controls beside them. In the lesson's console it is
+ * one screen tall and nothing scrolls but the step list; in a narrow frame the parts stack.
+ */
+.additional-models[data-model-package='needle'] > header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
 }
-.additional-models[data-model-package='needle'] .model-controls fieldset > label,
-.additional-models[data-model-package='needle'] .model-controls fieldset > p {
-  grid-column: 1/-1;
+.additional-models[data-model-package='needle'] > header h1 {
+  font-size: 15px;
+  margin: 0;
+}
+.additional-models[data-model-package='needle'] > header .model-kicker {
+  margin: 0;
+}
+.needle-lab {
+  display: grid;
+  gap: 10px;
+}
+.needle-stage {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.needle-lab .model-image,
+.needle-lab .model-3d,
+.needle-lab .model-controls,
+.needle-handle {
+  margin: 0;
+  padding: 8px 10px;
+  min-width: 0;
+}
+.needle-lab h2 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+.needle-handle {
+  background: #132232;
+  border: 1px solid #2a4155;
+  border-radius: 10px;
+}
+.needle-handle-view {
+  position: relative;
+  height: 112px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, #16303f 0%, #0a1a26 70%, #060f17 100%);
+}
+.needle-handle-view canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.needle-handle-name {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border: 1px solid #3c566d;
+  border-radius: 999px;
+  background: #0d1c2a;
+  color: #cfe0ee;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.needle-handle-name[data-below] {
+  top: auto;
+  bottom: 4px;
+}
+.needle-handle-name[data-lean] {
+  transform: translateX(-88%);
+}
+.needle-handle-name[data-focus] {
+  border-color: #5fe0e6;
+  background: #12414a;
+  color: #f1fffd;
+}
+.needle-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 54 / 40;
+  object-fit: contain;
+  background: #05080c;
+  border-radius: 6px;
+}
+.needle-status {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #c9dbe9;
+}
+.needle-ultrasound .model-feedback {
+  margin: 6px 0 0;
+  padding: 6px 9px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.needle-ultrasound[data-needle-tip='lost'] .needle-status {
+  color: #ffd9a0;
+}
+.needle-lab .model-viewport {
+  aspect-ratio: 4 / 3;
+  max-height: none;
+}
+.needle-lab .model-inspector,
+.needle-lab details.model-caption {
+  display: none;
+}
+/* The view's name sits on the view, which leaves its row to the camera buttons. */
+.needle-lab .model-3d {
+  position: relative;
+}
+.needle-lab .model-heading {
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+.needle-lab .model-heading h2 {
+  position: absolute;
+  z-index: 2;
+  left: 18px;
+  top: 46px;
+  margin: 0;
+  padding: 1px 8px;
+  border: 1px solid #3c566d;
+  border-radius: 999px;
+  background: #0d1c2a;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.needle-lab .model-observer-buttons {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+.needle-lab .model-observer-buttons button {
+  min-height: 28px;
+  padding: 2px 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.needle-panel {
+  /* Contains the visually hidden text inside it, so a scrolled list cannot stretch the frame. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.needle-panel .model-feedback {
+  margin: 0;
+  padding: 6px 9px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.needle-panel fieldset {
+  gap: 6px;
+  min-height: 0;
+}
+.needle-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.needle-panel-head h2 {
+  margin: 0;
+}
+.needle-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.needle-steps li {
+  padding: 4px 8px;
+  border: 1px solid #263c50;
+  border-radius: 8px;
+  background: #0f1d2b;
+}
+.needle-steps li[data-current] {
+  border-color: #5fe0e6;
+  background: #11283a;
+}
+.needle-steps li[data-done='true'] .needle-step-mark {
+  background: #1f6f62;
+  border-color: #58c8b0;
+  color: #eafff8;
+}
+.needle-step-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.needle-step-title p {
+  flex: 1;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #eaf3fb;
+}
+.needle-step-mark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #46627b;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+}
+.needle-step-how {
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #c3d5e4;
+}
+.additional-models .needle-slider {
+  display: grid;
+  grid-template-columns: 7.6em minmax(0, 1fr) 3.4em;
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #cfe0ee;
+}
+.needle-slider output {
+  text-align: right;
+  color: #9cf0f3;
+  font-variant-numeric: tabular-nums;
+}
+.additional-models .needle-slider input[type='range'] {
+  min-height: 22px;
+}
+.additional-models .needle-steps button,
+.additional-models .needle-reset {
+  flex: none;
+  min-height: 28px;
+  padding: 2px 10px;
+  font-size: 13px;
+}
+.needle-count {
+  flex: none;
+  font-size: 13px;
+  color: #9cf0f3;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 1000px) {
+  .additional-models[data-model-package='needle'] {
+    height: 100vh;
+    min-height: 0;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  /* The lesson's own heading names the task above this frame; the lab's is kept for readers only. */
+  .additional-models[data-model-package='needle'] > header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .needle-lab {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
+  }
+  /* The ultrasound picture on the left at full height; the handle above the scope tip beside it. */
+  .needle-stage {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .needle-stage .needle-ultrasound {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .needle-handle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .needle-stage .model-3d {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .needle-lab .model-image,
+  .needle-lab .model-3d {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .needle-picture {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 100%;
+  }
+  .needle-lab .model-viewport {
+    flex: 1;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  .needle-panel {
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 /* Observer controls beside the heading, and focus for the keyboard-driven canvas (EBUS-PRE-REVIEW-03). */

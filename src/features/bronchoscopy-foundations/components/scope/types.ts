@@ -226,7 +226,7 @@ export type ScopeAssist =
   | 'align-to-branch'
   /** Jump back to the authored start. */
   | 'teleport-to-start'
-  /** Zero deflection and rotation. */
+  /** Back to the rotation and deflection the step opened with: zero unless the view authors a start. */
   | 'recenter'
   /** The authored camera roll that sets the reviewed reference views at the RUL, RML and LUL. */
   | 'reference-orientation'
@@ -345,6 +345,7 @@ export type ScopeEventId =
   | 'suction-applied'
   | 'suction-released'
   | 'bench-advanced-off-target'
+  | 'bench-fluid-aspirated'
   | `accessory:${AccessoryState}`
   | `accessory-moved:${AccessoryPosition}`
   | `assist:${ScopeAssist}`
@@ -372,6 +373,8 @@ export type ScopeEventId =
   | 'advanced-against-closure'
   | 'tube-exited'
   | 'survey-complete'
+  /** A naming record was given a name that is not the airway the tip is inside. */
+  | 'misnamed'
 
 export type ScopeMetricId =
   | 'currentAirway'
@@ -453,6 +456,14 @@ export interface ScopeViewSpec {
   readonly ledger?: {
     readonly expected: readonly AirwayLabel[] | 'segmental' | 'profile'
     readonly record?: LedgerRecordWords
+    /**
+     * The record is kept by naming (educator feedback, 2026-10-13). While the tip is inside an
+     * airway on the record that has not been named, the pane asks which one it is and offers the
+     * names still left; the right one records it and drops out of the list. Until then the pane
+     * prints that airway's name nowhere: the caption, the readouts and the map say only that it
+     * is not named yet.
+     */
+    readonly naming?: boolean
   }
   readonly script?: ScopeScriptId
   /**
@@ -466,6 +477,8 @@ export interface ScopeViewSpec {
   readonly litAirways?: readonly AirwayLabel[]
   /** The model-boundary sentence printed under the scene. */
   readonly boundary: string
+  /** Fluid aspiration exercise outside the airway. */
+  readonly benchSuction?: boolean
   /** Learn-only authored target, shared by the scene and optical-frame goal check. */
   readonly benchTarget?: { readonly point: Vec3; readonly radiusMm: number }
   /** Physical action descriptions on the pilot's controls; existing callers retain labels. */
@@ -495,6 +508,8 @@ export type ScopeCommand =
       readonly airway: AirwayLabel
       readonly status: DeclarableStatus
     }
+  /** A naming record's answer: the name the learner gives the airway the tip is inside. */
+  | { readonly type: 'name'; readonly airway: AirwayLabel }
 
 /** An upcoming ostium the tip can see or steer into. */
 export interface OstiumPin {
@@ -504,6 +519,12 @@ export interface OstiumPin {
   readonly edgeId: number
   readonly pointLps: Vec3
   /**
+   * Where the opening's name is drawn: a point on the airway's centerline a little way inside it,
+   * so the name sits in the lumen rather than on the carina beside it. Drawing only: what is in
+   * view, the record and the align assist all read `pointLps`.
+   */
+  readonly labelPointLps?: Vec3
+  /**
    * Inside the round optical field — the circle inscribed in the nominal 4:3, 88° frame — and near
    * enough to be seen. Round, so rolling the scope never moves an opening into or out of view
    * (A06/A28).
@@ -512,6 +533,8 @@ export interface OstiumPin {
 }
 
 export interface ScopeSignals {
+  /** Dimensionless remaining fluid in the bench reservoir; absent in airway cases. */
+  readonly benchFluidRemaining?: number
   /** Feedback signals, not measurements of trauma, force or competence (§23.3). */
   readonly contactCount: number
   readonly pathLengthMm: number
@@ -618,6 +641,11 @@ export interface ScopePaneProps {
    */
   readonly helpTarget?: AirwayLabel | null
   readonly helpSentence?: string
+  /**
+   * Said, unasked, when something done in this attempt means a goal can no longer be met in it
+   * (a `without` clause that has been broken), with the way to start again.
+   */
+  readonly blockedSentence?: string
   /**
    * Opening names on request where a step does not offer the in-view labels control (A30). A
    * reference drawn by the pane: it sends no command, records no assist, and marks nothing seen or

@@ -37,6 +37,18 @@ import type {
   QualitativePrePostDilutionResult,
 } from '../prescriptionWorkbenchModel'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
+import {
+  CRRT_FILTRATION_FRACTION_CEILINGS,
+  CRRT_FILTRATION_FRACTION_DEVICE_NOTE,
+  CRRT_FILTRATION_FRACTION_ESTIMATE_NOTE,
+  CRRT_FILTRATION_FRACTION_EXPRESSION,
+  CRRT_FILTRATION_FRACTION_LIMITS,
+  CRRT_FILTRATION_FRACTION_NAME,
+  CRRT_FILTRATION_FRACTION_PLASMA_FLOW,
+  crrtFiltrationFractionStanding,
+  crrtFiltrationFractionWorking,
+  formatCrrtFiltrationFraction,
+} from '../content/filtrationFraction'
 import styles from './crrt-staged-prescription-builder.module.css'
 import { CRRT_NUMBERS } from '../content/teachingNumbers'
 
@@ -438,7 +450,9 @@ export function QualitativePrePostDilutionExperiment({
               <dt>Relative filtration-burden indicator</dt>
               <dd>
                 <strong>{qualitativeLabel(result.filtrationFractionBurdenProxy)}</strong>
-                <small>Split-only indicator; the quantitative value is unavailable.</small>
+                <small>
+                  Split-only indicator; the value is under {CRRT_FILTRATION_FRACTION_NAME}.
+                </small>
               </dd>
             </div>
             <div>
@@ -1157,8 +1171,47 @@ export function CrrtStagedPrescriptionBuilder({
                   result={consequences.filtrationBurden.qualitative}
                 />
 
-                <section className={styles.consequenceSection}>
-                  <h4>Filtration burden</h4>
+                <section className={styles.consequenceSection} data-crrt-filtration-fraction>
+                  <h4>{CRRT_FILTRATION_FRACTION_NAME}</h4>
+                  {consequences.filtrationBurden.filtrationFraction ? (
+                    <>
+                      <p>
+                        <strong data-crrt-filtration-fraction-value>
+                          {formatCrrtFiltrationFraction(
+                            consequences.filtrationBurden.filtrationFraction.fraction,
+                          )}
+                        </strong>{' '}
+                        ={' '}
+                        {crrtFiltrationFractionWorking(
+                          consequences.filtrationBurden.filtrationFraction,
+                        )}
+                        .{' '}
+                        {
+                          crrtFiltrationFractionStanding(
+                            consequences.filtrationBurden.filtrationFraction.fraction,
+                          ).text
+                        }
+                      </p>
+                      <p>
+                        Filtration fraction is {CRRT_FILTRATION_FRACTION_EXPRESSION}, where{' '}
+                        {CRRT_FILTRATION_FRACTION_PLASMA_FLOW}. Replacement entered before the
+                        filter adds to the flow reaching it, so the same volume gives a lower
+                        fraction before the filter than after it.
+                      </p>
+                      <p data-crrt-filtration-fraction-ceiling>
+                        {CRRT_FILTRATION_FRACTION_CEILINGS}
+                      </p>
+                      <p data-crrt-filtration-fraction-estimate>
+                        {CRRT_FILTRATION_FRACTION_ESTIMATE_NOTE}{' '}
+                        {CRRT_FILTRATION_FRACTION_DEVICE_NOTE}
+                      </p>
+                      <p data-crrt-filtration-fraction-limits>{CRRT_FILTRATION_FRACTION_LIMITS}</p>
+                    </>
+                  ) : (
+                    <p data-crrt-filtration-fraction-reason>
+                      {consequences.filtrationBurden.quantitativeReason}
+                    </p>
+                  )}
                   <p>
                     Printed total-predilution relationship:{' '}
                     <strong>
@@ -1166,10 +1219,9 @@ export function CrrtStagedPrescriptionBuilder({
                         ? 'unavailable — no entered pre-flow denominator'
                         : `${(consequences.filtrationBurden.printedTotalPredilutionFraction * 100).toFixed(1)}%`}
                     </strong>
-                    . This is a dimensionless relationship, not the quantitative filtration
-                    fraction.
+                    . This is the share of the dilution fluid that enters before the filter; it is
+                    not the filtration fraction.
                   </p>
-                  <p>{consequences.filtrationBurden.quantitativeReason}</p>
                 </section>
 
                 <section className={styles.consequenceSection}>

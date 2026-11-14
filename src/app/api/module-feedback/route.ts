@@ -1,5 +1,12 @@
+import { randomUUID } from 'node:crypto'
+import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { feedbackSchema, isPngScreenshot, maxScreenshotBytes } from '@/features/module-beta/schema'
+import {
+  describeReviewer,
+  reviewerProfileColumns,
+  type ReviewerProfile,
+} from '@/features/module-beta/reviewSchema'
 import {
   feedbackBucket,
   feedbackJson,
@@ -70,7 +77,8 @@ export async function POST(request: Request) {
       { error: 'You have sent 30 reports in the past hour. Please try again later.' },
       429,
     )
-  const screenshotPath = bytes ? `${auth.user.id}/${body.id}.png` : null
+  // Each attempt owns its image, so an orphan never blocks a retry's upload.
+  const screenshotPath = bytes ? `${auth.user.id}/${body.id}/${randomUUID()}.png` : null
   if (bytes && screenshotPath) {
     const { error } = await supabaseAdmin.storage
       .from(feedbackBucket)
@@ -81,24 +89,40 @@ export async function POST(request: Request) {
         503,
       )
   }
-  const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
-    id: body.id,
-    user_id: auth.user.id,
-    tester_email: auth.user.email ?? '',
-    module_id: body.moduleId,
-    page_path: body.pagePath,
-    comment: body.comment,
-    selected_text: body.selectedText,
-    screenshot_path: screenshotPath,
-  })
-  if (error) {
-    if (screenshotPath) await supabaseAdmin.storage.from(feedbackBucket).remove([screenshotPath])
-    return feedbackJson(
-      { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
-      503,
-    )
+  try {
+    const { error } = await supabaseAdmin.from('module_beta_feedback').insert({
+      id: body.id,
+      user_id: auth.user.id,
+      tester_email: auth.user.email ?? '',
+      module_id: body.moduleId,
+      page_path: body.pagePath,
+      comment: body.comment,
+      selected_text: body.selectedText,
+      screenshot_path: screenshotPath,
+    })
+    if (!error) return feedbackJson({ id: body.id }, 201)
+  } catch {
+    // A thrown transport error does not establish whether the insert committed.
   }
-  return feedbackJson({ id: body.id }, 201)
+  // Once the insert begins, never delete its image here. Even an empty lookup cannot
+  // rule out a pending commit. Accept private orphans rather than lose referenced images.
+  try {
+    const { data: persisted, error: lookupError } = await supabaseAdmin
+      .from('module_beta_feedback')
+      .select('id,user_id')
+      .eq('id', body.id)
+      .maybeSingle()
+    if (!lookupError && persisted)
+      return persisted.user_id === auth.user.id
+        ? feedbackJson({ id: persisted.id })
+        : feedbackJson({ error: 'Start a new feedback report and try again.' }, 409)
+  } catch {
+    // A lookup failure is also ambiguous; keep the image and let the same report ID retry.
+  }
+  return feedbackJson(
+    { error: 'Feedback could not be saved. Your draft has been kept open; please retry.' },
+    503,
+  )
 }
 
 export async function GET(request: Request) {
@@ -110,11 +134,13 @@ export async function GET(request: Request) {
   let query = supabaseAdmin
     .from('module_beta_feedback')
     .select(
-      'id,module_id,page_path,comment,selected_text,tester_email,created_at,screenshot_path,status,reviewer_notes',
+      'id,user_id,module_id,page_path,comment,selected_text,tester_email,created_at,screenshot_path,status,reviewer_notes',
       { count: 'exact' },
     )
   if (params.get('module')) query = query.eq('module_id', params.get('module')!)
   if (params.get('status')) query = query.eq('status', params.get('status')!)
+  const user = params.get('user')
+  if (user && z.string().uuid().safeParse(user).success) query = query.eq('user_id', user)
   const { data, count, error } = await query
     .order('created_at', { ascending: false })
     .order('id')
@@ -124,5 +150,16 @@ export async function GET(request: Request) {
       { error: 'Feedback could not be loaded. Check that feedback storage has been set up.' },
       503,
     )
-  return feedbackJson({ entries: data, count })
+  // Who sent each report, from their site profile, so a comment can be weighed by its author.
+  const users = [...new Set((data ?? []).map((entry) => entry.user_id).filter(Boolean))]
+  const reviewers: Record<string, string> = {}
+  if (users.length) {
+    const { data: profiles } = await supabaseAdmin
+      .from('site_profiles')
+      .select(`id,${reviewerProfileColumns}`)
+      .in('id', users)
+    for (const profile of (profiles ?? []) as (ReviewerProfile & { id: string })[])
+      reviewers[profile.id] = describeReviewer(profile)
+  }
+  return feedbackJson({ entries: data, count, reviewers })
 }

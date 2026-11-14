@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Link } from '@/i18n/navigation'
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS } from '../content/curriculum'
 import { PRACTICE_CASES } from '../content/cases'
 import { EMPTY_EBUS_OBSERVATION, type EbusObservation } from '@/lib/ebus-guided-bridge'
 import { labGoalMet } from '../content/types'
@@ -27,15 +27,17 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
   const [reveal, setReveal] = useState(false)
   const [example, setExample] = useState(false)
   const item = PRACTICE_CASES.find((c) => c.id === active)
-  const lesson = LESSONS.find((l) => l.id === active && l.lab)
-  const labs = LESSONS.filter((l) => l.lab?.kind === 'knobology')
+  // The recorded-clip labs, one per control. Two of them now sit inside a merged lesson, so the
+  // practice list is read from the content units, not the lesson list.
+  const lesson = CONTENT_LESSONS.find((l) => l.id === active && l.lab)
+  const labs = CONTENT_LESSONS.filter((l) => l.lab?.kind === 'knobology')
   function choose(id: string | null) {
     setActive(id)
     setReveal(false)
     setExample(false)
     setObservation(EMPTY_EBUS_OBSERVATION)
     setRound((v) => v + 1)
-    if (id && LESSONS.some((l) => l.id === id)) recordLocation({ kind: 'practice-lab', id })
+    if (id && CONTENT_LESSONS.some((l) => l.id === id)) recordLocation({ kind: 'practice-lab', id })
   }
   const acquired = observation.frameReady && observation.actionCount >= 1
   return (

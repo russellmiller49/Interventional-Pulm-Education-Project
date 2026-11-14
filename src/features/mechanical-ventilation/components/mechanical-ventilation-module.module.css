@@ -64,6 +64,33 @@
   overflow: visible;
 }
 
+/*
+ * Learn on a desktop is the fixed workspace again (owner, 2026-10-15): the shell is the viewport
+ * beneath the site header and the section's text and console panes scroll on their own, so the
+ * learner reads on while the console stays in view. The stage's own stylesheet
+ * (`stage/task-flow.module.css`) fills it; below this viewport Learn keeps the document flow above.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'][data-task-flow='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moduleShell[data-activity-mode='true'][data-task-flow='true'] [data-activity-frame='true'] {
+    display: grid;
+    height: 100%;
+    overflow: hidden;
+  }
+  .moduleShell[data-activity-mode='true'][data-task-flow='true']
+    [data-activity-frame='true']
+    > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 .englishFallback svg {
   width: 1rem;
   height: 1rem;

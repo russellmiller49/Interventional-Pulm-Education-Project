@@ -463,11 +463,11 @@ describe('the circuit walk, marked on the real map', () => {
     }
     // The teaching card says where the marking is, in the same words each time.
     expect(document.querySelector('[data-walk-scene-labels]')?.textContent).toMatch(
-      /^Marked on the circuit map and in the bedside scene:/,
+      /^Highlighted in yellow on the circuit map/,
     )
   })
 
-  it('rings the teaching site first and keeps ordinary labels during optional retrieval', () => {
+  it('rings the teaching site first and withholds the labels only for the map question', () => {
     mountSection('circuit-flow-path')
     expect(document.querySelector('[data-map-emphasis-role="sensor-site"]')).not.toBeNull()
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
@@ -476,9 +476,11 @@ describe('the circuit walk, marked on the real map', () => {
     )
     reachFoundationStep('circuit-flow-path', 'predict')
     expect(document.querySelector('[data-map-emphasis]')).toBeNull()
+    // Revised 2026-10-14 (tester feedback, "The circuit was still labeled when I answered the
+    // question"): the map question's sensor labels are withheld until the answer is in.
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(
       'data-location-disclosure',
-      'full',
+      'withheld',
     )
     fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(document.querySelector('#cardiohelp-circuit-panel')).toHaveAttribute(

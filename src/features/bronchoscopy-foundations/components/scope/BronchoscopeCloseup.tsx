@@ -9,6 +9,7 @@ import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
 import type { ScopeState } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
 import { bendingSectionSample, BENDING_SECTION_LENGTH } from './benchPresentation'
+import { LeftHandGrip } from './ControlHeadHand'
 
 function installStudioEnvironment(scene: THREE.Scene, gl: THREE.WebGLRenderer) {
   const previous = scene.environment
@@ -144,6 +145,13 @@ export function ControlHeadCloseup({
         <group position={suctionPosition}>
           <primitive object={assemblies.suction} dispose={null} />
         </group>
+        <LeftHandGrip
+          leverPivot={head.leverPivot as [number, number, number]}
+          bendRad={bend}
+          suctionPivot={head.suctionPivot as [number, number, number]}
+          suctionAxis={head.suctionAxis as [number, number, number]}
+          suctionPressMm={head.suctionTravel * suctionTravel}
+        />
       </group>
     </>
   )

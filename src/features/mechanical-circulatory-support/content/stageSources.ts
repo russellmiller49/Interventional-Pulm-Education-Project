@@ -2,6 +2,7 @@ import { MCS_CONTROL_PANEL } from './controlPanel'
 import { mcsIncrementForSection } from './deviceIncrements'
 import { mcsLessons } from './lessons'
 import { mcsLessonTransferByLessonId } from './lessonTransfers'
+import { MCS_LVAD_PERFUSION_DECISIONS, MCS_LVAD_PERFUSION_SECTION_ID } from './lvadPerfusionCase'
 import { mcsSectionLearningContractById } from './sectionLearningContracts'
 import { mcsSectionSpec } from './sectionSpecs'
 import { mcsSources } from './sources'
@@ -42,6 +43,9 @@ export function mcsStageSources(sectionId: string): McsStageSources {
   add(contract?.predictionItem.evidenceIds ?? [])
   add(transfer?.item.evidenceIds ?? [])
   for (const story of mcsStoryProblemsFor(sectionId)) add(story.item.evidenceIds)
+  if (sectionId === MCS_LVAD_PERFUSION_SECTION_ID) {
+    for (const decision of MCS_LVAD_PERFUSION_DECISIONS) add(decision.item.evidenceIds)
+  }
   if (spec.walksTheLoop) {
     add(MCS_SUPPORT_SPINE.sourceIds)
     add(MCS_CONTROL_PANEL.sourceIds)

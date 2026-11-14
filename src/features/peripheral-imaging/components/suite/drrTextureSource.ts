@@ -6,6 +6,14 @@ import { DEFAULT_FLUORO_SETTINGS } from '@fluoroview/knobology'
 import { detectorFrameForAngles } from '@fluoroview/geometry'
 import { IMAGING_CONFIG, loadAnatomyVolume, VOLUME_ASSET } from '../../lib/anatomy'
 import { type ImagingGeometry, type Point3 } from '../../lib/physics'
+import { BONE_DEPTH_SPLIT, FLUORO_LOOK, boneShareVolume } from '../../lib/fluoroLook'
+
+/** The bone volume is derived once from the one CT every display shares. */
+let boneShare: { readonly from: Uint8Array; readonly bytes: Uint8Array } | undefined
+function sharedBoneShare(volume: Uint8Array) {
+  if (boneShare?.from !== volume) boneShare = { from: volume, bytes: boneShareVolume(volume) }
+  return boneShare.bytes
+}
 
 export interface DrrPose {
   orbit: number
@@ -24,6 +32,7 @@ export class DrrTextureSource {
   private timer: ReturnType<typeof setTimeout> | undefined
   private listeners = new Set<() => void>()
   private pose: DrrPose = { orbit: 0, tilt: 0 }
+  private boneDepthTint = false
   revision = 0
   state: ProjectionState = 'loading'
   private readonly contextLost = (event: Event) => {
@@ -68,7 +77,7 @@ export class DrrTextureSource {
     try {
       const volume = await loadAnatomyVolume()
       if (this.disposed) return
-      await this.engine.load(volume)
+      await this.engine.load(volume, sharedBoneShare(volume))
       if (this.disposed) return
       this.state = 'ready'
       this.update(this.pose)
@@ -89,6 +98,16 @@ export class DrrTextureSource {
     this.timer = setTimeout(() => this.render(this.pose, false), 110)
   }
 
+  /**
+   * Tint bone by which side of the nodule it lies on along the beam. A display aid the learner
+   * turns on; the image is redrawn, and a frame stored before the change keeps its own pixels.
+   */
+  setBoneDepthTint(on: boolean) {
+    if (this.boneDepthTint === on) return
+    this.boneDepthTint = on
+    this.update(this.pose)
+  }
+
   render(pose: DrrPose, lowRes = false) {
     if (this.state !== 'ready' || this.disposed) return
     const metrics = this.engine.render({
@@ -97,6 +116,11 @@ export class DrrTextureSource {
       lowRes,
       // Tube-load controls never modulate DRR brightness.
       settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
+      look: {
+        ...FLUORO_LOOK,
+        depthTint: this.boneDepthTint ? 1 : 0,
+        depthSplitLps: BONE_DEPTH_SPLIT,
+      },
       geometry: {
         isocenter_mm: (pose.anatomyTranslation?.map((n) => -n) as Point3 | undefined) ?? [0, 0, 0],
         ...(pose.geometry

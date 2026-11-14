@@ -85,12 +85,12 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Tell inspiration from expiration on the running traces, and say where one breath ends and the next begins.',
     recognizeTitle: 'Why a ventilator exists',
     recognizeInstruction:
-      'Read the four short paragraphs under “Why a ventilator exists”, then watch the console for a few breaths. The patient is passive and the machine is doing all the work.',
+      'Read the four short paragraphs, then watch the console for a few breaths. This patient is passive: the ventilator starts every breath and does all of the work of moving gas.',
     recognizeLookIn: {
       pane: 'teaching',
       landmark: 'Why a ventilator exists',
       alsoPane: 'simulator',
-      alsoLandmark: 'the live console',
+      alsoLandmark: 'the console, running',
     },
     stops: [],
     knobStrip: strip({
@@ -98,7 +98,20 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
         'This section changes nothing. It reads the breath the machine is already giving.',
       ),
     }),
-    precommitDenyPatterns: [/flow below zero/i, /falling volume/i, /arrives sooner/i],
+    /*
+     * The last three are the marked interval's own evidence sentence ("flow −20.0 L/min (gas
+     * moving out) and volume falling by 12 mL"), which the frozen breath prints only after the
+     * prediction is committed. They are written to that sentence: the live flow trace's axis
+     * legend ("above the zero line is gas moving in") is a convention, not an answer.
+     */
+    precommitDenyPatterns: [
+      /flow below zero/i,
+      /falling volume/i,
+      /arrives sooner/i,
+      /volume (rising|falling)/i,
+      /\(gas moving (in|out)\)/i,
+      /flow [^.]*negative/i,
+    ],
     practicePairing: { kind: 'next-in-unit', caseId: 'MV-01' },
     orientation: [
       'A ventilator takes over one job the body normally does for itself: moving gas in and out of the lungs. It does this by pushing gas in under pressure and then letting the lungs empty.',
@@ -114,7 +127,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     objective: 'Given a change on one trace, say what the other two must show at the same moment.',
     recognizeTitle: 'Walk the breath',
     recognizeInstruction:
-      'Stand at each of the four stops on the breath map in turn. At each one, find the moment on the live console and read what the three traces do there.',
+      'Choose each of the four numbered stops on the breath map in turn. At each one, find the same moment on the console and read pressure, flow and volume there.',
     stops: ['trigger', 'inspiration', 'cycling', 'expiration'],
     knobStrip: strip(),
     shapingNote:
@@ -133,7 +146,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Pair each of the five main settings with the reading that shows whether the patient received it.',
     recognizeTitle: 'The five main settings',
     recognizeInstruction:
-      'Find the five main settings on the console — mode, breath size, rate, PEEP and oxygen. Then find the monitoring values beside them. The first group is what you ask for; the second is what happened.',
+      'Open Controls on the console and find the five main settings: mode, breath size, rate, PEEP and oxygen. Then find the measured values on the main screen. Settings are what you ask for; measurements are what the patient received.',
     stops: ['inspiration'],
     knobStrip: strip({
       'breath-size': thisKnob(
@@ -152,7 +165,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Using a valid inspiratory hold, decide whether a rise in peak pressure came from moving gas or from a stiffer system.',
     recognizeTitle: 'Two loads in one pressure',
     recognizeInstruction:
-      'Watch the pressure trace during the push. Notice the quick step at the start and the slower climb to the peak; they are not the same thing. The hold control is on the console.',
+      'Watch airway pressure during inspiration: a quick step at the start, then a slower climb to the peak. They are two different things. The inspiratory hold is on the console’s Tools screen.',
     stops: ['inspiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -174,7 +187,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'For a stiffer system under volume control and under pressure control, name the reading that will move and the one that will not.',
     recognizeTitle: 'What this breath holds constant',
     recognizeInstruction:
-      'Look at the mode on the console. Under volume control the machine promises a volume; the pressure is whatever that costs. Watch a few breaths with that promise in mind.',
+      'Find the mode on the console. In volume control the ventilator delivers a set tidal volume, and the pressure is whatever that volume requires. Watch a few breaths with that in mind.',
     stops: ['inspiration'],
     knobStrip: strip({
       mode: thisKnob(
@@ -196,7 +209,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide whether a delivered breath is sized to this patient’s predicted body weight and whether the plateau you are reading is valid.',
     recognizeTitle: 'Is this breath sized to this lung?',
     recognizeInstruction:
-      'This passive adult is receiving a larger breath than the earlier sections. Read the exhaled volume and think about what it should be compared against.',
+      'This passive adult is receiving a larger tidal volume than in the earlier sections. Read the exhaled tidal volume and decide what it should be measured against.',
     stops: ['inspiration'],
     knobStrip: strip({
       'breath-size': thisKnob(
@@ -214,7 +227,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide from the expiratory flow trace whether a breath finished emptying before the next one began.',
     recognizeTitle: 'Watch the breath empty',
     recognizeInstruction:
-      'This passive patient empties slowly. Watch the flow trace below zero and see where it is when the next breath starts.',
+      'This passive patient exhales slowly. Watch expiratory flow, below the zero line, and note where it is when the next breath starts.',
     stops: ['expiration'],
     knobStrip: strip({
       rate: thisKnob(
@@ -240,7 +253,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Localize a timing mismatch to the start of the breath or to the end of inspiration, from the effort trace and the flow trace.',
     recognizeTitle: 'Where does the mismatch live?',
     recognizeInstruction:
-      'Watch this patient for several breaths with the dashed effort trace in view. Then identify where the patient and machine disagree using the response choices beside the tracing.',
+      'Watch this patient for several breaths with the dashed effort trace in view. Then choose where on the breath the patient and the ventilator disagree, and commit your answer.',
     stops: ['trigger', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -264,7 +277,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'After a change on the oxygenation axis, say which readings show the benefit and which show the cost.',
     recognizeTitle: 'More than the saturation',
     recognizeInstruction:
-      'This patient’s saturation is low. Before changing anything, find the saturation, the peak pressure, the exhaled volume and the blood pressure on the screen — you will read all four.',
+      'This patient’s SpO₂ is low. Before changing anything, find the SpO₂, the peak pressure, the exhaled tidal volume and the blood pressure on the screen: you will read all four.',
     stops: [],
     knobStrip: strip({
       peep: thisKnob(
@@ -294,7 +307,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Given a change in rate or breath size, say which readings move at once and which move over minutes — and which control does not move carbon dioxide at all.',
     recognizeTitle: 'Two clocks: the breath and the blood gas',
     recognizeInstruction:
-      'Find the total rate, the minute ventilation and the modeled carbon dioxide on the screen. Two of them will move the moment a setting changes; one will not.',
+      'Find the total rate, the minute ventilation and the modeled PaCO₂ on the screen. Two of them move the moment a setting changes; the third lags behind.',
     stops: ['expiration'],
     knobStrip: strip({
       rate: thisKnob(
@@ -309,7 +322,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       },
     }),
     precommitDenyPatterns: [/toward a lower value/i, /co₂ rises as effective ventilation falls/i],
-    practicePairing: { kind: 'mechanism-match', caseId: 'MV-05' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'MV-06' },
   },
   {
     unitId: 'waveform-reading-sequence',
@@ -318,7 +331,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Given a striking feature on one trace, follow the whole breath in order and name the discriminating observation.',
     recognizeTitle: 'Where do the extra breaths come from?',
     recognizeInstruction:
-      'The displayed rate is higher than the set rate. Watch several breaths against the dashed effort trace, then identify where the extra breaths originate using the response choices beside the tracing.',
+      'The total rate is higher than the set rate. Watch several breaths against the dashed effort trace, then choose where on the breath the extra breaths begin, and commit your answer.',
     stops: ['trigger', 'inspiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -336,7 +349,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Distinguish a delivery mismatch during the push from a trigger or cycling mismatch, and name the reassessment each one needs.',
     recognizeTitle: 'Where does this patient’s discomfort live?',
     recognizeInstruction:
-      'This patient starts every supported breath but is uncomfortable. Watch the early part of each push against the effort trace, then identify the interval using the response choices beside the tracing.',
+      'This patient triggers every pressure-support breath but is uncomfortable. Watch several breaths against the effort trace, then choose where on the breath the mismatch is, and commit your answer.',
     stops: ['inspiration', 'cycling'],
     knobStrip: strip({
       mode: {
@@ -363,7 +376,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide which finding would show that an intervention helped this patient, and which findings only show that it was performed.',
     recognizeTitle: 'The person before the machine',
     recognizeInstruction:
-      'This awake patient is distressed. Read the available patient context, then assess the patient and communicate before changing a setting.',
+      'This awake patient is distressed. Read the patient context and the bedside actions available before you change any setting.',
     recognizeLookIn: {
       pane: 'simulator',
       landmark: 'Patient context and bedside actions',
@@ -386,7 +399,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'From a high peak pressure alone, decide which measurement discriminates the candidate mechanisms and what each result would mean.',
     recognizeTitle: 'One alarm, cause not supplied',
     recognizeInstruction:
-      'A passive patient has a high peak pressure and the cause is not given. Decide which measurement you would take first, then take it.',
+      'This passive patient has a high peak pressure, and the cause is not given. Decide which measurement you would take first, then take it.',
     stops: ['inspiration', 'expiration'],
     knobStrip: strip({
       mode: noKnob(
@@ -400,7 +413,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       /compliance/i,
       /stiff/i,
     ],
-    practicePairing: { kind: 'mechanism-match', caseId: 'MV-13' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'MV-14' },
   },
 ]
 
@@ -484,6 +497,18 @@ export function ventilationSectionSpecErrors(
       for (const pattern of spec.precommitDenyPatterns) {
         if (pattern.test(line))
           errors.push(`${spec.unitId}: "${line}" matches its own deny pattern ${pattern}`)
+      }
+    }
+    /*
+     * The Sections menu lists every section's topic word inside every section, before any answer.
+     * So a topic word is held to each section's deny list, not only its own.
+     */
+    for (const other of ventilationLearningUnits) {
+      for (const pattern of spec.precommitDenyPatterns) {
+        if (pattern.test(other.shortTitle))
+          errors.push(
+            `${spec.unitId}: the topic word "${other.shortTitle}" (${other.id}) matches deny pattern ${pattern}`,
+          )
       }
     }
   }

@@ -1,5 +1,6 @@
 import type { LabValues } from '../engine/labMetrics'
 import type { LabId } from '../types'
+import { ANGLE_EXAMPLES, obliquityName } from './angleRules'
 import type { ImagingSectionId } from './pathway'
 
 /** Authored examples, 2026-09-13. No setting here is a clinical target or a device specification. */
@@ -15,7 +16,7 @@ export interface TeachingDemonstration {
 const projection: readonly TeachingExample[] = [
   {
     title: 'Baseline · frontal overlap',
-    look: 'The modeled tool and lesion are stationary, separated by 30 mm along the initial X-ray path. Their projections overlap: depth is collapsed onto the detector.',
+    look: 'The tool and the lesion are stationary and 30 mm apart along the X-ray path. Their projections overlap: depth is collapsed onto the detector.',
     values: { orbit: 0, tilt: 0, depth: 30 },
   },
   {
@@ -24,20 +25,80 @@ const projection: readonly TeachingExample[] = [
     values: { orbit: 55, tilt: 0, depth: 30 },
   },
 ]
+const airways: readonly TeachingExample[] = [
+  {
+    title: 'Frontal · the image alone',
+    look: 'This is what fluoroscopy gives: the trachea and the main bronchi as lucent columns over the spine, and no bronchus beyond them. The amber contour marks the nodule.',
+    values: { orbit: 0, tilt: 0, airways: 'off', airwayNames: true },
+  },
+  {
+    title: 'Frontal · whole tree by lobe',
+    look: 'The same image with the bronchi drawn from the CT, one colour for each lobe. The upper lobes climb from the hila. The middle lobe, the lingula and the lower lobes all descend, and they overlap.',
+    values: { orbit: 0, tilt: 0, airways: 'all', airwayNames: true },
+  },
+  {
+    title: 'Frontal · right lower lobe',
+    look: 'One colour for each segmental bronchus; the heavy line is its first two centimetres. RB6 leaves the lower lobe bronchus first and runs posteriorly, along the beam: its heavy line is the shortest, and its branches seem to spring from one point. The basal bronchi fan toward the diaphragm, drawn nearer their full length.',
+    values: { orbit: 0, tilt: 0, airways: 'RLL', airwayNames: true },
+  },
+  {
+    title: 'Frontal · right middle lobe',
+    look: 'The middle lobe bronchus leaves the front of the bronchus intermedius at about the level where RB6 left the back. It runs anteriorly, so it too is drawn short, starting from the same place on the image.',
+    values: { orbit: 0, tilt: 0, airways: 'RML', airwayNames: true },
+  },
+  {
+    title: 'Frontal · left lower lobe',
+    look: 'The way to the nodule: left main bronchus, left lower lobe bronchus, then LB7+8, which runs laterally and is drawn long. LB6, the first bronchus off the lower lobe bronchus, is the short one.',
+    values: { orbit: 0, tilt: 0, airways: 'LLL', airwayNames: true },
+  },
+  {
+    title: 'LAO 30° · left lower lobe',
+    look: 'The same bronchi from a second angle. LB6 now runs more nearly across the beam and its heavy line has lengthened; nothing in the patient has moved.',
+    values: { orbit: -30, tilt: 0, airways: 'LLL', airwayNames: true },
+  },
+]
+/**
+ * Projection, the bronchi step: the four segmental bronchi that cross the nodule on the frontal
+ * image, followed through one oblique each way. Which of them still cross it at each angle is
+ * computed from the tree and held by `airway-tree.test.ts`.
+ */
+const bronchiOverNodule: readonly TeachingExample[] = [
+  {
+    title: 'Frontal · bronchi over the nodule',
+    look: 'Four segmental bronchi cross the amber outline of the nodule: LB5, LB7+8, LB9 and LB10. In the 3D view, from the head of the table, they lie one behind another along the beam, LB5 nearest the detector and LB10 nearest the tube.',
+    values: { orbit: 0, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+  {
+    title: 'LAO 30° · the anterior bronchus leaves',
+    look: 'LB5 has moved off the nodule toward the midline, and the heart has moved off it the same way: both lie in front of the nodule. LB7+8, LB9 and LB10 still cross it. The two posterior bronchi run back toward the spine, nearly along this beam.',
+    values: { orbit: -30, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+  {
+    title: 'RAO 30° · the posterior bronchi leave',
+    look: 'LB9 and LB10 have moved off the nodule toward the midline, the way the spine moves, and LB5 has moved off it toward the chest wall. Only LB7+8 still crosses the nodule. The heart now lies over it: this angle sorts the bronchi and is a poor one for seeing the nodule.',
+    values: { orbit: 30, tilt: 0, airways: 'lesion', airwayNames: true },
+  },
+]
 const field: readonly TeachingExample[] = [
   {
     title: 'Baseline · full acquisition field',
-    look: 'Identify the target, dashed planned excursion and two context landmarks. The amber outline is the acquired field.',
+    look: 'The open field takes in the spine and the mediastinum. Find the lesion, the dashed planned tool path and the two landmarks. The amber outline is the collimated field.',
     values: { field: 100, crop: false, cropWidth: 70, zoom: 1 },
   },
   {
     title: 'Physical collimation',
-    look: 'The shutters, beam and acquired region narrow together. Check the planned excursion and landmarks before accepting this field. The percentage is geometry, not patient dose.',
+    look: 'The shutters close, and the beam and the exposed area narrow together. The planned tool path and both landmarks are still inside the field: this is the field for advancing the tool.',
     values: { field: 80, crop: false, cropWidth: 70, zoom: 1 },
   },
   {
+    // Owner's teaching, 2026-10-11. 40% is past the width at which the spine leaves this field.
+    title: 'Collimated to the lesion · spine out of the field',
+    look: 'With the tool at the lesion the field is closed until the spine is outside it. Compare with the baseline: the lung, the lesion and the tool have more contrast, because less tissue is producing scatter and the display range is no longer spent on the spine.',
+    values: { field: 40, crop: false, cropWidth: 70, zoom: 1 },
+  },
+  {
     title: 'Crop the baseline stored frame',
-    look: 'The full-field acquisition is retained. The dashed display border hides its periphery; it does not undo exposure. Compare the acquisition metadata.',
+    look: 'The full field was still acquired. The dashed border only hides its periphery on the display; it does not undo the exposure. The caption under the image still reads field 100%.',
     values: { field: 100, crop: true, cropWidth: 70, zoom: 1 },
   },
   {
@@ -64,29 +125,29 @@ const time: readonly TeachingExample[] = [
   },
   {
     title: 'Combined example',
-    look: 'Halved rate and doubled width preserve model tube loading at fixed 20 mA, but both blur and inter-frame travel increase. This is not a patient-dose calculation.',
+    look: 'Halving the rate and doubling the width leaves the tube load unchanged at a fixed 20 mA, while both the blur and the travel between frames increase. Tube load is not patient dose.',
     values: { rate: 3.75, width: 10, speed: 20 },
   },
   {
     title: 'Static localization',
-    look: 'With the modeled tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
+    look: 'With the tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
     values: { rate: 3.75, width: 5, speed: 0 },
   },
 ]
 const registration: readonly TeachingExample[] = [
   {
     title: 'Planning / initial current state',
-    look: 'The planning target and initial current target agree in this example. This is a teaching state, not proof of registration in a patient.',
+    look: 'The planning target and the lesion on current imaging agree here: there is no divergence yet.',
     values: { shift: 0, previous: 0, overlay: false, showCurrent: true },
   },
   {
     title: 'Stored contour · acquisition A',
-    look: 'The teal contour was saved from acquisition A at zero displacement. Turning it on does not acquire a new image.',
+    look: 'The teal contour was saved from acquisition A, before any displacement. Turning it on does not acquire a new image.',
     values: { shift: 0, previous: 0, overlay: true, showCurrent: true },
   },
   {
     title: 'Subsequent change · contour on',
-    look: 'A rigid 20 mm displacement moves the current anatomy while the stored contour remains at acquisition A. This illustrates mismatch; it models neither atelectasis nor recruitment.',
+    look: 'The anatomy has moved 20 mm since acquisition A, and the stored contour has not moved with it. The contour now marks where the lesion was.',
     values: { shift: 20, previous: 0, overlay: true, showCurrent: true },
   },
   {
@@ -96,7 +157,7 @@ const registration: readonly TeachingExample[] = [
   },
   {
     title: 'Reassessment · acquisition B',
-    look: 'Only a new modeled capture updates the contour to the changed state. Coordinate physiology with anesthesia and reassess localization when needed; no ventilation maneuver is simulated.',
+    look: 'Only a new acquisition brings the contour to the current anatomy. Coordinate physiology with anesthesia and reassess localization when needed.',
     values: { shift: 20, previous: 20, overlay: true, showCurrent: true },
   },
 ]
@@ -108,7 +169,7 @@ const acquisition: readonly TeachingExample[] = [
   },
   {
     title: 'Both scouts centered',
-    look: 'Both offsets are corrected in the model. Coverage, equipment clearance, instrument/anesthesia state and protection remain learner-declared checks; there is no collision detection.',
+    look: 'Both offsets are corrected. Coverage, equipment clearance, the instrument and anesthesia state, and radiation protection are still checked with the team before the spin.',
     values: { offsetX: 0, offsetDepth: 0 },
   },
   {
@@ -120,7 +181,7 @@ const acquisition: readonly TeachingExample[] = [
 const sampling: readonly TeachingExample[] = [
   {
     title: 'Trace the actual sampling component',
-    look: 'Follow the amber intended lesion and green modeled side window across linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
+    look: 'Follow the amber lesion and the green side-cutting window across the linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
     values: {
       tipX: 10,
       tipY: 0,
@@ -134,7 +195,7 @@ const sampling: readonly TeachingExample[] = [
   },
   {
     title: 'Tip and window differ',
-    look: 'The tip reaches the lesion but the sampling window extends behind it. Trace the green component, not just the white tip. These dimensions do not describe a real device.',
+    look: 'The tip reaches the lesion but the sampling window extends behind it. Trace the green window, not just the white tip.',
     values: {
       tipX: -5,
       tipY: 0,
@@ -162,7 +223,7 @@ const sampling: readonly TeachingExample[] = [
   },
   {
     title: 'Same tool · thin planes',
-    look: 'The window is displaced from the lesion. A model intersection describes geometry only; it is not a safe sampling decision or a guarantee of diagnostic tissue.',
+    look: 'The window is displaced from the lesion: the thin planes show what the thick slab concealed.',
     values: {
       tipX: 10,
       tipY: 15,
@@ -176,17 +237,50 @@ const sampling: readonly TeachingExample[] = [
   },
 ]
 
+/** Expert-session round, part 2: the angles read off the CT for this course's nodule. */
+const plannedAngles: readonly TeachingExample[] = [
+  {
+    title: 'Planned obliquity · lung only',
+    look: `Rotated toward LAO, the side a hand on the chest gives for this left posterior nodule, to ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)}: the path through the nodule now misses the heart, and Anatomy over the nodule reads lung only.`,
+    values: { orbit: ANGLE_EXAMPLES.clearOblique.obliquity, tilt: 0, depth: 30 },
+  },
+  {
+    title: 'Planned tilt · straight on',
+    look: `No obliquity, ${ANGLE_EXAMPLES.cranialFrontal.tilt}° cranial: the path through the nodule rises above the heart. Caudal angulation would clear the heart only by bringing the diaphragm over the nodule.`,
+    values: { orbit: 0, tilt: ANGLE_EXAMPLES.cranialFrontal.tilt, depth: 30 },
+  },
+]
+
+/** Expert-session round, part 2: the nudge at the two-axis view. */
+const ribNudge: readonly TeachingExample[] = [
+  {
+    title: 'Heart off · rib over the nodule',
+    look: `At ${obliquityName(ANGLE_EXAMPLES.ribOblique.obliquity)} the heart is off the nodule, and a posterior rib lies across the path through it.`,
+    values: { orbit: ANGLE_EXAMPLES.ribOblique.obliquity, tilt: 0, depth: 0 },
+  },
+  {
+    title: 'Nudged cranial · rib off',
+    look: `${ANGLE_EXAMPLES.ribNudgeTilt}° of cranial angulation lowers the nodule against the posterior rib, and the rib leaves the path through it. Caudal angulation would move it the other way.`,
+    values: {
+      orbit: ANGLE_EXAMPLES.ribOblique.obliquity,
+      tilt: ANGLE_EXAMPLES.ribNudgeTilt,
+      depth: 0,
+    },
+  },
+]
+
 export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstration | null {
   switch (id) {
     case 'chain-walk':
-    case 'projection':
       return { lab: 'geometry', examples: projection }
+    case 'projection':
+      return { lab: 'geometry', examples: [...projection, ...bronchiOverNodule, ...plannedAngles] }
     case 'good-image':
       return {
         lab: 'geometry',
         examples: [
           ...projection,
-          ...field.slice(2).map((example) => ({
+          ...field.slice(3).map((example) => ({
             ...example,
             values: { orbit: 0, tilt: 0, depth: 22, ...example.values },
           })),
@@ -202,16 +296,41 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'CT superimposition · baseline',
-            look: 'Use the matched conceptual examples to distinguish noise and contrast loss. Here, inspect which CT structures project across the target ray; photon statistics and scatter are not calculated.',
+            look: 'Noise and scatter were compared on the earlier steps. Here, look at which structures project across the X-ray path through the lesion.',
             values: { orbit: 0, tilt: 0, depth: 0 },
           },
           {
             title: 'CT superimposition · changed view',
-            look: 'Only the beam angle changes. Compare anatomical silhouettes and the CT density bands along the target ray. The model does not score whether the heart clears the lesion.',
+            look: 'Only the C-arm angle changes. Compare the anatomical silhouettes and what the X-ray path through the lesion crosses.',
             values: { orbit: -35, tilt: 0, depth: 0 },
+          },
+          ...ribNudge,
+        ],
+      }
+    case 'suite-cases':
+      // Expert-session round, part 2 (A7): the same C-arm angle, supine and on the wedge.
+      return {
+        lab: 'geometry',
+        examples: [
+          {
+            title: 'Supine · within the room’s obliquity',
+            look: `The C-arm is at ${obliquityName(ANGLE_EXAMPLES.wedge.orbit)}, as far as the room allows toward the clear view. Supine, that is also the projection through the patient, and the heart still lies over the nodule.`,
+            values: { orbit: ANGLE_EXAMPLES.wedge.orbit, tilt: 0, depth: 22, wedge: 0 },
+          },
+          {
+            title: 'Wedged · same C-arm angle',
+            look: `The same C-arm angle with a ${ANGLE_EXAMPLES.wedge.wedge}° wedge under the left side: the chest rolls, the projection through the patient becomes ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)}, and only lung lies over the nodule.`,
+            values: {
+              orbit: ANGLE_EXAMPLES.wedge.orbit,
+              tilt: 0,
+              depth: 22,
+              wedge: ANGLE_EXAMPLES.wedge.wedge,
+            },
           },
         ],
       }
+    case 'airway-anatomy':
+      return { lab: 'geometry', examples: airways }
     case 'current-anatomy':
     case 'changing-anatomy':
       return { lab: 'registration', examples: registration }
@@ -232,7 +351,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
           },
           {
             title: 'Change the view, retain context',
-            look: 'The changed view reveals a mismatch. Collimate around the target while keeping the modeled excursion and landmarks. This field tracks the target center automatically; manual patient recentering is not modeled.',
+            look: 'The changed view reveals a mismatch. Collimate around the target while keeping the planned tool path and the landmarks in the field. The field stays centered on the target.',
             values: { orbit: 35, tilt: 0, depth: 22, field: 80, crop: false, zoom: 1 },
           },
           {
@@ -249,17 +368,17 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Acquisition arc',
-            look: 'Play or Step through the limited-angle acquisition, then inspect the reconstructed plane. The labeled reconstruction illustration explains the difference from a broad CT orbit.',
+            look: 'Play or Step through the limited-angle acquisition, then inspect the reconstructed plane. The reconstruction figure explains how this differs from a wide CT rotation.',
             values: { sweep: 30, plane: 0 },
           },
           {
-            title: 'Scroll through the modeled tool',
-            look: 'This demonstration uses a tool at −18 mm in the parallel teaching model. Its focus changes with the selected plane; out-of-plane structures blur.',
+            title: 'Scroll through the tool',
+            look: 'The tool lies at −18 mm. It is sharp when the plane passes through it and blurs as the plane moves away, as does every other out-of-plane structure.',
             values: { sweep: 30, plane: -18 },
           },
           {
-            title: 'Scroll through the modeled lesion',
-            look: 'The demonstration lesion is centered at zero. Limited-angle depth uncertainty remains. Finer voxel spacing is not evidence of finer measured resolution.',
+            title: 'Scroll through the lesion',
+            look: 'The lesion is centered at 0 mm. With a limited arc its depth remains uncertain: finer voxel spacing is not finer measured resolution.',
             values: { sweep: 30, plane: 0 },
           },
         ],
@@ -270,12 +389,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Patient, source and exposure path',
-            look: 'The patient is the scatter source. In lateral projections, positions on the detector side often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions throughout. Rings illustrate an idealized point-source distance relationship, not calibrated staff dose or a safe-distance boundary.',
+            look: 'The patient is the scatter source. In lateral projections, positions on the detector side often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions throughout. The rings show the inverse-square fall-off with distance from the patient; they are not measured staff doses or a safe-distance line.',
             values: { distance: 1.3, orbit: 0, shield: false },
           },
           {
             title: 'Distance and barrier',
-            look: 'Compare the exposure path after moving farther away and adding the barrier. Barrier placement, access and equipment-specific protection still require local review.',
+            look: 'Compare the exposure path after moving farther away and adding the barrier.',
             values: { distance: 2, orbit: 0, shield: true },
           },
         ],
@@ -286,12 +405,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Worked KAP arithmetic',
-            look: 'The modeled uniform field has 10 mGy air kerma over 100 cm²: 1 Gy·cm² KAP. This is not peak skin dose or effective dose.',
+            look: 'A uniform field of 10 mGy air kerma over 100 cm² gives a KAP of 1 Gy·cm². KAP is not peak skin dose or effective dose.',
             values: { kerma: 10, area: 100 },
           },
           {
             title: 'Same kerma · different area',
-            look: 'Doubling the modeled field area doubles the arithmetic product at fixed kerma. Real automatic exposure response and patient dose are not represented.',
+            look: 'Doubling the field area at the same air kerma doubles the KAP. On a real system, automatic exposure control may change the air kerma when the field changes.',
             values: { kerma: 10, area: 200 },
           },
         ],
@@ -359,21 +478,16 @@ const SECTION_FIXED_EXAMPLE: Readonly<Partial<Record<ImagingSectionId, LabValues
   // The stem describes a frontal image on which the tool and nodule are superimposed although they
   // are two centimetres apart along the X-ray path: zero obliquity, and 20 mm of depth offset.
   'chain-walk': { orbit: 0, tilt: 0, depth: 20 },
+  // The stem reads one lobe's bronchi on a frontal image without their names: the left lower lobe,
+  // drawn from the CT, names hidden on the image, in the key and in the readouts.
+  'airway-anatomy': { orbit: 0, tilt: 0, airways: 'LLL', airwayNames: false },
   // The stem reads a last-image-hold frame and asks which change alters what is acquired rather
   // than how it is displayed, so the example carries the section's own worked geometry with the
   // full acquired field and no display operation applied.
   'good-image': { orbit: 0, tilt: 0, depth: 22, field: 100, crop: false, cropWidth: 70, zoom: 1 },
-  // The planning target and the initial current target agree: the section's authored starting
-  // state, before any modeled displacement ('Planning / initial current state').
-  'current-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
   // The stem's situation is the section's own first demonstration, 'Two scouts · one centered':
   // centered on one view, offset in depth on the orthogonal one.
   'cbct-acquisition': { offsetX: 0, offsetDepth: 25 },
-  // The same authored starting state as current-anatomy; this section's stem is about motion during
-  // a spin, which the registration model does not simulate, so the image stays at its baseline.
-  'changing-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
-  // The section's authored starting geometry: staff at the baseline distance, no barrier in place.
-  'staff-protection': { distance: 1.3, orbit: 0, shield: false },
 }
 
 /**
@@ -398,49 +512,10 @@ export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string
 }
 
 /**
- * How a fixed example's image stands in relation to the question printed beside it.
- *
- * `depicts-the-question` — the learner can read the answer's evidence off this image: the tool and
- * the nodule really are superimposed on it, the lateral scout really does show the offset.
- *
- * `illustrative-model` — the image is the section's authored equipment model, and the question is a
- * written clinical scenario the model does not represent. A new dependent opacity, duplicated edges
- * from motion during a spin and a clinician holding an accessory in the primary beam are all
- * outside what the registration and scatter models simulate (see each section's `modelBoundary`).
- * The image is still a fixed, authored, stable picture of the equipment; it is simply not evidence
- * of the situation described, and the module must not say that it is.
+ * A fixed example always depicts its question: the learner can read the answer's evidence off the
+ * image. A check whose scenario the section's suite cannot show either carries an image of its own
+ * (a new dependent opacity in Section 4, doubled edges from motion in Section 16:
+ * `INDEPENDENT_IMAGE_PANEL_SECTIONS`, drawn by `simulatedFindings.ts`) or is a written scenario with
+ * no image (a hand in the primary beam in Section 17: `finish('record', 'case')`). It is never an
+ * unrelated image with a disclaimer (owner follow-up, 2026-10-12).
  */
-export type FixedExampleEvidence = 'depicts-the-question' | 'illustrative-model'
-
-/**
- * Declared per question, by the identity of the exact check and round — never per section and never
- * as a blanket rule, so a section's other activities and its transfer round keep their own framing.
- *
- * These three are the checks PI-FELLOW-01 recorded as claiming a connection their image does not
- * support. Each entry names the stem and the model that does not represent it. Removing an entry
- * restores the image-based framing, so this list is the whole of the claim.
- */
-const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
-  // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
-  // registration model translates the CT rigidly and simulates no ventilation or recruitment.
-  'current-anatomy:example:0',
-  // "the catheter and the nodule margin each appear twice" (QS-4's text form, OD4-02/OD4-05,
-  // 2026-09-22; before it, "duplicated tool and lesion edges from motion during the spin") — the
-  // same rigid-translation model simulates no motion artifact, and authentic motion media are
-  // deferred (OD4-06), so the declaration stands for the new check too.
-  'changing-anatomy:example:0',
-  // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
-  // the scatter scene shows distance, tube side and a barrier, and no such action.
-  'staff-protection:example:0',
-])
-
-export function fixedExampleEvidence(id: ImagingSectionId, round: 0 | 1): FixedExampleEvidence {
-  return ILLUSTRATIVE_ONLY_EXAMPLES.has(fixedExampleIdentity(id, round))
-    ? 'illustrative-model'
-    : 'depicts-the-question'
-}
-
-/** The declared identities, for the tests that hold this list to exactly what it claims. */
-export function illustrativeOnlyExampleIdentities(): readonly string[] {
-  return [...ILLUSTRATIVE_ONLY_EXAMPLES]
-}

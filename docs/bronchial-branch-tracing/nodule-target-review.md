@@ -48,6 +48,24 @@ The CT can show the original image without the simulated nodule through a labele
 
 The 377 generated PNGs comprise 373 compact nodule patches and four additional native planes (239, 476–478), totaling 1,101,884 bytes. No full source CT, donor volume or textbook page is added to public assets. The browser requests patches only for the displayed target/plane. Rebuilding prunes only obsolete PNG paths previously listed by this exporter's manifest.
 
+## Added November 10, 2026: five lesions in segments that had none
+
+| Lesion             | Segment | Segmental bronchus | Terminal source edge | Slice | Source HU at the centre | Approach point to centre |
+| ------------------ | ------- | ------------------ | -------------------- | ----- | ----------------------- | ------------------------ |
+| r-posterior        | RS2     | RB2                | 111                  | 447   | −783                    | 6.9 mm                   |
+| r-superior         | RS6     | RB6                | 150                  | 310   | −832                    | 7.6 mm                   |
+| l-superior-lingula | LS4     | LB4                | 258                  | 377   | −911                    | 6.5 mm                   |
+| l-posterior-basal  | LS10    | LB10               | 107                  | 268   | −890                    | 7.9 mm                   |
+| r-lateral-basal    | RS9     | RB9                | 325                  | 259   | −927                    | 7.0 mm                   |
+
+Each was placed by the same rule and the same donor as the first thirteen, by `build-targets.ts`, with nothing adjusted by hand. The script checked every edge of each new root-to-target path against the labelled graph and found no difference; the only recorded difference is still the LB6 junction above. The thirteen existing lesions, their patches and their manifests entries are byte for byte what they were.
+
+The set is now 18 lesions in 15 segments: 522 PNGs (518 patches and the same four extra native planes), 1,210,796 bytes. The size bound in `__tests__/nodule-targets.test.ts` was 1.2 MB and is now 1.3 MB. The coronal and sagittal reconstructions keep the same crop and planes and gain ten lesion sprites: 675 files, 34.30 MB against the 40 MB gate.
+
+Not included, and why: RB10 lies below the shipped slices (it would need planes 165–238); RB7's lesion would sit 3.9 mm past its last fork and cover it; LB7+8's last forks have lumens of 1.2–1.6 mm with the lesion 7.5 mm past them. Those three are the owner's call.
+
+The five new placements were looked at in the bench (lesion slice, ostium, map, first division, arrival) and nothing looked out of place, but they have not had the owner's read.
+
 ## Verification and limits
 
 Asset tests verify all original/generated hashes, each patch's dimensions and alpha footprint, the changing slice footprint, signed source-HU windowing and the shared compositor's numerical output at all 13 target centers. All target paths are connected, label matched and supplied with every required axial plane. Native patient/display round trips, unchanged proximal samples and the unoccluded distal reference points are also checked.

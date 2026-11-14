@@ -20,7 +20,17 @@ import type {
   SimulatorCenterlineAsset,
   SimulatorMeshAsset,
 } from '../features/simulator/types'
-import { emptyLinkedSweep, sampleLinkedSweep } from '../../../../../src/lib/ebus-linked-contract'
+import {
+  emptyLinkedSweep,
+  sampleLinkedSweep,
+  LINKED_ALONG_AIRWAY,
+  LINKED_LANDMARKS,
+  LINKED_PRESETS,
+  linkedLateralPosition,
+  linkedSetup,
+  type LinkedLesson,
+  type LinkedVariant,
+} from '../../../../../src/lib/ebus-linked-contract'
 const root = resolve('public/simulator/case-001')
 const json = <T>(file: string): T => JSON.parse(readFileSync(resolve(root, file), 'utf8'))
 const manifest = json<SimulatorCaseManifest>('case_manifest.simplified.web.json')
@@ -75,4 +85,155 @@ describe('actual acoustic windows at original and changed assisted positions', (
       }
     },
   )
+})
+
+describe('every structure a lesson asks the learner to find is reachable on ultrasound', () => {
+  const cases: [LinkedLesson, LinkedVariant, string][] = [
+    ['scope-orientation', 'guided', 'station_7_node_a::rms'],
+    ['ct-map', 'guided', 'station_7_node_a::rms'],
+    ['station-seven', 'guided', 'station_7_node_a::rms'],
+    ['station-seven', 'guided', 'station_7_node_a::lms'],
+    ['station-seven', 'changed-window', linkedSetup('station-seven', 'changed-window').presetKey],
+    ['right-paratracheal', 'guided', linkedSetup('right-paratracheal', 'guided').presetKey],
+    [
+      'right-paratracheal',
+      'changed-window',
+      linkedSetup('right-paratracheal', 'changed-window').presetKey,
+    ],
+    // The station scans of 2026-11-10, each from its own preset.
+    ['left-paratracheal', 'guided', LINKED_PRESETS['left-paratracheal']],
+    ['left-upper-paratracheal', 'guided', LINKED_PRESETS['left-upper-paratracheal']],
+    ['interlobar', 'guided', LINKED_PRESETS.interlobar],
+  ]
+  it.each(cases)('%s (%s) from %s', (lesson, variant, key) => {
+    const preset = manifest.presets.find((p) => p.preset_key === key)!
+    const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+    const offset = linkedSetup(lesson, variant).offsetMm
+    const best = new Map<string, number>()
+    for (let roll = 90; roll >= -90; roll -= 5) {
+      const pose = clampPosePositionInsideChannel(
+        computeSimulatorPose(line, preset.centerline_s_mm + offset, roll, preset),
+        channel,
+        0.2,
+      )
+      const frame = renderAcousticFrame(
+        volume,
+        acousticPoseFromScope(pose),
+        { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contactQualityForPose(pose, channel) },
+        192,
+        192,
+        80,
+        100,
+      )
+      const counts = new Map<number, number>()
+      for (const id of frame.labelImage) counts.set(id, (counts.get(id) ?? 0) + 1)
+      for (const [id, n] of counts) {
+        const name = volume.metadata.labels[id].key
+        best.set(name, Math.max(best.get(name) ?? 0, n))
+      }
+    }
+    // A structure the learner must click needs a patch they can hit: at least 1% of the image.
+    for (const id of LINKED_LANDMARKS[lesson])
+      expect([id, (best.get(id) ?? 0) >= 192 * 192 * 0.01]).toEqual([id, true])
+  })
+})
+
+describe('the advance-and-withdraw task on the real model', () => {
+  const setup = linkedSetup('scope-orientation', 'along-airway')
+  const preset = manifest.presets.find((p) => p.preset_key === setup.presetKey)!
+  const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+  const targetId = volume.metadata.labels.findIndex((label) => label.key === preset.station_key)
+  /** The same reading the workbench reports: the mean column of the node's own pixels. */
+  const at = (offsetMm: number) => {
+    const pose = clampPosePositionInsideChannel(
+      computeSimulatorPose(line, preset.centerline_s_mm + offsetMm, setup.initialRoll, preset),
+      channel,
+      0.2,
+    )
+    const contact = contactQualityForPose(pose, channel)
+    const frame = renderAcousticFrame(
+      volume,
+      acousticPoseFromScope(pose),
+      { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contact },
+      192,
+      192,
+      80,
+      100,
+    )
+    let sum = 0
+    let count = 0
+    for (let i = 0; i < frame.labelImage.length; i++)
+      if (frame.labelImage[i] === targetId) {
+        sum += i % frame.width
+        count += 1
+      }
+    return { contact, lateral: count >= 10 ? (sum / count + 0.5) / frame.width : null }
+  }
+  const { startOffsetMm, minOffsetMm, maxOffsetMm } = LINKED_ALONG_AIRWAY
+  it('starts with the node on the dot side, in a tissue window', () => {
+    expect(targetId).toBeGreaterThanOrEqual(3)
+    const start = at(startOffsetMm)
+    expect(start.contact).toBeGreaterThanOrEqual(0.45)
+    expect(linkedLateralPosition(start.lateral)).toBe('right')
+  })
+  it('slides the node toward the dot as the scope advances, and keeps contact across the range', () => {
+    const offsets = []
+    for (let offset = minOffsetMm; offset <= maxOffsetMm; offset += 2) offsets.push(offset)
+    const readings = offsets.map(at)
+    for (const reading of readings) expect(reading.contact).toBeGreaterThanOrEqual(0.45)
+    const laterals = readings.map((reading) => reading.lateral!)
+    for (let i = 1; i < laterals.length; i++) expect(laterals[i]).toBeGreaterThan(laterals[i - 1])
+    // The other end of the range is past the middle: the learner can overshoot and come back.
+    expect(linkedLateralPosition(laterals[0])).toBe('left')
+  })
+  it('reaches the middle within the range, by withdrawing from the start', () => {
+    const centred = []
+    for (let offset = minOffsetMm; offset <= maxOffsetMm; offset += 1)
+      if (linkedLateralPosition(at(offset).lateral) === 'centre') centred.push(offset)
+    expect(centred.length).toBeGreaterThanOrEqual(4)
+    expect(Math.max(...centred)).toBeLessThan(startOffsetMm)
+  })
+})
+
+describe('the 4L, 2L and 11Ri scans on the real model', () => {
+  const labs = ['left-paratracheal', 'left-upper-paratracheal', 'interlobar'] as const
+  it.each(labs)('%s: a rotation sweep from the preset crosses the node with contact', (lesson) => {
+    const setup = linkedSetup(lesson, 'guided')
+    expect(setup).toMatchObject({ offsetMm: 0, presetKey: LINKED_PRESETS[lesson] })
+    const preset = manifest.presets.find((p) => p.preset_key === setup.presetKey)!
+    // The node the sweep is about is the lab's last landmark.
+    const landmarks = LINKED_LANDMARKS[lesson]
+    expect(landmarks[landmarks.length - 1]).toBe(preset.station_key)
+    const line = lines.polylines.find((l) => l.line_index === preset.line_index)!
+    let sweep = emptyLinkedSweep()
+    const seenAt: number[] = []
+    for (let roll = 90; roll >= -90; roll -= 5) {
+      const pose = clampPosePositionInsideChannel(
+        computeSimulatorPose(line, preset.centerline_s_mm, roll, preset),
+        channel,
+        0.2,
+      )
+      const contact = contactQualityForPose(pose, channel)
+      expect(contact).toBeGreaterThan(0.45)
+      const frame = renderAcousticFrame(
+        volume,
+        acousticPoseFromScope(pose),
+        { ...DEFAULT_ACOUSTIC_CONTROLS, contactQuality: contact },
+        192,
+        192,
+        80,
+        100,
+      )
+      const visible = frame.structures.some(
+        (s) => volume.metadata.labels[s.id].key === preset.station_key,
+      )
+      if (visible) seenAt.push(roll)
+      sweep = sampleLinkedSweep(sweep, { roll, visible, contact, frameId: lesson + ':' + roll })
+    }
+    expect(sweep.phase).toBe('complete')
+    // The node is in the plane over a real arc, not at one rotation only.
+    expect(Math.max(...seenAt) - Math.min(...seenAt)).toBeGreaterThanOrEqual(20)
+    // The lab opens away from the node, so finding it takes a rotation.
+    expect(seenAt).not.toContain(setup.initialRoll)
+  })
 })

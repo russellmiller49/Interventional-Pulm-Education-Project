@@ -90,7 +90,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
-  await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+  await page.getByRole('button', { name: 'Skip this task' }).click()
   const explain = page.getByRole('button', { name: 'Show worked explanation', exact: true })
   await explain.focus()
   await page.keyboard.press('Enter')
@@ -103,14 +103,15 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await expect(page.getByRole('status')).toContainText('Your choice is not the accepted answer')
   await page.getByRole('button', { name: 'Try again', exact: true }).click()
   await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+  await page.getByRole('button', { name: 'Skip this task' }).click()
   await expect(
     page.getByRole('heading', { name: 'Apply again: a different fluid goal', exact: true }),
   ).toBeVisible()
   await assertUngraded(page)
+  await page.locator('[data-sections-drawer] summary').click()
   await page
-    .getByRole('combobox', { name: 'CRRT lesson', exact: true })
-    .selectOption('crrt-pressure-profile-integration')
+    .locator('[data-sections-drawer] button[data-section="crrt-pressure-profile-integration"]')
+    .click()
   await page.getByText(/Lesson tasks ·/, { exact: false }).click()
   const map = page.locator('details').filter({ has: page.getByText(/Lesson tasks ·/) })
   await map.getByRole('button').last().click()

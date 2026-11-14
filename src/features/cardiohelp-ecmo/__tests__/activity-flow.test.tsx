@@ -116,7 +116,9 @@ it.each(['vv', 'va'] as const)(
     }
     expect(currentFoundationStep()).toBe('circuit-flow-path-gas-path')
     reachFoundationStep('circuit-flow-path', 'predict')
-    expect(document.querySelector('[data-location-disclosure="full"]')).not.toBeNull()
+    // Revised 2026-10-14 (tester feedback, "The circuit was still labeled when I answered the
+    // question"): the map question's sensor labels are withheld until the answer is in.
+    expect(document.querySelector('[data-location-disclosure="withheld"]')).not.toBeNull()
     expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
     expect(document.querySelectorAll('[data-map-question-actions] button')).toHaveLength(1)
   },

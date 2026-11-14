@@ -114,12 +114,23 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     )
     const panel = screen.getByText('Sources', { selector: 'summary' }).closest('details')!
     fireEvent.click(within(panel).getByText('Sources', { selector: 'summary' }))
-    // The two model limits and their consequence stay visible, with the number to work to.
-    expect(panel).toHaveTextContent('Two things this simulator does not compute.')
-    expect(panel).toHaveTextContent('does not respond to the flows')
+    // Filtration fraction is worked out from the flows (owner decision O03). Since the clinical
+    // review of 2026-11-13 the note calls it a calculated estimate, says it is not either PrisMax
+    // display, and states one ceiling with each number's source. The model limit stays visible.
     expect(panel).toHaveTextContent(
-      `keep it under ${CRRT_NUMBERS.value('filtration-fraction-ceiling')}`,
+      'Filtration fraction here is a calculated estimate, worked out from the flows: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
     )
+    expect(panel).toHaveTextContent(
+      'It is not the PrisMax FF Blood % or FF Plasma % display, which the machine calculates by its own definitions.',
+    )
+    expect(panel).toHaveTextContent(
+      `Keep it at or below ${CRRT_NUMBERS.value('filtration-fraction-ceiling-range')} to lower the risk of the filter clotting (AJKD Core Curriculum, 2025)`,
+    )
+    expect(panel).toHaveTextContent(
+      `For post-dilution CVVH, ${CRRT_NUMBERS.value('filtration-fraction-ceiling')} is the usual maximum (Claure-Del Granado and Clark, 2021).`,
+    )
+    expect(panel).not.toHaveTextContent('by hand')
+    expect(panel).toHaveTextContent('One thing this simulator does not compute.')
     expect(panel).toHaveTextContent(
       'cumulative machine removal and whole-patient balance are not shown',
     )

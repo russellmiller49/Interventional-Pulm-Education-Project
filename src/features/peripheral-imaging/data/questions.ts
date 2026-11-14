@@ -98,6 +98,28 @@ export const QUESTIONS: Question[] = [
     ['setser', 'pritchett'],
   ),
   item(
+    'airway-1',
+    'optimize',
+    'The bronchi of one lobe are drawn from the CT on this frontal image, without their names; the heavy line is the first two centimetres of each. The bronchus that leaves the lobar bronchus first has the shortest heavy line. Which bronchus is it, and why is it drawn short?',
+    'b',
+    [
+      [
+        'The anteromedial basal bronchus (LB7+8): it is the shortest segmental bronchus of this lobe.',
+        'LB7+8 leaves the basal trunk lower down, and on this CT it runs laterally, across the beam, so the frontal image draws it at nearly its full length. A bronchus drawn short is not necessarily a short bronchus.',
+      ],
+      [
+        'The superior segmental bronchus (LB6): it runs posteriorly, nearly along the beam.',
+        'The lobe that descends over the cardiac silhouette to the diaphragm is the left lower lobe, and its first segmental bronchus is LB6. It runs posteriorly, so most of its length lies along the frontal beam and is not drawn as length.',
+      ],
+      [
+        'The superior lingular bronchus (LB4): it runs anteriorly, nearly along the beam.',
+        'LB4 does run anteriorly and a frontal image does draw it short. It arises from the lingular bronchus, off the left upper lobe bronchus; the lobe drawn here is the one that continues down to the diaphragm.',
+      ],
+    ],
+    'A bronchus is drawn at its true length only where it runs across the beam. On a frontal image the superior segmental bronchi run posteriorly, and the middle lobe, lingular and anterior segmental bronchi run anteriorly, so all are drawn short.',
+    ['chassagnon'],
+  ),
+  item(
     'signal-1',
     'optimize',
     'The image is stable, the tool is sharp and there is little noise, but the lesion is projected over the cardiac silhouette. Which adjustment most directly improves lesion conspicuity?',
@@ -157,7 +179,7 @@ export const QUESTIONS: Question[] = [
       ],
       [
         'It remains constant under these conditions.',
-        'Tube current × pulse width × pulse rate is the same. There are fewer images per second and more motion within each pulse; this exercise does not calculate patient dose.',
+        'Tube current × pulse width × pulse rate is the same. There are fewer images per second and more motion within each pulse. Tube load is not patient dose.',
       ],
     ],
     'Reducing pulse rate alone does not establish dose reduction or adequate temporal resolution.',
@@ -476,12 +498,12 @@ export const QUESTIONS: Question[] = [
   item(
     'case-5',
     'verify',
-    'In the course’s modeled needle design, the tip lies beyond a spherical lesion, and thin reformats place part of the side-cutting window inside it. Which documentation is most accurate?',
+    'The needle tip lies beyond a spherical lesion, and thin reformats place part of the needle’s side-cutting window inside the lesion. Which documentation is most accurate?',
     'a',
     [
       [
         'The side-cutting window partly intersects the lesion in this acquisition.',
-        'This states the component and extent the images demonstrate. Diagnostic adequacy and safety remain separate judgments for the real tool.',
+        'This states the component and extent the images demonstrate. Diagnostic adequacy and safety remain separate judgments.',
       ],
       [
         'The needle tip is in the lesion because the window intersects it.',
@@ -595,12 +617,12 @@ export const QUESTIONS: Question[] = [
   item(
     'case-5-v2',
     'verify',
-    'Linked thin axial, coronal and sagittal planes from a CBCT spin show the modeled lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
+    'Linked thin axial, coronal and sagittal planes from a CBCT spin show the lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
     'a',
     [
       [
-        'The side-cutting window partly intersects the modeled lesion in this acquisition; the tip lies beyond it.',
-        'Follow the tool, not the streak. The part that acquires tissue is the side-cutting window, not the tip. Here the linked thin planes show the window partly inside the modeled lesion and the tip beyond it; document that, in that acquisition.',
+        'The side-cutting window partly intersects the lesion in this acquisition; the tip lies beyond it.',
+        'Follow the tool, not the streak. The part that acquires tissue is the side-cutting window, not the tip. Here the linked thin planes show the window partly inside the lesion and the tip beyond it; document that, in that acquisition.',
       ],
       [
         'The needle tip is in the lesion, since part of the needle crosses it.',
@@ -611,7 +633,7 @@ export const QUESTIONS: Question[] = [
         'It is careful about adequacy, but “the needle is in the lesion” loses what the images show: which part of the tool, and how much of it. That is what the note needs.',
       ],
     ],
-    'Document which part of the biopsy tool is in the lesion, and in which acquisition. Tool-in-lesion confirmation does not guarantee diagnostic tissue, and a model intersection is not a clinical safety decision.',
+    'Document which part of the biopsy tool is in the lesion, and in which acquisition. Tool-in-lesion confirmation does not guarantee diagnostic tissue, and it is not a decision that sampling is safe.',
     ['setser', 'confirm'],
   ),
   item(
@@ -948,7 +970,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'The lesion margin on these planes comes from another acquisition, since the catheter is absent from them.',
-        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
+        'In this example the projection is the current acquisition and shows the catheter, while the three planes match the planning CT and show no catheter. Planes reconstructed from this acquisition would show that catheter, at least blurred on the planes near its depth. So, here, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
       ],
       [
         'The catheter is too thin to appear on these planes, so the lesion margin comes from this DTS acquisition.',
@@ -959,7 +981,7 @@ export const QUESTIONS: Question[] = [
         'Registration drift does occur, but a shift moves the catheter and the anatomy around it together, because one set of projections drew both. The planes that show that anatomy would show the catheter, and waiting for a refreshed registration cannot add a catheter those planes never contained.',
       ],
     ],
-    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this teaching case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
+    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
     ['saad', 'pritchett'],
   ),
   item(
@@ -1115,6 +1137,141 @@ export const QUESTIONS: Question[] = [
     ],
     'A dose notification is set on an index that accumulates across one patient’s imaging, and it prompts review (AAPM suggests the first at 3 Gy, then every 1 Gy): the total so far, the record, the imaging still planned and any follow-up. It is not peak skin dose and not a statement about equipment performance. Record the quantity, its units and the acquisitions it includes.',
     ['aapm12', 'wabip', 'skin'],
+  ),
+  // Expert-session round, part 2 (2026-10-20): practice and integrated items for planning the
+  // projection, positioning, the nudge and the centre of the DTS arc. Every direction they key is
+  // pinned in model-truth.test.ts; all are drafts pending physician review.
+  item(
+    'current-anatomy-practice-1',
+    'choose',
+    'What should the setup include before the first image?',
+    'b',
+    [
+      [
+        'Prone positioning, so that the posterior lung stays uppermost for the whole case.',
+        'Prone positioning does lift the posterior lung, but it changes anesthesia, airway access and the platform setup far more than a wedge does, and a wedge under the nodule side lifts that lung out of the dependent zone on any platform.',
+      ],
+      [
+        'A recruitment maneuver with anesthesia, and a wedge under the left side.',
+        'Dependent atelectasis can begin soon after induction and keep progressing, and nobody can reliably predict who will develop it. Recruiting before the first image keeps aerated lung around the nodule, and lifting the nodule side moves it out of the dependent lung. Settle the position before registration.',
+      ],
+      [
+        'Supine positioning, with a recruitment maneuver if the nodule is lost on imaging.',
+        'Waiting for the nodule to disappear makes recruitment a rescue. By then the collapsing lung has removed the contrast around the nodule and moved it away from the navigation target, and the planning images no longer match the lung.',
+      ],
+    ],
+    'Prevent atelectasis and position the patient before the first image: recruit with anesthesia and lift the nodule side, rather than rescuing a nodule that has already been lost.',
+    ['ilocate', 'vespa'],
+  ),
+  item(
+    'airway-anatomy-practice-1',
+    'optimize',
+    'Which reading of this image is justified?',
+    'c',
+    [
+      [
+        'The catheter is in the middle lobe bronchus, which is the bronchus that arises at this level.',
+        'The middle lobe bronchus does arise here, from the front of the airway. The superior segmental bronchus of the lower lobe arises from the back within about a centimetre of the same level, and a frontal image draws both starting from the same place.',
+      ],
+      [
+        'The catheter has met an obstruction, because it has stopped advancing on the image.',
+        'A catheter travelling along the beam moves little on the image however far it is advanced. Foreshortening explains the appearance without any obstruction; resistance at the hand, not the image, is the evidence for one.',
+      ],
+      [
+        'The catheter is running front to back, in the middle lobe bronchus or in the superior segment of the lower lobe.',
+        'Both arise at about this level, one anteriorly and one posteriorly, and both run largely along the frontal beam. The image places the catheter by side and height and cannot say front or back. A rotated projection, or the planning CT against the turns already taken, settles it.',
+      ],
+    ],
+    'The frontal image places a bronchus by side and by height. Front or back takes a second projection, the planning CT or direct vision.',
+    ['chassagnon', 'setser'],
+  ),
+  item(
+    'projection-practice-1',
+    'choose',
+    'Which obliquity should the team plan first?',
+    'b',
+    [
+      [
+        'RAO, rotating until the nodule moves away from the spine on the axial CT.',
+        'RAO swings the receptor toward the patient’s right, so for a right anterior nodule the beam meets the chest wall head-on at the nodule rather than running along it. The pleura beside the nodule is seen en face, and the line through the nodule runs back across the mediastinum.',
+      ],
+      [
+        'LAO, rotating until the line through the nodule clears the mediastinum on the axial CT.',
+        'For a right anterior nodule, a hand laid flat on the chest wall over it gives LAO: the beam runs along the chest wall through the nodule, which also shows the pleura beside it edge-on. The axial CT then says how far to rotate, until the line through the nodule misses the mediastinum.',
+      ],
+      [
+        'Frontal, with cranial angulation planned on the sagittal CT instead of any obliquity.',
+        'Cranial or caudal angulation moves the receptor along the body. It does not move a nodule off the mediastinum or show the anterior chest wall edge-on; the axial CT decides the obliquity, and the sagittal then adds any tilt.',
+      ],
+    ],
+    'Read the obliquity off the axial CT: a hand on the chest wall over the nodule gives the side (left anterior and right posterior nodules call for RAO, right anterior and left posterior for LAO), and the axial image gives how far.',
+    ['setser', 'tg272'],
+  ),
+  item(
+    'signal-practice-3',
+    'optimize',
+    'Which small change lays the nodule onto the rib’s shadow?',
+    'c',
+    [
+      [
+        'A few more degrees of LAO obliquity, to slide the nodule toward the rib.',
+        'Obliquity swings the receptor around the chest and shifts structures sideways against each other. The posterior ribs run roughly across the image here, so it is cranial or caudal angulation that moves the nodule up or down against them, and more LAO risks bringing the spine back over it.',
+      ],
+      [
+        'A few degrees of cranial angulation, to tip the beam toward the head.',
+        'Cranial angulation lowers the nodule against a rib behind it on a monitor with the head at the top, so it moves the nodule away from the rib above it. It would lay the nodule onto a rib in front of it instead.',
+      ],
+      [
+        'A few degrees of caudal angulation, to tip the beam toward the feet.',
+        'Structures behind the nodule and in front of it shift in opposite directions. With caudal angulation the nodule rises against a rib behind it, so a few degrees lays it onto the posterior rib just above. Make one small change, then look again.',
+      ],
+    ],
+    'Name the rib before you nudge. Caudal angulation raises the nodule against a rib behind it and lowers it against a rib in front of it; cranial does the reverse. A few degrees is usually enough.',
+    ['setser', 'tg272'],
+  ),
+  item(
+    'dts-acquisition-practice-3',
+    'dts',
+    'What gives the best chance of seeing the nodule clearly in its plane?',
+    'c',
+    [
+      [
+        'Repeat the frontal acquisition across a wider arc and review thinner planes.',
+        'A wider arc does narrow the range of depths that blur into each plane, so this helps. But the heart still lies along the central beam in front of the nodule, and what remains of its blur still falls across the nodule’s plane.',
+      ],
+      [
+        'Keep the frontal centre and scroll to a shallower plane, away from the haze.',
+        'The haze is the heart in front of the nodule, blurred across every plane by the limited arc. Scrolling moves the plane away from the nodule as well; it does not take the heart off the central beam.',
+      ],
+      [
+        'Wedge the left side up and centre the arc on the view that clears the heart.',
+        'The planes lie square to the beam at the centre of the arc, and what lies in front of and behind the nodule along that beam blurs into its plane. Rolling the patient brings the clear view within the C-arm’s reach, so lung rather than heart lies along the central beam.',
+      ],
+    ],
+    'Centre the DTS arc on the projection that shows the nodule clear. If the C-arm cannot rotate that far, a wedge under the nodule side rolls the chest toward it, or the arc can run asymmetrically where the system allows.',
+    ['saad', 'frontier'],
+  ),
+  item(
+    'case-9',
+    'choose',
+    'Before any fluoroscopy, the team reviews the planning CT of a small solid nodule in the posterior left lung. On the axial image the heart lies directly in front of it; on the sagittal image the dome of the diaphragm rises in front of it and below it. The lung has been recruited and a wedge is under the left side. Which projection plan fits the CT?',
+    'b',
+    [
+      [
+        'RAO until the heart clears, then caudal angulation to move the nodule off the dome.',
+        'For a nodule behind the heart in the left lung, RAO swings the receptor to the right and keeps the heart on the line through the nodule. Caudal angulation then runs that line down into the dome and the upper abdomen.',
+      ],
+      [
+        'LAO until the heart clears, then cranial rather than caudal angulation if more is needed.',
+        'A left posterior nodule calls for LAO, which swings the front of the line through the nodule to the left of the heart. The dome lies in front and below, so cranial angulation lifts the line above it, whereas caudal runs it into the abdomen.',
+      ],
+      [
+        'Frontal with caudal angulation, then LAO only if the nodule is still hidden.',
+        'Caudal angulation steep enough to take the heart off this nodule brings the diaphragm over it instead, so the first image trades one structure for another. The axial CT already said which obliquity would clear the heart.',
+      ],
+    ],
+    'Plan both angles from the CT before the first frame: the obliquity from the axial image, the cranial or caudal angle from the sagittal, and the second projection the same way.',
+    ['setser', 'tg272'],
   ),
 ]
 

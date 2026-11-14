@@ -5,6 +5,9 @@
  */
 import {
   LINKED_SWEEP_TOLERANCES,
+  linkedLateralPosition,
+  linkedOpticView,
+  type LinkedLateralPosition,
   type LinkedSweep,
 } from '../../../../../src/lib/ebus-linked-contract'
 
@@ -71,3 +74,92 @@ export function describeLinkedSweep(input: SweepStatusInput): SweepStatus {
   }
 }
 const lower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1)
+
+/**
+ * Where the node sits across the image during the advance-and-withdraw task, in one heading and
+ * one sentence. It says where the node is, not which way to move: working out the direction from
+ * the image is the task.
+ */
+export interface AlongAirwayStatus {
+  state: LinkedLateralPosition | 'no-window' | 'pending'
+  heading: string
+  next: string
+}
+export function describeAlongAirway(input: {
+  targetLateral: number | null | undefined
+  frameReady: boolean
+  contact: number
+  targetName: string
+}): AlongAirwayStatus {
+  const name = input.targetName
+  if (!input.frameReady)
+    return { state: 'pending', heading: 'Updating the image', next: 'Wait for the ultrasound image.' }
+  if (input.contact < T.minContact)
+    return {
+      state: 'no-window',
+      heading: 'No tissue contact',
+      next: 'The transducer has lifted off the airway wall, so the image is empty. Move the scope back to where the image returned.',
+    }
+  const position = linkedLateralPosition(input.targetLateral)
+  if (position === 'centre')
+    return {
+      state: 'centre',
+      heading: 'Node in the middle of the image',
+      next: `${name} sits under the transducer. Select “Continue with this image”.`,
+    }
+  if (position === 'out')
+    return {
+      state: 'out',
+      heading: 'Node not in the image',
+      next: `The plane has slid past ${lower(name)}. Move the scope the other way along the airway to bring it back.`,
+    }
+  return {
+    state: position,
+    heading: position === 'left' ? 'Node left of the middle' : 'Node right of the middle',
+    next: `Advance or withdraw with the Scope position slider until ${lower(name)} sits in the middle of the image.`,
+  }
+}
+
+/**
+ * The scope lesson's task on the forward-oblique lens: look along the airway, then bring the
+ * image back. The first step latches once the lens has looked along the airway; the second is
+ * the tip flexed up onto the wall with tissue echoes in the image.
+ */
+export interface AirwayViewStatus {
+  state: 'pending' | 'find-airway' | 'airway' | 'find-wall' | 'wall'
+  heading: string
+  next: string
+}
+export function describeAirwayView(input: {
+  opticalWallMm: number | null | undefined
+  contact: number
+  airwayViewed: boolean
+  frameReady: boolean
+}): AirwayViewStatus {
+  if (!input.frameReady)
+    return { state: 'pending', heading: 'Updating the image', next: 'Wait for the ultrasound image.' }
+  const view = linkedOpticView(input.opticalWallMm, input.contact)
+  if (view === 'lumen')
+    return {
+      state: 'airway',
+      heading: 'Looking along the airway',
+      next: 'The airway ahead is in the middle of the white-light view and the transducer is off the wall, so there is no ultrasound image. Now flex the tip up.',
+    }
+  if (!input.airwayViewed)
+    return {
+      state: 'find-airway',
+      heading: 'Flex the tip down',
+      next: 'Move Tip flexion until the airway ahead sits in the middle of the white-light view.',
+    }
+  if (view === 'wall')
+    return {
+      state: 'wall',
+      heading: 'Transducer on the wall',
+      next: 'The wall fills the white-light view and tissue echoes are back. Select “Continue with this image”.',
+    }
+  return {
+    state: 'find-wall',
+    heading: 'Flex the tip up',
+    next: 'Keep flexing up until the wall fills the white-light view and tissue echoes return.',
+  }
+}

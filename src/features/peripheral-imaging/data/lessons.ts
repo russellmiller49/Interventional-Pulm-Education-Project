@@ -1,7 +1,27 @@
+import {
+  ANGLE_EXAMPLES,
+  OBLIQUITY_ALONG_CHEST_WALL,
+  obliquityName,
+  type ChestWallQuadrant,
+} from '../content/angleRules'
+import {
+  AIRWAY_FACTS,
+  airwayRouteText,
+  frontalBeamShare,
+  overNoduleCm,
+  overNoduleSpanCm,
+} from '../content/airwayFacts'
 import { PI_NUMBERS } from '../content/teachingNumbers'
 import type { Lesson, ObjectiveId } from '../types'
 
 const n = PI_NUMBERS.value
+
+/** "left anterior or right posterior": the quadrants whose chest-wall view is on one side. */
+const quadrantsFor = (side: 'RAO' | 'LAO') =>
+  (Object.keys(OBLIQUITY_ALONG_CHEST_WALL) as ChestWallQuadrant[])
+    .filter((quadrant) => OBLIQUITY_ALONG_CHEST_WALL[quadrant] === side)
+    .sort((a, b) => (a.endsWith('anterior') ? -1 : b.endsWith('anterior') ? 1 : 0))
+    .join(' or ')
 
 export const OBJECTIVES: { id: ObjectiveId; title: string; description: string }[] = [
   {
@@ -118,7 +138,7 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Six components, one image',
         kind: 'signals',
-        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and the X-ray modalities use these components differently. Radial EBUS uses ultrasound and does not share this X-ray pipeline.',
+        body: 'A fluoroscopic image is formed in sequence. The X-ray tube emits photons, the collimated beam crosses the patient, the flat-panel detector records what arrives, the system may reconstruct or register what was acquired, and the monitor displays the result for interpretation. Each component changes the image in its own way, and fluoroscopy, DTS and CBCT use these components differently.',
         points: [
           'The X-ray tube and generator set kV, mA and pulses.',
           'Beam geometry sets the projection, collimation and distances.',
@@ -213,7 +233,7 @@ export const LESSONS: Lesson[] = [
         'Magnification enlarges the same projection, heart included. Obliquity changes the projection, so the heart can move off the lesion. The first changes the display or the detector sampling; the second changes the projection. Name the control before you change it.',
     },
     labTask:
-      'Change projection with fixed tool and lesion geometry, then inspect the same model with display zoom. Compare what each control changes and what remains unresolved.',
+      'Change projection with fixed tool and lesion geometry, then inspect the same image with display zoom. Compare what each control changes and what remains unresolved.',
     lab: 'geometry',
     takeaway: [
       'Control families organize the main acquisition and display adjustments.',
@@ -261,6 +281,23 @@ export const LESSONS: Lesson[] = [
         },
       },
       {
+        // Expert-session feedback, 2026-10 (owner-approved plan): recruitment as part of setting up
+        // every case. A practice pattern, not a trial result; VESPA tested a bundle (Section 16).
+        title: 'Prevent atelectasis before the first image',
+        body: 'Atelectasis in the dependent lung can develop soon after induction and keep progressing through the case, and it is hard to predict in an individual patient. It defeats imaging twice: lung collapsing around a nodule removes the aerated lung that gives it contrast, and lung that keeps changing after the planning images moves the lesion away from the navigation target. Make ventilation part of setting up every case rather than a rescue once the lesion is lost.',
+        points: [
+          'Agree the ventilation strategy with anesthesia before induction.',
+          'Perform a recruitment maneuver before the first image, and again after airway inspection and suctioning.',
+          'Individualize: severe emphysema or hemodynamic instability can argue against a recruitment maneuver.',
+        ],
+        sources: ['ilocate', 'vespa'],
+      },
+      {
+        title: 'Position the patient so the lesion side is up',
+        body: 'Atelectasis forms in whatever lung is lowest. A wedge under the lesion side, or a lateral position, lifts that lung out of the dependent zone; it works with any navigation platform and adds little to the setup. Prone positioning does the same for a posterior lesion but changes anesthesia, airway access and platform setup far more. Lifting the lesion side also lets the soft tissue of the chest wall fall away from it, and it widens the views the C-arm can reach: rolling the patient changes the projection each C-arm angle gives. A position change also alters access, clearance and registration, so settle the position before registration and the first images.',
+        sources: ['ilocate'],
+      },
+      {
         title: 'When the lesion is not where it was expected',
         body: 'When the expected lesion is not seen, first check coverage and acquisition quality. The lesion may be outside the reconstruction volume, faint, obscured by atelectasis or hemorrhage, or displaced since the planning CT. Re-localize the lesion on current imaging before deciding whether to redirect, change modality, or reconsider the procedure.',
         sources: ['setser', 'mobile', 'ilocate'],
@@ -270,17 +307,99 @@ export const LESSONS: Lesson[] = [
       scenario:
         'A posterior lower-lobe lesion is clear on the planning CT but becomes inseparable from a new dependent opacity during the case.',
       reasoning:
-        'Navigation may still be registered to central structures while the peripheral lung has changed. Address atelectasis with anesthesia and reconfirm the lesion on current imaging; more precise navigation cannot restore the original anatomy.',
+        'Navigation may still be registered to central structures while the peripheral lung has changed. Address atelectasis with anesthesia, with a recruitment maneuver and a position that lifts the lesion side, and reconfirm the lesion on current imaging; more precise navigation cannot restore the original anatomy.',
     },
     lab: 'registration',
     labTask:
       'Change the anatomy, then toggle the stored contour. Note which information is still current.',
     takeaway: [
       'Review the airway and nearby hazards on the planning CT before instrumentation.',
+      'Set up ventilation and position with anesthesia before the first image.',
       'Treat every image as a record of one respiratory and anatomical state.',
       'A lesion that cannot be found needs an explanation.',
     ],
     checkIds: ['anatomy-1', 'choose-1'],
+  },
+  {
+    id: 'airway-anatomy',
+    title: 'The bronchial tree on the frontal image',
+    shortTitle: 'Airway anatomy',
+    group: 'Localize and optimize',
+    stage: 'Foundation',
+    minutes: 10,
+    objective: 'optimize',
+    outcome:
+      'Locate the lobar and segmental bronchi on a frontal fluoroscopic image, and name the bronchi it draws short or on top of one another.',
+    concept: 'The frontal image sorts the bronchi by side and by height, not by depth',
+    prerequisites: ['chain-walk', 'current-anatomy'],
+    why: 'Fluoroscopy shows the catheter and not the bronchus it is in, so the operator supplies the airway map.',
+    recall: {
+      prompt: 'On the planning CT, what do you follow to the lesion before the procedure?',
+      answer:
+        'The bronchus that leads to it: the final airway, the direction of approach and the anatomy that must stay visible while the tool moves.',
+    },
+    blocks: [
+      {
+        title: 'Fluoroscopy does not show the bronchi',
+        body: 'The trachea and the main bronchi appear on a fluoroscopic image as lucent columns, because they are wide and the mediastinum around them is dense. Beyond them a bronchus is air inside aerated lung and has no contrast against it. In the periphery the image shows the bronchoscope, the catheter and the tool. Which bronchus they are in is read from where they lie and how they got there, against a map of the tree that comes from the planning CT. A navigation platform or a registered overlay draws that map on the image; without one, the operator carries it.',
+        points: [
+          'Seen on the image: the trachea, the carina and the main bronchi.',
+          'Not seen: every lobar and segmental bronchus beyond them.',
+          'The map comes from the CT, whether a system draws it or the operator remembers it.',
+        ],
+        sources: ['setser', 'pritchett'],
+      },
+      {
+        title: 'Side and height: what the frontal image does show',
+        body: `Start at the carina, which the image shows. On the CT used in this course the right main bronchus is ${AIRWAY_FACTS.rightMainMm} mm long and gives off the upper lobe bronchus almost at once; the left is ${AIRWAY_FACTS.leftMainMm} mm long before it divides. From the hila the tree fans out by height. The upper lobe bronchi turn upward: the apical bronchus on the right (RB1) and the upper division on the left run toward the apex in the plane of the image. The bronchus intermedius and the lower lobe bronchi continue downward, and the basal bronchi spread toward the diaphragm. A catheter that climbs from the hilum is in an upper lobe. One that descends is in the middle lobe, the lingula or a lower lobe, and the frontal image alone does not say which.`,
+        points: [
+          'Left or right: certain, once the orientation of the display has been confirmed.',
+          'Upward from the hilum: an upper lobe.',
+          'Downward: the middle lobe, the lingula or a lower lobe.',
+        ],
+        sources: ['chassagnon'],
+      },
+      {
+        title: 'Depth: what the frontal image does not show',
+        body: `A bronchus is drawn at its true length only where it runs across the beam. Several segmental bronchi run front to back. On this CT the superior segmental bronchi of the lower lobes run posteriorly, with ${frontalBeamShare('RB6')}% (RB6) and ${frontalBeamShare('LB6')}% (LB6) of their first two centimetres along the frontal beam. The anterior segmental bronchi (RB3, LB3), the medial bronchus of the middle lobe (RB5) and the superior lingular bronchus (LB4) run anteriorly by as much. Each is drawn as a short stub, or end-on as a ring. Bronchi at different depths are also drawn on top of one another: the middle lobe bronchus leaves the front of the bronchus intermedius and RB6 leaves the back of the lower lobe bronchus ${AIRWAY_FACTS.middleLobeAboveSuperiorMm} mm lower, so on the frontal image a catheter in either starts from the same place.`,
+        points: [
+          'Posterior: the superior segments (RB6, LB6) and the posterior segment of the right upper lobe (RB2).',
+          'Anterior: the anterior segments (RB3, LB3), the middle lobe and the lingula.',
+          'In the plane of the image: the apical bronchi and most of the basal bronchi.',
+        ],
+        sources: ['chassagnon'],
+        detail: {
+          title: 'Anatomy varies between patients',
+          body: 'A segmental bronchus can arise from a neighbouring trunk, share a stem with another or be absent. The names and directions given here are those of one CT. During a procedure the map is the patient’s own planning CT.',
+        },
+      },
+      {
+        title: 'Name the airway to the lesion before the procedure',
+        body: `The nodule in this course lies at the end of a branch of the anteromedial basal bronchus of the left lower lobe (LB7+8): the branch runs within ${AIRWAY_FACTS.noduleBronchusMm} mm of the nodule’s centre. The way to it is ${airwayRouteText(AIRWAY_FACTS.noduleRoute)}. On the frontal image that path descends to the patient’s left and ends over the cardiac silhouette, and the last bronchus runs laterally, across the beam, so a catheter in it is drawn at nearly its full length. A path described this way is what makes a frontal image readable: a catheter that turns at the top of the lower lobe bronchus and stops lengthening on the image has entered LB6, not the basal trunk.`,
+        points: [
+          'Lobe, then segment, then the branch that reaches the lesion.',
+          'At each turn: up or down, medial or lateral, front or back.',
+          'Front or back is the turn the frontal image will not confirm.',
+        ],
+        sources: ['chassagnon', 'setser'],
+      },
+    ],
+    worked: {
+      scenario:
+        'A catheter is advanced into the left lower lobe under frontal fluoroscopy, toward a nodule off LB7+8. Just below the upper lobe bronchus its tip turns laterally and a little upward. Two more centimetres are advanced and the tip moves only a few millimetres on the image.',
+      reasoning:
+        'The catheter has entered the superior segmental bronchus (LB6), which runs posteriorly: most of the advance is along the beam, so the image shows almost none of it. The planned path keeps descending in the plane of the image. Withdraw to the lower lobe bronchus and re-enter the basal trunk. An oblique projection would show the posterior course directly.',
+    },
+    lab: 'geometry',
+    labTask:
+      'Draw the bronchi of each lobe on the frontal image, find the ones it draws short, then rotate the C-arm and watch them lengthen.',
+    takeaway: [
+      'Fluoroscopy shows the central airways and the tool; the map of the bronchi comes from the CT.',
+      'The frontal image places a bronchus by side and by height.',
+      'Bronchi that run front to back are drawn short, and overlap the ones in front of or behind them.',
+      'Name the airway path to the lesion, turn by turn, before the procedure.',
+    ],
+    checkIds: ['airway-1', 'walk-1'],
   },
   {
     id: 'projection',
@@ -288,7 +407,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Projection & depth',
     group: 'Localize and optimize',
     stage: 'Foundation',
-    minutes: 12,
+    minutes: 14,
     objective: 'optimize',
     outcome:
       'Distinguish projected overlap from a resolved three-dimensional tool–lesion relationship.',
@@ -310,6 +429,46 @@ export const LESSONS: Lesson[] = [
           'Change the projection enough to add depth information while preserving clearance.',
           'Recenter and recollimate after rotating the C-arm.',
         ],
+        sources: ['setser', 'tg272'],
+      },
+      {
+        // The parallax of the block above, applied to the bronchi of the course CT. Which bronchi
+        // cross the nodule, how deep each lies and which leave it at each angle are computed from
+        // the tree (`content/airwayFacts.ts`, `lib/airwayTree.ts`) and held by `airway-tree.test.ts`.
+        title: 'Which bronchus reaches the nodule',
+        body: `Superimposition applies to the airways as it does to the tool. On the frontal image of this patient four segmental bronchi cross the outline of the nodule: LB5 from the lingula, and LB7+8, LB9 and LB10 from the lower lobe. They span about ${overNoduleSpanCm} cm front to back. LB5 lies about ${overNoduleCm('LB5')} cm in front of the nodule, LB9 about ${overNoduleCm('LB9')} cm behind it and LB10 about ${overNoduleCm('LB10')} cm behind it; only LB7+8 runs at the depth of the nodule. A catheter in any of the four is drawn reaching the nodule on this one image. Rotating the C-arm sorts them by depth. A bronchus in front of the nodule and a bronchus behind it move across it in opposite directions, and a bronchus at its depth stays over it. At LAO 30° LB5 has left the nodule toward the midline, as the heart has: both lie in front of it. LB9 and LB10 still cross it, because they run back toward the spine, nearly along this beam. At RAO 30° they have left it toward the midline as well, the way the spine moves, and LB5 has left toward the chest wall. LB7+8 crosses the nodule at all three angles.`,
+        points: [
+          'Overlap on the frontal image names several bronchi, not one.',
+          'What moves with the heart lies in front of the nodule; what moves with the spine lies behind it.',
+          'The bronchus that stays over the nodule as the C-arm rotates is the one to follow. One oblique did not separate LB9 and LB10; the opposite oblique did.',
+        ],
+        sources: ['setser', 'chassagnon'],
+      },
+      {
+        // Expert-session round, part 2 (2026-10-20): the educators' slides list these three benefits
+        // of rotating the C-arm, with safety following from the second and third.
+        title: 'Three reasons to angle the C-arm',
+        body: `Every change of C-arm angle should earn its exposure by doing at least one of three things. Seeing the nodule comes first: without it there is nothing to align the tool to. In one series of percutaneous CBCT-guided biopsies of nodules 1 cm or smaller, diagnostic accuracy was ${n('fluoro-visibility-accuracy')} (Hwang, Br J Radiol 2018). Seeing the pleura and the tool clearly is what makes sampling safe.`,
+        points: [
+          'Contrast: change what lies behind the nodule so that it stands out.',
+          'The pleural boundary: show the pleura beside a peripheral nodule edge-on.',
+          'The tool in profile: see the catheter and needle without foreshortening.',
+        ],
+        sources: ['setser', 'tg272'],
+      },
+      {
+        title: 'Read the obliquity off the axial CT',
+        body: `Obliquity swings the image receptor around the chest: RAO toward the patient’s right, LAO toward the left. To choose the side, picture a hand laid flat on the chest wall over the nodule. The beam that runs along the palm and through the nodule is tangent to the chest wall there, and the receptor goes where the fingers point. Then use the axial CT to decide how far to rotate: follow the line through the nodule at that obliquity, and stop where it misses the heart, the mediastinum and the spine. The nodule in this course lies in the posterior left lung with the heart in front of it. Every RAO projection crosses the heart; at ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)} only lung lies over the nodule.`,
+        points: [
+          `A ${quadrantsFor('RAO')} nodule: RAO.`,
+          `A ${quadrantsFor('LAO')} nodule: LAO.`,
+          'How far: until the line through the nodule clears the heart, the mediastinum and the spine.',
+        ],
+        sources: ['setser', 'tg272'],
+      },
+      {
+        title: 'Read the cranial or caudal angle off the sagittal CT',
+        body: `Cranial or caudal angulation moves the receptor along the body: cranial toward the head, caudal toward the feet. Follow the line through the nodule on the sagittal CT and tilt toward clear lung, away from the diaphragm, the heart and the hilar vessels. A low posterior nodule often needs cranial angulation to lift that line over the dome of the diaphragm; caudal angulation runs it into the upper abdomen. For the nodule in this course, straight on, about ${ANGLE_EXAMPLES.cranialFrontal.tilt}° of cranial angulation clears the heart, while caudal angulation clears it only by bringing the diaphragm over the nodule. Choose a second projection the same way, from the CT, rather than rotating until something changes.`,
         sources: ['setser', 'tg272'],
       },
       {
@@ -335,9 +494,11 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'geometry',
     labTask:
-      'Keep the tool depth offset, rotate the C-arm, and compare the 3D scene with its CT-derived projection.',
+      'Keep the tool depth offset, rotate the C-arm, and compare the 3D view with its projection.',
     takeaway: [
       'Overlap on one projection is superimposition until shown otherwise.',
+      'Several bronchi cross a nodule on one image; the one at its depth stays over it as the C-arm rotates.',
+      'Plan the obliquity on the axial CT and the cranial or caudal angle on the sagittal.',
       'Choose the projection for the question: alignment or advancement.',
       'Changing the projection does not move the tool.',
     ],
@@ -368,10 +529,23 @@ export const LESSONS: Lesson[] = [
         points: [
           'Noisy image: assess photon statistics and motion.',
           'Low contrast: assess collimation, scatter and the display.',
-          'Rib or heart superimposed on the lesion: change the projection.',
+          'Heart, diaphragm, spine or vessels superimposed on the lesion: change the projection.',
           'No distinct lesion after optimization: reassess lesion identity or the modality.',
         ],
         sources: ['tg125', 'tg272', 'wabip'],
+      },
+      {
+        // Expert-session round, part 2: the slides teach using the ribs rather than always avoiding
+        // them, and the cranial/caudal parallax the nudge relies on; model-truth pins both
+        // directions and the LAO 20° example.
+        title: 'Put the ribs to work',
+        body: 'What hides a small nodule is clutter crossing it: vessel shadows, the heart border, the dome of the diaphragm, a rib edge cutting through it. Overlap in itself is not the problem. A nodule laid on the even shadow of a rib, or against a rib’s edge, can stand out better than one over a field of vessels. Change what lies behind the nodule rather than hunting for an empty patch of lung.',
+        sources: ['setser', 'tg272'],
+      },
+      {
+        title: 'The nudge: a few degrees of cranial or caudal angulation',
+        body: `Once the heart and the spine are off the nodule, small changes of cranial or caudal angulation move it against the ribs. Structures in front of the nodule and behind it shift in opposite directions: on a monitor with the head at the top, caudal angulation raises the nodule against a rib behind it and lowers it against a rib in front of it, and cranial angulation does the reverse. So know from the CT whether the rib you are aiming for lies in front of the nodule or behind it, make one small change at a time, and look again. In this course’s ${obliquityName(ANGLE_EXAMPLES.ribOblique.obliquity)} view a posterior rib lies over the nodule; ${ANGLE_EXAMPLES.ribNudgeTilt}° of cranial angulation takes it off.`,
+        sources: ['setser', 'tg272'],
       },
       {
         title: 'Beam energy and photon output are different',
@@ -399,6 +573,8 @@ export const LESSONS: Lesson[] = [
       'Rotate the C-arm until the heart no longer overlaps the X-ray path through the lesion, then add angulation and read what the projection does.',
     takeaway: [
       'Name the limiting factor before changing anything.',
+      'Move the nodule off clutter; a rib behind it can help rather than hide it.',
+      'A few degrees of cranial or caudal angulation move the nodule against the ribs.',
       'More photons give diminishing returns.',
       'Image brightness is not a dose indicator.',
     ],
@@ -435,8 +611,23 @@ export const LESSONS: Lesson[] = [
         sources: ['wabip', 'tg125', 'tg272'],
       },
       {
+        // Owner's teaching, 2026-10-11: why excluding the spine improves the image.
+        title: 'Collimate the spine out of the field',
+        body: 'Collimating the beam to exclude highly radiopaque structures such as the spine can substantially improve how well you see a pulmonary target and the instruments used to reach it. Three mechanisms contribute: less scatter, automatic image processing that works on the lung, and more favorable automatic exposure control. The tool path has to stay in the field while the tool is advancing, so this is the field for working at the lesion.',
+        points: [
+          'Less scatter: a tighter field irradiates less tissue, so less scattered radiation reaches the detector to lower contrast.',
+          'Grayscale spent on the lung: with the spine out of the field, image processing spreads the display range across the lung, the lesion and the instrument.',
+          'Automatic exposure control set by the lung: dense bone in its measuring field pushes it toward a more penetrating, lower-contrast beam.',
+        ],
+        detail: {
+          title: 'Why each of the three helps',
+          body: 'Photons that undergo Compton scattering in the patient reach the detector from unintended directions and add a background signal that lowers contrast; a tighter field produces fewer of them, so a needle, a catheter or a robotic bronchoscope stands out better against the lung, which matters most for a subtle peripheral lesion or the tip of a small biopsy instrument. The image processing sets displayed brightness, contrast and grayscale from what is in the field: a spine that fills much of the image takes the bright end of the range, and with it excluded the same range is spread across the lung, the lesion and the instrument, so small differences in attenuation, such as a needle or forceps against a lesion, are easier to see; how much this helps depends on the system. Automatic exposure control adjusts kV, mA and pulse width to hold the detector signal in its measuring field; dense structures there push it toward a more penetrating beam, which lowers contrast in the lung and can wash out the aerated lung beside them, and with them excluded the system regulates to the lung, the lesion and the instrument.',
+        },
+        sources: ['wabip', 'tg125', 'tg272'],
+      },
+      {
         title: 'Display zoom versus acquisition magnification',
-        body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system.',
+        body: 'Ask whether a control changes the X-ray acquisition, the detector readout, or only the display. Display zoom enlarges acquired pixels and adds no exposure when applied to a stored image. A smaller acquisition field or magnification mode is an acquisition change, and what it changes depends on the system. When it improves edge recognition of a small nodule or a fine instrument, it often does so at a higher dose rate; collimating to the smaller field at the same time keeps the irradiated area, the scatter and the kerma–area product down.',
         sources: ['tg272', 'tg125'],
         detail: {
           title: 'Device-dependent limits of magnification modes',
@@ -461,9 +652,10 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'field',
     labTask:
-      'Compare the collimated field with an electronic crop, then apply display zoom to the stored image. Keep the full tool excursion in the field.',
+      'Collimate for the tool path, then collimate the spine out of the field once the tool is at the lesion. Compare the collimated field with an electronic crop and with display zoom on the stored image.',
     takeaway: [
       'Collimation acts on the beam; electronic cropping acts on the display.',
+      'At the lesion, collimating the spine out of the field improves contrast: less scatter, and grayscale and automatic exposure set by the lung.',
       'A magnification label does not tell you what the acquisition changed.',
       'Keep the anatomic context and mechanical clearance.',
     ],
@@ -513,7 +705,7 @@ export const LESSONS: Lesson[] = [
       scenario:
         'After the pulse rate is reduced, the system doubles pulse width. Tube current is unchanged.',
       reasoning:
-        'There are fewer images per second but the same mAs per second in this simplified comparison, and each exposure spans more motion. Pulse-rate arithmetic alone does not establish a reduction in patient dose.',
+        'There are fewer images per second but the same mAs per second in this comparison, and each exposure spans more motion. Pulse-rate arithmetic alone does not establish a reduction in patient dose.',
     },
     lab: 'temporal',
     labTask:
@@ -545,14 +737,17 @@ export const LESSONS: Lesson[] = [
     },
     blocks: [
       {
-        title: 'A two-axis fluoroscopy technique',
+        // Expert-session round, part 2 (2026-10-20): the educators' five-step workflow, in the
+        // course's own words, each step pointing back to the section that teaches it.
+        title: 'The 2D workflow, in order',
         kind: 'after-commitment',
-        body: 'State the question and review the planning CT. Use the axial CT to choose an oblique projection that moves the lesion off the heart, mediastinum, scapula, ribs or thick chest wall, and add modest cranial or caudal angulation when the sagittal CT shows the diaphragm, a rib edge or the clavicle over it; the individual lesion position, not a memorized lobe rule, decides the angle. Then recenter, collimate around the lesion and the anticipated tool excursion, use display zoom if the image is simply small, and choose a second projection that places the tool in profile.',
+        body: 'Work the same sequence in every case. Whether the nodule can be seen is largely settled before the first frame, by the plan, the state of the lung and the projection; the controls after that refine an image that already shows it. When a step does not answer the question, go back a step before adding exposure.',
         points: [
-          'Superimposition: change the projection, then recenter.',
-          'Image too small: display zoom on last-image hold.',
-          'Motion: address pulse width, pulse rate or the movement itself.',
-          'Unresolved depth or lesion identity: add DTS or CBCT.',
+          'Plan on the CT (Sections 4 to 6): the airway to the nodule, what will lie over it, and the obliquity and cranial or caudal angle that should clear it.',
+          'Recruit and position (Section 4): a recruitment maneuver with anesthesia before the first image and again after airway inspection, with the lesion side up.',
+          'Project (Sections 6 and 7): the planned projection, then a few degrees of tilt to move the nodule off clutter or onto a rib.',
+          'Optimize (Sections 8 and 9): magnify for edge detail and collimate to pay for it, set the pulse for the motion, and change exposure factors last, where the system allows manual technique.',
+          'Align, confirm, sample (Sections 6, 10 and 11 to 15): the tool in profile on a second projection, and DTS or CBCT when depth or lesion identity is still open.',
         ],
         sources: ['setser', 'tg272', 'wabip'],
       },
@@ -590,6 +785,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'geometry',
     takeaway: [
+      'Plan, recruit, project, optimize, then align and sample.',
       'Fix the limiting factor before increasing exposure.',
       'Concentric: exchange without moving the sheath. Eccentric: redirect and re-image. No pattern: relocalize.',
       'Stop repeating the same projection when it has stopped answering.',
@@ -617,18 +813,26 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Reconstructing planes from a DTS acquisition',
-        body: 'Digital tomosynthesis acquires a series of projections as the C-arm moves through a limited arc. Shifting and adding those projections brings one depth into register: structures at that depth reinforce, and structures at other depths blur out of plane. The result reduces superimposition and adds depth information that a single projection lacks. Think of sliding a stack of transparencies until one object lines up.',
+        body: 'Digital tomosynthesis sweeps the C-arm through a limited arc and takes a series of images. The reconstruction adds them so that the shadows of structures at one depth line up and reinforce, while everything above and below that depth is blurred out. Scroll through the depths and each level comes into focus in turn: that is a DTS plane. It reduces superimposition and adds depth information that a single projection lacks.',
         sources: ['saad', 'frontier'],
       },
       {
         title: 'Depth resolution depends on angular coverage',
         kind: 'after-commitment',
-        body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge. In-plane edges can look sharp while depth remains elongated or blurred, and small voxels do not repair this anisotropy (resolution that differs by direction): a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a system may resolve the unmeasured directions from a registered prior scan or a learned model and render a CT-like image, which removes the visible sign of the limit without removing the limit.',
+        body: 'Because the arc is limited, depth along the beam is measured less well than the image plane: a nodule and a needle can look sharp across the image yet stretched in depth, and small voxels do not change that. Some systems fill the poorly measured direction from a registered prior scan or a learned model and render a CT-like image, which hides the limit without removing it.',
         sources: ['saad', 'sumner', 'podder'],
         detail: {
-          title: 'More projections: state the constraint',
-          body: 'More projections at a fixed exposure per projection increase total exposure. Dividing a fixed total exposure among more projections changes sampling and noise differently. Projection count alone does not specify image quality, acquisition time or dose.',
+          title: 'The physics behind the limit',
+          body: 'Limited angular coverage leaves part of the spatial information unmeasured, often described as a missing wedge, which leaves anisotropy (resolution that differs by direction): in-plane edges can look sharp while depth stays elongated or blurred, and a reconstruction can contain small voxels without equivalent resolution in every direction. Sparse projections over a wide rotation and a limited arc are different sampling problems. Because the acquired projections do not single out one volume, a prior scan or a model decides what fills the unmeasured direction. More projections at a fixed exposure per projection increase total exposure; dividing a fixed total exposure among more projections changes sampling and noise differently, so projection count alone does not specify image quality, acquisition time or dose.',
         },
+      },
+      {
+        // Expert-session round, part 2: where the arc is centred decides what blurs into the nodule's
+        // plane. The slides show a wedged patient and an asymmetric sweep; model-truth pins the
+        // contrast-to-noise gain at an LAO 20° centre (tomosynthesis.test.ts).
+        title: 'Centre the arc on the view that shows the nodule',
+        body: `The reconstructed planes lie parallel to the detector at the middle of the arc, and a limited arc never fully removes what lies in front of the nodule and behind it along that central beam: it is blurred across the nodule’s plane. So centre the arc on the projection that shows the nodule clear, the one you would choose for 2D fluoroscopy, and what blurs into its plane is mostly aerated lung rather than heart or chest wall. For the nodule in this course, an arc centred on ${obliquityName(ANGLE_EXAMPLES.ribOblique.obliquity)} instead of straight on more than doubles the nodule’s contrast-to-noise in its plane. If the C-arm cannot reach that centre with the patient and the equipment in place, a wedge under the nodule side rolls the chest toward it, or, where the system allows, the arc can run asymmetrically, starting near frontal on one side and finishing further round on the other.`,
+        sources: ['saad', 'frontier'],
       },
       {
         title: 'Prepare the DTS acquisition',
@@ -649,9 +853,10 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'dts',
     labTask:
-      'Scroll the reconstruction plane through the added lesion and tool, then compare the surrounding anatomy with a wider DTS arc.',
+      'Scroll the reconstruction plane through the lesion and the tool, then compare the surrounding anatomy with a wider DTS arc.',
     takeaway: [
       'DTS adds depth information absent from a single projection.',
+      'Centre the arc where the path through the nodule crosses lung.',
       'Depth resolution depends on angular coverage.',
       'Voxel size does not describe measured resolution.',
     ],
@@ -769,7 +974,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Set up the model lesion and complete the readiness checks. See what happens when a checked setup is moved.',
+      'Center the lesion and complete the readiness checks. See what happens when a checked setup is moved.',
     takeaway: [
       'Center the lesion, not just the chest.',
       'Check clearance for the whole spin.',
@@ -881,7 +1086,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Select the mobile CBCT workflow. Compare its room-preparation needs, and center the lesion on both CT-derived scout images.',
+      'Select the mobile CBCT workflow. Compare its room-preparation needs, and center the lesion on both scout images.',
     takeaway: [
       'Portability changes logistics, not the physics.',
       'Commission the room, table and scanner together.',
@@ -939,11 +1144,11 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The needle tip is beyond the nodule, and its side-cutting window lies within part of the lesion on thin reformats.',
       reasoning:
-        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. The module’s modeled window geometry teaches this distinction; clinical interpretation depends on the real tool, the approved technique and the surrounding safety anatomy.',
+        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. At the table, the interpretation depends on the tool in use, the approved technique and the surrounding anatomy at risk.',
     },
     lab: 'mpr',
     labTask:
-      'Move the modeled needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
+      'Move the needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
     takeaway: [
       'Identify the lesion independently.',
       'Follow the part of the tool that acquires tissue on thin planes.',
@@ -1068,7 +1273,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'safety',
     labTask:
-      'Inspect staff, patient and barrier geometry. Explore distance while noting what the simplified calculation cannot establish.',
+      'Inspect staff, patient and barrier geometry. Explore distance while noting what the inverse-square ratio cannot establish.',
     takeaway: [
       'Protect against scatter as well as the primary beam.',
       'Use effective barriers and verified positions.',
@@ -1171,7 +1376,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Apply the same reasoning to new situations',
-        body: 'This section adds nothing new. It combines the modalities and safety questions of the course: each problem in the suite arises at one component of image formation, and naming it guides the next step. The eight integrated cases are on the Integrated cases tab. Every one of them is open at any time; no section has to be finished first.',
+        body: 'This section adds nothing new. It combines the modalities and safety questions of the course: each problem in the suite arises at one component of image formation, and naming it guides the next step. The integrated cases are on the Integrated cases tab. Every one of them is open at any time; no section has to be finished first.',
         points: [
           'Name the imaging question before naming a device.',
           'Say where in image formation the problem arises.',
@@ -1179,12 +1384,28 @@ export const LESSONS: Lesson[] = [
         ],
         sources: ['setser', 'wabip'],
       },
+      {
+        // Expert-session round, part 2 (A7): the full-case run-through on the geometry lab, the one
+        // place the wedge is a learner control. Every angle is held in model-truth.test.ts.
+        title: 'One nodule through the workflow',
+        body: `The nodule is the one this course has used throughout: in the posterior left lung, with the heart in front of it. Planning on the CT gave the projection: LAO, far enough to clear the heart, about ${obliquityName(ANGLE_EXAMPLES.clearOblique.obliquity)} through the patient. Anesthesia has recruited the lung. In this room the docked robotic platform leaves the C-arm no more than ${ANGLE_EXAMPLES.runThroughOrbitLimit}° of LAO, so the setup has to supply the rest: a ${ANGLE_EXAMPLES.wedge.wedge}° wedge under the left side rolls the chest, and the projection through the patient is the C-arm obliquity less the wedge. Project, then nudge, then collimate and inspect, reading the anatomy over the nodule at each step.`,
+        points: [
+          'Position: the wedge under the nodule side.',
+          'Project: rotate the C-arm toward LAO until only lung lies over the nodule.',
+          'Optimize: collimate around the lesion, keeping the tool path and landmarks, and zoom the stored image.',
+          'Nudge: a degree or two of beam tilt moves a rib across the nodule.',
+        ],
+        sources: ['setser', 'tg272'],
+      },
     ],
     worked: {
       scenario: 'Before starting, organize your own approach without a model answer.',
       reasoning:
         'Name the imaging question, the likely limiting factor, the acquisition that can resolve it, and the conditions needed to acquire it safely.',
     },
+    lab: 'geometry',
+    labTask:
+      'Run one nodule through the workflow: wedge the nodule side up, project it clear, collimate and inspect, then nudge the tilt and take the wedge out.',
     takeaway: [
       'Choose imaging for the unanswered question.',
       'Reconfirm the current anatomy and the biopsy tool.',

@@ -114,50 +114,50 @@ export function ModelSection({
   }, [volume, pose, point, plane, offset, onViewed])
   return (
     <section className="linked-section" aria-label="Model section">
-      <h3>Model section</h3>
-      <p className="guided-label">
-        Sections of the ultrasound anatomy label volume. This is not CT. Violet cross: selected
-        position. Cyan: scan-plane intersection. Colours follow the 3D model: veins blue, arteries
-        red, heart chambers mauve, esophagus tan, example nodes yellow, other tissue grey, air dark.
+      <div className="linked-section-bar">
+        <div className="guided-tabs">
+          {(['axial', 'coronal', 'sagittal'] as const).map((p) => (
+            <button key={p} aria-pressed={plane === p} onClick={() => setPlane(p)}>
+              {p[0].toUpperCase() + p.slice(1)}
+            </button>
+          ))}
+        </div>
+        <label>
+          Offset <output>{offset} mm</output>
+          <input
+            aria-label="Model section offset"
+            type="range"
+            min="-40"
+            max="40"
+            value={offset}
+            onChange={(e) => setOffset(Number(e.target.value))}
+          />
+        </label>
+        <button onClick={() => setOffset(0)} disabled={offset === 0}>
+          Center
+        </button>
+      </div>
+      <div className="linked-section-fit">
+        <div className="linked-section-image">
+          <canvas
+            ref={canvas}
+            width={300}
+            height={300}
+            aria-label={`${plane} model section with selected position and ultrasound plane`}
+          />
+          <ImageDiscovery
+            canvas={canvas}
+            image={image}
+            labels={volume.metadata.labels}
+            enabled={discover}
+          />
+        </div>
+      </div>
+      <p className="guided-label linked-section-key">
+        A slice through the 3D model (not a CT). Dashed cyan line: the ultrasound plane. Violet
+        cross: the selected structure. Veins blue, arteries red, nodes yellow.
+        {discover ? ' Hover or tap to name a structure.' : ''}
       </p>
-      <div className="guided-tabs">
-        {(['axial', 'coronal', 'sagittal'] as const).map((p) => (
-          <button key={p} aria-pressed={plane === p} onClick={() => setPlane(p)}>
-            {p[0].toUpperCase() + p.slice(1)}
-          </button>
-        ))}
-      </div>
-      <div className="linked-section-image">
-        <canvas
-          ref={canvas}
-          width={300}
-          height={300}
-          aria-label={`${plane} model section with selected position and ultrasound plane`}
-        />
-        <ImageDiscovery
-          canvas={canvas}
-          image={image}
-          labels={volume.metadata.labels}
-          enabled={discover}
-        />
-      </div>
-      {discover && (
-        <p className="guided-label">
-          Hover or tap to name a structure. Focus the image and use arrow keys to explore.
-        </p>
-      )}
-      <label>
-        Section offset <output>{offset} mm</output>
-        <input
-          aria-label="Model section offset"
-          type="range"
-          min="-40"
-          max="40"
-          value={offset}
-          onChange={(e) => setOffset(Number(e.target.value))}
-        />
-      </label>
-      <button onClick={() => setOffset(0)}>Center on selected position</button>
     </section>
   )
 }

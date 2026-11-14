@@ -4,6 +4,11 @@ import {
   type AnnotationLegend,
 } from '@/features/socrates-builder/case-content'
 import type { TeachingContent } from '../projections'
+import { getInvenioPair } from '@/features/socrates-builder/invenio-source'
+import {
+  invenioAnnotationKey,
+  invenioAnnotationKeySource,
+} from '@/features/socrates-builder/content/invenio-annotation-key'
 import styles from './study.module.css'
 export function StudyShell({ locale, children }: { locale: string; children: ReactNode }) {
   return (
@@ -23,15 +28,44 @@ export function StudyShell({ locale, children }: { locale: string; children: Rea
 export function AnnotationKey({
   legend,
   authorPreview = false,
+  descriptorUrl,
 }: {
   legend: AnnotationLegend
   authorPreview?: boolean
+  descriptorUrl?: string
 }) {
+  if (!legend.entries.length && descriptorUrl && getInvenioPair(descriptorUrl))
+    return (
+      <details open className={styles.providerKey} aria-label="Annotation color key">
+        <summary>Tissue annotation key</summary>
+        <p>
+          Colors in the Invenio image.{' '}
+          <a href={invenioAnnotationKeySource} target="_blank" rel="noreferrer">
+            Provider’s full-size key ↗
+          </a>
+        </p>
+        <ul className={styles.providerKeyEntries}>
+          {invenioAnnotationKey.map((entry) => (
+            <li key={entry.color} className={styles.legendEntry}>
+              <span
+                aria-hidden="true"
+                className={styles.swatch}
+                style={{ backgroundColor: entry.color }}
+              />
+              <span>{entry.label}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    )
   const pending = !legend.reviewed || annotationLegendIssues(legend).length > 0
   return (
     <section aria-label="Annotation color key">
       <h3>Annotation / color key</h3>
       {pending && <p>Annotation key pending review</p>}
+      {authorPreview && !legend.entries.length && (
+        <p>No color key has been added for this slide. Add entries under Case content.</p>
+      )}
       {(!pending || authorPreview) && (
         <div className={styles.legend}>
           {legend.entries.map((e, i) => (

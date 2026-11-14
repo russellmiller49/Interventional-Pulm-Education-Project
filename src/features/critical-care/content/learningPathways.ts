@@ -17,6 +17,10 @@ import { criticalCareModuleCatalog, type CriticalCareCatalogModuleId } from './m
 export const criticalCareLearningPathways: readonly LearningPathway[] = Object.freeze([
   {
     moduleId: 'icu-hemodynamics',
+    /*
+     * Sections 2–8 end on a case, run inside the section (`practicePairing` in the module's
+     * section specs); their minutes include the case's own (`minutes` on the case definition).
+     */
     arcSentence:
       'Ask why, trust the signal, read the waveform, advance the catheter, measure, and integrate',
     sections: [
@@ -34,7 +38,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pressure-system',
         shortTitle: 'Trust the signal',
         title: 'Can this number be trusted?',
-        minutes: 12,
+        minutes: 24,
         description:
           'Walk the line from the tip to the number: level and zero the system, fit the scale, and read the fast-flush response before any pressure is interpreted.',
         stage: 'foundation',
@@ -44,7 +48,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-interpretation',
         shortTitle: 'Identify the chamber',
         title: 'Identify the chamber from the waveform',
-        minutes: 10,
+        minutes: 20,
         description:
           'Walk the four places the tip can sit — right atrium, right ventricle, pulmonary artery, the wedge — and learn to name each from its shape alone.',
         stage: 'mechanism',
@@ -54,7 +58,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-components',
         shortTitle: 'Read the waves',
         title: 'Atrial waves and descents',
-        minutes: 10,
+        minutes: 20,
         description:
           'Identify atrial waves and descents against the ECG, then interpret abnormal components in a confirmed chamber and clinical context.',
         stage: 'mechanism',
@@ -64,7 +68,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'catheter-advancement',
         shortTitle: 'Advance',
         title: 'Where is the tip?',
-        minutes: 15,
+        minutes: 25,
         description:
           'Work a simulated catheter from the introducer to the pulmonary artery, confirming each stop from the tracing rather than the depth, and stopping when the list says stop.',
         stage: 'foundation',
@@ -74,7 +78,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pawp-capture',
         shortTitle: 'Wedge',
         title: 'Listening through a stopped branch',
-        minutes: 15,
+        minutes: 25,
         description:
           'From a confirmed pulmonary-artery position, take a brief end-expiratory wedge, judge whether it is plausible, and prove the occlusion has ended.',
         stage: 'mechanism',
@@ -84,7 +88,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'thermodilution-series',
         shortTitle: 'Measure flow',
         title: 'How much is flowing?',
-        minutes: 18,
+        minutes: 28,
         description:
           'Measure flow with a thermodilution series and a Fick calculation, judging each curve and each input before its number.',
         stage: 'mechanism',
@@ -94,7 +98,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'derived-hemodynamics',
         shortTitle: 'Derive',
         title: 'Numbers made of numbers',
-        minutes: 15,
+        minutes: 25,
         description:
           'Trace each calculated value back to its equation and its inputs, and withhold only what an invalid input actually touches.',
         stage: 'application',
@@ -214,14 +218,24 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   },
   {
     moduleId: 'mechanical-circulatory-support',
+    /*
+     * Sections 3–9 end on a case, run inside the section (`practicePairing` in the module's section
+     * specs); their minutes include the case's own (`minutes` on the case definition).
+     */
     arcSentence:
       'Validate the signal, separate the mechanisms, work each device, and choose between them',
     sections: [
+      /*
+       * Minutes re-estimated 2026-11-10 after the MCS text cut. Each section's earlier figure is
+       * scaled by how much of its on-screen text remained, counted with the section recap open
+       * (a learner who answers the closing question reads it): 114 minutes became 101. Sections
+       * 3 to 9 then end on their case, run inside the section, and carry its ten minutes: 171.
+       */
       {
         id: 'mcs-foundations-signals',
         shortTitle: 'Pressure and flow',
         title: 'A pressure that looks fine',
-        minutes: 12,
+        minutes: 10,
         description:
           'Build a pressure–flow baseline and separate patient, measurement, and device problems.',
         stage: 'foundation',
@@ -231,7 +245,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'mcs-foundations-mechanisms',
         shortTitle: 'Three devices',
         title: 'Three devices called support',
-        minutes: 12,
+        minutes: 11,
         description:
           'Distinguish what each mechanism changes before meeting the device that delivers it.',
         stage: 'foundation',
@@ -241,7 +255,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'iabp-timing-triggering',
         shortTitle: 'IABP timing',
         title: 'Is the balloon inflating at the right moment?',
-        minutes: 12,
+        minutes: 21,
         description:
           'Place inflation and deflation against the native beat, and match the trigger to signal quality.',
         stage: 'mechanism',
@@ -251,7 +265,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'iabp-efficacy-limits',
         shortTitle: 'IABP limits',
         title: 'Timed correctly, still not perfusing',
-        minutes: 12,
+        minutes: 21,
         description:
           'Read the assisted beat against the whole circulation, and decide whether the balloon is the problem.',
         stage: 'application',
@@ -261,7 +275,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'impella-unloading-placement',
         shortTitle: 'Impella flow',
         title: 'Where is the inlet sitting?',
-        minutes: 12,
+        minutes: 21,
         description:
           'The setting has not changed and the flow has fallen: decide what the readings say before any setting is touched.',
         stage: 'mechanism',
@@ -271,7 +285,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'impella-suction-purge-rv',
         shortTitle: 'Impella suction',
         title: 'A suction alarm at high support',
-        minutes: 12,
+        minutes: 20,
         description: 'Work the conditions in which more support produces less effective flow.',
         stage: 'application',
         activityId: 'mcs:learn:impella-suction-purge-rv',
@@ -280,7 +294,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'lvad-parameters-assessment',
         shortTitle: 'LVAD flow',
         title: 'Speed unchanged, resistance rising',
-        minutes: 12,
+        minutes: 20,
         description: 'Read speed, flow, power, and pulsatility index as one interdependent set.',
         stage: 'mechanism',
         activityId: 'mcs:learn:lvad-parameters-assessment',
@@ -289,7 +303,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'lvad-alarms-emergencies',
         shortTitle: 'LVAD alarms',
         title: 'An alarm at an unchanged speed',
-        minutes: 12,
+        minutes: 20,
         description:
           'Decide which of the controller’s readings is the signal when the speed has not changed.',
         stage: 'application',
@@ -299,7 +313,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'mcs-device-selection-integration',
         shortTitle: 'Choose',
         title: 'Low output on left-sided support',
-        minutes: 18,
+        minutes: 27,
         description:
           'Hold all three mechanisms against one phenotype and let the limiting problem select the device.',
         stage: 'integration',

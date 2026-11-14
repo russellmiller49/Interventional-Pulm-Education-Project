@@ -772,11 +772,11 @@
                 "sourceEdgeId": 42,
                 "airway": {
                   "code": "LB4",
-                  "name": "Left Upper Lobe Superior Lingular segmental bronchus",
-                  "shortName": "LB4"
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
                 },
                 "direction": "More cranial",
-                "label": "LB4 · Left Upper Lobe Superior Lingular segmental bronchus"
+                "label": "LB4 · Left superior lingular segmental bronchus"
               },
               {
                 "lps": [56.7595, -180.4233, -206.1253],
@@ -1301,11 +1301,11 @@
                 "sourceEdgeId": 12,
                 "airway": {
                   "code": "RB2",
-                  "name": "Right Upper Lobe Posterior segmental bronchus",
-                  "shortName": "RB2"
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
                 },
                 "direction": "More posterior",
-                "label": "RB2 · Right Upper Lobe Posterior segmental bronchus"
+                "label": "RB2 · Right posterior segmental bronchus"
               },
               {
                 "lps": [-48.1492, -160.7599, -168.1884],
@@ -1768,11 +1768,11 @@
                 "sourceEdgeId": 12,
                 "airway": {
                   "code": "RB2",
-                  "name": "Right Upper Lobe Posterior segmental bronchus",
-                  "shortName": "RB2"
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
                 },
                 "direction": "More posterior",
-                "label": "RB2 · Right Upper Lobe Posterior segmental bronchus"
+                "label": "RB2 · Right posterior segmental bronchus"
               },
               {
                 "lps": [-48.1492, -160.7599, -168.1884],
@@ -2235,11 +2235,11 @@
                 "sourceEdgeId": 12,
                 "airway": {
                   "code": "RB2",
-                  "name": "Right Upper Lobe Posterior segmental bronchus",
-                  "shortName": "RB2"
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
                 },
                 "direction": "More posterior",
-                "label": "RB2 · Right Upper Lobe Posterior segmental bronchus"
+                "label": "RB2 · Right posterior segmental bronchus"
               },
               {
                 "lps": [-48.1492, -160.7599, -168.1884],
@@ -6757,11 +6757,11 @@
                 "sourceEdgeId": 42,
                 "airway": {
                   "code": "LB4",
-                  "name": "Left Upper Lobe Superior Lingular segmental bronchus",
-                  "shortName": "LB4"
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
                 },
                 "direction": "More cranial",
-                "label": "LB4 · Left Upper Lobe Superior Lingular segmental bronchus"
+                "label": "LB4 · Left superior lingular segmental bronchus"
               },
               {
                 "lps": [56.7595, -180.4233, -206.1253],
@@ -7823,11 +7823,11 @@
                 "sourceEdgeId": 17,
                 "airway": {
                   "code": "RB6",
-                  "name": "Right Lower Lobe Superior segmental bronchus",
-                  "shortName": "RB6"
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
                 },
                 "direction": "More cranial",
-                "label": "RB6 · Right Lower Lobe Superior segmental bronchus"
+                "label": "RB6 · Right superior segmental bronchus"
               }
             ]
           }
@@ -8370,11 +8370,11 @@
                 "sourceEdgeId": 25,
                 "airway": {
                   "code": "LB10",
-                  "name": "Left Lower Lobe Posterior Basal segmental bronchus",
-                  "shortName": "LB10"
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
                 },
                 "direction": "More right",
-                "label": "LB10 · Left Lower Lobe Posterior Basal segmental bronchus"
+                "label": "LB10 · Left posterior basal segmental bronchus"
               }
             ]
           }
@@ -8521,6 +8521,2391 @@
         }
       ],
       "range": [239, 410]
+    },
+    {
+      "id": "right-upper-posterior",
+      "sourceEdgeIds": [0, 1, 3, 6, 12, 26, 55, 111],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "RUL", "name": "Right upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "RB1/B2", "name": "Right B1–B2 common trunk", "shortName": "B1–B2 common trunk" },
+        { "code": "RB2", "name": "Right posterior segmental bronchus", "shortName": "Posterior" }
+      ],
+      "anchor": {
+        "slice": 408,
+        "pixel": [247.4439, 317.4077],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "junction-1",
+          "slice": 387,
+          "pixel": [240.6285, 315.7026],
+          "lps": [-16.2532, -156.4931, -174.9251],
+          "sourceHu": -1009,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Daughter lumen",
+          "cropCenter": [246.8181, 316.5552],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 1,
+            "junctionLps": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+            "parent": {
+              "lps": [-11.5543, -155.3175, -164.4569],
+              "pixel": [247.4439, 317.4077],
+              "slice": 408,
+              "sourceHu": -1024,
+              "sourceEdgeId": 0,
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+            },
+            "options": [
+              {
+                "lps": [-16.2532, -156.4931, -174.9251],
+                "pixel": [240.6285, 315.7026],
+                "slice": 387,
+                "sourceHu": -1009,
+                "sourceEdgeId": 1,
+                "airway": {
+                  "code": "RMSB",
+                  "name": "Right main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More right",
+                "label": "RMSB · Right main bronchus"
+              },
+              {
+                "lps": [-7.7183, -155.8326, -175.0674],
+                "pixel": [253.0077, 316.6606],
+                "slice": 387,
+                "sourceHu": -1014,
+                "sourceEdgeId": 2,
+                "airway": {
+                  "code": "LMSB",
+                  "name": "Left main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More left",
+                "label": "LMSB · Left main bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-2",
+          "slice": 374,
+          "pixel": [211.9883, 312.7552],
+          "lps": [-35.9993, -158.5252, -181.6927],
+          "sourceHu": -1024,
+          "sourceEdgeId": 3,
+          "airway": {
+            "code": "RUL",
+            "name": "Right upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [218.9592, 313.3339],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 2,
+            "junctionLps": [-33.10675048828125, -158.19485473632812, -185.75762939453125],
+            "parent": {
+              "lps": [-26.3871, -157.7272, -181.4767],
+              "pixel": [225.93, 313.9126],
+              "slice": 374,
+              "sourceHu": -996,
+              "sourceEdgeId": 1,
+              "airway": {
+                "code": "RMSB",
+                "name": "Right main bronchus",
+                "shortName": "Main bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-35.9993, -158.5252, -181.6927],
+                "pixel": [211.9883, 312.7552],
+                "slice": 374,
+                "sourceHu": -1024,
+                "sourceEdgeId": 3,
+                "airway": {
+                  "code": "RUL",
+                  "name": "Right upper lobe bronchus",
+                  "shortName": "Upper lobe"
+                },
+                "direction": "More cranial",
+                "label": "RUL · Right upper lobe bronchus"
+              },
+              {
+                "lps": [-32.3618, -158.1143, -190.7012],
+                "pixel": [217.2642, 313.3511],
+                "slice": 356,
+                "sourceHu": -990,
+                "sourceEdgeId": 4,
+                "airway": {
+                  "code": "BI",
+                  "name": "Bronchus intermedius",
+                  "shortName": "Bronchus intermedius"
+                },
+                "direction": "More caudal",
+                "label": "BI · Bronchus intermedius"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-4",
+          "slice": 390,
+          "pixel": [195.5278, 312.2626],
+          "lps": [-47.348, -158.8648, -173.3716],
+          "sourceHu": -1011,
+          "sourceEdgeId": 6,
+          "airway": {
+            "code": "RB1/B2",
+            "name": "Right B1–B2 common trunk",
+            "shortName": "B1–B2 common trunk"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [200.195, 308.3304],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 4,
+            "junctionLps": [-46.36608123779297, -160.42164611816406, -175.1050567626953],
+            "parent": {
+              "lps": [-39.0981, -158.8791, -177.3378],
+              "pixel": [207.4937, 312.2419],
+              "slice": 382,
+              "sourceHu": -988,
+              "sourceEdgeId": 3,
+              "airway": {
+                "code": "RUL",
+                "name": "Right upper lobe bronchus",
+                "shortName": "Upper lobe"
+              }
+            },
+            "options": [
+              {
+                "lps": [-47.348, -158.8648, -173.3716],
+                "pixel": [195.5278, 312.2626],
+                "slice": 390,
+                "sourceHu": -1011,
+                "sourceEdgeId": 6,
+                "airway": {
+                  "code": "RB1/B2",
+                  "name": "Right B1–B2 common trunk",
+                  "shortName": "B1–B2 common trunk"
+                },
+                "direction": "More posterior",
+                "label": "RB1/B2 · Right B1–B2 common trunk"
+              },
+              {
+                "lps": [-49.1623, -164.287, -176.3875],
+                "pixel": [192.8963, 304.3982],
+                "slice": 384,
+                "sourceHu": -1009,
+                "sourceEdgeId": 7,
+                "airway": {
+                  "code": "RB3",
+                  "name": "Right Upper Lobe Anterior segmental bronchus",
+                  "shortName": "RB3"
+                },
+                "direction": "More anterior",
+                "label": "RB3 · Right Upper Lobe Anterior segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-7",
+          "slice": 392,
+          "pixel": [191.9711, 320.2197],
+          "lps": [-49.8002, -153.3788, -172.5816],
+          "sourceHu": -962,
+          "sourceEdgeId": 12,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [194.0084, 314.8668],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 7,
+            "junctionLps": [-48.24420166015625, -157.72247314453125, -171.9042205810547],
+            "parent": {
+              "lps": [-46.991, -159.431, -174.002],
+              "pixel": [196.0457, 311.4415],
+              "slice": 389,
+              "sourceHu": -1024,
+              "sourceEdgeId": 6,
+              "airway": {
+                "code": "RB1/B2",
+                "name": "Right B1–B2 common trunk",
+                "shortName": "B1–B2 common trunk"
+              }
+            },
+            "options": [
+              {
+                "lps": [-49.8002, -153.3788, -172.5816],
+                "pixel": [191.9711, 320.2197],
+                "slice": 392,
+                "sourceHu": -962,
+                "sourceEdgeId": 12,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More posterior",
+                "label": "RB2 · Right posterior segmental bronchus"
+              },
+              {
+                "lps": [-48.1492, -160.7599, -168.1884],
+                "pixel": [194.3657, 309.514],
+                "slice": 401,
+                "sourceHu": -1004,
+                "sourceEdgeId": 13,
+                "airway": {
+                  "code": "RB1",
+                  "name": "Right apical segmental bronchus",
+                  "shortName": "Apical"
+                },
+                "direction": "More anterior",
+                "label": "RB1 · Right apical segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-13",
+          "slice": 399,
+          "pixel": [182.4113, 330.488],
+          "lps": [-56.3913, -146.2993, -168.7555],
+          "sourceHu": -998,
+          "sourceEdgeId": 26,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [187.0989, 328.0833],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 13,
+            "junctionLps": [-52.89752960205078, -146.6857147216797, -168.79586791992188],
+            "parent": {
+              "lps": [-49.9275, -153.1427, -172.4257],
+              "pixel": [191.7865, 320.5622],
+              "slice": 392,
+              "sourceHu": -1001,
+              "sourceEdgeId": 12,
+              "airway": {
+                "code": "RB2",
+                "name": "Right posterior segmental bronchus",
+                "shortName": "Posterior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-56.3913, -146.2993, -168.7555],
+                "pixel": [182.4113, 330.488],
+                "slice": 399,
+                "sourceHu": -998,
+                "sourceEdgeId": 26,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More right",
+                "label": "RB2 · more right daughter"
+              },
+              {
+                "lps": [-51.1841, -142.7717, -166.484],
+                "pixel": [189.9638, 335.6045],
+                "slice": 404,
+                "sourceHu": -998,
+                "sourceEdgeId": 27,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More left",
+                "label": "RB2 · more left daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-28",
+          "slice": 404,
+          "pixel": [174.1906, 336.2377],
+          "lps": [-62.059, -142.3352, -166.3856],
+          "sourceHu": -1022,
+          "sourceEdgeId": 55,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [179.2149, 333.2351],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 28,
+            "junctionLps": [-58.9428825378418, -144.98899841308594, -168.91091918945312],
+            "parent": {
+              "lps": [-55.1309, -146.4754, -168.775],
+              "pixel": [184.2393, 330.2326],
+              "slice": 399,
+              "sourceHu": -950,
+              "sourceEdgeId": 26,
+              "airway": {
+                "code": "RB2",
+                "name": "Right posterior segmental bronchus",
+                "shortName": "Posterior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-62.059, -142.3352, -166.3856],
+                "pixel": [174.1906, 336.2377],
+                "slice": 404,
+                "sourceHu": -1022,
+                "sourceEdgeId": 55,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More cranial",
+                "label": "RB2 · more cranial daughter"
+              },
+              {
+                "lps": [-60.0481, -144.7477, -171.5947],
+                "pixel": [177.1073, 332.7384],
+                "slice": 394,
+                "sourceHu": -998,
+                "sourceEdgeId": 56,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More caudal",
+                "label": "RB2 · more caudal daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-57",
+          "slice": 417,
+          "pixel": [164.3738, 342.8614],
+          "lps": [-68.8272, -137.7684, -159.908],
+          "sourceHu": -1024,
+          "sourceEdgeId": 111,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [168.818, 340.541],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 57,
+            "junctionLps": [-66.5770492553711, -138.7927703857422, -164.13189697265625],
+            "parent": {
+              "lps": [-61.3449, -143.0487, -166.7831],
+              "pixel": [175.2264, 335.2027],
+              "slice": 403,
+              "sourceHu": -1024,
+              "sourceEdgeId": 55,
+              "airway": {
+                "code": "RB2",
+                "name": "Right posterior segmental bronchus",
+                "shortName": "Posterior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-68.8272, -137.7684, -159.908],
+                "pixel": [164.3738, 342.8614],
+                "slice": 417,
+                "sourceHu": -1024,
+                "sourceEdgeId": 111,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More cranial",
+                "label": "RB2 · more cranial daughter"
+              },
+              {
+                "lps": [-70.1814, -135.6877, -165.4098],
+                "pixel": [162.4097, 345.8793],
+                "slice": 406,
+                "sourceHu": -992,
+                "sourceEdgeId": 112,
+                "airway": {
+                  "code": "RB2",
+                  "name": "Right posterior segmental bronchus",
+                  "shortName": "Posterior"
+                },
+                "direction": "More caudal",
+                "label": "RB2 · more caudal daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "target-approach",
+          "slice": 440,
+          "pixel": [152.906, 355.1151],
+          "lps": [-76.7338, -129.3201, -148.2987],
+          "sourceHu": -1000,
+          "sourceEdgeId": 111,
+          "airway": {
+            "code": "RB2",
+            "name": "Right posterior segmental bronchus",
+            "shortName": "Posterior"
+          },
+          "landmark": "Distal nodule approach",
+          "cropCenter": [171.7882, 338.4969],
+          "cropSize": 190
+        }
+      ],
+      "range": [354, 464]
+    },
+    {
+      "id": "right-lower-superior",
+      "sourceEdgeIds": [0, 1, 4, 8, 17, 37, 78, 150],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "RB6", "name": "Right superior segmental bronchus", "shortName": "Superior" }
+      ],
+      "anchor": {
+        "slice": 408,
+        "pixel": [247.4439, 317.4077],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "junction-1",
+          "slice": 387,
+          "pixel": [240.6285, 315.7026],
+          "lps": [-16.2532, -156.4931, -174.9251],
+          "sourceHu": -1009,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Daughter lumen",
+          "cropCenter": [246.8181, 316.5552],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 1,
+            "junctionLps": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+            "parent": {
+              "lps": [-11.5543, -155.3175, -164.4569],
+              "pixel": [247.4439, 317.4077],
+              "slice": 408,
+              "sourceHu": -1024,
+              "sourceEdgeId": 0,
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+            },
+            "options": [
+              {
+                "lps": [-16.2532, -156.4931, -174.9251],
+                "pixel": [240.6285, 315.7026],
+                "slice": 387,
+                "sourceHu": -1009,
+                "sourceEdgeId": 1,
+                "airway": {
+                  "code": "RMSB",
+                  "name": "Right main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More right",
+                "label": "RMSB · Right main bronchus"
+              },
+              {
+                "lps": [-7.7183, -155.8326, -175.0674],
+                "pixel": [253.0077, 316.6606],
+                "slice": 387,
+                "sourceHu": -1014,
+                "sourceEdgeId": 2,
+                "airway": {
+                  "code": "LMSB",
+                  "name": "Left main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More left",
+                "label": "LMSB · Left main bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-2",
+          "slice": 356,
+          "pixel": [217.2642, 313.3511],
+          "lps": [-32.3618, -158.1143, -190.7012],
+          "sourceHu": -990,
+          "sourceEdgeId": 4,
+          "airway": {
+            "code": "BI",
+            "name": "Bronchus intermedius",
+            "shortName": "Bronchus intermedius"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [218.9592, 313.3339],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 2,
+            "junctionLps": [-33.10675048828125, -158.19485473632812, -185.75762939453125],
+            "parent": {
+              "lps": [-26.3871, -157.7272, -181.4767],
+              "pixel": [225.93, 313.9126],
+              "slice": 374,
+              "sourceHu": -996,
+              "sourceEdgeId": 1,
+              "airway": {
+                "code": "RMSB",
+                "name": "Right main bronchus",
+                "shortName": "Main bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-35.9993, -158.5252, -181.6927],
+                "pixel": [211.9883, 312.7552],
+                "slice": 374,
+                "sourceHu": -1024,
+                "sourceEdgeId": 3,
+                "airway": {
+                  "code": "RUL",
+                  "name": "Right upper lobe bronchus",
+                  "shortName": "Upper lobe"
+                },
+                "direction": "More cranial",
+                "label": "RUL · Right upper lobe bronchus"
+              },
+              {
+                "lps": [-32.3618, -158.1143, -190.7012],
+                "pixel": [217.2642, 313.3511],
+                "slice": 356,
+                "sourceHu": -990,
+                "sourceEdgeId": 4,
+                "airway": {
+                  "code": "BI",
+                  "name": "Bronchus intermedius",
+                  "shortName": "Bronchus intermedius"
+                },
+                "direction": "More caudal",
+                "label": "BI · Bronchus intermedius"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-5",
+          "slice": 310,
+          "pixel": [200.7861, 314.4855],
+          "lps": [-43.7227, -157.3323, -213.5889],
+          "sourceHu": -1022,
+          "sourceEdgeId": 8,
+          "airway": {
+            "code": "RLL",
+            "name": "Right lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [205.68, 308.4227],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 5,
+            "junctionLps": [-41.3557243347168, -160.81927490234375, -210.92237854003906],
+            "parent": {
+              "lps": [-36.9744, -159.5149, -204.3839],
+              "pixel": [210.574, 311.3198],
+              "slice": 328,
+              "sourceHu": -988,
+              "sourceEdgeId": 4,
+              "airway": {
+                "code": "BI",
+                "name": "Bronchus intermedius",
+                "shortName": "Bronchus intermedius"
+              }
+            },
+            "options": [
+              {
+                "lps": [-43.7227, -157.3323, -213.5889],
+                "pixel": [200.7861, 314.4855],
+                "slice": 310,
+                "sourceHu": -1022,
+                "sourceEdgeId": 8,
+                "airway": {
+                  "code": "RLL",
+                  "name": "Right lower lobe bronchus",
+                  "shortName": "Lower lobe"
+                },
+                "direction": "More posterior",
+                "label": "RLL · Right lower lobe bronchus"
+              },
+              {
+                "lps": [-41.8049, -165.6923, -211.9481],
+                "pixel": [203.5677, 302.3599],
+                "slice": 313,
+                "sourceHu": -999,
+                "sourceEdgeId": 9,
+                "airway": {
+                  "code": "RML",
+                  "name": "Right middle lobe bronchus",
+                  "shortName": "Middle lobe"
+                },
+                "direction": "More anterior",
+                "label": "RML · Right middle lobe bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-9",
+          "slice": 309,
+          "pixel": [197.0693, 324.4355],
+          "lps": [-46.2852, -150.4722, -214.2139],
+          "sourceHu": -967,
+          "sourceEdgeId": 17,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [198.9547, 318.759],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 9,
+            "junctionLps": [-45.98148727416992, -154.46925354003906, -217.18798828125],
+            "parent": {
+              "lps": [-43.0414, -158.2997, -212.7631],
+              "pixel": [201.7743, 313.0824],
+              "slice": 311,
+              "sourceHu": -1004,
+              "sourceEdgeId": 8,
+              "airway": {
+                "code": "RLL",
+                "name": "Right lower lobe bronchus",
+                "shortName": "Lower lobe"
+              }
+            },
+            "options": [
+              {
+                "lps": [-46.9293, -155.7974, -221.6953],
+                "pixel": [196.1352, 316.7116],
+                "slice": 294,
+                "sourceHu": -1017,
+                "sourceEdgeId": 16,
+                "airway": {
+                  "code": "R basal",
+                  "name": "Right basal bronchus",
+                  "shortName": "Basal bronchus"
+                },
+                "direction": "More caudal",
+                "label": "R basal · Right basal bronchus"
+              },
+              {
+                "lps": [-46.2852, -150.4722, -214.2139],
+                "pixel": [197.0693, 324.4355],
+                "slice": 309,
+                "sourceHu": -967,
+                "sourceEdgeId": 17,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More cranial",
+                "label": "RB6 · Right superior segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-18",
+          "slice": 306,
+          "pixel": [189.4923, 333.6352],
+          "lps": [-51.5092, -144.1294, -215.2821],
+          "sourceHu": -1023,
+          "sourceEdgeId": 37,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [194.0788, 327.9812],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 18,
+            "junctionLps": [-47.445777893066406, -146.6201934814453, -214.54714965820312],
+            "parent": {
+              "lps": [-46.1748, -151.9257, -215.2954],
+              "pixel": [197.2295, 322.3273],
+              "slice": 306,
+              "sourceHu": -976,
+              "sourceEdgeId": 17,
+              "airway": {
+                "code": "RB6",
+                "name": "Right superior segmental bronchus",
+                "shortName": "Superior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-45.185, -144.2665, -214.3808],
+                "pixel": [198.6652, 333.4363],
+                "slice": 308,
+                "sourceHu": -992,
+                "sourceEdgeId": 36,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More left",
+                "label": "RB6 · more left daughter"
+              },
+              {
+                "lps": [-51.5092, -144.1294, -215.2821],
+                "pixel": [189.4923, 333.6352],
+                "slice": 306,
+                "sourceHu": -1023,
+                "sourceEdgeId": 37,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More right",
+                "label": "RB6 · more right daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-39",
+          "slice": 304,
+          "pixel": [182.0601, 346.3833],
+          "lps": [-56.6334, -135.3402, -216.6685],
+          "sourceHu": -986,
+          "sourceEdgeId": 78,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [184.2965, 339.3195],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 39,
+            "junctionLps": [-55.322608947753906, -139.8459930419922, -215.39122009277344],
+            "parent": {
+              "lps": [-50.7293, -145.0806, -215.1747],
+              "pixel": [190.6234, 332.2556],
+              "slice": 307,
+              "sourceHu": -994,
+              "sourceEdgeId": 37,
+              "airway": {
+                "code": "RB6",
+                "name": "Right superior segmental bronchus",
+                "shortName": "Superior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-59.4535, -140.6773, -213.905],
+                "pixel": [177.9697, 338.6422],
+                "slice": 309,
+                "sourceHu": -1019,
+                "sourceEdgeId": 77,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More anterior",
+                "label": "RB6 · more anterior daughter"
+              },
+              {
+                "lps": [-56.6334, -135.3402, -216.6685],
+                "pixel": [182.0601, 346.3833],
+                "slice": 304,
+                "sourceHu": -986,
+                "sourceEdgeId": 78,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More posterior",
+                "label": "RB6 · more posterior daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-80",
+          "slice": 302,
+          "pixel": [172.1734, 352.7128],
+          "lps": [-63.4498, -130.9763, -217.2747],
+          "sourceHu": -1024,
+          "sourceEdgeId": 150,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [177.6869, 350.7363],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 80,
+            "junctionLps": [-58.877811431884766, -131.95407104492188, -216.92393493652344],
+            "parent": {
+              "lps": [-55.8471, -136.9426, -216.3686],
+              "pixel": [183.2005, 344.0591],
+              "slice": 304,
+              "sourceHu": -1024,
+              "sourceEdgeId": 78,
+              "airway": {
+                "code": "RB6",
+                "name": "Right superior segmental bronchus",
+                "shortName": "Superior"
+              }
+            },
+            "options": [
+              {
+                "lps": [-58.2393, -127.7354, -216.8528],
+                "pixel": [179.7308, 357.4135],
+                "slice": 303,
+                "sourceHu": -1024,
+                "sourceEdgeId": 149,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More left",
+                "label": "RB6 · more left daughter"
+              },
+              {
+                "lps": [-63.4498, -130.9763, -217.2747],
+                "pixel": [172.1734, 352.7128],
+                "slice": 302,
+                "sourceHu": -1024,
+                "sourceEdgeId": 150,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More right",
+                "label": "RB6 · more right daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "target-approach",
+          "slice": 303,
+          "pixel": [152.2834, 372.7674],
+          "lps": [-77.163, -117.1497, -216.7582],
+          "sourceHu": -973,
+          "sourceEdgeId": 150,
+          "airway": {
+            "code": "RB6",
+            "name": "Right superior segmental bronchus",
+            "shortName": "Superior"
+          },
+          "landmark": "Distal nodule approach",
+          "cropCenter": [171.6885, 349.4547],
+          "cropSize": 190
+        }
+      ],
+      "range": [292, 410]
+    },
+    {
+      "id": "left-lingula-superior",
+      "sourceEdgeIds": [0, 2, 496, 20, 42, 88, 166, 258],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LUL", "name": "Left upper lobe bronchus", "shortName": "Upper lobe" },
+        { "code": "LB4+5", "name": "Left lingular bronchus", "shortName": "Lingular bronchus" },
+        {
+          "code": "LB4",
+          "name": "Left superior lingular segmental bronchus",
+          "shortName": "Superior lingular"
+        }
+      ],
+      "anchor": {
+        "slice": 408,
+        "pixel": [247.4439, 317.4077],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "junction-1",
+          "slice": 387,
+          "pixel": [253.0077, 316.6606],
+          "lps": [-7.7183, -155.8326, -175.0674],
+          "sourceHu": -1014,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Daughter lumen",
+          "cropCenter": [246.8181, 316.5552],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 1,
+            "junctionLps": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+            "parent": {
+              "lps": [-11.5543, -155.3175, -164.4569],
+              "pixel": [247.4439, 317.4077],
+              "slice": 408,
+              "sourceHu": -1024,
+              "sourceEdgeId": 0,
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+            },
+            "options": [
+              {
+                "lps": [-16.2532, -156.4931, -174.9251],
+                "pixel": [240.6285, 315.7026],
+                "slice": 387,
+                "sourceHu": -1009,
+                "sourceEdgeId": 1,
+                "airway": {
+                  "code": "RMSB",
+                  "name": "Right main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More right",
+                "label": "RMSB · Right main bronchus"
+              },
+              {
+                "lps": [-7.7183, -155.8326, -175.0674],
+                "pixel": [253.0077, 316.6606],
+                "slice": 387,
+                "sourceHu": -1014,
+                "sourceEdgeId": 2,
+                "airway": {
+                  "code": "LMSB",
+                  "name": "Left main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More left",
+                "label": "LMSB · Left main bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-3",
+          "slice": 341,
+          "pixel": [316.8804, 303.2093],
+          "lps": [36.3189, -165.1067, -197.9712],
+          "sourceHu": -1024,
+          "sourceEdgeId": 496,
+          "airway": {
+            "code": "LUL",
+            "name": "Left upper lobe bronchus",
+            "shortName": "Upper lobe"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [308.6368, 307.2709],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 3,
+            "junctionLps": [32.44121551513672, -162.0923309326172, -198.90786743164062],
+            "parent": {
+              "lps": [24.9517, -161.1198, -196.2896],
+              "pixel": [300.3931, 308.9919],
+              "slice": 344,
+              "sourceHu": -1011,
+              "sourceEdgeId": 2,
+              "airway": {
+                "code": "LMSB",
+                "name": "Left main bronchus",
+                "shortName": "Main bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [34.9685, -159.5061, -202.361],
+                "pixel": [314.9217, 311.3325],
+                "slice": 332,
+                "sourceHu": -948,
+                "sourceEdgeId": 5,
+                "airway": {
+                  "code": "LLL",
+                  "name": "Left lower lobe bronchus",
+                  "shortName": "Lower lobe"
+                },
+                "direction": "More posterior",
+                "label": "LLL · Left lower lobe bronchus"
+              },
+              {
+                "lps": [36.3189, -165.1067, -197.9712],
+                "pixel": [316.8804, 303.2093],
+                "slice": 341,
+                "sourceHu": -1024,
+                "sourceEdgeId": 496,
+                "airway": {
+                  "code": "LUL",
+                  "name": "Left upper lobe bronchus",
+                  "shortName": "Upper lobe"
+                },
+                "direction": "More anterior",
+                "label": "LUL · Left upper lobe bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-21",
+          "slice": 339,
+          "pixel": [335.0311, 290.1228],
+          "lps": [48.8329, -174.1292, -198.7783],
+          "sourceHu": -905,
+          "sourceEdgeId": 20,
+          "airway": {
+            "code": "LB4+5",
+            "name": "Left lingular bronchus",
+            "shortName": "Lingular bronchus"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [328.9379, 294.5078],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 21,
+            "junctionLps": [46.598201751708984, -172.50791931152344, -194.6097412109375],
+            "parent": {
+              "lps": [40.431, -168.0826, -197.0765],
+              "pixel": [322.8447, 298.8929],
+              "slice": 343,
+              "sourceHu": -900,
+              "sourceEdgeId": 496,
+              "airway": {
+                "code": "LUL",
+                "name": "Left upper lobe bronchus",
+                "shortName": "Upper lobe"
+              }
+            },
+            "options": [
+              {
+                "lps": [48.8329, -174.1292, -198.7783],
+                "pixel": [335.0311, 290.1228],
+                "slice": 339,
+                "sourceHu": -905,
+                "sourceEdgeId": 20,
+                "airway": {
+                  "code": "LB4+5",
+                  "name": "Left lingular bronchus",
+                  "shortName": "Lingular bronchus"
+                },
+                "direction": "More caudal",
+                "label": "LB4+5 · Left lingular bronchus"
+              },
+              {
+                "lps": [45.5683, -171.7944, -189.7693],
+                "pixel": [330.2959, 293.5092],
+                "slice": 357,
+                "sourceHu": -944,
+                "sourceEdgeId": 21,
+                "airway": {
+                  "code": "LUL division",
+                  "name": "Left upper division bronchus",
+                  "shortName": "Upper division"
+                },
+                "direction": "More cranial",
+                "label": "LUL division · Left upper division bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-22",
+          "slice": 337,
+          "pixel": [347.8364, 280.0385],
+          "lps": [57.6616, -181.0818, -200.1074],
+          "sourceHu": -1021,
+          "sourceEdgeId": 42,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [341.7047, 284.8666],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 22,
+            "junctionLps": [55.0990104675293, -179.1025390625, -201.76290893554688],
+            "parent": {
+              "lps": [49.2066, -174.4243, -199.0715],
+              "pixel": [335.5731, 289.6947],
+              "slice": 339,
+              "sourceHu": -907,
+              "sourceEdgeId": 20,
+              "airway": {
+                "code": "LB4+5",
+                "name": "Left lingular bronchus",
+                "shortName": "Lingular bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [57.6616, -181.0818, -200.1074],
+                "pixel": [347.8364, 280.0385],
+                "slice": 337,
+                "sourceHu": -1021,
+                "sourceEdgeId": 42,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More cranial",
+                "label": "LB4 · Left superior lingular segmental bronchus"
+              },
+              {
+                "lps": [56.7595, -180.4233, -206.1253],
+                "pixel": [346.5279, 280.9937],
+                "slice": 325,
+                "sourceHu": -961,
+                "sourceEdgeId": 43,
+                "airway": {
+                  "code": "LB5",
+                  "name": "Left inferior lingular segmental bronchus",
+                  "shortName": "Inferior lingular"
+                },
+                "direction": "More caudal",
+                "label": "LB5 · Left inferior lingular segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-44",
+          "slice": 337,
+          "pixel": [353.3207, 272.6791],
+          "lps": [61.4428, -186.1558, -200.2006],
+          "sourceHu": -1022,
+          "sourceEdgeId": 88,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [351.6182, 277.8605],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 44,
+            "junctionLps": [60.380802154541016, -182.36170959472656, -199.91595458984375],
+            "parent": {
+              "lps": [56.6672, -180.3854, -200.5834],
+              "pixel": [346.3941, 281.0486],
+              "slice": 336,
+              "sourceHu": -1024,
+              "sourceEdgeId": 42,
+              "airway": {
+                "code": "LB4",
+                "name": "Left superior lingular segmental bronchus",
+                "shortName": "Superior lingular"
+              }
+            },
+            "options": [
+              {
+                "lps": [63.8707, -179.0112, -199.7356],
+                "pixel": [356.8422, 283.0419],
+                "slice": 338,
+                "sourceHu": -1024,
+                "sourceEdgeId": 87,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More posterior",
+                "label": "LB4 · more posterior daughter"
+              },
+              {
+                "lps": [61.4428, -186.1558, -200.2006],
+                "pixel": [353.3207, 272.6791],
+                "slice": 337,
+                "sourceHu": -1022,
+                "sourceEdgeId": 88,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More anterior",
+                "label": "LB4 · more anterior daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-90",
+          "slice": 335,
+          "pixel": [363.8877, 268.7908],
+          "lps": [68.7282, -188.8366, -200.9911],
+          "sourceHu": -1024,
+          "sourceEdgeId": 166,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [357.9083, 269.2323],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 90,
+            "junctionLps": [63.89826583862305, -188.6575164794922, -200.24435424804688],
+            "parent": {
+              "lps": [60.4831, -184.9345, -200.0587],
+              "pixel": [351.9288, 274.4505],
+              "slice": 337,
+              "sourceHu": -1004,
+              "sourceEdgeId": 88,
+              "airway": {
+                "code": "LB4",
+                "name": "Left superior lingular segmental bronchus",
+                "shortName": "Superior lingular"
+              }
+            },
+            "options": [
+              {
+                "lps": [64.0368, -192.1298, -199.5141],
+                "pixel": [357.0831, 264.0142],
+                "slice": 338,
+                "sourceHu": -946,
+                "sourceEdgeId": 165,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More right",
+                "label": "LB4 · more right daughter"
+              },
+              {
+                "lps": [68.7282, -188.8366, -200.9911],
+                "pixel": [363.8877, 268.7908],
+                "slice": 335,
+                "sourceHu": -1024,
+                "sourceEdgeId": 166,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More left",
+                "label": "LB4 · more left daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-168",
+          "slice": 346,
+          "pixel": [380.099, 263.8267],
+          "lps": [79.9051, -192.2591, -195.3691],
+          "sourceHu": -961,
+          "sourceEdgeId": 258,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [374.2375, 266.1036],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 168,
+            "junctionLps": [77.63404083251953, -190.7454071044922, -199.508056640625],
+            "parent": {
+              "lps": [69.9424, -189.1195, -200.9473],
+              "pixel": [365.6487, 268.3804],
+              "slice": 335,
+              "sourceHu": -1024,
+              "sourceEdgeId": 166,
+              "airway": {
+                "code": "LB4",
+                "name": "Left superior lingular segmental bronchus",
+                "shortName": "Superior lingular"
+              }
+            },
+            "options": [
+              {
+                "lps": [81.7855, -190.4297, -202.1816],
+                "pixel": [382.8263, 266.4801],
+                "slice": 333,
+                "sourceHu": -1003,
+                "sourceEdgeId": 257,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More caudal",
+                "label": "LB4 · more caudal daughter"
+              },
+              {
+                "lps": [79.9051, -192.2591, -195.3691],
+                "pixel": [380.099, 263.8267],
+                "slice": 346,
+                "sourceHu": -961,
+                "sourceEdgeId": 258,
+                "airway": {
+                  "code": "LB4",
+                  "name": "Left superior lingular segmental bronchus",
+                  "shortName": "Superior lingular"
+                },
+                "direction": "More cranial",
+                "label": "LB4 · more cranial daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "target-approach",
+          "slice": 366,
+          "pixel": [395.3919, 256.5647],
+          "lps": [90.4489, -197.2659, -185.6916],
+          "sourceHu": -921,
+          "sourceEdgeId": 258,
+          "airway": {
+            "code": "LB4",
+            "name": "Left superior lingular segmental bronchus",
+            "shortName": "Superior lingular"
+          },
+          "landmark": "Distal nodule approach",
+          "cropCenter": [371.8849, 269.6828],
+          "cropSize": 190
+        }
+      ],
+      "range": [323, 410]
+    },
+    {
+      "id": "left-lower-posterior-basal",
+      "sourceEdgeIds": [0, 2, 5, 11, 25, 53, 107],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+        { "code": "LLL", "name": "Left lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "L basal", "name": "Left basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "LB10",
+          "name": "Left posterior basal segmental bronchus",
+          "shortName": "Posterior basal"
+        }
+      ],
+      "anchor": {
+        "slice": 408,
+        "pixel": [247.4439, 317.4077],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "junction-1",
+          "slice": 387,
+          "pixel": [253.0077, 316.6606],
+          "lps": [-7.7183, -155.8326, -175.0674],
+          "sourceHu": -1014,
+          "sourceEdgeId": 2,
+          "airway": { "code": "LMSB", "name": "Left main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Daughter lumen",
+          "cropCenter": [246.8181, 316.5552],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 1,
+            "junctionLps": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+            "parent": {
+              "lps": [-11.5543, -155.3175, -164.4569],
+              "pixel": [247.4439, 317.4077],
+              "slice": 408,
+              "sourceHu": -1024,
+              "sourceEdgeId": 0,
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+            },
+            "options": [
+              {
+                "lps": [-16.2532, -156.4931, -174.9251],
+                "pixel": [240.6285, 315.7026],
+                "slice": 387,
+                "sourceHu": -1009,
+                "sourceEdgeId": 1,
+                "airway": {
+                  "code": "RMSB",
+                  "name": "Right main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More right",
+                "label": "RMSB · Right main bronchus"
+              },
+              {
+                "lps": [-7.7183, -155.8326, -175.0674],
+                "pixel": [253.0077, 316.6606],
+                "slice": 387,
+                "sourceHu": -1014,
+                "sourceEdgeId": 2,
+                "airway": {
+                  "code": "LMSB",
+                  "name": "Left main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More left",
+                "label": "LMSB · Left main bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-3",
+          "slice": 332,
+          "pixel": [314.9217, 311.3325],
+          "lps": [34.9685, -159.5061, -202.361],
+          "sourceHu": -948,
+          "sourceEdgeId": 5,
+          "airway": {
+            "code": "LLL",
+            "name": "Left lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [308.6368, 307.2709],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 3,
+            "junctionLps": [32.44121551513672, -162.0923309326172, -198.90786743164062],
+            "parent": {
+              "lps": [24.9517, -161.1198, -196.2896],
+              "pixel": [300.3931, 308.9919],
+              "slice": 344,
+              "sourceHu": -1011,
+              "sourceEdgeId": 2,
+              "airway": {
+                "code": "LMSB",
+                "name": "Left main bronchus",
+                "shortName": "Main bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [34.9685, -159.5061, -202.361],
+                "pixel": [314.9217, 311.3325],
+                "slice": 332,
+                "sourceHu": -948,
+                "sourceEdgeId": 5,
+                "airway": {
+                  "code": "LLL",
+                  "name": "Left lower lobe bronchus",
+                  "shortName": "Lower lobe"
+                },
+                "direction": "More posterior",
+                "label": "LLL · Left lower lobe bronchus"
+              },
+              {
+                "lps": [36.3189, -165.1067, -197.9712],
+                "pixel": [316.8804, 303.2093],
+                "slice": 341,
+                "sourceHu": -1024,
+                "sourceEdgeId": 496,
+                "airway": {
+                  "code": "LUL",
+                  "name": "Left upper lobe bronchus",
+                  "shortName": "Upper lobe"
+                },
+                "direction": "More anterior",
+                "label": "LUL · Left upper lobe bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-6",
+          "slice": 313,
+          "pixel": [323.9521, 314.8786],
+          "lps": [41.1945, -157.0612, -211.8967],
+          "sourceHu": -1023,
+          "sourceEdgeId": 11,
+          "airway": {
+            "code": "L basal",
+            "name": "Left basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [319.6252, 317.8301],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 6,
+            "junctionLps": [39.42020034790039, -154.9595947265625, -207.95469665527344],
+            "parent": {
+              "lps": [35.2281, -159.2404, -202.7157],
+              "pixel": [315.2983, 311.7178],
+              "slice": 332,
+              "sourceHu": -987,
+              "sourceEdgeId": 5,
+              "airway": {
+                "code": "LLL",
+                "name": "Left lower lobe bronchus",
+                "shortName": "Lower lobe"
+              }
+            },
+            "options": [
+              {
+                "lps": [39.1752, -150.8122, -205.3261],
+                "pixel": [321.0232, 323.9423],
+                "slice": 326,
+                "sourceHu": -1024,
+                "sourceEdgeId": 10,
+                "airway": {
+                  "code": "LB6",
+                  "name": "Left superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More cranial",
+                "label": "LB6 · Left superior segmental bronchus"
+              },
+              {
+                "lps": [41.1945, -157.0612, -211.8967],
+                "pixel": [323.9521, 314.8786],
+                "slice": 313,
+                "sourceHu": -1023,
+                "sourceEdgeId": 11,
+                "airway": {
+                  "code": "L basal",
+                  "name": "Left basal bronchus",
+                  "shortName": "Basal bronchus"
+                },
+                "direction": "More caudal",
+                "label": "L basal · Left basal bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-12",
+          "slice": 279,
+          "pixel": [334.2968, 325.6172],
+          "lps": [48.3267, -149.6574, -229.1012],
+          "sourceHu": -1020,
+          "sourceEdgeId": 25,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [336.017, 321.3005],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 12,
+            "junctionLps": [50.131290435791016, -153.16494750976562, -226.22903442382812],
+            "parent": {
+              "lps": [46.3281, -155.6098, -219.6463],
+              "pixel": [331.398, 316.9838],
+              "slice": 298,
+              "sourceHu": -1019,
+              "sourceEdgeId": 11,
+              "airway": {
+                "code": "L basal",
+                "name": "Left basal bronchus",
+                "shortName": "Basal bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [52.6973, -153.8928, -227.562],
+                "pixel": [340.636, 319.4742],
+                "slice": 282,
+                "sourceHu": -907,
+                "sourceEdgeId": 24,
+                "airway": {
+                  "code": "LB7+8/B9",
+                  "name": "Left B7+8–B9 common trunk",
+                  "shortName": "B7+8–B9 common trunk"
+                },
+                "direction": "More left",
+                "label": "LB7+8/B9 · Left B7+8–B9 common trunk"
+              },
+              {
+                "lps": [48.3267, -149.6574, -229.1012],
+                "pixel": [334.2968, 325.6172],
+                "slice": 279,
+                "sourceHu": -1020,
+                "sourceEdgeId": 25,
+                "airway": {
+                  "code": "LB10",
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
+                },
+                "direction": "More right",
+                "label": "LB10 · Left posterior basal segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-27",
+          "slice": 269,
+          "pixel": [340.6158, 335.8193],
+          "lps": [52.6834, -142.6236, -234.0922],
+          "sourceHu": -1019,
+          "sourceEdgeId": 53,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [337.3414, 330.2316],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 27,
+            "junctionLps": [49.214263916015625, -146.14422607421875, -233.9431915283203],
+            "parent": {
+              "lps": [48.4678, -150.3285, -228.2949],
+              "pixel": [334.5015, 324.6439],
+              "slice": 280,
+              "sourceHu": -1024,
+              "sourceEdgeId": 25,
+              "airway": {
+                "code": "LB10",
+                "name": "Left posterior basal segmental bronchus",
+                "shortName": "Posterior basal"
+              }
+            },
+            "options": [
+              {
+                "lps": [52.6834, -142.6236, -234.0922],
+                "pixel": [340.6158, 335.8193],
+                "slice": 269,
+                "sourceHu": -1019,
+                "sourceEdgeId": 53,
+                "airway": {
+                  "code": "LB10",
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
+                },
+                "direction": "More cranial",
+                "label": "LB10 · more cranial daughter"
+              },
+              {
+                "lps": [48.1682, -145.0402, -238.6129],
+                "pixel": [334.067, 332.3142],
+                "slice": 260,
+                "sourceHu": -939,
+                "sourceEdgeId": 54,
+                "airway": {
+                  "code": "LB10",
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
+                },
+                "direction": "More caudal",
+                "label": "LB10 · more caudal daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-55",
+          "slice": 271,
+          "pixel": [349.4789, 357.956],
+          "lps": [58.7941, -127.3614, -232.9695],
+          "sourceHu": -1024,
+          "sourceEdgeId": 107,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [346.2798, 350.5815],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 55,
+            "junctionLps": [56.06855392456055, -130.57791137695312, -235.29478454589844],
+            "parent": {
+              "lps": [54.3827, -138.3438, -234.5055],
+              "pixel": [343.0806, 342.0269],
+              "slice": 268,
+              "sourceHu": -1024,
+              "sourceEdgeId": 53,
+              "airway": {
+                "code": "LB10",
+                "name": "Left posterior basal segmental bronchus",
+                "shortName": "Posterior basal"
+              }
+            },
+            "options": [
+              {
+                "lps": [58.7941, -127.3614, -232.9695],
+                "pixel": [349.4789, 357.956],
+                "slice": 271,
+                "sourceHu": -1024,
+                "sourceEdgeId": 107,
+                "airway": {
+                  "code": "LB10",
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
+                },
+                "direction": "More cranial",
+                "label": "LB10 · more cranial daughter"
+              },
+              {
+                "lps": [54.7852, -126.5479, -237.6185],
+                "pixel": [343.6644, 359.136],
+                "slice": 262,
+                "sourceHu": -924,
+                "sourceEdgeId": 108,
+                "airway": {
+                  "code": "LB10",
+                  "name": "Left posterior basal segmental bronchus",
+                  "shortName": "Posterior basal"
+                },
+                "direction": "More caudal",
+                "label": "LB10 · more caudal daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "target-approach",
+          "slice": 271,
+          "pixel": [355.9016, 373.5872],
+          "lps": [63.2222, -116.5844, -232.8706],
+          "sourceHu": -1018,
+          "sourceEdgeId": 107,
+          "airway": {
+            "code": "LB10",
+            "name": "Left posterior basal segmental bronchus",
+            "shortName": "Posterior basal"
+          },
+          "landmark": "Distal nodule approach",
+          "cropCenter": [347.7627, 352.0055],
+          "cropSize": 190
+        }
+      ],
+      "range": [251, 410]
+    },
+    {
+      "id": "right-lower-lateral-basal",
+      "sourceEdgeIds": [0, 1, 4, 8, 16, 34, 72, 137, 223, 325],
+      "airwayPath": [
+        { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" },
+        { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+        { "code": "BI", "name": "Bronchus intermedius", "shortName": "Bronchus intermedius" },
+        { "code": "RLL", "name": "Right lower lobe bronchus", "shortName": "Lower lobe" },
+        { "code": "R basal", "name": "Right basal bronchus", "shortName": "Basal bronchus" },
+        {
+          "code": "RB9",
+          "name": "Right lateral basal segmental bronchus",
+          "shortName": "Lateral basal"
+        }
+      ],
+      "anchor": {
+        "slice": 408,
+        "pixel": [247.4439, 317.4077],
+        "sourceEdgeId": 0,
+        "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+      },
+      "checkpoints": [
+        {
+          "id": "junction-1",
+          "slice": 387,
+          "pixel": [240.6285, 315.7026],
+          "lps": [-16.2532, -156.4931, -174.9251],
+          "sourceHu": -1009,
+          "sourceEdgeId": 1,
+          "airway": { "code": "RMSB", "name": "Right main bronchus", "shortName": "Main bronchus" },
+          "landmark": "Daughter lumen",
+          "cropCenter": [246.8181, 316.5552],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 1,
+            "junctionLps": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+            "parent": {
+              "lps": [-11.5543, -155.3175, -164.4569],
+              "pixel": [247.4439, 317.4077],
+              "slice": 408,
+              "sourceHu": -1024,
+              "sourceEdgeId": 0,
+              "airway": { "code": "Trachea", "name": "Trachea", "shortName": "Trachea" }
+            },
+            "options": [
+              {
+                "lps": [-16.2532, -156.4931, -174.9251],
+                "pixel": [240.6285, 315.7026],
+                "slice": 387,
+                "sourceHu": -1009,
+                "sourceEdgeId": 1,
+                "airway": {
+                  "code": "RMSB",
+                  "name": "Right main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More right",
+                "label": "RMSB · Right main bronchus"
+              },
+              {
+                "lps": [-7.7183, -155.8326, -175.0674],
+                "pixel": [253.0077, 316.6606],
+                "slice": 387,
+                "sourceHu": -1014,
+                "sourceEdgeId": 2,
+                "airway": {
+                  "code": "LMSB",
+                  "name": "Left main bronchus",
+                  "shortName": "Main bronchus"
+                },
+                "direction": "More left",
+                "label": "LMSB · Left main bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-2",
+          "slice": 356,
+          "pixel": [217.2642, 313.3511],
+          "lps": [-32.3618, -158.1143, -190.7012],
+          "sourceHu": -990,
+          "sourceEdgeId": 4,
+          "airway": {
+            "code": "BI",
+            "name": "Bronchus intermedius",
+            "shortName": "Bronchus intermedius"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [218.9592, 313.3339],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 2,
+            "junctionLps": [-33.10675048828125, -158.19485473632812, -185.75762939453125],
+            "parent": {
+              "lps": [-26.3871, -157.7272, -181.4767],
+              "pixel": [225.93, 313.9126],
+              "slice": 374,
+              "sourceHu": -996,
+              "sourceEdgeId": 1,
+              "airway": {
+                "code": "RMSB",
+                "name": "Right main bronchus",
+                "shortName": "Main bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-35.9993, -158.5252, -181.6927],
+                "pixel": [211.9883, 312.7552],
+                "slice": 374,
+                "sourceHu": -1024,
+                "sourceEdgeId": 3,
+                "airway": {
+                  "code": "RUL",
+                  "name": "Right upper lobe bronchus",
+                  "shortName": "Upper lobe"
+                },
+                "direction": "More cranial",
+                "label": "RUL · Right upper lobe bronchus"
+              },
+              {
+                "lps": [-32.3618, -158.1143, -190.7012],
+                "pixel": [217.2642, 313.3511],
+                "slice": 356,
+                "sourceHu": -990,
+                "sourceEdgeId": 4,
+                "airway": {
+                  "code": "BI",
+                  "name": "Bronchus intermedius",
+                  "shortName": "Bronchus intermedius"
+                },
+                "direction": "More caudal",
+                "label": "BI · Bronchus intermedius"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-5",
+          "slice": 310,
+          "pixel": [200.7861, 314.4855],
+          "lps": [-43.7227, -157.3323, -213.5889],
+          "sourceHu": -1022,
+          "sourceEdgeId": 8,
+          "airway": {
+            "code": "RLL",
+            "name": "Right lower lobe bronchus",
+            "shortName": "Lower lobe"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [205.68, 308.4227],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 5,
+            "junctionLps": [-41.3557243347168, -160.81927490234375, -210.92237854003906],
+            "parent": {
+              "lps": [-36.9744, -159.5149, -204.3839],
+              "pixel": [210.574, 311.3198],
+              "slice": 328,
+              "sourceHu": -988,
+              "sourceEdgeId": 4,
+              "airway": {
+                "code": "BI",
+                "name": "Bronchus intermedius",
+                "shortName": "Bronchus intermedius"
+              }
+            },
+            "options": [
+              {
+                "lps": [-43.7227, -157.3323, -213.5889],
+                "pixel": [200.7861, 314.4855],
+                "slice": 310,
+                "sourceHu": -1022,
+                "sourceEdgeId": 8,
+                "airway": {
+                  "code": "RLL",
+                  "name": "Right lower lobe bronchus",
+                  "shortName": "Lower lobe"
+                },
+                "direction": "More posterior",
+                "label": "RLL · Right lower lobe bronchus"
+              },
+              {
+                "lps": [-41.8049, -165.6923, -211.9481],
+                "pixel": [203.5677, 302.3599],
+                "slice": 313,
+                "sourceHu": -999,
+                "sourceEdgeId": 9,
+                "airway": {
+                  "code": "RML",
+                  "name": "Right middle lobe bronchus",
+                  "shortName": "Middle lobe"
+                },
+                "direction": "More anterior",
+                "label": "RML · Right middle lobe bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-9",
+          "slice": 294,
+          "pixel": [196.1352, 316.7116],
+          "lps": [-46.9293, -155.7974, -221.6953],
+          "sourceHu": -1017,
+          "sourceEdgeId": 16,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [198.9547, 318.759],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 9,
+            "junctionLps": [-45.98148727416992, -154.46925354003906, -217.18798828125],
+            "parent": {
+              "lps": [-43.0414, -158.2997, -212.7631],
+              "pixel": [201.7743, 313.0824],
+              "slice": 311,
+              "sourceHu": -1004,
+              "sourceEdgeId": 8,
+              "airway": {
+                "code": "RLL",
+                "name": "Right lower lobe bronchus",
+                "shortName": "Lower lobe"
+              }
+            },
+            "options": [
+              {
+                "lps": [-46.9293, -155.7974, -221.6953],
+                "pixel": [196.1352, 316.7116],
+                "slice": 294,
+                "sourceHu": -1017,
+                "sourceEdgeId": 16,
+                "airway": {
+                  "code": "R basal",
+                  "name": "Right basal bronchus",
+                  "shortName": "Basal bronchus"
+                },
+                "direction": "More caudal",
+                "label": "R basal · Right basal bronchus"
+              },
+              {
+                "lps": [-46.2852, -150.4722, -214.2139],
+                "pixel": [197.0693, 324.4355],
+                "slice": 309,
+                "sourceHu": -967,
+                "sourceEdgeId": 17,
+                "airway": {
+                  "code": "RB6",
+                  "name": "Right superior segmental bronchus",
+                  "shortName": "Superior"
+                },
+                "direction": "More cranial",
+                "label": "RB6 · Right superior segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-17",
+          "slice": 280,
+          "pixel": [189.3994, 319.2645],
+          "lps": [-51.5732, -154.0374, -228.6978],
+          "sourceHu": -1024,
+          "sourceEdgeId": 34,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [195.1648, 318.663],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 17,
+            "junctionLps": [-47.751617431640625, -154.31643676757812, -225.9898223876953],
+            "parent": {
+              "lps": [-46.5851, -155.7782, -220.2347],
+              "pixel": [196.6343, 316.7396],
+              "slice": 297,
+              "sourceHu": -1024,
+              "sourceEdgeId": 16,
+              "airway": {
+                "code": "R basal",
+                "name": "Right basal bronchus",
+                "shortName": "Basal bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-51.5732, -154.0374, -228.6978],
+                "pixel": [189.3994, 319.2645],
+                "slice": 280,
+                "sourceHu": -1024,
+                "sourceEdgeId": 34,
+                "airway": {
+                  "code": "R basal",
+                  "name": "Right basal bronchus",
+                  "shortName": "Basal bronchus"
+                },
+                "direction": "More right",
+                "label": "R basal · more right daughter"
+              },
+              {
+                "lps": [-43.6234, -153.126, -227.6797],
+                "pixel": [200.9301, 320.5864],
+                "slice": 282,
+                "sourceHu": -1004,
+                "sourceEdgeId": 35,
+                "airway": {
+                  "code": "RB7",
+                  "name": "Right Lower Lobe Medial Basal segmental bronchus",
+                  "shortName": "RB7"
+                },
+                "direction": "More left",
+                "label": "RB7 · Right Lower Lobe Medial Basal segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-36",
+          "slice": 269,
+          "pixel": [185.7342, 323.8492],
+          "lps": [-54.1002, -150.8764, -234.2184],
+          "sourceHu": -1010,
+          "sourceEdgeId": 72,
+          "airway": {
+            "code": "R basal",
+            "name": "Right basal bronchus",
+            "shortName": "Basal bronchus"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [185.06, 320.6011],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 36,
+            "junctionLps": [-54.29362869262695, -152.99551391601562, -232.06617736816406],
+            "parent": {
+              "lps": [-50.6557, -154.3422, -227.3101],
+              "pixel": [190.7302, 318.8224],
+              "slice": 282,
+              "sourceHu": -1014,
+              "sourceEdgeId": 34,
+              "airway": {
+                "code": "R basal",
+                "name": "Right basal bronchus",
+                "shortName": "Basal bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-58.4744, -155.3552, -232.9186],
+                "pixel": [179.3898, 317.3531],
+                "slice": 271,
+                "sourceHu": -1024,
+                "sourceEdgeId": 71,
+                "airway": {
+                  "code": "RB8",
+                  "name": "Right anterior basal segmental bronchus",
+                  "shortName": "Anterior basal"
+                },
+                "direction": "More anterior",
+                "label": "RB8 · Right anterior basal segmental bronchus"
+              },
+              {
+                "lps": [-54.1002, -150.8764, -234.2184],
+                "pixel": [185.7342, 323.8492],
+                "slice": 269,
+                "sourceHu": -1010,
+                "sourceEdgeId": 72,
+                "airway": {
+                  "code": "R basal",
+                  "name": "Right basal bronchus",
+                  "shortName": "Basal bronchus"
+                },
+                "direction": "More posterior",
+                "label": "R basal · more posterior daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-74",
+          "slice": 262,
+          "pixel": [178.6357, 327.5656],
+          "lps": [-58.9943, -148.3141, -237.401],
+          "sourceHu": -1024,
+          "sourceEdgeId": 137,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [182.511, 326.0092],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 74,
+            "junctionLps": [-54.585838317871094, -149.3892364501953, -236.04676818847656],
+            "parent": {
+              "lps": [-54.1706, -151.647, -233.4358],
+              "pixel": [185.6322, 322.7315],
+              "slice": 270,
+              "sourceHu": -979,
+              "sourceEdgeId": 72,
+              "airway": {
+                "code": "R basal",
+                "name": "Right basal bronchus",
+                "shortName": "Basal bronchus"
+              }
+            },
+            "options": [
+              {
+                "lps": [-58.9943, -148.3141, -237.401],
+                "pixel": [178.6357, 327.5656],
+                "slice": 262,
+                "sourceHu": -1024,
+                "sourceEdgeId": 137,
+                "airway": {
+                  "code": "RB9",
+                  "name": "Right lateral basal segmental bronchus",
+                  "shortName": "Lateral basal"
+                },
+                "direction": "More right",
+                "label": "RB9 · Right lateral basal segmental bronchus"
+              },
+              {
+                "lps": [-53.6507, -147.1274, -239.869],
+                "pixel": [186.3862, 329.2869],
+                "slice": 257,
+                "sourceHu": -1024,
+                "sourceEdgeId": 138,
+                "airway": {
+                  "code": "RB10",
+                  "name": "Right Lower Lobe Posterior Basal segmental bronchus",
+                  "shortName": "RB10"
+                },
+                "direction": "More left",
+                "label": "RB10 · Right Lower Lobe Posterior Basal segmental bronchus"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-139",
+          "slice": 255,
+          "pixel": [164.3746, 343.4002],
+          "lps": [-68.8267, -137.3969, -241.2428],
+          "sourceHu": -1010,
+          "sourceEdgeId": 223,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [167.3079, 336.6102],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 139,
+            "junctionLps": [-67.59087371826172, -141.921630859375, -242.29917907714844],
+            "parent": {
+              "lps": [-62.0506, -146.7596, -239.2332],
+              "pixel": [174.2028, 329.8203],
+              "slice": 259,
+              "sourceHu": -1024,
+              "sourceEdgeId": 137,
+              "airway": {
+                "code": "RB9",
+                "name": "Right lateral basal segmental bronchus",
+                "shortName": "Lateral basal"
+              }
+            },
+            "options": [
+              {
+                "lps": [-68.8267, -137.3969, -241.2428],
+                "pixel": [164.3746, 343.4002],
+                "slice": 255,
+                "sourceHu": -1010,
+                "sourceEdgeId": 223,
+                "airway": {
+                  "code": "RB9",
+                  "name": "Right lateral basal segmental bronchus",
+                  "shortName": "Lateral basal"
+                },
+                "direction": "More posterior",
+                "label": "RB9 · more posterior daughter"
+              },
+              {
+                "lps": [-71.558, -141.867, -245.0203],
+                "pixel": [160.413, 336.9168],
+                "slice": 247,
+                "sourceHu": -980,
+                "sourceEdgeId": 224,
+                "airway": {
+                  "code": "RB9",
+                  "name": "Right lateral basal segmental bronchus",
+                  "shortName": "Lateral basal"
+                },
+                "direction": "More anterior",
+                "label": "RB9 · more anterior daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "junction-225",
+          "slice": 257,
+          "pixel": [153.7692, 352.8431],
+          "lps": [-76.1386, -130.8865, -240.0315],
+          "sourceHu": -1001,
+          "sourceEdgeId": 325,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Daughter lumen",
+          "cropCenter": [159.5718, 348.9059],
+          "cropSize": 90,
+          "decision": {
+            "nodeId": 225,
+            "junctionLps": [-71.98926544189453, -132.89535522460938, -241.5485076904297],
+            "parent": {
+              "lps": [-68.1375, -138.5061, -241.4018],
+              "pixel": [165.3743, 341.7915],
+              "slice": 254,
+              "sourceHu": -1023,
+              "sourceEdgeId": 223,
+              "airway": {
+                "code": "RB9",
+                "name": "Right lateral basal segmental bronchus",
+                "shortName": "Lateral basal"
+              }
+            },
+            "options": [
+              {
+                "lps": [-76.1386, -130.8865, -240.0315],
+                "pixel": [153.7692, 352.8431],
+                "slice": 257,
+                "sourceHu": -1001,
+                "sourceEdgeId": 325,
+                "airway": {
+                  "code": "RB9",
+                  "name": "Right lateral basal segmental bronchus",
+                  "shortName": "Lateral basal"
+                },
+                "direction": "More right",
+                "label": "RB9 · more right daughter"
+              },
+              {
+                "lps": [-71.8988, -128.6959, -243.9849],
+                "pixel": [159.9188, 356.0204],
+                "slice": 249,
+                "sourceHu": -957,
+                "sourceEdgeId": 326,
+                "airway": {
+                  "code": "RB9",
+                  "name": "Right lateral basal segmental bronchus",
+                  "shortName": "Lateral basal"
+                },
+                "direction": "More left",
+                "label": "RB9 · more left daughter"
+              }
+            ]
+          }
+        },
+        {
+          "id": "target-approach",
+          "slice": 259,
+          "pixel": [134.5274, 366.3432],
+          "lps": [-89.4049, -121.5788, -238.9585],
+          "sourceHu": -1023,
+          "sourceEdgeId": 325,
+          "airway": {
+            "code": "RB9",
+            "name": "Right lateral basal segmental bronchus",
+            "shortName": "Lateral basal"
+          },
+          "landmark": "Distal nodule approach",
+          "cropCenter": [155.3221, 348.5416],
+          "cropSize": 190
+        }
+      ],
+      "range": [242, 410]
     }
   ]
 }

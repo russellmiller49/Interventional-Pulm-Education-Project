@@ -33,6 +33,13 @@ export interface AirwayAnatomyCaseManifest {
     units: string
   }
   orientationLandmarks?: OrientationLandmark[]
+  /** How the case's bronchoscope view is drawn, where it differs from the shared look. */
+  appearance?: {
+    mucosaTint?: {
+      low: [number, number, number]
+      high: [number, number, number]
+    }
+  }
   ostialLandmarks?: Array<{ edgeId: number; pointLps: Vec3; label: string; description: string }>
   interaction: {
     rootNodeId: number
@@ -42,6 +49,8 @@ export interface AirwayAnatomyCaseManifest {
     stepMm: number
     lookAheadMm: number
     trailMaxPoints: number
+    /** Screen-up at the start of the root edge, in LPS; anterior when omitted. */
+    rootUpLps?: Vec3
   }
 }
 
@@ -54,6 +63,12 @@ export interface OrientationLandmark {
   oppositeEdgeId?: number
   screenDirection: 'up' | 'left'
   expectation: string
+  /**
+   * Roll so this LPS direction is screen-up at the reference, the view still facing along the
+   * centerline. Used where no branch marks the side to orient by (the dolphin's laryngeal spout:
+   * its slit's dorsal axis). When set, the target edge is not used for the roll.
+   */
+  upLps?: Vec3
 }
 
 export interface AirwaySurfaceTransform {

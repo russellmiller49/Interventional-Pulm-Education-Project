@@ -23,7 +23,8 @@ export const RELATED_PRACTICE_CASES: readonly RelatedPracticeCase[] = [
   {
     stepId: 'imaging-questions:transfer',
     caseId: 'two-dimensional-practice-1',
-    reason: 'a short practice case on reading an eccentric radial EBUS view, paired with Section 9',
+    reason:
+      'a short practice case on reading an eccentric radial EBUS view, paired with Section 10',
   },
 ]
 

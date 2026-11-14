@@ -10,7 +10,6 @@ import {
 import { breathGrammarRows, breathGrammarRowsFor } from '../../content/breathGrammar'
 import { VENTILATION_CONTROL_PANEL } from '../../content/controlPanel'
 import { labMetricLabels } from '../../engine/learningLab'
-import { ventilationStages } from '../../content/learningCurriculum'
 import type {
   VentilationStageLesson,
   VentilationStageStep,
@@ -114,7 +113,7 @@ function GuideBlock({ guide, look }: { guide: VentilationStepGuide; look?: strin
         <p>
           <strong>Readings that will move:</strong>{' '}
           {guide.watch.map((metric) => labMetricLabels[metric].label).join(', ')}. They are under
-          Readings to watch, and the captured comparison shows them before and after.
+          the console, and the captured result shows them before and after.
         </p>
       ) : null}
     </section>
@@ -179,7 +178,12 @@ function Disclosure({
 }
 
 /**
- * One lesson, in the same shape in every section.
+ * One lesson, in the same shape in every section, in the column beside the console.
+ *
+ * October 2026 (owner review): the column no longer repeats the section's kicker, idea and
+ * objective on every step — they are in "What this section is for" on the first task — and a task
+ * step shows only what to do while doing it. Section 1's orientation is the first task's reading,
+ * shown open rather than folded under More detail.
  *
  * The walkthrough (T1) found the parts that teach — the picture and checklist, why it matters, the
  * one table, which control, the live mechanism view, the worked example — folded into seven to ten
@@ -192,8 +196,10 @@ function Disclosure({
  *      guide on an experiment, or the picture and checklist — shown;
  *   3. the evidence this step asks you to read, when it asks — a worked figure or a separate
  *      normal reference — shown, with the limit that applies to it right beside it;
- *   4. the same three named disclosures: Worked example, More detail, Model limits. Sources are the
- *      list at the end of the page, and the lesson says so.
+ *   4. the live view of the mechanism, where the section has one, then the same three named
+ *      disclosures: Worked example, More detail, Model limits. Sources are the
+ *      list below the lesson (the end of the text pane on a desktop, the end of the page below it),
+ *      and the lesson says so.
  * Sections 1–5 are shorter (they have fewer mechanism panels) but not a different template.
  * Nothing here is expanded on every step: a step shows its own reference and folds the rest under
  * a name that says what is inside.
@@ -207,6 +213,7 @@ export function VentilationTeachingColumn({
   showCapturedReference = true,
   landmarkChooser = false,
   guideLook,
+  breathMap,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -224,23 +231,28 @@ export function VentilationTeachingColumn({
    * step working on a marked interval names the figure that is on screen. Said once, the same way.
    */
   readonly guideLook?: string
+  /** The full breath map, leading the column on the breath-walk steps. */
+  readonly breathMap?: ReactNode
 }) {
   const headingId = useId()
   const { unit } = lesson
   const spec = ventilationSectionSpec(unit.id)
   const foundation = isFoundationUnit(unit.id)
-  const stage = ventilationStages.find((entry) => entry.id === unit.stage)
   const kind = step.interaction.kind
   const taskStep = kind === 'simulator-task' || kind === 'observe'
-  const readingStep = kind === 'read' || kind === 'walk'
+  const readingStep = kind === 'read' || kind === 'walk' || kind === 'advance-breath'
+  const orientationShown = Boolean(spec.orientation) && step.ordinal === 1
+  /* Section 1's first task is its orientation, and only that: four paragraphs beside the console. */
+  const orientationStep = orientationShown && kind === 'read'
   const reveal = step.teaching === 'reveal'
   const integration = unit.id === 'high-peak-pressure-integration'
   const rows = breathGrammarRowsFor(unit.id)
   const highlighted = new Set(rows.map((row) => row.id))
   const stopCards = landmarkChooser || stops.length === 1 ? stops : []
-  const foundationFigure = foundation && foundationFigureStep(step)
-  const mechanismEvidence = !foundation && readingStep
+  const foundationFigure = foundation && !orientationStep && foundationFigureStep(step)
+  const mechanismEvidence = !foundation && readingStep && !orientationStep
   const boundaryShown = readingStep || reveal
+  const liveView = !foundation && hasVentilationTeachingPanel(lesson.panelId)
 
   return (
     <section
@@ -251,25 +263,26 @@ export function VentilationTeachingColumn({
       data-teaching-focus={step.teaching}
       aria-labelledby={headingId}
     >
-      <p className={styles.kicker}>
-        Lesson · {stage?.title ?? unit.stage} · Section {lesson.index + 1} of {lesson.total} ·{' '}
-        {unit.minutes} min
-      </p>
-      <h3 id={headingId}>{integration ? 'Clinical brief' : unit.title}</h3>
+      <h3 id={headingId} className={integration ? undefined : flow.srOnly}>
+        {integration ? 'Clinical brief' : `${unit.title}: teaching`}
+      </h3>
 
-      <div data-lesson-part="idea" data-teaching-block="framing">
-        <p>
-          <strong>The idea:</strong> {spec.newConcept}
-        </p>
-        <p>
-          <strong>By the end you can:</strong> {spec.objective}
-        </p>
-      </div>
+      {breathMap}
 
       <div data-lesson-part="task">
+        {orientationShown ? (
+          <section data-teaching-block="orientation">
+            <h4>Why a ventilator exists</h4>
+            {spec.orientation!.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </section>
+        ) : null}
         {taskStep && step.guide ? <GuideBlock guide={step.guide} look={guideLook} /> : null}
-        {!taskStep ? stopCards.map((stopId) => <StopCard key={stopId} stopId={stopId} />) : null}
-        {!taskStep ? (
+        {!taskStep && !orientationStep
+          ? stopCards.map((stopId) => <StopCard key={stopId} stopId={stopId} />)
+          : null}
+        {!taskStep && !orientationStep ? (
           <section data-teaching-block="method">
             <h4>The picture and the checklist</h4>
             <p className={styles.analogy}>{unit.analogy}</p>
@@ -320,6 +333,22 @@ export function VentilationTeachingColumn({
         </p>
       ) : null}
 
+      {/*
+        The live view of this section's mechanism, under its own name. It was the sixth of eight
+        parts inside "More detail" (about 870 words a task, measured November 2026), so nothing on
+        the screen said the section has a picture computed from the running patient. It leads the
+        named parts, and is open on the steps that explain a result the learner has just seen.
+        Everything else in "More detail" stays where the October review put it.
+      */}
+      {liveView ? (
+        <Disclosure name="On this ventilator, right now" id="live-view" open={reveal}>
+          <section data-teaching-block="panel" data-teaching-panel={lesson.panelId}>
+            <p className={styles.kicker}>Computed from the running patient</p>
+            <MechanicalVentilationTeachingPanel lessonId={lesson.panelId} state={state} />
+          </section>
+        </Disclosure>
+      ) : null}
+
       {integration ? null : (
         <Disclosure name="Worked example" id="worked-example">
           {!foundation && !readingStep ? (
@@ -342,7 +371,7 @@ export function VentilationTeachingColumn({
       )}
 
       <Disclosure name="More detail" id="more-detail">
-        {spec.orientation ? (
+        {spec.orientation && !orientationShown ? (
           <section data-teaching-block="orientation">
             <h4>Why a ventilator exists</h4>
             {spec.orientation.map((paragraph) => (
@@ -402,13 +431,6 @@ export function VentilationTeachingColumn({
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.monitoringSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.notSettingsSentence}</p>
         </section>
-        {!foundation && hasVentilationTeachingPanel(lesson.panelId) ? (
-          <section data-teaching-block="panel" data-teaching-panel={lesson.panelId}>
-            <h4>On this ventilator, right now</h4>
-            <p className={styles.kicker}>Computed from the running patient</p>
-            <MechanicalVentilationTeachingPanel lessonId={lesson.panelId} state={state} />
-          </section>
-        ) : null}
         {ventilationStoryProblemsFor(unit.id).length > 0 ? (
           <section data-teaching-block="story-problems">
             <h4>Two story problems</h4>
@@ -435,8 +457,7 @@ export function VentilationTeachingColumn({
       )}
 
       <p className={flow.note}>
-        Sources for this section are listed{' '}
-        <a href={`#${VENTILATION_SOURCES_ID}`}>at the end of the page</a>.
+        Sources for this section are listed <a href={`#${VENTILATION_SOURCES_ID}`}>below</a>.
       </p>
     </section>
   )

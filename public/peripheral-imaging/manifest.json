@@ -3,12 +3,12 @@
   "authoredOn": "2026-09-08",
   "assets": [
     {
-      "path": "room-hero.png",
-      "sourceSha256": "3ef1f256e3de70c4878af9bcd1b347ada2238747d6cf8aa815c3a357fec38b3d",
-      "source": "Repository-authored room, gantry and schematic patient context with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
+      "path": "room-suite.png",
+      "sourceSha256": "e81b9abaea20269e125c184d46b8d25fc683f212fb9da305aa6b4980d4bf866e",
+      "source": "Repository-authored room, C-arm, table and patient figure with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
       "provenance": "room-hero.json",
-      "sha256": "dfa096a52a72a13b9f59666eaa5acc069fb2045b51a7015af9a56ce8a30ad72c",
-      "bytes": 201045
+      "sha256": "c8e75caec15b5d4082262b1d32a60e8ee43919b6aefe7c825ef3e1c0017368bf",
+      "bytes": 287013
     },
     {
       "path": "anatomy/thorax.glb",
@@ -31,6 +31,13 @@
       "source": "Derived CT atlas with its baked nodule and an added authored tool; parallel projections and high-pass filtering",
       "sha256": "3cfca358f00ca1c445175a2b123cfaafa1b93f9a8234b683f73463b0ff3eb1cd",
       "bytes": 1229318
+    },
+    {
+      "path": "anatomy/dts-grid.png",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "source": "Derived CT atlas with its baked nodule and the same authored tool; parallel projections on a 5/6-degree grid for off-centre arcs, high-pass filtered",
+      "sha256": "d07e1856fc23c454b7d96e2e7cc4929390a2abd785994f2ec8642b187b6fb373",
+      "bytes": 2707192
     },
     {
       "path": "anatomy/fluoroview-carm.glb",

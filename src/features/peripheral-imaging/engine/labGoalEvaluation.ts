@@ -11,6 +11,7 @@ import {
   type LabValue,
   type LabValues,
 } from './labMetrics'
+import { isAirwayLobeShow } from '../lib/airwayTree'
 
 /**
  * Goals a step can set on a lab, and the one place the labs' history rules live.
@@ -98,6 +99,9 @@ export function labGoalLabel(goal: LabGoal): string {
 export function emptyLabState(lab: LabId, lessonId: string): LabState {
   return { values: labDefaults(lab, lessonId), events: [] }
 }
+
+/** The collimated field width, in percent, at or below which "narrowed for the tool path" counts. */
+export const FIELD_FOR_PATH_MAX = 75
 
 const ACQUISITION_SETUP_KEYS = ['kind', 'acquisitionOrbit', 'offsetX', 'offsetDepth'] as const
 const MPR_TOOL_KEYS = ['tipX', 'tipY', 'tipZ'] as const
@@ -203,6 +207,43 @@ export function labStateAfterChange(
     if (typeof separation === 'number' && separation >= 10) {
       events = withEvent(events, 'separation-seen')
     }
+    // Expert-session round, part 2: a projection with nothing but lung over the nodule, and the
+    // nudge — a change of beam tilt alone, with the heart off the nodule before and after, that
+    // lays a rib over the nodule or takes it off.
+    if (readouts.rayCrosses === 'Lung only') events = withEvent(events, 'lung-only-seen')
+    // The bronchial tree: which lobes the learner has had drawn, and whether a lobe has been
+    // looked at from a second angle (its bronchi separate; the frontal image had them overlapping).
+    const airways = labValue(lab, values, 'airways', lessonId)
+    if (isAirwayLobeShow(airways)) {
+      events = withEvent(events, `airway-lobe-${airways}-seen`)
+      if (airways === 'RLL' || airways === 'LLL')
+        events = withEvent(events, 'airway-lower-lobe-seen')
+      if (events.filter((event) => /^airway-lobe-.*-seen$/.test(event)).length >= 2)
+        events = withEvent(events, 'airway-lobes-compared')
+      if (Math.abs(labNumber(lab, values, 'orbit', lessonId)) >= 20)
+        events = withEvent(events, 'airway-lobe-rotated')
+    }
+    if (touched.length === 1 && touched[0] === 'tilt') {
+      const before = labReadouts(lab, state.values, lessonId)
+      if (
+        before.mediastinumOnRay === false &&
+        readouts.mediastinumOnRay === false &&
+        before.ribOnRay !== readouts.ribOnRay
+      )
+        events = withEvent(events, 'rib-moved-by-tilt')
+    }
+  }
+
+  if (lab === 'field' && touched.includes('field')) {
+    // Two things a collimated field can be asked for, at different moments of a procedure: the
+    // whole tool path while the tool advances, and the spine out of the field once it has arrived.
+    // They cannot both hold at once in this geometry, so each is recorded when it is achieved.
+    const readouts = labReadouts(lab, values, lessonId)
+    const field = labNumber(lab, values, 'field', lessonId)
+    // A real narrowing, not the first notch off the open field.
+    if (field <= FIELD_FOR_PATH_MAX && readouts.contextRetained === true)
+      events = withEvent(events, 'path-kept-collimated')
+    if (readouts.spineInField === false) events = withEvent(events, 'spine-excluded')
   }
 
   if (lab === 'temporal') {

@@ -1,13 +1,18 @@
+import { BenchFluidView } from './BenchFluidView'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
-import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
+import {
+  BENCH_AIM_TOLERANCE_DEG,
+  benchTargetObservation,
+} from '../../engine/scope/scopeBenchTarget'
 import { benchTipOrientation } from '../../engine/scope/benchOrientation'
 import type { ScopePaneProps } from './types'
 
 /** Accessible fallback: project a fixed reference card with the actual camera frame. */
 export function BenchSchematic({ state, view }: Pick<ScopePaneProps, 'state' | 'view'>) {
+  if (view.benchSuction) return <BenchFluidView state={state} />
   if (!state.pose) return null
   const frame = scopeOpticalFrame(state.pose)
   const project = (point: Vec3) => {
@@ -61,6 +66,20 @@ export function BenchSchematic({ state, view }: Pick<ScopePaneProps, 'state' | '
           fill="#ffce57"
           stroke="#fff0b0"
           strokeWidth="2"
+        />
+      ) : null}
+      {view.benchTarget ? (
+        <circle
+          cx="200"
+          cy="150"
+          r={
+            (150 * Math.tan((BENCH_AIM_TOLERANCE_DEG * Math.PI) / 180)) /
+            Math.tan((OPTICAL_FOV_DEG * Math.PI) / 360)
+          }
+          fill="none"
+          stroke="#b0e3e7"
+          strokeDasharray="4 3"
+          data-bench-reticle
         />
       ) : null}
       <path d="M190 150 H210 M200 140 V160" stroke="#f4faff" strokeWidth="2" />

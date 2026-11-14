@@ -1,9 +1,11 @@
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import {
   stageStepLocationErrors,
   type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
 import type { McsDeviceKind } from '../engine/types'
+import { mcsPresentationTitle } from './casePresentation'
 import { MCS_CONTROL_PANEL, type McsControlId, type McsControlStripState } from './controlPanel'
 import { MCS_DEVICE_INCREMENTS } from './deviceIncrements'
 import { mcsLearnerCopyErrors, mcsSentenceCount } from './learnerCopy'
@@ -36,10 +38,23 @@ const MCS_STAGE_PHASE_KEYS: readonly McsStagePhaseKey[] = [
   'transfer',
 ]
 
+/**
+ * The case that is a section's last task.
+ *
+ * The case runs inside the section, embedded on its own engine, after the transfer (owner,
+ * 2026-10-17, carrying the ICU hemodynamics change of 2026-10-14): a section ends by applying itself
+ * to a fresh patient instead of sending the learner to Practice, from which there was no way back.
+ * Each case is the last task of at most one section; Practice keeps every case as a list.
+ */
 export interface McsPracticePairing {
   readonly caseId: string
   /** `mechanism-match` applies this section's mechanism; `next-in-unit` is honest about not doing so. */
   readonly kind: 'mechanism-match' | 'next-in-unit'
+  /**
+   * What a `next-in-unit` case applies instead, said on the case's strip: the part of the section it
+   * does use, and the mechanism it does not. Required for `next-in-unit`, absent otherwise.
+   */
+  readonly applies?: string
 }
 
 export interface McsSectionSpec {
@@ -467,7 +482,11 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
     withholdsFlowAccountUntilCommit: false,
     controlStrip: { 'lvad-speed': 'no-setting' },
     grammarRowIds: ['active-component-power'],
-    practicePairing: { caseId: 'LVAD-03', kind: 'next-in-unit' },
+    practicePairing: {
+      caseId: 'LVAD-03',
+      kind: 'next-in-unit',
+      applies: 'its power check, not its thrombosis pattern',
+    },
     stepTitles: {
       recognize: 'Read what an alarm on this pathway reports',
       predict: 'Say what the controller will show',
@@ -567,6 +586,30 @@ export function mcsSectionSpec(sectionId: string): McsSectionSpec {
   return spec
 }
 
+export interface McsSectionCase {
+  readonly caseId: string
+  readonly kind: McsPracticePairing['kind']
+  /** The case's presentation title, as Practice names it. */
+  readonly title: string
+  readonly minutes: number
+  readonly applies?: string
+}
+
+/** The case that is this section's last task, or null when the section ends without one. */
+export function mcsSectionCase(sectionId: string): McsSectionCase | null {
+  const pairing = mcsSectionSpec(sectionId).practicePairing
+  if (!pairing) return null
+  const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === pairing.caseId)
+  if (!scenario?.minutes) throw new Error(`${sectionId} ends on a case with no minutes`)
+  return {
+    caseId: scenario.id,
+    kind: pairing.kind,
+    title: mcsPresentationTitle(scenario),
+    minutes: scenario.minutes,
+    ...(pairing.applies ? { applies: pairing.applies } : {}),
+  }
+}
+
 /** The application sections, in pathway order. */
 export function mcsApplicationSectionIds(): readonly string[] {
   return mcsLessons
@@ -602,6 +645,7 @@ export function validateMcsSectionSpecs(
     [...mcsPracticeScenarios, ...mcsCapstoneScenarios].map((scenario) => scenario.id),
   )
   const grammarRowIds = new Set(MCS_SUPPORT_GRAMMAR.rows.map((row) => row.id))
+  const pathwaySections = criticalCareLearningPathway('mechanical-circulatory-support').sections
 
   for (const spec of specs) {
     const where = spec.sectionId
@@ -732,7 +776,33 @@ export function validateMcsSectionSpecs(
       if (scenario && spec.track !== 'shared' && scenario.device !== spec.track) {
         errors.push(`${where}: pairs with a case on another device`)
       }
+      // The section's minutes include its case; a section no longer than its case has left it out.
+      const section = pathwaySections.find((candidate) => candidate.id === spec.sectionId)
+      if (scenario && !scenario.minutes) errors.push(`${where}: its case has no minutes`)
+      if (scenario?.minutes && section && section.minutes <= scenario.minutes) {
+        errors.push(`${where}: lists ${section.minutes} min, which cannot include its case`)
+      }
+      const applies = spec.practicePairing.applies
+      if (spec.practicePairing.kind === 'next-in-unit' && !applies) {
+        errors.push(`${where}: a case on another mechanism must say what it applies instead`)
+      }
+      if (spec.practicePairing.kind === 'mechanism-match' && applies) {
+        errors.push(`${where}: a case on the section's mechanism says nothing more on its strip`)
+      }
+      if (applies) errors.push(...mcsLearnerCopyErrors(`${where}.practicePairing.applies`, applies))
     }
+  }
+  // A case lives in one section at most: as its last task.
+  const placed = specs.flatMap((spec) =>
+    spec.practicePairing ? [spec.practicePairing.caseId] : [],
+  )
+  for (const caseId of new Set(placed)) {
+    if (placed.filter((candidate) => candidate === caseId).length > 1) {
+      errors.push(`case ${caseId} is the last task of more than one section`)
+    }
+  }
+  for (const scenario of mcsPracticeScenarios) {
+    if (!scenario.minutes) errors.push(`case ${scenario.id}: no minutes`)
   }
 
   // The integration section assumes exactly the application sections, and every increment has

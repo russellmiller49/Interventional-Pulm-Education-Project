@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Boxes, ClipboardCheck, Compass, Network, Video } from 'lucide-react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,7 +17,19 @@ import { AirwayStructureMediaPanel } from './AirwayStructureMediaPanel'
 import { CtCorrelationView } from './CtCorrelationView'
 import { SegmentDetailPanel } from './SegmentDetailPanel'
 
-type TabKey = 'video' | 'overview' | 'survey' | 'explore' | 'assess'
+const TAB_KEYS = ['video', 'overview', 'survey', 'explore', 'assess'] as const
+type TabKey = (typeof TAB_KEYS)[number]
+
+function isTabKey(value: string | null): value is TabKey {
+  return TAB_KEYS.some((key) => key === value)
+}
+
+// The open tab lives in ?tab= so a beta feedback report records which tab the reviewer was on.
+function tabFromLocation(): TabKey {
+  if (typeof window === 'undefined') return 'video'
+  const requested = new URLSearchParams(window.location.search).get('tab')
+  return isTabKey(requested) ? requested : 'video'
+}
 
 const STATS = [
   { value: '2', label: 'Lungs' },
@@ -35,7 +47,7 @@ const ASYMMETRY: { feature: string; right: string; left: string }[] = [
   { feature: 'Lobes', right: 'Upper, middle, lower (3)', left: 'Upper, lower (2) + lingula' },
   {
     feature: 'Upper-lobe takeoff',
-    right: 'Off the main bronchus',
+    right: 'Off the RMB, before the bronchus intermedius',
     left: 'Off the LMB, then upper division + lingula',
   },
   { feature: 'Basal segments', right: 'Four (RB7–RB10)', left: 'Three (LB7+8 fused, LB9, LB10)' },
@@ -60,8 +72,18 @@ function LobeLegend({ className }: { className?: string }) {
 }
 
 export function AirwayAnatomyLesson() {
-  const [activeTab, setActiveTab] = useState<TabKey>('video')
+  const [activeTab, setActiveTab] = useState<TabKey>(tabFromLocation)
   const [selectedId, setSelectedId] = useState<string | null>('trachea')
+
+  // Replace, not push: switching tabs does not fill the Back button. A missing or unknown value is
+  // rewritten to the tab actually shown.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('tab') === activeTab) return
+    url.searchParams.set('tab', activeTab)
+    window.history.replaceState(window.history.state, '', url)
+  }, [activeTab])
 
   const openInExplorer = useCallback((id: string) => {
     setSelectedId(id)
@@ -153,9 +175,9 @@ export function AirwayAnatomyLesson() {
                   aria-hidden
                 />
                 <span>
-                  Keep <strong>anterior at 12 o&apos;clock</strong> and the flat{' '}
-                  <strong>membranous wall at 6 o&apos;clock</strong> — it is your reliable posterior
-                  landmark when you lose your bearings.
+                  Find the flat <strong>membranous wall</strong> first: it is posterior. Viewed from
+                  the head of the bed it sits at 6 o&apos;clock, with the cartilage rings{' '}
+                  <strong>anterior at 12 o&apos;clock</strong>.
                 </span>
               </li>
               <li className="flex gap-2">
@@ -164,9 +186,22 @@ export function AirwayAnatomyLesson() {
                   aria-hidden
                 />
                 <span>
-                  In this neutral orientation the{' '}
-                  <strong>patient&apos;s right is toward the left</strong> of your video image, so
-                  the right main bronchus opens to your left.
+                  Looking down the airway, the{' '}
+                  <strong>patient&apos;s right is a quarter turn clockwise from anterior</strong>.
+                  With anterior at 12 o&apos;clock the right main bronchus opens on the right of the
+                  image, as in this lesson&apos;s recording.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span
+                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70"
+                  aria-hidden
+                />
+                <span>
+                  The scope turns freely, so name each side from the membranous wall, not from the
+                  edge of the picture. Facing the patient turns the picture half a turn (membranous
+                  wall at 12, right main bronchus on the left). An axial CT is seen from the feet,
+                  so it shows the patient&apos;s right on the left.
                 </span>
               </li>
               <li className="flex gap-2">

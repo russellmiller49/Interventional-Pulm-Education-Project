@@ -52,7 +52,7 @@ export async function saveSocratesSlideDocument(
     )
     if (error) return { ok: false, error: error.message }
 
-    revalidatePath('/[locale]/socrates-builder', 'page')
+    revalidatePath('/[locale]/socrates-library/legacy', 'page')
     return { ok: true, document: parseSocratesSlideDocument(data) }
   } catch (error) {
     return { ok: false, error: actionError(error) }
@@ -73,7 +73,7 @@ export async function publishSocratesSlideDocument(
     })
     if (error) return { ok: false, error: error.message }
 
-    revalidatePath('/[locale]/socrates-builder', 'page')
+    revalidatePath('/[locale]/socrates-library/legacy', 'page')
     revalidatePath('/[locale]/socrates-demo', 'page')
     revalidatePath('/[locale]/socrates', 'layout')
     return { ok: true, document: parseSocratesSlideDocument(data) }
@@ -97,7 +97,7 @@ export async function deleteSocratesSandboxDocumentAsAdmin(
     if (error) return { ok: false, error: error.message }
     if (!data) return { ok: false, error: 'The sandbox draft no longer exists.' }
 
-    revalidatePath('/[locale]/socrates-builder', 'page')
+    revalidatePath('/[locale]/socrates-library/legacy', 'page')
     revalidatePath('/[locale]/socrates-demo', 'page')
     revalidatePath('/[locale]/socrates', 'layout')
     return { ok: true, recordId }

@@ -45,6 +45,9 @@ const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
   RESET_BUBBLE: 'Attempted bubble reset',
   TOGGLE_CIRCUIT_CLAMP: 'Changed circuit clamp state',
   CORRECT_FAULT: 'Corrected scenario cause',
+  START_INOTROPE: 'Started an inotrope',
+  DRAW_RIGHT_RADIAL_GAS: 'Drew a right radial gas',
+  RAISE_VENTILATOR_SUPPORT: 'Raised ventilator FiO₂ and PEEP',
   PERFORM_CHECK: 'Performed circuit/device check',
   ROTARY_DELTA: 'Turned rotary control',
   SET_PUMP_MODE: 'Changed pump mode',
@@ -236,14 +239,42 @@ function findMatchingSimulatorIntervention(
 /**
  * Faults whose authored "correction" is recognition and escalation, not treatment (B6-006).
  *
- * Reviewing the right arm against the groin, or recognising a loading left ventricle, earns the
- * case's cause credit and opens the reassessment — but it changes nothing about the patient. The
- * fault therefore stays active in the model: the right-radial saturation, its alarm, the pulse
- * pressure and the valve keep doing what the physiology does until a treatment this module does not
- * simulate is given. Naming a problem is not the same as fixing it, and the display must not say
- * otherwise.
+ * Reviewing the right arm against the groin earns the case's cause credit and opens the
+ * reassessment — but it changes nothing about the patient. The fault therefore stays active in the
+ * model: the right-radial saturation and its alarm keep doing what the physiology does. Naming a
+ * problem is not the same as fixing it, and the display must not say otherwise.
+ *
+ * In the Learn lesson the right radial gas and the ventilator are their own actions, and only the
+ * ventilator moves a reading. `CORRECT_FAULT` then records the plan for what neither of them
+ * treats. Nothing here ends the fault, because V-AV and VV are not carried out.
  */
-export const RECOGNITION_ONLY_FAULTS: readonly FaultId[] = ['differential-hypoxemia', 'lv-loading']
+export const RECOGNITION_ONLY_FAULTS: readonly FaultId[] = ['differential-hypoxemia']
+
+/**
+ * Faults whose authored "correction" records a plan for treatment the module does not carry out.
+ *
+ * On a loading left ventricle, lowering flow and starting an inotrope are their own actions with a
+ * modeled response. `CORRECT_FAULT` then records the plan for what is left, volume removal and a
+ * vent. It earns the cause credit and opens the reassessment, and it changes no reading, so the
+ * fault stays active and the lungs stay congested.
+ */
+const PLANNED_TREATMENT_FAULTS: readonly FaultId[] = ['lv-loading']
+
+function persistsAfterCorrection(fault: FaultId): boolean {
+  return RECOGNITION_ONLY_FAULTS.includes(fault) || PLANNED_TREATMENT_FAULTS.includes(fault)
+}
+
+/** What `CORRECT_FAULT` is recorded as, named for what the model represents. */
+function correctionHistoryLabel(state: EcmoSimulationState, fault: FaultId): string {
+  if (RECOGNITION_ONLY_FAULTS.includes(fault)) {
+    return state.scenario.differentialResponse
+      ? 'Recorded the plan for the lung cause and for V-AV or conversion to VV. None of it is carried out here, so no reading changes for it.'
+      : `Recognised and escalated the scenario cause: ${fault}. This module represents recognition and escalation here, not a treatment, so the pattern persists.`
+  }
+  return PLANNED_TREATMENT_FAULTS.includes(fault)
+    ? 'Recorded the plan for volume removal and a left-ventricular vent. Neither is carried out here, so no reading changes for them.'
+    : `${actionLabels.CORRECT_FAULT}: ${fault}`
+}
 
 /** On reserve power with the mains loss still standing: the moment the transport lesson is about. */
 function reducesSupportOnBattery(state: EcmoSimulationState): boolean {
@@ -254,7 +285,7 @@ function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSim
   const correctedFaults = state.scenario.correctedFaults.includes(fault)
     ? state.scenario.correctedFaults
     : [...state.scenario.correctedFaults, fault]
-  const preserveLatch = fault === 'arterial-bubble' || RECOGNITION_ONLY_FAULTS.includes(fault)
+  const preserveLatch = fault === 'arterial-bubble' || persistsAfterCorrection(fault)
   const activeFaults = preserveLatch
     ? state.scenario.activeFaults
     : state.scenario.activeFaults.filter((active) => active !== fault)
@@ -276,7 +307,7 @@ function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSim
   if (!definition.clinicalCase) return credited
   return markClinicalImproving(credited, definition, {
     // Recognition records the authored response but leaves the trajectory where the physiology is.
-    trajectoryUnchanged: RECOGNITION_ONLY_FAULTS.includes(fault),
+    trajectoryUnchanged: persistsAfterCorrection(fault),
   })
 }
 
@@ -1312,13 +1343,55 @@ function reduceSimulationAction(
        * beside it had not moved — IA-3 in the September 2026 walkthrough, on the VA integrated
        * case. The recognition is still recorded; it is recorded as recognition.
        */
-      const recognitionOnly = RECOGNITION_ONLY_FAULTS.includes(action.fault)
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
-        recognitionOnly
-          ? `Recognised and escalated the scenario cause: ${action.fault}. This module represents recognition and escalation here, not a treatment, so the pattern persists.`
-          : `${actionLabels.CORRECT_FAULT}: ${action.fault}`,
+        correctionHistoryLabel(state, action.fault),
+      )
+    }
+    case 'START_INOTROPE': {
+      if (!hasFault(state, 'lv-loading') || state.scenario.inotropeRunning) return state
+      return appendHistory(
+        { ...state, scenario: { ...state.scenario, inotropeRunning: true } },
+        'action',
+        actionLabels.START_INOTROPE ?? '',
+      )
+    }
+    case 'DRAW_RIGHT_RADIAL_GAS': {
+      if (!hasFault(state, 'differential-hypoxemia')) return state
+      const saturation = state.patient.rightRadialSpo2
+      return appendHistory(
+        {
+          ...state,
+          scenario: {
+            ...state.scenario,
+            differentialResponse: {
+              ...state.scenario.differentialResponse,
+              rightRadialGas: { saturation, drawnAt: state.simulationTime },
+            },
+          },
+        },
+        'action',
+        `${actionLabels.DRAW_RIGHT_RADIAL_GAS}: SaO₂ ${saturation.toFixed(1)}%. A measurement, so no reading changes.`,
+      )
+    }
+    case 'RAISE_VENTILATOR_SUPPORT': {
+      const response = state.scenario.differentialResponse
+      if (!hasFault(state, 'differential-hypoxemia') || response?.ventilatorRaised) return state
+      const { nativeCardiacOutputLpm, pulsePressure } = state.patient
+      return appendHistory(
+        {
+          ...state,
+          scenario: {
+            ...state.scenario,
+            differentialResponse: {
+              ...response,
+              ventilatorRaised: { nativeCardiacOutputLpm, pulsePressure },
+            },
+          },
+        },
+        'action',
+        actionLabels.RAISE_VENTILATOR_SUPPORT ?? '',
       )
     }
     case 'APPLY_CLINICAL_INTERVENTION': {

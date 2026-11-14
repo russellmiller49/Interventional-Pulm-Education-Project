@@ -3,6 +3,12 @@ import { unlocalizedPathname } from '@/i18n/path'
 export const betaModules = [
   { id: 'ebus-guided', title: 'EBUS: Guided Course', path: '/ebus-guided', group: 'Bronchoscopy' },
   {
+    id: 'eus-b-guided',
+    title: 'EUS-B: Guided Course',
+    path: '/eus-b-guided',
+    group: 'Bronchoscopy',
+  },
+  {
     id: 'eus-b-simulator',
     title: 'EUS-B Simulator',
     path: '/eus-b-simulator',
@@ -24,6 +30,8 @@ export const betaModules = [
     id: 'live-anatomy',
     title: 'Live Bronchoscopy Anatomy',
     path: '/intro-bronchoscopy/airway-anatomy',
+    // `path` stays behind the intro course gate, so reviewers open the lesson here instead.
+    reviewPath: '/development-beta/live-anatomy/lesson',
     group: 'Bronchoscopy',
   },
   {
@@ -39,10 +47,22 @@ export const betaModules = [
     group: 'Bronchoscopy',
   },
   {
+    id: 'dolphin-bronchoscopy',
+    title: 'Dolphin Bronchoscopy',
+    path: '/dolphin-bronchoscopy',
+    group: 'Bronchoscopy',
+  },
+  {
     id: 'devices',
     title: 'Device Atlas — Device Intelligence beta',
     path: '/devices',
     group: 'Devices',
+  },
+  {
+    id: 'literature-atlas',
+    title: 'Literature Atlas',
+    path: '/literature-atlas',
+    group: 'Literature',
   },
   {
     id: 'cardiohelp-ecmo',
@@ -99,10 +119,17 @@ export function betaModuleById(id: string) {
   return betaModules.find((entry) => entry.id === id)
 }
 
+// Where a reviewer opens a module: its own address, unless that needs more than a site account.
+export function betaModuleReviewPath(entry: BetaModule): string {
+  return 'reviewPath' in entry ? entry.reviewPath : entry.path
+}
+
 export function betaModuleForPath(path: string) {
   const pathname = unlocalizedPathname(path)
-  const match = betaModules.find(
-    (entry) => pathname === entry.path || pathname.startsWith(`${entry.path}/`),
+  const match = betaModules.find((entry) =>
+    [entry.path, betaModuleReviewPath(entry)].some(
+      (modulePath) => pathname === modulePath || pathname.startsWith(`${modulePath}/`),
+    ),
   )
   if (match) return match
   if (pathname.startsWith('/branch-tracing/')) return betaModuleById('branch-tracing')

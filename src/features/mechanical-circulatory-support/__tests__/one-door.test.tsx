@@ -93,8 +93,16 @@ describe('the hub', () => {
     const accordion = document.querySelector('[data-pathway-accordion]')!
     const sections = accordion.querySelectorAll('[data-kind="section"]')
     expect(sections).toHaveLength(mcsPathway().sections.length)
-    expect(accordion.querySelectorAll('[data-kind="case"]')).toHaveLength(
-      mcsPracticeScenarios.length,
+    // A case that is a section's last task is named on that section's chip; the rest keep their own.
+    const sectionCases = [...accordion.querySelectorAll('[data-section-case]')].map((line) =>
+      line.getAttribute('data-section-case'),
+    )
+    const caseChips = [...accordion.querySelectorAll('[data-kind="case"] a')].map((link) =>
+      new URL(link.getAttribute('href') ?? '', 'http://x').searchParams.get('case'),
+    )
+    expect(sectionCases).toHaveLength(7)
+    expect([...sectionCases, ...caseChips].sort()).toEqual(
+      mcsPracticeScenarios.map((scenario) => scenario.id).sort(),
     )
     expect(accordion.querySelectorAll('[data-kind="capstone"]')).toHaveLength(
       mcsCapstoneScenarios.length,

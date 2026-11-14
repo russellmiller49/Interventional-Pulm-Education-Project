@@ -136,17 +136,16 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
             <section className="max-w-2xl rounded-lg border bg-card p-4">
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <h2 className="text-base font-semibold">SOCRATES slide builder</h2>
+                  <h2 className="text-base font-semibold">SOCRATES Library</h2>
                   <p className="text-sm text-muted-foreground">
-                    Register an Invenio deep-zoom slide, draw source-pixel regions, and prepare a
-                    reviewed version for the public demo.
+                    Open shared slides, edit annotations, and preview teaching and testing views.
                   </p>
                 </div>
                 <Link
                   className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  href={'/socrates-builder' as Route}
+                  href={'/socrates-library' as Route}
                 >
-                  Open SOCRATES builder
+                  Open SOCRATES Library
                 </Link>
               </div>
             </section>

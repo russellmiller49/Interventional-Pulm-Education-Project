@@ -1,5 +1,8 @@
 'use client'
 
+import { Link } from '@/i18n/navigation'
+import { lessonHref } from '../content/module'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
 import {
   useCallback,
   useEffect,
@@ -22,11 +25,14 @@ import {
   PRIMER_TITLE,
   alongSliceSentence,
   arrivalSentence,
+  astrayView,
   chooseDeclined,
   chooseTaken,
+  flyThroughCard,
   forkPatternSentence,
   identifyInstruction,
   identifyVerdict,
+  lesionPlaceSentence,
   lesionSentence,
   lookCaption,
   matchNoteSentence,
@@ -37,6 +43,7 @@ import {
   openingNumber,
   openingShort,
   packetProse,
+  passingSentence,
 } from '../content/bench-copy'
 import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { displayName } from '../engine/display-text'
@@ -48,16 +55,43 @@ import {
   responsePlane,
 } from '../engine/junction-feedback'
 import {
+  flyingThrough,
+  moving as isMoving,
   onwardOption,
   type NavAction,
   type NavPhase,
   type NavPlan,
   type NavSession,
 } from '../engine/nav-session'
-import { readMatch, stationMatch } from '../engine/orientation-match'
-import { NATIVE_CT, targetForTrace } from '../geometry/native-ct'
+import { replayMarks, replayRows } from '../engine/route-replay'
+import {
+  mapTurnToScope,
+  type Anatomical,
+  type MapLevel,
+  type OstiumFrame,
+  type QuarterTurn,
+  type Rim,
+} from '../engine/arc-map'
+import {
+  astrayIn,
+  astrayOut,
+  astrayPath,
+  astrayPose,
+  astrayStop,
+  tipSlice as astrayTipSlice,
+} from '../geometry/astray'
+import { falloffMmFor, routeRadiusMm } from '../geometry/airway-radius'
+import { openingAnchors } from '../geometry/opening-anchors'
+import type { Vec3 } from '../geometry/coordinates'
+import { AirwayTreeInset } from './AirwayTreeInset'
+import { ArcMap } from './ArcMap'
+import { RouteReplay } from './RouteReplay'
+import { STAGE_STEPS } from '../content/plan-copy'
+import { operationsToMatch, readMatch, stationMatch } from '../engine/orientation-match'
+import { lpsToVoxel, targetForTrace } from '../geometry/native-ct'
 import { cameraBasis, lookingDirection } from '../geometry/reference-frames'
 import {
+  arcNearest,
   arcToSlice,
   arrivalPose,
   driveFrom,
@@ -66,6 +100,7 @@ import {
   stationCamera,
   type ScopePose,
 } from '../geometry/route-stations'
+import { ReferenceCtView, referenceIndexFor, type ReferencePlane } from './ReferenceCtView'
 import { ScopeView, type ScopeOpeningLabel } from './ScopeView'
 import {
   TracingCtViewer,
@@ -73,6 +108,9 @@ import {
   type CtOverlayMark,
   type CtSliderTick,
 } from './TracingCtViewer'
+import { Band } from './Band'
+import { useFillViewport } from './useFillViewport'
+import { useStageFocus } from './useStageFocus'
 import styles from './nav-bench.module.css'
 
 /**
@@ -83,16 +121,22 @@ import styles from './nav-bench.module.css'
  * forks. It owns only view state: the slice on screen, where the CT is centred, the drive clock.
  */
 const DRIVE_MM_PER_SECOND = 15
+/** Through the central airways the scope does not stop, and moves faster. */
+const CRUISE_MM_PER_SECOND = 20
+/** Between the turns of a match that is shown: long enough for each to be seen. */
+const SHOW_TURN_MS = 600
+/** How long a drive waits for the scope's picture before going on without it. */
+const SCOPE_WAIT_MS = 6000
 /** Set once the learner has closed the primer on this device. */
 export const PRIMER_SEEN_KEY = 'branch-tracing.primer-seen-v1'
 const FORK_FIELD_MIN = 96
 const FORK_FIELD_MAX = 230
 const LESION_FIELD = 190
 
-const toPixel = (lps: readonly number[]): [number, number] => [
-  (lps[0] - NATIVE_CT.origin[0]) / NATIVE_CT.spacing[0],
-  (lps[1] - NATIVE_CT.origin[1]) / NATIVE_CT.spacing[1],
-]
+const toPixel = (lps: readonly number[]): [number, number] => {
+  const [i, j] = lpsToVoxel(lps)
+  return [i, j]
+}
 
 interface Crop {
   center: [number, number]
@@ -140,6 +184,23 @@ export interface BenchProps {
   notes?: ReactNode
   /** Links back to the hub, shown in the header. */
   exit: ReactNode
+  /** The map planned for this trip: drawn beside the scope from the segmental ostium on. */
+  map?: TripMap | null
+  /** Restart the whole trip, planning included. */
+  onRestart?: () => void
+  /**
+   * The bench is being demonstrated: this takes the text column's place, the pictures cannot be
+   * worked, and the header offers only the way out.
+   */
+  narration?: ReactNode
+}
+export interface TripMap {
+  rim: Record<Rim, Anatomical | null>
+  levels: MapLevel[]
+  /** The checkpoint index of each division the map draws, from the ostium out. */
+  forks: number[]
+  frame: OstiumFrame
+  turn: QuarterTurn
 }
 
 export function NavigationBench({
@@ -157,6 +218,9 @@ export function NavigationBench({
   closing,
   notes,
   exit,
+  map = null,
+  onRestart,
+  narration,
 }: BenchProps) {
   const target = targetForTrace(trace)
   const planned = plan.stations[session.station]
@@ -176,10 +240,39 @@ export function NavigationBench({
   const showLesion =
     plan.arrive || plan.stations.some((station) => station.steps.includes('choose'))
 
+  // ── The map, from the segmental ostium on ──────────────────────────────────────────────────
+  const mapDivision = map ? map.forks.indexOf(checkpointIndex) : -1
+  const pastOstium = Boolean(map) && map!.forks.length > 0 && checkpointIndex >= map!.forks[0]
+  const mapFocus = over || mapDivision < 0 ? null : mapDivision
+  const [mapTurned, setMapTurned] = useState(false)
+  // At arrival the drive is read back beside the map: each fork's choice, and the branches that
+  // led away. Nothing of it shows before the scope has arrived.
+  const replay = useMemo(
+    () => (map && phase === 'arrived' ? replayRows(plan, session, map.forks) : []),
+    [map, phase, plan, session],
+  )
+  // The opening the pointer or the keyboard is on, in any pane: its number lights in the scope,
+  // on the CT, on its button and in the fork's table. The map's arcs are not linked this way:
+  // which arc is which opening is the question the learner is answering.
+  const [hotOpening, setHotOpening] = useState<{ key: string; index: number } | null>(null)
+  // Past the segmental ostium the middle pane shows the map, beside the scope; the CT is a tab
+  // away. A tab the learner picks holds until the next fork.
+  const [centreChoice, setCentreChoice] = useState<{ key: string; tab: CentreTab } | null>(null)
+  const [refPlanes, setRefPlanes] = useState<Record<ReferencePlane, number>>(() => {
+    const at = toPixel(camera.position)
+    return {
+      coronal: referenceIndexFor('coronal', at),
+      sagittal: referenceIndexFor('sagittal', at),
+    }
+  })
+
   // ── View state: the slice on screen and where the CT is centred ───────────────────────────
   // A new fork opens on its own slice and arrival opens on the lesion's; nothing else resets
   // the learner's view.
   const viewKey = phase === 'arrived' ? `${stationKey}:arrived` : stationKey
+  const centre: CentreTab =
+    centreChoice?.key === stationKey ? centreChoice.tab : map && pastOstium ? 'map' : 'ct'
+  const reconstruction = centre === 'coronal' || centre === 'sagittal' ? centre : null
   const fresh: { key: string; slice: number; focus: 'fork' | 'lesion' } =
     phase === 'arrived'
       ? { key: viewKey, slice: target.slice, focus: 'lesion' }
@@ -196,24 +289,13 @@ export function NavigationBench({
       })),
     [viewKey, freshFocus],
   )
-  // The primer opens by itself the first time the bench is used on this device, and from the
-  // header button afterwards. The bench mounts after hydration, so storage can be read here.
-  const [helpOpen, setHelpOpen] = useState(() => {
-    try {
-      return window.localStorage.getItem(PRIMER_SEEN_KEY) === null
-    } catch {
-      return false
-    }
-  })
-  const closeHelp = useCallback(() => {
-    setHelpOpen(false)
-    try {
-      window.localStorage.setItem(PRIMER_SEEN_KEY, '1')
-    } catch {
-      /* The primer simply opens again next time. */
-    }
-  }, [])
+  const [helpOpen, setHelpOpen, closeHelp] = usePrimer(!narration)
   const helpButton = useRef<HTMLButtonElement>(null)
+  const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
+  useStageFocus(
+    benchRef,
+    `${session.station}:${phase}${phase === 'identify' ? `:${session.identifyOption}` : ''}`,
+  )
   const [wheelSlices, setWheelSlices] = useState(false)
   useEffect(() => {
     // In the fixed workspace the page does not scroll, so the wheel can step slices.
@@ -226,14 +308,53 @@ export function NavigationBench({
 
   // ── The drive between forks ───────────────────────────────────────────────────────────────
   const drive = useMemo(() => driveFrom(trace, checkpointIndex), [trace, checkpointIndex])
-  const { fromArc, toArc } = drive
+  // A turn into the opening that leads away, and the way back out of it.
+  const astray = session.astray
+  const astrayDrive = useMemo(
+    () =>
+      astray === null
+        ? null
+        : phase === 'astray-out'
+          ? astrayOut(trace, checkpointIndex, astray)
+          : astrayIn(trace, checkpointIndex, astray),
+    [trace, checkpointIndex, astray, phase],
+  )
+  const travelling = phase === 'drive' || phase === 'astray-in' || phase === 'astray-out'
+  // The fly-through of the central airways: no fork is stopped at until the learner asks, or the
+  // first fork that is chosen at comes up.
+  const flying = flyingThrough(plan, session)
+  const stopAsked = useRef(false)
+  const [stopping, setStopping] = useState(false)
+  useEffect(() => {
+    if (flying) return
+    stopAsked.current = false
+    setStopping(false)
+  }, [flying])
+  const { fromArc, toArc } =
+    phase === 'drive' || !astrayDrive
+      ? drive
+      : { fromArc: astrayDrive.fromArc, toArc: astrayDrive.toArc }
+  // The scope does not set off until its picture is drawn: a trip that opens on the fly-through
+  // would otherwise be half flown before there is anything to see. If the picture never comes
+  // (the 3D view failed), the trip goes on without it after a few seconds.
+  const [scopeSettled, setScopeSettled] = useState(false)
+  const onScopeReady = useCallback((ready: boolean) => {
+    if (ready) setScopeSettled(true)
+  }, [])
+  useEffect(() => {
+    const giveUp = window.setTimeout(() => setScopeSettled(true), SCOPE_WAIT_MS)
+    return () => window.clearTimeout(giveUp)
+  }, [])
   const [progress, setProgress] = useState(0)
   useEffect(() => {
-    if (phase !== 'drive') return
+    if (!travelling || !scopeSettled) return
+    const finishWith =
+      phase === 'drive' ? 'arrive' : phase === 'astray-in' ? 'astray-arrive' : 'astray-return'
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const speed = flying ? CRUISE_MM_PER_SECOND : DRIVE_MM_PER_SECOND
     const duration = reduced
       ? 0
-      : Math.max(900, Math.min(3500, (Math.abs(toArc - fromArc) / DRIVE_MM_PER_SECOND) * 1000))
+      : Math.max(flying ? 500 : 900, Math.min(3500, (Math.abs(toArc - fromArc) / speed) * 1000))
     let frame = 0,
       last = 0,
       done = false
@@ -242,7 +363,11 @@ export function NavigationBench({
       if (done) return
       done = true
       setProgress(0)
-      dispatch({ type: 'arrive' })
+      dispatch(
+        finishWith === 'arrive'
+          ? { type: 'arrive', hold: stopAsked.current }
+          : { type: finishWith },
+      )
     }
     const tick = (now: number) => {
       // A frame's timestamp can be a little earlier than the clock read when the drive began.
@@ -264,20 +389,25 @@ export function NavigationBench({
       cancelAnimationFrame(frame)
       window.clearTimeout(fallback)
     }
-  }, [phase, fromArc, toArc, dispatch])
+  }, [travelling, phase, fromArc, toArc, dispatch, flying, scopeSettled])
 
-  const moving = phase === 'drive'
+  const moving = isMoving(phase)
+  const offRoute = phase === 'astray-in' || phase === 'astray' || phase === 'astray-out'
   const pose: ScopePose = useMemo(
     () =>
-      moving
+      phase === 'drive'
         ? drivePose(trace, drive, progress)
-        : phase === 'arrived'
-          ? arrivalPose(trace)
-          : camera,
-    [moving, phase, trace, drive, progress, camera],
+        : offRoute && astrayDrive && phase !== 'astray'
+          ? astrayPose(trace, astrayDrive, progress)
+          : phase === 'astray' && astray !== null
+            ? (astrayStop(trace, checkpointIndex, astray) ?? camera)
+            : phase === 'arrived'
+              ? arrivalPose(trace)
+              : camera,
+    [phase, offRoute, astrayDrive, astray, trace, drive, progress, camera, checkpointIndex],
   )
   const tipPixel = toPixel(pose.position)
-  const tipSlice = arcToSlice(trace, pose.arc)
+  const tipSlice = offRoute ? astrayTipSlice(pose) : arcToSlice(trace, pose.arc)
   const headingLength = Math.hypot(pose.direction[0], pose.direction[1])
   const tip = {
     slice: tipSlice,
@@ -320,22 +450,27 @@ export function NavigationBench({
   }, [trace, nextIndex])
   const travelled = Math.max(0, Math.min(1, progress))
   const eased = travelled * travelled * (3 - 2 * travelled)
-  const crop: Crop = moving
-    ? {
-        center: [
-          here.center[0] + (ahead.center[0] - here.center[0]) * eased,
-          here.center[1] + (ahead.center[1] - here.center[1]) * eased,
-        ],
-        size: here.size + (ahead.size - here.size) * eased,
-      }
-    : phase === 'arrived' || current.focus === 'lesion'
-      ? lesionCrop
-      : here
-  const slice = moving ? tipSlice : current.slice
+  const crop: Crop =
+    phase === 'drive'
+      ? {
+          center: [
+            here.center[0] + (ahead.center[0] - here.center[0]) * eased,
+            here.center[1] + (ahead.center[1] - here.center[1]) * eased,
+          ],
+          size: here.size + (ahead.size - here.size) * eased,
+        }
+      : phase === 'arrived' || current.focus === 'lesion'
+        ? lesionCrop
+        : here
+  const slice = moving || phase === 'astray' ? tipSlice : current.slice
 
   const chosen = session.choice !== null
+  // On a drive that follows a map the first fork stopped at is the one that gives off the
+  // segment's bronchus, and the learner named that bronchus in planning: an opening labelled with
+  // its name would be the answer. So there, as on a trip that withholds names, an opening is
+  // named once the learner has chosen.
   const named = (opening: OpeningFacts) =>
-    independent
+    independent || map
       ? chosen || over
       : !asksIdentify || Boolean(session.marks[opening.index]?.ok) || chosen
   const identifying = phase === 'identify' ? facts.openings[session.identifyOption] : null
@@ -359,6 +494,15 @@ export function NavigationBench({
         ]
       : [],
   )
+  const hot = hotOpening?.key === stationKey ? hotOpening.index : null
+  const hover = (index: number) => (on: boolean) =>
+    setHotOpening((current) =>
+      on
+        ? { key: stationKey, index }
+        : current?.key === stationKey && current.index === index
+          ? null
+          : current,
+    )
   // Where the bench letters the openings itself, their model centres are shown on the CT.
   const locators: CtOverlayLocator[] =
     !asksIdentify && !independent && !moving && !over
@@ -368,6 +512,8 @@ export function NavigationBench({
           pixel: (responseLumen(trace, checkpointIndex, opening.index) ?? planes[opening.index])
             .pixel,
           label: openingNumber(opening.index),
+          hot: hot === opening.index,
+          onHover: hover(opening.index),
         }))
       : []
   const ticks: CtSliderTick[] = [
@@ -395,52 +541,112 @@ export function NavigationBench({
   ]
 
   // ── What the scope shows ──────────────────────────────────────────────────────────────────
+  // At the end of the airway the lesion is beyond the wall, not in view: a dashed ring says which
+  // way it lies, as a teaching overlay.
+  const lesionCue: ScopeOpeningLabel[] =
+    phase === 'arrived'
+      ? [
+          {
+            id: `${trace.id}:lesion`,
+            anchors: [target.centerLps as Vec3],
+            text: 'Lesion',
+            caption: 'beyond the wall',
+            tone: 'plain',
+            ariaLabel: 'Where the lesion lies, beyond the airway wall',
+            lesion: true,
+          },
+        ]
+      : []
   const openings: ScopeOpeningLabel[] =
     phase === 'arrived'
-      ? []
-      : facts.openings.map((opening) => {
-          const option = checkpoint.decision!.options[opening.index]
-          const fork = checkpoint.decision!.junctionLps
-          const delta = [option.lps[0] - fork[0], option.lps[1] - fork[1], option.lps[2] - fork[2]]
-          const length = Math.hypot(delta[0], delta[1], delta[2]) || 1
-          const at = (mm: number) =>
-            [0, 1, 2].map((axis) => fork[axis] + (delta[axis] / length) * mm) as [
-              number,
-              number,
-              number,
-            ]
-          return {
-            id: `${stationKey}:${opening.index}`,
-            // Deepest first: the number should sit in the opening, not on the spur in front of it.
-            anchors: [at(12), at(9), at(6), at(Math.min(3, length)), at(1.5)],
-            text: openingNumber(opening.index),
-            caption: named(opening) && !opening.repeatedName ? opening.airway.code : undefined,
-            tone: session.declined.includes(opening.index)
-              ? 'declined'
-              : session.choice === opening.index
-                ? 'chosen'
-                : identifying?.index === opening.index
-                  ? 'active'
-                  : session.marks[opening.index]?.ok
-                    ? 'done'
-                    : 'plain',
-            ariaLabel: `Opening ${openingNumber(opening.index)}`,
-          }
-        })
+      ? lesionCue
+      : offRoute
+        ? []
+        : facts.openings.map((opening) => {
+            const option = checkpoint.decision!.options[opening.index]
+            return {
+              id: `${stationKey}:${opening.index}`,
+              anchors: openingAnchors(checkpoint.decision!.junctionLps, option.lps),
+              text: openingNumber(opening.index),
+              caption: named(opening) && !opening.repeatedName ? opening.airway.code : undefined,
+              tone: session.declined.includes(opening.index)
+                ? 'declined'
+                : session.choice === opening.index
+                  ? 'chosen'
+                  : identifying?.index === opening.index
+                    ? 'active'
+                    : session.marks[opening.index]?.ok
+                      ? 'done'
+                      : 'plain',
+              ariaLabel: `Opening ${openingNumber(opening.index)}`,
+              hot: hot === opening.index,
+              onHover: hover(opening.index),
+              onPick:
+                phase === 'choose' && !session.declined.includes(opening.index)
+                  ? () => dispatch({ type: 'choose', option: opening.index })
+                  : undefined,
+            }
+          })
   const basis = cameraBasis(pose.direction, pose.up)
+  // The light's reach follows the width of the airway the scope is in. In a branch that leads
+  // away the scope is one generation on from the nearest point of the route: a little narrower.
+  const falloffMm = falloffMmFor(
+    offRoute
+      ? routeRadiusMm(trace, arcNearest(trace, pose.position)) * 0.8
+      : routeRadiusMm(trace, pose.arc),
+  )
+  // How far the map must turn to sit as the scope shows it, read from where the scope is now:
+  // the scope rolls as it enters each branch, and a map that is turned to it follows the roll.
+  const turnToScope = map
+    ? mapTurnToScope(map.frame, map.turn, basis)
+    : { angle: 0, reliable: true }
   const topName = nearestAxisName(basis.up)
-  const caption = moving
-    ? 'Driving on. The CT follows the tip of the scope.'
-    : phase === 'arrived'
-      ? `At the end of ${target.approachCode}, beside the lesion.`
-      : lookCaption(
-          facts.parent.code,
-          lookKind(pose.direction),
-          lookingDirection(pose.direction),
-          topName,
-        )
+  const astrayOpening = astray !== null ? facts.openings[astray] : null
+  const caption =
+    phase === 'astray-in'
+      ? `Into ${astrayOpening ? openingShort(astrayOpening, named(astrayOpening)) : 'the other opening'}. The CT follows the tip.`
+      : phase === 'astray-out'
+        ? 'Backing out to the fork. The CT follows the tip.'
+        : phase === 'astray'
+          ? 'In the branch that was taken, looking at what comes next.'
+          : moving
+            ? 'Driving on. The CT follows the tip of the scope.'
+            : phase === 'arrived'
+              ? `At the end of ${target.approachCode}. The ring marks where the lesion lies beyond the wall: it is not seen from the airway.`
+              : lookCaption(
+                  facts.parent.code,
+                  lookKind(pose.direction),
+                  lookingDirection(pose.direction),
+                  topName,
+                )
 
   // ── Actions ───────────────────────────────────────────────────────────────────────────────
+  // Showing the match plays it: each flip or quarter turn is made in turn, so the learner sees
+  // what was done to the CT and not only where it ended. With reduced motion it is set at once.
+  const showing = useRef<number[]>([])
+  useEffect(
+    () => () => {
+      showing.current.forEach((timer) => window.clearTimeout(timer))
+    },
+    [],
+  )
+  const showMatch = () => {
+    const steps = operationsToMatch(match, session.orientation)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced || steps.length === 0) return dispatch({ type: 'show-match' })
+    showing.current.forEach((timer) => window.clearTimeout(timer))
+    showing.current = [
+      ...steps.map((operation, i) =>
+        window.setTimeout(() => dispatch({ type: 'turn', operation }), i * SHOW_TURN_MS),
+      ),
+      window.setTimeout(() => dispatch({ type: 'show-match' }), steps.length * SHOW_TURN_MS),
+    ]
+  }
+  // Said once a trip, at the first fork that asks anything: that turning the CT is the learner's
+  // choice. After that the Check my turn button beside the CT says it.
+  const firstStop =
+    session.log.filter((entry) => entry.matchAsked || entry.identifyAsked || entry.chooseAsked)
+      .length <= 1
   const reading = readMatch(match, session.orientation)
   const mark = useCallback((value: CtMark) => dispatch({ type: 'mark', mark: value }), [dispatch])
   const showMark = () => {
@@ -475,12 +681,23 @@ export function NavigationBench({
   const routeSoFar = trace.airwayPath
     .slice(0, Math.max(1, trace.airwayPath.findIndex((a) => a.code === facts.parent.code) + 1))
     .filter((airway, index, list) => index === 0 || airway.code !== list[index - 1].code)
-  // Where the learner is in the four moves, so the next move is always in sight.
+  // Where the learner is in the moves at this fork, so the next move is always in sight. A trip
+  // that never marks openings leaves Identify out; where turning the CT is optional it says so.
   const order: NavPhase[] = ['match', 'identify', 'choose', 'ready']
-  const loopState = (id: LoopStepId): 'done' | 'now' | 'todo' | 'bench' => {
-    const at = phase === 'drive' || over ? order.length : order.indexOf(phase)
+  const loopSteps = LOOP_STEPS.filter(
+    (step) => step.id !== 'identify' || plan.stations.some((s) => s.steps.includes('identify')),
+  )
+  const loopState = (id: LoopStepId): 'done' | 'now' | 'todo' | 'bench' | 'optional' => {
+    const at =
+      phase === 'drive' || over
+        ? order.length
+        : offRoute
+          ? order.indexOf('choose')
+          : order.indexOf(phase)
     const index = id === 'drive' ? 3 : order.indexOf(id)
     if (phase === 'drive' && id === 'drive') return 'now'
+    if (flying && id === 'choose') return 'bench'
+    if (id === 'match' && session.matchNote === 'optional') return 'optional'
     if (index === at) return 'now'
     if (id !== 'drive' && !planned.steps.includes(id)) return index < at ? 'bench' : 'todo'
     if (id === 'match' && session.matchNote !== 'asked' && index < at) return 'bench'
@@ -495,11 +712,11 @@ export function NavigationBench({
       body: 'Put R, L, A and P on the same sides of the CT as they are in the scope.',
       where: 'CT panel: Rotate left, Rotate right, Flip.',
       primary: worked
-        ? { label: 'Show the match', onActivate: () => dispatch({ type: 'show-match' }) }
+        ? { label: 'Show the match', onActivate: showMatch }
         : { label: 'Check the match', onActivate: () => dispatch({ type: 'check-match' }) },
       secondary: worked
         ? { label: 'Check my own', onActivate: () => dispatch({ type: 'check-match' }) }
-        : { label: 'Show me', onActivate: () => dispatch({ type: 'show-match' }) },
+        : { label: 'Show me', onActivate: showMatch },
     }
   else if (phase === 'identify' && identifying) {
     const onSlice = slice === identifying.slice
@@ -522,8 +739,14 @@ export function NavigationBench({
     now = {
       kicker: `${forkCount} · Choose`,
       heading: 'Which opening leads toward the lesion?',
-      body: lesionSentence(target, lesion),
-      where: 'CT panel: follow each lumen with the slider. Lesion slice shows the lesion.',
+      // Which way the lesion lies from this fork is a hint, and past the segmental ostium it is
+      // the map's to give: said there, the opening could be chosen without the map.
+      body:
+        help && !(map && pastOstium) ? lesionSentence(target, lesion) : lesionPlaceSentence(target),
+      where:
+        map && pastOstium
+          ? 'Map panel: the arc that holds the star. Click the opening on that side, in the scope or here.'
+          : 'CT panel: follow each lumen with the slider; Lesion slice shows the lesion. Click an opening in the scope or here.',
       primary: worked
         ? { label: 'Show the choice', onActivate: () => dispatch({ type: 'show-choice' }) }
         : undefined,
@@ -545,16 +768,68 @@ export function NavigationBench({
         icon: <ArrowRight size={16} aria-hidden />,
       },
     }
-  else if (phase === 'drive')
+  else if (phase === 'drive' && flying) {
+    // Where the fly-through ends: the first fork that is chosen at.
+    const stop = plan.stations.find((station, index) => index > session.station && !station.cruise)
+    const stopAt = stop ? forkFacts(trace, stop.checkpointIndex)!.parent.code : target.approachCode
+    now = {
+      kicker: 'Central airways',
+      ...flyThroughCard(stopAt, stopping),
+      status: passingSentence(routeSoFar.map((airway) => airway.code)),
+      secondary: stopping
+        ? undefined
+        : {
+            label: 'Stop at the next fork',
+            onActivate: () => {
+              stopAsked.current = true
+              setStopping(true)
+            },
+          },
+    }
+  } else if (phase === 'drive')
     now = {
       kicker: `${forkCount} · Drive`,
       heading: `Driving into ${openingShort(route, true)}`,
+      status: `CT slice ${slice}`,
+    }
+  else if (phase === 'astray-in' && astrayOpening)
+    now = {
+      kicker: `${forkCount} · Choose`,
+      heading: `Driving into ${openingShort(astrayOpening, named(astrayOpening))}`,
+      status: `CT slice ${slice}`,
+    }
+  else if (phase === 'astray' && astrayOpening) {
+    const copy = astrayView(
+      astrayOpening,
+      named(astrayOpening),
+      lesion,
+      Boolean(astrayPath(trace, checkpointIndex, astrayOpening.index)?.ends),
+      help,
+    )
+    now = {
+      kicker: `${forkCount} · Choose`,
+      heading: copy.headline,
+      body: copy.detail,
+      where: map
+        ? 'Map panel: the arc that holds the star.'
+        : 'Bronchoscope panel: the view ahead.',
+      primary: {
+        label: 'Back out to the fork',
+        onActivate: () => dispatch({ type: 'back-out' }),
+      },
+    }
+  } else if (phase === 'astray-out')
+    now = {
+      kicker: `${forkCount} · Choose`,
+      heading: 'Backing out to the fork',
       status: `CT slice ${slice}`,
     }
   else
     now = {
       kicker: phase === 'arrived' ? 'Arrived' : 'End of this trip',
       heading: closing.heading,
+      // The summary can run past the bottom of the window; the way on stays in view.
+      pinActions: true,
       primary: closing.next
         ? {
             label: closing.next.label,
@@ -616,91 +891,63 @@ export function NavigationBench({
             {showLesion && <li data-route-chip="lesion">Lesion · {target.segment.code}</li>}
           </ol>
           <div className={styles.benchActions}>
-            <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
-              <CircleHelp size={15} aria-hidden /> What are we doing?
-            </button>
-            <button onClick={() => dispatch({ type: 'restart' })} data-bench-restart>
-              <RotateCcw size={15} aria-hidden /> Restart trip
-            </button>
+            {!narration && (
+              <>
+                <button ref={helpButton} onClick={() => setHelpOpen(true)} data-bench-help>
+                  <CircleHelp size={15} aria-hidden /> What are we doing?
+                </button>
+                <button
+                  onClick={onRestart ?? (() => dispatch({ type: 'restart' }))}
+                  data-bench-restart
+                >
+                  <RotateCcw size={15} aria-hidden /> Restart trip
+                </button>
+              </>
+            )}
             {exit}
           </div>
         </div>
       }
     >
-      <div className={styles.bench} data-bench data-bench-phase={phase}>
-        <section className={styles.pane} style={{ gridArea: 'scope' }} aria-label="Bronchoscope">
-          <header className={styles.paneHead}>
-            <h2>Bronchoscope</h2>
-            <span>{over && phase === 'arrived' ? target.approachCode : facts.parent.code}</span>
-          </header>
-          <div className={styles.squareSlot}>
-            <ScopeView
-              position={pose.position}
-              direction={pose.direction}
-              up={pose.up}
-              openings={openings}
-              moving={moving}
-              caption={caption}
-              phase={phase}
-            />
-          </div>
-          <p className={styles.paneCaption} data-scope-caption>
-            {caption}
-          </p>
-        </section>
-
-        <section className={styles.pane} style={{ gridArea: 'ct' }} aria-label="CT">
-          <header className={styles.paneHead}>
-            <h2>CT</h2>
-            <span data-ct-display>{orientationSummary(session)}</span>
-            {showLesion && (
-              <button
-                className={styles.lesionToggle}
-                aria-pressed={current.focus === 'lesion'}
-                disabled={moving || over}
-                onClick={() =>
-                  setView(
-                    current.focus === 'lesion'
-                      ? { key: viewKey, slice: facts.forkSlice, focus: 'fork' }
-                      : { key: viewKey, slice: target.slice, focus: 'lesion' },
-                  )
-                }
-                data-ct-lesion-toggle
-              >
-                {current.focus === 'lesion' ? 'Back to the fork' : 'Lesion slice'}
-              </button>
-            )}
-          </header>
-          <TracingCtViewer
-            slice={slice}
-            range={trace.range}
-            onSlice={setSlice}
-            orientation={session.orientation}
-            onTurn={moving ? undefined : (operation) => dispatch({ type: 'turn', operation })}
-            center={crop.center}
-            size={crop.size}
-            target={target}
-            showNodule={showLesion}
-            markSlice={identifying ? identifying.slice : undefined}
-            markLabel={identifying ? `opening ${openingNumber(identifying.index)}` : undefined}
-            onMark={identifying ? mark : undefined}
-            marks={marks}
-            locators={locators}
-            tip={over ? null : tip}
-            ticks={ticks}
-            wheelSlices={wheelSlices}
-          />
-        </section>
-
+      <div
+        ref={benchRef}
+        className={styles.bench}
+        style={{ height: benchMinHeight, minHeight: benchMinHeight }}
+        data-bench
+        data-bench-phase={phase}
+        data-bench-narrated={narration ? true : undefined}
+      >
+        {narration && <div className={styles.narration}>{narration}</div>}
+        {/* The text column comes first, in the page and in the tab order: what to do, then the
+            pictures it is done on. */}
         <div className={styles.now} style={{ gridArea: 'now' }}>
-          <ol className={styles.loop} aria-label="The four moves at this fork" data-loop-steps>
-            {LOOP_STEPS.map((step) => {
+          {map && (
+            <ol className={styles.stageStrip} aria-label="Plan, map, navigate" data-stage-steps>
+              {STAGE_STEPS.map((step) => (
+                <li
+                  key={step.id}
+                  data-stage-step={step.id}
+                  data-stage-state={step.id === 'navigate' ? 'now' : 'done'}
+                >
+                  {step.label}
+                </li>
+              ))}
+            </ol>
+          )}
+          <ol className={styles.loop} aria-label="The moves at this fork" data-loop-steps>
+            {loopSteps.map((step) => {
               const state = loopState(step.id)
               return (
                 <li key={step.id} data-loop-step={step.id} data-loop-state={state}>
                   <strong>{step.label}</strong>
                   <span>
-                    {state === 'bench' ? 'done for you' : state === 'now' ? 'now' : step.what}
+                    {state === 'bench'
+                      ? 'done for you'
+                      : state === 'optional'
+                        ? 'your choice'
+                        : state === 'now'
+                          ? 'now'
+                          : step.what}
                   </span>
                 </li>
               )
@@ -716,6 +963,11 @@ export function NavigationBench({
                       key={opening.index}
                       onClick={() => dispatch({ type: 'choose', option: opening.index })}
                       disabled={declined}
+                      onPointerEnter={() => hover(opening.index)(true)}
+                      onPointerLeave={() => hover(opening.index)(false)}
+                      onFocus={() => hover(opening.index)(true)}
+                      onBlur={() => hover(opening.index)(false)}
+                      data-choice-hot={hot === opening.index || undefined}
                       data-choice={openingNumber(opening.index)}
                       data-choice-declined={declined || undefined}
                     >
@@ -766,31 +1018,48 @@ export function NavigationBench({
               session.declined.length > 0 &&
               (() => {
                 const opening = facts.openings[session.declined[session.declined.length - 1]]
-                const copy = chooseDeclined(opening, named(opening), lesion)
+                const copy = chooseDeclined(opening, named(opening), lesion, help)
                 return <Band tone="miss" {...copy} />
               })()}
             {phase === 'ready' && <Band tone="in" {...chooseTaken(route, lesion)} />}
+            {session.optionalCheck && !moving && (
+              <Band
+                {...matchVerdict(
+                  readMatch(match, session.optionalCheck.orientation),
+                  session.optionalCheck.orientation,
+                  help,
+                )}
+              />
+            )}
           </div>
         </div>
 
         <div className={styles.detail} style={{ gridArea: 'detail' }} data-bench-detail>
-          {!over && (
+          {/* While the scope flies through, no fork is the learner's to read: the card says what
+              is passing, and the fork's own notes wait for a fork that is stopped at. */}
+          {!over && !flying && (
             <>
               {session.station === 0 && intro && phase !== 'drive' && (
                 <p className={styles.intro} data-bench-intro>
                   {intro}
                 </p>
               )}
-              {phase !== 'match' && session.matchNote !== 'asked' && !moving && (
-                <p className={styles.note} data-match-note={session.matchNote}>
-                  {matchNoteSentence(
-                    session.matchNote,
-                    session.orientation,
-                    session.station === 0,
-                    match.oblique,
-                  )}
-                </p>
-              )}
+              {/* A note about the CT's turn belongs beside the CT: with the map or a
+                  reconstruction in the middle pane it would point at a picture that is not there. */}
+              {phase !== 'match' &&
+                session.matchNote !== 'asked' &&
+                !moving &&
+                centre === 'ct' &&
+                (session.matchNote !== 'optional' || firstStop) && (
+                  <p className={styles.note} data-match-note={session.matchNote}>
+                    {matchNoteSentence(
+                      session.matchNote,
+                      session.orientation,
+                      session.station === 0,
+                      match.oblique,
+                    )}
+                  </p>
+                )}
               {phase !== 'match' &&
                 session.matchNote === 'asked' &&
                 reading.kind === 'matches' &&
@@ -822,25 +1091,36 @@ export function NavigationBench({
                 {!arrivedTeach && lookKind(camera.direction) === 'level' && (
                   <p>{alongSliceSentence(match)}</p>
                 )}
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">Opening</th>
-                      <th scope="col">In the scope</th>
-                      <th scope="col">On the CT</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {facts.openings.map((opening) => (
-                      <tr key={opening.index}>
-                        <th scope="row">{openingName(opening, named(opening))}</th>
-                        <td>{opening.side}</td>
-                        <td>{openingLevelSentence(opening)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p>{forkPatternSentence(facts)}</p>
+                {/* Where each opening is on the CT is read with the CT: with the map in the middle
+                    pane the fork's card keeps to its name and what the lesson says of it. */}
+                {centre !== 'map' && (
+                  <>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Opening</th>
+                          <th scope="col">In the scope</th>
+                          <th scope="col">On the CT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {facts.openings.map((opening) => (
+                          <tr
+                            key={opening.index}
+                            onPointerEnter={() => hover(opening.index)(true)}
+                            onPointerLeave={() => hover(opening.index)(false)}
+                            data-row-hot={hot === opening.index || undefined}
+                          >
+                            <th scope="row">{openingName(opening, named(opening))}</th>
+                            <td>{opening.side}</td>
+                            <td>{openingLevelSentence(opening)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <p>{forkPatternSentence(facts)}</p>
+                  </>
+                )}
                 {/* Said before the openings are identified: what the lumens look like on their
                     slices. It names the airways, so it is kept off the trips that withhold names. */}
                 {packet?.entryLimitation &&
@@ -885,6 +1165,169 @@ export function NavigationBench({
           )}
           {notes}
         </div>
+
+        <section
+          className={styles.pane}
+          style={{ gridArea: 'scope' }}
+          aria-label="Bronchoscope"
+          inert={Boolean(narration)}
+        >
+          <header className={styles.paneHead}>
+            <h2>Bronchoscope</h2>
+            <span>{over && phase === 'arrived' ? target.approachCode : facts.parent.code}</span>
+          </header>
+          <div className={styles.squareSlot}>
+            <ScopeView
+              position={pose.position}
+              direction={pose.direction}
+              up={pose.up}
+              openings={openings}
+              moving={moving}
+              caption={caption}
+              phase={phase}
+              segmental={pastOstium ? map!.frame.side : undefined}
+              onReady={onScopeReady}
+              falloffMm={falloffMm}
+            />
+            <AirwayTreeInset
+              trace={trace}
+              position={pose.position}
+              where={over && phase === 'arrived' ? target.approachCode : facts.parent.code}
+            />
+          </div>
+          <p className={styles.paneCaption} data-scope-caption>
+            {caption}
+          </p>
+        </section>
+
+        <section
+          className={styles.pane}
+          style={{ gridArea: 'ct' }}
+          aria-label={centre === 'map' ? 'Your map' : 'CT'}
+          data-centre-pane={centre}
+          inert={Boolean(narration)}
+        >
+          <header className={styles.paneHead}>
+            <h2>{CENTRE_TITLE[centre]}</h2>
+            <div className={styles.sideTabs} role="group" aria-label="Middle panel">
+              {CENTRE_TABS.filter((tab) => tab.id !== 'map' || map).map((tab) => (
+                <button
+                  key={tab.id}
+                  aria-pressed={centre === tab.id}
+                  onClick={() => setCentreChoice({ key: stationKey, tab: tab.id })}
+                  data-centre-tab={tab.id}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {centre === 'ct' && <span data-ct-display>{orientationSummary(session)}</span>}
+            {centre === 'ct' && session.matchNote === 'optional' && !moving && !over && (
+              <button
+                className={styles.lesionToggle}
+                onClick={() => dispatch({ type: 'check-match' })}
+                data-ct-check-turn
+              >
+                Check my turn
+              </button>
+            )}
+            {centre === 'ct' && showLesion && (
+              <button
+                className={styles.lesionToggle}
+                aria-pressed={current.focus === 'lesion'}
+                disabled={moving || over}
+                onClick={() =>
+                  setView(
+                    current.focus === 'lesion'
+                      ? { key: viewKey, slice: facts.forkSlice, focus: 'fork' }
+                      : { key: viewKey, slice: target.slice, focus: 'lesion' },
+                  )
+                }
+                data-ct-lesion-toggle
+              >
+                {current.focus === 'lesion' ? 'Back to the fork' : 'Lesion slice'}
+              </button>
+            )}
+          </header>
+          {reconstruction ? (
+            <ReferenceCtView
+              plane={reconstruction}
+              index={refPlanes[reconstruction]}
+              onIndexChange={(index) =>
+                setRefPlanes((all) => ({ ...all, [reconstruction]: index }))
+              }
+              axialSlice={slice}
+              focus={over ? undefined : { slice: tip.slice, pixel: tip.pixel }}
+              focusLabel="scope tip"
+              target={showLesion ? { id: target.id } : undefined}
+              onPick={(pick) => {
+                // A point picked on the reconstruction opens the axial CT there.
+                setView({ key: viewKey, slice: pick.slice, focus: current.focus })
+                setCentreChoice({ key: stationKey, tab: 'ct' })
+              }}
+              wheelPlanes={wheelSlices}
+            />
+          ) : centre === 'map' && map ? (
+            <>
+              <div className={styles.squareSlot}>
+                <ArcMap
+                  rim={map.rim}
+                  levels={map.levels}
+                  focus={mapFocus}
+                  star
+                  rotation={mapTurned ? turnToScope.angle : 0}
+                  following={mapTurned && moving}
+                  label="Your map"
+                  marks={replay.length ? replayMarks(replay, map.forks.length) : undefined}
+                />
+              </div>
+              {replay.length > 0 && <RouteReplay trace={trace} target={target} rows={replay} />}
+              <div
+                className={`${styles.paneCaption} ${styles.mapTurnRow}`}
+                data-map-turn-row
+                style={replay.length ? { display: 'none' } : undefined}
+              >
+                <button
+                  role="switch"
+                  aria-checked={mapTurned}
+                  className={styles.mapTurnSwitch}
+                  onClick={() => setMapTurned((value) => !value)}
+                  data-map-turn
+                >
+                  <span aria-hidden="true" />
+                  Turn the map to the scope
+                </button>
+                <span>
+                  {mapTurned
+                    ? turnToScope.reliable
+                      ? 'The map sits as the scope shows it, and follows the scope as it rolls.'
+                      : 'The scope looks along this branch, so the turn is approximate here.'
+                    : 'The map sits as you drew it. Turn it here, or in your head.'}
+                </span>
+              </div>
+            </>
+          ) : (
+            <TracingCtViewer
+              slice={slice}
+              range={trace.range}
+              onSlice={setSlice}
+              orientation={session.orientation}
+              onTurn={moving ? undefined : (operation) => dispatch({ type: 'turn', operation })}
+              center={crop.center}
+              size={crop.size}
+              target={target}
+              showNodule={showLesion}
+              markSlice={identifying ? identifying.slice : undefined}
+              markLabel={identifying ? `opening ${openingNumber(identifying.index)}` : undefined}
+              onMark={identifying ? mark : undefined}
+              marks={marks}
+              locators={locators}
+              tip={over ? null : tip}
+              ticks={ticks}
+              wheelSlices={wheelSlices}
+            />
+          )}
+        </section>
       </div>
       <HelpDialog
         open={helpOpen}
@@ -892,12 +1335,56 @@ export function NavigationBench({
         title={PRIMER_TITLE}
         returnFocusTo={helpButton}
       >
+        <p>
+          <Link href={lessonHref(DEMO_LESSON_ID)} data-watch-method>
+            Watch the method demonstrated, about 2 minutes
+          </Link>
+        </p>
         {PRIMER.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
       </HelpDialog>
     </LessonShell>
   )
+}
+
+type CentreTab = 'ct' | 'map' | ReferencePlane
+const CENTRE_TABS: { id: CentreTab; label: string }[] = [
+  { id: 'ct', label: 'Axial' },
+  { id: 'coronal', label: 'Coronal' },
+  { id: 'sagittal', label: 'Sagittal' },
+  { id: 'map', label: 'Map' },
+]
+const CENTRE_TITLE: Record<CentreTab, string> = {
+  ct: 'CT',
+  coronal: 'Coronal',
+  sagittal: 'Sagittal',
+  map: 'Map',
+}
+
+/**
+ * The primer opens by itself the first time a bench is used on this device, and from the header
+ * button afterwards. A bench mounts after hydration, so storage can be read here.
+ */
+export function usePrimer(auto = true) {
+  const [open, setOpen] = useState(() => {
+    // A bench that is being demonstrated never opens the primer over the demonstration.
+    if (!auto) return false
+    try {
+      return window.localStorage.getItem(PRIMER_SEEN_KEY) === null
+    } catch {
+      return false
+    }
+  })
+  const close = useCallback(() => {
+    setOpen(false)
+    try {
+      window.localStorage.setItem(PRIMER_SEEN_KEY, '1')
+    } catch {
+      /* The primer simply opens again next time. */
+    }
+  }, [])
+  return [open, setOpen, close] as const
 }
 
 type LoopStepId = 'match' | 'identify' | 'choose' | 'drive'
@@ -907,22 +1394,6 @@ const LOOP_STEPS: { id: LoopStepId; label: string; what: string }[] = [
   { id: 'choose', label: 'Choose', what: 'toward the lesion' },
   { id: 'drive', label: 'Drive', what: 'to the next fork' },
 ]
-
-function Band({
-  tone,
-  headline,
-  detail,
-}: {
-  tone: 'in' | 'near' | 'miss'
-  headline: string
-  detail: string
-}) {
-  return (
-    <p className={styles.band} data-verdict-tone={tone} role="status">
-      <strong>{headline}</strong> {detail}
-    </p>
-  )
-}
 
 function orientationSummary(session: NavSession) {
   const o = session.orientation

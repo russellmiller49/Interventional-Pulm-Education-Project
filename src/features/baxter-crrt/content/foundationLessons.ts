@@ -80,9 +80,10 @@ export const crrtFoundationTasks: Partial<
       instruction:
         'Follow blood from patient access to the filter and back. Separate the two questions the prescription must answer.',
       teaching: [
-        'Continuous renal replacement therapy (CRRT) provides kidney support over time. Solute and acid-base support address the composition of blood. Net fluid removal addresses how much fluid CRRT removes from the patient.',
+        'Continuous renal replacement therapy (CRRT) is kidney support that runs around the clock. Blood flows continuously from the patient through a filter and back, so solute and fluid are removed slowly over the whole day rather than in a session of a few hours, as in intermittent hemodialysis. Every prescription answers two questions. Solute and acid-base support addresses the composition of the blood. Net fluid removal addresses how much fluid CRRT removes from the patient.',
         'Blood leaves the patient through the access limb, passes a pump and filter, then returns through the return limb. The membrane separates blood from the fluid compartment. Later tasks add each fluid path to this same circuit.',
-        'The continuous approach spreads treatment over time. Hemodynamic tolerance, urgency and the ability to maintain treatment matter; a modality name alone does not answer these questions. General ICU physiology is the prerequisite; this lesson introduces the CRRT terms.',
+        'Because CRRT spreads treatment over the whole day, it avoids rapid shifts of fluid and solute, which matters most when blood pressure is unstable. Whether a continuous approach fits depends on how well the patient tolerates fluid shifts, how urgent the problem is, and whether treatment can be kept running. The modality names later in this lesson describe how the circuit moves solute and water; they do not answer those questions.',
+        'Trials have not shown better survival or kidney recovery with CRRT than with intermittent therapy, so the choice rests on physiology. Choose CRRT when intracranial pressure is raised or threatened, as in acute brain injury or acute liver failure: urea leaves the brain slowly, so the fast urea removal of intermittent hemodialysis can draw water into the brain and raise the pressure further. Choose it too when a large obligatory intake has to come off every day, as in an anuric patient on parenteral nutrition. Intermittent hemodialysis is the better tool when speed is the point: most poisonings, and derangements that must be corrected very quickly.',
       ],
     },
     {
@@ -90,11 +91,12 @@ export const crrtFoundationTasks: Partial<
       title: 'Worked example: separate support from removal',
       exampleId: 'constructed-solute-support',
       kind: 'read',
-      instruction: 'Read how the clinician separates a treatment goal from a constraint.',
+      instruction: 'Read the worked example.',
       teaching: [
-        'Constructed example: an adult with AKI needs ongoing solute and acid-base support. The team currently seeks no net removal by CRRT, and hemodynamic instability makes rapid fluid shifts difficult to tolerate.',
-        'Reasoning: name solute/acid-base support as the goal, zero net CRRT removal as a separate fluid assumption, and tolerance plus continuity as constraints. Zero CRRT removal does not mean the whole patient is fluid-neutral.',
-        'An urgent threat requires timely clinical treatment and escalation. A software exercise or checklist must never delay it. These examples do not select an individual regimen.',
+        'An adult with AKI needs ongoing solute and acid-base support. For now the team wants CRRT to remove no net fluid, and the patient is hemodynamically unstable, so rapid fluid shifts would be poorly tolerated.',
+        'How to frame it: the goal is solute and acid-base support. Net fluid removal is a separate setting, here zero. The constraints are what the patient can tolerate and keeping treatment running. Zero net removal by CRRT does not make the patient fluid-neutral: intake and other outputs still count.',
+        'A life-threatening problem such as severe hyperkalemia is treated at once with medical therapy while CRRT is being arranged. Setting up the circuit takes time and must never delay that treatment.',
+        `When to start: for a concrete indication, most often volume overload, hyperkalemia or metabolic acidosis that is not responding to medical therapy. An earlier start helped only in the single-center ELAIN trial. The larger AKIKI, IDEAL-ICU and STARRT-AKI trials found no benefit, with some signals of harm: impaired kidney recovery, more catheter-related bloodstream infections, more hypotension and hypophosphatemia. Waiting has a limit too: in AKIKI-2, deferring beyond the standard triggers trended toward higher 60-day mortality. In a patient who is a candidate for escalation, starting is likely reasonable for oliguria lasting ${N('oliguria-start')}. Mortality in these patients is ${N('krt-aki-mortality')}, so the decision to start is also the time to revisit prognosis and goals of care with the patient or family.`,
       ],
     },
     {
@@ -104,10 +106,10 @@ export const crrtFoundationTasks: Partial<
       kind: 'guided',
       tool: 'modalities',
       instruction:
-        'Select each of the four modality views and follow the active paths. These are illustrations, not applied prescriptions.',
+        'Select each of the four modalities beside the circuit. Read what it does under the buttons, and follow the paths it lights up.',
       teaching: [
         'Dialysate flows on the fluid side of the membrane. Replacement fluid enters the blood path. Ultrafiltration moves water from blood across the membrane to the effluent path, which carries everything leaving the fluid side of the filter to collection.',
-        'The four names describe which transport paths are used. Combining mechanisms does not establish a better modality; the treatment goal and clinical context still determine the choice. Quantitative settings come later.',
+        'Each name tells you which paths the circuit uses. Using both mechanisms does not make CVVHDF a better modality: trials have not shown that one continuous modality gives better outcomes than another. The treatment goal and the patient’s condition decide which modality to use. Flow rates and dose come in lessons 3 and 4.',
       ],
     },
     {
@@ -190,8 +192,7 @@ export const crrtFoundationTasks: Partial<
       exampleId: 'fluid-topology',
       kind: 'guided',
       tool: 'fluid-walk',
-      instruction:
-        'Select each fluid path and identify where it enters or leaves. The combined view illustrates topology, not a prescription.',
+      instruction: 'Select each fluid path and identify where it enters or leaves.',
       teaching: [
         'Dialysate stays on the fluid side of the membrane as a bulk flow, while solutes exchange across it. Pre- and post-filter replacement enter blood at different sites. Pre-blood-pump (PBP) fluid enters before the blood pump. Effluent leaves the fluid compartment for collection.',
         'PBP describes a location; it does not establish which solution should run there. Citrate solution selection and dosing remain protocol-dependent.',
@@ -309,10 +310,10 @@ export const crrtFoundationTasks: Partial<
       kind: 'guided',
       tool: 'modalities',
       instruction:
-        'Select all four views. Compare active dialysate and replacement paths while the blood topology stays fixed.',
+        'Select all four modalities. The blood path stays the same; compare which dialysate and replacement paths each one uses.',
       teaching: [
         'SCUF emphasizes net ultrafiltration; CVVH uses replacement-supported hemofiltration; CVVHD uses dialysate-supported diffusion; CVVHDF combines the two solute-transport approaches.',
-        'These views constrain incompatible paths. Changing a picture does not apply a machine prescription. The supported device workflow remains separately scoped.',
+        'The blood path is the same in all four. What changes is which fluid runs: SCUF uses neither dialysate nor replacement fluid, CVVH uses replacement fluid, CVVHD uses dialysate, and CVVHDF uses both.',
       ],
     },
     {
@@ -373,7 +374,7 @@ export const crrtFoundationTasks: Partial<
           'convection',
           'More water crosses the membrane, carrying solute by convection; replacement offsets part of that water.',
           true,
-          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it under ${N('filtration-fraction-ceiling')}.`,
+          `Filtration goes from 1,100 to 2,100 mL/h, and solute goes with the water. Replacement puts back all but the 100 mL/h of net removal, so the patient’s fluid loss is unchanged. With post-filter replacement all of that water comes out of the blood inside the filter: check the filtration fraction and keep it at or below ${N('filtration-fraction-ceiling-range')}.`,
         ),
         option(
           'replacement-dialysate',
@@ -403,6 +404,8 @@ export const crrtFoundationTasks: Partial<
         'Synthetic example: 80 kg, CVVHD, dialysate 1,900 mL/h and net CRRT removal 100 mL/h. Net CRRT removal is the net ultrafiltration the machine takes from the patient; PrisMax sets it as patient fluid removal (PFR). Replacement, PBP, syringe and makeup flows are zero. Total effluent is 2,000 mL/h. These are illustration values, not a treatment target.',
         'Running dose proxy: 2,000 ÷ 80 = 25 mL/kg/h. With three hours of assumed downtime, 21 of 24 hours run: 2,000 × 21 ÷ 24 ÷ 80 = 21.875 mL/kg/h.',
         'Both values are projected from entered assumptions. Effluent-based intensity is a proxy, not measured solute clearance. Only recorded delivery from a run over the same interval can support a delivered-dose claim.',
+        `Why ${N('dose-delivered')}: in the ATN and RENAL trials, ${N('dose-trial-high')} gave no benefit over it and brought more hypophosphatemia and hypotension. CRRT quality programs audit the gap between prescription and delivery; the proposed benchmarks are a delivered dose ${N('kpi-delivered-dose')} of the prescribed dose and downtime ${N('kpi-downtime')}.`,
+        `Two situations change the dose. In rhabdomyolysis and tumor lysis syndrome, potassium keeps pouring out of cells and ${N('dose-high-lysis')} may be needed, sometimes after intermittent hemodialysis has corrected a life-threatening potassium; step back toward the standard dose once the process is controlled, or the circuit keeps stripping phosphate, micronutrients and drugs. Lactic acidosis from shock is probably not one of them, though this is debated: lactate crosses the filter freely, but even a very high CRRT dose is a small fraction of the body’s own lactate clearance of ${N('lactate-endogenous-clearance')}. CRRT barely moves the lactate, so read a lactate on CRRT as you would off it.`,
       ],
     },
     {
@@ -415,7 +418,7 @@ export const crrtFoundationTasks: Partial<
         'Use the three-stage builder. Increase only downtime from 3 to 6 hours, compare the result, then explain what changed and what stayed fixed.',
       teaching: [
         'The builder below is bound to the same 80 kg example. It does not send settings to a device. Blood flow is in mL/min; dialysate and removal are in mL/h. The time window and weight remain unchanged.',
-        'Advanced filtration fraction and makeup attribution retain their existing source gates. They are not prerequisites for this valid basic downtime calculation.',
+        'Filtration fraction is worked out from your entries, under Advanced calculations and limits; quantities that depend on a makeup flow are not stated. Neither is needed for this downtime calculation.',
       ],
     },
     {
@@ -451,7 +454,7 @@ export const crrtFoundationTasks: Partial<
           '12.5',
           '12.5 mL/kg/h; half of the effluent was produced.',
           true,
-          `2,000 × 12 ÷ 24 ÷ 80 = 12.5 mL/kg/h, about half the delivered target of ${N('dose-delivered')}. Downtime is the usual reason delivery falls short, which is why you prescribe ${N('dose-prescribed')}. Twelve hours down is far more than that margin covers, so find out why the circuit keeps stopping.`,
+          `2,000 × 12 ÷ 24 ÷ 80 = 12.5 mL/kg/h, about half the delivered target of ${N('dose-delivered')}. Downtime is the usual reason delivery falls short, which is why ${N('dose-prescribed')} is commonly prescribed. Twelve hours down is far more than that margin covers, so find out why the circuit keeps stopping.`,
         ),
         option(
           '50',

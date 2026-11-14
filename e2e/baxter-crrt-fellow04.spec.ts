@@ -57,7 +57,7 @@ async function openGoalsCheck(page: Page) {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
-  await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+  await page.getByRole('button', { name: 'Skip this task' }).click()
   await expect(
     page.getByRole('heading', { name: 'Apply: identify goals and constraints' }),
   ).toBeVisible()
@@ -65,7 +65,7 @@ async function openGoalsCheck(page: Page) {
 async function openPressureLab(page: Page) {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-circuit-pressures')
   for (let step = 0; step < 3; step++)
-    await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+    await page.getByRole('button', { name: 'Skip this task' }).click()
   await expect(page.getByRole('button', { name: 'Commit prediction' })).toBeVisible()
 }
 async function developCrrt13Alert(page: Page) {
@@ -111,6 +111,9 @@ test('hub: orientation, glossary by keyboard, and a visited lesson that is not c
   const sequence = page.locator('[data-crrt-learn-sequence]')
   await expect(sequence.locator('[data-visited="true"]')).toHaveCount(1)
   await expect(sequence.locator('[data-visited="true"]')).toContainText('Visited')
+  // One lesson list on the hub (tester report, 2026-11-05): the visit shows once, not again on
+  // a topic-station chip.
+  await expect(page.locator('[data-visited-marker]')).toHaveCount(1)
   await assertNothingJudged(page)
 })
 

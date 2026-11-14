@@ -16,6 +16,13 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import { CapturedResult } from '../components/stage/RecordedBreathComparison'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
+import {
+  chooseStep,
+  openConsoleScreen,
+  pressClock,
+  pressPrimary,
+  setConsoleControl,
+} from '../test-support/stageHost'
 import { cancelTaskHeadingReveal } from '../components/stage/revealTaskHeading'
 import { describeModeledEffort, modeledEffortFacts } from '../content/effortDescription'
 import { ventilationExperimentStatus } from '../content/experimentStatus'
@@ -56,6 +63,17 @@ import {
   type VentilatorDeviceId,
   type WaveformSample,
 } from '../engine/types'
+
+/* The Learn stage, driven as a learner drives it: the task list, the console, the clock bar. */
+const stageMarker = () =>
+  document.querySelector('[data-experiment-stage]')?.getAttribute('data-experiment-stage')
+const modelTime = () => document.querySelector('[data-clock-bar] [data-model-time]')?.textContent
+const triggerTile = () => {
+  openConsoleScreen('controls')
+  return Number(
+    document.getElementById('mv-control-triggerThreshold')!.querySelector('strong')!.textContent,
+  )
+}
 
 const mockPush = jest.fn()
 jest.mock('@/i18n/navigation', () => ({
@@ -679,15 +697,10 @@ describe('5 · the requested change cannot be made first and then retained as th
     const lesson = ventilationStageLesson(SECTION_8)
     expect(lesson.steps[1].interaction.kind).toBe('prediction')
     expect(lesson.steps[2].interaction.kind).toBe('simulator-task')
-    const chooseStep = (index: number) =>
-      fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-        target: { value: index },
-      })
-    const control = () => document.getElementById('mv-quick-triggerThreshold') as HTMLInputElement
     chooseStep(1)
-    expect(Number(control().value)).toBe(4)
-    fireEvent.change(control(), { target: { value: '1.5' } })
-    expect(Number(control().value)).toBe(1.5)
+    expect(triggerTile()).toBe(4)
+    setConsoleControl('triggerThreshold', 1.5)
+    expect(triggerTile()).toBe(1.5)
     act(() => jest.advanceTimersByTime(3000))
     // Answer the optional prediction with the changed patient on screen.
     const question = lesson.steps[1].interaction
@@ -695,12 +708,10 @@ describe('5 · the requested change cannot be made first and then retained as th
     fireEvent.click(screen.getByRole('radio', { name: question.item.choices[0].label }))
     fireEvent.click(screen.getByRole('button', { name: 'Compare my choice' }))
     chooseStep(2)
-    const panel = document.querySelector<HTMLElement>('[data-experiment-panel]')!
     // A fresh patient at its baseline: the change is still to do and no model time has passed.
-    expect(panel.getAttribute('data-experiment-stage')).toBe('awaiting-action')
-    expect(panel.querySelector('[data-goal-state]')!.getAttribute('data-goal-state')).toBe('to-do')
-    expect(panel.querySelector('[data-model-time]')!.textContent).toMatch(/Model time 0\.0 s/)
-    expect(Number(control().value)).toBe(4)
+    expect(stageMarker()).toBe('awaiting-action')
+    expect(modelTime()).toBe('0.0 s')
+    expect(triggerTile()).toBe(4)
   })
 })
 
@@ -768,16 +779,9 @@ describe('6–7 · reset, restart and a device change each start from a fresh, v
   it('6 · rendered: Reset patient on the experiment step returns to a baseline still to change', () => {
     render(<VentilationStageHost unitId={SECTION_8} />)
     act(() => jest.advanceTimersByTime(10))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: 2 },
-    })
-    const panel = () => document.querySelector<HTMLElement>('[data-experiment-panel]')!
-    const control = () => document.getElementById('mv-quick-triggerThreshold') as HTMLInputElement
-    fireEvent.change(control(), { target: { value: '1.5' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
-    act(() => jest.advanceTimersByTime(25_000))
-    expect(panel().getAttribute('data-experiment-stage')).toBe('ready')
-    fireEvent.click(document.querySelector<HTMLElement>('[data-capture-result]')!)
+    chooseStep(2)
+    setConsoleControl('triggerThreshold', 1.5)
+    pressPrimary() // Run 20 s and capture
     expect(document.querySelector('[data-captured-result]')).not.toBeNull()
     expect(document.querySelector('[data-no-complete-breath]')).toBeNull()
     expect(document.querySelectorAll('[data-captured-result] [data-captured-breath]')).toHaveLength(
@@ -785,9 +789,9 @@ describe('6–7 · reset, restart and a device change each start from a fresh, v
     )
     fireEvent.click(document.querySelector<HTMLElement>('[data-reset-patient]')!)
     expect(document.querySelector('[data-captured-result]')).toBeNull()
-    expect(panel().getAttribute('data-experiment-stage')).toBe('awaiting-action')
-    expect(panel().querySelector('[data-model-time]')!.textContent).toMatch(/Model time 0\.0 s/)
-    expect(Number(control().value)).toBe(4)
+    expect(stageMarker()).toBe('awaiting-action')
+    expect(modelTime()).toBe('0.0 s')
+    expect(triggerTile()).toBe(4)
   })
 })
 
@@ -936,23 +940,16 @@ describe('9 · Section 8: the requested change is not reported as an additional 
     expect(requested(other).confounds).toEqual([])
   })
 
-  it('rendered: a clean run is captured automatically when asked, and prints no such line', () => {
+  it('rendered: a clean live run is captured automatically, and prints no such line', () => {
     render(<VentilationStageHost unitId={SECTION_8} />)
     act(() => jest.advanceTimersByTime(10))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: 2 },
-    })
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.change(document.getElementById('mv-quick-triggerThreshold')!, {
-      target: { value: '1.5' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    chooseStep(2)
+    setConsoleControl('triggerThreshold', 1.5)
+    pressClock('run')
     act(() => jest.advanceTimersByTime(25_000))
     // It was held here, with "this comparison no longer isolates one change".
     expect(document.querySelector('[data-auto-capture-held]')).toBeNull()
-    expect(
-      document.querySelector('[data-experiment-panel]')!.getAttribute('data-experiment-stage'),
-    ).toBe('captured')
+    expect(stageMarker()).toBe('captured')
     const result = document.querySelector('[data-captured-result]')!
     expect(result.textContent).not.toMatch(/Additional input changed/)
     expect(result.querySelectorAll('[data-captured-breath]')).toHaveLength(2)
@@ -1005,22 +1002,23 @@ describe('10 · R1: a background suspension still fabricates no inspection and n
     expect(hidden.readySince).toBe(midInterval.readySince)
   })
 
-  it('rendered: hidden with automatic capture on, on the Section 1 experiment step — no capture', () => {
+  it('rendered: hidden on the Section 1 experiment step, though capture is automatic — no capture', () => {
     render(<VentilationStageHost unitId={SECTION_1} />)
     act(() => jest.advanceTimersByTime(10))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: 2 },
-    })
-    const panel = () => document.querySelector<HTMLElement>('[data-experiment-panel]')!
-    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    const lesson = ventilationStageLesson(SECTION_1)
+    chooseStep(
+      lesson.steps.findIndex(
+        (step) => step.interaction.kind === 'simulator-task' && step.interaction.round === 0,
+      ),
+    )
+    pressClock('run')
     act(() => jest.advanceTimersByTime(4600))
     visibility = 'hidden'
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
     act(() => jest.advanceTimersByTime(3000))
-    expect(panel().getAttribute('data-experiment-stage')).toBe('awaiting-action')
+    expect(stageMarker()).toBe('awaiting-action')
     expect(document.querySelector('[data-captured-result]')).toBeNull()
     expect(document.querySelector('[data-background-pause]')).not.toBeNull()
     visibility = 'visible'
@@ -1028,7 +1026,7 @@ describe('10 · R1: a background suspension still fabricates no inspection and n
       document.dispatchEvent(new Event('visibilitychange'))
     })
     act(() => jest.advanceTimersByTime(3000))
-    expect(panel().getAttribute('data-experiment-stage')).toBe('awaiting-action')
+    expect(stageMarker()).toBe('awaiting-action')
     expect(document.querySelector('[data-captured-result]')).toBeNull()
   })
 })

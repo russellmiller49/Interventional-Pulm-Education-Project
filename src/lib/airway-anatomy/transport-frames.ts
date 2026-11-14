@@ -17,10 +17,14 @@ import type { AirwayGraph, OrientationLandmark, ScopePoseSnapshot, Vec3 } from '
 export interface TransportFrames {
   at(edgeId: number, distanceMm: number): OpticalFrame
 }
-/** Built once per case/profile. Corrections are inherited through the tree, not reset at forks. */
+/**
+ * Built once per case/profile. Corrections are inherited through the tree, not reset at forks.
+ * `rootUp` sets screen-up where the root edge starts; anterior when omitted.
+ */
 export function buildTransportFrames(
   graph: AirwayGraph,
   landmarks: OrientationLandmark[] = [],
+  rootUp?: Vec3,
 ): TransportFrames {
   const nodes = new Map(graph.nodes.map((n) => [n.id, n]))
   const edges = new Map(graph.edges.map((e) => [e.id, e]))
@@ -37,7 +41,7 @@ export function buildTransportFrames(
       const behind = sampleEdgePose(edge, Math.max(0, d - 2)).point
       const ahead = sampleEdgePose(edge, Math.min(edge.lengthMm, d + 2)).point
       const forward = unit(minus(ahead, behind))
-      const frame = previous ? transport(previous, p, forward) : makeFrame(p, forward)
+      const frame = previous ? transport(previous, p, forward) : makeFrame(p, forward, rootUp)
       frames.push(frame)
       distances.push(d)
       previous = frame
@@ -50,7 +54,8 @@ export function buildTransportFrames(
       const children = (nodes.get(edge.endNodeId)?.childEdgeIds ?? [])
         .map((id) => edges.get(id)!)
         .filter(Boolean)
-      if (children.length > 1) {
+      // A landmark that names screen-up directly keeps the authored view direction.
+      if (children.length > 1 && !landmark.upLps) {
         const anchors = children.map(
           (child) => sampleEdgePose(child, Math.min(4, child.lengthMm * 0.5)).point,
         )
@@ -85,7 +90,7 @@ export function buildTransportFrames(
       const from = opposite
         ? sampleEdgePose(opposite, Math.min(7, opposite.lengthMm * 0.6)).point
         : reference.position
-      const offset = minus(target, from)
+      const offset = landmark.upLps ?? minus(target, from)
       const currentAngle = Math.atan2(scalar(offset, reference.up), scalar(offset, reference.right))
       const desired = landmark.screenDirection === 'up' ? Math.PI / 2 : Math.PI
       const correction =

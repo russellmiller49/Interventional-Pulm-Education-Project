@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react'
 
+import type { GuidedControlId } from '../../engine/types'
 import type { StagePhase } from './stageModel'
 
 /**
@@ -21,6 +22,8 @@ export interface StageTeachingScopeValue {
   readonly focusedPresentation?: boolean
   readonly teachingSections?: readonly string[]
   readonly baselineGroup?: string
+  /** Light a console or gas-panel control the teaching text names; null clears it. */
+  readonly onPointControl?: (controlId: GuidedControlId | null) => void
   /** Context and the existing Continue action, repeated beside reading in a single-pane view. */
   readonly foundationNavigation?: {
     readonly instruction: string

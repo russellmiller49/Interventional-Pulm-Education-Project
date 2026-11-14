@@ -293,6 +293,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
       'monitor-workflow-supplied',
       'arterial-pressure-five-step-2020',
     ],
+    estimatedMinutes: 24,
   },
   {
     sourceId: 'waveform-interpretation',
@@ -304,7 +305,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
-    estimatedMinutes: 10,
+    estimatedMinutes: 20,
   },
   {
     // The flow rebuild split the waveform section in two: naming the place from its shape is one
@@ -318,7 +319,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
-    estimatedMinutes: 10,
+    estimatedMinutes: 20,
   },
   {
     sourceId: 'catheter-advancement',
@@ -330,7 +331,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:waveform-components'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 15,
+    estimatedMinutes: 25,
   },
   {
     sourceId: 'pawp-capture',
@@ -342,7 +343,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 15,
+    estimatedMinutes: 25,
   },
   {
     sourceId: 'thermodilution-series',
@@ -354,7 +355,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:pawp-capture'],
     evidenceIds: hemodynamicsEvidence,
-    estimatedMinutes: 18,
+    estimatedMinutes: 28,
   },
   {
     sourceId: 'derived-hemodynamics',
@@ -366,7 +367,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:thermodilution-series'],
     evidenceIds: hemodynamicsEvidence,
-    estimatedMinutes: 15,
+    estimatedMinutes: 25,
   },
   {
     sourceId: 'pac-signal-validation',
@@ -662,20 +663,26 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
 /**
  * Two shared foundation lessons, then three device pairs. Within each pair the first lesson
  * isolates the mechanism the device manipulates and the second applies it at the bedside.
+ *
+ * The last figure in each row is the section's minutes. It must equal the section's `minutes` in
+ * `learningPathways.ts` (the catalog check fails otherwise). Both were re-estimated on 2026-11-10
+ * after the MCS text cut. Every section after the two foundations ends on a case run inside it,
+ * and its minutes include the case's ten (`minutes` on the case, `practicePairing` in the
+ * module's section specs).
  */
 const mcsLessonSeeds: readonly ActivitySeed[] = (
   [
-    ['mcs-foundations-signals', 'A pressure that looks fine', 'foundation', 1],
-    ['mcs-foundations-mechanisms', 'Three devices called support', 'foundation', 2],
-    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1],
-    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1],
-    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2],
-    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2],
-    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3],
-    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3],
-    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1],
+    ['mcs-foundations-signals', 'A pressure that looks fine', 'foundation', 1, 10],
+    ['mcs-foundations-mechanisms', 'Three devices called support', 'foundation', 2, 11],
+    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1, 21],
+    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1, 21],
+    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2, 21],
+    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2, 20],
+    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3, 20],
+    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3, 20],
+    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1, 27],
   ] as const
-).map(([sourceId, title, curriculumStage, stageOrder]) => ({
+).map(([sourceId, title, curriculumStage, stageOrder, estimatedMinutes]) => ({
   sourceId,
   title,
   difficulty: (curriculumStage === 'foundation'
@@ -685,7 +692,7 @@ const mcsLessonSeeds: readonly ActivitySeed[] = (
       : 'intermediate') as CriticalCareDifficulty,
   curriculumStage,
   stageOrder,
-  estimatedMinutes: curriculumStage === 'integration' ? 18 : 12,
+  estimatedMinutes,
   ...(curriculumStage === 'integration'
     ? {
         description:

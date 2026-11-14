@@ -8,9 +8,12 @@ import type { EbusControl, EbusObservation, EbusLinkedLesson } from '@/lib/ebus-
 import {
   LINKED_LANDMARKS,
   LINKED_TASK_VERSION,
+  linkedLateralPosition,
+  linkedOpticView,
   linkedTaskId,
   type LinkedVariant,
 } from '@/lib/ebus-linked-contract'
+import type { ReviewImage } from './chapter-reviews'
 export type Topic = 'Prepare' | 'Optimize' | 'Locate' | 'Plan' | 'Sample' | 'Complete'
 export interface Choice {
   id: string
@@ -25,6 +28,11 @@ export interface Question {
   choices: Choice[]
   explanation: string
   imageStation?: string
+  /**
+   * A picture a case check is read beside, where the case is not about one station's CT and
+   * ultrasound (2026-11-11): the needle lab's picture, for a case about the needle tip.
+   */
+  imageFigure?: ReviewImage
   imagePolicy?: 'none' | 'retained-acquisition'
   /**
    * A passage from this lesson's own teaching that bears on this check (EBUS-PRE-REVIEW-04,
@@ -39,10 +47,23 @@ export interface Question {
    */
   namesContactMode?: ContactMode
 }
-export type LabGoal = 'scan' | 'coupling' | 'depth' | 'gain' | 'doppler' | 'capture' | 'model'
+export type LabGoal =
+  | 'scan'
+  /** Advance or withdraw until the node sits in the middle of the image (2026-11-10). */
+  | 'centre'
+  /** Look along the airway, then flex up onto the wall until tissue echoes return (2026-11-10). */
+  | 'airway-view'
+  | 'coupling'
+  | 'depth'
+  | 'gain'
+  | 'doppler'
+  | 'capture'
+  | 'model'
 export interface Lab {
   kind: 'simulator' | 'knobology' | 'model'
   modelPackage?: ModelPackage
+  /** Movements within the node the needle lab asks for, from the teaching-numbers register. */
+  needleMovements?: number
   goal: LabGoal
   presetKey: string
   controls: EbusControl[]
@@ -96,13 +117,42 @@ export interface Lesson {
    * L25-5). `specimens` draws the running case's supplied specimens and `troubleshooting` the
    * lesson's own troubleshooting questions (L22-6, L24-2).
    */
-  diagram?: 'ultrasound' | 'stations' | 'needle' | 'specimens' | 'troubleshooting'
+  diagram?:
+    | 'ultrasound'
+    /**
+     * The course's nodal map (2026-11-10), opening on its station, N-category or access view.
+     * It replaced a drawing of the airway with five unlabelled ovals.
+     */
+    | 'station-map'
+    | 'station-map-n'
+    | 'station-map-access'
+    | 'needle'
+    | 'specimens'
+    | 'troubleshooting'
+    /** Lesson 16: the six sonographic features on real EBUS images, and reading them. */
+    | 'node-features'
+    | 'node-reading'
+    /** A patient recording read on its paused frames (2026-11-11): colour Doppler around a node. */
+    | 'clip-doppler'
+    /** The same, for a needle pass: the needle and the stylet at its tip. */
+    | 'clip-needle'
+    /** After the needle lab: the tip in the image beside the tip turned out of it. */
+    | 'needle-tip'
+    /** The capstone's last page: the examination the learner has just carried out, as a record. */
+    | 'staging-summary'
   /** Optional refreshers in separate courses, linked from the recall (L1-3). Never required. */
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]
   sources: string[]
   /** A real limit of this lesson's model that a learner could trip on. Most lessons have none. */
   boundary?: string
+  /**
+   * The content units a lesson is built from, in teaching order (consolidation of 2026-11-10).
+   * Five lessons hold a second unit that used to be a lesson of its own: each step of the lesson
+   * says which unit it draws on (`ActivitySpec.from`), and the unit keeps its own id, lab, checks
+   * and boundary. Absent on a lesson that is a single unit.
+   */
+  parts?: Lesson[]
 }
 export interface EbusCase {
   id: string
@@ -122,8 +172,7 @@ export interface EbusCase {
  * means the gain control has to be the last one moved; that is a real property of the lookup (the
  * clips vary one control at a time), not a stale flag, so it is explained rather than removed.
  *
- * This reports; it never decides. `labGoalMet` remains the only gate, and a test holds the two to
- * the same answer.
+ * This list is the gate: `labGoalMet` is true exactly when every item here is met.
  */
 export interface LabRequirement {
   id: string
@@ -182,18 +231,23 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
         source.settings.contactQuality === state.contactQuality,
       text: 'Wait for the ultrasound image to finish updating.',
     })
-    list.push({
-      id: 'linked-landmarks',
-      met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
-        linked?.identifiedStructures?.includes(id),
-      ),
-      text: 'Identify the structure the task bar asks for on the 3D model.',
-    })
+    // The advance-and-withdraw task asks for a position in the image, and the airway-view task
+    // for two white-light views in turn: neither asks for a landmark or a sweep.
+    const alongAirway = lab.linkedVariant === 'along-airway' || lab.linkedVariant === 'airway-view'
+    if (!alongAirway)
+      list.push({
+        id: 'linked-landmarks',
+        met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
+          linked?.identifiedStructures?.includes(id),
+        ),
+        text: 'Find and click the structure the task bar names on the ultrasound image.',
+      })
+    if (alongAirway) return [...list, ...goalRequirements(lab, state)]
     if (lab.linkedLesson === 'ct-map')
       list.push({
         id: 'linked-section',
         met: !!linked?.modelSectionViewed,
-        text: 'Open “Model section” in the 3D pane.',
+        text: 'Open “Model section” (the third tab above the 3D model).',
       })
     else if (lab.linkedLesson === 'acoustic-contact')
       list.push({
@@ -216,6 +270,11 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
       })
     }
   }
+  return [...list, ...goalRequirements(lab, state)]
+}
+/** What the lab's own goal adds to the list, after the loading and linked-evidence items. */
+function goalRequirements(lab: Lab, state: EbusObservation): LabRequirement[] {
+  const list: LabRequirement[] = []
   switch (lab.goal) {
     case 'model':
       list.push({
@@ -237,6 +296,37 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
         met: state.targetVisible && state.contactQuality >= 0.45,
         text: 'Finish with the node in the ultrasound image.',
       })
+      break
+    case 'centre':
+      list.push(
+        {
+          id: 'centre-moved',
+          met: state.usedControls.includes('advance'),
+          text: 'Advance or withdraw the scope with the Scope position slider.',
+        },
+        {
+          id: 'centre-position',
+          met:
+            state.targetVisible &&
+            state.contactQuality >= 0.45 &&
+            linkedLateralPosition(state.targetLateral) === 'centre',
+          text: 'Finish with the node in the middle of the ultrasound image.',
+        },
+      )
+      break
+    case 'airway-view':
+      list.push(
+        {
+          id: 'airway-seen',
+          met: !!state.linked?.airwayViewed,
+          text: 'Flex the tip down until the airway ahead sits in the middle of the white-light view.',
+        },
+        {
+          id: 'airway-wall',
+          met: linkedOpticView(state.opticalWallMm, state.contactQuality) === 'wall',
+          text: 'Finish with the tip flexed up onto the wall and tissue echoes in the image.',
+        },
+      )
       break
     case 'coupling':
       list.push(
@@ -302,81 +392,12 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
   }
   return list
 }
+/**
+ * The gate is the list: a lab is done when every listed requirement is met. The two used to be
+ * written out separately and had drifted (the CT-map lab listed "open the model section" while
+ * the gate also waited for a sweep it never mentioned), which left the button disabled with
+ * nothing on the list to do.
+ */
 export function labGoalMet(lab: Lab, state: EbusObservation): boolean {
-  if (!state.ready || !state.frameReady || state.actionCount < 1) return false
-  if (lab.kind === 'knobology') {
-    const source = state.recorded
-    if (
-      !source ||
-      source.taskId !== lab.goal ||
-      source.settings.depthMm !== state.depth ||
-      source.settings.gain !== state.gain ||
-      source.settings.contrast !== state.contrast ||
-      source.settings.doppler !== state.doppler ||
-      source.captured !== state.saved
-    )
-      return false
-  }
-  if (lab.linkedLesson) {
-    const linked = state.linked
-    const source = linked?.source
-    if (
-      !linked?.assetsReady ||
-      !linked.frameId ||
-      !source ||
-      source.taskVersion !== LINKED_TASK_VERSION ||
-      source.frameId !== linked.frameId ||
-      source.taskId !== linkedTaskId(lab.linkedLesson, lab.linkedVariant ?? 'guided') ||
-      source.modelRevision !== linked.modelRevision ||
-      source.settings.depthMm !== state.depth ||
-      source.settings.gainDb !== state.gain ||
-      source.scope.roll !== state.roll ||
-      source.scope.flexion !== state.flexion ||
-      source.settings.contactQuality !== state.contactQuality
-    )
-      return false
-    if (
-      !LINKED_LANDMARKS[lab.linkedLesson].every((id) => linked.identifiedStructures?.includes(id))
-    )
-      return false
-    if (lab.linkedLesson === 'ct-map' && !linked.modelSectionViewed) return false
-    if (lab.linkedLesson === 'acoustic-contact') {
-      if (!linked.baselineFrameId || linked.baselineFrameId === linked.frameId) return false
-    } else {
-      const approaches =
-        lab.linkedLesson === 'station-seven' && lab.linkedVariant !== 'changed-window'
-          ? (['rms', 'lms'] as const)
-          : [linked.approach]
-      if (!approaches.every((a) => linked.sweeps?.[a]?.phase === 'complete')) return false
-    }
-  }
-  switch (lab.goal) {
-    case 'model':
-      return (
-        !!lab.modelPackage &&
-        state.model?.package === lab.modelPackage &&
-        state.model.revision === MODEL_REVISION &&
-        !!state.model.frameId &&
-        state.model.complete &&
-        !state.model.annotations &&
-        MODEL_STEPS[lab.modelPackage].every((step) => state.model!.steps.includes(step))
-      )
-    case 'scan':
-      return state.targetVisible && state.contactQuality >= 0.45
-    case 'coupling':
-      return state.contactQuality >= 0.8 && state.lastAction === 'flexion'
-    case 'depth':
-      return state.depth >= 30 && state.depth <= 45 && state.lastAction === 'depth'
-    case 'gain':
-      return (
-        state.gain >= 35 &&
-        state.gain <= 65 &&
-        state.lastAction === 'gain' &&
-        state.usedControls.includes('contrast')
-      )
-    case 'doppler':
-      return state.doppler
-    case 'capture':
-      return state.frozen && state.measured && state.saved
-  }
+  return labGoalRequirements(lab, state).every((requirement) => requirement.met)
 }

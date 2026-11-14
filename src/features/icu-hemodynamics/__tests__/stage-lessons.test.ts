@@ -1,3 +1,4 @@
+import { hemodynamicCaseById } from '../content/cases'
 import { pacAdvancementScenario } from '../content/pacAdvancementReasoning'
 import { hemodynamicsSectionIds, hemodynamicsSectionSpec } from '../content/sectionSpecs'
 import { hemodynamicsStageItems } from '../content/stageItems'
@@ -12,11 +13,12 @@ import {
  * The lesson contracts, on the registries alone.
  *
  * Nine lessons in the pathway's order, one prediction and one transfer each, the first step a
- * Recognize and the last a Transfer. HD-01 (self-paced) changed two contracts here: no step is gated
- * on the prediction any more, and the keyed-choice position and length statistics are retired —
- * a longest keyed option can carry a necessary clinical qualifier, and answer-position balancing is
- * not a release requirement. The adapter validates the rest at import; this suite is where a failure
- * is read.
+ * Recognize and the last a Transfer — or, in the seven sections paired to a case, the case itself,
+ * after the transfer, as the section's last task. HD-01 (self-paced) changed two contracts here:
+ * no step is gated on the prediction any more, and the keyed-choice position and length statistics
+ * are retired — a longest keyed option can carry a necessary clinical qualifier, and answer-position
+ * balancing is not a release requirement. The adapter validates the rest at import; this suite is
+ * where a failure is read.
  */
 describe('the nine lessons', () => {
   it('validate, in the pathway order', () => {
@@ -29,7 +31,12 @@ describe('the nine lessons', () => {
   it.each(hemodynamicsSectionIds)('%s has one shape', (sectionId) => {
     const lesson = hemodynamicsStageLesson(sectionId)
     expect(lesson.steps[0].phase).toBe('recognize')
+    // Ends with the transfer, or with a case step after the transfer step.
     expect(lesson.steps.at(-1)?.phase).toBe('transfer')
+    if (lesson.caseStepIndex >= 0) {
+      expect(lesson.caseStepIndex).toBe(lesson.steps.length - 1)
+      expect(lesson.caseStepIndex).toBeGreaterThan(lesson.transferStepIndex)
+    }
     expect(lesson.predictionStepIndex).toBeGreaterThan(0)
     expect(lesson.transferStepIndex).toBeGreaterThan(lesson.predictionStepIndex)
     const ids = new Set(lesson.steps.map((step) => step.id))
@@ -60,6 +67,47 @@ describe('the nine lessons', () => {
           )
         }
       }
+    }
+  })
+
+  it('ends each paired section on its case, and leaves the orientation and the capstone without one', () => {
+    const endings = Object.fromEntries(
+      hemodynamicsStageLessons().map((lesson) => {
+        const last = lesson.steps.at(-1)!
+        return [lesson.sectionId, last.interaction.kind === 'case' ? last.interaction.caseId : null]
+      }),
+    )
+    expect(endings).toEqual({
+      'why-measure': null,
+      'pressure-system': 'HD-08',
+      'waveform-interpretation': 'HD-04',
+      'waveform-components': 'HD-07',
+      'catheter-advancement': 'HD-03',
+      'pawp-capture': 'HD-06',
+      'thermodilution-series': 'HD-01',
+      'derived-hemodynamics': 'HD-05',
+      'pac-signal-validation': null,
+    })
+    for (const lesson of hemodynamicsStageLessons()) {
+      if (lesson.caseStepIndex < 0) continue
+      const step = lesson.steps[lesson.caseStepIndex]
+      if (step.interaction.kind !== 'case') throw new Error('not a case step')
+      const definition = hemodynamicCaseById.get(step.interaction.caseId)!
+      // Named by the presentation, never the diagnosis.
+      expect(step.title).toBe(`Apply it: ${definition.title}`)
+      expect(step.title).not.toContain(definition.shortTitle)
+      expect(step.actionLabel).toBe('Start the case')
+      expect(step.phase).toBe('transfer')
+      expect(step.surface).toBe('none')
+      expect(step.anatomy).toBe('none')
+      expect(step.gate).toBe('open')
+      expect(step.lookIn).toEqual({
+        pane: 'simulator',
+        landmark: 'the case brief and its checkpoints',
+      })
+      // Appending renumbers nothing: the case is the last id, and the step before it now leads on.
+      expect(step.id).toBe(`${lesson.sectionId}-${lesson.steps.length}-transfer`)
+      expect(lesson.steps[lesson.caseStepIndex - 1].actionLabel).not.toMatch(/Finish the section/)
     }
   })
 

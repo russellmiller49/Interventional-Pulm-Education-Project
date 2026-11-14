@@ -376,7 +376,9 @@ describe('ScopeFallback', () => {
     const bench = createScopeState(benchView, null)
     render(<ScopeFallback {...paneProps(bench, benchView, { map: null })} />)
     expect(q('[data-scope-place="bench"]')).not.toBeNull()
-    expect(q('[data-airway-map] [role="status"]')).not.toBeNull()
+    // Off the tree there is no airway to place on the map, so the pane leaves it out, as the 3D
+    // pane does, and the controls stay under the view.
+    expect(q('[data-airway-map]')).toBeNull()
     expect(q('[data-inspection-ledger]')).toBeNull()
     expect(q('[data-spine-strip] [aria-current]')).toBeNull()
   })

@@ -160,9 +160,13 @@ const controlWords: Readonly<Record<string, readonly [string, string]>> = {
   inspiratoryTimeSeconds: ['inspiratory time', 's'],
   oxygenPercent: ['oxygen', '%'],
   peepCmH2O: ['PEEP', 'cmH₂O'],
+  highPressureLimitCmH2O: ['high-pressure alarm limit', 'cmH₂O'],
 }
 
-function setupPhrases(setup: readonly VentilationAction[] | undefined): readonly string[] {
+function setupPhrases(
+  setup: readonly VentilationAction[] | undefined,
+  mechanicsWithheld: boolean,
+): readonly string[] {
   const phrases: string[] = []
   for (const action of setup ?? []) {
     if (action.type === 'SELECT_MODE') {
@@ -175,7 +179,7 @@ function setupPhrases(setup: readonly VentilationAction[] | undefined): readonly
           ? `${words[0]} ${action.value}${separator}${words[1]}`
           : `${action.control} ${action.value}`,
       )
-    } else if (action.type === 'SET_TEACHING_MECHANICS') {
+    } else if (action.type === 'SET_TEACHING_MECHANICS' && !mechanicsWithheld) {
       const { complianceScale = 1, resistanceScale = 1 } = action.overrides
       if (complianceScale !== 1) phrases.push(`simulated compliance ×${complianceScale}`)
       if (resistanceScale !== 1) phrases.push(`simulated airway resistance ×${resistanceScale}`)
@@ -196,22 +200,32 @@ function joinList(items: readonly string[]): string {
  * one from Part 1, and nothing said what had been set up. The patient is the round's `caseId`; the
  * starting changes are its `setup` actions; neither is authored a second time here. The last
  * sentence is what moving between parts has always done — it is stated, not changed.
+ *
+ * A part whose changed mechanics are the thing to find (`mechanicsWithheld`, Section 14) does not
+ * name them, and so does not claim "that patient's own settings" either. Its Part 2 is a second
+ * patient on the teaching model, as the round's own introduction says, not "the same" one.
  */
 export function ventilationPartSetupLine(unitId: string, roundIndex: 0 | 1): string {
   const experiment = ventilationExperimentByUnit.get(unitId)
   if (!experiment) throw new Error(`Unknown ventilation section ${unitId}`)
   const round: LabRound = experiment.rounds[roundIndex]
   const other: LabRound = experiment.rounds[roundIndex === 0 ? 1 : 0]
-  const changes = setupPhrases(round.setup)
+  const withheld = round.mechanicsWithheld === true
+  const changes = setupPhrases(round.setup, withheld)
   const starting =
     changes.length > 0
       ? ` It starts with ${joinList(changes)}.`
-      : ' It starts from that patient’s own settings.'
+      : withheld
+        ? ''
+        : ' It starts from that patient’s own settings.'
   if (roundIndex === 0) return `Part 1 uses ${patientPhrase(round.caseId)}.${starting}`
   const same = round.caseId === other.caseId
-  const who = same
-    ? `the same simulated patient as Part 1 (${patientPhrase(round.caseId)})`
-    : `a different simulated patient from Part 1: ${patientPhrase(round.caseId)}`
+  const who =
+    same && withheld
+      ? `${patientPhrase(round.caseId)} again, as a second patient whose difference from Part 1 is not given`
+      : same
+        ? `the same simulated patient as Part 1 (${patientPhrase(round.caseId)})`
+        : `a different simulated patient from Part 1: ${patientPhrase(round.caseId)}`
   return `Part 2 uses ${who}.${starting} It opens on a fresh, paused patient; the run and the captured breaths from Part 1 are not carried over.`
 }
 
@@ -225,13 +239,12 @@ export function ventilationRoundRelationLine(round: LabRound): string | null {
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Time: an estimate, and what it does not include
+ * Time: an estimate
  * ---------------------------------------------------------------------------------------------- */
 
 /**
- * The simulated seconds a section's two optional experiments ask the learner to watch, from the
- * rounds' own intervals. This is model time at 1×: a faster clock shortens the wait, and reading,
- * choosing and holds are not counted. It is not a measured learner duration.
+ * The simulated seconds a section's two experiments ask the learner to watch, from the rounds' own
+ * intervals. This is model time at 1×: a faster clock or Run and capture shortens the wait.
  */
 export function ventilationExperimentSeconds(unitId: string): number {
   const experiment = ventilationExperimentByUnit.get(unitId)
@@ -239,13 +252,9 @@ export function ventilationExperimentSeconds(unitId: string): number {
   return experiment.rounds.reduce((total, round) => total + round.seconds, 0)
 }
 
+/** "About 5 minutes" — the section's estimate, without the caveats it used to carry (October 2026). */
 export function ventilationSectionTimeLine(unitId: string): string {
   const unit = ventilationUnitById.get(unitId)
   if (!unit) throw new Error(`Unknown ventilation section ${unitId}`)
-  const seconds = ventilationExperimentSeconds(unitId)
-  const experiments =
-    seconds > 0
-      ? ` The optional experiments add about ${seconds} seconds of simulated time at 1×, less on a faster clock.`
-      : ' The optional parts here have no timed run.'
-  return `About ${unit.minutes} minutes to read.${experiments}`
+  return `About ${unit.minutes} minutes`
 }

@@ -131,12 +131,11 @@ export function DtsAbsenceFigure({
       </p>
       {state === 'failed' ? (
         <p className={styles.status} role="status">
-          The teaching figure could not be loaded here. The written situation still describes the
-          case.
+          The images could not be loaded here. The written situation describes the case.
         </p>
       ) : state === 'loading' ? (
         <p className={styles.status} role="status">
-          Preparing the figure from the teaching model…
+          Preparing the images…
         </p>
       ) : null}
       <div className={styles.panelGrid}>
@@ -144,7 +143,7 @@ export function DtsAbsenceFigure({
           <FigureCanvas
             pixels={images?.projection ?? null}
             size={SIZE}
-            label="A projection taken with the modeled catheter in place; the catheter is a bright line ending at the lesion"
+            label="A projection taken with the catheter in place; the catheter is a bright line ending at the lesion"
           />
           <figcaption>
             <strong>Projection</strong>, with the catheter in place
@@ -180,7 +179,7 @@ export function DtsAbsenceFigure({
       </p>
       {revealed ? (
         <dl className={styles.readouts} data-case-figure-readouts>
-          <dt>Where these planes come from, in this model</dt>
+          <dt>Where these planes come from</dt>
           <dd>
             They are drawn from the planning CT, which was acquired before the catheter was placed,
             so no plane at any depth contains it. That is why they match the planning CT panel.

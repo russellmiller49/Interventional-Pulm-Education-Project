@@ -34,6 +34,11 @@ import { centerlineTubeCollider, teachingCase } from '../test-support/teachingCa
  *
  * `scopeSceneModel` now owns the one mapping both renderers read, so the WebGL surface and the DOM
  * fallback cannot drift apart or hand a learner different strength of claim.
+ *
+ * Guided travel has since been made forgiving (educator feedback, 2026-10-13): a bent tip is carried
+ * through the fork at the end of the left main bronchus and straightened there. The field of mucosa
+ * under a `clear` signal is still reached the same way, with the bend on and the tip advanced along
+ * the left main bronchus, so the overshoot here stops short of that fork.
  */
 
 /** Words whose ordinary reading approves the picture on the screen. */
@@ -93,6 +98,9 @@ function forwardRunMm(state: ScopeState): number {
   return 120
 }
 
+/** Advances with the bend on that keep the tip inside the left main bronchus (about half of it). */
+const OVERSHOOT_ADVANCES = 8
+
 /** The re-review's overshoot, with the learner's own controls. */
 function overshoot() {
   const view = act(branchEntry).view
@@ -102,7 +110,7 @@ function overshoot() {
   pilot.goInto('LMSB')
   const openBefore = forwardRunMm(pilot.state)
   pilot.send({ type: 'set-deflection', deg: -30 })
-  for (let i = 0; i < 25; i += 1) pilot.advance()
+  for (let i = 0; i < OVERSHOOT_ADVANCES; i += 1) pilot.advance()
   return { view, pilot, state: pilot.state, openBefore }
 }
 
@@ -131,9 +139,12 @@ describe('the reproduced overshoot', () => {
     expect(state.location.fullLabel).toBe('Left main bronchus')
     expect(state.inputs.deflectionDeg).toBe(-30)
 
-    // The signal is still clear: neither recorded condition fired.
+    // The signal is still clear: neither recorded condition fired, and guided travel counted no
+    // contact for the bend.
     expect(state.signals.view).toBe('clear')
     expect(state.signals.lossOfViewCount).toBe(0)
+    expect(state.signals.contactCount).toBe(0)
+    expect(state.events).not.toContain('wall-contact')
 
     // And yet there is no lumen to see: no opening is in view, and the camera's own axis runs
     // into the wall in a fraction of the distance it had down the open bronchus.

@@ -59,6 +59,7 @@ import {
   ventilationStageLesson,
 } from '../content/stageLessons'
 import { VENTILATION_SELF_PACED_KEY } from '../engine/selfPacedProgress'
+import { chooseStep, pressPrimary } from '../test-support/stageHost'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -161,11 +162,8 @@ describe('one learner map', () => {
       const earlier = flat.slice(0, index).some((other) => other.caseId === entry.caseId)
       expect(entry.revisit).toBe(earlier)
     })
-    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual([
-      'MV-01',
-      'MV-05',
-      'MV-13',
-    ])
+    // Sections 10 and 14 have had their own case since 2026-11-12 (MV-06, MV-14).
+    expect(flat.filter((entry) => entry.revisit).map((entry) => entry.caseId)).toEqual(['MV-01'])
     // The stage of Sections 11–13 keeps its id and is not called "applications".
     expect(ventilationCompositionLine()).not.toMatch(/application/i)
     expect(ventilationCompositionLine()).toMatch(/3 integration sections · 1 capstone/)
@@ -289,7 +287,8 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     render(<VentilationStageHost unitId="mechanics-load-and-pressure" />)
     boot()
     const card = document.querySelector('[data-current-step]') as HTMLElement
-    expect(card.textContent).toMatch(/Step 1 of 7 · Part 1 of 2/)
+    // Seven tasks of its own, and the case it ends on.
+    expect(card.textContent).toMatch(/Task 1 of 8 · Part 1 of 2/)
     expect(document.querySelector('[data-stage-frame]')!.textContent).not.toMatch(/Application \d/)
     expect(document.querySelector('[data-part-setup]')?.textContent).toBe(
       ventilationPartSetupLine('mechanics-load-and-pressure', 0),
@@ -300,7 +299,9 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     for (const experiment of ventilationLearningExperiments) {
       const [first, second] = experiment.rounds
       const line = ventilationPartSetupLine(experiment.unitId, 1)
-      if (first.caseId === second.caseId)
+      if (first.caseId === second.caseId && second.mechanicsWithheld)
+        expect(line).toMatch(/again, as a second patient whose difference from Part 1 is not given/)
+      else if (first.caseId === second.caseId)
         expect(line).toMatch(/the same simulated patient as Part 1/)
       else expect(line).toMatch(/a different simulated patient from Part 1/)
       if (second.caseId !== 'MV-LAB') expect(line).toContain(`case ${second.caseId}`)
@@ -311,8 +312,30 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     expect(ventilationPartSetupLine('lung-protection', 1)).toContain(
       'a different simulated patient from Part 1: the simulated patient of case MV-01',
     )
-    expect(ventilationPartSetupLine('expiration-and-air-trapping', 0)).toContain(
-      'simulated airway resistance ×4 and rate 12/min',
+    // The limit is part of what this part starts from (60 since 2026-11-12), so it is said.
+    expect(ventilationPartSetupLine('expiration-and-air-trapping', 0)).toBe(
+      'Part 1 uses the passive teaching patient. It starts with simulated airway resistance ×4, rate 12/min and high-pressure alarm limit 60 cmH₂O.',
+    )
+  })
+
+  it('never names, above the first task, what the section keeps back until the prediction (MV-L5)', () => {
+    for (const experiment of ventilationLearningExperiments) {
+      const deny = ventilationSectionSpec(experiment.unitId).precommitDenyPatterns
+      for (const roundIndex of [0, 1] as const) {
+        const line = ventilationPartSetupLine(experiment.unitId, roundIndex)
+        expect([experiment.unitId, deny.filter((pattern) => pattern.test(line))]).toEqual([
+          experiment.unitId,
+          [],
+        ])
+      }
+    }
+    // Section 14: the cause of the high peak pressure is not given, so neither is the mechanics
+    // change behind it, and nothing claims the patient is unchanged.
+    expect(ventilationPartSetupLine('high-peak-pressure-integration', 0)).toBe(
+      'Part 1 uses the passive teaching patient.',
+    )
+    expect(ventilationPartSetupLine('high-peak-pressure-integration', 1)).toBe(
+      'Part 2 uses the passive teaching patient again, as a second patient whose difference from Part 1 is not given. It opens on a fresh, paused patient; the run and the captured breaths from Part 1 are not carried over.',
     )
   })
 
@@ -323,13 +346,11 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     const lastOfPartOne = lesson.steps.findIndex(
       (step) => step.interaction.kind === 'explain' && step.interaction.round === 0,
     )
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: String(lastOfPartOne) },
-    })
+    chooseStep(lastOfPartOne)
     expect(document.querySelector('[data-part-change-notice]')?.textContent).toMatch(
       /Continue opens Part 2 on a fresh, paused\s+patient/,
     )
-    fireEvent.click(screen.getAllByRole('button', { name: 'Continue' })[0])
+    pressPrimary()
     expect(document.querySelector('[data-current-step]')!.textContent).toMatch(/Part 2 of 2/)
     expect(document.querySelector('[data-part-change-notice]')).toBeNull()
   })
@@ -390,7 +411,8 @@ describe('the steps a learner is shown (N6)', () => {
       SECTION_IDS.map((id) => [id, ventilationStageLesson(id).steps.length]),
     )
     expect(counts).toEqual({
-      'breathing-with-support': 10,
+      // October 2026: Section 1 is eight tasks, with no hidden observe or interpret step.
+      'breathing-with-support': 8,
       'waveform-anatomy': 10,
       'controls-and-goals': 11,
       'mechanics-load-and-pressure': 10,
@@ -429,7 +451,7 @@ describe('the steps a learner is shown (N6)', () => {
     }
     expect(
       ventilationPresentedStepIndexes(ventilationStageLesson('breathing-with-support')),
-    ).toEqual([0, 1, 2, 5, 6, 7, 9])
+    ).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
     expect(ventilationPresentedStepIndexes(ventilationStageLesson('lung-protection'))).toEqual([
       0, 1, 2, 4, 5, 6, 7,
     ])
@@ -455,7 +477,8 @@ describe('the steps a learner is shown (N6)', () => {
           )
         }
       })
-      expect(resolvePresentedStepIndex(lesson, 39)).toBe(lesson.steps.length - 1)
+      // Past the end of a reorganised section: the first task, and the host says why.
+      expect(resolvePresentedStepIndex(lesson, 39)).toBe(0)
       expect(resolvePresentedStepIndex(lesson, -3)).toBe(0)
     }
   })
@@ -470,15 +493,13 @@ describe('the steps a learner is shown (N6)', () => {
     const before = Object.keys(localStorage).sort()
     render(<VentilationStageHost unitId="breathing-with-support" />)
     boot()
-    // Position 4 was "Interpret your recorded result"; it opens that part's explanation.
+    // Position 4 is the first part's explanation in the eight-task section.
     expect(document.querySelector('[data-current-step]')!.getAttribute('data-current-step')).toBe(
-      ventilationStageLesson('breathing-with-support').steps[5].id,
+      ventilationStageLesson('breathing-with-support').steps[4].id,
     )
-    expect(document.querySelector('[data-current-step]')!.textContent).toMatch(/Step 4 of 7/)
+    expect(document.querySelector('[data-current-step]')!.textContent).toMatch(/Task 5 of 8/)
     // Answer the optional question on its own step, then read what was stored.
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: '1' },
-    })
+    chooseStep(2)
     fireEvent.click(screen.getByLabelText('Expiration'))
     fireEvent.click(screen.getByRole('button', { name: 'Compare my choice' }))
     expect(document.querySelector('[data-choice-verdict]')).not.toBeNull()
@@ -487,16 +508,14 @@ describe('the steps a learner is shown (N6)', () => {
     expect(Object.keys(after).sort()).toEqual(['location', 'version', 'visited'])
     expect(after.version).toBe(1)
     expect(Object.keys(after.location).sort()).toEqual(['id', 'section', 'step'])
-    expect(after.location).toEqual({ section: 'learn', id: 'breathing-with-support', step: 1 })
+    expect(after.location).toEqual({ section: 'learn', id: 'breathing-with-support', step: 2 })
     expect(JSON.stringify(after)).not.toMatch(/Expiration|choice|answer/i)
     expect(Object.keys(localStorage).sort()).toEqual(before)
   })
 
-  it('states the reading time and derives the experiment time from the rounds', () => {
-    expect(ventilationSectionTimeLine('ventilation-and-co2')).toBe(
-      'About 7 minutes to read. The optional experiments add about 180 seconds of simulated time at 1×, less on a faster clock.',
-    )
-    expect(ventilationSectionTimeLine('breathing-with-support')).toMatch(/have no timed run/)
+  it('states the section time as an estimate, with no caveats attached (October 2026)', () => {
+    expect(ventilationSectionTimeLine('ventilation-and-co2')).toBe('About 7 minutes')
+    expect(ventilationSectionTimeLine('breathing-with-support')).toBe('About 5 minutes')
     render(<VentilationStageHost unitId="ventilation-and-co2" />)
     boot()
     expect(document.querySelector('[data-section-time]')?.textContent).toBe(
@@ -571,9 +590,7 @@ describe('optional questions (Q1, Q2, Q3, N5, S7-4)', () => {
     const lesson = ventilationStageLesson('waveform-anatomy')
     render(<VentilationStageHost unitId="waveform-anatomy" />)
     boot()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: String(lesson.predictionStepIndex) },
-    })
+    chooseStep(lesson.predictionStepIndex)
     const round = ventilationLearningExperiments.find((item) => item.unitId === 'waveform-anatomy')!
       .rounds[0]
     expect(round.correct).toBe(0)
@@ -603,9 +620,7 @@ describe('optional questions (Q1, Q2, Q3, N5, S7-4)', () => {
       }
     render(<VentilationStageHost unitId="waveform-anatomy" />)
     boot()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: '1' },
-    })
+    chooseStep(1)
     fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
     const round = ventilationLearningExperiments.find((item) => item.unitId === 'waveform-anatomy')!
       .rounds[0]
@@ -625,20 +640,23 @@ describe('optional questions (Q1, Q2, Q3, N5, S7-4)', () => {
     expect(kind('high-peak-pressure-integration', 0)).toBe('interpret')
     render(<VentilationStageHost unitId="controls-and-goals" />)
     boot()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
-      target: { value: '1' },
-    })
+    chooseStep(1)
     const question = document.querySelector('[data-reinforcement]')!
     expect(question.textContent).toContain('Identify the reading or control that answers this')
-    expect(question.textContent).not.toContain('Predict the observable response to one change')
+    expect(question.textContent).not.toContain('Predict the response to one change')
   })
 
   it('keeps step names, controls and the control strip open before any answer (N5, S7-4)', () => {
     render(<VentilationStageHost unitId="expiration-and-air-trapping" />)
     boot()
-    const outline = screen.getByRole('combobox', { name: 'Choose step' })
+    const outline = document.querySelector('[data-step-list]')!
     expect(outline).toHaveTextContent('Give expiration time back')
-    expect(document.body.textContent).toContain('This is a guided walk-through')
+    // Every task is open from the list; nothing is withheld until an answer is given.
+    expect(
+      [...outline.querySelectorAll<HTMLButtonElement>('button')].filter(
+        (button) => button.disabled,
+      ),
+    ).toHaveLength(1)
     const strip = document.querySelector('[data-teaching-block="knob-strip"]')!
     expect(strip.textContent).toContain('nothing here is held back')
     expect(strip.textContent).toContain('In Part 2 the cycle-off ends a supported breath sooner')
@@ -853,6 +871,9 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
       'ats-ards-2024',
       'amato-driving-pressure-2015',
       'aarc-assessment-2024',
+      'aoyama-driving-pressure-2018',
+      'bugedo-driving-pressure-2017',
+      'agrafiotis-driving-pressure-rcts-2026',
     ])
   })
 
@@ -874,6 +895,8 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
       // Native console labels and ranges, as the registered manuals print them.
       'content/deviceProfiles.ts',
       'components/MechanicalVentilatorConsole.tsx',
+      // The console's own control list, moved out of the component so the Learn guide reads it.
+      'content/consoleControls.ts',
       // A code comment quoting the casebook.
       'components/BedsidePanel.tsx',
     ])

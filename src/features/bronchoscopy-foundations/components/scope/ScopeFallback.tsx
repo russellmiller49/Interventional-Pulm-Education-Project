@@ -2,13 +2,13 @@
 
 import { useId, useRef, type ReactNode } from 'react'
 
-import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 
 import { airwayDisplayName } from '../../content/airwayTree'
 import {
   declarationAllowed,
   expectedLedgerAirways,
+  unnamedAirways,
   inspectionRecords,
   ledgerStatus,
 } from '../../engine/scope/inspectionLedger'
@@ -16,23 +16,31 @@ import {
   GOAL_CLAIM_TAG,
   GOAL_GROUP_HEADING,
   GOAL_MODEL_LIMIT,
+  PLAIN_GOALS_DONE_HEADING,
+  PLAIN_NEXT_GOAL_HEADING,
   scopeDoneLead,
   scopeNowLine,
 } from '../../engine/scope/goalPresentation'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
 import {
-  ACCESSORY_POSITION_WORDS,
-  ACCESSORY_STATE_WORDS,
+  ACCESSORY_CHECK_WORDS,
   describeScopePerformance,
   scopeReadouts,
 } from '../../engine/scope/scopeMetrics'
-import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
+import { AccessoryControls } from './AccessoryControls'
+import { dockKeyOrder } from './scopeKeyMap'
 import { LocationCaptionStrip } from './LocationCaptionStrip'
-import { opticalViewName, PATIENT_TICK_LEGEND, patientDirectionTicks } from './scopeSceneModel'
+import {
+  opticalViewName,
+  PATIENT_TICK_LEGEND,
+  patientDirectionTicks,
+  projectPinLabel,
+} from './scopeSceneModel'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
 import { TipCompass } from './TipCompass'
+import { NameSegment } from './NameSegment'
 import { TubeCrossSection } from './TubeCrossSection'
 import { BenchSchematic } from './BenchSchematic'
 import {
@@ -40,8 +48,6 @@ import {
   SCOPE_CONTROL_KEYS,
   SCOPE_DOM,
   scopeControlId,
-  type AccessoryPosition,
-  type AccessoryState,
   type AirwayInspectionRecord,
   type DeclarableStatus,
   type InspectionStatus,
@@ -52,6 +58,8 @@ import {
   type ScopePaneProps,
   type ScopeState,
   type ScopeInputMode,
+  type ScopeViewSpec,
+  type TreeAnswer,
 } from './types'
 
 /**
@@ -90,6 +98,9 @@ const DECLARATION_WORDS: Readonly<Record<DeclarableStatus, string>> = {
 
 const DECLARED_WITHOUT_VIEW = 'declared inspected without a view beyond its opening'
 
+/** What a naming record's table says for each row: it is a list of what is done and what is left. */
+const NAMING_STATUS_WORDS = { named: 'Named', open: 'To name' } as const
+
 /** Printed wherever the record shows (A07/A30). */
 export const LEDGER_CAVEAT =
   'Entering an airway is not inspecting it; only a declaration records an inspection.'
@@ -106,8 +117,27 @@ function recordWord(words: LedgerRecordWords, record: AirwayInspectionRecord): s
   return words.offer.find((entry) => entry.status === recorded)?.word ?? words.open
 }
 
-const ACCESSORY_STATES = Object.keys(ACCESSORY_STATE_WORDS) as readonly AccessoryState[]
-const ACCESSORY_POSITIONS = Object.keys(ACCESSORY_POSITION_WORDS) as readonly AccessoryPosition[]
+/**
+ * Whether the pane shows where in the airway the tip is: the region strip and the airway map.
+ *
+ * A step that steers (rotation or deflection), names segments, or is answered on the map needs
+ * them. One that does not — the brush exchange, where the tool moves and the scope stays put —
+ * drops both, so its controls sit directly under the view (owner feedback, 2026-11-03).
+ */
+export function showsAirwayContext(
+  view: Pick<ScopeViewSpec, 'controls' | 'ledger'>,
+  treeAnswer?: TreeAnswer,
+): boolean {
+  return (
+    view.controls.includes('rotate') ||
+    view.controls.includes('deflect') ||
+    view.ledger?.naming === true ||
+    treeAnswer !== undefined
+  )
+}
+
+/** The line about the attempt in a rewritten section: only that the reference names were on. */
+const REFERENCE_NAMES_USED = 'You had the opening names shown for reference.'
 
 const UNLABELED_OPENING = 'an opening ahead'
 
@@ -117,13 +147,13 @@ interface FieldPin {
   readonly top: string
 }
 
-/** The openings in the round field, placed by the scene's own projection of the optical frame. */
+/** The openings in the round field, each named where the scene names it: inside its lumen. */
 function fieldPins(state: ScopeState): readonly FieldPin[] {
   if (!state.pose) return []
   const frame = scopeOpticalFrame(state.pose)
   return state.ostia.flatMap((pin) => {
     if (!pin.inView) return []
-    const projected = projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
+    const projected = projectPinLabel(pin, frame)
     if (!projected) return []
     return [
       {
@@ -196,9 +226,13 @@ export function ScopePaneFrame(
   const paneClaims = new Set(goals.map(({ claim }) => claim ?? 'history'))
   const paneGoalsClaim = paneClaims.size === 1 ? [...paneClaims][0] : 'mixed'
   const currentGoal = goals.find(({ met }) => !met)
-  const paneGoalsHeading = currentGoal
-    ? 'The goal this step is waiting for'
-    : GOAL_GROUP_HEADING[paneGoalsClaim]
+  const paneGoalsHeading = props.plain
+    ? currentGoal
+      ? PLAIN_NEXT_GOAL_HEADING
+      : PLAIN_GOALS_DONE_HEADING
+    : currentGoal
+      ? 'The goal this step is waiting for'
+      : GOAL_GROUP_HEADING[paneGoalsClaim]
   // The engine withholds names until the view is identified again (unfamiliar-clear); so does help.
   const withheld = state.script?.phase === 'unidentified'
   const referenceNames =
@@ -208,16 +242,43 @@ export function ScopePaneFrame(
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
   const interactiveField = alignOffered && pins.length > 0
 
-  const dockKeys = SCOPE_CONTROL_KEYS.filter(
-    (key) => key !== 'declare' && view.controls.includes(key),
-  )
   const declareOffered = view.controls.includes('declare')
+  const naming = view.ledger?.naming === true
+  // Where in the airway the tip is: the region strip and the map, on steps that steer (above).
+  const airwayContext = showsAirwayContext(view, props.treeAnswer)
+  // The tool's controls print the assistant's reply under themselves; the view does not repeat it.
+  const replyBesideControls = view.controls.includes('accessory')
+  // A naming record asks its question in a row of its own, under the movement controls.
+  const dockKeys: ScopeControlKey[] = [
+    ...dockKeyOrder(
+      SCOPE_CONTROL_KEYS.filter((key) => view.controls.includes(key)),
+      view.benchSuction ? ['step'] : [],
+    ),
+    ...(declareOffered && naming ? (['declare'] as const) : []),
+  ]
   const recordWords = view.ledger?.record
   const readouts = scopeReadouts(view, state)
   const records = expectedLedgerAirways(view).length > 0 ? inspectionRecords(state.ledger) : []
   const lastMode = state.inputModes[state.inputModes.length - 1]
 
   const spotlight = (key: ScopeControlKey) => (spotlightKey === key ? 'true' : undefined)
+  /*
+   * The line about the attempt. A rewritten section says only what a learner could otherwise
+   * misread: that the playback is not their attempt, or that the opening names were on for
+   * reference. The input and assist record stays on the element's attributes (A18), not in words
+   * like "unaided" (owner feedback, 2026-11-03).
+   */
+  const performanceLine = view.physicalControlLabels
+    ? lastMode === 'scripted'
+      ? 'Demonstration · not your own attempt'
+      : props.plain
+        ? ''
+        : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
+    : props.plain
+      ? props.referenceLabels?.used
+        ? REFERENCE_NAMES_USED
+        : ''
+      : `${describeScopePerformance(state)}${props.referenceLabels?.used ? ' · opening names shown for reference' : ''}`
 
   const renderControl = (key: ScopeControlKey) => {
     const id = scopeControlId(key)
@@ -286,45 +347,15 @@ export function ScopePaneFrame(
             Suction
           </label>
         )
-      case 'accessory': {
-        const moveId = scopeControlId('accessory-move')
+      case 'accessory':
         return (
-          <>
-            <label htmlFor={id}>
-              Accessory
-              <select
-                id={id}
-                value={state.inputs.accessory}
-                onChange={(event) =>
-                  send({ type: 'accessory', state: event.target.value as AccessoryState })
-                }
-              >
-                {ACCESSORY_STATES.map((accessory) => (
-                  <option key={accessory} value={accessory}>
-                    {ACCESSORY_STATE_WORDS[accessory]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor={moveId}>
-              Accessory position
-              <select
-                id={moveId}
-                value={state.inputs.accessoryPosition}
-                onChange={(event) =>
-                  send({ type: 'accessory-move', to: event.target.value as AccessoryPosition })
-                }
-              >
-                {ACCESSORY_POSITIONS.map((position) => (
-                  <option key={position} value={position}>
-                    {ACCESSORY_POSITION_WORDS[position]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
+          <AccessoryControls
+            state={state}
+            send={send}
+            offerCheck={view.controls.includes('verifyAccessory')}
+            spotlightKey={spotlightKey}
+          />
         )
-      }
       case 'capture':
         return (
           <button id={id} type="button" onClick={() => send({ type: 'capture' })}>
@@ -372,7 +403,7 @@ export function ScopePaneFrame(
               checked={state.inputs.branchLabels}
               onChange={(event) => send({ type: 'branch-labels', on: event.target.checked })}
             />
-            In-view labels
+            Show the opening names
           </label>
         )
       case 'clearLens':
@@ -384,7 +415,7 @@ export function ScopePaneFrame(
       case 'verifyAccessory':
         return (
           <button id={id} type="button" onClick={() => send({ type: 'verify-accessory' })}>
-            Check the accessory against the image
+            {ACCESSORY_CHECK_WORDS}
           </button>
         )
       case 'step':
@@ -394,7 +425,7 @@ export function ScopePaneFrame(
           </button>
         )
       case 'declare':
-        return null
+        return <NameSegment view={view} state={state} disabled={!controlsEnabled} onName={send} />
     }
   }
 
@@ -409,9 +440,16 @@ export function ScopePaneFrame(
         aria-labelledby={goalNowId}
         data-scope-goal-now={currentGoal ? currentGoal.goal.id : 'all-recorded'}
       >
-        <p id={goalNowId} className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
-          {paneGoalsHeading}
-        </p>
+        <div className={styles.goalNowHead}>
+          <p id={goalNowId} className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
+            {paneGoalsHeading}
+          </p>
+          {props.allGoalsHref ? (
+            <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
+              All the goals for this step
+            </a>
+          ) : null}
+        </div>
         <ul className={styles.goals} aria-labelledby={goalNowId} data-scope-goals>
           {currentGoal ? (
             <li
@@ -419,31 +457,34 @@ export function ScopePaneFrame(
               data-goal-claim={currentGoal.claim ?? ''}
               data-goal-current={currentGoal.goal.id}
             >
-              {paneGoalsClaim === 'mixed' && currentGoal.claim ? (
+              {paneGoalsClaim === 'mixed' && currentGoal.claim && !props.plain ? (
                 <span className={styles.goalTag}>{GOAL_CLAIM_TAG[currentGoal.claim]}</span>
               ) : null}
               {currentGoal.goal.label}
             </li>
           ) : (
             <li data-met="true" data-goal-claim={paneGoalsClaim} data-goal-summary>
-              {scopeDoneLead(paneGoalsClaim)}
+              {scopeDoneLead(paneGoalsClaim, props.plain)}
             </li>
           )}
         </ul>
+        {props.blockedSentence ? (
+          <p className={styles.goalBlocked} role="status" data-goal-blocked>
+            {props.blockedSentence}
+          </p>
+        ) : null}
         {props.helpSentence ? (
           <p className={styles.goalHelp} role="status" data-goal-help>
             {props.helpSentence}
           </p>
         ) : null}
-        <p className={styles.goalsLimit} data-scope-goals-limit>
-          {scopeNowLine(state)}
-          {props.plain ? null : ` ${GOAL_MODEL_LIMIT}`}
-        </p>
-        {props.allGoalsHref ? (
-          <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
-            All the goals for this step
-          </a>
-        ) : null}
+        {/* One line says where the tip is: the region strip's caption, where the step shows it. */}
+        {props.plain && airwayContext && !view.physicalControlLabels ? null : (
+          <p className={styles.goalsLimit} data-scope-goals-limit>
+            {scopeNowLine(state)}
+            {props.plain ? null : ` ${GOAL_MODEL_LIMIT}`}
+          </p>
+        )}
       </section>
     ) : null
   return (
@@ -462,15 +503,10 @@ export function ScopePaneFrame(
         [SCOPE_DOM.profile]: view.profile,
       }}
     >
-      {!view.physicalControlLabels ? (
+      {!view.physicalControlLabels && airwayContext ? (
         <LocationCaptionStrip caption={props.caption} current={state.location.spineStop} />
       ) : null}
       {props.treeAnswer ? <TreeAnswerFieldset answer={props.treeAnswer} /> : null}
-      {!view.physicalControlLabels && !controlsEnabled && (lockedReason ?? pausedReason) ? (
-        <p className={styles.reason} role="status">
-          {lockedReason ?? pausedReason}
-        </p>
-      ) : null}
 
       {props.referenceLabels ? (
         <div className={styles.referenceLabels} data-reference-labels-control>
@@ -562,7 +598,7 @@ export function ScopePaneFrame(
                 {PLACE_WORDS[state.place]}
               </p>
             ) : null}
-            {state.message ? (
+            {state.message && !replyBesideControls ? (
               <p className={styles.message} role="status" data-scope-message>
                 {state.message}
               </p>
@@ -570,16 +606,12 @@ export function ScopePaneFrame(
           </div>
         ))}
 
-      {!props.hideMap ? (
-        <TreeMap
-          map={props.map}
-          lit={view.litAirways ?? []}
-          current={state.location.label}
-          tipLps={state.pose?.tipLps ?? null}
-          treeAnswer={props.treeAnswer}
-        />
+      {/* Why the controls are locked or paused, said beside them. */}
+      {!view.physicalControlLabels && !controlsEnabled && (lockedReason ?? pausedReason) ? (
+        <p className={styles.reason} role="status">
+          {lockedReason ?? pausedReason}
+        </p>
       ) : null}
-
       {props.dock ??
         (dockKeys.length > 0 ? (
           <fieldset
@@ -601,8 +633,20 @@ export function ScopePaneFrame(
           </fieldset>
         ) : null)}
 
+      {/* After the controls, so the view and its controls stay together (owner, 2026-11-03). */}
+      {!props.hideMap && airwayContext && state.place !== 'bench' ? (
+        <TreeMap
+          map={props.map}
+          lit={view.litAirways ?? []}
+          current={state.location.label}
+          tipLps={state.pose?.tipLps ?? null}
+          treeAnswer={props.treeAnswer}
+          unnamed={naming ? unnamedAirways(state.ledger) : undefined}
+        />
+      ) : null}
+
       {/* After the controls, so the bench and its controls stay together (SYSTEMIC-UX-01). */}
-      {state.place === 'bench' && view.physicalControlLabels ? (
+      {state.place === 'bench' && view.physicalControlLabels && !view.benchSuction ? (
         <TipCompass state={props.benchState ?? state} />
       ) : null}
       {goalCardFirst ? null : goalCard}
@@ -636,12 +680,17 @@ export function ScopePaneFrame(
           id={declareOffered ? scopeControlId('declare') : undefined}
           data-spotlight={spotlight('declare')}
         >
-          <table aria-label="The inspection record" {...{ [SCOPE_DOM.ledger]: '' }}>
+          <table
+            aria-label={naming ? 'The segments named so far' : 'The inspection record'}
+            {...{ [SCOPE_DOM.ledger]: '' }}
+          >
             <thead>
               <tr>
-                <th scope="col">Airway</th>
+                <th scope="col">{naming ? 'Segment' : 'Airway'}</th>
                 <th scope="col">Status</th>
-                {declareOffered ? <th scope="col">{recordWords ? 'Record' : 'Declare'}</th> : null}
+                {declareOffered && !naming ? (
+                  <th scope="col">{recordWords ? 'Record' : 'Declare'}</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -654,14 +703,18 @@ export function ScopePaneFrame(
                   >
                     <th scope="row">{airwayDisplayName(record.label)}</th>
                     <td>
-                      {recordWords
-                        ? recordWord(recordWords, record)
-                        : INSPECTION_STATUS_WORDS[status]}
-                      {record.inspected === 'declared-without-view'
+                      {naming
+                        ? record.identified
+                          ? NAMING_STATUS_WORDS.named
+                          : NAMING_STATUS_WORDS.open
+                        : recordWords
+                          ? recordWord(recordWords, record)
+                          : INSPECTION_STATUS_WORDS[status]}
+                      {!naming && record.inspected === 'declared-without-view'
                         ? ` · ${recordWords ? recordWords.withoutView : DECLARED_WITHOUT_VIEW}`
                         : ''}
                     </td>
-                    {declareOffered ? (
+                    {declareOffered && !naming ? (
                       <td>
                         <select
                           id={scopeControlId(`declare-${record.label}`)}
@@ -698,7 +751,7 @@ export function ScopePaneFrame(
               })}
             </tbody>
           </table>
-          {recordWords ? (
+          {naming ? null : recordWords ? (
             recordWords.note ? (
               <p className={styles.caveat}>{recordWords.note}</p>
             ) : null
@@ -710,18 +763,13 @@ export function ScopePaneFrame(
 
       <p
         className={styles.performance}
+        hidden={!performanceLine}
         {...{
           [SCOPE_DOM.inputMode]: lastMode ?? '',
           [SCOPE_DOM.assists]: state.assistsUsed.join(','),
         }}
       >
-        {view.physicalControlLabels
-          ? lastMode === 'scripted'
-            ? 'Demonstration · not your own attempt'
-            : props.plain
-              ? ''
-              : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
-          : `${describeScopePerformance(state)}${props.referenceLabels?.used ? ' · opening names shown for reference' : ''}`}
+        {performanceLine}
       </p>
 
       <p className={styles.boundary} {...{ [SCOPE_DOM.boundary]: '' }}>

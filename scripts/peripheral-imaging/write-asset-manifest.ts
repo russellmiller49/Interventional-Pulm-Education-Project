@@ -6,7 +6,7 @@ const hash = (path: string) => createHash('sha256').update(readFileSync(path)).d
 const root = 'public/peripheral-imaging/'
 const entries = [
   {
-    path: 'room-hero.png',
+    path: 'room-suite.png',
     sourceSha256: room.sourceSha256,
     source: room.source,
     provenance: 'room-hero.json',
@@ -29,6 +29,12 @@ const entries = [
     sourceSha256: anatomy.sourceSha256,
     source:
       'Derived CT atlas with its baked nodule and an added authored tool; parallel projections and high-pass filtering',
+  },
+  {
+    path: 'anatomy/dts-grid.png',
+    sourceSha256: anatomy.sourceSha256,
+    source:
+      'Derived CT atlas with its baked nodule and the same authored tool; parallel projections on a 5/6-degree grid for off-centre arcs, high-pass filtered',
   },
   {
     path: 'anatomy/fluoroview-carm.glb',

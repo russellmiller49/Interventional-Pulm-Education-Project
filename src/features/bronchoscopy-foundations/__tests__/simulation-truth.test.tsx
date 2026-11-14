@@ -130,7 +130,11 @@ describe('the protected exchange demonstration reaches the state it narrates (A1
 })
 
 describe('the scripted scene’s clock reaches an authored step; nothing else scripted does (A2, A3)', () => {
+  // The hold is no longer a course activity (educator feedback, 2026-10-13). The engine still
+  // carries the scripted hold, so its fixture view is run on the lesson's own carina step: the
+  // stage reducer's rule reads whether the step is authored and what the view's script is.
   const holdView = act(branchEntry).observe!.view!
+  const carinaView = act(branchEntry).view
   const larynxView = act(larynxAndEntry).view
   const plainView = act(viewLoss).view
 
@@ -147,8 +151,13 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
     return { lesson, step }
   }
 
-  function session(sectionId: 'larynx-and-entry' | 'view-loss', view: ScopeViewSpec) {
-    const { lesson, step } = stepWithView(sectionId, view)
+  /** A session on the authored step that shows `hostedOn`, with the scope run under `view`. */
+  function session(
+    sectionId: 'larynx-and-entry' | 'view-loss',
+    view: ScopeViewSpec,
+    hostedOn: ScopeViewSpec = view,
+  ) {
+    const { lesson, step } = stepWithView(sectionId, hostedOn)
     const reduce = bronchStageReducer(lesson)
     const scopeCase = teachingCase()
     let current = reduce(emptyBronchStageSession(), {
@@ -205,8 +214,9 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
     })
   })
 
-  it('finishes the authored hold once the learner has acknowledged and captured', () => {
-    const run = session('larynx-and-entry', holdView)
+  it('finishes the scripted hold once the learner has acknowledged and captured', () => {
+    const run = session('larynx-and-entry', holdView, carinaView)
+    expect(run.step.course).toBeDefined()
     run.send({ type: 'acknowledge' }, 'pointer')
     run.send({ type: 'capture' }, 'pointer')
     let state = run.state
@@ -219,7 +229,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('finishes the hold with the image taken before the acknowledgment too', () => {
-    const run = session('larynx-and-entry', holdView)
+    const run = session('larynx-and-entry', holdView, carinaView)
     run.send({ type: 'capture' }, 'pointer')
     let state = run.state
     for (let i = 0; i < 40 && !state.events.includes('hold-completed'); i += 1)
@@ -231,7 +241,8 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('refuses every other scripted command on an authored step', () => {
-    const run = session('larynx-and-entry', holdView)
+    const run = session('larynx-and-entry', holdView, carinaView)
+    expect(run.step.course).toBeDefined()
     const before = run.state
     for (const command of [
       { type: 'advance', mm: 3 },
@@ -267,7 +278,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('shows the hold from the clock its goal reads', () => {
-    const run = session('larynx-and-entry', holdView)
+    const run = session('larynx-and-entry', holdView, carinaView)
     expect(holdView.readouts).toContain('holdRemaining')
     expect(formatScopeMetric('holdRemaining', run.state)).toContain(`of ${HOLD_SECONDS}`)
     for (let i = 0; i < 4; i += 1) run.send({ type: 'tick', seconds: 1 }, 'scripted')
@@ -365,13 +376,16 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     const entry = labels(act(branchEntry).goals)
     // The model counts contacts; it does not know the tip is off the wall now.
     expect(entry).not.toMatch(/keep the tip off the wall/i)
-    expect(entry).toMatch(/no wall contact recorded/i)
+    // The carina task no longer asks for a clean passage at all (educator feedback, 2026-10-13):
+    // guided travel registers no contact from a bend, so its goals say nothing about the wall,
+    // a refused advance or the view.
+    expect(entry).not.toMatch(/wall contact|refused|lost view/i)
     expect(labels(act(viewLoss).goals)).not.toMatch(/along the visible lumen/i)
+    // The hold fixture keeps the wording a goal that does read the contact count has to use.
     expect(labels(act(branchEntry).observe!.goals)).toMatch(/no wall contact recorded/i)
     // `advanced-blind` records an advance made while the model's own view signal was lost. It is
-    // not a reading of the image, and the label may not imply one.
+    // not a reading of the image, and no label may imply one.
     expect(entry).not.toMatch(/without a clear view/i)
-    expect(entry).toMatch(/while the model recorded a lost view/i)
     const lens = viewLoss.moreActs!.lens
     if (lens.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
     expect(labels(lens.goals)).not.toMatch(/usable view/i)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
-import { EyeOff, Languages } from 'lucide-react'
+import { EyeOff, Info, Languages } from 'lucide-react'
 
 import { ModuleFrameV2 } from '@/features/learning-module/components/ModuleFrameV2'
 import { HandoffContent } from '@/i18n/handoff'
@@ -70,6 +70,13 @@ export function CardiohelpModuleFrame({
           navAriaLabel="ECMO Management module sections"
           theme="dark"
           activityMode={activityMode}
+          /*
+            A lesson, practice case or challenge takes the whole window: the site menu is hidden
+            while one is open (the rule is in `src/styles/globals.css`) and returns on the
+            module's own pages. The activity's bar stays on screen in its place; see
+            `EcmoActivityShell`.
+          */
+          hideSiteHeader
           headerExtra={
             headerExtra ? (
               <div className={styles.frameIdentity}>
@@ -81,14 +88,26 @@ export function CardiohelpModuleFrame({
             ) : undefined
           }
           safetyNotice={
-            <>
-              <strong>Teaching simulator.</strong>{' '}
-              <span>
+            /*
+              The module's one boundary statement, as a disclosure.
+
+              It was a full-width banner above the first thing a learner reads, and a tester
+              (2026-10-13) asked for it to be "minimized to a small button 'i' or something like
+              that". The statement is unchanged and stays on every page of the module; it opens
+              from its own name rather than standing in front of the content.
+            */
+            <details className={styles.boundaryDisclosure} data-ecmo-boundary>
+              <summary>
+                <strong>Teaching simulator</strong>
+                <Info aria-hidden="true" />
+                <span className="sr-only">About this simulator</span>
+              </summary>
+              <p>
                 Circuit and patient values are simulated; it is not a clinical device or a
                 patient-specific guide. Independent of Getinge: not manufactured, sponsored or
                 endorsed by them.
-              </span>
-            </>
+              </p>
+            </details>
           }
         >
           {locale !== 'en' ? (

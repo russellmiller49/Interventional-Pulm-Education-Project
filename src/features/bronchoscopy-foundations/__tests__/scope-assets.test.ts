@@ -419,6 +419,28 @@ describe('runtime review evidence and engine contracts', () => {
     expect(review.browser.dracoDecodeAndParseMs).toBeGreaterThan(0)
     expect(review.browser.bvhBuildMs).toBeGreaterThan(0)
   })
+  test('ships a laryngeal framework authored for this model, with no supplied mesh behind it', () => {
+    const glb = readGlb('larynx/larynx-lumen.glb')
+    const names = glb.doc.nodes.map((n) => n.name)
+    for (const name of [
+      'UA_hyoid',
+      'UA_thyroid',
+      'UA_cricoid',
+      'UA_tracheal_rings',
+      'UA_thyrohyoid_membrane',
+      'UA_cricothyroid_ligament',
+    ])
+      expect(names).toContain(name)
+    // The third-party cartilage model's grouped node, and the record of reading it, are gone.
+    expect(names).not.toContain('UA_skeleton')
+    const larynx = json<Record<string, unknown>>('larynx/larynx.json')
+    expect(larynx).not.toHaveProperty('sourceSha256')
+    expect(larynx).not.toHaveProperty('registration')
+    expect(larynx.skeleton).toMatchObject({
+      origin: 'Authored for this model. No supplied mesh is read or reused.',
+    })
+  })
+
   test('uses the engine larynx distances, a sub-millimetre path and the exact graph entry', () => {
     const larynx = json<{
       pathLps: number[][]

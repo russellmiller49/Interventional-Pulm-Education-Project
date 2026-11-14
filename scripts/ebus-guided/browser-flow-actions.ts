@@ -3,6 +3,8 @@ import type { Lab } from '../../src/features/ebus-guided/content/types'
 import type { LessonActivity } from '../../src/features/ebus-guided/content/stage'
 import { linkedObservation } from './browser-linked-actions'
 
+/** A newly selected clip is fetched and decoded before it is reported: allow for a cold load. */
+const decode = { timeout: 30000 }
 export async function performRecorded(page: Page, lab: Lab) {
   const frame = page.frameLocator('iframe[title="EBUS workbench"]')
   await expect
@@ -19,16 +21,18 @@ export async function performRecorded(page: Page, lab: Lab) {
   if (lab.goal === 'depth') {
     await frame.getByLabel('Image depth').fill('1')
     await expect
-      .poll(async () => (await linkedObservation(page))?.recorded?.settings.depthMm)
+      .poll(async () => (await linkedObservation(page))?.recorded?.settings.depthMm, decode)
       .toBe(30)
     await frame.getByLabel('Image depth').fill('2')
   }
   if (lab.goal === 'gain') {
     await frame.getByLabel('Image gain').fill('3')
-    await expect.poll(async () => (await linkedObservation(page))?.recorded?.settings.gain).toBe(43)
+    await expect
+      .poll(async () => (await linkedObservation(page))?.recorded?.settings.gain, decode)
+      .toBe(43)
     await frame.getByLabel('Image contrast').fill('4')
     await expect
-      .poll(async () => (await linkedObservation(page))?.recorded?.settings.contrast)
+      .poll(async () => (await linkedObservation(page))?.recorded?.settings.contrast, decode)
       .toBe(57)
     await frame.getByLabel('Image gain').fill('4')
   }

@@ -2,23 +2,74 @@ import { render, screen, within } from '@testing-library/react'
 
 import { BetaHubSections } from './BetaHubSections'
 import { betaModules } from './catalog'
-import { betaRollout, type BetaRollout } from './rollout'
+import { betaRollout, hubBetaModules, type BetaRollout } from './rollout'
 
 const allPreview = Object.fromEntries(
   betaModules.map((entry) => [entry.id, { stage: 'preview' }]),
 ) as BetaRollout
 
 describe('hub module sections', () => {
-  it('lists every module once with both of its links, whatever its stage', () => {
-    render(<BetaHubSections locale="en" modules={betaModules} rollout={betaRollout} />)
+  it('lists every module once, opening only in its feedback wrapper, whatever its stage', () => {
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
     expect(screen.getAllByRole('link', { name: /Test with feedback/ })).toHaveLength(
       betaModules.length,
     )
-    expect(screen.getAllByRole('link', { name: 'Standard module' })).toHaveLength(
-      betaModules.length,
-    )
+    // Direct module links live on Admin › Modules in development, not on the hub (2026-11-09).
+    expect(screen.getAllByRole('link')).toHaveLength(betaModules.length)
+    for (const link of screen.getAllByRole('link'))
+      expect(link.getAttribute('href')).toMatch(/^\/en\/development-beta\/[a-z0-9-]+$/)
     for (const entry of betaModules) {
       expect(screen.getAllByRole('heading', { name: entry.title })).toHaveLength(1)
+    }
+  })
+
+  it('shows each reviewer note on its card and leaves cards without one as they were', () => {
+    render(<BetaHubSections locale="en" modules={hubBetaModules} rollout={betaRollout} />)
+    // Nothing is marked ready yet, so every card, with or without a note, is still in development.
+    expect(screen.queryByRole('heading', { name: 'Ready for review' })).not.toBeInTheDocument()
+    const preview = screen.getByRole('region', { name: 'Still in development' })
+
+    for (const entry of hubBetaModules) {
+      const card = within(preview)
+        .getByRole('heading', { name: entry.title })
+        .closest('article') as HTMLElement
+      const { note } = betaRollout[entry.id]
+      if (note) {
+        expect(within(card).getByText(note.summary)).toBeVisible()
+        expect(within(card).getByText(note.audience)).toBeVisible()
+        for (const item of [...note.lookFor, ...note.knownLimits]) {
+          expect(within(card).getByText(item)).toBeVisible()
+        }
+        if (note.estimate) {
+          const basis = `from ${note.estimate.basis}`
+          expect(
+            within(card).getByText(
+              (_, element) =>
+                element?.tagName === 'DD' && element.textContent?.endsWith(basis) === true,
+            ),
+          ).toBeVisible()
+        } else {
+          expect(within(card).queryByText('Estimated time:')).not.toBeInTheDocument()
+        }
+      } else {
+        // The card a module had before notes existed: its title and its link, nothing else.
+        expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
+        expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
+      }
+    }
+    // Every listed module carries a note (owner request, 2026-11-04).
+    expect(hubBetaModules.every((entry) => betaRollout[entry.id].note)).toBe(true)
+  })
+
+  it('leaves a card without a note as it was: its title and its link', () => {
+    render(<BetaHubSections locale="en" modules={betaModules} rollout={allPreview} />)
+    const preview = screen.getByRole('region', { name: 'Still in development' })
+    for (const entry of betaModules) {
+      const card = within(preview)
+        .getByRole('heading', { name: entry.title })
+        .closest('article') as HTMLElement
+      expect(Array.from(card.children).map((child) => child.tagName)).toEqual(['H4', 'DIV'])
+      expect(card.textContent?.trim()).toBe(`${entry.title}Test with feedback`)
     }
   })
 
@@ -28,14 +79,15 @@ describe('hub module sections', () => {
     expect(screen.getByRole('heading', { name: 'Still in development' })).toBeInTheDocument()
   })
 
-  it('moves a ready module to the first section with its note and the same two links', () => {
+  it('moves a ready module to the first section with its note and the same link', () => {
     const rollout: BetaRollout = {
       ...allPreview,
       devices: {
         stage: 'ready',
         note: {
+          audience: 'Interventional pulmonology fellows',
           summary: 'A reference atlas of bronchoscopy devices.',
-          minutes: 20,
+          estimate: { minutes: 20, basis: 'three search tasks' },
           lookFor: ['Whether a device is easy to find by type'],
           knownLimits: ['Market status is unverified for some products'],
         },
@@ -45,7 +97,7 @@ describe('hub module sections', () => {
 
     const ready = screen.getByRole('region', { name: 'Ready for review' })
     expect(within(ready).getByRole('heading', { name: /Device Atlas/ })).toBeInTheDocument()
-    expect(within(ready).getByText(/about 20 minutes/)).toBeInTheDocument()
+    expect(within(ready).getByText(/about 20 minutes, from three search tasks/)).toBeVisible()
     expect(within(ready).getByText('A reference atlas of bronchoscopy devices.')).toBeVisible()
     expect(within(ready).getByText('Whether a device is easy to find by type')).toBeVisible()
     expect(within(ready).getByText('Market status is unverified for some products')).toBeVisible()
@@ -54,10 +106,7 @@ describe('hub module sections', () => {
       'href',
       '/es/development-beta/devices',
     )
-    expect(within(ready).getByRole('link', { name: 'Standard module' })).toHaveAttribute(
-      'href',
-      '/es/devices',
-    )
+    expect(within(ready).getAllByRole('link')).toHaveLength(1)
 
     const preview = screen.getByRole('region', { name: 'Still in development' })
     expect(within(preview).queryByRole('heading', { name: /Device Atlas/ })).not.toBeInTheDocument()

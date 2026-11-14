@@ -25,6 +25,15 @@ export interface CircuitLabel {
   id: string
   text: string
   position: THREE.Vector3
+  /**
+   * The object itself: the point a leader line ends on.
+   *
+   * `position` is where a pill used to rest, offset from its object so that eight pills did not
+   * pile on each other. The overview now sets its pills in rails along the top and bottom of the
+   * view, off the model, and draws a line from each to the object it names; that line has to end
+   * on the object, not beside it.
+   */
+  target: THREE.Vector3
 }
 
 export interface AccessSite {
@@ -88,17 +97,25 @@ export function patientWorldPoint(x: number, y: number, z: number): THREE.Vector
 
 const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
 
-// Patient-local access anchors. The right groin carries the return access:
-// vein for VV, artery (lateral to the vein, per NAVL) for VA.
+// Patient-local access anchors, named by the patient's own side (see
+// PATIENT_LEFT_AXIS: the patient's left is +x, the right is −x). Drainage is
+// from the patient's RIGHT femoral vein. The patient's LEFT groin carries the
+// return access: vein for VV, artery (lateral to the vein, per NAVL) for VA,
+// with the distal perfusion catheter below it. The pressure-zone map draws the
+// same groins in its anterior view.
+//
+// These were GROIN_VEIN_LEFT (−x), GROIN_VEIN_RIGHT and GROIN_ARTERY_RIGHT
+// (+x): left and right of the model's x axis, not of the patient. Only the
+// names changed (ECMO-OWNER-12, 2026-11-10); every coordinate is as it was.
 //
 // The y values are raycast-measured skin-surface heights of the B7 mannequin
 // (build_fidelity_assets.py prints them) plus ~4 mm so the runtime dressing
 // film sits proud of the skin. The previous anchors (y 0.258–0.265) were
 // authored to the old drape-window height, 0.16 m above even the old skin —
 // which is why cannula tips, dressing rings and the DPC visibly floated.
-const GROIN_VEIN_LEFT = patientWorldPoint(-0.135, 0.102, 0.09)
-const GROIN_VEIN_RIGHT = patientWorldPoint(0.135, 0.103, 0.09)
-const GROIN_ARTERY_RIGHT = patientWorldPoint(0.175, 0.068, 0.055)
+const GROIN_VEIN_PATIENT_RIGHT = patientWorldPoint(-0.135, 0.102, 0.09)
+const GROIN_VEIN_PATIENT_LEFT = patientWorldPoint(0.135, 0.103, 0.09)
+const GROIN_ARTERY_PATIENT_LEFT = patientWorldPoint(0.175, 0.068, 0.055)
 const DPC_ENTRY = patientWorldPoint(0.165, 0.075, 0.125)
 
 // Line hubs where cannulas meet circuit tubing, on the near bed edge.
@@ -123,8 +140,8 @@ function curve(points: THREE.Vector3[]): THREE.CatmullRomCurve3 {
 }
 
 export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
-  const drainageInsertion = GROIN_VEIN_LEFT
-  const returnInsertion = supportMode === 'va' ? GROIN_ARTERY_RIGHT : GROIN_VEIN_RIGHT
+  const drainageInsertion = GROIN_VEIN_PATIENT_RIGHT
+  const returnInsertion = supportMode === 'va' ? GROIN_ARTERY_PATIENT_LEFT : GROIN_VEIN_PATIENT_LEFT
 
   // Owner-approved re-route (B7 follow-up): both cannulae used to rise from
   // the groin and cross in an X over the abdomen on their way to the hubs.
@@ -213,11 +230,13 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       id: 'drainage-site',
       text: labelText('drainage-site'),
       position: drainageInsertion.clone().add(vec(-0.42, -0.06, 0.52)),
+      target: drainageInsertion.clone(),
     },
     {
       id: 'return-site',
       text: labelText('return-site'),
       position: returnInsertion.clone().add(vec(0.16, -0.26, -0.72)),
+      target: returnInsertion.clone(),
     },
     ...(supportMode === 'va'
       ? [
@@ -225,6 +244,7 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
             id: 'dpc',
             text: labelText('dpc'),
             position: DPC_ENTRY.clone().add(vec(0.24, 0.0, 0.42)),
+            target: DPC_ENTRY.clone(),
           },
         ]
       : []),
@@ -235,6 +255,7 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
         .getPointAt(DRAINAGE_CLAMP_U)
         .clone()
         .add(vec(0.05, 0.34, 0.3)),
+      target: drainageLine.getPointAt(DRAINAGE_CLAMP_U).clone(),
     },
     {
       id: 'return-clamp',
@@ -243,16 +264,19 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
         .getPointAt(RETURN_CLAMP_U)
         .clone()
         .add(vec(-0.1, 0.62, -0.35)),
+      target: returnLine.getPointAt(RETURN_CLAMP_U).clone(),
     },
     {
       id: 'hls-module',
       text: labelText('hls-module'),
       position: HLS_MODULE.clone().add(vec(-0.1, 0.72, 0.05)),
+      target: HLS_MODULE.clone().add(vec(0, 0.12, 0)),
     },
     {
       id: 'sensor',
       text: labelText('sensor'),
       position: sensorPosition.clone().add(vec(-0.85, -0.42, -0.7)),
+      target: sensorPosition.clone(),
     },
     {
       // The blender is modeled now, so the label names the device. Anchored
@@ -261,6 +285,7 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       id: 'sweep',
       text: labelText('sweep'),
       position: blenderOutlet.clone().add(vec(-0.12, 0.08, -0.04)),
+      target: blenderOutlet.clone(),
     },
     {
       // Sits just above the transformed console box, so it stays on the console when the placement
@@ -273,6 +298,8 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
         consolePlacement.worldBounds.max.y + 0.2,
         consolePlacement.origin.z + 0.1,
       ),
+      // The console's own body: the middle of its screen face, well inside its box.
+      target: consolePlacement.worldBounds.getCenter(new THREE.Vector3()).add(vec(0, 0.2, 0)),
     },
   ]
 

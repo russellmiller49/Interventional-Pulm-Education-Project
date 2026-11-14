@@ -14,6 +14,7 @@ import { ReconstructionComparison } from './ReconstructionComparison'
 import { SectionGlossary } from './SectionGlossary'
 import { ArtifactCauseStrip } from '../figures/ArtifactCauseStrip'
 import { FixedMobileComparison, TeamReadinessAid } from '../figures/CbctReferenceAids'
+import { WedgeDependencyFigure } from '../figures/CheckImages'
 import { TwoAxisWorkedExample } from '../figures/TwoAxisWorkedExample'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { Link } from '@/i18n/navigation'
@@ -56,7 +57,9 @@ export function ImagingTeachingColumn({
         <p data-check-prompt>
           {activity.visual === 'case'
             ? 'Choose the interpretation the written scenario supports.'
-            : 'Choose the interpretation this image and its acquisition context support.'}{' '}
+            : activity.visual === 'dose'
+              ? 'Choose the entry the procedure record supports.'
+              : 'Choose the interpretation this image and its acquisition context support.'}{' '}
           You can show the explanation first, reread the section’s teaching, or continue without
           answering.
         </p>
@@ -72,6 +75,9 @@ export function ImagingTeachingColumn({
       </div>
     )
   }
+  // A hands-on step authors no reading: its text column is the task card the host renders, and an
+  // empty panel here would be an empty box beside the image.
+  if (activity.content.length === 0) return null
   return (
     <div className={styles.teaching} data-teaching-panel>
       {activity.content.map((ref) => (
@@ -93,6 +99,7 @@ function TeachingReference({
   const { spec } = lesson
   // Prompt 04 figures and reference aids sit beside the block they illustrate. Rereading the
   // section's teaching at a check is text: the figure stays on its own step.
+  if (ref === '@wedge-dependency') return review ? null : <WedgeDependencyFigure />
   if (ref === '@two-axis-example') return review ? null : <TwoAxisWorkedExample />
   if (ref === '@artifact-strip') return review ? null : <ArtifactCauseStrip />
   if (ref === '@fixed-mobile-comparison') return review ? null : <FixedMobileComparison />

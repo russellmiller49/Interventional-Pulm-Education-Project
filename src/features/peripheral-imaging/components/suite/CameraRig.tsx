@@ -5,8 +5,8 @@ import { useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { LESION_CENTER, type Point3 } from '../../lib/physics'
-import { cameraPose } from './cameraPose'
-import type { SuiteFrame } from './suiteModel'
+import { cameraPose, OVERVIEW_VIEWS } from './cameraPose'
+import { toScene, type SuiteFrame } from './suiteModel'
 import type { SuiteCamera } from './types'
 
 const NO_BOUNDS: readonly Point3[] = []
@@ -39,6 +39,7 @@ export const CAMERA_ZOOM_STEP = 1.25
 export function CameraRig({
   view,
   frame,
+  roomFrame = frame,
   enabled,
   overviewBounds = NO_BOUNDS,
   focus = LESION_CENTER,
@@ -47,9 +48,12 @@ export function CameraRig({
   roomComposition = false,
   monitorOffset,
   command,
+  rollDeg = 0,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
+  /** The C-arm as the room sees it; differs from `frame` only while the patient is rolled. */
+  roomFrame?: SuiteFrame
   enabled: boolean
   overviewBounds?: readonly Point3[]
   focus?: Point3
@@ -58,14 +62,22 @@ export function CameraRig({
   roomComposition?: boolean
   monitorOffset?: Point3
   command?: CameraCommand | null
+  /**
+   * The patient rolled about the long axis (a wedge). The scene's patient-side objects are drawn in
+   * a group rolled by this angle, so a close-up or the beam's view rolls with them and stays on the
+   * physical tube; an overview stays where it stands in the room, so the patient, not the room, tilts.
+   */
+  rollDeg?: number
 }) {
   const { camera, invalidate, size } = useThree()
   const controls = useRef<OrbitControlsImpl>(null)
+  const overview = (OVERVIEW_VIEWS as readonly SuiteCamera[]).includes(view)
   const config = useMemo(
     () =>
       cameraPose({
         view,
-        frame,
+        // An overview stands in the room; a close-up or the beam's view travels with the patient.
+        frame: overview ? roomFrame : frame,
         fov: camera instanceof PerspectiveCamera ? camera.fov : null,
         width: size.width,
         height: size.height,
@@ -78,7 +90,9 @@ export function CameraRig({
       }),
     [
       view,
+      overview,
       frame,
+      roomFrame,
       camera,
       size.width,
       size.height,
@@ -90,15 +104,29 @@ export function CameraRig({
       monitorOffset,
     ],
   )
+  // The pose is worked out in the model's patient frame, rolled with the patient where a wedge
+  // applies, and only then carried into the renderer's frame (`toScene`).
+  const rolled = useMemo(() => {
+    const a = (rollDeg * Math.PI) / 180
+    const roll = ([x, y, z]: readonly number[]): Point3 =>
+      rollDeg === 0 || overview
+        ? [x, y, z]
+        : [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a), z]
+    return {
+      position: toScene(roll(config.position)),
+      target: toScene(roll(config.target)),
+      up: toScene(roll(config.up)),
+    }
+  }, [config, rollDeg, overview])
   const resetNonce = command?.kind === 'reset' ? command.nonce : 0
   useEffect(() => {
-    camera.position.set(...config.position)
-    camera.up.set(...config.up)
-    camera.lookAt(...config.target)
+    camera.position.set(...rolled.position)
+    camera.up.set(...rolled.up)
+    camera.lookAt(...rolled.target)
     camera.updateProjectionMatrix()
     controls.current?.update()
     invalidate()
-  }, [camera, invalidate, config, resetNonce])
+  }, [camera, invalidate, rolled, resetNonce])
   useEffect(() => {
     const orbit = controls.current
     if (!orbit || !command || command.kind === 'reset') return
@@ -115,7 +143,7 @@ export function CameraRig({
   return (
     <OrbitControls
       ref={controls}
-      target={config.target}
+      target={rolled.target}
       enabled={enabled}
       enablePan={false}
       enableZoom={false}

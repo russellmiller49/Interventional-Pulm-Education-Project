@@ -2,7 +2,7 @@
 
 import type { MediaRef } from '../../content/media'
 import styles from './bronch-stage.module.css'
-import { MEDIA_PENDING_NOTE, MediaFigure } from './MediaFigure'
+import { MediaFigure } from './MediaFigure'
 
 /**
  * The Simulator panel when a section reads from real images: the figures and the authored caption.
@@ -52,9 +52,6 @@ export function MediaWorkspace({
           {comparisonNote}
         </p>
       ) : null}
-      <p className={styles.boundaryLine} data-model-boundary>
-        {MEDIA_PENDING_NOTE}
-      </p>
     </div>
   )
 }

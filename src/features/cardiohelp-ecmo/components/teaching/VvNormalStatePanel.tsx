@@ -652,24 +652,25 @@ export function VvNormalStatePanel({
         <h3 id="beyond-circuit-heading" className={styles.heading}>
           What else belongs to the picture
         </h3>
-        <ul className="mt-3 grid gap-2" data-patient-context>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+        {/* A plain list where there were five bordered cards (tester feedback, 2026-10-14). */}
+        <ul className="mt-3 grid list-disc gap-1 pl-5" data-patient-context>
+          <li className="text-sm leading-6">
             The native lungs are still in the path and still contributing whatever gas exchange they
             can. The circuit is not the only lung in the picture.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             Native cardiac output remains essential: in VV support it does all of the circulatory
             work, and the circuit adds none.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             Ventilator settings, sedation, temperature, hemoglobin and volume state all sit inside
             this picture, and every one of them changes how the numbers above should be read.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             A measurement can also be wrong. Before a change is treated as physiology, it is worth
             establishing that the channel reporting it is reporting properly.
           </li>
-          <li className="rounded-xl border px-3 py-2 text-sm leading-6">
+          <li className="text-sm leading-6">
             A direction of travel over a window carries more than any one reading taken alone.
           </li>
         </ul>

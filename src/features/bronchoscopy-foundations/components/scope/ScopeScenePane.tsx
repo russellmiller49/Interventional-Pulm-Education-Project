@@ -2,18 +2,26 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
-import { ScopePaneFrame } from './ScopeFallback'
+import { ScopePaneFrame, showsAirwayContext } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
+import { unnamedAirways } from '../../engine/scope/inspectionLedger'
+import { isForkWaitMessage } from '../../engine/scope/scopeMessages'
 import { isDetailedBench, useBenchPresentation } from './useBenchPresentation'
-import { SCOPE_KEY_MAP, scopeKeyCommand, scopeKeyboardHint } from './scopeKeyMap'
+import {
+  HELD_INTERVAL_MS,
+  heldKeyCommand,
+  SCOPE_KEY_MAP,
+  scopeKeyCommand,
+  scopeKeyboardHint,
+} from './scopeKeyMap'
 import { SCOPE_MODES, type ScopeMode, type ScopePaneProps } from './types'
 import styles from './scope-scene.module.css'
 import { TreeMap } from './TreeMap'
 
 const Scene = dynamic(() => import('./ScopeScene'), {
   ssr: false,
-  loading: () => <p role="status">Loading the teaching model…</p>,
+  loading: () => <p role="status">Loading the 3D view…</p>,
 })
 export const SCOPE_MODES_READY: ReadonlySet<ScopeMode> = new Set(SCOPE_MODES)
 export { resolveScopeInputs } from '../../engine/scope/scopeInputs'
@@ -24,14 +32,15 @@ export function ScopeScenePane(props: ScopePaneProps) {
 }
 
 /**
- * Why the scripted scene is standing still, and what moves it on.
+ * Why the scene's own clock (the breathing folds, the draining fluid) is standing still, and what
+ * moves it on.
  *
  * Reduced motion, an explicit Step control and the schematic view all hold the scene's clock. The
  * phase the goals read is the phase on the readouts, so saying the clock is held is the honest
  * alternative to animating it anyway.
  */
 const PAUSED_SCENE_NOTE =
-  'The scripted scene is held while motion is reduced. Step one second moves it on, one second at a time.'
+  'The scene is paused while motion is reduced. Step one second moves it on, one second at a time.'
 
 /** Said while the controls wait for the first drawn frame, so a pressed control is not silent. */
 const LOADING_CONTROLS_NOTE =
@@ -71,7 +80,7 @@ function ScenePane(props: ScopePaneProps) {
   const lastMove = useRef(0)
   const [schematic, setSchematic] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const [visualTab, setVisualTab] = useState<'scope' | 'map'>('scope')
+  const [visualTab, setVisualTab] = useState<'scope' | 'map' | 'position'>('scope')
   const ready = schematic || status === 'ready'
   const playback = useScopePlayback(props, playbackRoot, ready, schematic)
   // One displayed bench state for the scene and for the end-on drawing under the controls. The
@@ -83,6 +92,21 @@ function ScenePane(props: ScopePaneProps) {
   )
   const report = useCallback((next: 'loading' | 'ready' | 'failed') => setStatus(next), [])
   const enabled = props.controlsEnabled && ready
+  // The map sits beside the view only on a step that steers, names or is answered on the map; a
+  // step without steering keeps its controls directly under the view (owner, 2026-11-03).
+  // Not on the larynx step: there the tip is above the tree the map draws, the outside view of the
+  // larynx is the picture that helps, and a third panel squeezed all three (owner, 2026-11-10).
+  const showMap =
+    props.state.place !== 'bench' &&
+    showsAirwayContext(props.view, props.treeAnswer) &&
+    (props.view.mode !== 'larynx-entry' || props.treeAnswer !== undefined)
+  // The outside view: the see-through airway tree with the scope in it, in the flat map's place.
+  // It carries no names, so it says no more than the map's own tip marker. It is not offered while
+  // a question is answered on the map, or while the step withholds where the tip is.
+  const positionAllowed =
+    showMap && !props.treeAnswer && props.state.script?.phase !== 'unidentified'
+  const shownTab = visualTab === 'position' && !positionAllowed ? 'scope' : visualTab
+  const position = shownTab === 'position'
   const keyboard = (event: KeyboardEvent) => {
     if (!enabled || event.altKey || event.metaKey || event.ctrlKey) return
     const target = event.target as HTMLElement
@@ -93,18 +117,20 @@ function ScenePane(props: ScopePaneProps) {
     const command = scopeKeyCommand(key, props.state)
     if (!command) return
     event.preventDefault()
-    if (
-      event.repeat &&
-      command.type !== 'advance' &&
-      command.type !== 'rotate' &&
-      command.type !== 'deflect'
-    )
-      return
-    if (command.type === 'advance') {
-      const now = performance.now()
-      if (event.repeat && now - lastMove.current < (props.state.inputs.stepMm / 24) * 1000) return
+    const now = performance.now()
+    if (event.repeat) {
+      // Only movement repeats, and a held key glides: fine increments at a steady rate.
+      if (command.type !== 'advance' && command.type !== 'rotate' && command.type !== 'deflect')
+        return
+      if (now - lastMove.current < HELD_INTERVAL_MS) return
+      // A held Advance ends where the scope waits at a fork; a new press goes on from there.
+      if (command.type === 'advance' && command.mm > 0 && isForkWaitMessage(props.state.message))
+        return
       lastMove.current = now
+      props.onCommand(heldKeyCommand(command), 'keyboard')
+      return
     }
+    lastMove.current = now
     props.onCommand(command, 'keyboard')
   }
   return (
@@ -117,7 +143,11 @@ function ScenePane(props: ScopePaneProps) {
     >
       {schematic ? (
         <div ref={setPlaybackRoot}>
-          <p role="status">Schematic view. Use the airway map and controls to continue.</p>
+          <p role="status">
+            {showMap
+              ? 'Schematic view. Use the airway map and controls to continue.'
+              : 'Schematic view. Use the controls to continue.'}
+          </p>
           <button
             type="button"
             onClick={() => {
@@ -142,12 +172,12 @@ function ScenePane(props: ScopePaneProps) {
           benchState={presentation.state}
           opticalView={
             <>
-              {props.state.place !== 'bench' ? (
+              {showMap ? (
                 <div className={styles.visualTabs} role="tablist" aria-label="Scope and airway map">
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={visualTab === 'scope'}
+                    aria-selected={shownTab === 'scope'}
                     onClick={() => setVisualTab('scope')}
                   >
                     Scope view
@@ -155,17 +185,30 @@ function ScenePane(props: ScopePaneProps) {
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={visualTab === 'map'}
+                    aria-selected={shownTab === 'map'}
                     onClick={() => setVisualTab('map')}
                   >
                     Airway map
                   </button>
+                  {positionAllowed ? (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={position}
+                      onClick={() => setVisualTab('position')}
+                      data-position-tab
+                    >
+                      3D view
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
               <div
                 className={styles.visualWorkspace}
                 data-bench={props.state.place === 'bench' ? 'true' : undefined}
-                data-visual-tab={visualTab}
+                data-map={showMap && !position ? 'beside' : 'none'}
+                data-visual-tab={showMap ? shownTab : 'scope'}
+                data-position-view={position ? 'true' : undefined}
               >
                 <div className={styles.scopeColumn} ref={setPlaybackRoot}>
                   <Scene
@@ -174,6 +217,8 @@ function ScenePane(props: ScopePaneProps) {
                     visible={playback.visible}
                     onStatus={report}
                     presentation={presentation}
+                    positionView={position}
+                    onShowMap={() => setVisualTab('map')}
                   />
                   {status === 'failed' ? (
                     <button
@@ -185,14 +230,28 @@ function ScenePane(props: ScopePaneProps) {
                     </button>
                   ) : null}
                 </div>
-                {props.state.place !== 'bench' ? (
-                  <div className={styles.mapColumn}>
+                {showMap && !position ? (
+                  // Held to the view's height beside it, so it never pushes the controls down.
+                  <div className={styles.mapColumn} data-map-column>
+                    {positionAllowed ? (
+                      <button
+                        type="button"
+                        className={styles.viewSwitch}
+                        onClick={() => setVisualTab('position')}
+                        data-show-position-view
+                      >
+                        3D view
+                      </button>
+                    ) : null}
                     <TreeMap
                       map={props.map}
                       lit={props.view.litAirways ?? []}
                       current={props.state.location.label}
                       tipLps={props.state.pose?.tipLps ?? null}
                       treeAnswer={props.treeAnswer}
+                      unnamed={
+                        props.view.ledger?.naming ? unnamedAirways(props.state.ledger) : undefined
+                      }
                     />
                   </div>
                 ) : null}

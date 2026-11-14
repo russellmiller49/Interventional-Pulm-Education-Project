@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { TEACHING_SIMULATOR_STATEMENT, summaryLines } from '../content/bench-copy'
 import {
@@ -8,37 +8,69 @@ import {
   NAMING_USE,
   SLICE_DIRECTION_NOTE,
   SUBSEGMENT_NOTE,
-  patternFor,
 } from '../content/course-guide'
-import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
+import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import {
+  MATCH_REQUIRED_LESSONS,
   NAV_LESSONS,
+  ORIENTATION_CHECK,
+  ORIENTATION_CHECK_RESULT,
+  ORIENTATION_LESSON,
+  REFRESHER_LESSONS,
   buildTrip,
   lessonAfter,
   lessonById,
-  lessonNumber,
+  lessonLabel,
   type NavLesson,
 } from '../content/nav-lessons'
+import { planSummaryLines } from '../content/plan-copy'
+import { ROLL_TITLE } from '../content/roll-copy'
+import { DEMO_LESSON_ID } from '../engine/demo-script'
+import { ROLL_DRILL_ID } from '../engine/roll-drill'
 import { summarize } from '../engine/nav-session'
-import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import {
+  navKey,
+  orientationShown,
+  readNavEntry,
+  readOrientationProgress,
+  recordOrientationProgress,
+  writeNavEntry,
+} from '../engine/nav-storage'
+import { summarizePlan } from '../engine/plan-session'
+import { readPrefs } from '../engine/prefs-storage'
 import { recordLessonOpened, setLessonReviewed } from '../engine/selfPacedProgress'
 import { ModuleFrame } from './ModuleFrame'
-import { NavigationBench } from './NavigationBench'
+import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
 import { useTrip } from './useTrip'
 import styles from './nav-bench.module.css'
+// Kept below the module frame: the frame's stylesheet has to load before the bench's, which
+// overrides it at equal weight, and a file that brings in the bench first reverses the two.
+import { DemoPlayer } from './DemoPlayer'
+import { RollDrillBench } from './RollDrillBench'
 
 export function NavLessonHost({ requestedId }: { requestedId?: string }) {
   const lesson = lessonById(requestedId) ?? NAV_LESSONS[0]
   const hydrated = useHydrated()
+  // The demonstration has the Learn address of a lesson, but it is watched, not worked: it has
+  // no place to save and is not one of the lessons.
+  const demo = requestedId === DEMO_LESSON_ID
+  // So has the drill: one bench of its own, five divisions, nothing saved but that it was done.
+  const drill = requestedId === ROLL_DRILL_ID
   return (
     <ModuleFrame section="learn" activity>
       {hydrated ? (
-        <LessonTrips key={lesson.id} lesson={lesson} />
+        demo ? (
+          <DemoPlayer />
+        ) : drill ? (
+          <RollDrill />
+        ) : (
+          <LessonTrips key={lesson.id} lesson={lesson} />
+        )
       ) : (
         <section aria-busy="true">
           <p role="status" style={{ padding: '1rem' }}>
-            Loading lesson {lessonNumber(lesson.id)}…
+            Loading {demo ? 'the demonstration' : drill ? ROLL_TITLE : lessonLabel(lesson, ': ')}…
           </p>
         </section>
       )}
@@ -53,10 +85,7 @@ function LessonTrips({ lesson }: { lesson: NavLesson }) {
     if (!saved) return 0
     const last = lesson.trips.length - 1
     // A lesson already driven to its end opens again from its first trip.
-    if (
-      saved.leg >= last &&
-      (saved.session.phase === 'arrived' || saved.session.phase === 'done')
-    ) {
+    if (saved.leg >= last && tripOver(saved.trip)) {
       writeNavEntry(key, null)
       return 0
     }
@@ -65,12 +94,21 @@ function LessonTrips({ lesson }: { lesson: NavLesson }) {
   useEffect(() => {
     recordLessonOpened(lesson.id)
   }, [lesson.id])
+  // The orientation check: which of its forks matched at the first check, on this visit.
+  const [firstCheck, setFirstCheck] = useState<Record<number, boolean>>({})
+  const onFirstCheck = useCallback(
+    (index: number, clean: boolean) =>
+      setFirstCheck((all) => (all[index] === clean ? all : { ...all, [index]: clean })),
+    [],
+  )
   return (
     <Trip
       key={tripIndex}
       lesson={lesson}
       tripIndex={tripIndex}
       storageKey={key}
+      firstCheck={firstCheck}
+      onFirstCheck={onFirstCheck}
       onNext={() => setTripIndex((index) => Math.min(lesson.trips.length - 1, index + 1))}
       onTrip={setTripIndex}
     />
@@ -81,63 +119,115 @@ function Trip({
   lesson,
   tripIndex,
   storageKey,
+  firstCheck,
+  onFirstCheck,
   onNext,
   onTrip,
 }: {
   lesson: NavLesson
   tripIndex: number
   storageKey: string
+  firstCheck: Record<number, boolean>
+  onFirstCheck: (index: number, clean: boolean) => void
   onNext: () => void
   onTrip: (index: number) => void
 }) {
-  const trip = useMemo(() => buildTrip(lesson.trips[tripIndex]), [lesson, tripIndex])
-  const [session, dispatch] = useTrip(trip.trace, trip.plan, storageKey, tripIndex)
+  // Turning the CT is asked for in the first lesson, and afterwards until the learner has shown
+  // it, on a drive that reads the CT at each fork. A drive that follows a map never waits for it:
+  // the CT was read in planning, and past the ostium the map is what sits beside the scope.
+  const spec = lesson.trips[tripIndex]
+  const drivesWithMap = Boolean(spec.from && spec.plan?.parts.includes('arcs'))
+  const matchOptional = useMemo(
+    () =>
+      !MATCH_REQUIRED_LESSONS.includes(lesson.id) &&
+      (drivesWithMap || orientationShown(readOrientationProgress())),
+    [lesson.id, drivesWithMap],
+  )
+  const trip = useMemo(
+    () => buildTrip(lesson.trips[tripIndex], { matchOptional, cruise: !readPrefs().everyFork }),
+    [lesson, tripIndex, matchOptional],
+  )
+  const [session, dispatch] = useTrip(trip.trace, trip.target, trip.trip, storageKey, tripIndex)
   const lastTrip = tripIndex === lesson.trips.length - 1
-  const over = session.phase === 'arrived' || session.phase === 'done'
+  const over = tripOver(session)
   useEffect(() => {
     // Reaching the end of a lesson is the learner's place in the course, not a result.
     if (over && lastTrip) setLessonReviewed(lesson.id, true)
+    if (over && lastTrip && lesson.id === ORIENTATION_LESSON)
+      recordOrientationProgress({ lessonOneDone: true })
   }, [over, lastTrip, lesson.id])
-  const next = lessonAfter(lesson.id)
-  const forkNames = trip.plan.stations.map(
+  // The orientation check: this fork matched at the first check, without being shown.
+  const isCheck = lesson.id === ORIENTATION_CHECK.id
+  const forkLog = session.nav?.log[0]
+  const cleanHere = Boolean(
+    forkLog?.matchAsked && !forkLog.matchMisses && !forkLog.matchShown && over,
+  )
+  useEffect(() => {
+    if (isCheck && over) onFirstCheck(tripIndex, cleanHere)
+  }, [isCheck, over, tripIndex, cleanHere, onFirstCheck])
+  const allFirstCheck =
+    isCheck && lesson.trips.every((_, i) => (i === tripIndex ? cleanHere : firstCheck[i] === true))
+  // After the check: on to planning, or to the first refresher when a fork did not match.
+  const next = isCheck && !allFirstCheck ? REFRESHER_LESSONS[0] : lessonAfter(lesson.id)
+  const stations = trip.trip.nav?.stations ?? []
+  const forkNames = stations.map(
     (station) => trip.trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
   )
   // A count of first tries says something only over a route of several forks.
-  const summary = trip.plan.stations.length >= 3 ? summaryLines(summarize(session), forkNames) : []
-  const pattern = patternFor(lesson.id)
-  const number = lessonNumber(lesson.id)
+  const summary = [
+    ...(session.plan && trip.trip.plan
+      ? planSummaryLines(summarizePlan(trip.trip.plan, session.plan))
+      : []),
+    ...(session.nav && stations.length >= 3 ? summaryLines(summarize(session.nav), forkNames) : []),
+  ]
+  const arrived = session.nav?.phase === 'arrived'
   return (
-    <NavigationBench
+    <TripBench
       section="learn"
-      title={`Lesson ${number} · ${lesson.title}`}
+      title={lessonLabel(lesson)}
       subtitle={
         lesson.trips.length > 1
           ? `Trip ${tripIndex + 1} of ${lesson.trips.length} · ${trip.spec.title}`
           : trip.spec.title
       }
       trace={trip.trace}
-      plan={trip.plan}
+      target={trip.target}
+      trip={trip.trip}
       teach={trip.teach}
+      planTeach={trip.spec.plan?.teach}
+      divisionTeach={trip.divisionTeach}
+      locators={trip.spec.plan?.locators}
       intro={trip.spec.intro}
       independent={trip.spec.independent}
-      help
+      help={!lesson.unaided}
       session={session}
       dispatch={dispatch}
       closing={
         lastTrip
           ? {
-              heading:
-                session.phase === 'arrived'
-                  ? 'You have reached the lesion. End of the lesson.'
+              heading: arrived
+                ? 'You have reached the lesion. End of the lesson.'
+                : isCheck
+                  ? 'End of the check'
                   : 'End of the lesson',
-              body: [lesson.closing, ...summary, TEACHING_SIMULATOR_STATEMENT],
+              body: [
+                ...(isCheck
+                  ? [
+                      allFirstCheck
+                        ? ORIENTATION_CHECK_RESULT.matched
+                        : ORIENTATION_CHECK_RESULT.notYet,
+                    ]
+                  : []),
+                lesson.closing,
+                ...summary,
+                TEACHING_SIMULATOR_STATEMENT,
+              ],
               next: next
-                ? { label: `Lesson ${number + 1}: ${next.title}`, href: lessonHref(next.id) }
-                : { label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` },
+                ? { label: lessonLabel(next, ': '), href: lessonHref(next.id) }
+                : { label: `Drill: ${ROLL_TITLE}`, href: lessonHref(ROLL_DRILL_ID) },
             }
           : {
-              heading:
-                session.phase === 'arrived' ? 'You have reached the lesion' : 'End of this trip',
+              heading: arrived ? 'You have reached the lesion' : 'End of this trip',
               body: [...summary, `Next: ${lesson.trips[tripIndex + 1].title}.`],
               next: { label: 'Next trip', onActivate: onNext },
             }
@@ -163,14 +253,6 @@ function Trip({
               ))}
             </ol>
           )}
-          {pattern && (
-            <dl>
-              <dt>Fork pattern: {pattern.name}</dt>
-              {pattern.definition.map((line) => (
-                <dd key={line}>{line}</dd>
-              ))}
-            </dl>
-          )}
           <dl>
             <dt>Names</dt>
             <dd>
@@ -178,7 +260,12 @@ function Trip({
             </dd>
             <dt>Slices</dt>
             <dd>{SLICE_DIRECTION_NOTE}</dd>
-            <dt>Source</dt>
+            <dt>Sources</dt>
+            <dd>
+              <a href={METHOD_SOURCE.url} target="_blank" rel="noreferrer">
+                {METHOD_SOURCE.title}
+              </a>
+            </dd>
             <dd>
               <a href={SOURCE.url} target="_blank" rel="noreferrer">
                 {SOURCE.title}
@@ -187,6 +274,20 @@ function Trip({
           </dl>
         </details>
       }
+    />
+  )
+}
+
+/** The drill, opened: its place in the course is that it was opened, and then that it was done. */
+function RollDrill() {
+  useEffect(() => {
+    recordLessonOpened(ROLL_DRILL_ID)
+  }, [])
+  return (
+    <RollDrillBench
+      exit={<Link href={BASE_PATH}>Course overview</Link>}
+      next={{ label: 'Practice: pick a lesion', href: `${BASE_PATH}/practice` }}
+      onDone={() => setLessonReviewed(ROLL_DRILL_ID, true)}
     />
   )
 }

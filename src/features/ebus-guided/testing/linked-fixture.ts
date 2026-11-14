@@ -48,10 +48,24 @@ export function acquired(lesson: LinkedLesson, variant: LinkedVariant = 'guided'
     ready: true,
     frameReady: true,
     actionCount: 25,
-    lastAction: lesson === 'acoustic-contact' ? 'flexion' : 'roll',
-    usedControls: lesson === 'acoustic-contact' ? ['flexion'] : ['roll'],
+    lastAction:
+      variant === 'along-airway'
+        ? 'advance'
+        : variant === 'airway-view' || lesson === 'acoustic-contact'
+          ? 'flexion'
+          : 'roll',
+    usedControls:
+      variant === 'along-airway'
+        ? ['advance']
+        : variant === 'airway-view' || lesson === 'acoustic-contact'
+          ? ['flexion']
+          : ['roll'],
     contactQuality: 1,
     targetVisible: true,
+    // The advance-and-withdraw task finishes with the node in the middle of the image.
+    targetLateral: variant === 'along-airway' ? 0.5 : undefined,
+    // The airway-view task finishes with the lens on the wall, having looked along the airway.
+    opticalWallMm: variant === 'airway-view' ? 4 : undefined,
     linked: {
       assetsReady: true,
       modelRevision: source.modelRevision,
@@ -63,6 +77,7 @@ export function acquired(lesson: LinkedLesson, variant: LinkedVariant = 'guided'
       sweeps: { rms: sweep, lms: sweep, default: sweep },
       frameId: source.frameId,
       baselineFrameId: 'initial-frame',
+      airwayViewed: variant === 'airway-view' ? true : undefined,
       source,
     },
   }

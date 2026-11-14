@@ -1,6 +1,7 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { cleanup, fireEvent } from '@testing-library/react'
 
+import { peripheralImagingSectionIds } from '../content/pathway'
 import { imagingStageLesson } from '../content/stageLessons'
 import {
   clickPrimary,
@@ -9,6 +10,7 @@ import {
   goalStates,
   installDom,
   mountSection,
+  nowPrimary,
   nowSecondary,
   nowSkip,
   nowStatus,
@@ -64,15 +66,50 @@ function advanceTo(sectionId: Parameters<typeof mountSection>[0], kind: string) 
  * PDF pp.17, 19 and 21). The geometry — what is on screen together — is held in the browser suite;
  * these hold the structure that geometry depends on, and the self-paced contract around it.
  */
-describe('report 2.13 — the checklist is printed with the controls', () => {
-  it('hands the step’s goals to the suite pane and prints them nowhere else', () => {
+/*
+ * Owner feedback, 2026-10-11 (slide 5): the text column of a hands-on step was an empty box, with
+ * the checklist folded into the control dock. The checklist now has one home, the task card in the
+ * text column, with what to do and what to watch.
+ */
+describe('the checklist of a hands-on step is in the text column', () => {
+  it('prints the step’s goals once, in the task card, under what to do', () => {
     advanceTo('good-image', 'lab-task')
-    const inPane = document.querySelectorAll('[data-suite-goals] li')
-    expect(inPane.length).toBeGreaterThan(0)
-    // Not a second copy on the Now card, which the comparison workbench puts below the fold.
-    expect(document.querySelector('[data-step-goals]')).toBeNull()
-    expect(nowStatus()).toContain('listed with the controls')
-    expect(nowStatus()).not.toMatch(/listed below/)
+    const card = document.querySelector('[data-text-column] [data-task-card]')
+    expect(card).not.toBeNull()
+    expect(card!.querySelector('[data-task-lead]')?.textContent?.length).toBeGreaterThan(40)
+    expect(card!.querySelectorAll('[data-step-goals] li').length).toBeGreaterThan(0)
+    // Not a second copy beside the controls.
+    expect(document.querySelector('[data-suite-goals]')).toBeNull()
+    expect(document.querySelectorAll('[data-step-goals]')).toHaveLength(1)
+    expect(nowStatus()).toMatch(/checklist/)
+    expect(nowStatus()).not.toMatch(/listed (below|with the controls)/)
+  })
+
+  it.each(peripheralImagingSectionIds)(
+    'never leaves the text column of %s empty on any step',
+    (sectionId) => {
+      const { lesson } = mountSection(sectionId)
+      for (let guard = 0; guard < lesson.steps.length; guard++) {
+        const column = document.querySelector('[data-text-column]')
+        expect(column?.textContent?.trim().length ?? 0).toBeGreaterThan(0)
+        if (currentStepId() === lesson.steps.at(-1)!.id) break
+        const primary = nowPrimary()
+        if (primary && !primary.disabled) fireEvent.click(primary)
+        else clickSkip()
+      }
+    },
+  )
+
+  it('closes the walk with the six components and the one thing left to do', () => {
+    const { lesson } = advanceTo('chain-walk', 'walk')
+    for (let stop = 0; stop < 6; stop++) clickPrimary()
+    expect(currentStepId()).toBe(lesson.steps[1].id)
+    const column = document.querySelector('[data-text-column]')!
+    expect(column.querySelectorAll('[data-walk-recap] li')).toHaveLength(6)
+    expect(column.querySelector('[data-task-lead]')?.textContent).toMatch(/C-arm obliquity/)
+    expect(goalStates()).toEqual(['false'])
+    setRange('orbit', 20)
+    expect(goalStates()).toEqual(['true'])
   })
 
   it('shows a goal as met from the learner’s own control change, in that same list', () => {
@@ -96,7 +133,7 @@ describe('report 2.13 — the checklist is printed with the controls', () => {
     advanceTo('good-image', 'lab-task')
     clickSkip()
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(document.querySelectorAll('[data-suite-goals] li')).toHaveLength(0)
+    expect(document.querySelector('[data-step-goals]')).toBeNull()
     expect(document.querySelector('[data-step-review]')).not.toBeNull()
   })
 })

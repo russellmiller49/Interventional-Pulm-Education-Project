@@ -39,9 +39,6 @@ export function BronchoscopyFoundationsReference() {
       <div className="grid gap-3">
         <p className={KICKER}>Reference</p>
         <h1 className="text-3xl font-bold tracking-tight">Tables, template, glossary, sources</h1>
-        <p className="text-sm text-muted-foreground" data-review-status>
-          Authored teaching content, pending clinical review.
-        </p>
         <nav aria-label="Reference sections" className="flex flex-wrap gap-2 text-sm">
           {REFERENCE_SECTIONS.map((section) => (
             <a

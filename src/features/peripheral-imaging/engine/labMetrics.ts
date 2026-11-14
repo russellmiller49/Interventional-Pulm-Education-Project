@@ -2,6 +2,7 @@ import type { LabId } from '../types'
 import {
   centeredForTeaching,
   fieldContextCoverage,
+  spineInField,
   clamp,
   kapGyCm2,
   kapMicroGyM2,
@@ -12,6 +13,16 @@ import {
   windowRelationship,
   type Point3,
 } from '../lib/physics'
+import { AIRWAY_LOBES, AIRWAY_LOBE_KEYS } from '../content/airwayNames'
+import {
+  AIRWAY_SEGMENTS_BY_LOBE,
+  LESION_AIRWAYS,
+  isAirwayShow,
+  lesionAirwaysAt,
+  mostForeshortened,
+} from '../lib/airwayTree'
+import { tableCrossing } from '../lib/rayCrossingTable'
+import { rayCrossingLabel } from '../lib/rayStructures'
 
 /**
  * The lab controls and the arithmetic behind every readout, in one place.
@@ -63,7 +74,8 @@ const FIELD_CONTROLS: readonly LabControlSpec[] = [
     key: 'field',
     kind: 'range',
     label: 'Collimated field width',
-    min: 45,
+    // Tight enough to take the spine and most of the mediastinum out of the field around the lesion.
+    min: 30,
     max: 100,
     step: 1,
     unit: '%',
@@ -96,6 +108,47 @@ const FIELD_CONTROLS: readonly LabControlSpec[] = [
     default: 1,
   },
 ]
+
+/**
+ * A wedge under the patient's left side, the nodule side, rolls the chest about its long axis. It
+ * changes which lung is dependent, and it changes the view for a given C-arm angle: rolling the
+ * patient by w is the same projection as rotating the C-arm by −w, which is how a wedge buys a view
+ * (or a sweep centre) the C-arm cannot reach.
+ */
+export const WEDGE_CONTROL: LabControlSpec = {
+  key: 'wedge',
+  kind: 'select',
+  label: 'Wedge under the patient’s left side',
+  options: [
+    { value: 0, label: 'None (supine)' },
+    { value: 15, label: '15°' },
+    { value: 30, label: '30°' },
+  ],
+  default: 0,
+}
+
+/**
+ * The bronchial tree drawn on the image from the CT: hidden, the whole tree coloured by lobe, one
+ * lobe with a colour and a name for each segmental bronchus, or the segmental bronchi that cross
+ * the outline of the nodule on the frontal image.
+ */
+export const AIRWAYS_CONTROL: LabControlSpec = {
+  key: 'airways',
+  kind: 'select',
+  label: 'Bronchi drawn from the CT',
+  options: [
+    { value: 'off', label: 'None' },
+    { value: 'all', label: 'Whole tree, by lobe' },
+    ...AIRWAY_LOBE_KEYS.map((lobe) => ({ value: lobe, label: AIRWAY_LOBES[lobe].name })),
+    { value: 'lesion', label: 'Bronchi over the nodule' },
+  ],
+  default: (lessonId) => (lessonId === 'airway-anatomy' ? 'all' : 'off'),
+}
+
+/** The projection through the patient: the C-arm obliquity less the wedge. */
+export function viewObliquity(orbit: number, wedge: number): number {
+  return orbit - wedge
+}
 
 export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = {
   geometry: [
@@ -130,12 +183,15 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       unit: ' mm',
       default: (lessonId) => (lessonId === 'signal' ? 0 : 22),
     },
+    WEDGE_CONTROL,
+    AIRWAYS_CONTROL,
+    { key: 'airwayNames', kind: 'toggle', label: 'Name the bronchi', default: true },
     {
       key: 'resetGeometry',
       kind: 'action',
       label: 'Reset geometry',
       default: false,
-      patch: { orbit: 0, tilt: 0, depth: 22 },
+      patch: { orbit: 0, tilt: 0, depth: 22, wedge: 0 },
     },
   ],
   field: FIELD_CONTROLS,
@@ -160,7 +216,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'speed',
       kind: 'range',
-      label: 'Authored tool speed',
+      label: 'Tool speed',
       min: 0,
       max: 40,
       step: 1,
@@ -172,12 +228,22 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'sweep',
       kind: 'range',
-      label: 'Authored DTS arc',
+      label: 'DTS arc',
       min: 20,
       max: 60,
       step: 10,
       unit: '°',
       default: 30,
+    },
+    {
+      key: 'sweepCenter',
+      kind: 'range',
+      label: 'Centre of the DTS arc',
+      min: -30,
+      max: 30,
+      step: 10,
+      unit: '°',
+      default: 0,
     },
     {
       key: 'plane',
@@ -225,7 +291,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'acquisitionOrbit',
       kind: 'range',
-      label: 'Illustrative gantry rotation',
+      label: 'Gantry rotation',
       min: -100,
       max: 100,
       step: 1,
@@ -286,7 +352,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'captured',
       kind: 'action',
-      label: 'Capture the checked model setup',
+      label: 'Run the CBCT spin',
       default: false,
       patch: { captured: true },
     },
@@ -322,7 +388,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       unit: ' mm',
       default: 0,
     },
-    { key: 'slab', kind: 'toggle', label: 'Combine depths into a teaching slab', default: false },
+    { key: 'slab', kind: 'toggle', label: 'Thick slab (combine depths)', default: false },
     {
       key: 'slicesTarget',
       kind: 'action',
@@ -366,7 +432,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'shift',
       kind: 'range',
-      label: 'Authored anatomical displacement',
+      label: 'Anatomical displacement',
       min: -30,
       max: 30,
       step: 1,
@@ -377,7 +443,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'showCurrent',
       kind: 'toggle',
-      label: 'Show the current lesion position (teaching ground truth)',
+      label: 'Show the current lesion position',
       default: true,
     },
     { key: 'capture', kind: 'action', label: 'Capture a new stored contour', default: false },
@@ -386,7 +452,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'distance',
       kind: 'range',
-      label: 'Illustrative distance from patient center',
+      label: 'Distance from patient center',
       min: 1.3,
       max: 3,
       step: 0.1,
@@ -406,7 +472,7 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
     {
       key: 'shield',
       kind: 'toggle',
-      label: 'Place the schematic shielding barrier between patient and staff',
+      label: 'Place the shielding barrier between patient and staff',
       default: false,
     },
   ],
@@ -524,6 +590,15 @@ export type LabMetricId =
   | 'depthMm'
   | 'irradiatedAreaPct'
   | 'contextRetained'
+  | 'rayCrosses'
+  | 'ribOnRay'
+  | 'mediastinumOnRay'
+  | 'diaphragmOnRay'
+  | 'viewObliquityDeg'
+  | 'airwaysDrawn'
+  | 'airwayShortest'
+  | 'airwaysOverLesion'
+  | 'spineInField'
   | 'zoomAddsExposure'
   | 'pulseRate'
   | 'masPerSecond'
@@ -531,6 +606,8 @@ export type LabMetricId =
   | 'interFrameTravelMm'
   | 'intervalMs'
   | 'sweepDeg'
+  | 'sweepCentreDeg'
+  | 'rayCrossesAtCentre'
   | 'planeMm'
   | 'centered'
   | 'ready'
@@ -558,8 +635,17 @@ export interface LabMetricSpec {
 export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   separationMm: { label: 'Projected tool–lesion separation', unit: ' mm', digits: 1 },
   depthMm: { label: 'True depth offset along the X-ray path', unit: ' mm', digits: 0 },
-  contextRetained: { label: 'Modeled target, excursion and landmarks retained' },
-  irradiatedAreaPct: { label: 'Modeled irradiated area vs full field', unit: '%', digits: 0 },
+  contextRetained: { label: 'Lesion, tool path and landmarks in the field' },
+  rayCrosses: { label: 'Anatomy over the nodule' },
+  ribOnRay: { label: 'Rib over the nodule' },
+  mediastinumOnRay: { label: 'Heart or mediastinum over the nodule' },
+  diaphragmOnRay: { label: 'Diaphragm over the nodule' },
+  viewObliquityDeg: { label: 'Projection through the patient', unit: '°', digits: 0 },
+  airwaysDrawn: { label: 'Bronchi drawn' },
+  airwayShortest: { label: 'Most foreshortened at this angle' },
+  airwaysOverLesion: { label: 'Bronchi over the nodule at this angle' },
+  spineInField: { label: 'Spine in the field' },
+  irradiatedAreaPct: { label: 'Irradiated area vs the open field', unit: '%', digits: 0 },
   zoomAddsExposure: { label: 'Extra exposure from display zoom' },
   pulseRate: { label: 'Pulse rate', unit: ' pulses/s', digits: 2 },
   masPerSecond: { label: 'Tube load at fixed 20 mA', unit: ' mAs/s', digits: 2 },
@@ -567,10 +653,12 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   interFrameTravelMm: { label: 'Travel between frames', unit: ' mm', digits: 1 },
   intervalMs: { label: 'Time between acquired frames', unit: ' ms', digits: 0 },
   sweepDeg: { label: 'DTS arc', unit: '°', digits: 0 },
+  sweepCentreDeg: { label: 'Centre of the DTS arc', unit: '°', digits: 0 },
+  rayCrossesAtCentre: { label: 'Anatomy over the nodule at the arc’s centre' },
   planeMm: { label: 'DTS plane depth', unit: ' mm', digits: 0 },
   centered: { label: 'Lesion centered on both scout images' },
   ready: { label: 'Acquisition readiness' },
-  captured: { label: 'Checked model setup captured' },
+  captured: { label: 'Spin run on the checked setup' },
   windowLabel: { label: 'Side-cutting window and lesion' },
   windowIntersects: { label: 'Side-cutting window intersects the lesion' },
   windowFull: { label: 'Side-cutting window fully within the lesion' },
@@ -579,7 +667,7 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   currentShiftMm: { label: 'Current anatomy state', unit: ' mm', digits: 0 },
   contourStale: { label: 'Stored contour differs from current anatomy' },
   inverseSquareRatio: {
-    label: 'Unshielded point-source illustration vs 1 m',
+    label: 'Scatter exposure vs 1 m, unshielded',
     unit: '×',
     digits: 2,
   },
@@ -598,38 +686,94 @@ export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
   separationMm:
     'The distance on the detector between where the tool tip and the target project in this projection. Zero means they are superimposed, however far apart they are in depth.',
   depthMm:
-    'How far the tool tip sits from the target along the initial X-ray path: the depth a single projection collapses.',
+    'How far the tool tip sits from the target along the frontal X-ray path: the depth a single projection collapses.',
   irradiatedAreaPct:
-    'The collimated field’s area as a share of the full detector field, from the field width squared. Geometry, not dose.',
+    'The collimated field’s area as a share of the open field, from the field width squared. Scatter is produced in the irradiated tissue, so less area means less scatter reaching the detector.',
   contextRetained:
-    'Whether the modeled target, both numbered landmarks and the whole dashed planned excursion fall inside the field.',
+    'Whether the lesion, both numbered landmarks and the whole dashed planned tool path fall inside the field.',
+  rayCrosses:
+    'What the X-ray path through the centre of the nodule crosses besides lung and chest wall, read from the CT: the heart and mediastinum, the diaphragm, the spine or a rib. Lung only means nothing dense lies over the nodule in this projection.',
+  ribOnRay: 'Whether the X-ray path through the centre of the nodule crosses a rib.',
+  mediastinumOnRay:
+    'Whether the X-ray path through the centre of the nodule crosses the heart or mediastinum.',
+  diaphragmOnRay:
+    'Whether the X-ray path through the centre of the nodule passes below the diaphragm, through the upper abdomen.',
+  airwaysDrawn:
+    'Which bronchi are drawn over the image. They are taken from the CT of this patient; fluoroscopy itself does not show a bronchus beyond the central airways.',
+  airwayShortest:
+    'Of the segmental bronchi of the lobe shown, the one whose first two centimetres run most nearly along the X-ray beam at this angle, with the share of its length that the image cannot show as length.',
+  airwaysOverLesion:
+    'Of the segmental bronchi that cross the outline of the nodule on the frontal image, the ones whose centrelines still cross it at this angle, from the CT. A bronchus named at one angle and not at another lies in front of the nodule or behind it.',
+  viewObliquityDeg:
+    'The C-arm obliquity less the wedge: rolling the patient 30° gives the same image as rotating the C-arm 30° the other way.',
+  spineInField:
+    'Whether any of the vertebral column lies inside the collimated field. With it outside, the display range and the automatic exposure control are set by the lung, the lesion and the tool.',
   zoomAddsExposure: 'Always no: display zoom re-displays acquired pixels and delivers no X-rays.',
   pulseRate: 'How often a new image is acquired.',
   masPerSecond:
-    'Pulse rate × pulse width × a fixed 20 mA: the output the tube is asked for each second. Not patient dose.',
+    'Pulse rate × pulse width × a fixed 20 mA: the output the tube is asked for each second. Tube load is not patient dose.',
   inFrameBlurMm:
-    'How far the tool travels during one pulse at the authored speed: the blur within one frame.',
+    'How far the tool travels during one pulse at the set tool speed: the blur within one frame.',
   interFrameTravelMm: 'How far the tool travels between one acquired frame and the next.',
   intervalMs: 'The time between acquired frames: one second divided by the pulse rate.',
-  sweepDeg: 'The authored angular width of the DTS arc.',
+  sweepDeg: 'The angular width of the DTS arc.',
+  sweepCentreDeg:
+    'The C-arm obliquity at the middle of the arc. The reconstructed planes lie square to the beam there, so moving the centre tilts them.',
+  rayCrossesAtCentre:
+    'What the X-ray path through the centre of the nodule crosses at the arc’s centre, read from the CT. Structures on that path lie above and below the nodule in depth, where a limited arc blurs them into it.',
   planeMm: 'The depth of the reconstructed plane relative to the target plane.',
-  centered: 'Whether the lesion lies within the teaching tolerance of centre on both scout images.',
-  ready: 'Centered, with every readiness check declared.',
-  captured: 'Whether the checked model setup was captured before the spin.',
-  windowLabel:
-    'Where the modeled side-cutting window lies relative to the modeled lesion: geometry only.',
-  windowIntersects: 'Whether any part of the modeled window lies inside the modeled lesion.',
-  windowFull: 'Whether the whole modeled window lies inside the modeled lesion.',
+  centered: 'Whether the lesion lies within 8 mm of center on both scout images.',
+  ready: 'Centered, with all four pre-spin checks confirmed.',
+  captured: 'Whether the spin was run on a centered, checked setup.',
+  windowLabel: 'Where the side-cutting window lies relative to the lesion.',
+  windowIntersects: 'Whether any part of the side-cutting window lies inside the lesion.',
+  windowFull: 'Whether the whole side-cutting window lies inside the lesion.',
   tipInside:
-    'Whether the modeled tip lies inside the modeled lesion, which is a different question from the window.',
+    'Whether the tip lies inside the lesion, which is a different question from the window.',
   storedShiftMm: 'The displacement at which the stored contour was captured.',
   currentShiftMm: 'The displacement the current anatomy sits at now.',
   contourStale:
     'Yes when the stored contour was captured at a different displacement from the current anatomy.',
   inverseSquareRatio:
-    'One over the distance squared, relative to one metre: the idealized point-source trend, not a staff dose.',
+    'One over the distance squared, relative to one meter: the inverse-square trend with distance. It is not a measured staff dose.',
   kapGyCm2: 'Air kerma × beam area at the chosen plane.',
   kapMicroGyM2: 'The same kerma–area product in µGy·m²: 1 Gy·cm² is 100 µGy·m².',
+}
+
+function airwayReadouts(show: LabValue, named: boolean, orbit: number, tilt: number): LabReadouts {
+  // With the names hidden the readouts do not print them either: hiding them is how the learner
+  // tests their own naming, and how a check withholds its answer.
+  const over = lesionAirwaysAt(orbit, tilt)
+  const airwaysOverLesion = !named
+    ? 'Names hidden'
+    : over.length === 0
+      ? 'None of the ' + LESION_AIRWAYS.length
+      : over.join(', ')
+  const oneLobe = 'Show one lobe to compare its bronchi'
+  if (!isAirwayShow(show) || show === 'off')
+    return { airwaysDrawn: 'None', airwayShortest: oneLobe, airwaysOverLesion }
+  if (show === 'all')
+    return { airwaysDrawn: 'Whole tree, by lobe', airwayShortest: oneLobe, airwaysOverLesion }
+  if (show === 'lesion')
+    return {
+      airwaysDrawn: named
+        ? `Over the nodule on the frontal image: ${LESION_AIRWAYS.join(', ')}`
+        : 'Over the nodule on the frontal image, names hidden',
+      airwayShortest: oneLobe,
+      airwaysOverLesion,
+    }
+  if (!named)
+    return {
+      airwaysDrawn: `${AIRWAY_LOBES[show].name}, names hidden`,
+      airwayShortest: 'Names hidden',
+      airwaysOverLesion,
+    }
+  const shortest = mostForeshortened(show, orbit, tilt)
+  return {
+    airwaysDrawn: `${AIRWAY_LOBES[show].name}: ${AIRWAY_SEGMENTS_BY_LOBE[show].join(', ')}`,
+    airwayShortest: `${shortest.key}, ${Math.round(shortest.along * 100)}% along the beam`,
+    airwaysOverLesion,
+  }
 }
 
 export function formatReadout(metric: LabMetricId, value: LabValue | undefined): string {
@@ -646,17 +790,30 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
   const f = (key: string) => labFlag(lab, values, key, lessonId)
   switch (lab) {
     case 'geometry': {
-      const orbit = n('orbit'),
+      // Every projection is computed through the patient, so a wedge counts as obliquity.
+      const orbit = viewObliquity(n('orbit'), n('wedge')),
         tilt = n('tilt'),
         depth = n('depth')
       const target = projectToDetector(LESION_CENTER, orbit, tilt)
       const tip = projectToDetector(toolTipForDepth(depth), orbit, tilt)
+      const crossing = tableCrossing(orbit, tilt)
       return {
         separationMm: Math.hypot(target[0] - tip[0], target[1] - tip[1]),
         depthMm: depth,
         irradiatedAreaPct: n('field') ** 2 / 100,
         zoomAddsExposure: false,
         contextRetained: fieldContextCoverage(n('field'), orbit, tilt),
+        rayCrosses: rayCrossingLabel(crossing),
+        ribOnRay: crossing.rib,
+        mediastinumOnRay: crossing.mediastinum,
+        diaphragmOnRay: crossing.diaphragm,
+        viewObliquityDeg: orbit,
+        ...airwayReadouts(
+          labValue(lab, values, 'airways', lessonId),
+          labValue(lab, values, 'airwayNames', lessonId) === true,
+          orbit,
+          tilt,
+        ),
       }
     }
     case 'field': {
@@ -665,6 +822,7 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         irradiatedAreaPct: (field * field) / 100,
         zoomAddsExposure: false,
         contextRetained: fieldContextCoverage(field),
+        spineInField: spineInField(field),
       }
     }
     case 'temporal': {
@@ -680,8 +838,15 @@ export function labReadouts(lab: LabId, values: LabValues, lessonId: string): La
         intervalMs: metrics.intervalMs,
       }
     }
-    case 'dts':
-      return { sweepDeg: n('sweep'), planeMm: n('plane') }
+    case 'dts': {
+      const centre = n('sweepCenter')
+      return {
+        sweepDeg: n('sweep'),
+        planeMm: n('plane'),
+        sweepCentreDeg: centre,
+        rayCrossesAtCentre: rayCrossingLabel(tableCrossing(centre, 0)),
+      }
+    }
     case 'acquisition': {
       const centered = centeredForTeaching(n('offsetX'), n('offsetDepth'))
       const ready = centered && ACQUISITION_CHECKS.every((key) => f(key))

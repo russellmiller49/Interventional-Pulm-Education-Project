@@ -147,9 +147,9 @@ describe('G. the leg raise, the unfavourable choice and the case briefs', () => 
     const hd01 = hemodynamicCaseById.get('HD-01')!
     const plr = hd01.interventions.find((item) => item.id === 'passive-leg-raise')!
     expect(plr.label).not.toMatch(/stroke-volume endpoint/)
-    expect(plr.response).toMatch(/no continuous cardiac-output channel/)
+    expect(plr.response).toMatch(/no real-time flow channel/)
     const feedback = feedbackForHemodynamicAction(hd01, plr, false)
-    expect(feedback.theCue).toMatch(/thermodilution series acquired while the leg raise lasts/)
+    expect(feedback.theCue).toMatch(/Thermodilution, bolus or continuous, is too slow/)
     expect(feedback.theCue).not.toMatch(/Watch the flow trend/)
 
     let state = createInitialHemodynamicState(hd01, 'practice', 3282)

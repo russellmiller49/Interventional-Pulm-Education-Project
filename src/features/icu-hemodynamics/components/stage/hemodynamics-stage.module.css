@@ -112,6 +112,15 @@
   gap: 0.35rem 0.75rem;
 }
 
+/*
+ * Withdraw and Advance sit level with the control's name, not centred on its wrapped description.
+ * In a narrow column the description runs to three lines, and centring put the buttons on the
+ * lower edge of a 720 px window, a fifth of them cut off.
+ */
+.dock[data-dock='tip'] > .dockRow {
+  align-items: start;
+}
+
 .dockRow > label,
 .dockRow > div:first-child {
   display: grid;
@@ -724,6 +733,33 @@
 }
 
 /*
+ * Learn on a desktop is the fixed workspace (owner, 2026-10-16): the shell is the viewport beneath
+ * the site header and the section's text and visual panes scroll on their own, so the learner reads
+ * on with the monitor and its controls still in view. `hemodynamics-flow.module.css` fills it; below
+ * this viewport Learn keeps the document flow above.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true'] [data-activity-frame] {
+    display: grid;
+    height: 100%;
+    overflow: hidden;
+  }
+  .moduleShell[data-document-flow='true'][data-desktop-workspace='true']
+    [data-activity-frame]
+    > div:last-child {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/*
  * HD-PRE-REVIEW-02 (report L6-02): the captured occlusion trace the wedge cursor is moved across,
  * with the simulation's modeled respiratory phase drawn beneath it. The shaded band is the one
  * cardiac cycle the cursor's value averages.
@@ -987,4 +1023,12 @@
   .controlStrip li {
     flex-wrap: wrap;
   }
+}
+
+/* The link to the next critical care module, on the last section's "Section finished" card. */
+.moduleLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }

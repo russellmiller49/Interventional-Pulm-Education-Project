@@ -654,9 +654,11 @@ describe('F09 — the shared alternatives heading, and which component MCS actua
    * The EBUS pre-review fixed the key-aware heading on `AnswerVerdict`. MCS renders
    * `ChoiceReasoningFeedback` on all three of its verdict surfaces and `AnswerVerdict` on none, so
    * that fix does not reach this module. Neither shared component is edited or forked here: these
-   * tests record the exact consumers and preserve their reasoning and source contract. The
-   * key-aware heading repair remains a shared-owner follow-up; the current incorrect heading is
-   * not an invariant and a future shared repair must not break these consumer tests.
+   * tests record the exact consumers and preserve their reasoning and source contract.
+   *
+   * The shared repair landed as SHARED-FEEDBACK-02 (November 2026): the card states the
+   * best-supported answer on its own and folds only the answers that do not fit. The consumer test
+   * below now holds the card to that on a real MCS surface.
    */
   const read = (relative: string) => readFileSync(join(FEATURE_ROOT, relative), 'utf8')
 
@@ -677,18 +679,40 @@ describe('F09 — the shared alternatives heading, and which component MCS actua
     for (const file of consumers) expect(read(file)).not.toContain('<AnswerVerdict')
   })
 
-  it('keeps keyed and non-keyed reasoning reachable regardless of the shared heading repair', () => {
+  it('keeps every answer’s reasoning reachable, and never files the best-supported answer under “do not fit”', () => {
     const story = mcsStoryProblems[0]
+    const best = story.item.choices.filter((candidate) => candidate.plausibility === 'best')
+    // The card reads `plausibility`; the item contract keys on `correctChoiceIds`. Same answers.
+    expect(best.map((candidate) => candidate.id)).toEqual([...story.item.correctChoiceIds])
     for (const choice of story.item.choices) {
       const view = render(<McsStoryProblems stories={[story]} />)
       fireEvent.click(screen.getByRole('radio', { name: choice.label }))
       fireEvent.click(screen.getByRole('button', { name: 'Compare prediction' }))
       const verdict = view.container.querySelector<HTMLElement>('[data-story-verdict]')!
       expect(verdict).toHaveTextContent(choice.rationale)
-      const alternatives = verdict.querySelector('[data-other-answers-panel]')!
       for (const other of story.item.choices.filter((candidate) => candidate.id !== choice.id)) {
-        expect(alternatives).toHaveTextContent(other.label)
-        expect(alternatives).toHaveTextContent(other.rationale)
+        const row = verdict.querySelector(`[data-other-answer="${other.id}"]`)!
+        expect(row).toHaveTextContent(other.label)
+        expect(row).toHaveTextContent(other.rationale)
+      }
+      // Under "Why the other answers do not fit": only answers that do not fit.
+      const fold = verdict.querySelector('[data-other-answers-panel]')!
+      expect(fold.querySelector('summary')).toHaveTextContent('Why the other answers do not fit')
+      for (const keyed of best) {
+        expect(fold.querySelector(`[data-other-answer="${keyed.id}"]`)).toBeNull()
+        expect(fold).not.toHaveTextContent(keyed.rationale)
+      }
+      const stated = verdict.querySelector('[data-best-supported-answers]')
+      if (choice.plausibility === 'best') {
+        expect(stated).toBeNull()
+      } else {
+        expect(stated!.querySelector('[data-keyed-answer-label]')).toHaveTextContent(
+          'Best-supported answer',
+        )
+        for (const keyed of best) {
+          expect(stated).toHaveTextContent(keyed.label)
+          expect(stated).toHaveTextContent(keyed.rationale)
+        }
       }
       expect(within(verdict).getByText('Sources')).toBeInTheDocument()
       expect(verdict.querySelector('a[href]')).not.toBeNull()

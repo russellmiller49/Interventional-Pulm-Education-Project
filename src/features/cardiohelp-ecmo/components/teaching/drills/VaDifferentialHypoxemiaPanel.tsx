@@ -2,6 +2,7 @@ import {
   ECMO_BASELINE_DISPLAY_DEADBANDS,
   ecmoDerivedValueGuides,
 } from '../../../content/ecmoValueGuides'
+import { ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD } from '../../../content/teachingNumbers'
 import { EcmoDifferentialHypoxemiaMoves } from '../EcmoReferenceValues'
 import type { EcmoSimulationState } from '../../../engine/types'
 import { VaAorticStreamsDiagram } from '../VaAorticStreamsDiagram'
@@ -37,7 +38,7 @@ import {
 export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { patient, circuit } = state
   const differentialActive = state.scenario.activeFaults.includes('differential-hypoxemia')
-  const corrected = state.scenario.correctedFaults.includes('differential-hypoxemia')
+  const ventilatorRaised = Boolean(state.scenario.differentialResponse?.ventilatorRaised)
   const gap = patient.femoralArterialSpo2 - patient.rightRadialSpo2
   /*
    * The authored display deadband, not a clinical rule.
@@ -55,7 +56,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
       supportMode="va"
       clinicalQuestion="A right-hand oximeter is low while a femoral arterial sample and the blood leaving the membrane both read high, and the arterial trace is pulsatile. Are these three readings disagreeing with each other, or reporting different things?"
       boundaries={[
-        'The right-radial saturation on this monitor does not respond to pump speed or to ventilator settings. At the bedside, more retrograde flow moves the mixing point toward the aortic root and a better-ventilated lung raises the right-arm value; here one step stands for both the confirmation and the ventilator change.',
+        'The right-radial saturation on this monitor does not respond to pump speed. At the bedside, more retrograde flow moves the mixing point toward the aortic root. Here the ventilator does lift the right arm, by a size and at a speed this simulation sets.',
       ]}
     >
       <section className={styles.section} aria-labelledby="va-config-heading">
@@ -218,10 +219,10 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
           </p>
           <p data-live-differential-state>
             {differentialActive
-              ? `The upper-body pattern is active on this circuit, with the two arterial sites ${gap.toFixed(1)} points apart.`
-              : corrected
-                ? 'The upper-body pattern has been recognised and escalated on this circuit, and the modeled right-radial value is moving along its recovery curve.'
-                : 'No upper-body differential is active on this circuit at the moment.'}
+              ? ventilatorRaised
+                ? `The upper-body pattern is still active with the ventilator raised, with the two arterial sites ${gap.toFixed(1)} points apart. The ventilator improved what the native lungs deliver and did not move where the two streams meet.`
+                : `The upper-body pattern is active on this circuit, with the two arterial sites ${gap.toFixed(1)} points apart.`
+              : 'No upper-body differential is active on this circuit at the moment.'}
           </p>
         </Mechanism>
 
@@ -256,6 +257,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             first.
           </p>
           <EcmoDifferentialHypoxemiaMoves />
+          <p data-differential-lesson-record>{ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD}</p>
         </FittingResponse>
 
         <ThreeDomainResponse

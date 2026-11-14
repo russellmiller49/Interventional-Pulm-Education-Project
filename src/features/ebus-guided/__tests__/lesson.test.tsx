@@ -138,6 +138,8 @@ const primary = () => document.querySelector('[data-now-primary]') as HTMLButton
 const next = () => fireEvent.click(primary())
 const check = () => fireEvent.click(screen.getByRole('button', { name: 'Check response' }))
 const verdict = () => document.querySelector('[data-answer-verdict]')
+/** The lesson's save, restart and exit controls sit behind "More" in the header. */
+const openMore = () => fireEvent.click(screen.getByRole('button', { name: 'More' }))
 const explanation = () => document.querySelector('[data-explanation-reveal]')
 const skipAcquisition = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Continue without an image' }))
@@ -164,15 +166,43 @@ function expectNoGradedWrite() {
     'visitedLessonIds',
   ])
 }
-function startLab() {
-  render(<LessonHost lesson={coupling} />)
+/*
+ * The lesson order since the 2026-11-10 flow change: a committed prediction, the teaching, the
+ * acquisition, the learner's own image with its key points, then one transfer check.
+ */
+/**
+ * From the first lab's image screen to the lesson's closing check. The contact lesson holds a
+ * second unit since 2026-11-10: the contact model's briefing, its lab, and one check on that image.
+ */
+function toClosingCheck() {
   next()
-  answer(coupling.question.choices.find((c) => c.correct)!.text)
+  expect(heading('Relate the wall, transducer and air gap')).toBeInTheDocument()
+  next()
+  skipAcquisition()
+  expect(heading('Explain the contact comparison')).toBeInTheDocument()
   next()
 }
-it('shows a wrong response’s feedback, allows a retry, stores nothing and does not advance by itself', () => {
+function startLab() {
   render(<LessonHost lesson={coupling} />)
+  answer(coupling.question.choices.find((c) => c.correct)!.text)
   next()
+  next()
+}
+const stationSeven = LESSONS.find((l) => l.id === 'station-seven')!
+/** Station 7 up to its first acquisition: prediction, briefing, demonstration. */
+function startStationSeven() {
+  render(<LessonHost lesson={stationSeven} />)
+  answer(stationSeven.question.choices.find((c) => c.correct)!.text)
+  next()
+  next()
+  next()
+}
+it('asks for the prediction before any teaching, shows a wrong response’s feedback, allows a retry and stores nothing', () => {
+  render(<LessonHost lesson={coupling} />)
+  expect(heading('Identify the acquisition problem')).toBeInTheDocument()
+  expect(document.querySelector('[data-activity-kind]')).toHaveTextContent('Predict first')
+  // Nothing that states the answer is on the screen before the learner commits.
+  expect(screen.queryByText(coupling.paragraphs[0])).not.toBeInTheDocument()
   expect(screen.queryByText(coupling.worked.reasoning)).not.toBeInTheDocument()
   expect(screen.queryByText(coupling.question.explanation)).not.toBeInTheDocument()
   expect(primary()).toHaveTextContent('Continue without answering')
@@ -185,27 +215,39 @@ it('shows a wrong response’s feedback, allows a retry, stores nothing and does
   expect(document.querySelectorAll('input[type=radio]:checked')).toHaveLength(0)
   answer(coupling.question.choices.find((c) => c.correct)!.text)
   expect(screen.getByText('Correct.', { exact: false })).toBeInTheDocument()
+  next()
+  // The teaching, with its worked example, follows the commitment.
+  expect(heading('Compare contact and brightness')).toBeInTheDocument()
+  expect(screen.getByText(coupling.paragraphs[0])).toBeVisible()
+  expect(screen.getByText(coupling.worked.reasoning, { exact: false })).toBeVisible()
   expectNoGradedWrite()
 })
-it('opens the hint and the explanation before any answer, and the hint reviews the concept read-only', () => {
+it('opens the hint and the explanation before any answer; a later check’s hint reviews the concept read-only', () => {
   render(<LessonHost lesson={coupling} />)
-  next()
   fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
   expect(screen.getByText(coupling.checklist[0])).toBeVisible()
+  // The prediction comes before the teaching, so its hint has no earlier concept to reopen.
+  expect(screen.queryByRole('button', { name: /Review this concept/ })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
   expect(explanation()).toHaveTextContent(coupling.question.explanation)
   expect(explanation()).toHaveTextContent('Shown without an answer')
   expect(verdict()).toBeNull()
+  next()
+  next()
+  skipAcquisition()
+  toClosingCheck()
+  expect(heading('Reassess another window')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Hint' }))
   fireEvent.click(screen.getByRole('button', { name: /Review this concept/ }))
   expect(screen.getByText('Review · Current activity paused')).toBeVisible()
   expect(screen.getByText(coupling.paragraphs[0])).toBeVisible()
   expect(primary()).toHaveTextContent('Return to current task')
   next()
-  expect(heading('Identify the acquisition problem')).toBeInTheDocument()
+  expect(heading('Reassess another window')).toBeInTheDocument()
   expect(document.querySelectorAll('input[type=radio]:checked')).toHaveLength(0)
   expectNoGradedWrite()
 })
-it('holds an image only after a real acquisition; skipping holds nothing, and the check on it stays explainable but unanswerable', () => {
+it('holds an image only after a real acquisition; skipping holds nothing, and the image screen says so', () => {
   startLab()
   expect(primary()).toHaveTextContent('Continue with this image')
   expect(primary()).toBeDisabled()
@@ -215,16 +257,16 @@ it('holds an image only after a real acquisition; skipping holds nothing, and th
   expect(primary()).toBeDisabled()
   skipAcquisition()
   expect(heading('Compare the acquired images')).toBeInTheDocument()
-  expect(document.querySelector('[data-question-unavailable]')).toHaveTextContent(
-    'No image is held for this check',
+  expect(document.querySelector('[data-activity-kind]')).toHaveTextContent('Your image')
+  expect(document.querySelector('[data-evidence-identity="held-missing"]')).toHaveTextContent(
+    'No image',
   )
-  expect(screen.queryByRole('button', { name: 'Check response' })).toBeDisabled()
-  expect(screen.getByLabelText(coupling.observation.choices[0].text)).toBeDisabled()
-  fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
-  expect(explanation()).toHaveTextContent(coupling.observation.explanation)
-  expect(screen.getByRole('button', { name: /Back to the acquisition/ })).toBeVisible()
-  expect(primary()).toHaveTextContent('Continue without answering')
-  next()
+  expect(screen.getByRole('button', { name: 'Go back and acquire one' })).toBeVisible()
+  // The image screen asks nothing: the check that repeated the prediction is no longer shown.
+  expect(screen.queryByRole('button', { name: 'Check response' })).not.toBeInTheDocument()
+  expect(screen.queryByText(coupling.observation.prompt)).not.toBeInTheDocument()
+  expect(primary()).toHaveTextContent('Continue to Relate the wall, transducer and air gap')
+  toClosingCheck()
   answer(coupling.transfer.choices.find((c) => c.unsafe)!.text)
   expect(screen.getByText('Not correct, and unsafe.', { exact: false })).toBeVisible()
   expect(primary()).toBeEnabled()
@@ -232,63 +274,85 @@ it('holds an image only after a real acquisition; skipping holds nothing, and th
   next()
   expect(heading('Lesson finished')).toBeInTheDocument()
   const summary = document.querySelector('[data-session-summary]')!
+  expect(summary).toHaveTextContent('Identify the acquisition problem: Check answered')
   expect(summary).toHaveTextContent('Restore the acoustic window: No image')
-  expect(summary).toHaveTextContent('Compare the acquired images: Check not answered')
   expect(summary).toHaveTextContent('Reassess another window: Check answered')
   expect(readProgress().progress.reviewedLessonIds).toEqual(['acoustic-contact'])
   expectNoGradedWrite()
 })
-it('holds a real acquisition, checks the image on it, and neither restart nor reload restores any response', () => {
+it('holds a real acquisition, shows it with the key points, and neither restart nor reload restores any response', () => {
   startLab()
   fireEvent.click(screen.getByText('Render changed scan'))
   expect(primary()).toBeEnabled()
   next()
-  expect(document.querySelector('[data-question-unavailable]')).toBeNull()
-  answer(coupling.observation.choices.find((c) => c.correct)!.text)
-  expect(screen.getByText('Correct.', { exact: false })).toBeVisible()
+  expect(heading('Compare the acquired images')).toBeInTheDocument()
+  expect(document.querySelector('[data-evidence-identity="held"]')).toBeInTheDocument()
+  expect(screen.getByText(coupling.takeaways[0])).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Check response' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Course outline' }))
   expect(
     screen.getByRole('button', { name: /Restore the acoustic window · Image acquired/ }),
   ).toBeInTheDocument()
+  expect(
+    screen.getByRole('button', { name: /Identify the acquisition problem · Check answered/ }),
+  ).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: /Close/ }))
-  fireEvent.click(screen.getByText('Restart lesson'))
-  expect(heading('Compare contact and brightness')).toBeInTheDocument()
-  next()
+  openMore()
+  fireEvent.click(screen.getByRole('button', { name: 'Restart lesson' }))
+  expect(heading('Identify the acquisition problem')).toBeInTheDocument()
   expect(document.querySelectorAll('input[type=radio]:checked')).toHaveLength(0)
   expect(verdict()).toBeNull()
   cleanup()
   render(<LessonHost lesson={coupling} />)
-  expect(heading('Compare contact and brightness')).toBeInTheDocument()
+  expect(heading('Identify the acquisition problem')).toBeInTheDocument()
+  expect(document.querySelectorAll('input[type=radio]:checked')).toHaveLength(0)
   expect(readProgress().progress.lastLocation).toEqual({ kind: 'lesson', id: 'acoustic-contact' })
   expect(readProgress().progress.reviewedLessonIds).toEqual([])
   expectNoGradedWrite()
 })
+it('a check on a held image stays explainable but unanswerable when both acquisitions were skipped', () => {
+  startStationSeven()
+  skipAcquisition()
+  next()
+  skipAcquisition()
+  expect(screen.getByText(stationSeven.transfer.prompt)).toBeVisible()
+  expect(document.querySelector('[data-question-unavailable]')).toHaveTextContent(
+    'No image is held for this check',
+  )
+  expect(screen.queryByRole('button', { name: 'Check response' })).toBeDisabled()
+  expect(screen.getByLabelText(stationSeven.transfer.choices[0].text)).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
+  expect(explanation()).toHaveTextContent(stationSeven.transfer.explanation)
+  expect(screen.getByRole('button', { name: /Back to the acquisition/ })).toBeVisible()
+  expect(primary()).toHaveTextContent('Continue without answering')
+  expectNoGradedWrite()
+})
 it('withholds checking when the retained acquisition becomes unavailable, keeps the explanation open and lets the learner continue', () => {
-  startLab()
+  startStationSeven()
   fireEvent.click(screen.getByText('Render changed scan'))
   next()
+  next()
+  fireEvent.click(screen.getByText('Render changed scan'))
+  next()
+  expect(screen.getByText(stationSeven.transfer.prompt)).toBeVisible()
   fireEvent.click(screen.getByText('Move before frame'))
   expect(document.querySelector('[data-question-unavailable]')).toHaveTextContent(
     'The held image is unavailable in the current view',
   )
-  expect(screen.getByLabelText(coupling.observation.choices[0].text)).toBeDisabled()
+  expect(screen.getByLabelText(stationSeven.transfer.choices[0].text)).toBeDisabled()
   fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
-  expect(explanation()).toHaveTextContent(coupling.observation.explanation)
+  expect(explanation()).toHaveTextContent(stationSeven.transfer.explanation)
   expect(primary()).toBeEnabled()
   next()
-  expect(screen.getByText(coupling.transfer.prompt)).toBeVisible()
+  expect(heading('Record what this window establishes')).toBeInTheDocument()
   expectNoGradedWrite()
 })
 it('requires a fresh changed-window acquisition before the changed-window check, and a current source for the record task', () => {
-  const lesson = LESSONS.find((l) => l.id === 'station-seven')!
-  render(<LessonHost lesson={lesson} />)
-  next()
-  next()
-  answer(lesson.question.choices.find((c) => c.correct)!.text)
-  next()
+  const lesson = stationSeven
+  startStationSeven()
   fireEvent.click(screen.getByText('Render changed scan'))
   next()
-  answer(lesson.observation.choices.find((c) => c.correct)!.text)
+  expect(heading('Read the acquired window')).toBeInTheDocument()
   next()
   expect(primary()).toHaveTextContent('Continue with this image')
   expect(primary()).toBeDisabled()
@@ -352,6 +416,7 @@ it.each([
     const lesson = LESSONS.find((entry) => entry.id === lessonId)!
     render(<LessonHost lesson={lesson} />)
     next()
+    next()
     fireEvent.click(screen.getByRole('button', { name: revealLabel }))
     const reference = () =>
       document.querySelector(`[data-task-reference="${interaction}"]`) as HTMLElement
@@ -374,12 +439,13 @@ it.each([
     }
     assertAuthoredReference()
     expect(primary()).toBeEnabled()
-    // Both optional questions on this task may be passed over before the next task.
-    next()
+    // The task carries no check of its own now: one step on, then back to it.
     next()
     fireEvent.click(screen.getByRole('button', { name: /^Back$/ }))
     assertAuthoredReference()
+    openMore()
     fireEvent.click(screen.getByRole('button', { name: /^Restart lesson$/ }))
+    next()
     next()
     expect(reference()).toBeNull()
     expect(screen.getByRole('button', { name: revealLabel })).toBeEnabled()
@@ -387,27 +453,34 @@ it.each([
   },
 )
 
-it('completes, shows or skips a matching task without a write, and shows its explanation either way', () => {
+it('completes, shows or skips a task without a write; a skipped task with a check after it shows its explanation', () => {
   const lesson = LESSONS.find((l) => l.id === 'clinical-question')!
   render(<LessonHost lesson={lesson} />)
+  expect(screen.getByText(lesson.question.prompt)).toBeVisible()
+  next()
   next()
   expect(heading('State the information needed')).toBeInTheDocument()
   expect(screen.queryByText(lesson.question.prompt)).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Show the matches' }))
   expect(screen.getByText(lesson.matching!.explanation, { exact: false })).toBeVisible()
-  expect(screen.getByText(lesson.question.prompt)).toBeVisible()
   expect(document.querySelector('[data-task-explanation]')).toHaveTextContent(
     'You opened the answer to this task',
   )
-  expect(primary()).toHaveTextContent('Continue without answering')
+  // The check that followed the task repeated the prediction and is no longer asked.
+  expect(screen.queryByText(lesson.observation.prompt)).not.toBeInTheDocument()
+  expect(primary()).toHaveTextContent('Continue to Consider a different diagnostic request')
   cleanup()
-  render(<LessonHost lesson={lesson} />)
+  // A task that still has a check after it: skipping the task shows its explanation, then the check.
+  const recovery = LESSONS.find((l) => l.id === 'complications-recovery')!
+  render(<LessonHost lesson={recovery} />)
   next()
+  next()
+  expect(heading('Prioritize the patient during deterioration')).toBeInTheDocument()
   next()
   expect(document.querySelector('[data-task-explanation]')).toHaveTextContent(
     'You continued without completing this task',
   )
-  expect(screen.getByText(lesson.question.prompt)).toBeVisible()
+  expect(screen.getByText(recovery.observation.prompt)).toBeVisible()
   expectNoGradedWrite()
 })
 it('opens help without any storage write', () => {
@@ -420,6 +493,9 @@ it('opens help without any storage write', () => {
 })
 it('saves a lesson for later and unsaves it, as the only marks besides location and finish', () => {
   render(<LessonHost lesson={coupling} />)
+  // Closed, the menu's controls are not offered at all.
+  expect(screen.queryByRole('button', { name: 'Save for later' })).not.toBeInTheDocument()
+  openMore()
   fireEvent.click(screen.getByRole('button', { name: 'Save for later' }))
   expect(readProgress().progress.reviewLaterLessonIds).toEqual(['acoustic-contact'])
   fireEvent.click(screen.getByRole('button', { name: 'Saved for later' }))
@@ -429,8 +505,8 @@ it('saves a lesson for later and unsaves it, as the only marks besides location 
 it('cancels a pending recorded hold on a real workbench invalidation so recovery can acquire again', () => {
   const lesson = LESSONS.find((item) => item.id === 'image-depth')!
   render(<LessonHost lesson={lesson} />)
-  next()
   answer(lesson.question.choices.find((choice) => choice.correct)!.text)
+  next()
   next()
   fireEvent.click(screen.getByText('Load recorded acquisition'))
   next()

@@ -1,3 +1,5 @@
+import type { LabMetricId } from '../engine/labMetrics'
+import type { SuiteInputs, SuiteViewSpec } from '../components/suite/types'
 import { imagingLesson, peripheralImagingSectionIds, type ImagingSectionId } from './pathway'
 import { teachingDemonstration } from './teachingExamples'
 
@@ -30,6 +32,15 @@ export interface ImagingLearningActivity {
   readonly visual: ImagingVisual
   readonly examples?: readonly string[]
   readonly controls?: readonly string[]
+  /**
+   * What this step changes in the section's suite view: its own readouts, or an input no control
+   * is bound to. A step without it shows the section's view.
+   */
+  readonly view?: {
+    readonly camera?: SuiteViewSpec['camera']
+    readonly readouts?: readonly LabMetricId[]
+    readonly defaults?: Partial<SuiteInputs>
+  }
   readonly captureGroup?: string
   readonly disclosure: 'teaching' | 'learner-work' | 'independent'
   readonly completion: 'explicit-continue' | 'supported-observations' | 'committed-response'
@@ -47,7 +58,18 @@ const read = (
   presentation: ImagingPresentation = 'illustrated',
   examples?: readonly string[],
   controls?: readonly string[],
-): ActivityInput => ({ id, title, content, visual, presentation, examples, controls, task: 'read' })
+  view?: ImagingLearningActivity['view'],
+): ActivityInput => ({
+  id,
+  title,
+  content,
+  visual,
+  presentation,
+  examples,
+  controls,
+  view,
+  task: 'read',
+})
 const work = (
   title: string,
   presentation: ImagingPresentation,
@@ -82,7 +104,8 @@ const finish = (
   {
     id: 'interpretation',
     task: 'check',
-    title: 'Interpret a changed example',
+    // A check with no image is a written scenario, and its title says so.
+    title: visual === 'case' ? 'Interpret a clinical scenario' : 'Interpret a changed example',
     presentation,
     visual,
     content: [],
@@ -104,6 +127,17 @@ const finish = (
     content: [],
   },
 ]
+
+/** Centering and the four pre-spin checks. The spin has its own button, with the scouts. */
+const CBCT_SETUP_CONTROLS = [
+  'offsetX',
+  'offsetDepth',
+  'center',
+  'target',
+  'clearance',
+  'state',
+  'protection',
+] as const
 
 /** Each section authors its own sequence. Content lives in the existing lesson/example registries. */
 const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> = {
@@ -194,6 +228,19 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['overlay'],
     ),
     read(
+      'setup',
+      'Set up ventilation and position before the first image',
+      [
+        'Prevent atelectasis before the first image',
+        'Position the patient so the lesion side is up',
+        '@wedge-dependency',
+      ],
+      'suite',
+      'comparison',
+      ['Planning / initial current state'],
+      [],
+    ),
+    read(
       'mismatch',
       'Compare a stored contour after anatomy changes',
       ['@worked', 'When the lesion is not where it was expected'],
@@ -204,6 +251,50 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Inspect a mismatch with the planning target', 'comparison'),
     compare('Capture new localization evidence', 'comparison'),
+    // The check shows a new dependent opacity on its own image pair (`DependentOpacityPair`).
+    ...finish('comparison'),
+  ],
+  'airway-anatomy': [
+    read(
+      'map',
+      'Find the central airways and the lobes',
+      [
+        '@purpose',
+        'Fluoroscopy does not show the bronchi',
+        'Side and height: what the frontal image does show',
+      ],
+      'suite',
+      'comparison',
+      ['Frontal · the image alone', 'Frontal · whole tree by lobe'],
+      [],
+    ),
+    read(
+      'depth',
+      'Find the bronchi the frontal image draws short',
+      ['Depth: what the frontal image does not show'],
+      'suite',
+      'comparison',
+      ['Frontal · right lower lobe', 'Frontal · right middle lobe'],
+      [],
+    ),
+    read(
+      'route',
+      'Name the airway to the lesion',
+      ['Name the airway to the lesion before the procedure', '@worked'],
+      'suite',
+      'comparison',
+      ['Frontal · left lower lobe', 'LAO 30° · left lower lobe'],
+      [],
+    ),
+    work('Draw each lobe and find its short bronchi', 'comparison', 'suite', [
+      'airways',
+      'airwayNames',
+    ]),
+    compare('Rotate the C-arm and watch a lobe open out', 'comparison', [
+      'airways',
+      'airwayNames',
+      'orbit',
+    ]),
     ...finish('comparison'),
   ],
   projection: [
@@ -215,6 +306,43 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'comparison',
       ['Baseline · frontal overlap', 'Change projection only'],
       ['orbit'],
+    ),
+    // The same parallax applied to the anatomy: the bronchi that cross the nodule on the frontal
+    // image lie at different depths, and rotating the C-arm takes them off it. No tool is drawn;
+    // the question is which bronchus reaches the nodule, before anything is in it.
+    read(
+      'bronchi',
+      'Find which bronchus stays over the nodule',
+      ['Which bronchus reaches the nodule'],
+      'suite',
+      'comparison',
+      [
+        'Frontal · bronchi over the nodule',
+        'LAO 30° · the anterior bronchus leaves',
+        'RAO 30° · the posterior bronchi leave',
+      ],
+      ['orbit'],
+      {
+        // Close on the nodule from the patient's left and in front: the four bronchi are seen one
+        // behind another, which is what the image beside it cannot show.
+        camera: 'target',
+        readouts: ['airwaysOverLesion', 'rayCrosses'],
+        defaults: { showTool: false },
+      },
+    ),
+    // Expert-session round, part 2: choosing the angles from the CT gets its own reading step.
+    read(
+      'angles',
+      'Plan the obliquity and tilt from the CT',
+      [
+        'Three reasons to angle the C-arm',
+        'Read the obliquity off the axial CT',
+        'Read the cranial or caudal angle off the sagittal CT',
+      ],
+      'suite',
+      'comparison',
+      ['Planned obliquity · lung only', 'Planned tilt · straight on'],
+      ['orbit', 'tilt'],
     ),
     read(
       'alignment',
@@ -246,12 +374,21 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     read(
       'superimposition',
-      'Inspect superimposition on CT-derived projections',
+      'Inspect superimposition in two projections',
       ['@worked'],
       'suite',
       'comparison',
       ['CT superimposition · baseline', 'CT superimposition · changed view'],
       ['orbit'],
+    ),
+    read(
+      'ribs',
+      'Use the ribs, and nudge with beam tilt',
+      ['Put the ribs to work', 'The nudge: a few degrees of cranial or caudal angulation'],
+      'suite',
+      'comparison',
+      ['Heart off · rib over the nodule', 'Nudged cranial · rib off'],
+      ['orbit', 'tilt'],
     ),
     work('Change the projection and compare silhouettes', 'comparison'),
     ...finish('comparison', 'signal'),
@@ -260,10 +397,14 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'collimation',
       'Keep the information the task requires',
-      ['@purpose', 'Collimate to the task'],
+      ['@purpose', 'Collimate to the task', 'Collimate the spine out of the field'],
       'suite',
       'comparison',
-      ['Baseline · full acquisition field', 'Physical collimation'],
+      [
+        'Baseline · full acquisition field',
+        'Physical collimation',
+        'Collimated to the lesion · spine out of the field',
+      ],
       ['field'],
     ),
     read(
@@ -283,7 +424,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ],
       ['crop', 'cropWidth', 'zoom'],
     ),
-    work('Collimate while retaining the planned excursion', 'comparison', 'suite', ['field']),
+    work('Collimate for the tool path, then for the lesion', 'comparison', 'suite', ['field']),
     compare('Inspect the acquisition through crop and zoom', 'comparison', [
       'crop',
       'cropWidth',
@@ -327,7 +468,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'case',
       'The tool is visible. What is still uncertain?',
-      ['@purpose', 'A two-axis fluoroscopy technique', '@two-axis-example', '@worked'],
+      ['@purpose', 'The 2D workflow, in order', '@two-axis-example', '@worked'],
       'suite',
       'comparison',
       [
@@ -373,7 +514,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'arc',
       'Prepare and inspect the acquisition arc',
-      ['Prepare the DTS acquisition'],
+      ['Centre the arc on the view that shows the nodule', 'Prepare the DTS acquisition'],
       'suite',
       'acquisition',
       ['Acquisition arc'],
@@ -385,11 +526,18 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['@worked', 'Depth resolution depends on angular coverage'],
       'suite',
       'multiplanar',
-      ['Scroll through the modeled tool', 'Scroll through the modeled lesion'],
+      ['Scroll through the tool', 'Scroll through the lesion'],
       ['plane'],
     ),
     work('Review the reconstructed planes', 'multiplanar'),
-    compare('Compare limited-angle depth behavior', 'multiplanar'),
+    compare('Compare limited-angle depth behavior', 'multiplanar', [
+      'sweep',
+      'sweepCenter',
+      'plane',
+      'planeTool',
+      'planeLesion',
+      'planeDeeper',
+    ]),
     // Independent sanity review of PR #279 (finding F3, CHK-S10, 2026-09-24): the check's stem
     // (`dts-1`) is conceptual, "structures are elongated in the depth direction", and states its
     // evidence in words. The image beside it was one reconstructed plane, which cannot show
@@ -414,7 +562,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ],
       'suite',
       'multiplanar',
-      ['Acquisition arc', 'Scroll through the modeled tool', 'Scroll through the modeled lesion'],
+      ['Acquisition arc', 'Scroll through the tool', 'Scroll through the lesion'],
       ['sweep', 'plane'],
     ),
     work('Distinguish reconstruction, target update and overlay', 'record', 'case'),
@@ -441,8 +589,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Two scouts · one centered', 'Both scouts centered'],
       ['offsetX', 'offsetDepth'],
     ),
-    work('Center, check and acquire the modeled volume', 'acquisition'),
-    compare('Reassess after a setup change', 'acquisition'),
+    work('Center, check and run the spin', 'acquisition', 'suite', CBCT_SETUP_CONTROLS),
+    compare('Reassess after a setup change', 'acquisition', CBCT_SETUP_CONTROLS),
     ...finish('acquisition'),
   ],
   'fixed-suite': [
@@ -469,7 +617,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Movement requires rechecking'],
       ['offsetX'],
     ),
-    work('Inspect the fixed-room setup after movement', 'acquisition'),
+    // Only what this step uses: the readiness checks and the spin belong to the CBCT section.
+    work('Inspect the fixed-room setup after movement', 'acquisition', 'suite', [
+      'acquisitionOrbit',
+      'offsetX',
+    ]),
     ...finish('record', 'case'),
   ],
   'mobile-suite': [
@@ -493,7 +645,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Preserve orientation and registration', '@worked'],
       'provenance',
     ),
-    work('Inspect the mobile scanner path with a centered setup', 'acquisition'),
+    work('Inspect the mobile scanner path with a centered setup', 'acquisition', 'suite', [
+      'acquisitionOrbit',
+      'offsetX',
+      'offsetDepth',
+      'center',
+    ]),
     ...finish('record', 'case'),
   ],
   'tool-confirmation': [
@@ -547,6 +704,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Capture a contour, then change the anatomy', 'comparison'),
     compare('Review current evidence without the old annotation', 'comparison'),
+    // The check shows the doubled edges of motion on its own planes (`MotionDoubledPlanes`).
     ...finish('comparison'),
   ],
   'staff-protection': [
@@ -568,9 +726,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       ['Distance and barrier'],
       ['orbit'],
     ),
-    work('Compare distance in the idealized model', 'acquisition'),
+    work('Compare exposure at different distances', 'acquisition'),
     compare('Inspect a changed projection with a barrier', 'acquisition'),
-    ...finish('acquisition'),
+    // The check is about a hand in the primary beam, which the scatter scene does not show: a
+    // written scenario.
+    ...finish('record', 'case'),
   ],
   'dose-reporting': [
     read(
@@ -615,9 +775,25 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
       'questions',
       'record',
     ),
-    // Report 8.2 (fellow walkthrough, PDF p.44): the task places eight findings against the six
-    // components of image formation; no decision is asked for, and the prompt already says so.
-    work('Match each finding to its component of image formation', 'record', 'case'),
+    // Expert-session round, part 2 (A7): the matching task (report 8.2) gave way to a run-through of
+    // one nodule on the geometry lab, with the wedge as a control.
+    read(
+      'run-through',
+      'Plan one nodule through the workflow',
+      ['One nodule through the workflow'],
+      'suite',
+      'comparison',
+      ['Supine · within the room’s obliquity', 'Wedged · same C-arm angle'],
+      ['wedge'],
+    ),
+    work('Wedge, project, collimate and inspect', 'comparison', 'suite', [
+      'wedge',
+      'orbit',
+      'tilt',
+      'field',
+      'zoom',
+    ]),
+    compare('Nudge the tilt, then take the wedge out', 'comparison', ['wedge', 'orbit', 'tilt']),
     ...finish('record', 'case'),
   ],
 }
@@ -631,9 +807,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
  * `TeachingPanels` re-exports the predicate for the components that ask it.
  */
 export const INDEPENDENT_IMAGE_PANEL_SECTIONS: readonly ImagingSectionId[] = [
+  'current-anatomy',
   'signal',
   'field',
   'time',
+  'changing-anatomy',
   'dose-reporting',
 ]
 
@@ -644,9 +822,12 @@ export function imagingLearningActivities(
     ...activity,
     id: `${sectionId}:${activity.id}`,
     sectionId,
-    // These activities compare one acquisition across different display/temporal explanations.
+    // These activities compare one acquisition across different display/temporal explanations. A
+    // step with a view of its own draws a different picture, so it keeps a baseline of its own.
     captureGroup:
-      ['field', 'time', 'projection'].includes(sectionId) && activity.task === 'read'
+      ['field', 'time', 'projection'].includes(sectionId) &&
+      activity.task === 'read' &&
+      !activity.view
         ? `${sectionId}:worked-acquisition`
         : activity.id,
     disclosure:
@@ -669,6 +850,7 @@ export function imagingLearningActivities(
  * they illustrate (Prompt 04: OD4-06, OD4-08, OD4-09, OD4-10).
  */
 export const IMAGING_FIGURE_REFS = [
+  '@wedge-dependency',
   '@two-axis-example',
   '@artifact-strip',
   '@fixed-mobile-comparison',

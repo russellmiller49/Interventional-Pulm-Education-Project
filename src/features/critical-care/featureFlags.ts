@@ -1,7 +1,6 @@
 export const criticalCareFeatureFlagNames = [
   'criticalCareDashboardV2',
   'hemodynamicsGuidedV2',
-  'ventilationLearnV2',
   'mcsChromeV2',
   'ecmoChromeV2',
   'crrtChromeV2',
@@ -15,7 +14,6 @@ export type CriticalCareFeatureFlags = Readonly<Record<CriticalCareFeatureFlagNa
 const defaults: CriticalCareFeatureFlags = {
   criticalCareDashboardV2: true,
   hemodynamicsGuidedV2: true,
-  ventilationLearnV2: false,
   mcsChromeV2: false,
   ecmoChromeV2: false,
   crrtChromeV2: false,
@@ -25,7 +23,6 @@ const defaults: CriticalCareFeatureFlags = {
 const environmentKeys: Readonly<Record<CriticalCareFeatureFlagName, string>> = {
   criticalCareDashboardV2: 'CRITICAL_CARE_DASHBOARD_V2',
   hemodynamicsGuidedV2: 'HEMODYNAMICS_GUIDED_V2',
-  ventilationLearnV2: 'VENTILATION_LEARN_V2',
   mcsChromeV2: 'MCS_CHROME_V2',
   ecmoChromeV2: 'ECMO_CHROME_V2',
   crrtChromeV2: 'CRRT_CHROME_V2',
