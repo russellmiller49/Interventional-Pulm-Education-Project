@@ -387,8 +387,15 @@ describe('T1 and S6-2: the lesson is shown, in one shape, in all fourteen sectio
       expect(names.every((name) => ALLOWED.includes(name ?? ''))).toBe(true)
       expect(names).toEqual(ALLOWED.filter((name) => names.includes(name)))
       // A unit's point to keep in mind is on the page exactly once, shown or in its disclosure;
-      // a unit without one renders no such block.
-      const boundary = lesson.unit.boundary
+      // a unit without one renders no such block. One its own deny list refuses before the first
+      // answer (Section 7's "trapped gas") waits for that answer (author's ruling, 2026-11-12).
+      const held =
+        index <= lesson.predictionStepIndex &&
+        lesson.spec.precommitDenyPatterns.some((pattern) =>
+          pattern.test(lesson.unit.boundary ?? ''),
+        )
+      const boundary = held ? undefined : lesson.unit.boundary
+      if (held) expect(block.textContent).not.toContain(lesson.unit.boundary!)
       const blocks = block.querySelectorAll('[data-teaching-block="boundary"]')
       expect(blocks).toHaveLength(boundary ? 1 : 0)
       if (boundary) expect((block.textContent ?? '').split(boundary).length - 1).toBe(1)

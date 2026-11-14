@@ -43,7 +43,7 @@ import {
 import { isFoundationUnit } from '../../content/foundations'
 import { resolveGuidedConsoleTasks } from '../../content/guidedConsoleTask'
 import { ventilationLearningUnits } from '../../content/learningCurriculum'
-import { ventilationExperimentByUnit } from '../../content/learningExperiments'
+import { ventilationExperimentForDevice } from '../../content/learningExperiments'
 import {
   ventilationPartSetupLine,
   ventilationRoundRelationLine,
@@ -213,16 +213,21 @@ function VentilationStageSession({
   storageAvailable: boolean
 }) {
   const router = useRouter()
-  const lesson = useMemo(() => ventilationStageLesson(unitId), [unitId])
+  /*
+   * The lesson's shape — its steps, ids and gates — is the same on every console, so the saved
+   * position and the step the lab opens are read from it before the session exists. What is shown
+   * is `lesson` below, in the selected console's words.
+   */
+  const structure = useMemo(() => ventilationStageLesson(unitId), [unitId])
   /*
    * `index` is the step's position in the lesson, which is what the saved reading location holds.
    * The learner is shown the presented steps only (N6). A saved position past the end of a lesson
    * that has since been reorganised reopens the section at its first task, and says so.
    */
-  const presented = useMemo(() => ventilationPresentedStepIndexes(lesson), [lesson])
+  const presented = useMemo(() => ventilationPresentedStepIndexes(structure), [structure])
   // Read once, at mount: the first visit rewrites the stored position to the task now shown.
-  const [reorganised] = useState(() => initialStep >= lesson.steps.length)
-  const [index, setIndex] = useState(() => resolvePresentedStepIndex(lesson, initialStep))
+  const [reorganised] = useState(() => initialStep >= structure.steps.length)
+  const [index, setIndex] = useState(() => resolvePresentedStepIndex(structure, initialStep))
   const position = Math.max(0, presented.indexOf(index))
   const previousIndex = position > 0 ? presented[position - 1] : null
   const nextIndex = position < presented.length - 1 ? presented[position + 1] : null
@@ -233,12 +238,17 @@ function VentilationStageSession({
   const { session, engine, lab } = useVentilationLabSession({
     unitId,
     device,
-    round: stepRound(lesson.steps[index]),
+    round: stepRound(structure.steps[index]),
   })
+  // The cycle-off threshold and the rise time in this console's own names (author, 2026-11-12).
+  const lesson = useMemo(
+    () => ventilationStageLesson(unitId, session.device),
+    [unitId, session.device],
+  )
   const step = lesson.steps[index]
   const interaction = step.interaction
   const presentation = step.presentation
-  const experiment = ventilationExperimentByUnit.get(unitId)!
+  const experiment = ventilationExperimentForDevice(unitId, session.device)!
   const round = experiment.rounds[session.round]
   const evidence = session.evidence[session.round]
   const sources = ventilationStageSources(unitId, session.device)
@@ -827,6 +837,26 @@ function VentilationStageSession({
     <BreathMap variant="strip" emphasis={step.stops} />
   )
 
+  /*
+   * Which of the section's questions are behind the learner: answered, or moved on from. The first
+   * is the location question where the section opens on one, else Part 1's prediction.
+   */
+  const firstQuestionIndex = lesson.steps.findIndex(
+    (candidate) =>
+      candidate.interaction.kind === 'locate' ||
+      (candidate.interaction.kind === 'prediction' && candidate.interaction.round === 0),
+  )
+  const firstQuestionIsLocation = lesson.steps[firstQuestionIndex]?.interaction.kind === 'locate'
+  const answered = {
+    first:
+      (firstQuestionIsLocation
+        ? session.evidence[0].location !== undefined
+        : session.evidence[0].prediction !== undefined) || index > firstQuestionIndex,
+    second:
+      session.evidence[1].prediction !== undefined ||
+      (lesson.transferPredictionStepIndex >= 0 && index > lesson.transferPredictionStepIndex),
+  }
+
   const teaching = (
     <VentilationTeachingColumn
       lesson={lesson}
@@ -838,6 +868,7 @@ function VentilationStageSession({
       landmarkChooser={interaction.kind === 'walk'}
       guideLook={simulatorTask ? lookLine : undefined}
       breathMap={breathMap}
+      answered={answered}
     />
   )
 

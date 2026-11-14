@@ -48,6 +48,11 @@ export interface VentilationSectionSpec {
   /** A shaping setting the section reaches for, named for the strip's last row. */
   readonly shapingNote?: string
   /**
+   * When the shaping note gives a question's keyed direction, the answer it waits for: the
+   * section's first question (its location question, or Part 1's prediction) or Part 2's.
+   */
+  readonly shapingNoteAfter?: 'first-answer' | 'second-answer'
+  /**
    * Text that must not appear on any surface before the prediction is committed: the keyed
    * answer's distinctive phrase, the case's diagnosis, the direction of the response.
    */
@@ -234,8 +239,10 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
         'The setting this section changes, and the one that made emptying harder. Fewer breaths give each expiration more time.',
       ),
     }),
+    // It gives Part 2's keyed direction, so it waits for Part 2's answer (author, 2026-11-12).
     shapingNote:
       'In Part 2 the cycle-off ends a supported breath sooner, which also gives expiration time back.',
+    shapingNoteAfter: 'second-answer',
     precommitDenyPatterns: [
       /less time for passive emptying/i,
       /shorter machine inspiration/i,
@@ -354,11 +361,13 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     knobStrip: strip({
       mode: {
         state: 'not-this',
-        note: 'A different mode would change the promise, not the place where this push and this effort part company.',
+        note: 'A different mode would change the promise, not the place on the breath where this patient and the ventilator part company.',
       },
     }),
+    // It places the mismatch on the push, the location question's key, so it waits for that answer.
     shapingNote:
       'The rise time and the cycle-off are the settings this section reaches for: one shapes the start of the push, the other decides its end.',
+    shapingNoteAfter: 'first-answer',
     precommitDenyPatterns: [
       /faster rise with less discomfort/i,
       /shorter machine inspiration/i,

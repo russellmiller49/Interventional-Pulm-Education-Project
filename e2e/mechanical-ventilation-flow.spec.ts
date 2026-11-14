@@ -197,7 +197,7 @@ test('the way on is pinned and visible at laptop and phone widths', async ({ pag
   ]) {
     await page.setViewportSize(viewport)
     await openSection(page, 'controls-and-goals')
-    await chooseTask(page, 'Separate oxygen from breath delivery')
+    await chooseTask(page, 'What the FiO₂ setting changes')
     await expect(page.locator('[data-now-footer="pinned"]')).toBeVisible()
     await expect(primary(page)).toBeInViewport()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(

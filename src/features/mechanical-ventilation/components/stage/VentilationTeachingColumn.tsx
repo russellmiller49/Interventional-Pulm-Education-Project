@@ -177,6 +177,13 @@ function Disclosure({
   )
 }
 
+/** Which of the section's questions the learner has answered or moved on from. */
+export interface VentilationAnswered {
+  readonly first: boolean
+  readonly second: boolean
+}
+const NOT_ANSWERED: VentilationAnswered = { first: false, second: false }
+
 /**
  * One lesson, in the same shape in every section, in the column beside the console.
  *
@@ -214,6 +221,7 @@ export function VentilationTeachingColumn({
   landmarkChooser = false,
   guideLook,
   breathMap,
+  answered = NOT_ANSWERED,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -233,6 +241,11 @@ export function VentilationTeachingColumn({
   readonly guideLook?: string
   /** The full breath map, leading the column on the breath-walk steps. */
   readonly breathMap?: ReactNode
+  /**
+   * Whether the learner has answered, or moved on from, the section's first question (its location
+   * question, or Part 1's prediction) and Part 2's. Text that would answer one of them waits for it.
+   */
+  readonly answered?: VentilationAnswered
 }) {
   const headingId = useId()
   const { unit } = lesson
@@ -251,6 +264,23 @@ export function VentilationTeachingColumn({
   const stopCards = landmarkChooser || stops.length === 1 ? stops : []
   const foundationFigure = foundation && !orientationStep && foundationFigureStep(step)
   const mechanismEvidence = !foundation && readingStep && !orientationStep
+  /*
+   * Closed before the commitment (author's ruling, 2026-11-12, "Close them before commitment"). A
+   * point to keep in mind that the section's own deny list refuses before the first answer — Section
+   * 7's "trapped gas" — waits for that answer; so does a shaping note that gives a question's keyed
+   * direction (Section 7's note on Part 2's cycle-off, Section 12's "shapes the start of the push").
+   */
+  const boundaryHeld =
+    !answered.first &&
+    Boolean(unit.boundary) &&
+    spec.precommitDenyPatterns.some((pattern) => pattern.test(unit.boundary ?? ''))
+  const boundary = boundaryHeld ? undefined : unit.boundary
+  const shapingHeld =
+    spec.shapingNoteAfter === 'first-answer'
+      ? !answered.first
+      : spec.shapingNoteAfter === 'second-answer'
+        ? !answered.second
+        : false
   const boundaryShown = readingStep || reveal
   const liveView = !foundation && hasVentilationTeachingPanel(lesson.panelId)
 
@@ -327,9 +357,9 @@ export function VentilationTeachingColumn({
       {mechanismEvidence ? (
         <MechanismReadingEvidence lesson={lesson} device={state.deviceId} />
       ) : null}
-      {boundaryShown && unit.boundary ? (
+      {boundaryShown && boundary ? (
         <p className={flow.note} data-teaching-block="boundary">
-          <strong>Keep in mind:</strong> {unit.boundary}
+          <strong>Keep in mind:</strong> {boundary}
         </p>
       ) : null}
 
@@ -411,7 +441,10 @@ export function VentilationTeachingColumn({
           <p className={styles.kicker}>The five main settings</p>
           <p>
             This strip is the worked reading for both parts of this section. Open it before or after
-            trying the optional questions; nothing here is held back.
+            trying the optional questions;{' '}
+            {spec.shapingNote && shapingHeld
+              ? 'its last note waits until you have answered the question it bears on.'
+              : 'nothing here is held back.'}
           </p>
           <p>{VENTILATION_CONTROL_PANEL.sentence}</p>
           <ul className={styles.strip}>
@@ -426,7 +459,7 @@ export function VentilationTeachingColumn({
               )
             })}
           </ul>
-          {spec.shapingNote ? <p>{spec.shapingNote}</p> : null}
+          {spec.shapingNote && !shapingHeld ? <p data-shaping-note>{spec.shapingNote}</p> : null}
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.shapingSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.monitoringSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.notSettingsSentence}</p>
@@ -450,9 +483,9 @@ export function VentilationTeachingColumn({
         ) : null}
       </Disclosure>
 
-      {boundaryShown || !unit.boundary ? null : (
+      {boundaryShown || !boundary ? null : (
         <Disclosure name="Keep in mind" id="model-limits">
-          <p data-teaching-block="boundary">{unit.boundary}</p>
+          <p data-teaching-block="boundary">{boundary}</p>
         </Disclosure>
       )}
 

@@ -395,8 +395,9 @@ describe('parts of a section (N2, S6-3, S5-1, S7-1, S11-1, S12-1)', () => {
     // Section 7 uses cycle-off before Section 8 teaches it: the terms are expanded where used.
     const early = round('expiration-and-air-trapping', 1)
     expect(early.introduction).toMatch(/pressure support/)
+    // The console's own label follows the clinical term (author's ruling, 2026-11-12).
     expect(early.introduction).toMatch(
-      /cycle-off threshold \(expiratory trigger sensitivity, ETS\)/,
+      /cycle-off threshold \(ETS\), also called the expiratory trigger sensitivity/,
     )
     // Both uses of the cycling setup keep the same patient and goal; nothing was relocated.
     expect(round('dyssynchrony-mechanisms', 1).caseId).toBe('MV-10')
@@ -650,16 +651,22 @@ describe('optional questions (Q1, Q2, Q3, N5, S7-4)', () => {
     render(<VentilationStageHost unitId="expiration-and-air-trapping" />)
     boot()
     const outline = document.querySelector('[data-step-list]')!
-    expect(outline).toHaveTextContent('Give expiration time back')
+    expect(outline).toHaveTextContent('The cycle-off threshold on pressure support')
     // Every task is open from the list; nothing is withheld until an answer is given.
     expect(
       [...outline.querySelectorAll<HTMLButtonElement>('button')].filter(
         (button) => button.disabled,
       ),
     ).toHaveLength(1)
+    /*
+     * The strip stays open, but its note on Part 2's cycle-off gives Part 2's keyed direction, so
+     * it waits for that answer (author's ruling, 2026-11-12, "Close them before commitment").
+     */
     const strip = document.querySelector('[data-teaching-block="knob-strip"]')!
-    expect(strip.textContent).toContain('nothing here is held back')
-    expect(strip.textContent).toContain('In Part 2 the cycle-off ends a supported breath sooner')
+    expect(strip.textContent).toContain('its last note waits until you have answered')
+    expect(strip.textContent).not.toContain(
+      'In Part 2 the cycle-off ends a supported breath sooner',
+    )
     expect(
       screen.queryAllByRole('radio').some((radio) => (radio as HTMLInputElement).checked),
     ).toBe(false)

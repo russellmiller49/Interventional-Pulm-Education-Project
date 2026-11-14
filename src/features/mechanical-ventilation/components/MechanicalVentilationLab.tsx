@@ -613,6 +613,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
             state={state}
             dispatch={dispatch}
             controlsEnabled={controlsEnabled}
+            showLungPanel
           />
           <CalibrationPanel definition={definition} state={state} />
         </section>
