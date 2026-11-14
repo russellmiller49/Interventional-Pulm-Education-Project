@@ -148,8 +148,105 @@ describe('EBUS Guided teaching numbers', () => {
     const recovery = lesson('complications-recovery')
     expect(copy('complications-recovery')).toContain(EBUS_NUMBERS.value('complication-rate'))
     const key = recovery.question.choices.find((choice) => choice.correct)!
-    expect(key.text).toMatch(/Retract the needle, keep the scope in/)
+    expect(key.text).toBe('Stop sampling and retract the needle fully into its sheath')
     expect(key.text).not.toMatch(/team|protocol|escalat/i)
+  })
+
+  // The owner's ruling of 2026-11-14 on the bleeding and desaturation first moves.
+  describe('bleeding and desaturation after the owner ruling of 2026-11-14', () => {
+    const recovery = lesson('complications-recovery')
+    const text = copy('complications-recovery')
+    const everything = [
+      text,
+      ...recovery.checklist,
+      ...recovery.takeaways,
+      recovery.worked.reasoning,
+      recovery.sequence!.prompt,
+      ...recovery.sequence!.steps.map((step) => step.text),
+      recovery.sequence!.explanation,
+      ...[recovery.question, recovery.observation, recovery.transfer].flatMap((item) => [
+        item.prompt,
+        ...item.choices.flatMap((choice) => [choice.text, choice.rationale]),
+      ]),
+    ].join(' ')
+
+    it('retracts the needle first and never says the needle stays in', () => {
+      expect(text).toMatch(/stop sampling and retract the needle completely into its sheath/)
+      expect(recovery.sequence!.steps[0].text).toBe(
+        'Stop sampling and retract the needle fully into its sheath',
+      )
+      expect(recovery.checklist[0]).toMatch(/retract the needle fully into its sheath/)
+      expect(everything).not.toMatch(/needle in\b/i)
+      expect(everything).not.toMatch(/scope stays/i)
+    })
+
+    it('keeps the scope at the site conditionally, and limits suction', () => {
+      expect(text).toMatch(
+        /whether to stay there depends on where the bleeding is, how brisk it is and how well the airway is controlled/,
+      )
+      expect(text).toMatch(/Suction as much as you need to see .* and no more/)
+      expect(text).toMatch(/pulls a forming clot off the site/)
+    })
+
+    it('offers the local measures as choices, not as a fixed sequence', () => {
+      expect(text).toMatch(/measures to pick from, not steps to work through in order/)
+      expect(recovery.sequence!.explanation).toMatch(/Only the first step is fixed/)
+      expect(recovery.sequence!.steps.map((step) => step.text).join(' ')).not.toMatch(
+        /cold saline|bleeding side down/i,
+      )
+      // What the evidence is, and where it comes from.
+      expect(text).toMatch(/expert practice with one published case behind it/)
+      expect(text).toMatch(/Cold saline is widely used and little studied/)
+      expect(text).toMatch(/comes from transbronchial lung biopsy/)
+    })
+
+    it('does not offer the ultrasound balloon as hemorrhage control', () => {
+      expect(text).toMatch(/made for acoustic contact, not for hemostasis/)
+      expect(everything).not.toMatch(/or the inflated balloon|scope tip or the balloon/)
+      const balloon = recovery.question.choices.find((choice) => /balloon/i.test(choice.text))!
+      expect(balloon.correct).toBeFalsy()
+    })
+
+    it('calls for help early and protects the lung that is not bleeding', () => {
+      expect(text).toMatch(/call for help early, before the local measures have run out/)
+      expect(text).toMatch(/Protect the lung that is not bleeding/)
+      expect(text).toMatch(/bronchial blocker/)
+      expect(text).toMatch(/rigid or therapeutic bronchoscopy/)
+    })
+
+    it('keeps desaturation a separate response, with no saturation number to wait for', () => {
+      const desaturation = recovery.paragraphs.find((entry) => /A falling saturation/.test(entry))!
+      expect(desaturation).toMatch(/a different problem/)
+      for (const cause of [
+        /airway open/,
+        /chest moving/,
+        /scope itself obstructing/,
+        /sedation slowed the breathing/,
+        /blood or secretion/,
+      ])
+        expect(desaturation).toMatch(cause)
+      expect(desaturation).toMatch(/not when the monitor reaches a set number/)
+      expect(desaturation).not.toMatch(/\d/)
+      expect(desaturation).toMatch(
+        /withdraw the scope, unless you need it to clear blood from the airway/,
+      )
+      expect(desaturation).toMatch(/airway management and assisted ventilation first/)
+      expect(everything).not.toMatch(/100% oxygen/)
+    })
+
+    it('cites published sources that exist in the registry', () => {
+      const registered = new Set<string>(SOURCES.map((source) => source.id))
+      for (const id of recovery.sources) expect(registered.has(id)).toBe(true)
+      expect(recovery.sources).toEqual(
+        expect.arrayContaining([
+          'ics2023',
+          'aquire2013',
+          'asano2013',
+          'bernasconi2017',
+          'sabath2020',
+        ]),
+      )
+    })
   })
 
   it('leaves a boundary note only where the model has a real limit', () => {

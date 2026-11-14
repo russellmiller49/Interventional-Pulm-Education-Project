@@ -113,6 +113,39 @@ export const SOURCES = [
     url: 'https://medical.olympusamerica.com/products/bf-uc190f',
     type: 'Manufacturer source',
   },
+  /*
+   * Bleeding and desaturation (2026-11-14). None of these is a guideline recommendation for
+   * EBUS-TBNA. Asano is the EBUS-specific series; Bernasconi and Davidson are reviews written
+   * mainly about transbronchial lung biopsy and massive hemoptysis; Sabath is a single case.
+   * Asano, Bernasconi and Sabath were read in full (PubMed Central); Davidson as an abstract.
+   */
+  {
+    id: 'asano2013',
+    title:
+      'Asano F, et al. Complications associated with EBUS-TBNA: a nationwide survey by the Japan Society for Respiratory Endoscopy. Respir Res 2013;14:50',
+    url: 'https://doi.org/10.1186/1465-9921-14-50',
+    type: 'National survey',
+  },
+  {
+    id: 'bernasconi2017',
+    title:
+      'Bernasconi M, et al. Iatrogenic bleeding during flexible bronchoscopy: risk factors, prophylactic measures and management. ERJ Open Res 2017;3:00084-2016',
+    url: 'https://doi.org/10.1183/23120541.00084-2016',
+    type: 'Review',
+  },
+  {
+    id: 'sabath2020',
+    title:
+      'Sabath BF, et al. Delayed massive hemoptysis after EBUS-TBNA. Endosc Ultrasound 2020;9:419-420',
+    url: 'https://doi.org/10.4103/eus.eus_50_20',
+    type: 'Case report',
+  },
+  {
+    id: 'davidson2020',
+    title: 'Davidson K, Shojaee S. Managing massive hemoptysis. Chest 2020;157:77-88',
+    url: 'https://doi.org/10.1016/j.chest.2019.07.012',
+    type: 'Review',
+  },
   // Needle technique within the node (2026-11-11): the trials behind "the stylet and suction are
   // choices", read from their abstracts on PubMed on that date.
   {

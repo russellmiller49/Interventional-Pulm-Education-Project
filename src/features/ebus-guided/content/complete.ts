@@ -101,51 +101,62 @@ export const completeLessons: Lesson[] = [
     concept: 'Continue observing after the needle pass',
     paragraphs: [
       `Monitor oxygenation, ventilation, hemodynamics, airway patency, and bleeding throughout the procedure. Serious complications are uncommon. In the AQuIRE registry of 1,317 patients at six hospitals, a complication occurred within 24 hours in ${N('complication-rate')} and a pneumothorax in ${N('pneumothorax-rate')}. These are rates for the whole procedure, not for the needle aspiration alone. More than a third of the patients had another procedure in the same session. Transbronchial lung biopsy was the only risk factor for a complication, and five of the seven pneumothoraces were in patients who had one.`,
-      'When bleeding obscures the view, retract the needle into its sheath and keep the scope in the airway: it is your view, your suction and your tamponade. Suction, and give 100% oxygen. Press the tip of the scope, or the inflated balloon, against the puncture site and hold it there. If bleeding continues, instill cold saline and turn the patient bleeding side down. If it still continues, secure the airway and isolate the bleeding lung with a bronchial blocker or by intubating the other main bronchus. Call for help as soon as the first moves have not worked.',
+      /*
+       * Bleeding and desaturation (owner ruling of 2026-11-14, `ebus-bleeding-sequence-source`).
+       * No guideline gives a bleeding sequence for EBUS-TBNA: ICS/IAB 2023 gives rates and
+       * prevention points only. The first move (needle fully into its sheath) and the priorities
+       * are the owner's; the local measures are expert practice, most of it written about
+       * transbronchial lung biopsy (Bernasconi 2017), with one case report of scope-tip pressure on
+       * a TBNA site (Sabath 2020) and nothing published on the ultrasound balloon as tamponade.
+       */
+      'Bleeding after a needle pass is usually a brief ooze at the puncture site that stops by itself. Whatever its size, the first move is the same: stop sampling and retract the needle completely into its sheath, so that it cannot injure the wall or the scope. Then keep your view and protect the airway. Holding the scope at the site keeps the source in sight and lets you suction and press on it; whether to stay there depends on where the bleeding is, how brisk it is and how well the airway is controlled. Suction as much as you need to see and to keep blood out of the airways, and no more: suction pulls a forming clot off the site.',
+      'What you add next is chosen for the site and the severity; these are measures to pick from, not steps to work through in order. A visible ooze from a puncture site can be pressed on with the tip of the scope, which is expert practice with one published case behind it. The saline balloon on the transducer is made for acoustic contact, not for hemostasis: do not rely on it to control bleeding. Cold saline is widely used and little studied; it also clears the lens. Turning the patient bleeding side down protects the other lung once you know which side is bleeding. Most of what is written about these measures comes from transbronchial lung biopsy, where the scope can be wedged into a segment. A puncture in the wall of the trachea or a main bronchus cannot be wedged.',
+      'If the bleeding is substantial or does not settle, call for help early, before the local measures have run out. The danger is blood flooding the airways, more than the volume lost. Protect the lung that is not bleeding: position the patient bleeding side down and, if it continues, isolate the bleeding lung with a bronchial blocker or by intubating the other main bronchus, or move to rigid or therapeutic bronchoscopy to clear the airway and treat a central bleeding point.',
+      'A falling saturation is a different problem, and the scope has a different place in it. Stop sampling, retract the needle and stop whatever provoked it: come off the wall, release the suction. Then find the cause. Is the airway open, and the tube or mask seated? Is the chest moving? Is the scope itself obstructing the airway? Has sedation slowed the breathing? Is there blood or secretion to clear? Give oxygen and support the airway as the patient needs; a patient who is clearly deteriorating is treated now, not when the monitor reaches a set number. If oxygenation or ventilation does not recover promptly, withdraw the scope, unless you need it to clear blood from the airway, and put airway management and assisted ventilation first.',
       'Complications can also present later. Persistent or worsening dyspnea, chest pain, fever, substantial hemoptysis, or other concerning symptoms after EBUS require timely clinical evaluation. Infection, including mediastinitis, is uncommon but important.',
       'Before discharge, tell the patient what was found, what is pending and who will call with it. Give return precautions they can act on: fever, worsening chest pain, shortness of breath, or coughing up more than streaks of blood are reasons to be seen the same day.',
     ],
     checklist: [
-      'Needle in, scope stays, suction and oxygen.',
-      'Pressure on the puncture site, then cold saline.',
-      'Bleeding side down; isolate the lung if it continues.',
+      'Bleeding: stop sampling and retract the needle fully into its sheath.',
+      'Bleeding: keep a view, fit the local measure to the site, call for help early.',
+      'Desaturation: stop, find the cause, support the airway; withdraw the scope if it does not recover.',
     ],
     worked: {
       context:
         'Oxygenation worsens during sampling and does not promptly return to the preceding condition.',
       reasoning:
-        'Stop sampling and retract the needle. Check the airway first: is the tube or mask seated, is there blood or secretion to suction, is the chest moving? Give 100% oxygen. If the saturation does not recover, take the scope out so it no longer occupies the airway, and ventilate.',
+        'Stop sampling, retract the needle and take the scope off the wall. Treat while you look for the cause: give oxygen, open the airway, and check that the tube or mask is seated, that the chest is moving, and that neither the scope nor blood or secretion is blocking the airway. Ask whether sedation has slowed the breathing. If the saturation does not recover promptly, take the scope out so that it no longer occupies the airway, and ventilate. That is the reverse of bleeding, where the scope may stay to keep the view.',
     },
     question: q(
       'recovery-predict',
       'During a pass, substantial airway bleeding obscures the view. What do you do first?',
       [
-        'Retract the needle, keep the scope in, suction and press on the site',
-        'The scope is your view, your suction and your tamponade. Retract the needle so it cannot injure the wall, suction to see, and hold pressure on the puncture site with the scope tip or the balloon. Cold saline and turning the patient bleeding side down come next.',
+        'Stop sampling and retract the needle fully into its sheath',
+        'This comes first whatever follows: an exposed needle can injure the wall and the scope, and nothing else is done safely while it is out. Then keep a view and protect the airway. Which local measure you add depends on the site and the severity.',
       ],
       [
         'Finish the planned passes before addressing the bleeding',
         'This delays management of an evolving airway threat.',
       ],
       [
-        'Withdraw the scope to the trachea to clear the lens and reassess',
-        'Pulling back gives up the suction and the pressure on the puncture site, and lets blood run into the other lung.',
+        'Inflate the balloon over the puncture site and hold it there',
+        'The needle is still out, so this is not the first move. The balloon is also made for acoustic contact, not for hemostasis, and should not be relied on to control bleeding.',
       ],
       true,
     ),
     sequence: sequence(
-      'Order the response to bleeding that obscures the view.',
+      'Order the priorities when bleeding obscures the view.',
       [
-        'Retract the needle into its sheath and keep the scope in the airway',
-        'Suction to keep a view and give 100% oxygen',
-        'Hold pressure on the puncture site, then instill cold saline',
-        'Turn the patient bleeding side down and isolate the lung if it continues',
+        'Stop sampling and retract the needle fully into its sheath',
+        'Keep a view and protect the airway: oxygen, and suction as needed',
+        'Add a local measure that fits the site and the severity',
+        'If it persists: get help, protect the other lung, isolate the bleeding lung',
       ],
-      'Each step keeps your view and protects the other lung. Call for help as soon as the first moves have not worked.',
+      'Only the first step is fixed. The local measure is chosen, not worked through as a list, and substantial bleeding goes straight to the last line: call for help early.',
     ),
     observation: q(
       'recovery-observe',
-      'After pressure and cold saline the view clears and the saturation is stable. What do you do before any more sampling?',
+      'The bleeding has stopped after local measures, the view is clear and the saturation is stable. What do you do before any more sampling?',
       [
         'Inspect the puncture site and both main bronchi',
         'Confirm the bleeding has stopped and that no clot is obstructing an airway. Then decide whether the remaining passes are worth taking.',
@@ -177,10 +188,11 @@ export const completeLessons: Lesson[] = [
       true,
     ),
     takeaways: [
-      'Bleeding: needle in, scope stays in, pressure on the site.',
+      'Bleeding: retract the needle fully first; what follows depends on the site and the severity.',
+      'Desaturation: find the cause and support the airway; the scope comes out if it does not recover.',
       'Give return precautions the patient can act on.',
     ],
-    sources: ['ics2023', 'aquire2013'],
+    sources: ['ics2023', 'aquire2013', 'asano2013', 'bernasconi2017', 'sabath2020', 'davidson2020'],
   },
   {
     id: 'results-reporting',
