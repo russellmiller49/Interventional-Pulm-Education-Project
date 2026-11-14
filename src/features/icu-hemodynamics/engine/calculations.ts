@@ -13,6 +13,7 @@ import { arterialMeasurementSystem } from './measurementLines'
 import { isOverdamped, isUnderdamped } from './waveformArtifacts'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
 import {
+  offsetCancellingInputIds,
   requireDerivedInputDefinition,
   requireDerivedMetric,
   type DerivedMetricId,
@@ -112,7 +113,11 @@ const PAWP_INPUT_ID = 'pawpMeanMmHg'
 const PA_SYSTOLIC_DIASTOLIC_INPUT_IDS = ['papSystolicMmHg', 'papDiastolicMmHg']
 const ARTERIAL_PULSE_INPUT_IDS = ['pulsePressureMaxMmHg', 'pulsePressureMinMmHg']
 const CATHETER_TIP_INPUT_IDS = ['meanPapMmHg', ...PA_SYSTOLIC_DIASTOLIC_INPUT_IDS, PAWP_INPUT_ID]
-/** Everything read against the zero. A pulse pressure is a difference on one line, so it is not. */
+/**
+ * Everything read against the zero. A pulse pressure is a difference on one line, so it is not. PA
+ * systolic and diastolic are listed because each is an absolute reading; a result that uses them
+ * only as the PA pulse pressure is spared by the gate, not by this list.
+ */
 const ABSOLUTE_PRESSURE_INPUT_IDS = ['mapMmHg', 'rapMmHg', ...CATHETER_TIP_INPUT_IDS]
 
 function dynamicResponseFault(
@@ -166,8 +171,9 @@ function catheterArtifactFault(artifact: PressureArtifact): DerivedSignalFault |
  * What is wrong with the pressure signal now, and which measurements each fault reaches.
  *
  * Each fault is mapped to the channels the simulator actually distorts, so a fault takes down only
- * the results built on those channels. A zero or level error moves every absolute pressure and
- * leaves pulse pressure unchanged. A poor dynamic response distorts systolic, diastolic and pulse
+ * the results built on those channels. A zero or level error moves every absolute pressure by one
+ * fixed offset and leaves pulse pressure unchanged, so it is marked `fixedOffset` and spares a
+ * result that reads its inputs only as a pulse pressure (PPV, PA compliance). A poor dynamic response distorts systolic, diastolic and pulse
  * pressure on its own line, and the mean is the least affected, so results built on means survive
  * it. Whip and wall contact belong to the catheter tip: they never reach the arterial line or the
  * right atrial port. A false wedge is a bad PAWP and nothing else.
@@ -187,6 +193,7 @@ export function pressureSignalFaults(
           reason:
             'The transducer has not been zeroed, so every absolute pressure sits on an unverified baseline. Pulse pressure is unchanged.',
           inputIds: ABSOLUTE_PRESSURE_INPUT_IDS,
+          fixedOffset: true,
         },
     offLevel
       ? {
@@ -194,6 +201,7 @@ export function pressureSignalFaults(
           label: 'transducer off level',
           reason: `The transducer is ${Math.abs(levelCm).toFixed(0)} cm ${levelCm > 0 ? 'above' : 'below'} the phlebostatic axis, so every absolute pressure carries a hydrostatic error. Pulse pressure is unchanged.`,
           inputIds: ABSOLUTE_PRESSURE_INPUT_IDS,
+          fixedOffset: true,
         }
       : null,
     dynamicResponseFault('PA', system, PA_SYSTOLIC_DIASTOLIC_INPUT_IDS),
@@ -233,10 +241,24 @@ export function faultsWithStoredWedge(
   return [...live, ...stored]
 }
 
-/** Every measurement a metric needs, reached through any calculated input it is built on. */
-function requiredInputIds(metricId: DerivedMetricId): readonly string[] {
-  return requireDerivedMetric(metricId).dependencies.flatMap(({ inputId }) =>
-    inputId === 'strokeVolumeMl' ? requiredInputIds(inputId) : [inputId],
+/**
+ * Every measurement a metric needs that this fault can change, reached through any calculated input
+ * it is built on. A fixed offset cannot change an input the metric reads only as a within-beat
+ * difference on one trace, so those inputs drop out for a zero or level error and stay in for every
+ * fault that distorts the waveform.
+ */
+function inputIdsFaultCanChange(
+  metricId: DerivedMetricId,
+  fault: DerivedSignalFault,
+): readonly string[] {
+  const metric = requireDerivedMetric(metricId)
+  const spared = fault.fixedOffset ? offsetCancellingInputIds(metric) : []
+  return metric.dependencies.flatMap(({ inputId }) =>
+    inputId === 'strokeVolumeMl'
+      ? inputIdsFaultCanChange(inputId, fault)
+      : spared.includes(inputId)
+        ? []
+        : [inputId],
   )
 }
 
@@ -253,9 +275,9 @@ function withholdFaultedResults(
 ): DerivedHemodynamics {
   const gated = { ...results }
   for (const metricId of Object.keys(results) as DerivedMetricId[]) {
-    const required = requiredInputIds(metricId)
     const reasons = faults.flatMap((fault) => {
-      const reached = fault.inputIds.filter((inputId) => required.includes(inputId))
+      const changeable = inputIdsFaultCanChange(metricId, fault)
+      const reached = fault.inputIds.filter((inputId) => changeable.includes(inputId))
       if (reached.length === 0) return []
       const labels = reached.map((inputId) => requireDerivedInputDefinition(inputId).label)
       return [`Unreliable input: ${labels.join(', ')} (${fault.label}).`]
