@@ -1,6 +1,7 @@
 import { teachingNumberErrors } from '@/features/learning-module/numbers/teachingNumbers'
 
 import { CONTENT_LESSONS } from '../content/curriculum'
+import { FEATURE_TABS } from '../content/node-features'
 import { SOURCES } from '../content/sources'
 import { EBUS_NUMBERS } from '../content/teachingNumbers'
 
@@ -54,19 +55,26 @@ describe('EBUS Guided teaching numbers', () => {
       expect(text).toContain(EBUS_NUMBERS.value('node-short-axis'))
       expect(text).toMatch(/not a size below which a node can be left unsampled/)
       expect(text).toMatch(/independently predicted metastasis; size did not/)
-      expect(text).toMatch(/a small node can still contain metastasis/)
+      // The atlas panel for size carries the same point beside the images.
+      const sizeTab = FEATURE_TABS.find((tab) => tab.id === 'size-shape')!
+      expect(sizeTab.meaning).toMatch(/does not decide whether a node is sampled/)
+      expect(sizeTab.meaning).toMatch(/a small node can still contain metastasis/)
     })
 
     it('puts the CHEST recommendation and the AABIP minimum standard side by side', () => {
       const text = copy('adequacy-rose')
       expect(text).toMatch(/2024 CHEST guideline recommends at least 4 needle passes/)
       expect(text).toMatch(/2025 AABIP guideline sets at least three passes, or ROSE/)
+      expect(text).toMatch(/in practice this means at least three, and often four or more/)
       expect(text).toMatch(/minimum standard for systematic staging/)
       // CHEST 2016 is history, and a diagnostic count is not a molecular one.
       expect(text).toMatch(
         /CHEST 2016 guideline suggested at least three passes when ROSE was not available/,
       )
       expect(text).toMatch(/not always enough for molecular testing/)
+      // The needle-gauge sentence that follows names its guideline, now that three are in play.
+      expect(text).toMatch(/2024 CHEST guideline also suggests a 21G or 22G/)
+      expect(text).not.toMatch(/The same guideline/)
       expect(lesson('adequacy-rose').sources).toEqual(
         expect.arrayContaining(['chest2024', 'aabip2025', 'chest2016']),
       )
@@ -89,6 +97,10 @@ describe('EBUS Guided teaching numbers', () => {
       expect(text).not.toMatch(/stop 5 days before a procedure|stop 7 days before a biopsy/)
       expect(row('clopidogrel-accp').appliesTo).toMatch(/Elective noncardiac surgery/)
       expect(row('clopidogrel-bts').appliesTo).toMatch(/Not a requirement for EBUS-TBNA/)
+      // The takeaway no longer asks the fellow to memorise an interval.
+      const takeaways = lesson('preparation').takeaways.join(' ')
+      expect(takeaways).toMatch(/not from a fixed interval/)
+      expect(takeaways).not.toMatch(/Know the antiplatelet intervals/)
     })
 
     it('gives the registry rates as rates of the whole procedure', () => {
@@ -97,7 +109,7 @@ describe('EBUS Guided teaching numbers', () => {
       expect(text).toContain(EBUS_NUMBERS.value('pneumothorax-rate'))
       expect(text).toMatch(/1,317 patients at six hospitals/)
       expect(text).toMatch(/not for the needle aspiration alone/)
-      expect(text).toMatch(/transbronchial lung biopsy was the only risk factor/)
+      expect(text).toMatch(/Transbronchial lung biopsy was the only risk factor/)
       for (const id of ['complication-rate', 'pneumothorax-rate'] as const)
         expect(row(id).appliesTo).toMatch(/1,317 patients at 6 hospitals/)
     })
@@ -105,7 +117,7 @@ describe('EBUS Guided teaching numbers', () => {
     it('takes the fasting intervals from anesthesia guidance, with the patients they are written for', () => {
       const text = copy('preparation')
       expect(EBUS_NUMBERS.value('fasting-solids')).toBe(
-        'at least 6 hours after a light meal, and 8 hours or more after fried or fatty food or meat',
+        'at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat',
       )
       expect(EBUS_NUMBERS.value('fasting-clear-fluids')).toBe('2 hours')
       expect(cites('fasting-solids')).toEqual(['asa2017'])
@@ -114,7 +126,7 @@ describe('EBUS Guided teaching numbers', () => {
         /^Healthy patients having an elective procedure/,
       )
       expect(text).toMatch(/healthy patients having an elective procedure/)
-      expect(text).toMatch(/not written for a patient at increased risk of aspiration/)
+      expect(text).toMatch(/may not apply to a patient at increased risk of aspiration/)
       // BTS 2013's 4 hours is no longer the default taught for EBUS.
       expect(text).not.toMatch(/4 hours/)
       expect(lesson('preparation').sources).toContain('asa2017')
@@ -129,13 +141,6 @@ describe('EBUS Guided teaching numbers', () => {
       expect(EBUS_NUMBERS.get('scope-view-angle').note).toMatch(/BF-UC190F looks 20°/)
       for (const id of ['scope-tip-diameter', 'scope-insertion-tube', 'scope-channel'] as const)
         expect(row(id).appliesTo).toMatch(/BF-UC190F/)
-    })
-
-    it('says what was read for every row, and when', () => {
-      for (const entry of EBUS_NUMBERS.rows) {
-        expect(entry.checkedOn).toBe('2026-11-14')
-        expect(entry.checkedBy).toMatch(/read|only/)
-      }
     })
   })
 

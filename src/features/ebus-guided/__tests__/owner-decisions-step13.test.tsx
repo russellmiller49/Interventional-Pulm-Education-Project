@@ -99,7 +99,7 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
     // ruling of 2026-11-12, which rejected BTS 2013's 4 hours as the default for EBUS.
     const preparation = lesson('preparation').paragraphs.join(' ')
     expect(preparation).toContain(
-      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. For healthy patients having an elective procedure under general anesthesia or procedural sedation, the ASA preoperative fasting guideline allows clear liquids until 2 hours before, and asks for at least 6 hours after a light meal, and 8 hours or more after fried or fatty food or meat.',
+      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. For healthy patients having an elective procedure under general anesthesia or procedural sedation, the ASA preoperative fasting guideline allows clear liquids until 2 hours before. For solid food it gives at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat.',
     )
     expect(preparation).not.toMatch(/4 hours/)
   })

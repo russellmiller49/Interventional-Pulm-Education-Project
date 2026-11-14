@@ -168,7 +168,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     ...ICS_CHECKED,
   },
   'passes-per-station': {
-    label: 'Needle passes per station, suspected malignancy',
+    label: 'Needle passes per sampling site, suspected malignancy',
     value: 'at least 4',
     class: 'guideline',
     sources: [chest2024('Recommendation 5', 'strong recommendation, very low certainty')],
@@ -222,7 +222,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         locator: 'Antiplatelet recommendations (22 to 26)',
       },
     ],
-    note: 'Not an interval for EBUS-TBNA. ICS/IAB 2023, the statement written for EBUS-TBNA, allows continuing clopidogrel when the thrombotic risk outweighs the bleeding risk (3A). The decision depends on the planned procedure, any biopsy added to it, and the patient’s bleeding and thrombotic risk.',
+    note: 'Not an interval for EBUS-TBNA. ICS/IAB 2023, which is written for EBUS-TBNA, allows continuing clopidogrel when the thrombotic risk outweighs the bleeding risk (3A). The decision depends on the planned procedure, any biopsy added to it, and the patient’s bleeding and thrombotic risk.',
     ...UNSIGNED,
     checkedOn: CHECKED_ON,
     checkedBy:
@@ -266,6 +266,12 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         grade: null,
         locator: 'Product page, Specs: Direction of View',
       },
+      {
+        sourceId: 'olympus-uc190f',
+        year: 2021,
+        grade: null,
+        locator: 'Product page, Specs: Direction of View (the BF-UC190F figure in the note)',
+      },
     ],
     note: 'The angle differs between scope models: the BF-UC190F looks 20° forward-oblique, with the same 80° field. The lesson teaches the consequence, which does not depend on the exact figure.',
     ...OLYMPUS_CHECKED,
@@ -281,6 +287,12 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         year: 2010,
         grade: null,
         locator: 'Product page, Specs: Field of View',
+      },
+      {
+        sourceId: 'olympus-uc190f',
+        year: 2021,
+        grade: null,
+        locator: 'Product page, Specs: Field of View (the BF-UC190F figure in the note)',
       },
     ],
     note: 'The BF-UC190F has the same 80° field.',
@@ -398,7 +410,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
   'fasting-solids': {
     label: 'Fasting before elective anesthesia or procedural sedation: solid food',
     value:
-      'at least 6 hours after a light meal, and 8 hours or more after fried or fatty food or meat',
+      'at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat',
     appliesTo: ASA_POPULATION,
     class: 'guideline',
     sources: [asa('Recommendations for Solids and Nonhuman Milk; Table 1')],
@@ -406,7 +418,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     ...ASA_CHECKED,
   },
   'fasting-clear-fluids': {
-    label: 'Fasting before bronchoscopy: clear fluids',
+    label: 'Fasting before elective anesthesia or procedural sedation: clear liquids',
     value: '2 hours',
     appliesTo: ASA_POPULATION,
     class: 'guideline',
