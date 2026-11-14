@@ -9,10 +9,12 @@ import {
   writeCriticalCareProgress,
 } from '@/features/learning-module/activity/progress'
 import { BranchTracingOverview } from '../components/BranchTracingOverview'
+import { LesionPicker } from '../components/LesionPicker'
 import { METHOD_STEPS } from '../content/course-guide'
 import { BASE_PATH, METHOD_SOURCE, SOURCE, lessonHref } from '../content/module'
 import { ALL_LESSONS, NAV_LESSONS, ORIENTATION_CHECK } from '../content/nav-lessons'
 import { NAV_STORAGE_KEY } from '../engine/nav-storage'
+import { RESULTS_STORAGE_KEY } from '../engine/results-storage'
 import {
   emptySelfPacedRecord,
   parseSelfPacedRecord,
@@ -231,12 +233,12 @@ describe('storage boundary', () => {
       )
   it('no course source writes the shared activity envelope, imports the legacy readers, or writes storage outside the declared owners', () => {
     // Each file that writes to this device, and the one key it writes: the course place, the
-    // place within a trip, whether the bench's primer has been seen, how the drive runs, and what
-    // happened the last time each whole lesion was reached. Nothing else is stored.
+    // place within a trip, how the drive runs, and what happened the last time each whole lesion
+    // was reached. Nothing else is stored: the primer opens only on request, so nothing records
+    // whether it has been seen.
     const writers: Record<string, string> = {
       'engine/selfPacedProgress.ts': 'SELF_PACED_STORAGE_KEY',
       'engine/nav-storage.ts': 'NAV_STORAGE_KEY',
-      'components/NavigationBench.tsx': 'PRIMER_SEEN_KEY',
       'engine/prefs-storage.ts': 'PREFS_STORAGE_KEY',
       'engine/results-storage.ts': 'RESULTS_STORAGE_KEY',
     }
@@ -265,11 +267,10 @@ describe('storage boundary', () => {
       keys.push(text.match(new RegExp(`export const ${writers[rel]} = '([^']+)'`))![1])
     }
     expect(found.sort()).toEqual(Object.keys(writers).sort())
-    // Five keys, each the module's own.
+    // Four keys, each the module's own.
     expect(keys.sort()).toEqual([
       'branch-tracing.nav-v2',
       'branch-tracing.prefs-v1',
-      'branch-tracing.primer-seen-v1',
       'branch-tracing.results-v1',
       'branch-tracing.self-paced-v1',
     ])
@@ -384,5 +385,50 @@ describe('Overview', () => {
       await screen.findByRole('link', { name: 'Start with the orientation check' }),
     ).toHaveAttribute('href', lessonHref(ORIENTATION_CHECK.id))
     expect(localStorage.getItem(SELF_PACED_STORAGE_KEY)).toBe('{"version":2}')
+  })
+})
+
+describe('Lesion list', () => {
+  const step = { asked: true, misses: 0, shown: false }
+  const reached = (arcs: { asked: number; firstTry: number }) => ({
+    reachedAt: '2026-11-14T12:00:00.000Z',
+    runs: 1,
+    plan: { lesion: step, segment: step, frame: step, arcs },
+    drive: { choose: { asked: 3, firstTry: 3 }, wrongTurns: 0, backedOut: 0 },
+  })
+
+  it('gives no count of divisions on a lesion that has not been reached, and the count once it has', () => {
+    const first = render(<LesionPicker mode="practice" />)
+    const cards = first.container.querySelectorAll('[data-lesion]')
+    expect(cards.length).toBe(18)
+    // The lobe picture and the state line stay on every card; the count is on none.
+    expect(first.container.querySelectorAll('[data-lesion-thumb]')).toHaveLength(18)
+    expect(first.container.querySelectorAll('[data-lesion-result]')).toHaveLength(18)
+    expect(first.container.querySelectorAll('[data-lesion-divisions]')).toHaveLength(0)
+    expect(first.container.textContent).not.toMatch(/divisions? past the segmental ostium/)
+    first.unmount()
+
+    // Once a run has reached the lesion, that card gives the count; the others still do not.
+    localStorage.setItem(
+      RESULTS_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        results: { 'practice:r-anterior-basal': reached({ asked: 2, firstTry: 1 }) },
+      }),
+    )
+    const after = render(<LesionPicker mode="practice" />)
+    const counts = after.container.querySelectorAll('[data-lesion-divisions]')
+    expect(counts).toHaveLength(1)
+    expect(counts[0].closest('[data-lesion]')).toHaveAttribute('data-lesion', 'r-anterior-basal')
+    expect(counts[0].textContent).toBe('2 divisions past the segmental ostium')
+    // Nothing else on the list changed: no difficulty label, the same pictures.
+    expect(after.container.querySelectorAll('[data-lesion-thumb]')).toHaveLength(18)
+    expect(after.container.textContent).not.toMatch(/difficult|easy|hard/i)
+  })
+
+  it('holds the closing set’s cards to the same rule', () => {
+    const { container } = render(<LesionPicker mode="assess" />)
+    expect(container.querySelectorAll('[data-lesion]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-lesion-divisions]')).toHaveLength(0)
   })
 })

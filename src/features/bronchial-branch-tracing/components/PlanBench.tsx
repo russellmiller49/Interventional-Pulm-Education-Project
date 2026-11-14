@@ -42,6 +42,7 @@ import {
   gradeArcs,
   gradeFrame,
   withGhost,
+  withReferences,
   mappedForks,
   modelMapLevels,
   sectorAngle,
@@ -263,7 +264,7 @@ export function PlanBench({
   const [revealed, setRevealed] = useState(false)
   useEffect(() => setRevealed(false), [viewKey])
 
-  const [helpOpen, setHelpOpen, closeHelp] = usePrimer(!narration)
+  const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
   useStageFocus(
@@ -356,10 +357,16 @@ export function PlanBench({
           failedGrade.off.includes(i) ? ('off' as const) : ('kept' as const),
         )
       : undefined
+  // Once the map is finished, each branch the route does not take carries its own next division,
+  // faint, as the model has it: what a turn into the wrong branch would show. Never before.
+  const sideLevels = useMemo(
+    () => (finished ? withReferences(drawnLevels, modelLevels) : drawnLevels),
+    [finished, drawnLevels, modelLevels],
+  )
   const sideMap = (
     <ArcMap
       rim={rim}
-      levels={drawnLevels}
+      levels={sideLevels}
       drawing={
         stage === 'arcs'
           ? { placed: here.placed, leadsOn: here.leadsOn, count: optionCount, verdicts }
@@ -404,8 +411,11 @@ export function PlanBench({
         ? modelLevels
         : reviewShow === 'mine'
           ? drawnLevels
-          : withGhost(drawnLevels, modelLevels),
+          : withGhost(withReferences(drawnLevels, modelLevels), modelLevels),
     [reviewShow, drawnLevels, modelLevels],
+  )
+  const reviewHasReferences = modelLevels.some((level) =>
+    (level.references ?? []).some((inside) => inside.length > 1),
   )
   // While the airway is traced back from the lesion there is no map to show: the CT takes both
   // picture columns, and a reconstruction opens beside it on request.
@@ -961,6 +971,11 @@ export function PlanBench({
                         <i data-line="model" aria-hidden /> the model’s
                       </span>
                     </>
+                  )}
+                  {reviewShow !== 'mine' && reviewHasReferences && (
+                    <span data-review-legend="reference">
+                      <i data-line="reference" aria-hidden /> next division off the route
+                    </span>
                   )}
                 </div>
               ) : (

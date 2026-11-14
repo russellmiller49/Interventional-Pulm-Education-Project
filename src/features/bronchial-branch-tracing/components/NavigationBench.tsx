@@ -127,8 +127,6 @@ const CRUISE_MM_PER_SECOND = 20
 const SHOW_TURN_MS = 600
 /** How long a drive waits for the scope's picture before going on without it. */
 const SCOPE_WAIT_MS = 6000
-/** Set once the learner has closed the primer on this device. */
-export const PRIMER_SEEN_KEY = 'branch-tracing.primer-seen-v1'
 const FORK_FIELD_MIN = 96
 const FORK_FIELD_MAX = 230
 const LESION_FIELD = 190
@@ -289,7 +287,7 @@ export function NavigationBench({
       })),
     [viewKey, freshFocus],
   )
-  const [helpOpen, setHelpOpen, closeHelp] = usePrimer(!narration)
+  const [helpOpen, setHelpOpen, closeHelp] = usePrimer()
   const helpButton = useRef<HTMLButtonElement>(null)
   const [benchRef, benchMinHeight] = useFillViewport<HTMLDivElement>()
   useStageFocus(
@@ -1363,27 +1361,12 @@ const CENTRE_TITLE: Record<CentreTab, string> = {
 }
 
 /**
- * The primer opens by itself the first time a bench is used on this device, and from the header
- * button afterwards. A bench mounts after hydration, so storage can be read here.
+ * The primer opens from the header button only, never by itself: "Watch the method", linked beside
+ * Start on the hub and at the top of the primer, is what shows a newcomer the method.
  */
-export function usePrimer(auto = true) {
-  const [open, setOpen] = useState(() => {
-    // A bench that is being demonstrated never opens the primer over the demonstration.
-    if (!auto) return false
-    try {
-      return window.localStorage.getItem(PRIMER_SEEN_KEY) === null
-    } catch {
-      return false
-    }
-  })
-  const close = useCallback(() => {
-    setOpen(false)
-    try {
-      window.localStorage.setItem(PRIMER_SEEN_KEY, '1')
-    } catch {
-      /* The primer simply opens again next time. */
-    }
-  }, [])
+export function usePrimer() {
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
   return [open, setOpen, close] as const
 }
 
