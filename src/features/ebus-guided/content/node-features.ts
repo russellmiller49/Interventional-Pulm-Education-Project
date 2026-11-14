@@ -98,7 +98,7 @@ export const FEATURE_TABS: FeatureTab[] = [
     id: 'size-shape',
     title: 'Size and shape',
     definition: `Size is the short axis, measured with calipers at right angles to the long axis. Shape compares the two: round when the long axis is less than ${RATIO} times the short axis, oval when it is more.`,
-    meaning: `A short axis ${EBUS_NUMBERS.value('node-short-axis')} and a round shape both favor malignancy. In Fujiwara’s series, round shape predicted metastasis independently; size did not once the other features were counted.`,
+    meaning: `A short axis ${EBUS_NUMBERS.value('node-short-axis')} and a round shape both favor malignancy. In Fujiwara’s series, round shape predicted metastasis independently; size did not once the other features were counted. Size shifts suspicion; it does not decide whether a node is sampled, and a small node can still contain metastasis.`,
     examples: [
       {
         slug: 'station-7-oval',

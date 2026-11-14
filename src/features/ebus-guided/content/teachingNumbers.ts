@@ -6,22 +6,60 @@ import {
 /**
  * Every clinical number EBUS Guided teaches, with its source.
  *
- * The values and locators are the ones recorded in the EBUS-PRE-REVIEW-05 decision packet
+ * The values and locators were first recorded in the EBUS-PRE-REVIEW-05 decision packet
  * (`docs/gap-remediation/fellow-walkthrough/ebus/drafts/`), where each source was retrieved on
  * 2026-09-23. They were held there as "local protocol required" or "hold for source"; the
- * teaching-first rules of 2026-10-08 restore them. None is signed yet:
- * `npm run numbers:signoff -- ebus-guided`.
+ * teaching-first rules of 2026-10-08 restore them.
+ *
+ * The owner reviewed all 26 rows on 2026-11-12: 18 acceptable as written, 7 to correct or clarify,
+ * and the solid-food fasting row rejected and replaced. Each source was read again on 2026-11-14,
+ * and every `checkedBy` below says what was read then: full text, an abstract, a publisher's
+ * extract, or a secondary summary. None is signed yet: `npm run numbers:signoff -- ebus-guided`.
  */
-const PACKET = {
-  checkedOn: '2026-09-23',
-  checkedBy: 'EBUS-PRE-REVIEW-05 packet, full text read',
-  signedBy: null,
-  signedOn: null,
+const UNSIGNED = { signedBy: null, signedOn: null } as const
+const CHECKED_ON = '2026-11-14'
+
+/** CHEST 2024 (Chest 2025): the full text is behind the publisher's access check. */
+const CHEST_2024_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy:
+    'Recommendation wording read 2026-11-14 on the CHEST guideline page; full text read 2026-09-23 (EBUS-PRE-REVIEW-05 packet) and not read again',
 } as const
-const ABSTRACT_ONLY = {
-  ...PACKET,
-  checkedBy: 'EBUS-PRE-REVIEW-05 packet, abstract only; full text not read',
+/** The manufacturer's product pages, which print the specifications. */
+const OLYMPUS_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy: 'Olympus America product page, Specs, read 2026-11-14',
 } as const
+/** AQuIRE: the full text in PubMed Central, Results and Tables 2 to 4. */
+const AQUIRE_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy: 'Full text read 2026-11-14 (PMC3616680)',
+} as const
+const aquire = (locator: string): TeachingNumberCitation => ({
+  sourceId: 'aquire2013',
+  year: 2013,
+  grade: 'registry',
+  locator,
+})
+/** ASA 2017: the full text on the journal's site. The 2023 modular update was read as an abstract. */
+const ASA_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy:
+    'ASA 2017 full text read 2026-11-14 (journal site); the 2023 modular update read as an abstract only',
+} as const
+const asa = (locator: string): TeachingNumberCitation => ({
+  sourceId: 'asa2017',
+  year: 2017,
+  grade: null,
+  locator,
+})
+/** Who the ASA intervals are written for, in the guideline's own terms. */
+const ASA_POPULATION =
+  'Healthy patients having an elective procedure under general anesthesia, regional anesthesia or procedural sedation. The guideline says it may not apply, or may need to be modified, for patients with conditions that affect gastric emptying (pregnancy, obesity, diabetes, hiatal hernia, reflux disease, ileus or bowel obstruction, emergency care, enteral tube feeding) and for patients whose airway may be difficult to manage'
 
 const chest2024 = (locator: string, grade: string): TeachingNumberCitation => ({
   sourceId: 'chest2024',
@@ -36,17 +74,17 @@ const ics = (locator: string, grade: string | null): TeachingNumberCitation => (
   locator,
 })
 
-/** Lesson 16's sonographic-feature numbers, read 2026-11-05 (none signed yet). */
-const FEATURES_CHECKED = {
-  checkedOn: '2026-11-05',
-  checkedBy:
-    'ICS/IAB 2023 full text (PMC10401980), Table 5 and the sonographic-characteristics text',
-  signedBy: null,
-  signedOn: null,
+/** ICS/IAB 2023, read in full on 2026-11-05 and again on 2026-11-14 (none signed yet). */
+const ICS_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy: 'ICS/IAB 2023 full text read 2026-11-14 (PMC10401980)',
 } as const
 const FUJIWARA_ABSTRACT = {
-  ...FEATURES_CHECKED,
-  checkedBy: 'Fujiwara 2010, PubMed abstract (PMID 20382710); full text not read',
+  ...UNSIGNED,
+  checkedOn: CHECKED_ON,
+  checkedBy:
+    'Fujiwara 2010, PubMed abstract read 2026-11-14 (PMID 20382710); full text not read (publisher access check)',
 } as const
 const fujiwara = (locator: string): TeachingNumberCitation => ({
   sourceId: 'fujiwara2010',
@@ -64,22 +102,24 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
       ics('Table 6 and sonographic nodal characteristics', null),
       fujiwara('Abstract: size category'),
     ],
-    note: 'Size was not an independent predictor in Fujiwara’s multivariate analysis.',
-    ...FEATURES_CHECKED,
+    note: 'A sonographic feature associated with malignancy, not a size below which a node is left unsampled: ICS/IAB 2023 Table 6 gives size above 1 cm a sensitivity of 63 to 100% and a specificity of 5 to 81%, and states that nodal characteristics do not preclude aspiration (3A). Size was not an independent predictor in Fujiwara’s multivariate analysis.',
+    ...ICS_CHECKED,
+    checkedBy:
+      'ICS/IAB 2023 full text read 2026-11-14 (PMC10401980); Fujiwara 2010 from its PubMed abstract only',
   },
   'node-round-ratio': {
     label: 'Long axis ÷ short axis below which a node is round',
     value: '1.5',
     class: 'guideline',
     sources: [ics('Table 5, Shape', null)],
-    ...FEATURES_CHECKED,
+    ...ICS_CHECKED,
   },
   'node-distinct-margin': {
     label: 'Share of the border sharply seen for a distinct margin',
     value: 'more than half',
     class: 'guideline',
     sources: [ics('Table 5, Margins', null)],
-    ...FEATURES_CHECKED,
+    ...ICS_CHECKED,
   },
   'fujiwara-nodes': {
     label: 'Nodes in the Fujiwara EBUS image classification study',
@@ -111,36 +151,38 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     class: 'guideline',
     sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
     note: 'Pooled across 29 studies (8,204 nodes), as reported by ICS/IAB 2023.',
-    ...FEATURES_CHECKED,
+    ...ICS_CHECKED,
   },
   'cns-specificity': {
     label: 'Specificity of a coagulation necrosis sign for malignancy',
     value: '93%',
     class: 'guideline',
     sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
-    ...FEATURES_CHECKED,
+    ...ICS_CHECKED,
   },
   'heterogeneous-specificity': {
     label: 'Specificity of heterogeneous echogenicity for malignancy',
     value: '82%',
     class: 'guideline',
     sources: [ics('Sonographic nodal characteristics: Agrawal meta-analysis', null)],
-    ...FEATURES_CHECKED,
+    ...ICS_CHECKED,
   },
   'passes-per-station': {
     label: 'Needle passes per station, suspected malignancy',
     value: 'at least 4',
     class: 'guideline',
     sources: [chest2024('Recommendation 5', 'strong recommendation, very low certainty')],
-    note: 'The 2016 CHEST guideline suggested at least 3 passes when ROSE is unavailable. The 2024 recommendation does not depend on ROSE.',
-    ...PACKET,
+    note: 'CHEST 2024 recommends four or more needle passes over three or fewer in suspected malignant disease, and the recommendation does not depend on ROSE. Taught beside AABIP 2025 Table 6, whose minimum standard for systematic staging is at least 3 passes or ROSE per nodal station (footnote: in practice at least 3, and frequently 4 or more). CHEST 2016 suggested at least 3 passes when ROSE is unavailable, an ungraded consensus statement that is now historical. ICS/IAB 2023 advises at least 3 passes per station for staging and at least 4 for diagnosis with molecular profiling (2A). A count that secures the diagnosis may not supply molecular or other ancillary testing.',
+    ...CHEST_2024_CHECKED,
+    checkedBy:
+      'CHEST 2024 recommendation wording read 2026-11-14 on the CHEST guideline page (full text read 2026-09-23, not read again); AABIP 2025 Table 6 and its footnote read in the published PDF; ICS/IAB 2023 full text; CHEST 2016 from a secondary summary only',
   },
   'needle-gauge': {
     label: 'Needle gauge, suspected malignancy',
     value: '21G or 22G rather than 19G',
     class: 'guideline',
     sources: [chest2024('Recommendation 4', 'conditional, very low certainty')],
-    ...PACKET,
+    ...CHEST_2024_CHECKED,
   },
   'agitations-per-pass': {
     label: 'Needle movements within the node on one pass',
@@ -153,21 +195,24 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         grade: 'expert panel report',
         locator: 'Technical aspects: definition of a pass',
       },
-      ics('Sampling technique', 'expert opinion'),
+      ics('Number of needle agitations', 'UPP (usual practice point)'),
     ],
-    note: 'CHEST 2016 describes a pass as one entry and exit, typically 5 to 15 agitations. ICS/IAB 2023 suggests at least 10.',
-    ...PACKET,
+    note: 'A description of technique, not a recommendation: CHEST 2016 defines a pass as one entry and exit of the needle, typically with 5 to 15 agitations. ICS/IAB 2023 advises at least 10 agitations per pass as a usual practice point, on one trial in sarcoidosis that found no difference between 10 and 20. Neither makes an exact count mandatory. The needle lab asks for the low end of the range as the minimum of that exercise only.',
+    ...ICS_CHECKED,
+    checkedBy:
+      'ICS/IAB 2023 full text read 2026-11-14 (PMC10401980); CHEST 2016 full text read 2026-09-23 (EBUS-PRE-REVIEW-05 packet), on 2026-11-14 only a secondary summary',
   },
   'aspirin-continue': {
     label: 'Aspirin before EBUS-TBNA',
     value: 'may continue',
     class: 'guideline',
     sources: [ics('Antiplatelet agents', '3A')],
-    ...PACKET,
+    ...ICS_CHECKED,
   },
   'clopidogrel-accp': {
-    label: 'Clopidogrel before a procedure (ACCP)',
+    label: 'Clopidogrel before elective noncardiac surgery (ACCP)',
     value: 'stop 5 days before',
+    appliesTo: 'Elective noncardiac surgery. The guideline makes no recommendation about EBUS-TBNA',
     class: 'guideline',
     sources: [
       {
@@ -177,24 +222,37 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         locator: 'Antiplatelet recommendations (22 to 26)',
       },
     ],
-    note: 'Sources differ. ACCP 2022 writes this for elective surgery and procedures. BTS 2013 says 7 days before biopsy, in a statement that did not cover EBUS. ICS/IAB 2023 allows continuing clopidogrel for EBUS-TBNA when the thrombotic risk outweighs the bleeding risk (3A).',
-    ...PACKET,
+    note: 'Not an interval for EBUS-TBNA. ICS/IAB 2023, the statement written for EBUS-TBNA, allows continuing clopidogrel when the thrombotic risk outweighs the bleeding risk (3A). The decision depends on the planned procedure, any biopsy added to it, and the patient’s bleeding and thrombotic risk.',
+    ...UNSIGNED,
+    checkedOn: CHECKED_ON,
+    checkedBy:
+      'ACCP 2022 full text read 2026-09-23 (EBUS-PRE-REVIEW-05 packet); on 2026-11-14 the abstract and a secondary summary of its tables only. ICS/IAB 2023 full text read 2026-11-14',
   },
   'clopidogrel-bts': {
-    label: 'Clopidogrel before bronchoscopic biopsy (BTS)',
+    label: 'Clopidogrel before endobronchial or transbronchial lung biopsy (BTS)',
     value: 'stop 7 days before',
+    appliesTo:
+      'Endobronchial biopsy and transbronchial lung biopsy at diagnostic flexible bronchoscopy. Not a requirement for EBUS-TBNA',
     class: 'guideline',
     sources: [
-      { sourceId: 'bts2013', year: 2013, grade: null, locator: 'Antiplatelet recommendations' },
+      {
+        sourceId: 'bts2013',
+        year: 2013,
+        grade: 'C',
+        locator: 'Summary of recommendations: antiplatelet agents',
+      },
     ],
-    ...PACKET,
-    checkedBy: 'EBUS-PRE-REVIEW-05 packet, partial read; the statement excludes EBUS',
+    note: 'Becomes relevant to an EBUS procedure when an endobronchial or transbronchial lung biopsy is planned in the same session. The same recommendation continues low-dose aspirin alone.',
+    ...UNSIGNED,
+    checkedOn: CHECKED_ON,
+    checkedBy:
+      'Publisher’s extract of the summary of recommendations read 2026-11-14 (clopidogrel stopped 7 days before endobronchial or transbronchial lung biopsy is considered, low-dose aspirin continued, Grade C); full text not read',
   },
   /*
    * Optics of the convex EBUS scope, added 2026-11-10 with the scope lesson (not signed). They are
-   * the values the project already records for this scope in `BF_UC180F_NOMINAL`
-   * (src/lib/bronchoscopy-core/devices.ts), which the simulated lens uses; the manufacturer page
-   * was not re-read when these rows were written.
+   * the values the project records for this scope in `BF_UC180F_NOMINAL`
+   * (src/lib/bronchoscopy-core/devices.ts), which the simulated lens uses, and they match the
+   * manufacturer's product page as read on 2026-11-14.
    */
   'scope-view-angle': {
     label: 'Convex EBUS scope, direction of view',
@@ -202,14 +260,15 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     appliesTo: 'Olympus BF-UC180F; forward-oblique, from the long axis of the scope',
     class: 'device',
     sources: [
-      { sourceId: 'olympus-uc180f', year: 2010, grade: null, locator: 'Specifications, optics' },
+      {
+        sourceId: 'olympus-uc180f',
+        year: 2010,
+        grade: null,
+        locator: 'Product page, Specs: Direction of View',
+      },
     ],
-    note: 'The angle differs between scope models. The lesson teaches the consequence, which does not depend on the exact figure.',
-    checkedOn: '2026-11-10',
-    checkedBy:
-      'Project device record BF_UC180F_NOMINAL (src/lib/bronchoscopy-core/devices.ts); manufacturer page not re-read',
-    signedBy: null,
-    signedOn: null,
+    note: 'The angle differs between scope models: the BF-UC190F looks 20° forward-oblique, with the same 80° field. The lesson teaches the consequence, which does not depend on the exact figure.',
+    ...OLYMPUS_CHECKED,
   },
   'scope-field-of-view': {
     label: 'Convex EBUS scope, field of view',
@@ -217,13 +276,15 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     appliesTo: 'Olympus BF-UC180F',
     class: 'device',
     sources: [
-      { sourceId: 'olympus-uc180f', year: 2010, grade: null, locator: 'Specifications, optics' },
+      {
+        sourceId: 'olympus-uc180f',
+        year: 2010,
+        grade: null,
+        locator: 'Product page, Specs: Field of View',
+      },
     ],
-    checkedOn: '2026-11-10',
-    checkedBy:
-      'Project device record BF_UC180F_NOMINAL (src/lib/bronchoscopy-core/devices.ts); manufacturer page not re-read',
-    signedBy: null,
-    signedOn: null,
+    note: 'The BF-UC190F has the same 80° field.',
+    ...OLYMPUS_CHECKED,
   },
   'scope-tip-diameter': {
     label: 'Convex EBUS scope, distal end',
@@ -235,11 +296,12 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         sourceId: 'olympus-uc190f',
         year: 2021,
         grade: null,
-        locator: 'Brochure OAIRES0121BRO38644, p. 4 specification table',
+        locator:
+          'Product page, Specs: Outer Diameter; brochure OAIRES0121BRO38644, p. 4 specification table',
       },
     ],
-    note: 'From the product brochure, not the instructions for use. The BF-UC180F is 6.9 mm at the tip.',
-    ...PACKET,
+    note: 'From the product page and brochure, not the instructions for use. The BF-UC180F is 6.9 mm at the tip.',
+    ...OLYMPUS_CHECKED,
   },
   'scope-insertion-tube': {
     label: 'Convex EBUS scope, insertion tube',
@@ -251,10 +313,11 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         sourceId: 'olympus-uc190f',
         year: 2021,
         grade: null,
-        locator: 'Brochure OAIRES0121BRO38644, p. 4 specification table',
+        locator:
+          'Product page, Specs: Outer Diameter Insertion Tube; brochure OAIRES0121BRO38644, p. 4 specification table',
       },
     ],
-    ...PACKET,
+    ...OLYMPUS_CHECKED,
   },
   'scope-channel': {
     label: 'Convex EBUS scope, working channel',
@@ -262,18 +325,24 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     appliesTo: 'Olympus BF-UC190F',
     class: 'device',
     sources: [
-      { sourceId: 'olympus-uc190f', year: 2021, grade: null, locator: 'Product page, channel' },
+      {
+        sourceId: 'olympus-uc190f',
+        year: 2021,
+        grade: null,
+        locator: 'Product page, Specs: Channel Width',
+      },
     ],
-    ...PACKET,
+    ...OLYMPUS_CHECKED,
   },
   'complication-rate': {
-    label: 'Complications of EBUS-TBNA',
+    label: 'Complications within 24 hours of an EBUS-TBNA procedure (AQuIRE registry)',
     value: '1.44%',
-    appliesTo: '1,317 patients at 6 hospitals',
+    appliesTo:
+      '19 of 1,317 patients at 6 hospitals. 474 of them had another procedure in the same session, and 187 a transbronchial lung biopsy',
     class: 'consensus',
-    sources: [{ sourceId: 'aquire2013', year: 2013, grade: 'registry', locator: 'Abstract' }],
-    note: 'Transbronchial lung biopsy in the same procedure was the only risk factor for a complication.',
-    ...ABSTRACT_ONLY,
+    sources: [aquire('Results, Any Complication; Tables 2 and 3')],
+    note: 'The rate of the whole procedure, not the isolated risk of needle aspiration (95% CI 0.87 to 2.24). Transbronchial lung biopsy in the same procedure was the only risk factor: 3.21% with it and 1.15% without (OR 2.85, 95% CI 1.07 to 7.59). With TBNA alone, 10 of 843 patients (1.2%).',
+    ...AQUIRE_CHECKED,
   },
   /*
    * Restaging after induction therapy, added 2026-11-10 with the consolidation (not signed: the
@@ -289,11 +358,11 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
     sources: [
       { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
     ],
-    note: '95% CI 52 to 76, for EBUS-TBNA alone (the same review gives EUS-FNA 73%). The denominator is patients with persistent nodal disease, so about one in three of them is missed; this is not a negative predictive value. The abstract does not say how many of the 558 patients had EBUS-TBNA.',
-    checkedOn: '2026-11-10',
-    checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
-    signedBy: null,
-    signedOn: null,
+    note: '95% CI 52 to 76, for EBUS-TBNA alone (the same review gives EUS-FNA 73%). The denominator is patients with persistent nodal disease, so about one in three of them is missed; this is not a negative predictive value. The abstract does not say how many of the 558 patients had EBUS-TBNA. The 2026 ERS/ESGE/ESTS guideline pools a sensitivity of 0.64 (95% CI 0.54 to 0.73) for endosonography in restaging, which agrees, and suggests endosonography over mediastinoscopy for restaging after induction therapy (conditional recommendation, very low certainty).',
+    ...UNSIGNED,
+    checkedOn: CHECKED_ON,
+    checkedBy:
+      'PubMed abstract read 2026-11-14 (PMID 31590952); full text not read. ERS/ESGE/ESTS 2026, PICO question 5, read in full on the publisher’s site for context',
   },
   'restaging-specificity': {
     label: 'Specificity of EBUS-TBNA for mediastinal restaging after induction therapy',
@@ -305,39 +374,49 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
       { sourceId: 'jiang2020', year: 2020, grade: 'meta-analysis', locator: 'Abstract, Results' },
     ],
     note: '95% CI 78 to 100, for EBUS-TBNA alone (the same review gives EUS-FNA 99%, 95% CI 90 to 100).',
-    checkedOn: '2026-11-10',
-    checkedBy: 'PubMed abstract (PMID 31590952); full text not read',
-    signedBy: null,
-    signedOn: null,
+    ...UNSIGNED,
+    checkedOn: CHECKED_ON,
+    checkedBy:
+      'PubMed abstract read 2026-11-14 (PMID 31590952); full text not read. ERS/ESGE/ESTS 2026, PICO question 5, read in full on the publisher’s site for context',
   },
   'pneumothorax-rate': {
-    label: 'Pneumothorax after EBUS-TBNA',
+    label: 'Pneumothorax within 24 hours of an EBUS-TBNA procedure (AQuIRE registry)',
     value: '0.53%',
-    appliesTo: '1,317 patients at 6 hospitals',
+    appliesTo:
+      '7 of 1,317 patients at 6 hospitals. 5 of the 7 had a transbronchial lung biopsy in the same session',
     class: 'consensus',
-    sources: [{ sourceId: 'aquire2013', year: 2013, grade: 'registry', locator: 'Abstract' }],
-    ...ABSTRACT_ONLY,
+    sources: [aquire('Results, Pneumothorax; Tables 2 and 4')],
+    note: 'Not the risk of EBUS-TBNA alone (95% CI 0.21 to 1.09). Pneumothorax followed 2.7% of procedures with a transbronchial lung biopsy (5 of 187) and 0.2% of those without (2 of 1,130; OR 15.49, 95% CI 2.98 to 80.46). Four of the seven needed a chest tube.',
+    ...AQUIRE_CHECKED,
   },
+  /*
+   * Fasting. The owner rejected BTS 2013's 4 hours for food as the default for EBUS under
+   * anesthesia (2026-11-12) and asked for current elective anesthesia guidance in its place. The
+   * row keeps its id; its value, source and scope are new. The two solid-food intervals share one
+   * row because the guideline states them in one recommendation.
+   */
   'fasting-solids': {
-    label: 'Fasting before bronchoscopy: food',
-    value: '4 hours',
+    label: 'Fasting before elective anesthesia or procedural sedation: solid food',
+    value:
+      'at least 6 hours after a light meal, and 8 hours or more after fried or fatty food or meat',
+    appliesTo: ASA_POPULATION,
     class: 'guideline',
-    sources: [{ sourceId: 'bts2013', year: 2013, grade: 'D', locator: 'Fasting recommendation' }],
-    note: 'Not in the EBUS packet. Taken from the Bronchoscopy Foundations register (rewrite plan, row 1). An anesthesia service may require longer for solids.',
-    checkedOn: '2026-10-08',
-    checkedBy: 'Bronchoscopy Foundations rewrite plan register; not re-read for EBUS',
-    signedBy: null,
-    signedOn: null,
+    sources: [asa('Recommendations for Solids and Nonhuman Milk; Table 1')],
+    note: 'ASA 2017: a light meal may be taken up to 6 hours before; additional fasting time, for example 8 or more hours, may be needed after fried foods, fatty foods or meat. BTS 2013 gave 4 hours for food before diagnostic flexible bronchoscopy; that is earlier bronchoscopy guidance and is not this course’s default for EBUS under anesthesia. The 2023 ASA update covers carbohydrate-containing clear liquids, chewing gum and pediatric fasting, which the 2017 guideline did not address.',
+    ...ASA_CHECKED,
   },
   'fasting-clear-fluids': {
     label: 'Fasting before bronchoscopy: clear fluids',
     value: '2 hours',
+    appliesTo: ASA_POPULATION,
     class: 'guideline',
-    sources: [{ sourceId: 'bts2013', year: 2013, grade: 'D', locator: 'Fasting recommendation' }],
-    checkedOn: '2026-10-08',
-    checkedBy: 'Bronchoscopy Foundations rewrite plan register; not re-read for EBUS',
-    signedBy: null,
-    signedOn: null,
+    sources: [
+      asa('Recommendations for Clear Liquids; Table 1'),
+      { sourceId: 'bts2013', year: 2013, grade: 'D', locator: 'Fasting recommendation' },
+    ],
+    ...ASA_CHECKED,
+    checkedBy:
+      'ASA 2017 full text read 2026-11-14 (journal site). The BTS 2013 fasting recommendation was not read: it is carried from the Bronchoscopy Foundations register',
   },
 })
 
