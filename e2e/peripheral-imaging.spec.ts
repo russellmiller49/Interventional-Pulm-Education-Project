@@ -3538,6 +3538,42 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   expect(grey.swing).toBeGreaterThan(20)
   await capture(page, info, 'fluoro-ribs-grey.png')
 
+  // Owner's ruling, 2026-11-12: a display toggle, bone dark by default. The two settings draw the
+  // same image as inverses of each other, and the choice is kept when the page reloads.
+  const monitor = page.locator('[data-current-image] [data-projection-state]')
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-dark')
+  const display = page.getByRole('group', { name: 'Fluoroscopy display' })
+  await expect(display.getByRole('button', { name: 'Bone dark' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  const meanLevel = () =>
+    canvas.evaluate((node) => {
+      const c = node as HTMLCanvasElement
+      const gl = c.getContext('webgl2')!
+      const pixels = new Uint8Array(c.width * c.height * 4)
+      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+      let sum = 0
+      for (let i = 0; i < pixels.length; i += 4) sum += pixels[i]
+      return sum / (pixels.length / 4)
+    })
+  const darkMean = await meanLevel()
+  await display.getByRole('button', { name: 'Bone bright' }).click()
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-bright')
+  await expect.poll(async () => Math.abs((await meanLevel()) + darkMean - 255)).toBeLessThan(12)
+  await page.reload()
+  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+    'data-display-polarity',
+    'bone-bright',
+    { timeout: 90000 },
+  )
+  await page
+    .getByRole('group', { name: 'Fluoroscopy display' })
+    .getByRole('button', { name: 'Bone dark' })
+    .click()
+  await expect(monitor).toHaveAttribute('data-projection-state', 'ready', { timeout: 90000 })
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-dark')
+
   const toggle = page.locator('[data-bone-depth-toggle]')
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
   await toggle.click()
@@ -3558,6 +3594,7 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   }
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', check.id)
   await expect(page.locator('[data-bone-depth-toggle]')).toHaveCount(0)
+  await expect(page.locator('[data-polarity-control]')).toHaveCount(0)
 })
 
 test('the bronchial tree is drawn and named on the frontal image, and withheld on its check', async ({

@@ -56,6 +56,7 @@ uniform float uBoneHighHu;
 uniform float uToneHigh;
 uniform float uToneGamma;
 uniform float uDepthTint;
+uniform float uInvert;
 uniform vec3 uDepthSplitLps;
 uniform sampler3D uBoneVolume;
 uniform float uUseBoneVolume;
@@ -101,7 +102,8 @@ void main() {
   float tStart = max(tHits.x, 0.0);
   float tEnd = tHits.y;
   if (tEnd <= tStart) {
-    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    // Nothing attenuates this ray: it reads as air in either polarity.
+    outColor = vec4(vec3(uInvert > 0.5 ? 1.0 : 0.0), 1.0);
     return;
   }
 
@@ -144,14 +146,26 @@ void main() {
   intensity = clamp(intensity + noise, 0.0, 1.0);
   intensity = pow(intensity, max(0.45, uContrastBoost) * uToneGamma);
 
+  // Display polarity: denser is brighter as computed; inverted, denser is darker.
+  if (uInvert > 0.5) intensity = 1.0 - intensity;
+
   vec3 color = vec3(intensity);
   if (uDepthTint > 0.0) {
     // An optional overlay, never part of the image itself: bone is tinted by which side of the
-    // split point it lies on along the beam.
+    // split point it lies on along the beam (amber on the tube side, blue on the detector side).
     float tube = smoothstep(0.8, 8.0, boneTubeSide) * uDepthTint;
     float detector = smoothstep(0.8, 8.0, boneDetectorSide) * uDepthTint;
-    color *= vec3(1.0) + tube * vec3(0.26, 0.04, -0.4) + detector * vec3(-0.4, 0.06, 0.42);
-    color += tube * vec3(0.045, 0.02, 0.0) + detector * vec3(0.0, 0.035, 0.08);
+    if (uInvert > 0.5) {
+      // Bone is dark here, and a tint that scales the gray would vanish on it: bone is drawn in
+      // the hue itself, at a level that stays darker than the lung around it.
+      float weight = clamp(tube + detector, 0.0, 1.0);
+      vec3 hue = (tube * vec3(0.95, 0.6, 0.18) + detector * vec3(0.25, 0.58, 1.0))
+        / max(tube + detector, 1e-4);
+      color = mix(color, hue * (0.35 + 0.55 * intensity), 0.5 * weight);
+    } else {
+      color *= vec3(1.0) + tube * vec3(0.26, 0.04, -0.4) + detector * vec3(-0.4, 0.06, 0.42);
+      color += tube * vec3(0.045, 0.02, 0.0) + detector * vec3(0.0, 0.035, 0.08);
+    }
   }
   outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -182,6 +196,8 @@ export interface DrrLook {
   /** 0 for the image as acquired; up to 1 to tint bone by its side of `depthSplitLps`. */
   depthTint: number
   depthSplitLps: Vec3
+  /** Display polarity: false draws denser brighter (radiograph style), true draws denser darker. */
+  invert: boolean
 }
 
 export const DEFAULT_DRR_LOOK: DrrLook = {
@@ -192,6 +208,7 @@ export const DEFAULT_DRR_LOOK: DrrLook = {
   toneGamma: 1,
   depthTint: 0,
   depthSplitLps: [0, 0, 0],
+  invert: false,
 }
 
 /** Additive pose overrides; changing these never uploads the CT volume again. */
@@ -333,6 +350,7 @@ export class VolumeDRRRenderer {
         uToneHigh: { value: DEFAULT_DRR_LOOK.toneHigh },
         uToneGamma: { value: DEFAULT_DRR_LOOK.toneGamma },
         uDepthTint: { value: 0 },
+        uInvert: { value: 0 },
         uDepthSplitLps: { value: new Vector3() },
         uBoneVolume: { value: (boneTexture ?? texture) as Texture },
         uUseBoneVolume: { value: boneTexture ? 1 : 0 },
@@ -421,6 +439,7 @@ export class VolumeDRRRenderer {
     this.material.uniforms.uToneGamma.value = look.toneGamma
     this.material.uniforms.uDepthTint.value = look.depthTint
     this.material.uniforms.uDepthSplitLps.value.set(...look.depthSplitLps)
+    this.material.uniforms.uInvert.value = look.invert ? 1 : 0
     this.material.uniforms.uMaxSteps.value = plan.sampleSteps
     this.material.uniforms.uTime.value =
       ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - this.timeStart) /

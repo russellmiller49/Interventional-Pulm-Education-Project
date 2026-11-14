@@ -6,7 +6,7 @@
  *
  * - Automatic image processing. The display range is set from the pixels inside the collimated
  *   field (their 1st to 99th percentile). While the spine and mediastinum are in the field they
- *   take the bright end of that range; once they are collimated out, the same range is spread over
+ *   take the dense end of that range; once they are collimated out, the same range is spread over
  *   the lung, the lesion and the tool.
  * - Scatter. Scatter is produced in the irradiated tissue, so its share of the detector signal is
  *   taken to rise with the irradiated area, and it is drawn the way FluoroView draws it: as a veil

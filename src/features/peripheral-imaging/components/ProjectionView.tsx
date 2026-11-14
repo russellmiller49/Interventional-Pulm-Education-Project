@@ -15,6 +15,7 @@ import {
   radians,
   type Point3,
 } from '../lib/physics'
+import { useFluoroPolarity } from '../lib/displayPolarity'
 import styles from '../imaging.module.css'
 
 export function Projection({
@@ -42,10 +43,12 @@ export function Projection({
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const renderer = useRef<VolumeDRRRenderer | null>(null)
-  const latest = useRef({ orbit, tilt })
+  // The fallback image follows the same display setting as the suite's monitor.
+  const invert = useFluoroPolarity() === 'bone-dark'
+  const latest = useRef({ orbit, tilt, invert })
   useEffect(() => {
-    latest.current = { orbit, tilt }
-  }, [orbit, tilt])
+    latest.current = { orbit, tilt, invert }
+  }, [orbit, tilt, invert])
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
   const id = useId().replace(/:/g, '')
   const [ox, oy, oz] = registration ? [0, 0, -registration.current] : offset
@@ -64,6 +67,7 @@ export function Projection({
         cranialCaudalDeg: latest.current.tilt,
         settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
         lowRes: false,
+        look: { invert: latest.current.invert },
       })
     }
     let observer: ResizeObserver | undefined
@@ -99,6 +103,7 @@ export function Projection({
       cranialCaudalDeg: tilt,
       settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
       lowRes: true,
+      look: { invert },
     })
     const timer = window.setTimeout(
       () =>
@@ -107,11 +112,12 @@ export function Projection({
           cranialCaudalDeg: tilt,
           settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
           lowRes: false,
+          look: { invert },
         }),
       110,
     )
     return () => window.clearTimeout(timer)
-  }, [orbit, tilt])
+  }, [orbit, tilt, invert])
   const screen = (point: Point3, translation: Point3 = [ox, oy, oz]) => {
     const p = projectToDetector(point.map((v, i) => v + translation[i]) as Point3, orbit, tilt)
     return [256 + (p[0] / DETECTOR_FIELD) * 512, 256 - (p[1] / DETECTOR_FIELD) * 512]

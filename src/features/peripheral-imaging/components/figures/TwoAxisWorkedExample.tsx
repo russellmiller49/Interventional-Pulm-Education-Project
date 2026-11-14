@@ -337,6 +337,7 @@ export function TwoAxisWorkedExample() {
             <figure key={which} className={styles.panel} data-projection={which}>
               <FigureCanvas
                 pixels={model ? model.projections[which] : null}
+                fluoroscopic
                 size={TWO_AXIS_EXAMPLE.projection.sizePx}
                 label={
                   which === 'before'
