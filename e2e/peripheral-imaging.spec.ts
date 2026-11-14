@@ -3740,3 +3740,104 @@ test('Projection: the bronchi over the nodule are drawn without a tool, and rota
   await expect(overlay).toHaveCount(0)
   await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(1)
 })
+
+test('Practice drill: the nodule is placed from the catheter tip on the image alone, then shown in 3D and on the CT', async ({
+  page,
+}, info) => {
+  // Airway anatomy, part 4 (owner go-ahead 2026-11-11): FluoroView's nodule quiz on the course CT.
+  // A catheter is parked in a neighbouring bronchus, the C-arm turns 30° either way, and nothing
+  // that shows depth — the 3D view, the bronchi, the CT — is on screen until an answer is checked.
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(`${base()}/en/peripheral-imaging/practice`)
+  const entry = page.locator('[data-practice-drill-link]')
+  await expect(entry).toContainText('Where is the nodule from the catheter tip?')
+  await entry.click()
+  await expect(page.locator('[data-airway-drill]')).toHaveAttribute(
+    'data-airway-drill',
+    'position-1',
+  )
+  const ready = () =>
+    expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
+  await ready()
+  const drill = page.locator('[data-airway-drill]')
+  const image = page.locator('[data-current-image]')
+  const slider = page.locator('#peripheral-imaging-control-drillOrbit')
+
+  // Asked: the image with the catheter and the nodule, one control, and nothing that gives depth.
+  await expect(drill).toHaveAttribute('data-drill-revealed', 'false')
+  await expect(image.locator('[data-catheter-overlay]')).toHaveCount(1)
+  await expect(image.locator('[data-target-overlay]')).toHaveCount(1)
+  await expect(image.locator('[data-airway-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-suite-viewport]')).toHaveCount(0)
+  await expect(page.locator('[data-drill-axial]')).toHaveCount(0)
+  await expect(page.locator('[data-readout]')).toHaveCount(0)
+  await expect(drill).not.toContainText(/[LR]B\d/)
+  await expect(slider).toHaveAttribute('min', '-30')
+  await expect(slider).toHaveAttribute('max', '30')
+  // The image is large enough to read the tip against the nodule.
+  expect((await image.locator('canvas').boundingBox())!.width).toBeGreaterThan(400)
+  await noHorizontalOverflow(page)
+
+  // Turning the C-arm moves the nodule against the tip: toward the midline at LAO for this one,
+  // whose nodule lies in front of the tip. Screen left is toward the midline in the left lung.
+  const gap = async () => {
+    const tipX = Number(await image.locator('[data-catheter-tip]').getAttribute('data-tip-x'))
+    const targetX = Number(await image.locator('[data-target-overlay]').getAttribute('cx'))
+    return targetX - tipX
+  }
+  const frontal = await gap()
+  expect(frontal).toBeGreaterThan(5)
+  await slider.fill('-30')
+  await ready()
+  await expect(image.locator('[data-acquisition-context]')).toContainText('C-arm obliquity -30°')
+  expect(await gap()).toBeLessThan(frontal - 10)
+  await capture(page, info, 'drill-asked-lao.png')
+  await slider.fill('30')
+  await ready()
+  expect(await gap()).toBeGreaterThan(frontal + 10)
+
+  // Answered: the reasoning, the bronchi, the 3D view and the CT open together.
+  await page.locator('[data-prediction-choices] input[value="anterior-lateral"]').check()
+  await page.locator('[data-airway-drill] [data-now-primary]').click()
+  await expect(drill).toHaveAttribute('data-drill-revealed', 'true')
+  await ready()
+  await expect(page.locator('[data-drill-verdict]')).toHaveText(
+    'Yes: the nodule lies anterior and lateral to the tip.',
+  )
+  await expect(page.locator('[data-drill-next]')).toContainText('The catheter is in LB9')
+  await expect(image.locator('[data-airway-overlay]')).toHaveAttribute('data-airway-show', 'lesion')
+  await expect(image.locator('[data-catheter-overlay]')).toHaveCount(1)
+  await expect(page.locator('[data-suite-viewport]')).toHaveCount(1)
+  await expect(page.locator('[data-drill-axial]')).toHaveAttribute('data-ct-state', 'ready', {
+    timeout: 60000,
+  })
+  // On the CT the tip is marked behind and medial to the nodule: lower and to the left of it.
+  const nodule = await page.locator('[data-drill-axial-nodule]').boundingBox()
+  const tip = await page.locator('[data-drill-axial-tip]').boundingBox()
+  expect(tip!.y + tip!.height / 2).toBeGreaterThan(nodule!.y + nodule!.height / 2)
+  expect(tip!.x + tip!.width / 2).toBeLessThan(nodule!.x + nodule!.width / 2)
+  await noHorizontalOverflow(page)
+  await capture(page, info, 'drill-revealed.png')
+
+  // Try again puts all of it away.
+  await page.locator('[data-answer-again]').click()
+  await expect(drill).toHaveAttribute('data-drill-revealed', 'false')
+  await ready()
+  await expect(image.locator('[data-airway-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-suite-viewport]')).toHaveCount(0)
+  await expect(drill).not.toContainText(/[LR]B\d/)
+
+  // The next position is one link away and opens asked, not answered.
+  await page.locator('[data-next-drill]').click()
+  await expect(page.locator('[data-airway-drill]')).toHaveAttribute(
+    'data-airway-drill',
+    'position-2',
+  )
+  await expect(page.locator('[data-airway-drill]')).toHaveAttribute('data-drill-revealed', 'false')
+  await expectNoStoredResponses(page)
+})

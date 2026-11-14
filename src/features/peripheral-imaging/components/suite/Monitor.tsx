@@ -10,6 +10,7 @@ import {
 } from '../../lib/fieldDisplay'
 import type { Point3 } from '../../lib/physics'
 import { AirwayOverlay } from './AirwayOverlay'
+import { CatheterOverlay } from './CatheterOverlay'
 import { airwayLegend, isAirwayLobeShow, type AirwayShow } from '../../lib/airwayTree'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import type { ImagingSuitePaneProps } from './types'
@@ -70,6 +71,7 @@ export function Monitor({
   boneDepthAid = false,
   showTool = true,
   airways,
+  catheter,
 }: {
   pose: DrrPose
   depth: number
@@ -106,6 +108,8 @@ export function Monitor({
   showTool?: boolean
   /** The bronchi drawn from the CT over the projection, and whether they are named. */
   airways?: { readonly show: AirwayShow; readonly names: boolean }
+  /** A catheter lying in the airways, trachea to tip, drawn on the projection. */
+  catheter?: readonly Point3[]
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -158,6 +162,15 @@ export function Monitor({
           geometry={pose.geometry}
           show={airwayShow}
           names={airways?.names ?? true}
+          offset={offset}
+        />
+      )}
+      {catheter && (
+        <CatheterOverlay
+          orbit={pose.orbit}
+          tilt={pose.tilt}
+          geometry={pose.geometry}
+          path={catheter}
           offset={offset}
         />
       )}

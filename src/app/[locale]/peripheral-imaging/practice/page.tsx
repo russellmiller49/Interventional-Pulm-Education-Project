@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { PeripheralImagingModuleFrame } from '@/features/peripheral-imaging/components/PeripheralImagingModuleFrame'
+import { AirwayDrillActivity } from '@/features/peripheral-imaging/components/AirwayDrillActivity'
 import { ImagingCaseActivity } from '@/features/peripheral-imaging/components/ImagingCaseActivity'
 import { PeripheralImagingPracticeLanding } from '@/features/peripheral-imaging/components/PeripheralImagingPracticeLanding'
 import { imagingMicroCaseById } from '@/features/peripheral-imaging/content/microCases'
+import { airwayDrillCase } from '@/features/peripheral-imaging/lib/airwayDrill'
 import { PERIPHERAL_IMAGING_PRACTICE_HREF } from '@/features/peripheral-imaging/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -21,14 +23,28 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ case?: string | string[] }>
+  searchParams?: Promise<{ case?: string | string[]; drill?: string | string[] }>
 }
 
 export default async function PeripheralImagingPracticePage({ params, searchParams }: PageProps) {
   const { locale } = await params
-  const requested = (await searchParams)?.case
+  const query = await searchParams
+  const requested = query?.case
   const caseId = Array.isArray(requested) ? requested[0] : requested
+  const requestedDrill = query?.drill
+  const drillId = Array.isArray(requestedDrill) ? requestedDrill[0] : requestedDrill
   setRequestLocale(locale)
+
+  // The drill has an image and its control beside the question, so it takes the wide frame.
+  if (drillId && airwayDrillCase(drillId)) {
+    return (
+      <PeripheralImagingModuleFrame locale={locale} activeHref={PERIPHERAL_IMAGING_PRACTICE_HREF}>
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <AirwayDrillActivity key={drillId} caseId={drillId} />
+        </div>
+      </PeripheralImagingModuleFrame>
+    )
+  }
 
   if (caseId && imagingMicroCaseById.has(caseId)) {
     return (

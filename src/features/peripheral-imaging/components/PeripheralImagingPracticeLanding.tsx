@@ -4,11 +4,13 @@ import { ArrowRight, Check } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 
+import { AIRWAY_DRILL, airwayDrillLinkTarget } from '../content/airwayDrill'
 import { imagingCases } from '../content/cases'
 import { imagingMicroCasesInPathwayOrder, microCasesForSection } from '../content/microCases'
 import { imagingLesson, peripheralImagingSectionIds } from '../content/pathway'
 import { imagingSectionLinkTarget } from '../content/pathwayResolver'
 import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF } from '../content/routes'
+import { AIRWAY_DRILL_CASES } from '../lib/airwayDrill'
 import { ImagingContinueCta } from './hub/ImagingPathwayAccordion'
 import { useImagingProgress } from './useImagingProgress'
 
@@ -90,6 +92,23 @@ export function PeripheralImagingPracticeLanding() {
           )}
         </div>
       </div>
+
+      <section className="grid gap-2" data-practice-drill>
+        <h2 className="text-sm font-bold">A drill on the image</h2>
+        <Link
+          className="flex min-h-11 items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-sm"
+          href={airwayDrillLinkTarget(AIRWAY_DRILL_CASES[0].id)}
+          data-practice-drill-link={AIRWAY_DRILL_CASES[0].id}
+        >
+          <span className="grid gap-1">
+            <span className="font-semibold">{AIRWAY_DRILL.title}</span>
+            <span className="text-xs leading-5 text-muted-foreground">
+              {AIRWAY_DRILL.summary} {AIRWAY_DRILL_CASES.length} catheter positions.
+            </span>
+          </span>
+          <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
+        </Link>
+      </section>
 
       <ol className="grid gap-6" data-practice-list>
         {sections.map((sectionId) => {
