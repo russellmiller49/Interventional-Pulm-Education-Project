@@ -105,8 +105,11 @@ commitment.
 accordion's "Up next" all call `nextIncompleteHemodynamicsSection`, which walks the canonical order
 and returns the first section without a completed record — section one for a fresh learner. The
 composition line ("9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1
-capstone · 193 min" since October 2026, when sections 2–8 took their case as their last task and
-their minutes include it) is counted from the registry at render. The accordion groups by stage as
+capstone · 170 min" since November 2026; 193 from October, when sections 2–8 took their case as
+their last task and their minutes include it) is counted from the registry at render. Each
+section's minutes are its measured reading time plus its case (owner ruling 2026-11-14: task-card
+words a learner who works the section sees, folds closed, at 200 words a minute;
+`test-support/sectionReading.tsx`, held by `section-minutes.test.tsx`). The accordion groups by stage as
 contiguous runs of the one order (the pathway interleaves a foundation between two mechanism runs
 on purpose, so a stage may appear twice), and `pathway-resolver.test.tsx` asserts that flattening
 the groups reproduces it. Case chips name the presentation, never the short diagnosis.

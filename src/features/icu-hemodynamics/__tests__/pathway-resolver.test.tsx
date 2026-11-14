@@ -100,9 +100,10 @@ describe('the resolver', () => {
     expect(hemodynamicsCompositionLine()).toBe(
       `${composition.total} sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · ${composition.minutes} min`,
     )
-    // The seven cases that end their sections count in the time: 121 min of lessons, 72 of cases.
+    // The seven cases that end their sections count in the time: 98 min of measured reading
+    // (owner ruling 2026-11-14, `section-minutes.test.tsx`), 72 of cases.
     expect(hemodynamicsCompositionLine()).toBe(
-      '9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 193 min',
+      '9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 170 min',
     )
     for (const section of hemodynamicsPathwaySections) {
       const pairing = hemodynamicsPracticePairing(section.id)
