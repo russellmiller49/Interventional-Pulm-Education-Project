@@ -26,6 +26,11 @@ export type HemodynamicsPresentationKind =
  * out (`DerivedValueFigure`). The derived-values section had no drawing at all: its reading, its
  * two questions and its two Explain cards were text about equations.
  *
+ * `fick-calculation` is the Fick calculation drawn the same way (`FickCalculationFigure`), beside
+ * the flow section's fourth task. Its six reading pages, one Fick episode each, were the module's
+ * last reading task with no drawing (owner ruling hd-e4-fick-drawing, 2026-11-14). The drawing
+ * follows the page; beside the task's question it shows the calculation's structure and no numbers.
+ *
  * `normal-reference` is the normal tracing for the chamber the walk is standing in. It used to
  * be the first thing in the walk's task card, with the stop's text and Next stop a few screens
  * under it: pressing Next stop changed a tracing that had scrolled out of view (owner,
@@ -36,6 +41,7 @@ export type HemodynamicsSectionFigure =
   | 'pac-parts'
   | 'td-curve'
   | 'derived-value'
+  | 'fick-calculation'
   | 'normal-reference'
 
 export interface HemodynamicsTaskPresentation {
@@ -60,12 +66,14 @@ function sectionFigure(
 ): HemodynamicsSectionFigure {
   const task = step.interaction.kind
   if (section === 'why-measure' && task !== 'case') return 'pac-parts'
-  // Not the tasks that draw their own curves (the series, the disagreement) or the Fick reading.
+  // Not the tasks that draw their own curves (the series, the disagreement).
   if (
     section === 'thermodilution-series' &&
     (task === 'read' || task === 'prediction' || task === 'explain')
   )
     return 'td-curve'
+  // The Fick reading pages and the question after them.
+  if (section === 'thermodilution-series' && task === 'observe') return 'fick-calculation'
   // Not the workbenches, which lay out their own inputs and results.
   if (
     section === 'derived-hemodynamics' &&
