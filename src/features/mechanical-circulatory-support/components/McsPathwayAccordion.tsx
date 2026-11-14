@@ -14,6 +14,7 @@ import {
   resolveNextIncompleteMcsSection,
   type McsProgressView,
 } from '../content/pathwayResolver'
+import { mcsSectionCase } from '../content/sectionSpecs'
 import { readMcsLearningProgress } from '../engine/learningProgress'
 import styles from './mechanical-circulatory-support.module.css'
 
@@ -25,8 +26,9 @@ const FRESH_PROGRESS: McsProgressView = { visitedLessonIds: [], visitedCaseIds: 
  *
  * Groups are contiguous runs of the canonical order, so opening every group and reading top to
  * bottom is the pathway. Section chips say "worked through" in words rather than only in an
- * attribute; case chips are named by presentation, never by diagnosis, because the accordion is
- * read before any case's debrief.
+ * attribute. A section that ends on a case names it on its own chip as its last task: the case runs
+ * inside the section, so it is part of the section rather than a separate link to Practice. The
+ * unit's other cases keep their chips, which open Practice.
  */
 export function McsPathwayAccordion({
   progress,
@@ -39,6 +41,11 @@ export function McsPathwayAccordion({
   const worked = mcsWorkedSectionIds(progress)
   const visited = new Set(progress.visitedCaseIds)
   const next = resolveNextIncompleteMcsSection(progress)
+  const placedCaseIds = new Set(
+    groups.flatMap((group) =>
+      group.sections.flatMap((section) => mcsSectionCase(section.id)?.caseId ?? []),
+    ),
+  )
 
   return (
     <div className={styles.pathwayAccordion} id={id} data-pathway-accordion>
@@ -60,6 +67,7 @@ export function McsPathwayAccordion({
               {group.sections.map((section) => {
                 const done = worked.has(section.id)
                 const recommended = next?.id === section.id
+                const sectionCase = mcsSectionCase(section.id)
                 return (
                   <li
                     key={section.id}
@@ -74,26 +82,36 @@ export function McsPathwayAccordion({
                       </span>
                       <span className={styles.pathwayChipTitle}>{section.title}</span>
                       <span className={styles.pathwayChipDescription}>{section.description}</span>
+                      {sectionCase ? (
+                        <span
+                          className={styles.pathwayChipDescription}
+                          data-section-case={sectionCase.caseId}
+                        >
+                          Last task · Case: {sectionCase.title}
+                        </span>
+                      ) : null}
                       {done ? <span className={styles.pathwayChipDone}>visited</span> : null}
                     </Link>
                   </li>
                 )
               })}
-              {group.cases.map((scenario) => (
-                <li key={scenario.id} data-kind="case" data-visited={visited.has(scenario.id)}>
-                  <Link
-                    href={`${mechanicalCirculatorySupportNavBase}/practice?case=${encodeURIComponent(scenario.id)}`}
-                  >
-                    <span className={styles.pathwayChipKicker}>{mcsCaseKindLabel(scenario)}</span>
-                    <span className={styles.pathwayChipTitle}>
-                      {mcsPresentationTitle(scenario)}
-                    </span>
-                    {visited.has(scenario.id) ? (
-                      <span className={styles.pathwayChipDone}>visited</span>
-                    ) : null}
-                  </Link>
-                </li>
-              ))}
+              {group.cases
+                .filter((scenario) => !placedCaseIds.has(scenario.id))
+                .map((scenario) => (
+                  <li key={scenario.id} data-kind="case" data-visited={visited.has(scenario.id)}>
+                    <Link
+                      href={`${mechanicalCirculatorySupportNavBase}/practice?case=${encodeURIComponent(scenario.id)}`}
+                    >
+                      <span className={styles.pathwayChipKicker}>{mcsCaseKindLabel(scenario)}</span>
+                      <span className={styles.pathwayChipTitle}>
+                        {mcsPresentationTitle(scenario)}
+                      </span>
+                      {visited.has(scenario.id) ? (
+                        <span className={styles.pathwayChipDone}>visited</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
               {group.capstone ? (
                 <li data-kind="capstone" data-visited={visited.has(group.capstone.id)}>
                   <Link

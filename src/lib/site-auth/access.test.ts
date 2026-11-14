@@ -192,6 +192,7 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/es/pccm-intro-course', params())).toBe('pccm_intro_course')
     expect(getRequiredEntitlement('/socrates-library', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/es/socrates-library', params())).toBe('socrates_editor')
+    expect(getRequiredEntitlement('/socrates-library/legacy', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/socrates-builder', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/es/socrates-builder', params())).toBe('socrates_editor')
     expect(getRequiredEntitlement('/socrates-builder/slides/new', params())).toBe('socrates_editor')
@@ -231,6 +232,35 @@ describe('main site auth access helpers', () => {
       expect(isPublicPath(path)).toBe(false)
       expect(getRequiredEntitlement(path, params())).toBe('site_admin')
     }
+  })
+
+  it('keeps the Literature Atlas tester preview public-unlisted and apart from the Explorer', () => {
+    for (const path of [
+      '/literature-atlas',
+      '/es/literature-atlas',
+      '/zh-CN/literature-atlas',
+      '/literature-atlas/anything',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('literature-atlas')
+    }
+    // The shared `/literature` stem must not open the site-admin Explorer, nor the other way round.
+    for (const path of ['/literature', '/en/literature/methods', '/literature-atlasx']) {
+      expect(isPublicUnlistedPath(path)).toBe(false)
+    }
+    expect(getRequiredEntitlement('/literature/methods', params())).toBe('site_admin')
+    // The relay is an API route, not a module page: the proxy passes every `/api/` path and the
+    // route sets its own noindex header.
+    expect(resolveSiteModuleId('/api/literature-atlas/map')).toBeNull()
+  })
+
+  it('keeps the live anatomy lesson on one analytics id at its beta review address', () => {
+    expect(resolveSiteModuleId('/en/development-beta/live-anatomy/lesson')).toBe(
+      resolveSiteModuleId('/en/intro-bronchoscopy/airway-anatomy'),
+    )
+    expect(resolveSiteModuleId('/en/development-beta/live-anatomy')).toBeNull()
   })
 
   it('tracks the protected SOCRATES builder separately from the public demo', () => {
@@ -291,6 +321,30 @@ describe('main site auth access helpers', () => {
     )
     expect(isPublicPath('/socal-ebus-course/app/simulator/eus-b-case-001/case_manifest.json')).toBe(
       true,
+    )
+  })
+
+  it('keeps the EUS-B guided course public-unlisted and opens its lab only as a training embed', () => {
+    for (const path of [
+      '/eus-b-guided',
+      '/es/eus-b-guided',
+      '/eus-b-guided/learn',
+      '/zh-CN/eus-b-guided/learn',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('eus-b-guided')
+    }
+    expect(isPublicPath('/socal-ebus-course/app/eus-b-guided.html')).toBe(false)
+    expect(
+      getRequiredEntitlement(
+        '/socal-ebus-course/app/eus-b-guided.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBeNull()
+    expect(getRequiredEntitlement('/socal-ebus-course/app/eus-b-guided.html', params())).toBe(
+      'socal_ebus_course',
     )
   })
 

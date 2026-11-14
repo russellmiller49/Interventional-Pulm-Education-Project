@@ -23,6 +23,8 @@ export function SectionHeader({
   onHelp,
   onRestart,
   restartLabel = 'Restart',
+  onRestartCourse,
+  restartCourseLabel = 'Restart course',
   onSaveAndExit,
   saveAndExitHref,
   resumedNote,
@@ -38,6 +40,9 @@ export function SectionHeader({
   readonly onHelp?: () => void
   readonly onRestart?: () => void
   readonly restartLabel?: string
+  /** Opens the course's first section at its first step, beside the restart of this section. */
+  readonly onRestartCourse?: () => void
+  readonly restartCourseLabel?: string
   readonly onSaveAndExit?: () => void
   readonly saveAndExitHref?: string
   readonly resumedNote?: string
@@ -79,6 +84,16 @@ export function SectionHeader({
             onClick={onRestart}
           >
             {restartLabel}
+          </button>
+        ) : null}
+        {onRestartCourse ? (
+          <button
+            type="button"
+            className={styles.headerButton}
+            data-stage-restart-course
+            onClick={onRestartCourse}
+          >
+            {restartCourseLabel}
           </button>
         ) : null}
         {saveAndExitHref ? (

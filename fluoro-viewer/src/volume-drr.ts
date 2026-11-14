@@ -50,6 +50,15 @@ uniform float uMaTimeGain;
 uniform float uMuScale;
 uniform float uNoiseSigma;
 uniform float uContrastBoost;
+uniform float uBoneMu;
+uniform float uBoneLowHu;
+uniform float uBoneHighHu;
+uniform float uToneHigh;
+uniform float uToneGamma;
+uniform float uDepthTint;
+uniform vec3 uDepthSplitLps;
+uniform sampler3D uBoneVolume;
+uniform float uUseBoneVolume;
 uniform int uMaxSteps;
 uniform float uTime;
 
@@ -70,12 +79,15 @@ vec2 intersectBox(vec3 ro, vec3 rd, vec3 boxMin, vec3 boxMax) {
   return vec2(tmin, tmax);
 }
 
-float huToMu(float hu, float kvp) {
+float boneShare(float hu) {
+  return smoothstep(uBoneLowHu, uBoneHighHu, hu);
+}
+
+float huToMu(float hu, float kvp, float bone) {
   float kvpFactor = pow(80.0 / max(kvp, 30.0), 1.35);
   float tissueDensity = max(0.0, (hu + 1000.0) / 1000.0);
   float softTissue = smoothstep(-850.0, 80.0, hu);
-  float bone = smoothstep(160.0, 1250.0, hu);
-  return kvpFactor * (0.00013 * tissueDensity + 0.00009 * softTissue + 0.00038 * bone);
+  return kvpFactor * (0.00013 * tissueDensity + 0.00009 * softTissue + uBoneMu * bone);
 }
 
 void main() {
@@ -99,6 +111,10 @@ void main() {
   float jitter = hash21(gl_FragCoord.xy + vec2(uTime, 0.0)) * stepMm;
   float t = tStart + jitter;
   float lineIntegral = 0.0;
+  // Bone path on the tube side and on the detector side of the depth-split point, in millimetres.
+  float boneTubeSide = 0.0;
+  float boneDetectorSide = 0.0;
+  vec3 beam = normalize(uDetectorCenterLps - uSourceLps);
 
   for (int i = 0; i < 1024; i++) {
     if (i >= steps) break;
@@ -110,17 +126,34 @@ void main() {
     }
     float normalizedSample = texture(uVolume, uvw).r;
     float hu = normalizedSample * (uHuHigh - uHuLow) + uHuLow;
-    float mu = huToMu(hu, uKvp);
+    float bone = boneShare(hu);
+    // A caller may supply bone as its own volume, already smoothed: thresholding the CT sample by
+    // sample draws a rib that crosses the voxel grid obliquely as a row of steps.
+    if (uUseBoneVolume > 0.0) bone = texture(uBoneVolume, uvw).r;
+    float mu = huToMu(hu, uKvp, bone);
     lineIntegral += mu * stepMm * uMuScale;
+    if (uDepthTint > 0.0) {
+      if (dot(samplePos - uDepthSplitLps, beam) < 0.0) boneTubeSide += bone * stepMm;
+      else boneDetectorSide += bone * stepMm;
+    }
     t += stepMm;
   }
 
-  float intensity = smoothstep(0.035, 0.92, lineIntegral) * uMaTimeGain;
+  float intensity = smoothstep(0.035, uToneHigh, lineIntegral) * uMaTimeGain;
   float noise = (hash21(gl_FragCoord.xy * 0.917 + uTime) - 0.5) * uNoiseSigma;
   intensity = clamp(intensity + noise, 0.0, 1.0);
-  intensity = pow(intensity, max(0.45, uContrastBoost));
+  intensity = pow(intensity, max(0.45, uContrastBoost) * uToneGamma);
 
-  outColor = vec4(vec3(intensity), 1.0);
+  vec3 color = vec3(intensity);
+  if (uDepthTint > 0.0) {
+    // An optional overlay, never part of the image itself: bone is tinted by which side of the
+    // split point it lies on along the beam.
+    float tube = smoothstep(0.8, 8.0, boneTubeSide) * uDepthTint;
+    float detector = smoothstep(0.8, 8.0, boneDetectorSide) * uDepthTint;
+    color *= vec3(1.0) + tube * vec3(0.26, 0.04, -0.4) + detector * vec3(-0.4, 0.06, 0.42);
+    color += tube * vec3(0.045, 0.02, 0.0) + detector * vec3(0.0, 0.035, 0.08);
+  }
+  outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 `
 
@@ -129,6 +162,36 @@ export interface DrrFrameMetrics {
   renderMs: number
   sampleSteps: number
   renderScale: number
+}
+
+/**
+ * How attenuation becomes the displayed image. The defaults are FluoroView's own; a caller may
+ * weight bone more heavily, so that ribs resolved in the CT are resolved in the projection, and may
+ * ask for bone to be tinted by depth as a labelled overlay.
+ */
+export interface DrrLook {
+  /** Added attenuation of bone, per millimetre at 80 kVp, before `uMuScale`. */
+  boneMu: number
+  /** The HU range over which a voxel goes from no bone to all bone. */
+  boneLowHu: number
+  boneHighHu: number
+  /** The line integral that maps to full brightness. */
+  toneHigh: number
+  /** Extra display gamma; below 1 lifts the lung fields. */
+  toneGamma: number
+  /** 0 for the image as acquired; up to 1 to tint bone by its side of `depthSplitLps`. */
+  depthTint: number
+  depthSplitLps: Vec3
+}
+
+export const DEFAULT_DRR_LOOK: DrrLook = {
+  boneMu: 0.00038,
+  boneLowHu: 160,
+  boneHighHu: 1250,
+  toneHigh: 0.92,
+  toneGamma: 1,
+  depthTint: 0,
+  depthSplitLps: [0, 0, 0],
 }
 
 /** Additive pose overrides; changing these never uploads the CT volume again. */
@@ -152,6 +215,7 @@ export class VolumeDRRRenderer {
   private material: ShaderMaterial | null = null
   private quad: Mesh | null = null
   private volumeTexture: Data3DTexture | null = null
+  private boneTexture: Data3DTexture | null = null
   private roiCenterLps: Vec3 | null = null
   private destroyed = false
   private ready = false
@@ -178,7 +242,11 @@ export class VolumeDRRRenderer {
     this.preserveDrawingBuffer = options.preserveDrawingBuffer ?? false
   }
 
-  async load(preloadedVolume?: Uint8Array): Promise<void> {
+  /**
+   * `boneShare`, when given, is each voxel's share of bone (0–255) on the CT's own grid. It replaces
+   * the per-sample HU ramp, so the caller decides what counts as bone and how it is smoothed.
+   */
+  async load(preloadedVolume?: Uint8Array, boneShare?: Uint8Array): Promise<void> {
     if (this.destroyed) return
     const gl = this.canvas.getContext('webgl2', {
       preserveDrawingBuffer: this.preserveDrawingBuffer,
@@ -215,6 +283,19 @@ export class VolumeDRRRenderer {
     texture.unpackAlignment = 1
     texture.needsUpdate = true
     this.volumeTexture = texture
+    let boneTexture: Data3DTexture | null = null
+    if (boneShare) {
+      if (boneShare.byteLength !== expectedBytes)
+        throw new Error('Bone volume does not match the CT volume grid.')
+      boneTexture = new Data3DTexture(boneShare, sx, sy, sz)
+      boneTexture.format = RedFormat
+      boneTexture.type = UnsignedByteType
+      boneTexture.minFilter = LinearFilter
+      boneTexture.magFilter = LinearFilter
+      boneTexture.unpackAlignment = 1
+      boneTexture.needsUpdate = true
+      this.boneTexture = boneTexture
+    }
 
     const spacing = this.asset.spacingXyzMm
     const origin = this.asset.originLps
@@ -246,6 +327,15 @@ export class VolumeDRRRenderer {
         uMuScale: { value: 1 },
         uNoiseSigma: { value: 0 },
         uContrastBoost: { value: 1 },
+        uBoneMu: { value: DEFAULT_DRR_LOOK.boneMu },
+        uBoneLowHu: { value: DEFAULT_DRR_LOOK.boneLowHu },
+        uBoneHighHu: { value: DEFAULT_DRR_LOOK.boneHighHu },
+        uToneHigh: { value: DEFAULT_DRR_LOOK.toneHigh },
+        uToneGamma: { value: DEFAULT_DRR_LOOK.toneGamma },
+        uDepthTint: { value: 0 },
+        uDepthSplitLps: { value: new Vector3() },
+        uBoneVolume: { value: (boneTexture ?? texture) as Texture },
+        uUseBoneVolume: { value: boneTexture ? 1 : 0 },
         uMaxSteps: { value: 192 },
         uTime: { value: 0 },
       },
@@ -265,6 +355,7 @@ export class VolumeDRRRenderer {
     settings: FluoroSettings
     lowRes: boolean
     geometry?: DrrGeometry
+    look?: Partial<DrrLook>
   }): DrrFrameMetrics {
     if (!this.ready || !this.material || !this.renderer) {
       return this.lastMetrics
@@ -322,6 +413,14 @@ export class VolumeDRRRenderer {
     this.material.uniforms.uMuScale.value = 7.5
     this.material.uniforms.uNoiseSigma.value = noiseSigma
     this.material.uniforms.uContrastBoost.value = settings.highDoseMode ? 1.08 : 1
+    const look = { ...DEFAULT_DRR_LOOK, ...options.look }
+    this.material.uniforms.uBoneMu.value = look.boneMu
+    this.material.uniforms.uBoneLowHu.value = look.boneLowHu
+    this.material.uniforms.uBoneHighHu.value = look.boneHighHu
+    this.material.uniforms.uToneHigh.value = look.toneHigh
+    this.material.uniforms.uToneGamma.value = look.toneGamma
+    this.material.uniforms.uDepthTint.value = look.depthTint
+    this.material.uniforms.uDepthSplitLps.value.set(...look.depthSplitLps)
     this.material.uniforms.uMaxSteps.value = plan.sampleSteps
     this.material.uniforms.uTime.value =
       ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - this.timeStart) /
@@ -384,10 +483,12 @@ export class VolumeDRRRenderer {
     }
     this.material?.dispose()
     this.volumeTexture?.dispose()
+    this.boneTexture?.dispose()
     this.renderer?.dispose()
     this.material = null
     this.quad = null
     this.volumeTexture = null
+    this.boneTexture = null
     this.renderer = null
   }
 

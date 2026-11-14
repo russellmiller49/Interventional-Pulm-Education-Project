@@ -30,6 +30,12 @@ async function geometry(page: Page) {
       site.getBoundingClientRect().bottom,
       desktop ? shell.getBoundingClientRect().top : 0,
     )
+    // The lesson bar is pinned on a desktop window; focus below it starts under it.
+    const bar = shell.firstElementChild as HTMLElement
+    if (getComputedStyle(bar).position === 'sticky' && !bar.contains(focus)) {
+      const barRect = bar.getBoundingClientRect()
+      if (barRect.top <= visibleTop + 1 && barRect.bottom > visibleTop) visibleTop = barRect.bottom
+    }
     // A strip below the viewport top is still in normal flow. Only count it when pinned.
     if (getComputedStyle(strip).position === 'sticky' && !strip.contains(focus)) {
       const stripRect = strip.getBoundingClientRect()
@@ -146,25 +152,24 @@ for (const width of [390, 320]) {
     )
     await settle(page)
     await tabTo(page, 'Continue')
-    // Match the report's pre-wheel position (native focus centering varies by browser version).
-    const initial = await geometry(page)
+    /*
+     * Rewritten 2026-10-13. The step's action row is now pinned to the foot of the view, and a
+     * reading step no longer carries a skip button beside it, so the control before Continue in
+     * the tab order is further up the card and a wheel leaves it above the view. Reverse Tab has
+     * to bring that control back, clear of the site header; forward Tab returns to the pinned row.
+     */
     await page.mouse.move(width / 2, 420)
-    await page.mouse.wheel(0, Math.round(initial.focus.rect.top - 400))
-    await settle(page)
-    await page.mouse.wheel(0, 230)
+    await page.mouse.wheel(0, 400)
     await settle(page)
     const before = await record(page, info, 'before-reverse-tab')
-    expect(before.focus.rect.top).toBeGreaterThan(168)
-    expect(before.focus.rect.top).toBeLessThan(172)
+    expect(before.document.scrollTop).toBeGreaterThan(0)
+    await visibleFocus(page)
     await page.keyboard.press('Shift+Tab')
     await settle(page)
-    await expect(
-      page.getByRole('button', { name: 'Continue without doing this step', exact: true }),
-    ).toBeFocused()
-    const after = await record(page, info, 'after-reverse-tab')
+    await expect(page.getByRole('button', { name: 'Continue', exact: true })).not.toBeFocused()
+    await record(page, info, 'after-reverse-tab')
     await page.screenshot({ path: info.outputPath('reverse-tab.png') })
     await visibleFocus(page)
-    expect(after.document.scrollTop).toBeGreaterThan(before.document.scrollTop - 100)
     await page.keyboard.press('Tab')
     await settle(page)
     await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeFocused()
@@ -185,20 +190,35 @@ for (const lesson of [
     await open(page, lesson, true)
     await tabTo(page, 'Sources for this lesson')
     await record(page, info, 'sources')
-    for (let i = 0; i < 3; i++) {
+    /*
+     * Revised 2026-10-14. Drills now pin their action row to the foot of the card, so "Why this
+     * matters" sits before the pinned buttons rather than after them and the press count from
+     * Sources changed. Walk back to it, then forward to Sources, checking every stop is visible.
+     */
+    const why = page.locator('summary').filter({ hasText: /^Why this matters$/ })
+    for (
+      let i = 0;
+      i < 8 && !(await why.evaluate((node) => node === document.activeElement));
+      i++
+    ) {
       await page.keyboard.press('Shift+Tab')
       await settle(page)
     }
-    await expect(page.locator('summary').filter({ hasText: /^Why this matters$/ })).toBeFocused()
+    await expect(why).toBeFocused()
     await record(page, info, 'why-this-matters')
     await page.screenshot({ path: info.outputPath('reverse-tab.png') })
     await visibleFocus(page)
-    for (let i = 0; i < 3; i++) {
+    const sources = page.locator('[data-stage-sources] > summary')
+    for (
+      let i = 0;
+      i < 8 && !(await sources.evaluate((node) => node === document.activeElement));
+      i++
+    ) {
       await page.keyboard.press('Tab')
       await settle(page)
       await visibleFocus(page)
     }
-    await expect(page.locator('[data-stage-sources] > summary')).toBeFocused()
+    await expect(sources).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page.locator('[data-stage-sources]')).toHaveAttribute('open', '')
     await page.keyboard.press('Escape')
@@ -314,19 +334,36 @@ test('Prompt03: the enlarged phone launch gate keeps its action inside the panel
   await expect(page.locator('[data-gate-reason]')).toHaveCount(0)
 })
 
-test('Prompt03: header controls retain focus across the phone breakpoint', async ({ page }) => {
-  await page.setViewportSize({ width: 610, height: 844 })
+test('Prompt03: header controls retain focus across the fold breakpoint', async ({ page }) => {
+  // The fold was phone-only (600 px). Since the lesson bar was pinned it is every window under
+  // 1500 px, so the bar is one row; the same focus rules hold at the new width.
+  await page.setViewportSize({ width: 1510, height: 844 })
   await open(page, 'circuit-flow-path')
   const restart = page.locator('[data-ecmo-restart]')
+  // The fold is decided after hydration, and the lesson then takes entry focus, up to two seconds
+  // after load on a dev server. Wait both out, or the first resize below finds a bar that has not
+  // folded yet and a task that takes the focus back.
+  await expect
+    .poll(() =>
+      restart.evaluate((node) => Object.keys(node).some((key) => key.startsWith('__reactProps'))),
+    )
+    .toBe(true)
+  await page.waitForTimeout(2500)
   await restart.focus()
-  for (const width of [590, 610, 590]) {
+  for (const width of [1490, 1510, 1490]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(restart).toBeFocused()
+    await expect(restart).toBeVisible()
+  }
+  // Open with focus inside, the menu stays open and usable down to a phone and back.
+  for (const width of [610, 590, 610]) {
     await page.setViewportSize({ width, height: 844 })
     await expect(restart).toBeFocused()
     await expect(restart).toBeVisible()
   }
   const summary = page.locator('[data-ecmo-header-more] > summary')
   await summary.focus()
-  await page.setViewportSize({ width: 610, height: 844 })
+  await page.setViewportSize({ width: 1510, height: 844 })
   await expect(page.locator('[data-ecmo-main-menu]')).toBeFocused()
 })
 
@@ -335,9 +372,13 @@ test('Main menu replaces the in-activity track switch and opens Learn on the cur
 }) => {
   await page.setViewportSize({ width: 1280, height: 961 })
   await open(page, 'circuit-flow-path')
-  // No inert summary on a desktop, and no VV/VA switch inside the activity.
-  await expect(page.locator('[data-ecmo-header-more] > summary')).toBeHidden()
+  // No VV/VA switch inside the activity. At this width the main menu and the restarts are one
+  // menu in the bar, and its button opens it (it was once an inert summary on a desktop).
   await expect(page.getByRole('radiogroup', { name: 'ECMO support mode' })).toHaveCount(0)
+  const more = page.locator('[data-ecmo-header-more] > summary')
+  await expect(more).toBeVisible()
+  await expect(page.locator('[data-ecmo-restart]')).toBeHidden()
+  await more.click()
   await expect(page.locator('[data-ecmo-restart]')).toBeVisible()
   await page.getByRole('button', { name: 'Main menu', exact: true }).click()
   await expect(page).toHaveURL(/\/en\/cardiohelp-ecmo\/learn\?track=vv$/)
@@ -380,7 +421,7 @@ test('Prompt03: enlarged emergency strip does not intercept the event or crush c
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320)
   // The alarm changes to a long, medium-priority two-clamp message after de-airing.
   await page.getByRole('button', { name: 'Next step', exact: true }).click()
-  await page.getByRole('button', { name: 'Continue without doing this step', exact: true }).click()
+  await page.getByRole('button', { name: 'Skip', exact: true }).click()
   await page.locator('#cardiohelp-clamp-return').click()
   await page.getByRole('button', { name: 'Next step', exact: true }).click()
   await page.locator('#cardiohelp-clamp-drainage').click()

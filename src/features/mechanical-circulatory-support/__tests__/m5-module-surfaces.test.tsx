@@ -87,7 +87,9 @@ describe('MCS M5 — the module front door derives what it claims', () => {
         `${mcsCapstoneScenarios.length} optional integrated cases, one per device track`,
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText(`Browse all ${mcsLessons.length} sections`)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: `${mcsLessons.length} sections, in one order` }),
+    ).toBeInTheDocument()
   })
 
   it('does not count Mechanism Studio as one of the patient cases', async () => {
@@ -141,15 +143,12 @@ describe('MCS M5 — the module front door derives what it claims', () => {
     ).toBeInTheDocument()
   })
 
-  it('keeps the teaching-simulator statement in the primary path, with no release checklist', async () => {
+  it('states the teaching-simulator boundary once, with no release checklist', async () => {
     const { container } = await renderHub()
 
-    const governance = container.querySelector('[data-review-governance]') as HTMLElement
-    expect(
-      within(governance)
-        .getByText(/This is a teaching simulator\./)
-        .closest('details'),
-    ).toBeNull()
+    // The frame's closed disclosure is the one statement (2026-10-17).
+    expect(container.querySelectorAll('details[data-mcs-boundary]')).toHaveLength(1)
+    expect(container.querySelector('[data-review-governance]')).toBeNull()
     expect(container.querySelector('[data-reviewer-layer]')).toBeNull()
     expect(container.textContent).not.toMatch(/Publication awaits review|pending clinical review/i)
   })
@@ -223,7 +222,7 @@ describe('MCS M5 — module chrome on every route', () => {
     for (const section of ['practice', 'assess'] as const) {
       const view = await renderWorkbench({ section })
       expect(screen.getByRole('note', { name: 'Educational safety notice' })).toHaveTextContent(
-        /Teaching simulator\. Its numbers come from a model, not from a patient or a real console/,
+        /^Teaching simulator.*Its numbers come from a model, not from a patient or a real console/,
       )
       view.unmount()
     }

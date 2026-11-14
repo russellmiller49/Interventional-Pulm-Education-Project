@@ -161,7 +161,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
         id: 'b',
         text: 'Retain B because its smaller irradiated area establishes adequate information.',
         rationale:
-          'An area percentage from the model cannot establish adequate coverage or patient dose. This field loses context required by the task.',
+          'An irradiated-area percentage cannot establish adequate coverage or patient dose. This field loses context required by the task.',
       },
       {
         id: 'c',
@@ -201,7 +201,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
     ],
     correct: 'b',
     takeaway:
-      'Choose temporal settings for the motion and imaging task. The fixed-current model reports tube loading, not patient dose; image lag is not simulated.',
+      'Choose temporal settings for the motion and imaging task. The readout is tube load at a fixed current, not patient dose.',
     sources: ['tg272', 'tg125', 'wabip'],
   },
   'two-dimensional': {
@@ -213,7 +213,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
         id: 'a',
         text: 'Accept the visible tip and target as adequate confirmation for sampling.',
         rationale:
-          'The sampling component and its depth remain unconfirmed, and required image context is missing. A teaching image cannot clear a biopsy: that decision stays with the procedure team, with the real images and the patient in front of them.',
+          'The sampling component and its depth remain unconfirmed, and required image context is missing.',
       },
       {
         id: 'b',
@@ -236,7 +236,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
   'tool-confirmation': {
     id: 'sampling-interpretation-v2',
     objective: 'verify',
-    stem: 'Trace the intended lesion and green modeled sampling window in the new thin-plane configuration. What conclusion is supported?',
+    stem: 'Trace the lesion and the green sampling window in the new thin-plane configuration. What conclusion is supported?',
     choices: [
       {
         id: 'a',
@@ -259,7 +259,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
     ],
     correct: 'a',
     takeaway:
-      'Trace the sampling component in linked thin views. Model intersection is not a clinical safety decision or a diagnosis.',
+      'Trace the sampling component in linked thin views. A window shown within the lesion is not a decision that sampling is safe, and it is not a diagnosis.',
     sources: ['setser', 'confirm'],
   },
   // QS-4, text form: the stem describes the appearance and leaves the cause for the learner to

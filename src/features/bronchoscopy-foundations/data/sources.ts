@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -178,6 +178,9 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U19: 'Dimensions of one manufacturer’s current bronchoscopes, taken from device records and product specifications; other scopes differ.',
   U20: 'The prescribing information for flumazenil injection; its effect can wear off before the benzodiazepine does.',
   U21: 'The prescribing information for naloxone injection; the dose used is the one for partial reversal after procedural opioids, not for overdose.',
+  U22: 'A reference textbook of mechanical ventilation, used for trapped gas and for pneumothorax in a ventilated patient. It names one site for a needle; a newer text names another.',
+  U23: 'A critical care protocols handbook, used only for where and how a tension pneumothorax is decompressed and the drain that follows.',
+  U24: 'A review of the pig as a model for lung research, used only for how brushes and forceps are built and handled; it is not a clinical guideline.',
 }
 
 /**
@@ -259,7 +262,7 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     id: 'U19',
     kind: 'manufacturer product specifications',
     title:
-      'Olympus bronchoscope specifications: EVIS X1 BF-H1100 and BF-1TH1100; EVIS EXERA III BF-P190',
+      'Olympus bronchoscope specifications: EVIS X1 BF-H1100 and BF-1TH1100; EVIS EXERA III BF-P190, BF-1TH190 and BF-XT190',
     authors: null,
     organization: 'Olympus',
     year: 2026,
@@ -296,6 +299,49 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     accessedDate: '2026-10-08',
     transcript: null,
   },
+  {
+    id: 'U22',
+    kind: 'reference textbook',
+    title: 'Principles and Practice of Mechanical Ventilation, third edition',
+    authors: 'Tobin MJ, editor',
+    organization: null,
+    year: 2013,
+    doi: null,
+    url: null,
+    reviewedScope:
+      'Hypotension from intrinsic PEEP and its release by disconnection; airway pressures and needle decompression when a ventilated patient has a pneumothorax; low exhaled tidal volume alarms',
+    accessedDate: '2026-10-11',
+    transcript: null,
+  },
+  {
+    id: 'U23',
+    kind: 'reference textbook',
+    title: 'ICU Protocols: A Step-wise Approach, third edition, volumes I and II',
+    authors: 'Chawla R, Todi S, editors',
+    organization: null,
+    year: 2025,
+    doi: '10.1007/978-981-96-5633-2',
+    url: null,
+    reviewedScope:
+      'Tension pneumothorax: the two sites for decompression, needle or finger, and the chest drain that follows',
+    accessedDate: '2026-10-11',
+    transcript: null,
+  },
+  {
+    id: 'U24',
+    kind: 'translational review',
+    title:
+      'Anatomy and bronchoscopy of the porcine lung: a model for translational respiratory medicine',
+    authors: 'Judge EP, Hughes JML, Egan JJ, Maguire M, Molloy EL, O’Dea S',
+    organization: null,
+    year: 2014,
+    doi: '10.1165/rcmb.2013-0453TR',
+    url: null,
+    reviewedScope:
+      'Bronchial brushing and endobronchial biopsy (page 340): the brush sheath advanced and retracted by the assistant on request, the protected specimen brush in two telescoping catheters, and toothed, cupped and needle forceps',
+    accessedDate: '2026-11-03',
+    transcript: null,
+  },
 ]
 
 const SOURCE_USE_WORDING: Readonly<Record<string, string>> = {
@@ -310,6 +356,7 @@ function kindLabel(source: ManifestSource, sourceClass: BronchSourceClass): stri
   if (source.id === 'S1') return 'Textbook'
   if (source.id === 'S2') return 'Training manual'
   if (source.id === 'S3') return 'Faculty manual'
+  if (/textbook/i.test(source.kind)) return 'Textbook'
   if (/trial/i.test(source.kind) || source.id === 'U13') return 'Randomized trial'
   if (
     /manufacturer|product|official web documentation/i.test(source.kind) ||
@@ -317,6 +364,7 @@ function kindLabel(source: ManifestSource, sourceClass: BronchSourceClass): stri
   )
     return 'Manufacturer documentation'
   if (/checklist/i.test(source.kind)) return 'Emergency checklist'
+  if (/\breview\b/i.test(source.kind)) return 'Review article'
   return 'Guideline or official guidance'
 }
 

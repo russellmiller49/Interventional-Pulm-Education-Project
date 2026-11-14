@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
-import { Link, useRouter } from '@/i18n/navigation'
+import { useEffect, useMemo, useRef } from 'react'
+import type { TripPlan } from '../engine/trip-session'
+import { Link } from '@/i18n/navigation'
 import { TEACHING_SIMULATOR_STATEMENT, summaryLines } from '../content/bench-copy'
 import { NAMING_KEY, NAMING_USE, SLICE_DIRECTION_NOTE, targetNaming } from '../content/course-guide'
 import type { CtNoduleTarget } from '../content/ct-types'
@@ -10,15 +11,20 @@ import { routePlan } from '../content/nav-lessons'
 import {
   ASSESS_TARGET_IDS,
   TARGET_IDS,
+  lobeOf,
   targetById,
   targetLabel,
-  targetsByLobe,
   traceForTarget,
 } from '../content/targets'
+import { planSummaryLines } from '../content/plan-copy'
 import { summarize } from '../engine/nav-session'
-import { navKey, readNavEntry, writeNavEntry } from '../engine/nav-storage'
+import { navKey } from '../engine/nav-storage'
+import { ROUTE_PLAN_PARTS, summarizePlan } from '../engine/plan-session'
+import { readPrefs } from '../engine/prefs-storage'
+import { recordResult, resultOf } from '../engine/results-storage'
+import { LesionPicker } from './LesionPicker'
 import { ModuleFrame } from './ModuleFrame'
-import { NavigationBench } from './NavigationBench'
+import { TripBench, tripOver } from './TripBench'
 import { useHydrated } from './useHydrated'
 import { useTrip } from './useTrip'
 import styles from './nav-bench.module.css'
@@ -26,9 +32,10 @@ import styles from './nav-bench.module.css'
 type Mode = 'practice' | 'assess'
 
 /**
- * Whole routes, trachea to lesion. Practice offers every lesion with help on. The closing set
- * (the `assess` address) is three lesions in three lobes with the help off: openings are numbered
- * but not named until chosen, and a missed mark is told what it is in, not which way to move.
+ * Whole lesions: plan from the lesion back, draw the map, then drive from the trachea. Practice
+ * offers every lesion with help on. The closing set (the `assess` address) is three lesions in
+ * three lobes with the help off: openings are numbered but not named until chosen, a miss is told
+ * that it missed, not which way to move, and a turn into a branch that leads away is counted.
  */
 export function NavRouteHost({ mode, requestedTarget }: { mode: Mode; requestedTarget?: string }) {
   const hydrated = useHydrated()
@@ -56,90 +63,60 @@ export function NavRouteHost({ mode, requestedTarget }: { mode: Mode; requestedT
   )
 }
 
-function LesionPicker({ mode }: { mode: Mode }) {
-  const router = useRouter()
-  const groups = targetsByLobe()
-    .map((group) => ({
-      ...group,
-      targets:
-        mode === 'assess'
-          ? group.targets.filter((target) => ASSESS_TARGET_IDS.includes(target.id))
-          : group.targets,
-    }))
-    .filter((group) => group.targets.length)
-  const open = (id: string) => {
-    // A route already driven to its lesion starts again from the trachea.
-    const key = navKey(mode, id)
-    if (readNavEntry(key).entry?.session.phase === 'arrived') writeNavEntry(key, null)
-    router.push(`${BASE_PATH}/${mode}?lesion=${id}`)
-  }
-  const ids = groups.flatMap((group) => group.targets.map((target) => target.id))
-  return (
-    <main className={styles.picker} data-lesion-picker={mode}>
-      <h1>{mode === 'assess' ? 'Three lesions, no hints' : 'Pick a lesion'}</h1>
-      <p>
-        {mode === 'assess'
-          ? 'Each route runs from the trachea to the lesion. Openings are numbered but not named until you have chosen, and a missed mark is told what it landed in, not which way to move. The match, identify, choose and drive steps are the same.'
-          : 'Each route runs from the trachea to the lesion: match the CT to the scope, identify the openings, choose toward the lesion and drive on, at every fork. The trachea and main bronchus are chosen, not marked.'}
-      </p>
-      <div className={styles.pickerGroups}>
-        {groups.map((group) => (
-          <section key={group.lobe} className={styles.pickerGroup}>
-            <h2>{group.lobe}</h2>
-            <ul>
-              {group.targets.map((target) => (
-                <li key={target.id}>
-                  <button onClick={() => open(target.id)} data-lesion={target.id}>
-                    {target.segment.code} · {target.segment.name}
-                    <small>
-                      by {target.approachCode} · slice {target.slice}
-                    </small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      {mode === 'practice' && (
-        <div className={styles.pickerActions}>
-          <button
-            onClick={() => open(ids[Math.floor(Math.random() * ids.length)])}
-            data-lesion-surprise
-          >
-            Surprise me
-          </button>
-        </div>
-      )}
-      <p className={styles.boundary}>{TEACHING_SIMULATOR_STATEMENT}</p>
-    </main>
-  )
-}
-
 function RouteRun({ mode, target }: { mode: Mode; target: CtNoduleTarget }) {
   const trace = useMemo(() => traceForTarget(target.id), [target.id])
-  const plan = useMemo(() => routePlan(trace), [trace])
+  const trip: TripPlan = useMemo(
+    () => ({
+      plan: { traceId: trace.id, targetId: target.id, parts: ROUTE_PLAN_PARTS },
+      // A whole lesion is driven with its map: no fork waits for the CT to be turned.
+      nav: routePlan(trace, { matchOptional: true, cruise: !readPrefs().everyFork }),
+    }),
+    [trace, target.id],
+  )
   const storageKey = navKey(mode, target.id)
-  const [session, dispatch] = useTrip(trace, plan, storageKey, 0)
-  const forkNames = plan.stations.map(
+  const [session, dispatch] = useTrip(trace, target, trip, storageKey, 0)
+  // Reaching the lesion is recorded once, when it happens: a trip opened already at its end (a
+  // reload on the closing screen) was recorded when it got there.
+  const over = tripOver(session)
+  const wasOver = useRef(over)
+  useEffect(() => {
+    if (over && !wasOver.current)
+      recordResult(
+        storageKey,
+        resultOf(
+          session.plan ? summarizePlan(trip.plan!, session.plan) : null,
+          session.nav ? summarize(session.nav) : null,
+        ),
+      )
+    wasOver.current = over
+    // The summaries are read at the moment the trip ends; nothing changes them afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [over, storageKey])
+  const forkNames = trip.nav!.stations.map(
     (station) => trace.checkpoints[station.checkpointIndex].decision!.parent.airway.code,
   )
   const naming = targetNaming(target)
   return (
-    <NavigationBench
+    <TripBench
       section={mode}
-      title={`${mode === 'assess' ? 'Closing set' : 'Practice'} · ${targetLabel(target)}`}
-      subtitle="Trachea to the lesion"
+      title={`${mode === 'assess' ? 'Closing set' : 'Practice'} · A lesion in the ${lobeOf(target).toLowerCase()}, slice ${target.slice}`}
+      subtitle="From the lesion back, then the trachea to the lesion"
       trace={trace}
-      plan={plan}
-      intro={`${naming.sentence} Start by matching the CT to the scope in the trachea.`}
+      target={target}
+      trip={trip}
+      intro="Plan it from the lesion back, draw the map, then drive."
       independent={mode === 'assess'}
       help={mode === 'practice'}
       session={session}
       dispatch={dispatch}
       closing={{
         heading: 'You have reached the lesion',
-        body: [...summaryLines(summarize(session), forkNames), TEACHING_SIMULATOR_STATEMENT],
+        body: [
+          `${targetLabel(target)}. ${naming.sentence}`,
+          ...(session.plan ? planSummaryLines(summarizePlan(trip.plan!, session.plan)) : []),
+          ...(session.nav ? summaryLines(summarize(session.nav), forkNames) : []),
+          TEACHING_SIMULATOR_STATEMENT,
+        ],
         next: { label: 'Choose another lesion', href: `${BASE_PATH}/${mode}` },
       }}
       exit={<Link href={`${BASE_PATH}/${mode}`}>All lesions</Link>}

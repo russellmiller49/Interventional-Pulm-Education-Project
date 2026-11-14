@@ -2,26 +2,42 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { ArrowUpRight } from 'lucide-react'
 import type { BetaModule } from './catalog'
-import type { BetaRollout } from './rollout'
+import type { BetaRollout, BetaTesterNote } from './rollout'
+import { ReviewStatus } from './HubReviewStatus'
+import { betaRouteForGroup, betaRoutePlace, inRouteOrder } from './route'
 
-const groups = ['Bronchoscopy', 'Devices', 'Critical care'] as const
+const groups = ['Bronchoscopy', 'Devices', 'Literature', 'Critical care'] as const
 
+/*
+ * The hub opens a module only in its feedback wrapper. Direct links to the modules themselves are
+ * an admin tool, on Admin › Modules in development, and are not offered to reviewers here
+ * (owner decision, 2026-11-09).
+ */
 function ModuleLinks({ entry, locale }: { entry: BetaModule; locale: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="space-y-3">
       <Link
         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
         href={`/${locale}/development-beta/${entry.id}` as Route}
       >
         Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
       </Link>
-      <Link
-        className="text-sm underline underline-offset-4"
-        href={`/${locale}${entry.path}` as Route}
-      >
-        Standard module
-      </Link>
+      <ReviewStatus moduleId={entry.id} locale={locale} />
     </div>
+  )
+}
+
+/** "Critical care route · 2 of 5" and the one line on why the module sits there. */
+function RoutePlace({ moduleId }: { moduleId: string }) {
+  const place = betaRoutePlace(moduleId)
+  if (!place) return null
+  return (
+    <p className="text-sm leading-6" data-route-step={place.position}>
+      <span className="font-semibold">
+        {place.route.title} · {place.position} of {place.total}.
+      </span>{' '}
+      <span className="text-muted-foreground">{place.why}</span>
+    </p>
   )
 }
 
@@ -39,9 +55,39 @@ function NoteList({ title, items }: { title: string; items: readonly string[] })
   )
 }
 
+function formatMinutes(minutes: number) {
+  if (minutes < 90) return `${minutes} minutes`
+  return `${Math.round(minutes / 30) / 2} hours`
+}
+
+function TesterNote({ note }: { note: BetaTesterNote }) {
+  return (
+    <>
+      <p className="text-sm leading-6">{note.summary}</p>
+      <dl className="space-y-1 text-sm leading-6">
+        <div>
+          <dt className="inline font-semibold">Written for: </dt>
+          <dd className="inline text-muted-foreground">{note.audience}</dd>
+        </div>
+        {note.estimate && (
+          <div>
+            <dt className="inline font-semibold">Estimated time: </dt>
+            <dd className="inline text-muted-foreground">
+              about {formatMinutes(note.estimate.minutes)}, from {note.estimate.basis}
+            </dd>
+          </div>
+        )}
+      </dl>
+      <NoteList title="Where feedback helps most" items={note.lookFor} />
+      <NoteList title="Known limits" items={note.knownLimits} />
+    </>
+  )
+}
+
 /**
- * The hub's module list. Every module is listed and opens the same way whatever its stage; a
- * module that is ready for review moves to the first section and shows its tester note.
+ * The hub's module list. Every module passed in is listed and opens the same way; a
+ * module that is ready for review moves to the first section and shows its tester note. A module
+ * still in development shows its note too when it has one.
  */
 export function BetaHubSections({
   locale,
@@ -64,7 +110,8 @@ export function BetaHubSections({
               Ready for review
             </h2>
             <p className="text-muted-foreground">
-              Start here. Each card says what to look for and what is still under faculty review.
+              Start here. Each card says who the module is for, where feedback helps most and its
+              known limits.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -79,12 +126,11 @@ export function BetaHubSections({
                 >
                   <div className="space-y-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {entry.group} · about {note.minutes} minutes
+                      {entry.group}
                     </p>
                     <h3 className="text-lg font-semibold">{entry.title}</h3>
-                    <p className="text-sm leading-6">{note.summary}</p>
-                    <NoteList title="What to look for" items={note.lookFor} />
-                    <NoteList title="Still under review" items={note.knownLimits} />
+                    <RoutePlace moduleId={entry.id} />
+                    <TesterNote note={note} />
                   </div>
                   <ModuleLinks entry={entry} locale={locale} />
                 </article>
@@ -105,21 +151,43 @@ export function BetaHubSections({
             </p>
           </div>
           {groups.map((group) => {
-            const entries = preview.filter((entry) => entry.group === group)
+            const route = betaRouteForGroup(group)
+            const entries = inRouteOrder(
+              preview.filter((entry) => entry.group === group),
+              route,
+            )
             if (entries.length === 0) return null
             return (
               <div key={group} className="space-y-4">
                 <h3 className="text-xl font-semibold">{group}</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {entries.map((entry) => (
-                    <article
-                      key={entry.id}
-                      className="flex flex-col justify-between gap-6 rounded-2xl border bg-card p-6 shadow-sm"
-                    >
-                      <h4 className="text-lg font-semibold">{entry.title}</h4>
-                      <ModuleLinks entry={entry} locale={locale} />
-                    </article>
-                  ))}
+                {route ? (
+                  <p className="max-w-3xl text-muted-foreground" data-route-intro>
+                    {route.intro}
+                  </p>
+                ) : null}
+                {/* Top-aligned, so a card without a note keeps its height beside one with a note. */}
+                <div className="grid items-start gap-4 md:grid-cols-2">
+                  {entries.map((entry) => {
+                    const { note } = rollout[entry.id]
+                    const title = <h4 className="text-lg font-semibold">{entry.title}</h4>
+                    return (
+                      <article
+                        key={entry.id}
+                        className="flex flex-col justify-between gap-6 rounded-2xl border bg-card p-6 shadow-sm"
+                      >
+                        {note ? (
+                          <div className="space-y-3">
+                            {title}
+                            <RoutePlace moduleId={entry.id} />
+                            <TesterNote note={note} />
+                          </div>
+                        ) : (
+                          title
+                        )}
+                        <ModuleLinks entry={entry} locale={locale} />
+                      </article>
+                    )
+                  })}
                 </div>
               </div>
             )

@@ -10,8 +10,10 @@ import { useHemodynamicsSelfPacedRecord } from './useHemodynamicsSelfPacedRecord
 
 /**
  * The case list. Every case opens directly; the only thing a card says about the learner is whether
- * the case was opened on this device. The old case ledger (attempts, best scores, mastery) is no
- * longer read here — reading it used to rewrite a version-one record as version two.
+ * the case was opened on this device. The same cases also run inside the Learn sections, each as the
+ * last task of the section that teaches its mechanism; this list is the way to any of them at once.
+ * The old case ledger (attempts, best scores, mastery) is no longer read here — reading it used to
+ * rewrite a version-one record as version two.
  */
 export function IcuHemodynamicsPracticeLandingV2() {
   const { record } = useHemodynamicsSelfPacedRecord()
@@ -25,6 +27,10 @@ export function IcuHemodynamicsPracticeLandingV2() {
         Each case opens one focused simulation workspace. Act in any order, watch the modeled
         consequence of each action, ask for help at any point, and open the teaching debrief
         whenever you want to compare your reasoning with an expert&apos;s.
+      </p>
+      <p className="mt-3 max-w-3xl leading-7 text-muted-foreground" data-cases-in-sections>
+        Each case is also the last task of the section that teaches its mechanism; the warm-shock
+        case is offered as a second case when <em>Numbers made of numbers</em> is finished.
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-2">
         {hemodynamicCases.map((definition, index) => {

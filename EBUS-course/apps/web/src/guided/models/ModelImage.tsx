@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import {
-  MODEL_GEOMETRY,
-  needleGeometry,
   phantomPlaneReference,
   phantomSections,
   routeDefinition,
@@ -10,6 +8,7 @@ import {
   type ModelState,
   type ModelAction,
 } from '../../../../../../src/lib/ebus-model-contract'
+import { NeedleUltrasound } from './NeedleUltrasound'
 /*
  * Condition-specific captions for the contact schematic (EBUS-PRE-REVIEW-03, L5-3). Each names
  * the modelled origin of the dark band in the state the learner has selected — the same
@@ -17,11 +16,11 @@ import {
  * any recorded image. The 3D viewport's concealed part names are untouched.
  */
 const CONTACT_CAPTIONS: Record<ContactMode, string> = {
-  gap: 'Air gap: the transducer face is separated from the wall by the modelled air gap, so the drawn path ends at the interface and no tissue echoes are drawn beyond it.',
+  gap: 'Air gap: the transducer face is separated from the wall by an air gap, so the drawn path ends at the interface and no tissue echoes are drawn beyond it.',
   direct: 'Direct contact: the transducer face touches the wall and the drawn path continues into tissue.',
   balloon: 'Fluid-balloon contact: the fluid-filled balloon bridges the transducer and the wall, and the drawn path continues into tissue.',
   bubble: 'Balloon with a bubble: a focal air interface sits at the balloon–wall contact (labelled on the image); the dark band begins at that interface, at the top of the field.',
-  shadow: 'Contact with a reflector: a bright modelled focus lies within tissue (labelled on the image); the dark band begins behind that focus, not at the transducer.',
+  shadow: 'Contact with a reflector: a strong reflector lies within tissue (labelled on the image); the dark band begins behind the reflector, not at the transducer.',
 }
 export function ModelImage({
   state: s,
@@ -53,7 +52,7 @@ export function ModelImage({
         </p>
         <p>
           {routeSupported(s)
-            ? `Viewing the fixed ${s.station === '8' ? 'authored lower paraesophageal example' : `station ${s.station} example`}.`
+            ? `Viewing the fixed ${s.station === '8' ? 'lower paraesophageal example' : `station ${s.station} example`}.`
             : 'No supported orientation preset for this selection.'}
         </p>
         <p>
@@ -65,7 +64,7 @@ export function ModelImage({
         <p className="model-caption">
           In the 3D view an arrow runs from the selected orientation locator to the fixed target;
           it shows viewing direction only and does not establish a clear needle path. Station 9 is
-          not modeled; hilar/interlobar regions still require an appropriate examination.
+          not included in this model; hilar/interlobar regions still require an appropriate examination.
         </p>
       </section>
     )
@@ -183,8 +182,7 @@ export function ModelImage({
                 {placed === null
                   ? 'Place both calipers to compare your own.'
                   : `Your calipers are ${placed.toFixed(1)} phantom mm apart, ${Math.abs(placed - model.axisMm!).toFixed(1)} mm from the model axis.`}{' '}
-                This is a comparison with an authored shape, not a score, a pass mark or a
-                statement about reading a patient image.
+                This compares your calipers with the phantom’s true axis; it is not a score.
               </>
             ) : (
               <>
@@ -199,97 +197,18 @@ export function ModelImage({
           </p>
         )}
         <p className="model-caption">
-          Analytic section of the same 3D shape. Tap a frozen image for calipers, or use the numeric
-          endpoint controls. Distances are authored phantom millimetres in the coordinate system
-          drawn on the section: horizontal 0 at the midline, vertical measured down from the top of
-          the modelled field. They are not calibrated clinical millimetres and do not transfer to a
-          recorded or patient image.
+          A slice through the 3D shape at the current plane offset. Freeze it, then click its
+          borders to place calipers.
         </p>
       </section>
     )
   }
-  if (s.package === 'needle') {
-    const imageState = s.held ? { ...s, ...s.held } : s
-    const g = needleGeometry(imageState)
-    const d = g.axis,
-      tip = g.tip
-    // Clip the shaft against a finite imaging slab; the true distal endpoint is separately tested.
-    const start = MODEL_GEOMETRY.needle.retractedTip.map(
-      (v, i) => v - d[i] * 30 + d[i] * (imageState.extension + imageState.sheath),
-    )
-    const sampled = Array.from({ length: 301 }, (_, i) =>
-      start.map((v, j) => v + ((tip[j] - v) * i) / 300),
-    ).filter(
-      (p) =>
-        p[1] >= 2 &&
-        Math.abs(Math.sin((imageState.plane * Math.PI) / 180) * (p[0] - g.outlet[0])) <=
-          MODEL_GEOMETRY.needle.sliceHalfThickness,
-    )
-    const line = sampled.map((p) => `${p[0]},${p[1]}`).join(' ')
-    return (
-      <section className="model-image">
-        <h2>Ultrasound schematic · {s.live ? 'Live' : 'Frozen reference'}</h2>
-        <svg
-          viewBox="-30 -2 65 45"
-          role="img"
-          aria-label="Authored needle and imaging-plane intersection schematic"
-        >
-          <rect x="-30" y="-2" width="65" height="45" fill="#101722" />
-          <path d="M-24 8H30" stroke="#879099" strokeWidth="2" {...name('Airway wall')} />
-          {imageState.contact && (
-            <>
-              <ellipse cx="6" cy="23" rx="10" ry="8" fill="#667381" {...name('Example node')} />
-              <ellipse
-                cx="25"
-                cy="15"
-                rx="4"
-                ry="4"
-                fill="#253749"
-                stroke="#82909e"
-                strokeWidth=".4"
-                {...name('Adjacent vessel')}
-              />
-              {sampled.length > 1 && imageState.extension > 1 && (
-                <polyline
-                  points={line}
-                  stroke="#eef4ff"
-                  fill="none"
-                  strokeWidth=".6"
-                  {...name('Needle intersection with the imaging plane')}
-                />
-              )}{' '}
-              {g.tipVisible && (
-                <circle
-                  cx={tip[0]}
-                  cy={tip[1]}
-                  r=".65"
-                  fill="white"
-                  {...name('Needle tip in the imaging plane')}
-                />
-              )}
-            </>
-          )}
-          {reveal && imageState.extension > 1 && (
-            <text x="-26" y="40" fill="#91efd5" fontSize="2">
-              {g.tipVisible
-                ? 'The distal tip intersects this plane.'
-                : 'The true distal tip is outside this plane.'}
-            </text>
-          )}
-        </svg>
-        {reveal && hover && <p role="tooltip">{hover}</p>}
-        <p className="model-caption">
-          Geometric intersection, not clinical ultrasound. A visible line may be a shaft segment.
-          {!s.live ? ' Frozen reference: it cannot establish current tip guidance.' : ''}
-        </p>
-      </section>
-    )
-  }
+  if (s.package === 'needle') return <NeedleUltrasound state={s} reveal={reveal} locked={locked} />
   const coupled = s.mode !== 'gap',
     brightness = 0.35 + s.gain / 155
   return (
     <section className="model-image">
-      <h2>Authored echo schematic</h2>
+      <h2>Echo schematic</h2>
       <svg
         viewBox="-30 0 60 45"
         role="img"
@@ -361,7 +280,7 @@ export function ModelImage({
           {s.mode === 'shadow' && (
             <>
               <path d="M2.2 19.6L8 16" stroke="#9ef0e2" strokeWidth=".2" />
-              <text x="8.4" y="15.7">modelled reflector</text>
+              <text x="8.4" y="15.7">strong reflector</text>
               <path d="M-4.5 34L-8.5 34" stroke="#9ef0e2" strokeWidth=".2" />
               <text x="-28.5" y="34.6">dark band begins behind it</text>
             </>
@@ -381,7 +300,7 @@ export function ModelImage({
         {CONTACT_CAPTIONS[s.mode]}
       </p>
       <p className="model-caption">
-        Qualitative authored echoes. Brightness is illustrative. Gain cannot restore the absent
+        Schematic echoes; brightness is illustrative. Gain cannot restore the absent
         window in the air-gap condition.
       </p>
     </section>

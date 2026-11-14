@@ -11,6 +11,7 @@ import type {
   AuthoredChoice,
   AuthoredItem,
   BronchAct,
+  BronchFind,
   BronchSectionDefinition,
   BronchTeachingBlock,
 } from './types'
@@ -638,6 +639,50 @@ function firstMoveErrors(section: BronchSectionDefinition): string[] {
       errors.push(`${where} ends by following someone else's plan; end with a move.`)
   }
   return errors
+}
+
+/**
+ * The copy rules for a set of click-on-the-picture questions that belongs to no section (the
+ * image bank): the same digit, vocabulary, length and sentence rules a section's own set is held to.
+ */
+export function findCopyErrors(where: string, find: BronchFind): readonly string[] {
+  return actSurfaces(where, { kind: 'find', outcomeId: 'image-bank', find }).flatMap((surface) => [
+    ...numberTokenErrors(surface.where, surface.text),
+    ...digitErrors(surface),
+    ...bannedTermErrors(surface),
+    ...capErrors(surface),
+    ...sentenceErrors(surface),
+    ...paragraphErrors(surface),
+  ])
+}
+
+/**
+ * The copy rules for a practice case that belongs to no section (a vignette): the digit,
+ * vocabulary, length and sentence rules, the stem cap with its case, and a key that is a move.
+ * `sums` lets the options, reasons and explanation carry amounts added up from the case.
+ */
+export function caseCopyErrors(
+  where: string,
+  situation: string,
+  item: AuthoredItem,
+  sums = false,
+): readonly string[] {
+  const errors = itemSurfaces(where, item, situation)
+    .map((surface) => (sums ? { ...surface, caseValues: true as const } : surface))
+    .flatMap((surface) => [
+      ...numberTokenErrors(surface.where, surface.text),
+      ...digitErrors(surface),
+      ...bannedTermErrors(surface),
+      ...capErrors(surface),
+      ...sentenceErrors(surface),
+      ...paragraphErrors(surface),
+    ])
+  const count = wordCount(`${situation} ${item.stem}`)
+  if (count > REWRITE_CAPS.stemWords)
+    errors.push(
+      `${where} stem runs to ${count} words with its case; at most ${REWRITE_CAPS.stemWords}.`,
+    )
+  return [...errors, ...keyErrors(where, item.choices)]
 }
 
 /** Everything a rewritten section gets wrong. Empty for a section that follows the rules. */

@@ -11,14 +11,17 @@
  *   the points `rayThrough`/`projectToDetector` use, so a figure cannot disagree with the lab about
  *   where anything projects.
  * - Appearance: `huToMu` and the display curve are FluoroView's (`fluoro-viewer/src/volume-drr.ts`:
- *   `huToMu` at its default 80 kVp, `uMuScale` 7.5, `smoothstep(0.035, 0.92, lineIntegral)`), with
- *   the defaults the suite renders at (exposure gain 1, contrast boost 1, noise off). Denser is
- *   brighter, as on the suite's monitor.
+ *   `huToMu` at its default 80 kVp, `uMuScale` 7.5) with the course's own weighting of bone and
+ *   display curve (`lib/fluoroLook.ts`), at the settings the suite renders at (exposure gain 1,
+ *   contrast boost 1, noise off). Denser is brighter, and ribs show, as on the suite's monitor.
+ *   The one difference: the suite smooths its bone volume by a voxel and this twin ramps each
+ *   sample, because a figure's scene can add things the CT does not hold (a catheter, an opacity).
  *
  * Nothing here is a detector, exposure, scatter or dose model. The CT is the course's quantized
  * teaching volume with its authored nodule.
  */
 import { ANATOMY } from './anatomy'
+import { FLUORO_LOOK } from './fluoroLook'
 import { DEFAULT_GEOMETRY, LESION_CENTER, projectToDetector, type Point3 } from './physics'
 import { detectorPoint, suiteFrame } from '../components/suite/suiteModel'
 
@@ -64,20 +67,25 @@ const smoothstep = (edge0: number, edge1: number, value: number) => {
   return t * t * (3 - 2 * t)
 }
 
-/** FluoroView's `huToMu` at its default 80 kVp (the kVp factor is then exactly 1). Per millimetre. */
+/**
+ * FluoroView's `huToMu` at its default 80 kVp (the kVp factor is then exactly 1), with bone
+ * weighted as the course's monitor weights it. Per millimetre.
+ */
 export function huToMu(hu: number): number {
   const density = Math.max(0, (hu + 1000) / 1000)
   return (
-    0.00013 * density + 0.00009 * smoothstep(-850, 80, hu) + 0.00038 * smoothstep(160, 1250, hu)
+    0.00013 * density +
+    0.00009 * smoothstep(-850, 80, hu) +
+    FLUORO_LOOK.boneMu * smoothstep(FLUORO_LOOK.boneLowHu, FLUORO_LOOK.boneHighHu, hu)
   )
 }
 
 /** FluoroView's `uMuScale`: the line integral is Σ huToMu · ds · 7.5. */
 export const PROJECTION_MU_SCALE = 7.5
 
-/** FluoroView's display curve at the suite's default settings: denser reads brighter, 0–1. */
+/** The suite's display curve: denser reads brighter, 0–1. */
 export function projectionDisplay(lineIntegral: number): number {
-  return smoothstep(0.035, 0.92, lineIntegral)
+  return smoothstep(0.035, FLUORO_LOOK.toneHigh, lineIntegral) ** FLUORO_LOOK.toneGamma
 }
 
 export interface ProjectionRequest {

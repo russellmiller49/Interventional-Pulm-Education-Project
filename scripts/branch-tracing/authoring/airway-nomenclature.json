@@ -159,6 +159,31 @@
       "code": "LUL",
       "name": "Left upper lobe bronchus",
       "shortName": "Upper lobe"
+    },
+    "rb2": {
+      "code": "RB2",
+      "name": "Right posterior segmental bronchus",
+      "shortName": "Posterior"
+    },
+    "rb6": {
+      "code": "RB6",
+      "name": "Right superior segmental bronchus",
+      "shortName": "Superior"
+    },
+    "lb4": {
+      "code": "LB4",
+      "name": "Left superior lingular segmental bronchus",
+      "shortName": "Superior lingular"
+    },
+    "lb10": {
+      "code": "LB10",
+      "name": "Left posterior basal segmental bronchus",
+      "shortName": "Posterior basal"
+    },
+    "rb9": {
+      "code": "RB9",
+      "name": "Right lateral basal segmental bronchus",
+      "shortName": "Lateral basal"
     }
   },
   "edges": {
@@ -337,6 +362,96 @@
       "airway": "lul",
       "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
       "existingLabel": "LUL"
+    },
+    "12": {
+      "airway": "rb2",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB2"
+    },
+    "26": {
+      "airway": "rb2",
+      "basis": "Existing RB2 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB2"
+    },
+    "55": {
+      "airway": "rb2",
+      "basis": "Existing RB2 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB2"
+    },
+    "111": {
+      "airway": "rb2",
+      "basis": "Existing RB2 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB2"
+    },
+    "17": {
+      "airway": "rb6",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB6"
+    },
+    "37": {
+      "airway": "rb6",
+      "basis": "Existing RB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB6"
+    },
+    "78": {
+      "airway": "rb6",
+      "basis": "Existing RB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB6"
+    },
+    "150": {
+      "airway": "rb6",
+      "basis": "Existing RB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB6"
+    },
+    "42": {
+      "airway": "lb4",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB4"
+    },
+    "88": {
+      "airway": "lb4",
+      "basis": "Existing LB4 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB4"
+    },
+    "166": {
+      "airway": "lb4",
+      "basis": "Existing LB4 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB4"
+    },
+    "258": {
+      "airway": "lb4",
+      "basis": "Existing LB4 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB4"
+    },
+    "25": {
+      "airway": "lb10",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "LB10"
+    },
+    "53": {
+      "airway": "lb10",
+      "basis": "Existing LB10 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB10"
+    },
+    "107": {
+      "airway": "lb10",
+      "basis": "Existing LB10 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "LB10"
+    },
+    "137": {
+      "airway": "rb9",
+      "basis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+      "existingLabel": "RB9"
+    },
+    "223": {
+      "airway": "rb9",
+      "basis": "Existing RB9 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB9"
+    },
+    "325": {
+      "airway": "rb9",
+      "basis": "Existing RB9 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+      "existingLabel": "RB9"
     }
   }
 }

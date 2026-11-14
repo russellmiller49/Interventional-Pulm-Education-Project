@@ -28,6 +28,7 @@ export const PLAIN_SCOPE_EVENTS = [
   'suction-applied',
   'suction-released',
   'bench-advanced-off-target',
+  'bench-fluid-aspirated',
   'reached-carina',
   'returned-to-trachea',
   'wall-contact',
@@ -52,6 +53,7 @@ export const PLAIN_SCOPE_EVENTS = [
   'advanced-against-closure',
   'tube-exited',
   'survey-complete',
+  'misnamed',
 ] as const satisfies readonly PlainScopeEventId[]
 
 export const ACCESSORY_STATES = [

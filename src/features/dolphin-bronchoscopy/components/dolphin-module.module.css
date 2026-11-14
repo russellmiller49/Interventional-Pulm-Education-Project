@@ -1,0 +1,124 @@
+/*
+ * The module shell around every Dolphin Bronchoscopy page (copied from Peripheral Imaging).
+ *
+ * Dark palette tokens the shared lesson stage reads (`--ink`, `--muted`, `--panel`, `--line`,
+ * `--cyan-bright`, …), and the activity-mode rule that hands a lesson stage the viewport: at a
+ * desktop size the shell is exactly the viewport less the site header, does not scroll, and the
+ * three panes inside scroll on their own — the same rule the critical-care labs carry, so the
+ * sibling modules agree about the first thing a learner sees.
+ */
+.moduleShell {
+  --ink: #eaf4f4;
+  --muted: #9fb4b7;
+  --stage-muted: #9fb4b7;
+  --panel: #10262b;
+  --panel-2: #17343a;
+  --panel-3: #1f4249;
+  --line: rgba(163, 206, 209, 0.22);
+  --cyan: #36c3ca;
+  --cyan-bright: #71e1e5;
+  --navy: #07191d;
+  /* The shell's flat base colour. A block pinned inside a scrolling pane paints itself with this
+     so the content sliding under it does not show through the gaps. */
+  --surface-base: #061519;
+  --amber: #ffbf62;
+  --red: #ff6b73;
+  --green: #76d69b;
+  min-height: 100vh;
+  padding: clamp(1rem, 2.5vw, 2.5rem);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 72% 5%, rgba(43, 132, 139, 0.22), transparent 30rem),
+    radial-gradient(circle at 5% 35%, rgba(119, 57, 85, 0.14), transparent 30rem),
+    var(--surface-base);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* A lesson stage gets the viewport beneath the site header; its three panes scroll on their own.
+   Below the fixed-workspace viewport the stage stacks its panes and the document scrolls. */
+.moduleShell[data-activity-mode='true'] {
+  padding: 0;
+}
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+.englishFallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.englishFallback svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.moduleShell [data-now-primary]:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.moduleShell [data-now-primary]:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.moduleShell [data-now-secondary]:hover:not(:disabled),
+.moduleShell [data-prediction-choices] label:hover {
+  border-color: var(--cyan-bright);
+}
+
+.moduleShell [data-prediction-choices] label[data-selected='true'] {
+  border-color: var(--cyan-bright);
+  box-shadow: inset 0 0 0 1px var(--cyan-bright);
+}
+
+/*
+ * Report 1.9 (fellow walkthrough, PDF p.13). "Why the other answers do not fit" is some of the most
+ * useful text in a section and was the hardest to read: the stage's rule for any disclosure inside
+ * the explanation column greys it to `--muted`, and the list sat on a lightened panel at 14 px.
+ * The shared verdict is not edited; the list simply takes the body colour and size here, wherever
+ * a PI page renders it. The complete feedback is unchanged.
+ */
+.moduleShell [data-answer-verdict] details,
+.moduleShell [data-other-answers] {
+  color: var(--ink);
+}
+.moduleShell [data-other-answers] {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+/*
+ * Report PR3 (fellow walkthrough, PDF p.46/p.47). The practice and integrated-case decisions use the
+ * shared action classes, which read `--stage-*` tokens that only the shared lesson shell defines.
+ * PI does not render that shell, so "Check my answer" had no background at all: dark ink on the
+ * dark page at 55% opacity, beside a bright "Show the explanation" that read as the only thing to
+ * do. The tokens are supplied here from the PI palette, and the disabled action is drawn readable.
+ * It stays natively disabled until a choice is made. The explanation is not demoted, hidden or made
+ * conditional on an answer: it is a first-class way to learn here (PI-01), so it gets the same
+ * bordered button it has everywhere else.
+ */
+.moduleShell [data-case-decision] {
+  --stage-accent: var(--cyan-bright);
+  --stage-line: var(--line);
+  --stage-ink: var(--ink);
+  --stage-muted: var(--muted);
+  --stage-type-floor: 1rem;
+}
+.moduleShell [data-case-decision] [data-now-primary]:disabled {
+  opacity: 1;
+  border-color: var(--line);
+  background: var(--panel-2);
+  color: #c3d6d8;
+}

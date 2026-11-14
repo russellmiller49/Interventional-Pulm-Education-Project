@@ -4,6 +4,10 @@ import type { Vec3 } from '@/lib/airway-anatomy/types'
 import type { ScopeState } from '../../components/scope/types'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from './scopeOstia'
 
+/** Bench exercise tolerances, not clinical movement limits. */
+export const BENCH_AIM_TOLERANCE_DEG = 12
+export const BENCH_APPROACH_DEPTH_MM = { min: 8, max: 28 } as const
+
 /** Read the real engine optical frame; never derive a second motion response from slider values. */
 export function benchTargetObservation(state: ScopeState, point: Vec3) {
   if (!state.pose || state.place !== 'bench') return null
@@ -16,7 +20,7 @@ export function benchTargetObservation(state: ScopeState, point: Vec3) {
   const position =
     !projected || scalar(relative, frame.forward) <= 0
       ? 'outside the forward view'
-      : angleDeg <= 5
+      : angleDeg <= BENCH_AIM_TOLERANCE_DEG
         ? 'centered'
         : [
             projected.y > 0.04 ? 'above' : projected.y < -0.04 ? 'below' : '',

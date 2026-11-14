@@ -60,7 +60,7 @@ export function MobileNav({
   return (
     <HandoffContent>
       {
-        <div className="flex items-center gap-1 lg:hidden">
+        <div className="flex items-center gap-1 lg:hidden" data-site-nav="mobile">
           <Sheet>
             <SheetTrigger asChild>
               <Button

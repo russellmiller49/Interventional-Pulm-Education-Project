@@ -26,6 +26,7 @@ export interface NonPublicModule {
 }
 
 export const nonPublicModuleGroups = [
+  'Board preparation',
   'IP tooling',
   'Pleural',
   'Bronchoscopy',
@@ -34,11 +35,25 @@ export const nonPublicModuleGroups = [
 
 export const nonPublicModules: NonPublicModule[] = [
   {
+    path: '/board-navigator',
+    title: 'IP Board Navigator',
+    group: 'Board preparation',
+    summary:
+      'A personalized learning layer over the board-prep library: a knowledge map of objective-level evidence on the AABIP blueprint, short repair labs (diagnose, explain, manipulate, apply, review), rules-first recommendations with a readable rationale, and spaced retention checks. Pilot of 24 objectives across mediastinal staging, pleural disease, airway obstruction and stents, and therapeutic modalities. Record stays on the device.',
+  },
+  {
     path: '/ebus-guided',
     title: 'EBUS: Guided Course',
     group: 'Bronchoscopy',
     summary:
       'A guided linear EBUS course with required acquisition labs, station correlation, sampling and specimen decisions, and formative case assessment.',
+  },
+  {
+    path: '/eus-b-guided',
+    title: 'EUS-B: Guided Course',
+    group: 'Bronchoscopy',
+    summary:
+      'A guided course on the EBUS scope in the esophagus for operators who already perform linear EBUS: one six-landmark survey taught with predictions, find-the-view tasks on the EUS-B simulator case, and labeled debriefs. In the beta-testing hub; three of 13 planned lessons are open and the text awaits physician review.',
   },
   {
     path: '/eus-b-simulator',
@@ -76,6 +91,13 @@ export const nonPublicModules: NonPublicModule[] = [
     group: 'IP tooling',
     summary:
       'Read-only procedure workspaces for the three exemplar procedures, with a demo-data-only readiness view. Draft-watermarked; no writes.',
+  },
+  {
+    path: '/literature-atlas',
+    title: 'Literature Atlas (tester preview)',
+    group: 'IP tooling',
+    summary:
+      'Read-only evidence map of the interventional pulmonology literature: browse and filter about 37,000 included articles on a topic map, list and matrix; read machine-generated study briefs (about 5,300, labelled as not physician-reviewed unless reviewed) and compare up to six side by side or up to 50 in an evidence table. Nothing is saved. Served from the separate Atlas service through a same-origin relay; in the beta-testing hub.',
   },
   {
     path: '/literature',
@@ -126,6 +148,27 @@ export const nonPublicModules: NonPublicModule[] = [
     title: 'Airway Anatomy — Synchronized Bronchoscopy',
     group: 'Bronchoscopy',
     summary: 'Virtual bronchoscopy with synchronized 3D airway and CT views.',
+  },
+  {
+    path: '/learn/anatomy/dolphin-airway',
+    title: 'Dolphin Airway — Synchronized Bronchoscopy',
+    group: 'Bronchoscopy',
+    summary:
+      'Virtual bronchoscopy of a dolphin from the bony nasal passages through the laryngeal spout to the principal bronchi, with synchronized 3D and CT views. Sandbox used by the Dolphin Bronchoscopy module.',
+  },
+  {
+    path: '/learn/anatomy/dolphin',
+    title: 'Dolphin Anatomy in 3D',
+    group: 'Bronchoscopy',
+    summary:
+      'A 3D model of a bottlenose dolphin from CT: skeleton, airway and lungs, heart and aorta, brain, sinuses and body wall. Sandbox used by the Dolphin Bronchoscopy module.',
+  },
+  {
+    path: '/dolphin-bronchoscopy',
+    title: 'Dolphin Bronchoscopy',
+    group: 'Bronchoscopy',
+    summary:
+      'A self-paced module for veterinarians: the dolphin airway map and numbered branches, the NMMP procedure from planning and sedation to passing the laryngeal spout, the survey and record, lavage, brush and biopsy, complications and recovery, on the dolphin simulator.',
   },
   {
     path: '/learn/anatomy/branch-tracing',

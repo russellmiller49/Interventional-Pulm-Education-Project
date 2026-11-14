@@ -25,11 +25,11 @@ export function ModuleFrame({
   }, [])
   const items = [
     { href: BASE_PATH, title: 'Overview', description: 'The course and where you left off' },
-    { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Scope and CT, fork by fork' },
+    { href: `${BASE_PATH}/learn`, title: 'Learn', description: 'Plan, map, then drive' },
     {
       href: `${BASE_PATH}/practice`,
       title: 'Practice',
-      description: `Navigate to one of ${TARGET_IDS.length} lesions`,
+      description: `Plan and reach one of ${TARGET_IDS.length} lesions`,
     },
     {
       href: `${BASE_PATH}/assess`,
@@ -41,6 +41,9 @@ export function ModuleFrame({
     <div
       className={styles.module}
       data-activity={activity}
+      // A bench has its own bar and its own way out, so it takes the whole window: the site menu
+      // (the rule is in `src/styles/globals.css`) and the section tabs give up their rows.
+      data-site-header={activity ? 'hidden' : undefined}
       data-learning-scroll-owner={activity ? 'workspace' : 'document'}
       data-enlarged-text={enlargedText || undefined}
       lang="en"

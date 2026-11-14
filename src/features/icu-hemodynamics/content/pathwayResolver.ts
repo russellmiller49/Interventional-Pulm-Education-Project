@@ -139,7 +139,7 @@ export function hemodynamicsPathwayComposition(): HemodynamicsPathwayComposition
   }
 }
 
-/** "9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 121 min". */
+/** "9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 193 min". */
 export function hemodynamicsCompositionLine(): string {
   const composition = hemodynamicsPathwayComposition()
   const parts = composition.byStage.map(
@@ -153,12 +153,15 @@ export interface HemodynamicsPathwayGroup {
   readonly title: string
   readonly description: string
   readonly sections: readonly LearningPathwaySection[]
-  /** The Practice case each section in this group pairs to, by its presentation title. */
+  /**
+   * The case that is the last task of a section in this group, by its presentation title. Sections
+   * that end without a case (the orientation, the capstone) have no entry.
+   */
   readonly cases: readonly {
     readonly sectionId: string
     readonly caseId: string
     readonly title: string
-    readonly kind: 'mechanism-match' | 'next-in-unit'
+    readonly kind: 'mechanism-match'
   }[]
 }
 
@@ -174,17 +177,21 @@ export function hemodynamicsPathwayGroups(): readonly HemodynamicsPathwayGroup[]
   for (const section of hemodynamicsPathwaySections) {
     const last = groups.at(-1)
     const pairing = hemodynamicsPracticePairing(section.id)
-    const entry = {
-      sectionId: section.id,
-      caseId: pairing.caseId,
-      title: pairing.title,
-      kind: pairing.kind,
-    }
+    const entries = pairing
+      ? [
+          {
+            sectionId: section.id,
+            caseId: pairing.caseId,
+            title: pairing.title,
+            kind: pairing.kind,
+          },
+        ]
+      : []
     if (last && last.stage === section.stage) {
       groups[groups.length - 1] = {
         ...last,
         sections: [...last.sections, section],
-        cases: [...last.cases, entry],
+        cases: [...last.cases, ...entries],
       }
     } else {
       groups.push({
@@ -192,7 +199,7 @@ export function hemodynamicsPathwayGroups(): readonly HemodynamicsPathwayGroup[]
         title: STAGE_TITLES[section.stage],
         description: STAGE_DESCRIPTIONS[section.stage],
         sections: [section],
-        cases: [entry],
+        cases: entries,
       })
     }
   }

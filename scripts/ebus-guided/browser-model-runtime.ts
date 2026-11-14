@@ -39,14 +39,9 @@ async function main() {
       const f = p.frameLocator('iframe')
       await performModel(f, pkg)
       await p.screenshot({ path: `${out}/${pkg}-runtime-complete.png` })
-      if (pkg === 'measurement') {
-        const d = p.waitForEvent('download')
-        await f.getByRole('button', { name: 'Download phantom image', exact: true }).click()
-        await (await d).saveAs(out + '/recorded-phantom.svg')
-      }
       await f.getByRole('button', { name: 'Reset activity', exact: true }).click()
       await expect(
-        f.getByText('Required model actions recorded. Hold this acquisition in the lesson.'),
+        f.getByText('All steps done. Select “Continue with this image” in the lesson.'),
       ).toHaveCount(0)
       console.log('RUNTIME PASS', pkg)
       await p.unroute('**/model-harness')

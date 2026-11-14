@@ -358,7 +358,7 @@ export function McsWorkbench({
   }
 
   return (
-    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode flowing theme="light">
+    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode flowing>
       {/*
        * A layout-neutral scope for the Studio (F36). The shared activity chrome always draws the
        * six-stage Recognize→Transfer stepper and a mode badge; in the open sandbox, and on the
@@ -388,7 +388,7 @@ export function McsWorkbench({
           progressLabel={progressLabel}
           stepperAriaLabel="MCS shared activity phases"
           onPhaseSelect={selectActivityPhase}
-          theme="light"
+          theme="dark"
           patientContext={
             <>
               <PatientContextBar

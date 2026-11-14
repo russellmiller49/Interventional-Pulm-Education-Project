@@ -8,6 +8,7 @@ import {
   projectionPixelOf,
   PROJECTION_MU_SCALE,
 } from '../lib/ctProjection'
+import { FLUORO_LOOK } from '../lib/fluoroLook'
 import { LESION_CENTER, type Point3 } from '../lib/physics'
 import {
   addUniformVeil,
@@ -36,16 +37,20 @@ function volumeWith(hu: number, sphere?: { centre: Point3; radius: number; hu: n
   return volume
 }
 
-describe('the CPU projection is FluoroView’s mapping on the suite’s geometry', () => {
-  it('uses FluoroView’s attenuation and display constants at the suite’s default settings', () => {
+describe('the CPU projection is the suite’s mapping on the suite’s geometry', () => {
+  it('uses FluoroView’s attenuation with the course’s weighting of bone and display curve', () => {
     expect(PROJECTION_MU_SCALE).toBe(7.5)
     expect(huToMu(-1000)).toBe(0)
-    // At 80 HU the soft-tissue ramp (−850 to 80) is complete and the bone ramp (from 160) not begun.
+    // At 80 HU the soft-tissue ramp (−850 to 80) is complete and the bone ramp not begun.
+    expect(FLUORO_LOOK.boneLowHu).toBeGreaterThan(80)
     expect(huToMu(80)).toBeCloseTo(0.00013 * 1.08 + 0.00009, 12)
     expect(huToMu(0)).toBeLessThan(huToMu(80))
-    expect(huToMu(1300)).toBeGreaterThan(huToMu(100))
+    // Above the bone ramp a voxel carries the whole of the course's bone weighting.
+    expect(huToMu(FLUORO_LOOK.boneHighHu) - huToMu(FLUORO_LOOK.boneLowHu)).toBeGreaterThan(
+      FLUORO_LOOK.boneMu,
+    )
     expect(projectionDisplay(0.035)).toBe(0)
-    expect(projectionDisplay(0.92)).toBe(1)
+    expect(projectionDisplay(FLUORO_LOOK.toneHigh)).toBe(1)
     expect(projectionDisplay(0.5)).toBeGreaterThan(projectionDisplay(0.3))
   })
 

@@ -1,3 +1,5 @@
+import type { ReplayRow } from '../engine/route-replay'
+import { everyStepFirst, type TripResult } from '../engine/results-storage'
 import type { CtNoduleTarget } from './ct-types'
 import { displayName } from '../engine/display-text'
 import {
@@ -31,14 +33,14 @@ export const openingNumber = (index: number) => String(index + 1)
 
 /** One boundary statement for the module: on the hub and on each closing screen. */
 export const TEACHING_SIMULATOR_STATEMENT =
-  'This is a teaching simulator built on one CT scan. It trains you to read an airway route off axial slices and relate it to the bronchoscopic view; it does not show what a bronchoscope or tool can reach, and it does not replace supervised practice on patients.'
+  'This is a teaching simulator built on one CT scan. It trains you to plan an airway route on the CT, map it, and relate the map to the bronchoscopic view; it does not show what a bronchoscope or tool can reach, and it does not replace supervised practice on patients.'
 
 export const PRIMER_TITLE = 'What we are doing, and why'
 export const PRIMER: readonly string[] = [
-  'A peripheral lesion is reached by taking the right opening at every fork. The bronchoscope shows you the fork. The CT, read beforehand, tells you which opening to take.',
-  'The catch is that the two pictures do not face the same way. An axial CT is drawn as if you stood at the patient’s feet looking toward the head. A scope looking down the trachea sees it mirrored; a scope that has turned into a lobe sees it rotated.',
-  'So at each fork you do four things. Match: turn or flip the CT until the letters R, L, A and P sit on the same sides as they do in the scope. Identify: find each opening’s lumen on the CT, scrolling to the slice where it leaves the parent. Choose: decide which opening leads toward the lesion. Drive: advance to the next fork, and the CT follows the tip.',
-  'Repeat until the airway ends beside the lesion. Kurimoto and Morita call this bronchial branch tracing. Their four fork patterns (vertical, horizontal–horizontal, horizontal–vertical and horizontal–oblique) describe how the two daughters of a fork part on the CT, and you will meet each one.',
+  'A peripheral lesion is reached by taking the right opening at every division: a series of two- and three-way choices. Past the segmental bronchus, no route in this course has more than five of them.',
+  'The route is planned on the CT before the scope moves, by the simplified bronchial branch tracing of Mortimer and Saghaie. Plan: start at the lesion, find the airway that runs into it and follow it back to its segmental bronchus. Map: draw the view into that segment’s ostium as a circle with four directions round it; at each division to the lesion, draw each branch as an arc where it leaves, inside the arc before, and star the branch that reaches the lesion.',
+  'Navigate: the scope flies through the central airways and stops at the fork where the segment’s bronchus leaves. Past the segmental ostium the map tells you which opening to take. If the view stops matching your map, you are in a branch that leads away: back out to the fork and look again.',
+  'The CT and the scope do not face the same way. An axial CT is drawn from the patient’s feet; a scope looking down the trachea sees it mirrored, and one that has turned into a lobe sees it rotated. A short check at the start asks you to turn the CT to match at three forks, with two refresher lessons behind it. In the course itself, turning the CT on screen is your choice.',
 ]
 
 const SIDE_WORDS: Record<ScreenSide, string> = {
@@ -114,14 +116,19 @@ export function matchVerdict(
   }
 }
 
-/** Said once the CT faces the scope without the learner having turned it. */
+/**
+ * Said once the CT faces the scope without the learner having turned it, or, where turning is
+ * the learner's choice, how the CT stands against the scope.
+ */
 export function matchNoteSentence(
-  note: 'kept' | 'set',
+  note: 'kept' | 'set' | 'optional',
   orientation: CtOrientation,
   firstFork: boolean,
   oblique = false,
 ) {
   const display = orientationName(orientation).toLowerCase()
+  if (note === 'optional')
+    return `Turning the CT is your choice: it is shown ${display}. Read its edge letters against the scope’s, or turn it and check.`
   // An oblique look has no exact match: say so, and say what the display does agree on.
   if (oblique)
     return `The scope is looking at an angle to both of the CT’s axes here, so no turn of the CT puts every letter where the scope has it. The CT is shown in the closest display: ${display}.`
@@ -244,24 +251,90 @@ export function lesionSentence(target: CtNoduleTarget, lesion: LesionFacts) {
   return `The lesion is in ${target.segment.code}, the ${target.segment.name.toLowerCase()}. It lies ${level} (slice ${lesion.slice}), about ${Math.round(lesion.mm)} mm away, ${lesion.bearing}.`
 }
 
+/**
+ * Where the lesion is, with nothing about which way it lies from the fork. The choose card says
+ * this wherever the way is the learner's to work out: past the segmental ostium, where the map
+ * gives it, and at every fork of a trip that offers no hints.
+ */
+export function lesionPlaceSentence(target: CtNoduleTarget) {
+  return `The lesion is in ${target.segment.code}, the ${target.segment.name.toLowerCase()}, ringed on slice ${target.slice}.`
+}
+
 /** "37 mm toward the feet of this fork" / "at about this fork's level" */
 function lesionLevel(lesion: LesionFacts) {
   return Math.abs(lesion.slicesFromFork) <= 2
     ? 'at about this fork’s level'
     : `${levelPhrase(lesion.slicesFromFork)} of this fork`
 }
-export function chooseDeclined(opening: OpeningFacts, named: boolean, lesion: LesionFacts) {
+/**
+ * Back at the fork after a branch that led away. With hints on, which way the lesion lies; without,
+ * only that the branch led away, which is what the learner saw.
+ */
+export function chooseDeclined(
+  opening: OpeningFacts,
+  named: boolean,
+  lesion: LesionFacts,
+  help: boolean,
+) {
   const subject = openingShort(opening, named)
+  const back = 'You are back at the fork: take the other opening.'
   return {
     headline: `${subject[0].toUpperCase()}${subject.slice(1)} leads away from the lesion.`,
-    detail: `It runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}. First move: back to the fork, and follow the other lumen on the CT toward the lesion’s slice.`,
+    detail: help
+      ? `It runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}. ${back}`
+      : back,
   }
+}
+/**
+ * In the branch that leads away, looking at its next division. With hints on, why it leads away;
+ * without, only that the view is not the map's, which is what the learner would see.
+ */
+export function astrayView(
+  opening: OpeningFacts,
+  named: boolean,
+  lesion: LesionFacts,
+  ends: boolean,
+  help: boolean,
+) {
+  const subject = openingShort(opening, named)
+  const seen = ends
+    ? 'The airway narrows and ends ahead, with no branch toward the lesion.'
+    : 'The division ahead is not one your map draws.'
+  return help
+    ? {
+        headline: `${subject[0].toUpperCase()}${subject.slice(1)} leads away from the lesion.`,
+        detail: `${seen} It runs ${opening.course} from the fork; the lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}. Back out to the fork.`,
+      }
+    : { headline: 'This view does not match the map.', detail: `${seen} Back out to the fork.` }
 }
 export function chooseTaken(opening: OpeningFacts, lesion: LesionFacts) {
   return {
     headline: `${opening.airway.code} leads toward the lesion.`,
     detail: `${displayName(opening.airway.name)} runs ${opening.course} from the fork. The lesion lies ${lesion.bearing}, ${lesionLevel(lesion)}.`,
   }
+}
+
+// ── The fly-through of the central airways ───────────────────────────────────────────────────
+
+/**
+ * The task card while the scope flies through the airways above the first fork that is chosen
+ * at. `stopAt` is the airway that fork divides; `stopping` once the learner has asked to stop at
+ * the next fork instead.
+ */
+export function flyThroughCard(stopAt: string, stopping: boolean) {
+  return stopping
+    ? {
+        heading: 'Stopping at the next fork',
+        body: 'The scope stops at the next fork it reaches, and you choose from there.',
+      }
+    : {
+        heading: `Flying through to ${stopAt}`,
+        body: `The scope flies through the airways you know and stops in ${stopAt}, where the choices begin.`,
+      }
+}
+/** "Passing: Trachea › RMSB › BI." */
+export function passingSentence(codes: readonly string[]) {
+  return `Passing: ${codes.join(' › ')}.`
 }
 
 // ── Fork facts, arrival, summary ─────────────────────────────────────────────────────────────
@@ -307,9 +380,64 @@ export function summaryLines(summary: NavSummary, forkNames: string[]) {
   tally('CT matched to the scope', summary.match)
   tally('Openings identified', summary.identify)
   tally('Opening toward the lesion chosen', summary.choose)
+  if (summary.wrongTurns)
+    lines.push(
+      `Branches that led away, driven into: ${summary.wrongTurns}; backed out of: ${summary.backedOut}.`,
+    )
   if (summary.slowest)
     lines.push(
       `The fork that took longest: ${forkNames[summary.slowest.station] ?? 'one fork'}, ${summary.slowest.tries} tries.`,
     )
   return lines
+}
+
+// ── The lesion list ──────────────────────────────────────────────────────────────────────────
+
+export const divisionsLine = (divisions: number) =>
+  `${divisions} ${divisions === 1 ? 'division' : 'divisions'} past the segmental ostium`
+
+/** "2 of 3": how many of the planning steps asked landed at their first check. */
+export function planStepsFirst(plan: NonNullable<TripResult['plan']>) {
+  const steps = [plan.lesion, plan.segment, plan.frame].filter((s) => s.asked)
+  return { asked: steps.length, firstTry: steps.filter((s) => !s.misses && !s.shown).length }
+}
+
+/**
+ * The line under a lesion on the list: not opened, left part-way, or reached, with how much of
+ * the last run landed at its first check. The counts are the closing-set table's own.
+ */
+export function lesionStateLine(result: TripResult | null, started: boolean): string {
+  if (!result) return started ? 'Started, not yet reached.' : 'Not yet opened.'
+  const times = result.runs > 1 ? ` ${result.runs} times` : ''
+  if (everyStepFirst(result)) return `Reached${times}. Last time, every step at its first check.`
+  const parts: string[] = []
+  const tally = (label: string, part: { asked: number; firstTry: number }) => {
+    if (part.asked) parts.push(`${label} ${part.firstTry} of ${part.asked}`)
+  }
+  if (result.plan) {
+    tally('planning steps', planStepsFirst(result.plan))
+    tally('divisions drawn', result.plan.arcs)
+  }
+  if (result.drive) {
+    tally('openings chosen', result.drive.choose)
+    if (result.drive.wrongTurns)
+      parts.push(
+        `${result.drive.wrongTurns} ${result.drive.wrongTurns === 1 ? 'branch' : 'branches'} that led away entered`,
+      )
+  }
+  return `Reached${times}. Last time, at the first check: ${parts.join('; ')}.`
+}
+
+// ── The route read back at arrival ───────────────────────────────────────────────────────────
+
+/** One fork of the drive, read back: what was chosen first, and how the scope went on. */
+export function replayLine(row: ReplayRow, airway: string): string {
+  const where = row.division === null ? airway : `Division ${row.division + 1} (${airway})`
+  if (row.result === 'shown') return `${where}: the opening toward the lesion was shown.`
+  if (row.result === 'first') return `${where}: the opening toward the lesion, first choice.`
+  const entered = row.away.map((option) => openingNumber(option))
+  const first = entered.length
+    ? `opening ${entered.join(' and ')} first, which led away; backed out`
+    : 'an opening that leads away first'
+  return `${where}: ${first}, then the opening toward the lesion.`
 }

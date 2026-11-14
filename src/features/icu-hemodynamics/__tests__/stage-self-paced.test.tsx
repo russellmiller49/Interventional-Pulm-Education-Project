@@ -15,9 +15,9 @@ import {
 } from '../engine/selfPacedProgress'
 import {
   advanceToPrediction,
-  clickPrimary,
   currentStepId,
   installDom,
+  leaveTask,
   mountSection,
   scannableText,
 } from '../test-support/stageHarness'
@@ -116,11 +116,7 @@ describe.each(hemodynamicsSectionIds)('%s, self-paced', (sectionId) => {
     const lesson = hemodynamicsStageLesson(sectionId)
     mountSection(sectionId)
     let guard = 80
-    while (!document.querySelector('[data-stage-completion]') && guard-- > 0) {
-      const skip = document.querySelector<HTMLButtonElement>('[data-skip-task]')
-      if (skip) fireEvent.click(skip)
-      else clickPrimary()
-    }
+    while (!document.querySelector('[data-stage-completion]') && guard-- > 0) leaveTask()
     expect(document.querySelector('[data-stage-completion]')).not.toBeNull()
     const states = stepStates()
     expect(states).toHaveLength(lesson.steps.length)

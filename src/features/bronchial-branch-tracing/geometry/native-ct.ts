@@ -28,6 +28,23 @@ export function traceById(id: string): CtTrace {
   return trace
 }
 export const sliceZ = (slice: number) => NATIVE_CT.origin[2] + slice * NATIVE_CT.spacing[2]
+/**
+ * Patient LPS (mm) to continuous native voxel [i, j, k]: i is the image column (toward patient
+ * left), j the image row (toward posterior), k the slice (toward superior). Identity direction.
+ */
+export const lpsToVoxel = (lps: readonly number[]) =>
+  [0, 1, 2].map((axis) => (lps[axis] - NATIVE_CT.origin[axis]) / NATIVE_CT.spacing[axis]) as [
+    number,
+    number,
+    number,
+  ]
+/** Native voxel [i, j, k] (continuous) to patient LPS (mm); the inverse of `lpsToVoxel`. */
+export const voxelToLps = (voxel: readonly number[]) =>
+  [0, 1, 2].map((axis) => NATIVE_CT.origin[axis] + voxel[axis] * NATIVE_CT.spacing[axis]) as [
+    number,
+    number,
+    number,
+  ]
 export const nativeImageUrl = (slice: number) =>
   slice >= 240 && slice <= 475
     ? `${NATIVE_CT_BASE}/axial/${String(slice).padStart(3, '0')}.png`

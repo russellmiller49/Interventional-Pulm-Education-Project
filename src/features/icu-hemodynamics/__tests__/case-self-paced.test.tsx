@@ -75,6 +75,35 @@ function storedRecord() {
   return parseSelfPacedRecord(localStorage.getItem(ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY))
 }
 
+/** Work a case to its end the short way: its required actions, the debrief, the transfer repair. */
+function runToTransferComplete(caseId: string) {
+  const definition = hemodynamicCaseById.get(caseId)!
+  fireEvent.click(screen.getByRole('button', { name: 'Orient to the patient and signals' }))
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Go to the actions without recording a frame' }),
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
+  for (const requiredId of definition.requiredInterventionIds) {
+    const intervention = definition.interventions.find((item) => item.id === requiredId)!
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: (accessibleName) => accessibleName.includes(intervention.shortLabel),
+      }),
+    )
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Observe the modeled response' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Reassess and open the debrief' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Open the signal-transfer variant' }))
+  fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
+    target: { value: '0' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: /fast-flush response check/i }))
+  fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Resolve the pressure-system response' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm the line is revalidated' }))
+}
+
 /**
  * HD-01 replaced `case-activity-v2.test.tsx`, which asserted that a finished case wrote a scored
  * legacy result and a completed/mastered normalized record, emitted prediction/mastery telemetry,
@@ -203,6 +232,12 @@ describe('a hemodynamic case, self-paced', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Resolve the pressure-system response' }))
     fireEvent.click(screen.getByRole('button', { name: 'Confirm the line is revalidated' }))
     expect(document.querySelector('[data-transfer-complete]')).not.toBeNull()
+    // On its own page the end of the case goes back to the case list; it names no section.
+    expect(screen.getByRole('link', { name: 'Back to all cases' })).toHaveAttribute(
+      'href',
+      '/icu-hemodynamics/practice',
+    )
+    expect(screen.queryByRole('link', { name: 'Continue learning' })).not.toBeInTheDocument()
 
     for (const [key, value] of Object.entries(legacy)) expect(localStorage.getItem(key)).toBe(value)
     expect(localStorage.getItem(ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY)).toBeNull()
@@ -247,6 +282,69 @@ describe('a hemodynamic case, self-paced', () => {
     expect(document.querySelector('[data-case-hint]')?.textContent?.length).toBeGreaterThan(0)
     expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
     expect(storedRecord()?.location).toEqual({ kind: 'case', caseId: 'HD-07', mode: 'applied' })
+  })
+
+  it('runs inside a section as its last task: no module frame, the section strip, and exits that go back to it', async () => {
+    const onReturnToSection = jest.fn()
+    const onCaseFinished = jest.fn()
+    const definition = hemodynamicCaseById.get('HD-01')!
+    render(
+      <HemodynamicCaseActivity
+        caseId="HD-01"
+        mode="practice"
+        embedded={{
+          sectionId: 'thermodilution-series',
+          sectionTitle: 'How much is flowing?',
+          sectionNumber: 7,
+          onReturnToSection,
+          onCaseFinished,
+        }}
+      />,
+    )
+    const strip = await screen.findByText(/^Case · /)
+    expect(strip).toHaveTextContent(`Case · ${definition.title} · the last task of Section 7`)
+    // The section's stage is the frame: no module frame, no Practice breadcrumb, no page title.
+    expect(document.querySelector('[aria-label="Educational safety notice"]')).toBeNull()
+    expect(screen.queryByRole('link', { name: /Practice · HD-01/ })).not.toBeInTheDocument()
+    expect(document.querySelector('h1')).toBeNull()
+    expect(screen.getByRole('heading', { level: 3, name: 'Patient brief' })).toBeInTheDocument()
+    expect(document.querySelector('[data-case-flow]')).toHaveAttribute('data-embedded', 'last-task')
+    // Opening it is recorded exactly as on its own page, and nothing else is.
+    expect(storedRecord()?.openedCaseIds).toEqual(['HD-01'])
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exit case' }))
+    expect(onReturnToSection).toHaveBeenCalledTimes(1)
+    expect(push).not.toHaveBeenCalled()
+
+    runToTransferComplete('HD-01')
+    expect(document.querySelector('[data-case-finished]')).toHaveTextContent(/^Case finished\./)
+    expect(screen.queryByRole('link', { name: 'Continue learning' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Back to all cases' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Section 7: How much is flowing?' }))
+    expect(onCaseFinished).toHaveBeenCalledTimes(1)
+    expect(push).not.toHaveBeenCalled()
+    expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
+    expect(localStorage.getItem(ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('names a second case as a second case on its section’s mechanism', async () => {
+    render(
+      <HemodynamicCaseActivity
+        caseId="HD-02"
+        mode="practice"
+        embedded={{
+          sectionId: 'derived-hemodynamics',
+          sectionTitle: 'Numbers made of numbers',
+          sectionNumber: 8,
+          relation: 'second-case',
+          onReturnToSection: jest.fn(),
+          onCaseFinished: jest.fn(),
+        }}
+      />,
+    )
+    expect(await screen.findByText(/^Case · /)).toHaveTextContent(
+      'Case · Warm shock with a low diastolic pressure · a second case on the mechanism of Section 8',
+    )
   })
 
   it('still interrupts a hazardous action taken without a working frame', async () => {

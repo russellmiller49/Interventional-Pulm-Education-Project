@@ -1,4 +1,3 @@
-import { isHemodynamicsSectionId } from '@/features/icu-hemodynamics/content/sectionSpecs'
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
@@ -17,27 +16,17 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ case?: string | string[]; nextLearn?: string | string[] }>
+  searchParams?: Promise<{ case?: string | string[] }>
 }
 
 export default async function IcuHemodynamicsPracticePage({ params, searchParams }: PageProps) {
   const { locale } = await params
   const query = await searchParams
   const requestedCase = query?.case
-  const nextLearn =
-    typeof query?.nextLearn === 'string' && isHemodynamicsSectionId(query.nextLearn)
-      ? query.nextLearn
-      : undefined
   setRequestLocale(locale)
+  // A case is also the last task of its section, embedded there; this is the same case on its own.
   if (typeof requestedCase === 'string' && hemodynamicCaseById.has(requestedCase)) {
-    return (
-      <HemodynamicCaseActivity
-        caseId={requestedCase}
-        mode="practice"
-        locale={locale}
-        nextLearn={nextLearn}
-      />
-    )
+    return <HemodynamicCaseActivity caseId={requestedCase} mode="practice" locale={locale} />
   }
   return (
     <IcuHemodynamicsModuleFrameV2 activeHref={`${icuHemodynamicsNavBase}/practice`}>

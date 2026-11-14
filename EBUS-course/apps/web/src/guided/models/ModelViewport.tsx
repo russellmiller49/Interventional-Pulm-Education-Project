@@ -9,6 +9,7 @@ import { attachObserverControls, OBSERVER_CAPTION, type ObserverControlsHandle }
 import { createStructureCallouts, type StructureCalloutHandle } from '../structureCallouts'
 import {
   MODEL_GEOMETRY,
+  NEEDLE_LAB,
   modelFrameId,
   needleGeometry,
   routeDefinition,
@@ -40,7 +41,8 @@ interface AssetRecord {
   sha256: string
   bytes?: number
 }
-async function load(pkg: ModelPackage) {
+/** Fetches a model package and checks it against its manifest. */
+export async function loadModel(pkg: ModelPackage) {
   const root = 'models/guided-v2/'
   const manifest = JSON.parse(
     new TextDecoder().decode(await bytes(root + 'asset-manifest.json')),
@@ -72,17 +74,44 @@ async function load(pkg: ModelPackage) {
     }),
   )
 }
-/** What the needle model's camera frames: the distal end, the handle, or both. */
-type NeedleView = 'tip' | 'handle' | 'whole'
-const NEEDLE_VIEWS: { id: NeedleView; label: string }[] = [
-  { id: 'tip', label: 'Needle tip' },
-  { id: 'handle', label: 'Handle' },
-  { id: 'whole', label: 'Whole assembly' },
+/**
+ * What the needle model's camera frames: the distal end. The handle is at true scale, so one view
+ * cannot show both ends well; the needle lab draws the handle in its own strip (`NeedleHandleView`).
+ */
+const NEEDLE_TIP_PARTS = [
+  'target_node',
+  'airway_wall',
+  'adjacent_vessel',
+  'scope_distal_end',
+  'scope_bending_section',
 ]
-/** The parts each close view frames. The handle is at true scale, so one view cannot show both ends well. */
-const NEEDLE_VIEW_PARTS: Record<Exclude<NeedleView, 'whole'>, string[]> = {
-  tip: ['target_node', 'airway_wall', 'adjacent_vessel', 'scope_distal_end', 'scope_bending_section'],
-  handle: ['handle_assembly'],
+/**
+ * Puts a sectioned structure of the needle model on the section the ultrasound picture draws
+ * (`NEEDLE_LAB`), keeping its cut face where it is. The exported node and vessel were placed for
+ * an earlier picture; this moves and scales them, it does not re-model them.
+ */
+function fitSection(
+  object: THREE.Object3D | undefined,
+  section: { cx: number; cy: number; rx: number; ry: number },
+) {
+  if (!object) return
+  object.position.set(0, 0, 0)
+  object.scale.set(1, 1, 1)
+  object.updateWorldMatrix(true, true)
+  const box = new THREE.Box3().setFromObject(object)
+  const centre = box.getCenter(new THREE.Vector3()),
+    size = box.getSize(new THREE.Vector3())
+  if (!(size.x > 0 && size.y > 0)) return
+  const scale = new THREE.Vector3(
+    (section.rx * 2) / size.x,
+    (section.ry * 2) / size.y,
+    (section.rx * 2) / size.x,
+  )
+  // The world here is in millimetres (the root carries the glTF metre scale); positions are metres.
+  const anchor = new THREE.Vector3(centre.x, centre.y, box.max.z)
+  const target = new THREE.Vector3(section.cx, section.cy, box.max.z)
+  object.scale.copy(scale)
+  object.position.copy(target.sub(anchor.multiply(scale)).divideScalar(1000))
 }
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -110,6 +139,9 @@ export function ModelViewport({
   const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null)
   const [ready, setReady] = useState(false)
   const [selected, setSelected] = useState('')
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
+  const markSelected = useRef<(() => void) | null>(null)
   const [structures, setStructures] = useState<{ id: string; label: string }[]>([])
   const resetCamera = useRef<(() => void) | null>(null)
   // Presentation only: observer engagement and whether the route view draws structure labels.
@@ -119,9 +151,6 @@ export function ModelViewport({
   const showLabelsRef = useRef(showLabels)
   showLabelsRef.current = showLabels
   const [arrowPx, setArrowPx] = useState<number | null>(null)
-  const [needleView, setNeedleView] = useState<NeedleView>('tip')
-  const needleViewRef = useRef(needleView)
-  needleViewRef.current = needleView
   useEffect(() => {
     const el = host.current
     if (!el) return
@@ -168,6 +197,27 @@ export function ModelViewport({
         }
       })
       return names
+    }
+    // The structure chosen in the list is outlined in the model, so the list points at something.
+    let outlines: THREE.BoxHelper[] = []
+    const outlineSelected = () => {
+      outlines.forEach((box) => {
+        scene.remove(box)
+        box.geometry.dispose()
+        ;(box.material as THREE.Material).dispose()
+      })
+      outlines = []
+      const chosen = selectedRef.current
+      if (!chosen) return
+      root.traverseVisible((o) => {
+        if (!(o instanceof THREE.Mesh) || !o.userData.label) return
+        if (((o.userData.semanticId as string) || o.name) !== chosen) return
+        const box = new THREE.BoxHelper(o, 0xd9a5ff)
+        ;(box.material as THREE.LineBasicMaterial).depthTest = false
+        box.renderOrder = 20
+        scene.add(box)
+        outlines.push(box)
+      })
     }
     const draw = () => {
       if (disposed) return
@@ -256,8 +306,14 @@ export function ModelViewport({
           shaft.scale.y = Math.hypot(...base.map((v, i) => tip[i] - v)) / shaft.userData.spanMm
         }
         setVisible('protected_needle_in_channel', !s.removed)
-        setVisible('needle_motion', r || s.extension === 0)
-        setVisible('needle_tip', r)
+        // The learner works the needle by hand and watches it here, so it is always drawn.
+        setVisible('needle_motion', !s.removed)
+        setVisible('needle_tip', !s.removed)
+        setPosition('extension_stop', [
+          (s.stop > 0 ? s.stop : MODEL_GEOMETRY.needle.maxTravel) - MODEL_GEOMETRY.needle.maxTravel,
+          0,
+          0,
+        ])
         for (const name of [
           'handle_assembly',
           'mount_connector',
@@ -269,7 +325,6 @@ export function ModelViewport({
           'sheath_motion',
         ])
           setVisible(name, !s.removed)
-        setVisible('needle_motion', !s.removed && (r || s.extension === 0))
         const material = new THREE.MeshBasicMaterial({
           color: 0x31bfae,
           transparent: true,
@@ -401,9 +456,7 @@ export function ModelViewport({
           const id = o.userData.semanticId || o.name
           const hiddenAnswer =
             !r &&
-            (id === 'needle_tip' ||
-              id === 'needle_shaft' ||
-              id === 'air_gap' ||
+            (id === 'air_gap' ||
               id === 'air_bubble' ||
               id === 'calcified_focus')
           // A part drawn in several materials arrives as several meshes with one id: list it once.
@@ -418,11 +471,16 @@ export function ModelViewport({
         }
       })
       setStructures(items)
+      outlineSelected()
       draw()
       live.current.onRendered(modelFrameId(s))
     }
     update.current = updateScene
-    load(state.package)
+    markSelected.current = () => {
+      outlineSelected()
+      draw()
+    }
+    loadModel(state.package)
       .then((loaded) => {
         if (disposed) {
           loaded.forEach(dispose)
@@ -438,6 +496,16 @@ export function ModelViewport({
           }),
         )
         groups.forEach((g) => root.add(g))
+        if (state.package === 'needle') {
+          const { node, vessel } = NEEDLE_LAB
+          fitSection(root.getObjectByName('target_node'), node)
+          fitSection(root.getObjectByName('adjacent_vessel'), {
+            cx: vessel.cx,
+            cy: vessel.cy,
+            rx: vessel.r,
+            ry: vessel.r,
+          })
+        }
         const home = () => {
           const s = live.current.state
           if (s.package === 'routes') {
@@ -462,14 +530,10 @@ export function ModelViewport({
             // `root` carries the glTF metre-to-millimetre scale, so its world matrix has to be
             // current before the box means anything in the units the rest of this file uses.
             scene.updateMatrixWorld(true)
-            const view = needleViewRef.current
             const bounds = new THREE.Box3()
-            const parts =
-              view === 'whole'
-                ? []
-                : NEEDLE_VIEW_PARTS[view]
-                    .map((name) => root.getObjectByName(name))
-                    .filter((o): o is THREE.Object3D => Boolean(o))
+            const parts = NEEDLE_TIP_PARTS.map((name) => root.getObjectByName(name)).filter(
+              (o): o is THREE.Object3D => Boolean(o),
+            )
             // An older export without these parts falls back to the whole model.
             for (const part of parts.length ? parts : groups) bounds.expandByObject(part)
             const centre = bounds.getCenter(new THREE.Vector3())
@@ -479,13 +543,12 @@ export function ModelViewport({
             // The assembly is long and shallow, so the width against the panel's aspect ratio is
             // what actually sets the distance; the old fixed position ignored both.
             const fit = Math.max(size.y / 2 / halfFov, size.x / 2 / halfFov / aspect)
-            const margin = view === 'handle' && parts.length ? 1.06 : 1.12
+            const margin = 1.08
             const distance =
               Number.isFinite(fit) && fit > 0 ? fit * margin + size.z / 2 : 176
             controls.target.copy(Number.isFinite(centre.x) ? centre : new THREE.Vector3(-29, 4, 0))
-            // The handle is seen slightly from its distal end, so its knob, scale and lever separate.
-            const along = view === 'handle' && parts.length ? 0.3 : 0.05
-            const above = view === 'handle' && parts.length ? -0.3 : 0.15
+            const along = 0.05
+            const above = 0.15
             camera.position.set(
               controls.target.x + distance * along,
               controls.target.y + distance * above,
@@ -559,8 +622,7 @@ export function ModelViewport({
       const id = hit?.userData.semanticId || hit?.name
       const r = live.current.reveal
       const hidden =
-        !r &&
-        ['needle_tip', 'needle_shaft', 'air_gap', 'air_bubble', 'calcified_focus'].includes(id)
+        !r && ['air_gap', 'air_bubble', 'calcified_focus'].includes(id)
       const label = hit?.userData.label
       setTooltip(
         label && !hidden
@@ -586,6 +648,7 @@ export function ModelViewport({
     return () => {
       disposed = true
       update.current = null
+      markSelected.current = null
       resetCamera.current = null
       observer.disconnect()
       observerControlsDispose()
@@ -600,28 +663,18 @@ export function ModelViewport({
   }, [state.package])
   useEffect(() => {
     setTooltip(null)
+    selectedRef.current = ''
     setSelected('')
     update.current?.()
   }, [state, reveal, showLabels])
   useEffect(() => {
-    resetCamera.current?.()
-  }, [needleView])
+    markSelected.current?.()
+  }, [selected])
   return (
     <section className="model-3d">
       <div className="model-heading">
-        <h2>3D relationship</h2>
+        <h2>{state.package === 'needle' ? 'Scope tip' : '3D relationship'}</h2>
         <div className="model-observer-buttons" role="group" aria-label="Observer camera">
-          {state.package === 'needle' &&
-            NEEDLE_VIEWS.map((view) => (
-              <button
-                key={view.id}
-                aria-pressed={needleView === view.id}
-                data-needle-view={view.id}
-                onClick={() => setNeedleView(view.id)}
-              >
-                {view.label}
-              </button>
-            ))}
           <button onClick={() => observerRef.current?.orbit(-0.3)}>Orbit left</button>
           <button onClick={() => observerRef.current?.orbit(0.3)}>Orbit right</button>
           <button onClick={() => observerRef.current?.zoom(1.3)}>Zoom in</button>
@@ -649,9 +702,9 @@ export function ModelViewport({
       </div>
       <div className="model-inspector">
         <label>
-          Discover a structure{' '}
+          Find a structure in the model{' '}
           <select
-            aria-label="Discover a structure"
+            aria-label="Find a structure in the model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -663,31 +716,29 @@ export function ModelViewport({
             ))}
           </select>
         </label>
-        {selected && <p role="status">{structures.find((o) => o.id === selected)?.label}</p>}
+        {selected && (
+          <p role="status">
+            {structures.find((o) => o.id === selected)?.label}: outlined in violet in the model.
+          </p>
+        )}
       </div>
-      <p className="model-caption" data-observer-caption>
-        {OBSERVER_CAPTION} Observer movement does not alter the acquisition.
-        {state.package === 'needle' && !reveal
-          ? ' Distal needle geometry is concealed; use the ultrasound schematic.'
-          : ''}
-        {/*
-         * What this panel can and cannot show across the five contact conditions
-         * (EBUS-PRE-REVIEW-04, L5-4). Measured on the production build at the default view: the
-         * air gap, direct contact and fluid balloon differ; the bubble renders identically to the
-         * balloon and the reflector identically to direct contact. Nothing is added to the scene.
-         */}
-        {state.package === 'contact'
-          ? ' From this view the cutaway shows where the transducer, wall and fluid balloon sit, so it changes between an air gap, direct contact and balloon contact. The bubble and the reflector do not change what it shows; their effect is in the echo schematic.'
-          : ''}
-        {state.package === 'routes'
-          ? ' The arrow runs from the selected orientation locator to the fixed target and shows viewing direction only: blue for the airway approach, teal for the esophageal approach. Labels name the model’s own structures; the example node is named only in the worked example.'
-          : ''}
-      </p>
-      <p className="model-caption" data-observer-engaged={engaged} role="status">
-        {engaged
-          ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them.'
-          : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
-      </p>
+      <details className="model-caption">
+        <summary>How to move the model</summary>
+        <p data-observer-caption>{OBSERVER_CAPTION}</p>
+      </details>
+      {state.package === 'contact' && (
+        <p className="model-caption">
+          The cutaway shows the air gap, direct contact and the balloon. The bubble and the
+          reflector show their effect in the echo schematic.
+        </p>
+      )}
+      {state.package === 'routes' && (
+        <p className="model-caption">
+          The arrow shows the viewing direction to the node: blue from the airway, teal from the
+          esophagus.
+        </p>
+      )}
+      <span hidden data-observer-engaged={engaged} />
     </section>
   )
 }

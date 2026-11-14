@@ -4,9 +4,8 @@ import type { AuthoredChoice, BronchAct, BronchSectionDefinition } from '../type
 
 /**
  * Driving the scope (rewrite, brief 4). The fellow learns the grip, where to stand and how the
- * image follows from it, what each control changes, and the order that enters an opening: rotate,
- * bend, then advance with the lumen centered. Each control is practised on the bench, once with a
- * demonstration and a cue and once without. The technique teaching of `branch-entry` (entering an
+ * image follows from it, what each control changes, and coordinated aiming before entering an opening. Each control is practised on the bench with a
+ * demonstration, then combined in a changed-target task. The technique teaching of `branch-entry` (entering an
  * opening, coming back, a turn that does not reach the tip) is here; its airway tasks move to
  * section 5.
  *
@@ -78,18 +77,18 @@ export const section: BronchSectionDefinition = {
 
   clinicalQuestion: 'How do you make the tip go where you are looking?',
   objective:
-    'Use each control of the scope, and enter an opening by rotating, bending and then advancing.',
+    'Use each control of the scope, and aim with rotation and tip bending before advancing into an opening.',
   harmfulReflex: 'Advancing before the lumen is centered. Aim first, then move.',
   harmfulReflexPatterns: [/\badvanc/i],
   anchor: {
     analogy:
       'Driving the scope is threading a needle at arm’s length. You line the thread up first. Only then do you push.',
     precise:
-      'Rotate to put the opening in the bending plane, bend to center its lumen, and only then advance.',
+      'Coordinate rotation and tip bending to face the opening, then advance with its lumen in view.',
     checklistLabel: 'Before every movement',
     checklist: [
       'Tube straight between your hands',
-      'Rotate, then bend',
+      'Coordinate rotation and tip bending',
       'Lumen centered before you advance',
       'Bend released before you withdraw',
     ],
@@ -152,7 +151,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Rotation turns the camera and the bending plane',
-      body: 'Turn your left wrist and the whole scope turns. The image rotates, and the plane the tip bends in rotates with it.\n\nThis is how you reach an opening off to one side. Rotate until it sits at the top or bottom of the image, then bend toward it.\n\nUp on the screen is not a fixed direction in the patient. Find a landmark to tell you which way you are facing.',
+      body: 'Turn your left wrist and the whole scope turns. The image rotates, and the plane the tip bends in rotates with it.\n\nRotation directs the bending plane toward an opening. Combine small changes in rotation and tip bend to bring the lumen into view.\n\nUp on the screen is not a fixed direction in the patient. Find a landmark to tell you which way you are facing.',
       claimClass: 'source',
       sourceRefs: MOTIONS,
     },
@@ -160,8 +159,8 @@ export const section: BronchSectionDefinition = {
       id: 'combine',
       kind: 'pattern',
       role: 'worked-example',
-      heading: 'Rotate, bend, then advance',
-      body: 'To enter an opening, do three things in order. Rotate to bring it into the bending plane. Bend until its lumen is in the center of the image.\n\nThen advance, keeping the lumen in the center. An opening already above or below you needs no rotation.\n\nNever advance toward a wall to find the way. If the lumen is not centered, stop and aim again.',
+      heading: 'Aim with rotation and tip bending',
+      body: 'At the carina, coordinate rotation and tip bending to face the main bronchus you want to enter. Adjust both while watching the lumen.\n\nOnce you are facing the opening, advance in small steps and keep adjusting your aim. The bench example separates the controls so you can see each effect; clinical steering combines them.\n\nNever advance toward a wall to find the way. If the lumen is not centered, stop and aim again.',
       claimClass: 'source',
       sourceRefs: ENTRY,
     },
@@ -169,8 +168,8 @@ export const section: BronchSectionDefinition = {
       id: 'suction',
       kind: 'pattern',
       role: 'mechanism',
-      heading: 'Suction does not steer',
-      body: 'Your index finger presses the suction valve. It clears the view and does nothing else. The tip stays where it is.\n\nSuction in short bursts, with the lumen in view. Held against the wall, suction pulls mucosa onto the tip.',
+      heading: 'Suction removes fluid through the working channel',
+      body: 'Your index finger presses the suction valve. With the channel opening in fluid, suction draws fluid into the working channel. It does not change the direction of the tip.\n\nSuction in short bursts, with the lumen in view. Held against the wall, suction pulls mucosa onto the tip.',
       claimClass: 'source',
       sourceRefs: MOTIONS,
     },
@@ -179,7 +178,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'worked-example',
       heading: 'Into an opening, and back',
-      body: 'Name the opening you want before you move. Stop short of it, with the opening in view. Then rotate, bend and advance along the lumen, easing the bend off as the airway straightens.\n\nComing back, release the bend before you withdraw. A bent tip pulled backward catches on the wall.\n\nIf the handle turns and the image does not, the turn is being lost. Loosen your grip on the insertion tube and straighten it.',
+      body: 'Name the opening you want before you move. Stop short of it, with the opening in view. Coordinate rotation and tip bending to face the opening before advancing along its lumen, easing the bend as the airway straightens.\n\nComing back, release the bend before you withdraw. A bent tip pulled backward catches on the wall.\n\nIf the handle turns and the image does not, the turn is being lost. Loosen your grip on the insertion tube and straighten it.',
       media: {
         kind: 'scope-photo',
         imageId: 'full-scope',
@@ -201,7 +200,7 @@ export const section: BronchSectionDefinition = {
         'Twisting against a gripped or looped tube. Loosen, straighten, then try a small turn.',
         'Withdrawing with the bend still on. Release the lever first.',
         'Walking around the bed to steer. Turn your wrist.',
-        'Steering with suction. It only clears the view.',
+        'Steering with suction. Use rotation and tip bending to aim; suction removes fluid.',
       ],
       claimClass: 'synthesis',
       sourceRefs: [...MOTIONS, T10_MOTIONS, T11_COACHING],
@@ -215,13 +214,10 @@ export const section: BronchSectionDefinition = {
   act: task('rotation', 'use-controls'),
   moreActs: {
     depth: task('depth', 'use-controls'),
-    'depth-repeat': task('depth-repeat', 'use-controls'),
     bend: task('bend', 'use-controls'),
-    'bend-repeat': task('bend-repeat', 'use-controls'),
     'rotation-repeat': task('rotation-repeat', 'use-controls'),
     combine: task('combine', 'aim-and-enter'),
     suction: task('suction', 'use-controls'),
-    'suction-repeat': task('suction-repeat', 'use-controls'),
     'changed-target': task('transfer', 'aim-and-enter'),
   },
 
@@ -257,30 +253,31 @@ export const section: BronchSectionDefinition = {
     id: 'five-controls-transfer',
     itemType: 'management-decision',
     situation:
-      'You are in the trachea of an airway model with the tip straight. A side opening sits at the bottom edge of the image, and you can see into it.',
+      'You are in the distal trachea approaching the carina. The main bronchus you want to enter is off-center, and the scope is not yet facing its lumen.',
     stem: 'What is your next movement?',
     choices: choices(
       [
-        'Bend the tip down until the opening is centered',
-        'Advance until you are level with the opening, then bend',
-        'Rotate a quarter turn, then bend toward the opening',
+        'Coordinate rotation and tip bending to face the lumen before advancing',
+        'Advance toward the bronchus before adjusting the direction of the tip',
+        'Rotate the straight scope and advance without changing the tip bend',
         'Pause, and swing the control section down toward the floor',
       ],
       [
-        'The opening is at the bottom edge, so it is already in the bending plane. Bend to center it, then go.',
-        'Going forward without the lumen centered takes the tip past the opening and into the wall.',
-        'Rotating moves the opening out of the bending plane. It was already where the lever could reach it.',
+        'Rotation directs the bending plane and tip bending changes the viewing direction. Adjust them together until you face the bronchial lumen, then advance under vision.',
+        'Advancing before the scope faces the bronchial lumen risks contact with the carina or airway wall. Aim first.',
+        'Rotation alone turns the image around a straight tip. Add tip bending to aim into the off-axis bronchus before advancing.',
         'Swinging the handle moves the tube outside the patient. The tip bends only with the lever.',
       ],
       'b',
     ),
     explanation:
-      'Read the image before you move. An opening at the top or bottom edge needs the lever only. One off to the side needs rotation first. Advance once the lumen is centered.',
+      'Steering into a main bronchus usually combines rotation and tip bending. There is no mandatory rotate-then-bend sequence. In the isolated bench model, a target already in the bending plane may need only deflection. In an airway, use the visible lumen to guide both controls before and during advancement.',
     objectiveIds: ['M05-O2'],
     outcomeIds: ['aim-and-enter'],
     claimClass: 'synthesis',
     sourceRefs: ENTRY,
-    transferVariant: 'An airway model, not the bench, and an opening that needs one control only.',
+    transferVariant:
+      'Transfer from the isolated bench controls to coordinated entry into a main bronchus.',
   },
 
   practice: [

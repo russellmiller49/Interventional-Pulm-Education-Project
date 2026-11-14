@@ -65,10 +65,13 @@ export const sampleLessons: Lesson[] = [
         'An exposed tip can harm the patient or the equipment',
         'Retraction and securing the assembly follow the current device instructions.',
       ],
-      ['Retraction determines nodal histology', 'It is a safety maneuver, not a diagnostic test.'],
       [
-        'A sheath automatically makes all needle positions safe',
-        'The needle position must actually be checked.',
+        'Retraction keeps the aspirate from being lost in the channel',
+        'The specimen stays in the needle lumen either way; the check is about an exposed tip cutting the channel or the airway.',
+      ],
+      [
+        'Retraction releases the suction before the needle leaves the node',
+        'Suction is released at the syringe before the needle leaves the node; retraction is checked so the tip is covered in the channel.',
       ],
     ),
     transfer: q(
@@ -83,8 +86,8 @@ export const sampleLessons: Lesson[] = [
         'Resistance should prompt reassessment, not escalation of force.',
       ],
       [
-        'Increase ultrasound gain to reduce mechanical resistance',
-        'Gain changes the image, not the needle mechanics.',
+        'Lengthen the needle stop so the stroke carries more momentum',
+        'The stop limits travel to the far side of the node; lengthening it does not help entry and removes that safeguard.',
       ],
       true,
     ),
@@ -94,6 +97,124 @@ export const sampleLessons: Lesson[] = [
       'Retraction checks protect the patient and equipment.',
     ],
     sources: ['ics2023', 'chest2016'],
+  },
+  /*
+   * Needle technique within the node (2026-11-11), folded into the needle lesson by the owner's
+   * decision. It teaches which choices are the operator's and what to change between passes.
+   *
+   * What is evidence and what is practice is kept apart in the text. The stylet and suction
+   * statements are two randomized trials. Slow pull is one randomized trial and one retrospective
+   * series, described as mixed. Taking the suction off after a bloody pass, and fanning, are the
+   * owner's practice points (his decisions of 2026-11-11) and are labelled as practice points to
+   * the learner. The fresh needle after a malignant node is AABIP 2025's own note under the
+   * ninth-edition TNM changes; that guideline makes no recommendation on needle technique.
+   */
+  {
+    id: 'needle-technique',
+    title: 'Needle technique within the node',
+    topic: 'Sample',
+    minutes: 6,
+    objective:
+      'Choose what to change between passes: the stylet, suction, and how the needle moves within the node.',
+    recall:
+      'The needle is in the node with its tip in the imaging plane, and the stop is set to the far side of the node.',
+    concept: 'Most of these choices are yours; know what each one changes',
+    paragraphs: [
+      'The stylet. Two randomized trials sampled the same nodes with and without the stylet and found no difference in specimen adequacy or diagnostic yield (Scholten 2017; Lin 2018). Using it is optional (ICS/IAB 2023).',
+      'Suction. In the second of those trials suction did not change adequacy or yield either, but passes with suction more often returned a tissue core. Suction is a choice, not a requirement. Slow pull, in which the stylet is drawn back slowly as the needle moves and no syringe is attached, is an alternative: one randomized trial found no difference in on-site adequacy against suction and one retrospective series favoured it for tissue cores, so the evidence is mixed (Kassirian 2022; He 2020).',
+      'A bloody pass. Practice point: when a pass made with suction returns mostly blood, take the suction off for the next pass.',
+      'Fanning. Practice point: change the angle of the needle a little between movements, so that successive movements sample different parts of the node and not one track. The only EBUS study of fanning found for this course was a bench study on a model (Mizumori 2023).',
+      'Between stations. Once a malignant node has been identified, a fresh needle may be used for the next station to reduce cross-contamination (AABIP 2025).',
+    ],
+    checklist: [
+      'Decide on the stylet and suction before the pass.',
+      'After a bloody pass, take the suction off.',
+      'Change the needle angle between movements.',
+    ],
+    worked: {
+      context: 'The first pass at a station was made with suction, and the smear is mostly blood.',
+      reasoning:
+        'Take the suction off for the next pass. In the randomized comparison, adequacy and diagnostic yield were the same with and without suction, so the next pass gives nothing up that the trial measured except the chance of a tissue core.',
+    },
+    question: q(
+      'technique-predict',
+      'A pass at this station was made with suction and returned mostly blood. What do you change for the next pass?',
+      [
+        'Take the suction off',
+        'Practice point: after a bloody pass with suction, the next pass is made without it. In a randomized comparison, adequacy and diagnostic yield were the same with and without suction (Lin 2018).',
+      ],
+      [
+        'Change to a larger needle',
+        `A larger needle is not the response to a bloody pass. For suspected malignancy the 2024 CHEST guideline suggests a ${N('needle-gauge')} needle.`,
+      ],
+      [
+        'Add the stylet to clear the needle',
+        'Two randomized trials found no difference in adequacy or yield with the stylet, and it does not change what suction draws into the needle.',
+      ],
+    ),
+    observation: q(
+      'technique-observe',
+      'Two randomized trials sampled the same nodes with and without the stylet. What did they find?',
+      [
+        'No difference in specimen adequacy or diagnostic yield',
+        'Using the stylet is a choice. One of the trials also found the pass a little quicker without it.',
+      ],
+      [
+        'More diagnostic samples with the stylet',
+        'Neither trial found a difference in diagnostic yield.',
+      ],
+      [
+        'More blood contamination without the stylet',
+        'Neither trial reported a difference of that kind; adequacy and yield were the same.',
+      ],
+    ),
+    transfer: q(
+      'technique-transfer',
+      'The pathologist asks for tissue cores from this station. Which choice does the randomized comparison support?',
+      [
+        'Make the passes with suction',
+        'Passes with suction more often returned a tissue core, although adequacy and yield were unchanged (Lin 2018).',
+      ],
+      [
+        'Use the stylet on every pass',
+        'The stylet made no difference to adequacy or yield in either trial, and neither reported that it changed tissue cores.',
+      ],
+      [
+        'Make fewer movements on each pass',
+        'Nothing in these trials supports fewer movements; the lesson’s guidance on movements per pass stands.',
+      ],
+    ),
+    matching: matching(
+      'Match the situation with the change.',
+      [
+        ['The last pass, made with suction, was mostly blood', 'Take the suction off'],
+        ['Tissue cores are wanted from this station', 'Make the passes with suction'],
+        [
+          'Every movement follows the same track through the node',
+          'Change the needle angle between movements',
+        ],
+        [
+          'A malignant node has just been sampled and another station is next',
+          'Consider a fresh needle',
+        ],
+      ],
+      'Suction raised tissue-core acquisition without changing adequacy or yield (Lin 2018). Taking the suction off after a bloody pass and fanning are practice points. A fresh needle after a malignant node is meant to reduce cross-contamination between stations (AABIP 2025).',
+    ),
+    takeaways: [
+      'The stylet and suction are choices: neither changed adequacy or yield in randomized trials.',
+      'After a bloody pass, take the suction off.',
+      'Vary the needle angle within the node.',
+    ],
+    sources: [
+      'scholten2017',
+      'lin2018',
+      'kassirian2022',
+      'he2020',
+      'mizumori2023',
+      'ics2023',
+      'chest2024',
+      'aabip2025',
+    ],
   },
   {
     id: 'adequacy-rose',
@@ -107,7 +228,7 @@ export const sampleLessons: Lesson[] = [
     paragraphs: [
       'Rapid on-site evaluation (ROSE) provides immediate feedback about the submitted material and may guide further acquisition or allocation. It does not replace final pathology and does not automatically establish adequacy for all molecular or ancillary tests.',
       `For suspected malignancy, the 2024 CHEST guideline recommends ${N('passes-per-station')} needle passes per station rather than three or fewer (a strong recommendation on very low certainty evidence), and suggests ROSE where it is available. Four passes do not guarantee enough material for every assay.`,
-      `The same guideline suggests a ${N('needle-gauge')} needle for suspected malignancy. Needle choice does not make up for poor targeting or the wrong container. When molecular testing is planned, take additional passes for cell block.`,
+      `The same guideline suggests a ${N('needle-gauge')} needle for suspected malignancy. Needle choice does not make up for poor targeting or the wrong container. When molecular testing is planned, take additional passes for cell block. PD-L1 immunohistochemistry and next-generation sequencing often draw on that same cell block, although some laboratories run ancillary tests on smears or other preparations, and how material is processed and allocated follows the laboratory’s own protocol. Material that was enough for the diagnosis can run out before the last assay, so tell the laboratory which tests are needed before the case, not after the report.`,
     ],
     checklist: [
       'Ask what the on-site finding establishes.',
@@ -127,10 +248,13 @@ export const sampleLessons: Lesson[] = [
         'Adequacy for the requested ancillary assays',
         'An on-site finding does not guarantee final assay adequacy.',
       ],
-      ['Whether the anatomical station changes', 'Pathology does not alter the sampling location.'],
       [
-        'Whether all other stations are now known to be positive',
-        'A finding at one site does not classify unsampled stations.',
+        'Whether the needle was actually within the node',
+        'Malignant cells on site already show that lesional material was reached; what is open is whether there is enough for the assays.',
+      ],
+      [
+        'Whether lymphocytes are present to confirm a nodal sample',
+        'Lymphocytes matter for calling a negative sample representative; with tumor present, the open question is quantity for ancillary testing.',
       ],
     ),
     matching: matching(
@@ -169,12 +293,12 @@ export const sampleLessons: Lesson[] = [
         'EBUS can be performed without ROSE; plan material and follow-up deliberately.',
       ],
       [
-        'Assume any aspirate is adequate because it contains blood',
-        'Blood alone is not evidence of representative target material.',
+        'Postpone until on-site cytology can attend',
+        'ROSE is suggested where available, not required; EBUS-TBNA is performed without it, with a planned number of passes.',
       ],
       [
-        'Treat a normal-looking node as a substitute for cytology',
-        'Morphology does not provide specimen adequacy.',
+        'Take fewer passes, since adequacy cannot be checked',
+        'Without on-site feedback the planned pass count and cell-block material matter more, not less.',
       ],
     ),
     diagram: 'specimens',
@@ -217,12 +341,12 @@ export const sampleLessons: Lesson[] = [
         'Pooling erases which station supplied the finding.',
       ],
       [
-        'Because each station always needs a different needle gauge',
-        'Gauge selection and station labeling are different decisions.',
+        'To give the laboratory more cells per block for biomarkers',
+        'Separating material does not raise cellularity; it is done so a positive result can be assigned to its station.',
       ],
       [
-        'Because separate labels increase the number of malignant cells',
-        'Labels preserve identity, not cellular yield.',
+        'To keep blood from one station from diluting the other',
+        'Dilution is not the concern; a pooled positive cannot be assigned to a station, which is what staging needs.',
       ],
     ),
     matching: matching(
@@ -242,12 +366,12 @@ export const sampleLessons: Lesson[] = [
         'A single default container may not preserve every requested diagnostic option.',
       ],
       [
-        'Different containers alone establish different diagnoses',
-        'The material must still be examined.',
+        'Formalin preserves everything, but separate tubes aid labeling',
+        'Formalin fixes cells and kills organisms, so flow cytometry and culture are lost.',
       ],
       [
-        'The same medium is always interchangeable across laboratories',
-        'Local processing and assay requirements need confirmation.',
+        'Saline keeps the material suitable for any later study',
+        'Unfixed material degrades; cytology and cell block need prompt fixation, so one medium does not serve every study.',
       ],
     ),
     transfer: q(
@@ -262,8 +386,8 @@ export const sampleLessons: Lesson[] = [
         'The diagnosis requires compatible clinical findings and assessment for alternatives.',
       ],
       [
-        'A new container label can recover a culture from already fixed tissue',
-        'Relabeling does not reverse fixation or supply an unperformed test.',
+        'Culture can still be requested on the fixed cell block',
+        'Fixation kills organisms; stains or molecular tests may be possible on fixed material, but culture is not.',
       ],
     ),
     diagram: 'specimens',

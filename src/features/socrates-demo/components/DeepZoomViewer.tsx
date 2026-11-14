@@ -4,6 +4,12 @@ import { createPortal } from 'react-dom'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type OpenSeadragonType from 'openseadragon'
 import { socratesTileSourceUrl } from '@/features/socrates-builder/invenio-source'
+import {
+  resizeAnnotation,
+  resizeBoundsFromHandle,
+  resizeHandles,
+  type ResizeHandle,
+} from '@/features/socrates-builder/annotation-editing'
 
 import type {
   DeepZoomSlide,
@@ -29,6 +35,7 @@ export interface DeepZoomViewerProps {
   interactionMode?: 'navigate' | 'draw-rectangle' | 'move-rectangle'
   onDrawRectangle?: (rect: ImageRect) => void
   onMoveAnnotation?: (id: string, delta: ImagePoint) => void
+  onResizeAnnotation?: (id: string, bounds: ImageRect) => void
   ariaLabel?: string
 }
 
@@ -68,6 +75,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       interactionMode = 'navigate',
       onDrawRectangle,
       onMoveAnnotation,
+      onResizeAnnotation,
       ariaLabel = 'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
     },
     ref,
@@ -86,23 +94,33 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onStatusChange,
       onDrawRectangle,
       onMoveAnnotation,
+      onResizeAnnotation,
     })
     const interactionModeRef = useRef(interactionMode)
+    const imagePointFromPointerRef = useRef<
+      ((event: { clientX: number; clientY: number }) => ImagePoint | null) | null
+    >(null)
     const drawStartRef = useRef<ImagePoint | null>(null)
     const moveStartRef = useRef<{
       id: string
       point: ImagePoint
       bounds: ImageRect
       pointerId: number
+      handle?: ResizeHandle
     } | null>(null)
     const annotationsRef = useRef(annotations)
     const activeAnnotationRef = useRef<DemoAnnotation | null>(null)
+    const selectedAnnotation = annotations.find(
+      (annotation) => annotation.id === selectedAnnotationId,
+    )
+    const selectedAnnotationRef = useRef(selectedAnnotation)
     const [attempt, setAttempt] = useState(0)
     const [overlayElement, setOverlayElement] = useState<HTMLDivElement | null>(null)
     const [status, setStatus] = useState<DeepZoomViewerStatus>({ phase: 'loading' })
     const [tileWarning, setTileWarning] = useState(false)
     const [labelPosition, setLabelPosition] = useState<LabelPosition | null>(null)
     const [draftRectangle, setDraftRectangle] = useState<ImageRect | null>(null)
+    const [handlePositions, setHandlePositions] = useState<LabelPosition[]>([])
 
     const activeAnnotation =
       annotations.find((annotation) => annotation.id === previewedAnnotationId) ??
@@ -117,16 +135,20 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         onStatusChange,
         onDrawRectangle,
         onMoveAnnotation,
+        onResizeAnnotation,
       }
       annotationsRef.current = annotations
+      selectedAnnotationRef.current = selectedAnnotation
     }, [
       annotations,
       onDrawRectangle,
       onMoveAnnotation,
+      onResizeAnnotation,
       onImageHover,
       onImageSelect,
       onStatusChange,
       onViewportChange,
+      selectedAnnotation,
     ])
 
     useEffect(() => {
@@ -153,6 +175,22 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       const viewer = viewerRef.current
       const tiledImage = tiledImageRef.current
       const annotation = activeAnnotationRef.current
+
+      const selected = selectedAnnotationRef.current
+      setHandlePositions(
+        viewer && tiledImage && selected
+          ? resizeHandles.map((handle) => {
+              const bounds = polygonBounds(selected.polygon)
+              return viewer.viewport.viewportToViewerElementCoordinates(
+                tiledImage.imageToViewportCoordinates(
+                  bounds.x + bounds.width * handle.x,
+                  bounds.y + bounds.height * handle.y,
+                  true,
+                ),
+              )
+            })
+          : [],
+      )
 
       if (!viewer || !tiledImage || !annotation) {
         setLabelPosition(null)
@@ -270,7 +308,20 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
 
     useEffect(() => {
       updateLabelPosition()
-    }, [activeAnnotation, updateLabelPosition])
+    }, [activeAnnotation, selectedAnnotation, updateLabelPosition])
+
+    const resizedBounds = useCallback(
+      (id: string, bounds: ImageRect, handle: ResizeHandle, delta: ImagePoint) => {
+        const resized = resizeAnnotation(
+          annotationsRef.current,
+          id,
+          resizeBoundsFromHandle(bounds, handle, delta),
+          { x: 0, y: 0, ...slide.expectedDimensions },
+        ).find((annotation) => annotation.id === id)
+        return resized ? polygonBounds(resized.polygon) : bounds
+      },
+      [slide.expectedDimensions],
+    )
 
     useEffect(() => {
       const viewerElement = viewerElementRef.current
@@ -432,7 +483,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             })
           })
 
-          const imagePointFromPointer = (event: PointerEvent) => {
+          const imagePointFromPointer = (event: { clientX: number; clientY: number }) => {
             const activeTiledImage = tiledImageRef.current
             if (!activeTiledImage || !viewer) return null
 
@@ -444,6 +495,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
               ),
             )
           }
+          imagePointFromPointerRef.current = imagePointFromPointer
 
           pointerMoveHandler = (event: PointerEvent) => {
             const point = imagePointFromPointer(event)
@@ -456,11 +508,16 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
               event.pointerId === moveStart.pointerId
             ) {
               event.preventDefault()
-              setDraftRectangle({
-                ...moveStart.bounds,
-                x: moveStart.bounds.x + point.x - moveStart.point.x,
-                y: moveStart.bounds.y + point.y - moveStart.point.y,
-              })
+              const delta = { x: point.x - moveStart.point.x, y: point.y - moveStart.point.y }
+              setDraftRectangle(
+                moveStart.handle
+                  ? resizedBounds(moveStart.id, moveStart.bounds, moveStart.handle, delta)
+                  : {
+                      ...moveStart.bounds,
+                      x: moveStart.bounds.x + delta.x,
+                      y: moveStart.bounds.y + delta.y,
+                    },
+              )
               return
             }
 
@@ -526,11 +583,15 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
               moveStartRef.current = null
               setDraftRectangle(null)
               viewer?.canvas.releasePointerCapture?.(event.pointerId)
-              if (point && (point.x !== moveStart.point.x || point.y !== moveStart.point.y))
-                callbacksRef.current.onMoveAnnotation?.(moveStart.id, {
-                  x: point.x - moveStart.point.x,
-                  y: point.y - moveStart.point.y,
-                })
+              if (point && (point.x !== moveStart.point.x || point.y !== moveStart.point.y)) {
+                const delta = { x: point.x - moveStart.point.x, y: point.y - moveStart.point.y }
+                if (moveStart.handle)
+                  callbacksRef.current.onResizeAnnotation?.(
+                    moveStart.id,
+                    resizedBounds(moveStart.id, moveStart.bounds, moveStart.handle, delta),
+                  )
+                else callbacksRef.current.onMoveAnnotation?.(moveStart.id, delta)
+              }
               return
             }
             const drawStart = drawStartRef.current
@@ -604,6 +665,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         callbacksRef.current.onImageHover(null)
         drawStartRef.current = null
         moveStartRef.current = null
+        imagePointFromPointerRef.current = null
         tiledImageRef.current = null
         viewerRef.current = null
         viewer?.destroy()
@@ -613,6 +675,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       emitViewportSnapshot,
       fitImageRect,
       publishStatus,
+      resizedBounds,
       slide.descriptorUrl,
       slide.expectedDimensions.height,
       slide.expectedDimensions.width,
@@ -681,6 +744,73 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
               overlayElement,
             )
           : null}
+
+        {interactionMode === 'move-rectangle' &&
+          onResizeAnnotation &&
+          selectedAnnotation &&
+          !draftRectangle &&
+          status.phase === 'ready' &&
+          resizeHandles.map((handle, index) => {
+            const position = handlePositions[index]
+            if (!position) return null
+            return (
+              <button
+                key={handle.id}
+                type="button"
+                className={styles.resizeHandle}
+                data-handle={handle.id}
+                style={{ left: position.x, top: position.y, cursor: `${handle.id}-resize` }}
+                aria-label={`Resize ${selectedAnnotation.label}: ${handle.label}`}
+                title="Drag to resize. Arrow keys resize by 10 pixels; Shift by 1 pixel."
+                onPointerDown={(event) => {
+                  const viewer = viewerRef.current
+                  const point = imagePointFromPointerRef.current?.(event)
+                  if (event.button !== 0 || !viewer || !point || moveStartRef.current) return
+                  event.preventDefault()
+                  event.stopPropagation()
+                  event.currentTarget.focus({ preventScroll: true })
+                  callbacksRef.current.onImageHover(null)
+                  moveStartRef.current = {
+                    id: selectedAnnotation.id,
+                    point,
+                    bounds: polygonBounds(selectedAnnotation.polygon),
+                    pointerId: event.pointerId,
+                    handle: handle.id,
+                  }
+                  viewer.canvas.setPointerCapture?.(event.pointerId)
+                }}
+                onKeyDown={(event) => {
+                  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key))
+                    return
+                  event.preventDefault()
+                  const distance = event.shiftKey ? 1 : 10
+                  const delta = {
+                    x:
+                      event.key === 'ArrowLeft'
+                        ? -distance
+                        : event.key === 'ArrowRight'
+                          ? distance
+                          : 0,
+                    y:
+                      event.key === 'ArrowUp'
+                        ? -distance
+                        : event.key === 'ArrowDown'
+                          ? distance
+                          : 0,
+                  }
+                  callbacksRef.current.onResizeAnnotation?.(
+                    selectedAnnotation.id,
+                    resizedBounds(
+                      selectedAnnotation.id,
+                      polygonBounds(selectedAnnotation.polygon),
+                      handle.id,
+                      delta,
+                    ),
+                  )
+                }}
+              />
+            )
+          })}
 
         {activeAnnotation && labelPosition ? (
           <span

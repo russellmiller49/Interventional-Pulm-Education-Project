@@ -37,6 +37,65 @@ export function surfaceAnchorLocal(mesh: THREE.Mesh, focus: THREE.Vector3): THRE
   }
   return anchor
 }
+/**
+ * Two parts of the scope tip can have centres a millimetre or two apart (the transducer sits in
+ * the distal body), so their leaders ended on the same spot. A mesh whose anchor lies within a
+ * quarter of a smaller mesh's size of that mesh's anchor is re-anchored to the point on its own
+ * surface that the observer can see and that lies farthest, on screen, from every other anchor:
+ * a part of the structure nothing else is pointing at and nothing else is drawn over. The smaller
+ * part keeps its centre; the larger one, which has room, is the one that moves.
+ */
+export function separateAnchors(
+  meshes: THREE.Mesh[],
+  anchors: THREE.Vector3[],
+  camera: THREE.Camera,
+) {
+  const world = anchors.map((anchor, i) => meshes[i].localToWorld(anchor.clone()))
+  const sizes = meshes.map((mesh) =>
+    new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3()).length(),
+  )
+  const eye = camera.getWorldPosition(new THREE.Vector3())
+  const raycaster = new THREE.Raycaster()
+  const screen = (point: THREE.Vector3) => point.clone().project(camera)
+  const bySize = meshes.map((_, i) => i).sort((p, q) => sizes[p] - sizes[q])
+  bySize.forEach((i, rank) => {
+    const mesh = meshes[i]
+    const crowded = bySize
+      .slice(0, rank)
+      .some((j) => world[j].distanceTo(world[i]) < 0.25 * sizes[j])
+    if (!crowded) return
+    // Everything drawn with this part can hide it: the rest of the device or of the anatomy.
+    let root: THREE.Object3D = mesh
+    while (root.parent && root.parent.type !== 'Scene') root = root.parent
+    const occluders: THREE.Object3D[] = []
+    root.traverseVisible((object) => {
+      if (object instanceof THREE.Mesh) occluders.push(object)
+    })
+    const others = world.filter((_, j) => j !== i).map(screen)
+    const position = mesh.geometry.getAttribute('position')
+    const stride = Math.max(1, Math.floor(position.count / 400))
+    const ranked: { v: number; score: number }[] = []
+    const point = new THREE.Vector3()
+    for (let v = 0; v < position.count; v += stride) {
+      const at = screen(mesh.localToWorld(point.fromBufferAttribute(position, v)))
+      if (Math.abs(at.x) > 0.9 || Math.abs(at.y) > 0.9) continue
+      ranked.push({ v, score: Math.min(...others.map((o) => Math.hypot(o.x - at.x, o.y - at.y))) })
+    }
+    ranked.sort((p, q) => q.score - p.score)
+    for (const { v } of ranked) {
+      mesh.localToWorld(point.fromBufferAttribute(position, v))
+      raycaster.set(eye, point.clone().sub(eye).normalize())
+      const hit = raycaster.intersectObjects(occluders, false)[0]
+      // Seen when the first surface along the line of sight is this part, at this point.
+      if (hit && hit.object === mesh && hit.point.distanceTo(point) < 0.05 * sizes[i]) {
+        anchors[i].fromBufferAttribute(position, v)
+        world[i] = point.clone()
+        break
+      }
+    }
+  })
+  return anchors
+}
 /** The same anchor in world coordinates. */
 export function surfaceAnchor(mesh: THREE.Mesh, focus: THREE.Vector3): THREE.Vector3 {
   return mesh.localToWorld(surfaceAnchorLocal(mesh, focus))
@@ -86,6 +145,9 @@ export function createStructureCallouts(
     return true
   }
   let last: ReturnType<StructureCalloutHandle['geometry']> = []
+  const anchors = meshes.map((mesh) => surfaceAnchorLocal(mesh, focus))
+  // Crowded anchors are moved apart once, from the first view the markers are drawn in.
+  let separated = false
   const markers = meshes.map((mesh, index) => {
     const letter = letterFor(index)
     const button = document.createElement('button')
@@ -99,13 +161,13 @@ export function createStructureCallouts(
     name.className = 'linked-structure-name'
     name.hidden = true
     button.append(glyph, name)
-    button.setAttribute('aria-label', 'Structure ' + letter)
+    button.setAttribute('aria-label', letter ? 'Structure ' + letter : 'Structure')
     const line = document.createElementNS(svg.namespaceURI, 'path')
     const dot = document.createElementNS(svg.namespaceURI, 'circle')
     dot.setAttribute('r', '3.5')
     svg.append(line, dot)
     overlay.appendChild(button)
-    const anchor = surfaceAnchorLocal(mesh, focus)
+    const anchor = anchors[index]
     button.addEventListener('click', () => choose(mesh.name, mesh.localToWorld(anchor.clone())))
     button.addEventListener('pointerenter', () => onHover(mesh.name))
     button.addEventListener('pointerleave', () => onHover(null))
@@ -123,6 +185,10 @@ export function createStructureCallouts(
       const width = host.clientWidth,
         height = host.clientHeight
       if (!width || !height) return
+      if (!separated) {
+        separated = true
+        separateAnchors(meshes, anchors, camera)
+      }
       const projected = markers
         .map((marker) => {
           const point = projectPoint(
@@ -173,7 +239,10 @@ export function createStructureCallouts(
           marker.button.classList.toggle('is-visible', marker.visible)
           marker.button.setAttribute(
             'aria-label',
-            'Structure ' + marker.letter + (named && names![marker.mesh.name] ? ': ' + names![marker.mesh.name] : ''),
+            // A view that names its markers without lettering them is announced by name alone.
+            marker.letter
+              ? 'Structure ' + marker.letter + (named && names![marker.mesh.name] ? ': ' + names![marker.mesh.name] : '')
+              : (named && names![marker.mesh.name]) || 'Structure',
           )
           // Named pills hang from the canvas edge; letters sit centred on their column line.
           const buttonWidth = named ? marker.button.offsetWidth || glyphSize : glyphSize

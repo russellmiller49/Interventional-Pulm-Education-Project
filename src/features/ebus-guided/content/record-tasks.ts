@@ -20,7 +20,7 @@ export const RECORD_DECISIONS: Record<RecordTask, RecordDecision[]> = {
       label: 'Extent supported by this acquisition',
       choices: [
         ['complete', 'Complete clinical station survey'],
-        ['window-only', 'This modeled window only'],
+        ['window-only', 'This window only'],
         ['negative', 'Negative tissue assessment'],
       ],
     },
@@ -30,9 +30,9 @@ export const RECORD_DECISIONS: Record<RecordTask, RecordDecision[]> = {
       id: 'description',
       label: 'Description supported by the vignette',
       choices: [
-        ['benign', 'Benign node confirmed by shape'],
+        ['benign', 'Benign node on sonographic criteria'],
         ['appearance-only', 'Oval, homogeneous appearance; pathology undetermined'],
-        ['malignant', 'Malignant node confirmed by visibility'],
+        ['malignant', 'Suspicious node; no central hilar structure described'],
       ],
     },
     {
@@ -52,7 +52,7 @@ export const RECORD_DECISIONS: Record<RecordTask, RecordDecision[]> = {
       choices: [
         ['two', 'Two stations'],
         ['one', 'One station'],
-        ['unknown', 'Determined by the number of passes'],
+        ['unknown', 'One or two, depending on the pathology of each'],
       ],
     },
   ],
@@ -70,9 +70,9 @@ export const RECORD_DECISIONS: Record<RecordTask, RecordDecision[]> = {
       id: 'next-specimen',
       label: 'Next specimen decision',
       choices: [
-        ['more-passes', 'Continue to a fixed number despite tolerance'],
+        ['more-passes', 'Complete four passes before reassessing tolerance'],
         ['reconcile-safety', 'Reconcile requested studies, handling and procedural tolerance'],
-        ['finish-all', 'Declare every diagnostic endpoint satisfied'],
+        ['finish-all', 'Stop: malignant cells on ROSE complete the specimen plan'],
       ],
     },
     {
@@ -110,12 +110,12 @@ export const RECORD_DECISIONS: Record<RecordTask, RecordDecision[]> = {
       id: 'follow-up',
       label: 'Responsibility for closing the loop',
       choices: [
-        ['automatic', 'Assume pending studies will complete without review'],
+        ['automatic', 'Pathology will contact the team if a result is abnormal'],
         [
           'responsible-team',
           'Responsible clinical team: reconcile results, recovery and next steps',
         ],
-        ['dismiss', 'Remove unsampled targets from follow-up'],
+        ['dismiss', 'Follow up the sampled stations only'],
       ],
     },
   ],

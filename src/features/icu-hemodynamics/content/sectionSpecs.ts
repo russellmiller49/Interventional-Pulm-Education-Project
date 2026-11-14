@@ -16,8 +16,8 @@ import { hemodynamicsSourceById } from './sources'
  * A section spec carries what the pathway row cannot — the one new concept, the discrimination
  * the section enables, which stops on the spine it lights, which rows of the one table it
  * highlights, the control strip its Explain step shows, the phrases no pre-commit surface may
- * carry, and the Practice case it pairs to by mechanism. The pathway (`learningPathways.ts`) stays
- * the order; this is what a section *is*.
+ * carry, and the case, matched by mechanism, that is its last task. The pathway
+ * (`learningPathways.ts`) stays the order; this is what a section *is*.
  */
 export const hemodynamicsSectionIds = [
   'why-measure',
@@ -51,9 +51,22 @@ export interface ControlStrip {
   readonly sentence: string
 }
 
+/**
+ * The case that is a section's last task, matched to the section by mechanism.
+ *
+ * The case runs inside the section, embedded on its own engine, after the transfer: the owner found
+ * the cases good but stranded outside the sections they apply (2026-10-14), so a section now ends
+ * by applying itself to a fresh patient rather than sending the learner to Practice. Each case is
+ * the last task of at most one section; Practice keeps every case as a list.
+ */
 export interface PracticePairing {
-  readonly kind: 'mechanism-match' | 'next-in-unit'
+  readonly kind: 'mechanism-match'
   readonly caseId: string
+  /**
+   * A further case on the same mechanism, offered on the completion card once the section is
+   * finished. It is never a task of its own and adds nothing to the section's minutes.
+   */
+  readonly secondCaseId?: string
 }
 
 export interface HemodynamicsSectionSpec {
@@ -77,7 +90,11 @@ export interface HemodynamicsSectionSpec {
    * or behaviour for a real one. Empty otherwise, and then nothing renders.
    */
   readonly modelBoundary: string
-  readonly practicePairing: PracticePairing
+  /**
+   * The case that ends this section, or none: the orientation has no mechanism to apply, and the
+   * capstone already runs a case patient inside the lesson.
+   */
+  readonly practicePairing?: PracticePairing
   readonly sourceIds: readonly string[]
 }
 
@@ -116,7 +133,6 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /says nothing about (why|flow|the cause)/i,
     ],
     modelBoundary: '',
-    practicePairing: { kind: 'next-in-unit', caseId: 'HD-01' },
     sourceIds: ['pac-review-2014', 'esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
   {
@@ -191,7 +207,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /this (tracing|trace) is (the |a )?(right )?ventric/i,
     ],
     modelBoundary: '',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-07' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'HD-04' },
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-waveforms-part-1-2021', 'pac-review-2014'],
   },
   {
@@ -256,7 +272,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
     ],
     modelBoundary:
       'The simulated catheter meets no resistance and shows no ectopy; the first moves for both are in the list above.',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-08' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'HD-03' },
     sourceIds: ['pac-waveforms-part-1-2021', 'pac-review-2014', 'edwards-swan-ganz-ifu-2023'],
   },
   {
@@ -289,7 +305,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
     ],
     modelBoundary:
       'The simulator lets the balloon down by itself if you leave it up; that timing is the simulator’s, not a limit for a real catheter.',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-08' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'HD-06' },
     sourceIds: [
       'pac-waveforms-part-1-2021',
       'edwards-swan-ganz-ifu-2023',
@@ -325,7 +341,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /replaced rather than forced/i,
     ],
     modelBoundary: '',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-08' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'HD-01' },
     sourceIds: [
       'pac-derived-part-2-2021',
       'master-hemodynamics-reference',
@@ -361,7 +377,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /every required input/i,
     ],
     modelBoundary: '',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-05' },
+    practicePairing: { kind: 'mechanism-match', caseId: 'HD-05', secondCaseId: 'HD-02' },
     sourceIds: ['pac-derived-part-2-2021', 'master-hemodynamics-reference'],
   },
   {
@@ -412,7 +428,6 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /first suspect is the measurement/i,
     ],
     modelBoundary: '',
-    practicePairing: { kind: 'mechanism-match', caseId: 'HD-08' },
     sourceIds: [
       'arterial-pressure-five-step-2020',
       'pac-waveforms-part-1-2021',
@@ -430,13 +445,31 @@ export function hemodynamicsSectionSpec(sectionId: string): HemodynamicsSectionS
   return spec
 }
 
+export interface HemodynamicsSectionCase {
+  readonly caseId: string
+  /** The case's presentation title — never its diagnosis (`shortTitle`). */
+  readonly title: string
+  readonly minutes: number
+}
+
+function sectionCase(sectionId: string, caseId: string): HemodynamicsSectionCase {
+  const definition = hemodynamicCaseById.get(caseId)
+  if (!definition) throw new Error(`Section ${sectionId} pairs to an unknown case ${caseId}.`)
+  return { caseId, title: definition.title, minutes: definition.minutes }
+}
+
+/** The case that is this section's last task, or null when the section ends without one. */
 export function hemodynamicsPracticePairing(
   sectionId: string,
-): PracticePairing & { readonly title: string } {
-  const spec = hemodynamicsSectionSpec(sectionId)
-  const definition = hemodynamicCaseById.get(spec.practicePairing.caseId)
-  if (!definition) throw new Error(`Section ${sectionId} pairs to an unknown case.`)
-  return { ...spec.practicePairing, title: definition.title }
+): (HemodynamicsSectionCase & { readonly kind: PracticePairing['kind'] }) | null {
+  const pairing = hemodynamicsSectionSpec(sectionId).practicePairing
+  return pairing ? { kind: pairing.kind, ...sectionCase(sectionId, pairing.caseId) } : null
+}
+
+/** The further case on this section's mechanism its completion card offers, or null. */
+export function hemodynamicsSecondCase(sectionId: string): HemodynamicsSectionCase | null {
+  const secondCaseId = hemodynamicsSectionSpec(sectionId).practicePairing?.secondCaseId
+  return secondCaseId ? sectionCase(sectionId, secondCaseId) : null
 }
 
 export const objectiveActionVerbPattern =
@@ -525,8 +558,26 @@ export function validateHemodynamicsSectionSpecs(
       if (pattern.flags.includes('g'))
         errors.push(`${where} deny pattern ${pattern} is global (stateful).`)
     }
-    if (!hemodynamicCaseById.has(spec.practicePairing.caseId)) {
-      errors.push(`${where} pairs to an unknown case ${spec.practicePairing.caseId}.`)
+    const pairing = spec.practicePairing
+    if (pairing) {
+      const definition = hemodynamicCaseById.get(pairing.caseId)
+      if (!definition) {
+        errors.push(`${where} pairs to an unknown case ${pairing.caseId}.`)
+      } else {
+        const section = pathway.sections.find((candidate) => candidate.id === spec.id)
+        // The section's minutes include its case; a section shorter than its case has left it out.
+        if (section && section.minutes <= definition.minutes) {
+          errors.push(`${where} lists ${section.minutes} min, which cannot include its case.`)
+        }
+      }
+      if (pairing.secondCaseId !== undefined) {
+        if (!hemodynamicCaseById.has(pairing.secondCaseId)) {
+          errors.push(`${where} offers an unknown second case ${pairing.secondCaseId}.`)
+        }
+        if (pairing.secondCaseId === pairing.caseId) {
+          errors.push(`${where} offers its own case as the second case.`)
+        }
+      }
     }
     if (spec.sourceIds.length === 0) errors.push(`${where} cites nothing.`)
     for (const sourceId of spec.sourceIds) {
@@ -538,6 +589,17 @@ export function validateHemodynamicsSectionSpecs(
   const capstone = specs.at(-1)
   if (capstone && capstone.prerequisiteSectionIds.length !== specs.length - 2) {
     errors.push('The capstone must assume every section but the orientation.')
+  }
+  // A case lives in one section: as its last task, or as the second case its completion offers.
+  const placed = specs.flatMap((spec) =>
+    spec.practicePairing
+      ? [spec.practicePairing.caseId, spec.practicePairing.secondCaseId ?? []].flat()
+      : [],
+  )
+  for (const caseId of new Set(placed)) {
+    if (placed.filter((candidate) => candidate === caseId).length > 1) {
+      errors.push(`Case ${caseId} is placed in more than one section.`)
+    }
   }
   return errors
 }

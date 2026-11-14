@@ -63,6 +63,10 @@ const baseClaimTypes: Readonly<Record<string, string>> = {
   'ardsnet-alveoli-2004': 'clinical',
   'amato-driving-pressure-2015': 'clinical',
   'tobin-3e-severe-asthma': 'clinical',
+  // Driving-pressure correction (2026-10-31): the sources behind the ~15 cmH₂O reference.
+  'aoyama-driving-pressure-2018': 'clinical',
+  'bugedo-driving-pressure-2017': 'clinical',
+  'agrafiotis-driving-pressure-rcts-2026': 'clinical',
 }
 
 describe('MV-03 source identities', () => {

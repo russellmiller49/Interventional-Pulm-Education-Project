@@ -7,10 +7,17 @@ import {
   type BronchSectionId,
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
+import { imageBankSet } from '../src/features/bronchoscopy-foundations/content/imageBank'
+import { PRACTICE_SETS } from '../src/features/bronchoscopy-foundations/content/practiceSets'
+import { VIGNETTES } from '../src/features/bronchoscopy-foundations/content/vignettes'
 import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
-import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
+import {
+  scopeControlId,
+  type AirwayLabel,
+} from '../src/features/bronchoscopy-foundations/components/scope/types'
+import { airwayDisplayName } from '../src/features/bronchoscopy-foundations/content/airwayTree'
 import {
   benchTipOrientation,
   compassRadius,
@@ -50,12 +57,24 @@ test.beforeEach(async ({ page }) => {
   if (!['localhost', '127.0.0.1'].includes(new URL(url).hostname))
     throw new Error('Local server required')
   await page.route('**/api/analytics', (route) => route.fulfill({ status: 204 }))
+  if (process.env.BRONCH_FOUNDATIONS_AUTH_TOKEN) {
+    await page.goto(
+      '/api/local-dev-auth?token=' +
+        encodeURIComponent(process.env.BRONCH_FOUNDATIONS_AUTH_TOKEN) +
+        '&next=' +
+        base,
+    )
+  }
   const response = await page.goto(base)
   expect(response?.status()).toBe(200)
   await expect(page.locator('[data-bronch-continue]')).toHaveCount(1)
 })
 async function openSection(page: Page, id: BronchSectionId) {
   const lesson = bronchStageLesson(id)
+  // A section reopens at the screen it was left on. These helpers start each one at its first
+  // screen, so a place kept earlier in the same test is forgotten before the section is opened.
+  if (page.url().startsWith('http'))
+    await page.evaluate(() => localStorage.removeItem('ip-bronchoscopy-foundations-place-v1'))
   await page.goto(base + '/learn?section=' + id)
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   return lesson
@@ -190,7 +209,10 @@ for (const viewport of [
             for (let y = Math.floor(info.height * 0.2); y < info.height * 0.8; y++) {
               for (let x = Math.floor(info.width * 0.2); x < info.width * 0.8; x++) {
                 const at = (y * info.width + x) * info.channels
-                if (data[at] > 40 && data[at] > data[at + 1] * 1.15) tissue++
+                // Lit tissue: bright enough, and warmer than neutral. Since the wall took the
+                // pale warm colour of the course's real stills its red stands only a little
+                // above its green, so the margin is small. Black and neutral grey do not pass.
+                if (data[at] > 40 && data[at] > data[at + 1] * 1.06) tissue++
                 count++
               }
             }
@@ -285,9 +307,9 @@ test('one entry, explanation before an answer, Back review and a reload that res
     'visitedSectionIds',
   ])
   expect(await earlierRecord(page)).toBeNull()
+  // A reload returns to the screen reached. The answer given there does not come back.
   await page.reload()
-  await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
-  for (let index = 0; index < lesson.predictionStepIndex; index++) await primary(page).click()
+  await expect(stage(page)).toHaveAttribute('data-stage', check.id)
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
   await skip(page).click()
@@ -339,7 +361,16 @@ async function pilotMovement(page: Page, id: string) {
       break
     case 'suction':
     case 'suction-repeat':
+      for (let i = 0; i < 6; i++) await depth('advance')
       await control(page, 'suction').check()
+      if (await control(page, 'step').count()) await control(page, 'step').click()
+      await expect
+        .poll(async () =>
+          Number(
+            await page.locator('[data-bench-fluid="outside"]').getAttribute('data-fluid-remaining'),
+          ),
+        )
+        .toBeLessThan(1)
       await control(page, 'suction').uncheck()
       break
     case 'transfer':
@@ -449,7 +480,10 @@ for (const viewport of [
             expect((await record(page)).reviewedSectionIds).toEqual([])
             expect(await earlierRecord(page)).toBeNull()
           }
-          if (step.learn?.demonstration) await pilotAction(page, 'Try with guidance')
+          // The controls are live without the example (owner feedback, 2026-11-03); after
+          // watching it, Try with guidance hands them back on a fresh scope.
+          if (step.learn?.id === 'bend' || step.learn?.id === 'depth')
+            await pilotAction(page, 'Try with guidance')
 
           await ready(page)
           if (step.learn?.id === 'rotation') {
@@ -560,7 +594,6 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
     else await pilotContinue(page)
     await expect(stage(page)).not.toHaveAttribute('data-stage', current!)
   }
-  await pilotAction(page, 'Try with guidance')
   await page.getByRole('button', { name: 'Use the schematic view', exact: true }).click()
   const schematic = page.getByRole('img', { name: /^Schematic scope view/ })
   await expect(schematic).toBeVisible()
@@ -573,51 +606,168 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
 
-test('the survey distinguishes entering from inspecting and refuses an unseen-airway claim', async ({
+/**
+ * The survey is a naming task (educator feedback, 2026-10-13). Inside a segment that has not been
+ * named, "Which segment is this?" opens among the controls with the names still left; the engine
+ * checks the answer. These helpers do what a learner does and read only what a learner is shown.
+ */
+const NAME_REFUSED =
+  'Not this segment. Look at which lobe you are in and where the opening sat, then choose again.'
+const nameList = (page: Page) => control(page, 'name-segment')
+const namedCount = (page: Page) => page.locator('[data-name-segment-count]')
+const locationCaption = (page: Page) => page.locator('[data-location-caption]')
+
+/**
+ * Drive until the list of names opens. Guided travel follows the lumen. At a fork the picture
+ * decides: the scope enters the opening plainly nearest the centre of the view, and otherwise waits
+ * short of the fork, with the openings in view, until the tip is turned toward one. Once through,
+ * the bend is let go. So the way in is to advance, and wherever the scope waits to bend the tip and
+ * advance again. Returns the rotation and deflection the tip went in with.
+ */
+async function driveIntoUnnamedSegment(page: Page) {
+  const asked = page.locator('[data-name-segment="asked"]')
+  const fork = page.locator('[data-scope-message]', { hasText: 'More than one opening is ahead' })
+  // A quarter turn further at each wait, so the scope does not take every fork the same way.
+  let turn = 0
+  let aim = { rotate: 0, deflect: 0 }
+  for (let press = 0; press < 150 && !(await asked.count()); press += 1) {
+    aim = {
+      rotate: Number(await control(page, 'rotate').inputValue()),
+      deflect: Number(await control(page, 'deflect').inputValue()),
+    }
+    await control(page, 'advance').press('Enter')
+    if ((await asked.count()) || !(await fork.count())) continue
+    await setRange(page, 'rotate', [0, 90, 180, -90][turn++ % 4])
+    await setRange(page, 'deflect', 30)
+  }
+  await expect(asked).toHaveCount(1)
+  await expect(locationCaption(page)).toHaveText(/A segment you have not named yet$/)
+  return aim
+}
+
+/**
+ * Answer the question without knowing the answer: one offered name after another. Every wrong name
+ * is refused and records nothing; the right one is accepted and the list closes.
+ */
+async function nameTheSegment(page: Page) {
+  const list = nameList(page)
+  const message = page.locator('[data-scope-message]')
+  const before = (await namedCount(page).textContent())!
+  const offered = (await list
+    .locator('option:not([value=""])')
+    .evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value),
+    )) as AirwayLabel[]
+  const refused: AirwayLabel[] = []
+  for (const label of offered) {
+    await list.selectOption(label)
+    await expect(message).toHaveText(/^(Yes\. This is |Not this segment\.)/)
+    if ((await message.textContent())!.startsWith('Yes.')) {
+      await expect(message).toHaveText(`Yes. This is ${airwayDisplayName(label)}.`)
+      return { label, refused, offered }
+    }
+    await expect(message).toHaveText(NAME_REFUSED)
+    await expect(namedCount(page)).toHaveText(before)
+    await expect(list).toHaveValue('')
+    await expect(list.locator('option:not([value=""])')).toHaveCount(offered.length)
+    refused.push(label)
+  }
+  throw new Error('None of the offered names was accepted')
+}
+
+test('the survey asks which segment the tip is in, refuses a wrong name and records the right one', async ({
   page,
 }) => {
+  test.setTimeout(240_000)
   await reachAct(page, 'systematic-survey')
   await ready(page)
   const rows = page.locator('[data-inspection-ledger] [data-ledger-row]')
-  // Every segment of both lungs has a line.
+  // Every segment of both lungs has a line. The table is a list of what is named: no menu in it.
   await expect(rows).toHaveCount(18)
-  // The record offers three statuses, under the section's own words, and nothing is declared.
-  const first = page.locator('[data-ledger-row="RB1"] select')
-  expect(await first.locator('option').allTextContents()).toEqual([
-    'Record…',
-    'Seen',
-    'Not seen',
-    'Not reachable',
-  ])
-  await expect(page.locator('[data-inspection-ledger] thead th')).toHaveText([
-    'Airway',
-    'Status',
-    'Record',
-  ])
-  await expect(page.locator('[data-ledger-row="RB1"] td').first()).toHaveText('To do')
-  // Seen needs the scope inside the segment; not reachable needs its opening in view.
-  expect(await first.locator('option[value="inspected"]').isDisabled()).toBe(true)
-  const rb10 = page.locator('[data-ledger-row="RB10"] select')
-  expect(await rb10.locator('option[value="not-safely-accessible"]').isDisabled()).toBe(true)
-  await rb10.selectOption('not-observed')
-  await expect(rb10).toHaveValue('')
-  await expect(page.locator('[data-ledger-row="RB10"]')).toHaveAttribute(
-    'data-ledger-status',
-    'not-observed',
+  await expect(page.locator('[data-inspection-ledger] thead th')).toHaveText(['Segment', 'Status'])
+  await expect(page.locator('[data-inspection-ledger] tbody td')).toHaveText(
+    Array<string>(18).fill('To name'),
   )
-  await expect(page.locator('[data-ledger-row="RB10"] td').first()).toHaveText('Not seen')
+  await expect(page.locator('[data-inspection-ledger] select')).toHaveCount(0)
+  // Above the carina nothing is asked yet, and no name is handed out: no opening names, no
+  // readout of the airway, and every segment's pin on the map is a question mark.
+  const naming = page.locator('[data-name-segment]')
+  await expect(naming).toHaveAttribute('data-name-segment', 'waiting')
+  await expect(nameList(page)).toHaveCount(0)
+  await expect(namedCount(page)).toHaveText('0 of 18 named')
+  await expect(control(page, 'branchLabels')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /opening names/ })).toHaveCount(0)
+  await expect(page.locator('[data-readouts]')).toHaveCount(0)
+  await expect(page.locator('[data-airway-pin][data-unnamed="true"]')).toHaveText(
+    Array<string>(18).fill('?'),
+  )
   await expect(primary(page)).toBeDisabled()
   await expect(skip(page)).toHaveText('Continue without completing')
+
+  // Entering a segment opens the question, with every name still left, by number or by name.
+  await driveIntoUnnamedSegment(page)
+  await expect(nameList(page)).toHaveAccessibleName('Which segment is this?')
+  await expect(nameList(page).locator('option:not([value=""])')).toHaveCount(18)
+  await page.getByRole('radio', { name: 'Names' }).check()
+  await expect(nameList(page).locator('option[value="RB4"]')).toHaveText(
+    'Right middle lobe, lateral',
+  )
+  await page.getByRole('radio', { name: 'Numbers' }).check()
+  await expect(nameList(page).locator('option[value="RB4"]')).toHaveText('RB4')
+  // Where the tip is stays a question until it is answered: on the map, on the card, and in the
+  // help, which says where to answer and not what the answer is.
+  const here = page.locator('[data-airway-pin][aria-current="location"]')
+  await expect(here).toHaveText('?')
+  await expect(here).toHaveAttribute('data-unnamed', 'true')
+  // Where the tip is is said once, by the region strip's caption (owner feedback, 2026-11-03).
+  await expect(locationCaption(page)).toContainText('A segment you have not named yet')
+  await expect(page.locator('[data-goal-now], [data-scope-goals-limit]')).toHaveCount(0)
+  const help = page.locator('[data-goal-help]')
+  await page.locator('[data-now-card]').getByRole('button', { name: 'Show me where' }).click()
+  await expect(help).toHaveText('Choose this segment’s name from the list under the controls.')
+
+  // A wrong name is refused and leaves the count; the right one is recorded and leaves the list.
+  const { label, refused } = await nameTheSegment(page)
+  expect(refused.length).toBeGreaterThan(0)
+  const name = airwayDisplayName(label)
+  await expect(namedCount(page)).toHaveText('1 of 18 named')
+  await expect(naming).toHaveAttribute('data-name-segment', 'waiting')
+  await expect(nameList(page)).toHaveCount(0)
+  await expect(locationCaption(page)).toContainText(name)
+  await expect(help).toHaveText(
+    'Drive into a segment you have not named yet. Its list of names opens under the controls.',
+  )
+  await expect(page.locator(`[data-ledger-row="${label}"] td`)).toHaveText('Named')
+  await expect(
+    page.locator('[data-inspection-ledger] tbody td', { hasText: 'To name' }),
+  ).toHaveCount(17)
+  await expect(page.locator(`[data-airway-pin="${label}"]`)).toHaveText(label)
+  await expect(page.locator(`[data-airway-pin="${label}"]`)).not.toHaveAttribute('data-unnamed')
+  await expect(page.locator('[data-airway-pin][data-unnamed="true"]')).toHaveCount(17)
+  // One segment is not a lung: both goals are still open, and so is the way on.
+  for (const goal of ['right-lung-named', 'left-lung-named'])
+    await expect(page.locator(`[data-goal="${goal}"]`)).toHaveAttribute('data-met', 'false')
+  await expect(primary(page)).toBeDisabled()
   const scene = page.locator('[data-scope-scene]')
-  await expect(scene).toContainText('Seen needs a clear view from inside the segment.')
   await expect(scene).not.toContainText('Declare')
+  await expect(scene).not.toContainText('Record…')
   await expect(scene).not.toContainText('only a declaration records an inspection')
 })
 
 test('a survey left without completing it saves no survey and claims nothing', async ({ page }) => {
+  test.setTimeout(240_000)
   const lesson = await openSection(page, 'systematic-survey')
+  const act = lesson.steps.find((step) => step.interaction.kind === 'scope-task')!
   for (let guard = 0; guard <= lesson.steps.length + 1; guard++) {
     if (await page.locator('[data-section-completion]').count()) break
+    // Part of the survey is done before it is left: one segment named out of eighteen.
+    if ((await stage(page).getAttribute('data-stage')) === act.id) {
+      await ready(page)
+      await driveIntoUnnamedSegment(page)
+      await nameTheSegment(page)
+      await expect(namedCount(page)).toHaveText('1 of 18 named')
+      await expect(skip(page)).toHaveText('Continue without completing')
+    }
     if (await skip(page).count()) await skip(page).click()
     else await primary(page).click()
   }
@@ -663,14 +813,105 @@ test('Practice explains before an answer, lets the learner try again, saves noth
   await page.goto(base + '/practice')
   await page.locator('[data-next-case]').click()
   await expect(page.locator('[data-prediction-choices]')).toBeVisible()
-  await expect(page.locator('a[href*="learn?section="]')).not.toHaveCount(0)
+  // The section a case draws on is named with the explanation or the answer, not before.
+  await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
   await page.getByRole('button', { name: 'Show the explanation' }).click()
   await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-prediction-choices] input').first().check()
   await page.getByRole('button', { name: 'Check my answer' }).click()
   await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await record(page)).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
+})
+
+test('a vignette gives a patient with numbers, one decision, and the register’s value in the reason', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  const links = page.locator('[data-practice-vignettes] [data-practice-case-link]')
+  await expect(links).toHaveCount(VIGNETTES.length)
+  const vignette = VIGNETTES.find((entry) => entry.id === 'vg-one-more-syringe')!
+  await page.locator('[data-practice-browse] summary').click()
+  await page.locator(`[data-practice-case-link="${vignette.id}"]`).click()
+  await expect(page.locator(`[data-practice-case="${vignette.id}"]`)).toContainText('weighs 80 kg')
+  const key = vignette.choices.find((choice) => choice.plausibility === 'best')!
+  await page.locator(`[data-prediction-choices] input[value="${key.id}"]`).check()
+  await page.getByRole('button', { name: 'Check my answer' }).click()
+  const verdict = page.locator('[data-answer-verdict]')
+  await expect(verdict).toHaveAttribute('data-revealed', 'true')
+  await expect(verdict).toContainText('570 mg of a 640 mg limit')
+  await expect(verdict).toContainText('At 8.0 mg/kg his limit is 640 mg.')
+  await expect(page.locator('#main-content')).not.toContainText('{{')
+  expect(await record(page)).toBeNull()
+})
+
+test('a mixed set runs ten cases from many sections, names each section afterwards, and leads to the next set', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await expect(page.locator('[data-practice-set-link]')).toHaveCount(PRACTICE_SETS.length)
+  await expect(page.locator('[data-practice-browse]')).not.toHaveAttribute('open', '')
+  await page.locator('[data-practice-continue]').click()
+  const cases = PRACTICE_SETS[0]
+  for (const [index, entry] of cases.entries()) {
+    const card = page.locator(`[data-practice-case="${entry.id}"]`)
+    await expect(card).toContainText(
+      `set 1 of ${PRACTICE_SETS.length} · case ${index + 1} of ${cases.length}`,
+    )
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
+    await page
+      .locator(`[data-prediction-choices] input[value="${entry.stage.item.correctChoiceIds[0]}"]`)
+      .check()
+    await page.getByRole('button', { name: 'Check my answer' }).click()
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < cases.length - 1) await page.locator('[data-next-case]').click()
+  }
+  await page.locator('[data-next-set]').click()
+  await expect(page.locator(`[data-practice-case="${PRACTICE_SETS[1][0].id}"]`)).toContainText(
+    `set 2 of ${PRACTICE_SETS.length} · case 1 of`,
+  )
+  expect(await record(page)).toBeNull()
+})
+
+test('the image bank asks for a click on a still, upright and rotated, and saves nothing', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await page.locator('[data-practice-image-bank-link]').click()
+  await expect(page).toHaveURL(/\/practice\/images$/)
+  const rows = imageBankSet(1)!.rows
+  for (const [index, row] of rows.entries()) {
+    await expect(page.locator('[data-find-position]')).toHaveText(
+      `Image ${index + 1} of ${rows.length}`,
+    )
+    await expect(page.locator('[data-bronch-find]')).toContainText(row.context)
+    const turn = page.locator('[data-find-rotation]')
+    if (row.rotation) await expect(turn).toHaveAttribute('data-find-rotation', String(row.rotation))
+    else await expect(turn).toHaveCount(0)
+    // The outline is a button by keyboard as well as by pointer.
+    const outline = page.locator(`[data-find-marker="${row.targetId}"]`)
+    await expect(outline).toHaveAttribute('role', 'button')
+    await outline.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-find-verdict]')).toHaveAttribute('data-find-verdict', 'held')
+    await expect(page.locator('[data-find-verdict]')).toBeFocused()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < rows.length - 1) await page.locator('[data-find-next]').click()
+  }
+  await expect(page.locator('[data-image-bank-finished]')).toBeVisible()
+  await page.locator('[data-image-bank-next]').click()
+  await expect(page).toHaveURL(/\/practice\/images\?set=2$/)
+  await expect(page.locator('[data-image-bank]')).toHaveAttribute('data-image-bank-set', '2')
+  await expect(page.locator('[data-find-verdict]')).toHaveCount(0)
   expect(await record(page)).toBeNull()
   expect(await earlierRecord(page)).toBeNull()
 })
@@ -888,6 +1129,8 @@ test('the course remains readable at 200 percent zoom', async ({ page }, info) =
  * learner input mode, and the pane sends it as `scripted`.
  */
 const readout = (page: Page, id: string) => page.locator('[data-readout="' + id + '"]')
+/** A finished goal card's lead in every section (2026-10-13). It says nothing about the view. */
+const GOALS_MET_LEAD = 'All the goals for this task are met.'
 
 test('the worked accessory exchange keeps its false report and still ends protected', async ({
   page,
@@ -896,8 +1139,11 @@ test('the worked accessory exchange keeps its false report and still ends protec
   await ready(page)
   const caption = page.locator('[data-demonstration-caption]')
   const message = page.locator('[data-scope-message]')
+  // The tool's buttons carry its true state on their group (owner feedback, 2026-11-03: the
+  // drop-downs are gone). The controls are live from the start; the example is optional.
   const accessory = control(page, 'accessory')
-  await primary(page).click()
+  await expect(page.locator('[data-scope-controls]')).toBeEnabled()
+  await pilotAction(page, 'Watch the example')
   await expect(caption).toContainText('protected brush enters the channel')
   const captions: string[] = []
   for (let i = 0; i < 7; i++) {
@@ -906,38 +1152,38 @@ test('the worked accessory exchange keeps its false report and still ends protec
     // The assistant's false report is the teaching moment; it must still be here.
     if (/reports it done/.test(captions[i])) {
       await expect(message).toContainText('back in its sheath')
-      await expect(accessory).toHaveValue('brush-exposed')
+      await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-exposed')
     }
     if (/report does not hold/.test(captions[i])) {
       await expect(message).toContainText('disagree')
-      await expect(accessory).toHaveValue('brush-exposed')
+      await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-exposed')
     }
   }
   expect(captions.some((text) => /reports it done/.test(text))).toBe(true)
   expect(captions.some((text) => /report does not hold/.test(text))).toBe(true)
   // The example ends in the state its last line narrates, with no refusal on the way.
   await expect(caption).toContainText('protected brush returns into the channel')
-  await expect(accessory).toHaveValue('brush-sheathed')
-  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-sheathed')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'in-channel')
   await expect(message).toHaveCount(0)
   // Watching it is not doing it: the learner's own attempt starts from nothing.
   await page.getByRole('button', { name: 'Try with guidance' }).click()
-  await expect(accessory).toHaveValue('brush-sheathed')
-  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  await expect(accessory).toHaveAttribute('data-accessory-state', 'brush-sheathed')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'none')
   expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
   expect((await record(page)).reviewedSectionIds).toEqual([])
   // Replaying starts the example again from its first movement, on its own state.
   await page.getByRole('button', { name: 'Replay the example' }).click()
   await expect(caption).toContainText('protected brush enters the channel')
-  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'in-channel')
   await page.getByRole('button', { name: 'Try with guidance' }).click()
-  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  await expect(accessory).toHaveAttribute('data-accessory-position', 'none')
   expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
 
 test.describe('the scripted scene runs on its own clock', () => {
-  // The module config holds motion reduced for the pixel journeys; these two need it running.
+  // The module config holds motion reduced for the pixel journeys; this one needs it running.
   test.use({ contextOptions: { reducedMotion: 'no-preference' } })
 
   test('the authored breath moves on its own, and the crossing becomes reachable', async ({
@@ -963,36 +1209,9 @@ test.describe('the scripted scene runs on its own clock', () => {
     await expect(crossed).toHaveAttribute('data-met', 'true')
   })
 
-  test('the carina hold runs down on its own and finishes on the learner’s actions', async ({
-    page,
-  }) => {
-    const lesson = await openSection(page, 'larynx-and-entry')
-    for (const step of lesson.steps) {
-      if (step.course?.id === 'hold-view') break
-      const leave = skip(page)
-      if (await leave.count()) await leave.click()
-      else await primary(page).click()
-    }
-    await ready(page)
-    const hold = readout(page, 'holdRemaining')
-    await expect(hold).toContainText('scripted seconds still to run')
-    // The clock runs with no learner action at all — and running out is not the hold.
-    await expect(hold).toContainText('the assistant is still waiting', { timeout: 30_000 })
-    for (const id of ['acknowledge', 'capture', 'hold', 'no-drift'])
-      await expect(page.locator('[data-goal="' + id + '"]')).toHaveAttribute('data-met', 'false')
-    await control(page, 'acknowledge').press('Enter')
-    await expect(page.locator('[data-goal="hold"]')).toHaveAttribute('data-met', 'false')
-    await control(page, 'capture').press('Enter')
-    await expect(hold).toContainText('finished')
-    for (const id of ['acknowledge', 'capture', 'hold', 'no-drift'])
-      await expect(page.locator('[data-goal="' + id + '"]')).toHaveAttribute('data-met', 'true')
-    await expect(primary(page)).toBeEnabled()
-    // The lead reports the record and the live readings; it never approves the image.
-    await expect(page.locator('[data-now-status]')).toHaveText(
-      'Recorded: every step this card asks for, and its live readings hold.',
-    )
-    await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'mixed')
-  })
+  // The scripted hold above the carina is no longer a course activity (2026-10-13), so its browser
+  // test has no lesson step to run on. The engine's hold is covered by Jest
+  // (`scope-playback.test.tsx`, through `test-support/carinaTasks.ts`).
 })
 
 test('closed folds still refuse the advance, and the manual step is the reduced-motion way on', async ({
@@ -1057,30 +1276,31 @@ for (const viewport of [
       await expect(carina).toHaveAttribute('data-met', 'true')
       const status = page.locator('[data-now-status]')
       const heading = page.locator('[data-goal-group]')
-      const limit = page.locator('[data-goal-now]')
-      await expect(status).toHaveText('Recorded: every step this card asks for.')
-      await expect(heading).toHaveText('On the record for this attempt')
-      // A rewritten section's card says where the tip is and nothing about what it does not judge.
-      await expect(limit).toContainText('Where the tip is now')
-      await expect(limit).not.toContainText('usable')
+      // Where the tip is: said once, by the region strip's caption on this steering step.
+      const limit = locationCaption(page)
+      // The goal card's plain wording (2026-10-13): what is done, never that the view is a good one.
+      await expect(status).toHaveText(GOALS_MET_LEAD)
+      await expect(heading).toHaveText('Goals met')
+      await expect(page.locator('[data-goal-claim-tag]')).toHaveCount(0)
+      // A rewritten section says where the tip is, once, and nothing about what it does not judge.
+      await expect(limit).toBeVisible()
+      await expect(page.locator('[data-goal-now], [data-scope-goals-limit]')).toHaveCount(0)
+      await expect(page.locator('[data-now-card]')).not.toContainText('usable')
       // Keep going past the target, the way the walkthrough did.
       for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
-      // The events happened, so the ticks stay; the headline still reports only the record.
+      // The events happened, so the ticks stay; the headline still reports only the goals.
       await expect(carina).toHaveAttribute('data-met', 'true')
-      await expect(status).toHaveText('Recorded: every step this card asks for.')
+      await expect(status).toHaveText(GOALS_MET_LEAD)
       await expect(page.locator('[data-now-card]')).not.toContainText(
         'Every goal on this card is met',
       )
       // Where the tip is now stays visible, and separate from the record.
-      await expect(limit).toContainText('Where the tip is now:')
-      await expect(limit).not.toContainText('Where the tip is now: Trachea.')
+      await expect(limit).toBeVisible()
+      await expect(limit).not.toContainText(/The (trachea|main carina) \(/)
       expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
       // The pane's own green list carries the same framing, not a bare row of ticks.
-      await expect(page.locator('[data-scope-goals-group]')).toHaveText(
-        'On the record for this attempt',
-      )
-      await expect(page.locator('[data-scope-goals-limit]')).toContainText('Where the tip is now')
-      await expect(page.locator('[data-scope-goals-limit]')).not.toContainText('usable')
+      await expect(page.locator('[data-scope-goals-group]')).toHaveText('Goals met')
+      await expect(page.locator('[data-scope-goal-now]')).not.toContainText('usable')
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true)
@@ -1110,8 +1330,8 @@ for (const viewport of [
         await expect.poll(themeOf, { timeout: 10_000 }).not.toBe(first)
         await expect(heading).toBeVisible()
         await expect(limit).toBeVisible()
-        await expect(status).toHaveText('Recorded: every step this card asks for.')
-        await expect(page.locator('[data-scope-goals-limit]')).toBeVisible()
+        await expect(status).toHaveText(GOALS_MET_LEAD)
+        await expect(page.locator('[data-scope-goal-now]')).toBeVisible()
         await shot(await themeOf())
       }
       expect(
@@ -1121,19 +1341,52 @@ for (const viewport of [
   )
 }
 
-test('a completed inspection record stays a record after the scope leaves those airways', async ({
+test('a named segment stays named after the scope leaves it, and is not asked again', async ({
   page,
 }) => {
   test.setTimeout(240_000)
   await reachAct(page, 'systematic-survey')
   await ready(page)
-  // Every goal on this card reads the attempt: the sequences it walked and the record it wrote.
+  // Both goals on this card read the attempt's record: what was named, not where the tip is.
   const rows = page.locator('[data-step-goals] li')
-  await expect(rows).toHaveCount(3)
-  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
+  await expect(rows).toHaveCount(2)
+  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(2)
   await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
+  await expect(page.locator('[data-goal-group]')).toHaveText('Goals for this task')
   await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
-  await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
+  await expect(locationCaption(page)).toBeVisible()
+  await expect(page.locator('[data-goal-now]')).toHaveCount(0)
+
+  const aim = await driveIntoUnnamedSegment(page)
+  const { label } = await nameTheSegment(page)
+  const name = airwayDisplayName(label)
+  const caption = locationCaption(page)
+  const named = async () => {
+    await expect(namedCount(page)).toHaveText('1 of 18 named')
+    await expect(page.locator(`[data-ledger-row="${label}"] td`)).toHaveText('Named')
+    await expect(page.locator(`[data-airway-pin="${label}"]`)).toHaveText(label)
+    await expect(page.locator('[data-airway-pin][data-unnamed="true"]')).toHaveCount(17)
+    await expect(page.locator('[data-name-segment]')).toHaveAttribute(
+      'data-name-segment',
+      'waiting',
+    )
+  }
+  await named()
+  // Out of the segment, back into the airway it came off: the record does not follow the tip.
+  for (let i = 0; i < 30 && (await caption.textContent())!.includes(name); i += 1)
+    await control(page, 'withdraw').press('Enter')
+  await expect(caption).not.toContainText(name)
+  await expect(page.locator(`[data-airway-pin="${label}"]`)).not.toHaveAttribute('aria-current')
+  await named()
+  // Back in through the same opening, aimed as before: it is printed by name now, and the question
+  // is not repeated.
+  await setRange(page, 'rotate', aim.rotate)
+  await setRange(page, 'deflect', aim.deflect)
+  for (let i = 0; i < 30 && !(await caption.textContent())!.includes(name); i += 1)
+    await control(page, 'advance').press('Enter')
+  await expect(caption).toContainText(name)
+  await expect(nameList(page)).toHaveCount(0)
+  await named()
 })
 
 /**
@@ -1590,7 +1843,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize(viewport)
-      const { step } = await stepTo(page, 'what-completion-means', 'prediction')
+      const { step } = await stepTo(page, 'ventilated-patient', 'prediction')
       if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
       const { item } = step.interaction.stage
       const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
@@ -1616,7 +1869,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    const { step } = await stepTo(page, 'what-completion-means', 'sort')
+    const { step } = await stepTo(page, 'ventilated-patient', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
@@ -1801,7 +2054,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     const dock = page.locator('[data-scope-controls]')
     if ((await page.locator('[data-three-state]').getAttribute('data-three-state')) !== 'ready')
       await expect(dock).toHaveAttribute('disabled', '')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     const compass = page.locator('[data-tip-compass]')
     for (const angle of [0, 15, 60, -60, 120, -120]) {
@@ -1825,7 +2077,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     await setRange(page, 'deflect', 0)
 
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 30)
     for (const [rotation, bendUp, words] of [
@@ -2401,7 +2652,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 0)
     await setRange(page, 'rotate', 0)
@@ -2493,7 +2743,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     await setRange(page, 'deflect', 0)
     await control(page, 'deflect').focus()
@@ -2515,7 +2764,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
     await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
-    await pilotAction(page, 'Try with guidance')
     await ready(page)
     const pane = page.locator('[data-scope-scene]')
     const overlay = page.locator('[data-bench-off-card]')
@@ -2574,4 +2822,425 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     const savedAfter = await record(page)
     expect({ ...savedAfter, updatedAt: null }).toEqual({ ...savedBefore, updatedAt: null })
   })
+})
+
+/**
+ * Educator feedback, 2026-10-13 (`docs/bronchoscopy-foundations/review/feedback-2026-10-13.md`), on
+ * the real route with native input: guided travel that pauses short of every fork and enters the
+ * opening at the centre of the picture, the screen on where the operator stands, the right lung's
+ * opening view, and the course's own frames.
+ */
+test.describe('Feedback 2026-10-13: guided travel, orientation and the course’s own frames', () => {
+  const FORK_WAITS =
+    'More than one opening is ahead. Bend the tip toward the one you want, then advance.'
+  const FORK_AHEAD =
+    'A fork. Advance again to enter the opening at the centre of the view, or bend toward another first.'
+  const THROUGH = 'Through the opening. The tip is straight again, in line with this airway.'
+
+  test('above the carina a straight tip waits with both openings named, a bend chooses one, and the task ends back in the trachea', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-carina')
+    await ready(page)
+    const message = page.locator('[data-scope-message]')
+    const signal = page.locator('[data-three-state] [data-view-signal]')
+    const caption = locationCaption(page)
+    const goal = (id: string) => page.locator(`[data-step-goals] [data-goal="${id}"]`)
+    // To the carina, into the right, back, into the left, back. No wall contact is counted here.
+    await expect(page.locator('[data-step-goals] li')).toHaveCount(5)
+    await expect(page.locator('[data-goal-group]')).toHaveText('Goals for this task')
+    await expect(page.locator('[data-scope-goals-group]')).toHaveText('Your next goal')
+    await expect(readout(page, 'currentAirway')).toHaveCount(1)
+    await expect(readout(page, 'contactCount')).toHaveCount(0)
+
+    // Down the trachea with a straight tip. Short of the carina two openings are about equally
+    // ahead: the scope waits, says why, and the field stays clear.
+    const waits = page.locator('[data-scope-message]', { hasText: 'More than one opening' })
+    for (let i = 0; i < 80 && !(await waits.count()); i += 1)
+      await control(page, 'advance').press('Enter')
+    await expect(message).toHaveText(FORK_WAITS)
+    await expect(goal('reach-carina')).toHaveAttribute('data-met', 'true')
+    // It waits where the choice can be seen: both openings are in the picture, each with its name.
+    const names = page.locator('[data-three-state] [data-ostium-pin]')
+    /** Where each opening's name is drawn, in percent of the picture. */
+    const placed = async () =>
+      Object.fromEntries(
+        await names.evaluateAll((pins) =>
+          pins.map((pin) => {
+            const { left, top } = (pin as HTMLElement).style
+            return [pin.getAttribute('data-ostium-pin')!, [parseFloat(left), parseFloat(top)]]
+          }),
+        ),
+      ) as Record<string, [number, number]>
+    /** The same names in the same places: the tip is where it was, turned as it was. */
+    const expectSamePicture = async (expected: Record<string, [number, number]>) => {
+      const now = await placed()
+      expect(Object.keys(now).sort()).toEqual(Object.keys(expected).sort())
+      for (const [label, [left, top]] of Object.entries(expected)) {
+        expect(Math.abs(now[label][0] - left), label).toBeLessThan(0.5)
+        expect(Math.abs(now[label][1] - top), label).toBeLessThan(0.5)
+      }
+    }
+    await expect(names).toHaveCount(2)
+    for (const label of ['RMSB', 'LMSB'])
+      await expect(page.locator(`[data-three-state] [data-ostium-pin="${label}"]`)).toBeVisible()
+    // Pressing on without choosing moves nothing: the same message, the same picture.
+    const waitingView = await placed()
+    await control(page, 'advance').press('Enter')
+    await expect(message).toHaveText(FORK_WAITS)
+    await expectSamePicture(waitingView)
+    await expect(caption).toContainText('main carina')
+    await expect(goal('enter-right')).toHaveAttribute('data-met', 'false')
+    await expect(control(page, 'deflect')).toHaveValue('0')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+
+    // A quarter turn of the control section puts one opening above the centre of the picture and
+    // the other below it, so the lever (U toward the top of the picture) can choose between them.
+    await setRange(page, 'rotate', -90)
+    await expect(names).toHaveCount(2)
+    /** How far each named opening in the picture is from the picture's centre, in CSS pixels. */
+    const offCentre = async () =>
+      Object.fromEntries(
+        await names.evaluateAll((pins) =>
+          pins.map((pin) => {
+            const field = (
+              (pin as HTMLElement).offsetParent ?? pin.parentElement!
+            ).getBoundingClientRect()
+            const box = pin.getBoundingClientRect()
+            return [
+              pin.getAttribute('data-ostium-pin')!,
+              Math.hypot(
+                box.left + box.width / 2 - (field.left + field.width / 2),
+                box.top + box.height / 2 - (field.top + field.height / 2),
+              ),
+            ]
+          }),
+        ),
+      ) as Record<string, number>
+    const above = Object.fromEntries(
+      await names.evaluateAll((pins) =>
+        pins.map((pin) => [
+          pin.getAttribute('data-ostium-pin')!,
+          parseFloat((pin as HTMLElement).style.top) < 50,
+        ]),
+      ),
+    ) as Record<'RMSB' | 'LMSB', boolean>
+    expect(above.RMSB).not.toBe(above.LMSB)
+    // The turn moved the names in the picture, not the tip: this is the waiting place, as turned.
+    const waitingPlace = await placed()
+
+    for (const [label, name, entered, back] of [
+      ['RMSB', 'Right main bronchus', 'enter-right', 'back-to-trachea'],
+      ['LMSB', 'Left main bronchus', 'enter-left', 'back-from-left'],
+    ] as const) {
+      // The picture decides. The bend brings the wanted opening toward the centre of the picture,
+      // nearer than any other name in view, and that is the opening the next Advance enters.
+      const straight = await offCentre()
+      await setRange(page, 'deflect', above[label] ? 30 : -30)
+      await expect.poll(async () => (await offCentre())[label]).toBeLessThan(straight[label])
+      const bent = await offCentre()
+      expect(bent[label]).toBe(Math.min(...Object.values(bent)))
+      // A bent tip under guided travel is not a wall contact: no red field, no refusal for it.
+      await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+      // From the waiting place, one Advance carries the tip through the fork into that opening.
+      await control(page, 'advance').press('Enter')
+      await expect(caption).toContainText(name)
+      await expect(goal(entered)).toHaveAttribute('data-met', 'true')
+      // Through the fork the bend is let go; the turn of the control section is the learner's.
+      await expect(message).toHaveText(THROUGH)
+      await expect(control(page, 'deflect')).toHaveValue('0')
+      await expect(control(page, 'rotate')).toHaveValue('-90')
+      await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+      await expect(goal(back)).toHaveAttribute('data-met', 'false')
+      // One Withdraw comes back out to the waiting place in the trachea, where both openings are
+      // in the picture again, each with its name where it was.
+      await control(page, 'withdraw').press('Enter')
+      await expect(caption).toContainText('main carina')
+      await expect(goal(back)).toHaveAttribute('data-met', 'true')
+      await expect(names).toHaveCount(2)
+      await expectSamePicture(waitingPlace)
+    }
+
+    // The finished card says the goals are met, in plain words, and tags no row.
+    await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(5)
+    await expect(page.locator('[data-goal-group]')).toHaveText('Goals met')
+    await expect(page.locator('[data-scope-goals-group]')).toHaveText('Goals met')
+    await expect(page.locator('[data-now-status]')).toHaveText(GOALS_MET_LEAD)
+    await expect(page.locator('[data-goal-claim-tag]')).toHaveCount(0)
+    await expect(caption).toContainText(/The (trachea|main carina) \(/)
+    await expect(primary(page)).toBeEnabled()
+    expect((await record(page)).reviewedSectionIds).toEqual([])
+  })
+
+  test('a fork with one opening plainly ahead: the scope pauses once and says so, and the next Advance enters the opening at the centre', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await walkToStep(page, 'right-side', 'right-side-flow-v1-application')
+    await ready(page)
+    const message = page.locator('[data-scope-message]')
+    const caption = locationCaption(page)
+    const signal = page.locator('[data-three-state] [data-view-signal]')
+    const atFork = page.locator('[data-scope-message]', {
+      hasText: /^(A fork\.|More than one opening is ahead\.)/,
+    })
+    const toTheFork = async () => {
+      for (let i = 0; i < 12 && !(await atFork.count()); i += 1)
+        await control(page, 'advance').press('Enter')
+    }
+    // From the opening view the lower lobe is plainly nearest the centre of the picture. The scope
+    // still stops short of the fork, once, and says what the next Advance will do.
+    await toTheFork()
+    await expect(message).toHaveText(FORK_AHEAD)
+    await expect(caption).toContainText('Bronchus intermedius')
+    await expect(control(page, 'rotate')).toHaveValue('44')
+    await expect(control(page, 'deflect')).toHaveValue('-3')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+    // The next press enters the opening at the centre of the view, and the slight bend is let go.
+    await control(page, 'advance').press('Enter')
+    await expect(caption).toContainText('Right lower lobe bronchus')
+    await expect(message).toHaveText(THROUGH)
+    await expect(control(page, 'deflect')).toHaveValue('0')
+    await expect(control(page, 'rotate')).toHaveValue('44')
+    // One press, one fork: the press after that stops for the lower lobe's own fork.
+    await control(page, 'advance').press('Enter')
+    await expect(atFork).toHaveCount(1)
+    await expect(caption).toContainText('Right lower lobe bronchus')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+
+    // "Or bend toward another first": from the same pause, lifting the tip toward the middle lobe
+    // at the top of the picture sends the same single press there instead.
+    await control(page, 'reset').click()
+    await expect(caption).toContainText('Bronchus intermedius')
+    await expect(control(page, 'deflect')).toHaveValue('-3')
+    await toTheFork()
+    await expect(message).toHaveText(FORK_AHEAD)
+    await setRange(page, 'deflect', 18)
+    await control(page, 'advance').press('Enter')
+    await expect(caption).toContainText('Right middle lobe bronchus')
+    await expect(message).toHaveText(THROUGH)
+    await expect(control(page, 'deflect')).toHaveValue('0')
+    await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+    expect((await record(page)).reviewedSectionIds).toEqual([])
+  })
+
+  test('where you stand: each position turns the view above the carina and its table of landmarks', async ({
+    page,
+  }) => {
+    const screenId = 'larynx-and-entry-flow-v1-where-you-stand'
+    const { lesson } = await walkToStep(page, 'larynx-and-entry', screenId)
+    // After the carina stills, before the carina task.
+    const at = lesson.steps.findIndex((step) => step.id === screenId)
+    expect(lesson.steps[at - 1].id).toBe('larynx-and-entry-flow-v1-trachea-and-carina')
+    expect(lesson.steps[at + 1].id).toBe('larynx-and-entry-flow-v1-carina')
+    const compass = page.locator('[data-orientation-compass]')
+    const picture = compass.locator('svg[data-compass-turn]')
+    const reading = compass.locator('[data-compass-reading]')
+    await expect(compass).toBeVisible()
+    // A screen to read: nothing on it can be left undone.
+    await expect(skip(page)).toHaveCount(0)
+    await expect(primary(page)).toBeEnabled()
+    const before = await record(page)
+    // From the head of the bed, by the clock: the view the rest of the course teaches.
+    const headOfBed = {
+      'membranous-wall': 6,
+      'right-main': 3,
+      'left-main': 9,
+      'right-upper': 3,
+      'middle-lobe': 12,
+      'right-superior': 6,
+      'left-upper': 9,
+      'left-superior': 6,
+    }
+    await expect(compass.locator('[data-compass-landmark]')).toHaveCount(8)
+    for (const position of [
+      { id: 'head', turn: 0, top: 'the front of the chest' },
+      { id: 'facing', turn: 180, top: 'the patient’s back' },
+      { id: 'bedside-right', turn: 90, top: 'the patient’s left side' },
+      { id: 'bedside-left', turn: 270, top: 'the patient’s right side' },
+    ]) {
+      const button = compass.locator(`button[data-operator-position="${position.id}"]`)
+      await button.focus()
+      await page.keyboard.press('Enter')
+      await expect(button).toHaveAttribute('aria-pressed', 'true')
+      await expect(compass.locator('button[aria-pressed="true"]')).toHaveCount(1)
+      await expect(picture).toHaveAttribute('data-compass-turn', String(position.turn))
+      await expect(reading).toHaveAttribute('data-compass-reading', position.id)
+      await expect(reading).toContainText(`The top of your screen is ${position.top}.`)
+      // Every row is the head-of-the-bed row, turned with the picture.
+      for (const [id, hour] of Object.entries(headOfBed))
+        await expect(compass.locator(`[data-compass-landmark="${id}"] td`).last()).toHaveText(
+          `${((hour + position.turn / 30 - 1) % 12) + 1} o’clock`,
+        )
+      // The compass on the rim is the patient's: its front (A) leaves 12 o'clock by the same turn.
+      await expect
+        .poll(() =>
+          picture.evaluate((svg) => {
+            const disc = (letter: string) => {
+              const circle = svg.querySelector(`[data-compass-mark="${letter}"] circle`)!
+              return { x: Number(circle.getAttribute('cx')), y: Number(circle.getAttribute('cy')) }
+            }
+            const front = disc('A')
+            const back = disc('P')
+            const deg = (Math.atan2(front.x - back.x, back.y - front.y) * 180) / Math.PI
+            return Math.round(deg + 360) % 360
+          }),
+        )
+        .toBe(position.turn)
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true)
+    }
+    // Choosing where to stand is reading: it writes nothing, and the carina task is next.
+    expect({ ...(await record(page)), updatedAt: null }).toEqual({ ...before, updatedAt: null })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(picture).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    await primary(page).click()
+    await expect(stage(page)).toHaveAttribute('data-stage', 'larynx-and-entry-flow-v1-carina')
+  })
+
+  test('the right lung’s practice opens on the middle lobe view, and Recenter and Reset return to it', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await walkToStep(page, 'right-side', 'right-side-flow-v1-application')
+    await ready(page)
+    const opening = async () => {
+      // Mid-way along the bronchus intermedius, turned so the middle lobe is at the top.
+      await expect(control(page, 'rotate')).toHaveValue('44')
+      await expect(control(page, 'deflect')).toHaveValue('-3')
+      await expect(page.locator('[data-scope-controls] label output')).toHaveText(['44°', '-3°'])
+      await expect(readout(page, 'currentAirway')).toContainText('Bronchus intermedius')
+      await expect(page.locator('[data-three-state] [data-view-signal]')).toHaveAttribute(
+        'data-view-signal',
+        'clear',
+      )
+    }
+    await opening()
+    await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(0)
+    await setRange(page, 'rotate', 120)
+    await setRange(page, 'deflect', 25)
+    await expect(page.locator('[data-scope-controls] label output')).toHaveText(['120°', '25°'])
+    await control(page, 'recenter').click()
+    await opening()
+    await setRange(page, 'rotate', 0)
+    await control(page, 'withdraw').press('Enter')
+    await control(page, 'reset').click()
+    await opening()
+    expect((await record(page)).reviewedSectionIds).toEqual([])
+  })
+
+  test('the right main bronchus still is the view from above the carina, and the survey video opens on its own first frame', async ({
+    page,
+  }) => {
+    const still = '/bronchoscopy-foundations/find-frames/right-main-origin.jpg'
+    // Both tours that show the right main bronchus use the course's own frame, outlined.
+    for (const [section, stepId] of [
+      ['larynx-and-entry', 'larynx-and-entry-flow-v1-trachea-and-carina'],
+      ['right-side', 'right-side-flow-v1-upper-lobe'],
+    ] as const) {
+      await walkToStep(page, section, stepId)
+      const tour = page.locator('[data-normal-airway-tour]')
+      await tour.locator('button[data-tour-airway="RMSB"]').click()
+      const figure = tour.locator('figure[data-media-id="rmb"]')
+      await expect(figure.locator('img')).toHaveAttribute('src', still)
+      await expect
+        .poll(() =>
+          figure.locator('img').evaluate((image) => (image as HTMLImageElement).naturalWidth),
+        )
+        .toBeGreaterThan(0)
+      await expect(figure.locator('polygon[data-media-outline]')).toHaveCount(1)
+      await expect(page.locator('[data-media-state="failed"]')).toHaveCount(0)
+    }
+    // Before it plays, the survey video shows its own first frame.
+    const poster = '/bronchoscopy-foundations/survey/opening-frame.jpg'
+    await walkToStep(page, 'systematic-survey', 'systematic-survey-flow-v1-the-order')
+    const video = page.locator('[data-stage] video')
+    await expect(video).toHaveCount(1)
+    await expect(video).toHaveAttribute('poster', poster)
+    expect(await video.evaluate((element) => (element as HTMLVideoElement).paused)).toBe(true)
+    const response = await page.request.get(poster)
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toContain('image/jpeg')
+  })
+})
+
+test('the outside 3D view takes the flat map’s place beside the scope view, and gives it back', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await walkToStep(page, 'right-side', 'right-side-flow-v1-application')
+  await ready(page)
+  const views = page.locator('[data-three-state]')
+  await expect(page.locator('[data-map-column]')).toBeVisible()
+  await expect(views).not.toHaveAttribute('data-observer', 'true')
+
+  await page.locator('[data-show-position-view]').click()
+  await expect(page.locator('[data-map-column]')).toHaveCount(0)
+  await expect(views).toHaveAttribute('data-observer', 'true')
+  await expect(page.locator('[data-position-note]')).toContainText('patient’s right is on the left')
+  // It names no airway: the step's opening names are off, and the outside view adds none.
+  await expect(page.locator('[data-ostium-pin]:not([aria-label="An opening ahead"])')).toHaveCount(
+    0,
+  )
+  // The goal, both views and the controls under them stay on one laptop screen.
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const dockBottom = await page
+    .locator('[data-scope-controls]')
+    .evaluate((element) => element.getBoundingClientRect().bottom)
+  expect(dockBottom).toBeLessThanOrEqual(768)
+  // The controls still drive the scope with the outside view open: it travels to the next fork,
+  // where the scope waits and says so.
+  for (let press = 0; press < 8; press += 1) {
+    if (await page.locator('[data-scope-message]').count()) break
+    await control(page, 'advance').click()
+  }
+  await expect(page.locator('[data-scope-message]')).toBeVisible()
+
+  await page.locator('[data-show-flat-map]').click()
+  await expect(page.locator('[data-map-column]')).toBeVisible()
+  await expect(views).not.toHaveAttribute('data-observer', 'true')
+})
+
+test('the control head is worked by hand: the lever by a drag down, the wrist by a drag across', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await walkToStep(page, 'five-controls', 'five-controls-learn-rotation')
+  await ready(page)
+  const layer = page.locator('[data-head-drag]')
+  await expect(layer).toHaveAttribute('data-head-drag', 'lever wrist')
+  await expect(layer).toHaveAttribute('data-head-drag-enabled', 'true')
+  await expect(page.locator('[data-head-drag-hint]')).toContainText('Drag up or down')
+  const box = (await layer.boundingBox())!
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+
+  // Down on the lever: the tip goes toward U, and the head does not turn.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x, y + 50, { steps: 5 })
+  await page.mouse.up()
+  await expect(control(page, 'deflect')).toHaveValue('60')
+  await expect(control(page, 'rotate')).toHaveValue('0')
+  await expect(page.locator('[data-control-head]')).toHaveAttribute(
+    'data-lever-deflection',
+    '60.00',
+  )
+
+  // Across the head: it turns with the hand, and the lever stays where it was left.
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + 40, y, { steps: 4 })
+  await page.mouse.up()
+  await expect(control(page, 'rotate')).toHaveValue('36')
+  await expect(control(page, 'deflect')).toHaveValue('60')
+  // The sliders under the view remain the keyboard path.
+  await control(page, 'deflect').press('ArrowLeft')
+  await expect(control(page, 'deflect')).toHaveValue('59')
 })

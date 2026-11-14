@@ -67,16 +67,14 @@ export function DTSImage({ sweep, plane }: { sweep: number; plane: number }) {
       <div
         className={styles.radiograph}
         role="img"
-        aria-label={`CT-derived shift-and-add plane at ${plane} millimeters, from 13 projections over ${sweep} degrees. The target and instrument were added to the teaching volume.`}
+        aria-label={`Reconstructed plane at ${plane} millimeters, from 13 projections over ${sweep} degrees, with the lesion and the tool.`}
       >
         <canvas ref={canvas} width={256} height={256} aria-hidden="true" />
         <div className={styles.imageHeader}>
           <span>Limited-angle plane</span>
           <span>{plane} mm</span>
         </div>
-        <div className={styles.imageFooter}>
-          CT + model target / tool · background-suppressed shift-and-add
-        </div>
+        <div className={styles.imageFooter}>Shift-and-add reconstruction · lesion and tool</div>
         {status !== 'ready' && (
           <div className={styles.imageStatus}>
             {status === 'loading'

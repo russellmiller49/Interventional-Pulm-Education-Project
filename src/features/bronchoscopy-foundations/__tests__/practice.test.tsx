@@ -5,6 +5,7 @@ import { axe } from 'jest-axe'
 import { BronchCaseActivity } from '../components/BronchCaseActivity'
 import { BronchoscopyFoundationsPracticeLanding } from '../components/BronchoscopyFoundationsPracticeLanding'
 import { bronchMicroCasesInPathwayOrder, microCaseAttemptKey } from '../content/microCases'
+import { PRACTICE_SETS, PRACTICE_SET_SIZE, practiceSetErrors } from '../content/practiceSets'
 import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -129,13 +130,50 @@ describe('a practice case', () => {
     expect(screen.getByText(/Back to the case list/)).toBeInTheDocument()
   })
 
-  it('names the section it draws on before any answer, so the idea can be reviewed', () => {
+  it('names the section it draws on only after an answer or the explanation (rewrite plan)', () => {
     const microCase = cases()[0]
     render(<BronchCaseActivity caseId={microCase.id} />)
+    // Before an answer the section would give the idea away.
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
+    expect(document.querySelector('a[href*="learn?section="]')).toBeNull()
+    fireEvent.click(document.querySelector('[data-show-explanation]')!)
     expect(document.querySelector('[data-case-pairing] a')).toHaveAttribute(
       'href',
       `/bronchoscopy-foundations/learn?section=${microCase.sectionId}`,
     )
+    fireEvent.click(document.querySelector('[data-show-explanation]')!)
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
+    checkChoice(microCase.stage.item.choices[0].id)
+    expect(document.querySelector('[data-case-pairing] a')).not.toBeNull()
+  })
+
+  it('keeps the way on inside a mixed set, then offers the next set', () => {
+    const first = PRACTICE_SETS[0]
+    render(<BronchCaseActivity caseId={first[0].id} set={1} />)
+    expect(document.body).toHaveTextContent(
+      `Practice · set 1 of ${PRACTICE_SETS.length} · case 1 of ${first.length}`,
+    )
+    expect(document.querySelector('[data-nav-next-case]')).toHaveAttribute(
+      'href',
+      `/bronchoscopy-foundations/practice?case=${first[1].id}&set=1`,
+    )
+    checkChoice(first[0].stage.item.choices[0].id)
+    expect(document.querySelector('[data-next-case]')).toHaveAttribute(
+      'data-next-case',
+      first[1].id,
+    )
+    cleanup()
+    render(<BronchCaseActivity caseId={first[first.length - 1].id} set={1} />)
+    checkChoice(first[first.length - 1].stage.item.choices[0].id)
+    expect(document.querySelector('[data-next-case]')).toBeNull()
+    expect(document.querySelector('[data-next-set]')).toHaveAttribute(
+      'href',
+      `/bronchoscopy-foundations/practice?case=${PRACTICE_SETS[1][0].id}&set=2`,
+    )
+    cleanup()
+    // A set the case is not in is ignored: the case opens in the whole list.
+    render(<BronchCaseActivity caseId={first[0].id} set={2} />)
+    expect(document.body).not.toHaveTextContent('· set 2 of')
   })
 
   it('lists the local policies a decision depends on with the feedback or explanation, and only when there are any', () => {
@@ -164,6 +202,18 @@ describe('a practice case', () => {
   })
 })
 
+describe('the mixed practice sets', () => {
+  it('deal every case once into sets of ten, half vignettes, with no two from one section or topic side by side', () => {
+    expect(practiceSetErrors()).toEqual([])
+    expect(PRACTICE_SETS.flat()).toHaveLength(cases().length)
+    for (const setCases of PRACTICE_SETS.slice(0, -1)) {
+      expect(setCases).toHaveLength(PRACTICE_SET_SIZE)
+      expect(setCases.filter((entry) => entry.vignetteTopic).length).toBe(PRACTICE_SET_SIZE / 2)
+      expect(new Set(setCases.map((entry) => entry.sectionId)).size).toBeGreaterThanOrEqual(5)
+    }
+  })
+})
+
 describe('the practice landing', () => {
   it('lists every case in pathway order behind one door', async () => {
     const { container } = render(<BronchoscopyFoundationsPracticeLanding />)
@@ -172,11 +222,18 @@ describe('the practice landing', () => {
     )
     expect(links).toEqual(cases().map((microCase) => microCase.id))
     expect(document.querySelector('[data-practice-list]')).not.toBeNull()
+    // The one door is the first mixed set; the full list is behind a disclosure, closed.
     expect(document.querySelectorAll('[data-practice-continue]')).toHaveLength(1)
-    expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
-      'data-next-case',
-      cases()[0].id,
+    const door = document.querySelector('[data-practice-continue]')!
+    expect(door).toHaveAttribute('data-next-case', PRACTICE_SETS[0][0].id)
+    expect(door).toHaveAttribute(
+      'href',
+      `/bronchoscopy-foundations/practice?case=${PRACTICE_SETS[0][0].id}&set=1`,
     )
+    expect(document.querySelectorAll('[data-practice-set-link]')).toHaveLength(PRACTICE_SETS.length)
+    const browse = document.querySelector<HTMLDetailsElement>('[data-practice-browse]')!
+    expect(browse.open).toBe(false)
+    expect(browse.querySelectorAll('[data-practice-case-link]')).toHaveLength(cases().length)
     expect(await axe(container)).toHaveNoViolations()
   })
 
@@ -197,7 +254,7 @@ describe('the practice landing', () => {
     render(<BronchoscopyFoundationsPracticeLanding />)
     expect(document.querySelector('[data-practice-continue]')).toHaveAttribute(
       'data-next-case',
-      all[0].id,
+      PRACTICE_SETS[0][0].id,
     )
     expect(document.querySelector('[data-decided]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/first decision|decided once|capstone/i)

@@ -161,7 +161,7 @@ export const section: BronchSectionDefinition = {
       assists: {},
       script: 'red-out',
       litAirways: ['TR'],
-      boundary: 'The red field is scripted for practice.',
+      boundary: 'The red field is set up for practice.',
     },
   },
 
@@ -178,7 +178,7 @@ export const section: BronchSectionDefinition = {
       readouts: ['contactCount', 'lossOfViewCount'],
       script: 'red-out',
       litAirways: ['TR'],
-      boundary: 'The red field is scripted for practice.',
+      boundary: 'The red field is set up for practice.',
     },
     goals: [
       {
@@ -288,7 +288,7 @@ export const section: BronchSectionDefinition = {
         readouts: ['currentAirway'],
         script: 'lens-contamination',
         litAirways: ['TR'],
-        boundary: 'The smear is scripted for practice.',
+        boundary: 'The smear is set up for practice.',
       },
       goals: [
         {

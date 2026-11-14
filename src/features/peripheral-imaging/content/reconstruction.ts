@@ -51,7 +51,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
     analogy:
       'Think of sliding a stack of transparencies until one object lines up: what sits at the chosen depth reinforces, and everything nearer or further spreads into a smear.',
     measured:
-      'A short arc of images — thirteen in this section — acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
+      'A short series of images acquired as the C-arm moves through a limited arc, all from roughly the same side of the patient. On the bronchoscopy systems in use that arc is usually fifty to seventy degrees; CT acquires over a hundred and eighty degrees or more.',
     built: [
       'Choose a depth. Every structure sitting at that depth lands on the same spot in each image once the images are shifted by the amount that depth would move between views.',
       'Shift each image by that amount and average them. What sits at the chosen depth reinforces; everything nearer or further spreads out and fades into a smear. Repeat for another depth and another picture appears.',
@@ -73,7 +73,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
       'Anything about a structure the arc never covered from a useful angle, however clean the image of it looks.',
     ],
     boundary:
-      'This section shows the plain version and only that: thirteen parallel-beam projections of a teaching volume, shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur is visible here on purpose — it is the cue a CT-like rendering does not leave you. No vendor algorithm, no scatter model and no measured detector response is involved.',
+      'The DTS image in this course is the plain version: the projections shifted and averaged, with no registered prior scan and no learned model behind them. The out-of-plane blur stays visible; it is the cue a CT-like rendering does not leave you.',
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
     shownIn: 'dts-acquisition',
   },
@@ -105,7 +105,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
       'The detail of a diagnostic scan. It answers where things are, in the room, at that moment.',
     ],
     boundary:
-      'What this module displays after the spin is the original planning CT standing in for a reconstructed volume, labelled as such. Those images were not reconstructed from the projections the spin acquired.',
+      'The volume shown after the spin in this course is cleaner than a real one. A real CBCT volume is noisier and lower in contrast.',
     sourceIds: ['setser', 'mobile'],
     shownIn: 'cbct-acquisition',
   },

@@ -10,7 +10,11 @@
 export const BRONCHOSCOPY_FOUNDATIONS_NAV_BASE = '/bronchoscopy-foundations'
 
 export const BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF = `${BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}/learn`
+/** The closing screen: what the sections cannot show, and what comes next at the bedside. */
+export const BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF = `${BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF}/complete`
 export const BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF = `${BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}/practice`
+/** The image bank: sets of click-on-the-picture questions drawn from both lungs. */
+export const BRONCHOSCOPY_FOUNDATIONS_IMAGE_BANK_HREF = `${BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF}/images`
 export const BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF = `${BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}/assess`
 export const BRONCHOSCOPY_FOUNDATIONS_REFERENCE_HREF = `${BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}/reference`
 export const BRONCHOSCOPY_FOUNDATIONS_ATLAS_HREF = `${BRONCHOSCOPY_FOUNDATIONS_REFERENCE_HREF}/airway-atlas`
@@ -18,9 +22,16 @@ export const BRONCHOSCOPY_FOUNDATIONS_ATLAS_HREF = `${BRONCHOSCOPY_FOUNDATIONS_R
 /** Where the module's static teaching assets live. */
 export const BRONCHOSCOPY_FOUNDATIONS_ASSET_BASE = '/bronchoscopy-foundations'
 
-export function bronchCaseLinkTarget(caseId: string): {
+/** A practice case. With `set`, the case is one of a mixed set and its way on stays in that set. */
+export function bronchCaseLinkTarget(
+  caseId: string,
+  set?: number,
+): {
   readonly pathname: string
   readonly query: Record<string, string>
 } {
-  return { pathname: BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF, query: { case: caseId } }
+  return {
+    pathname: BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF,
+    query: set ? { case: caseId, set: String(set) } : { case: caseId },
+  }
 }

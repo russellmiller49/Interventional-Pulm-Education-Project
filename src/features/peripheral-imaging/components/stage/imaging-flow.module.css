@@ -161,23 +161,67 @@
   background: #0e262d;
   box-shadow: 0 1rem 3rem #0009;
 }
+/* Laid out like the ECMO Sections list: numbered rows, the current one filled. */
+.outlineIntro {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0 0 0.25rem;
+}
+.outlineIntro strong {
+  font-size: 0.95rem;
+}
+.outlineIntro small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
 .outline h2 {
-  color: var(--cyan-bright);
-  font-size: 0.9rem;
-  margin: 1rem 0 0.25rem;
+  color: #6ed7cd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 1rem 0 0.4rem;
 }
 .outline ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
   list-style: none;
   padding: 0;
 }
 .outline a {
-  display: block;
-  padding: 0.4rem;
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #345363;
+  border-radius: 0.65rem;
+  color: #d5e4e9;
+  background: #102735;
   font-size: 0.9rem;
-  border-radius: 0.3rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.outline a:hover {
+  border-color: #65bfb8;
+  background: #153442;
+}
+.outline a > span:first-child {
+  color: #75d4cb;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-align: center;
 }
 .outline a[aria-current] {
-  background: var(--panel-3);
+  border-color: #69cfc5;
+  color: #061b22;
+  background: #80d9d0;
+  box-shadow: 0 0 0 2px rgba(105, 207, 197, 0.18);
+}
+.outline a[aria-current] > span:first-child {
+  color: #0c5755;
 }
 .progress {
   display: flex;
@@ -218,12 +262,17 @@
   color: #bed1d4;
   font-size: 0.95rem;
 }
+/*
+ * The task: the text column, then the image it is read against (owner feedback, 2026-10-11).
+ * Side by side the text is on the left; stacked it is on top. The text column is never an empty
+ * box: a step with nothing to say there renders nothing.
+ */
 .task {
   max-width: var(--imaging-flow-max);
   margin: auto;
   padding: 0 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 1.65fr);
   gap: 1.5rem;
   align-items: start;
 }
@@ -256,6 +305,13 @@
   border-radius: 0.75rem;
   background: #102930;
 }
+.explanation:empty {
+  display: none;
+}
+/* A guard, not a layout: no rule below may leave a text-column gutter beside the image. */
+.course .task:has(> .explanation:empty) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
 .explanation h3 {
   font-size: 1rem;
   line-height: 1.4;
@@ -276,10 +332,9 @@
 .course[data-presentation='multiplanar'] .explanation {
   max-width: 900px;
   width: 100%;
-  justify-self: center;
 }
 .course[data-presentation='record'] .task {
-  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 1.1fr);
 }
 .evidence:empty {
   display: none;
@@ -482,15 +537,24 @@
 .taskHeading {
   scroll-margin-top: calc(var(--site-header-height, 4rem) + 7rem);
 }
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .task {
+/*
+ * A hands-on step. Its text column is the task: what to do, ticked off as it is done. It is a short
+ * list, so it takes a narrow column and the workbench takes the rest; below that width it sits
+ * above the workbench.
+ */
+.course:is([data-task-kind='act'], [data-task-kind='observe']) .task:has(.evidence:not(:empty)) {
   grid-template-columns: minmax(0, 1fr);
 }
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation {
-  order: -1;
-  padding: 0.5rem 0.85rem;
-}
-.course:is([data-task-kind='act'], [data-task-kind='observe']) .explanation:has([data-walk-stop]) {
-  order: initial;
+/* The multiplanar workbench is three planes and their controls in a row: it needs the full width
+   until the window is wide, so its task sits above it on a laptop. */
+@media (min-width: 1180px) {
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(17rem, 20rem) minmax(0, 1fr);
+  }
 }
 @media (max-width: 700px) {
   .header {
@@ -544,8 +608,32 @@
   grid-template-columns: minmax(0, 1fr);
   max-width: var(--imaging-flow-max);
 }
-.course[data-presentation='comparison'] .task:has([data-suite-scene]) .explanation {
-  order: initial;
+/*
+ * From here the workbench beside a text column is still wide enough for its two projections and
+ * its controls in one row (`suite-scene.module.css`, the `suite` container at 48rem).
+ */
+@media (min-width: 1180px) {
+  .course[data-presentation='comparison']:not([data-chrome-pinned='false'])
+    .task:has([data-suite-scene]) {
+    grid-template-columns: minmax(20rem, 22rem) minmax(0, 1fr);
+  }
+}
+
+/*
+ * A check: the question and its choices are the text column, so it gets a reader's width and the
+ * fixed example image sits beside it. The multiplanar examples need the full row for their planes.
+ */
+@media (min-width: 1001px) {
+  .course:is([data-task-kind='check'], [data-task-kind='transfer']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 1.2fr);
+  }
+}
+.course[data-task-kind='check'][data-presentation='multiplanar'] .task:has(.evidence:not(:empty)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /*
@@ -564,17 +652,25 @@
  * the walk is one readable column again, the scene first and its text under it.
  */
 @media (min-width: 1001px) {
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .task {
-    grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 1.65fr);
   }
-  .course[data-step-kind='walk'] .explanation,
-  .course[data-step-kind='walk'] .explanation:has([data-walk-stop]) {
-    order: initial;
+  .course[data-step-kind='walk'] .explanation {
     padding: 0.85rem 1rem;
   }
 }
-@media (min-width: 1001px) and (min-height: 700px) {
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .explanation {
+/*
+ * The task list of a hands-on step stays beside the workbench while the workbench is scrolled, the
+ * way the walk's text does.
+ */
+@media (min-width: 1180px) and (min-height: 700px) {
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not(
+      [data-chrome-pinned='false'],
+      [data-presentation='multiplanar']
+    )
+    .task:has(.evidence:not(:empty))
+    .explanation {
     position: sticky;
     top: calc(
       var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem)) + 0.5rem
@@ -633,10 +729,32 @@
   .header > div:first-child > h1 {
     grid-column: 1 / -1;
   }
-  .course[data-presentation='comparison'] .task:has([data-suite-scene]) {
-    grid-template-columns: minmax(0, 2.5fr) minmax(22rem, 1fr);
+  .course[data-presentation='comparison']:not([data-chrome-pinned='false'])
+    .task:has([data-suite-scene]) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.5fr);
   }
-  .course[data-step-kind='walk']:not([data-chrome-pinned='false']) .task {
-    grid-template-columns: minmax(0, 2.6fr) minmax(22rem, 1fr);
+  .course[data-presentation='multiplanar'] .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.5fr);
+  }
+  .course:is([data-task-kind='act'], [data-task-kind='observe']):not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
+  }
+  .course[data-step-kind='walk']:not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty)) {
+    grid-template-columns: minmax(22rem, 1fr) minmax(0, 2.6fr);
+  }
+}
+@media (min-width: 1500px) and (min-height: 700px) {
+  .course[data-presentation='multiplanar']:is(
+      [data-task-kind='act'],
+      [data-task-kind='observe']
+    ):not([data-chrome-pinned='false'])
+    .task:has(.evidence:not(:empty))
+    .explanation {
+    position: sticky;
+    top: calc(
+      var(--imaging-focus-clear-top, calc(var(--site-header-height, 4rem) + 7rem)) + 0.5rem
+    );
   }
 }

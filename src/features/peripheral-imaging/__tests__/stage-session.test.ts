@@ -82,7 +82,7 @@ describe('the stage session', () => {
   it('performs a lab step when the learner continues with its goals met, and keeps it performed', () => {
     let session: ImagingStageSession = emptyImagingStageSession(lesson)
     session = reduce(session, { type: 'SKIP_PAST', index: actIndex - 1 })
-    session = reduce(session, { type: 'LAB_CHANGE', patch: { orbit: 40, depth: 22 } })
+    session = reduce(session, { type: 'LAB_CHANGE', patch: { orbit: -24, depth: 22 } })
     expect(stepWorkDone(lesson, act, actIndex, session)).toBe(true)
     session = reduce(session, { type: 'CONTINUE_PAST', index: actIndex })
     expect(deriveStageProgress(lesson, session)).toMatchObject({

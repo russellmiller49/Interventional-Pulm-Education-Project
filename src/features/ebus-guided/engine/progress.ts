@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { FINAL_CASES } from '../content/cases'
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS } from '../content/curriculum'
 import { labGoalMet, type Lab, type Question } from '../content/types'
 import type { EbusObservation } from '@/lib/ebus-guided-bridge'
 import {
@@ -98,7 +98,8 @@ export function parseRecord(raw: string | null): CourseRecord {
   try {
     const parsed = schema.safeParse(JSON.parse(raw ?? 'null'))
     if (!parsed.success) return emptyRecord()
-    const ids = new Set(LESSONS.map((l) => l.id))
+    // The legacy record counted the course's content units, before five were folded into others.
+    const ids = new Set(CONTENT_LESSONS.map((l) => l.id))
     const cleaned = {
       ...parsed.data,
       completed: [...new Set(parsed.data.completed.filter((id) => ids.has(id)))],
@@ -114,7 +115,7 @@ export function parseRecord(raw: string | null): CourseRecord {
     ]
     cleaned.assessmentComplete =
       cleaned.assessmentComplete &&
-      cleaned.completed.length === LESSONS.length &&
+      cleaned.completed.length === CONTENT_LESSONS.length &&
       cleaned.completedCases.length === FINAL_CASES.length
     return cleaned
   } catch {

@@ -106,7 +106,7 @@ export const FIXED_MOBILE_COMPARISON: readonly FixedMobileRow[] = [
 
 /** What the course's own 3D scenes do and do not distinguish (OD4-09: field sizes equalised). */
 export const FIXED_MOBILE_MODEL_NOTE =
-  'In this course’s scenes the fixed and the mobile C-arm draw the same detector field and the same field of view; they differ only in how they are mounted.'
+  'The fixed and the mobile C-arm are drawn here with the same detector field and the same field of view; only the mounting differs.'
 
 export const FIXED_MOBILE_LIMIT =
   'Capabilities vary by model and software version. No study cited here compares a fixed with a mobile installation directly, so the dose figures are not a ranking.'

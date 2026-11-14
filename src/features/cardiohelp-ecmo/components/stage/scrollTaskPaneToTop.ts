@@ -1,3 +1,5 @@
+import { ecmoPinnedLessonBarHeight } from '../shell/useEcmoLessonBar'
+
 /** Scroll only the ECMO reading surface or the nearest independently scrolling pane. */
 export function ecmoScrollOwner(node: HTMLElement): HTMLElement | null {
   for (
@@ -53,10 +55,12 @@ export function scrollEcmoTargetIntoView(
   const owner = ecmoScrollOwner(node)
   const shell = node.closest('[data-ecmo-shell]')
   const strip = shell?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
+  // Everything pinned above the reading area: the lesson bar, and the strip when it is pinned.
   const stickyStripHeight =
-    strip && window.getComputedStyle(strip).position === 'sticky'
+    ecmoPinnedLessonBarHeight(node) +
+    (strip && window.getComputedStyle(strip).position === 'sticky'
       ? strip.getBoundingClientRect().height
-      : 0
+      : 0)
   const label = owner?.querySelector<HTMLElement>(':scope > [data-pane-label]')
   const inset = stickyStripHeight + (label?.getBoundingClientRect().height ?? 0) + 16
   if (owner) {
@@ -92,9 +96,10 @@ export function revealEcmoTargetIfNeeded(node: HTMLElement): void {
     .closest('[data-ecmo-shell]')
     ?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
   const stickyHeight =
-    strip && getComputedStyle(strip).position === 'sticky'
+    ecmoPinnedLessonBarHeight(node) +
+    (strip && getComputedStyle(strip).position === 'sticky'
       ? strip.getBoundingClientRect().height
-      : 0
+      : 0)
   const top = Math.max(siteHeaderHeight(), owner?.getBoundingClientRect().top ?? 0) + stickyHeight
   const bottom = Math.min(
     window.innerHeight,

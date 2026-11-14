@@ -14,6 +14,7 @@ import {
   type LabMetric,
   type LabRound,
 } from '../content/learningExperiments'
+import { canonicalToNativeControlValue } from '../content/deviceProfiles'
 import { resolveVentilationSimulationCase } from '../content/learningPatient'
 import { ventilationLessonAttempt } from '../content/lessonRuntime'
 import { plateauReadingValidity } from '../content/plateauValidity'
@@ -24,6 +25,7 @@ import {
   shiftBreathClock,
 } from './simulation'
 import { ventilationSimulationReducer } from './reducer'
+import { deriveEffectiveVentilationRate } from './physics'
 import {
   ventilatorDeviceIds,
   type PauseOrigin,
@@ -378,8 +380,23 @@ export function labCheckpoint(session: LabSession): LabCheckpoint {
   return { ...record, time: simulation.simulationTime }
 }
 export function labGoalMet(goal: LabGoal, session: LabSession): boolean {
-  if (goal.type === 'control')
-    return Math.abs(labControlValue(session.simulation, goal.key) - goal.value) < 0.01
+  if (goal.type === 'control') {
+    const current = labControlValue(session.simulation, goal.key)
+    if (Math.abs(current - goal.value) < 0.01) return true
+    /*
+     * A console that shows a setting in its own units may not be able to hold the canonical value
+     * exactly: the PB980 sets rise time as a percentage and the AVEA on a 1–9 scale, so "rise time
+     * 100 ms" is the nearest step those consoles have. The goal is met when the console shows the
+     * value it shows for the goal — what the learner was asked to set, on the console in front of
+     * them. On the other consoles this is the same comparison as above.
+     */
+    const { deviceId, ventilator } = session.simulation
+    const shown = (value: number) =>
+      Number(
+        canonicalToNativeControlValue(deviceId, ventilator.settings, goal.key, value).toFixed(2),
+      )
+    return shown(current) === shown(goal.value)
+  }
   if (goal.type === 'mechanics')
     return Math.abs(session.simulation.teachingMechanics[goal.key] - goal.value) < 0.01
   if (goal.type === 'hold') {
@@ -479,6 +496,11 @@ export type LabAction =
   | { type: 'PREDICT' }
   | { type: 'COMMIT'; choice: number; confidence?: 'sure' | 'unsure' }
   | { type: 'COMPARE' }
+  /**
+   * Run the patient through the round's response interval and capture the result, in one step.
+   * A no-op unless every requested change is in place (see `runResponseInterval`).
+   */
+  | { type: 'RUN_AND_CAPTURE' }
   | { type: 'INSPECT'; sampleTime: number }
   | { type: 'INTERPRET'; choice: string; now: string }
   | { type: 'REFLECT'; text: string }
@@ -735,6 +757,7 @@ function reduceLearningLab(session: LabSession, action: LabAction): LabSession {
       evidence: setEvidence(session, { ...committed, baseline }),
     }
   }
+  if (action.type === 'RUN_AND_CAPTURE') return runResponseInterval(session)
   if (action.type === 'COMPARE' && labReadyToCompare(session))
     return {
       ...session,
@@ -921,6 +944,58 @@ function reduceLearningLab(session: LabSession, action: LabAction): LabSession {
     ...next,
     readySince: goalsMet ? (session.readySince ?? simulation.simulationTime) : null,
   }
+}
+
+/**
+ * One breath period at the rate the patient is actually breathing, in model seconds — the same
+ * rate `STEP_BREATH` advances by.
+ */
+export function ventilationBreathPeriodSeconds(state: VentilationSimulationState): number {
+  const rate = deriveEffectiveVentilationRate(
+    state.ventilator.settings,
+    state.patient,
+    resolveVentilationSimulationCase(state.caseId).predictedBodyWeightKg,
+  )
+  return 60 / Math.max(1, rate)
+}
+
+/**
+ * "Run 45 s and capture", as one action.
+ *
+ * Everything requested must already be in place: this never makes a change, performs a hold or
+ * selects a bedside action for the learner. It then runs the patient in the same 0.1-s model steps
+ * the live clock uses — so the events, the condition revisions and the confounds are exactly what a
+ * live run would have recorded — until `labReadyToCompare` (the one capture gate) opens, and
+ * captures through the existing `COMPARE` branch. The run is bounded by the round's interval plus
+ * four breath periods (a slow patient may need a breath or two more before the record holds a
+ * complete one) and by the session's 900-s model-time limit; if the gate never opens, the run stops
+ * paused where it got to and nothing is captured.
+ */
+export function runResponseInterval(session: LabSession): LabSession {
+  const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
+  if (session.phase !== 'experiment' || session.evidence[session.round].response) return session
+  if (!round.goals.every((goal) => labGoalMet(goal, session))) return session
+  let next = learningLabReducer(session, {
+    type: 'ENGINE',
+    action: { type: 'SET_PAUSED', paused: false },
+  })
+  const bound = Math.min(
+    900,
+    next.simulation.simulationTime +
+      Math.max(0, round.seconds) +
+      4 * ventilationBreathPeriodSeconds(next.simulation),
+  )
+  while (!labReadyToCompare(next) && next.simulation.simulationTime < bound) {
+    const before = next.simulation.simulationTime
+    next = learningLabReducer(next, { type: 'ENGINE', action: { type: 'TICK', seconds: 0.1 } })
+    if (next.simulation.simulationTime === before) break
+  }
+  if (!labReadyToCompare(next))
+    return learningLabReducer(next, {
+      type: 'ENGINE',
+      action: { type: 'SET_PAUSED', paused: true },
+    })
+  return learningLabReducer(next, { type: 'COMPARE' })
 }
 
 const finite = z.number().finite()

@@ -344,6 +344,19 @@ export function installDom() {
     this.removeAttribute('open')
   }
   Element.prototype.scrollIntoView = jest.fn()
+  // jsdom has no `matchMedia`. The orientation figure reads the reduced-motion preference when it
+  // mounts; reduced motion is the setting under which nothing on the stage animates on its own.
+  if (typeof window.matchMedia !== 'function')
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: (query: string) => ({
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+    })
   if (!('clipboard' in navigator)) {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
   }

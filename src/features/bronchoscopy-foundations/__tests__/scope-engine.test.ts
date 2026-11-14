@@ -5,6 +5,7 @@ import { makeFrame } from '@/lib/bronchoscopy-core/frame'
 import {
   AIRWAY_LABELS,
   type AirwayLabel,
+  type ScopeEventId,
   type ScopeGoal,
   type ScopeGoalTest,
   type ScopeViewSpec,
@@ -17,6 +18,7 @@ import {
   scopeCaseProfileErrors,
   teachingGraphFileErrors,
 } from '../engine/scope/anatomyProfiles'
+import { blockedGoalSentence } from '../engine/scope/goalPresentation'
 import { DECLARATION_MESSAGES } from '../engine/scope/inspectionLedger'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../engine/scope/scopeCaption'
 import { createScopeCase } from '../engine/scope/scopeCase'
@@ -25,8 +27,13 @@ import { scopeFrame } from '../engine/scope/scopeFrame'
 import { scopeGoalsMet, scopeGoalTestMet } from '../engine/scope/scopeGoalEvaluation'
 import { SCOPE_MESSAGES, SCRIPT_REPORTS } from '../engine/scope/scopeMessages'
 import {
+  ACCESSORY_CHECK_WORDS,
+  ACCESSORY_COMMAND_WORDS,
+  ACCESSORY_POSITION_BUTTON_WORDS,
   ACCESSORY_POSITION_WORDS,
   ACCESSORY_STATE_WORDS,
+  ACCESSORY_TOOL_WORDS,
+  accessoryControlsNote,
   CORDS_STATE_WORDS,
   describeScopePerformance,
   formatScopeMetric,
@@ -67,6 +74,17 @@ beforeAll(async () => {
     ),
   )
 })
+
+/** Every event a goal list says "without". */
+function withoutEvents(goals: readonly ScopeGoal[]): ScopeEventId[] {
+  const found = new Set<ScopeEventId>()
+  const walk = (test: ScopeGoalTest) => {
+    if (test.type === 'without') found.add(test.event)
+    if (test.type === 'all') test.tests.forEach(walk)
+  }
+  goals.forEach((goal) => walk(goal.test))
+  return [...found]
+}
 
 function scopeStepsOf(section: BronchSectionDefinition) {
   const steps: { view: ScopeViewSpec; goals: readonly ScopeGoal[] }[] = []
@@ -295,12 +313,27 @@ describe('the engine’s learner-facing words', () => {
       ...Object.values(CORDS_STATE_WORDS),
       ...Object.values(ACCESSORY_STATE_WORDS),
       ...Object.values(ACCESSORY_POSITION_WORDS),
+      // The tool's buttons, the check, and the line beside them (owner feedback, 2026-11-03).
+      ...Object.values(ACCESSORY_POSITION_BUTTON_WORDS),
+      ...Object.values(ACCESSORY_TOOL_WORDS).map((tool) => tool.where),
+      ...Object.values(ACCESSORY_COMMAND_WORDS).flatMap((commands) =>
+        commands.map((command) => command.words),
+      ),
+      ACCESSORY_CHECK_WORDS,
+      accessoryControlsNote(null),
+      ...(['forceps', 'brush', 'needle'] as const).map(accessoryControlsNote),
       NEUTRAL_LOCATION_CAPTION,
     ]
     for (const section of sections) {
-      for (const { view } of scopeStepsOf(section)) {
+      for (const { view, goals } of scopeStepsOf(section)) {
         const state = createScopeState(view, scopeCase)
         strings.push(scopeLocationCaption(state), describeScopePerformance(state))
+        // What the card says when a broken "without" rules a goal out, for every one authored.
+        for (const event of withoutEvents(goals)) {
+          const blocked = blockedGoalSentence(goals, { ...state, events: [event] }, true)
+          expect(blocked).not.toBeNull()
+          strings.push(blocked!)
+        }
         for (const metric of Object.keys(
           SCOPE_METRIC_LABELS,
         ) as (keyof typeof SCOPE_METRIC_LABELS)[])

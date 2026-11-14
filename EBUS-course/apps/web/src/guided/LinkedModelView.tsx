@@ -1,10 +1,10 @@
 import {
   LINKED_LANDMARKS,
   LANDMARK_NAMES,
-  LANDMARK_HINTS,
+  linkedLandmarkHint,
+  linkedLandmarkName,
   STRUCTURE_FEATURES,
   structureDisplayName,
-  type LinkedSweepEvent,
 } from '../../../../../src/lib/ebus-linked-contract'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
@@ -36,7 +36,7 @@ import {
 } from './structureCallouts'
 import { compassDirections, fitSphereDistance } from './observerCamera'
 import { attachObserverControls, OBSERVER_CAPTION } from './observerControls'
-import { describeLinkedSweep, SWEEP_TOLERANCE_NOTE } from './sweepStatus'
+import { describeAirwayView, describeAlongAirway, describeLinkedSweep } from './sweepStatus'
 import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from './stageLook'
 
 type Mode = 'scope' | 'anatomy' | 'section'
@@ -46,11 +46,6 @@ type Controller = {
   zoom: (factor: number) => void
   reset: () => void
   release: () => void
-}
-/** What the sampler last did, reported by the workbench that owns the sweep state. */
-export interface LinkedSweepReport {
-  event: LinkedSweepEvent | null
-  resetProgress: { samples: number; span: number } | null
 }
 interface Props {
   ultrasound: ReactNode
@@ -67,13 +62,18 @@ interface Props {
   evidence: EbusLinkedEvidence
   onEvidence: (value: Partial<EbusLinkedEvidence>) => void
   onApproach: (approach: 'rms' | 'lms') => void
-  onDemo: (action: 'roll' | 'flexion' | 'reset') => void
+  onDemo: (action: 'roll' | 'flexion' | 'advance' | 'reset') => void
+  /** Where the target sits across the current frame, 0 (image left) to 1; null when not seen. */
+  targetLateral?: number | null
+  /** Lens to the first airway wall along the optical axis, in millimetres; null with no hit. */
+  opticalWallMm?: number | null
   /** Current rendered frame: whether the model target is in this plane (EBUS-PRE-REVIEW-03). */
   targetVisible?: boolean
   frameReady?: boolean
   /** The model target's name, from the preset the workbench was configured with. */
   targetName?: string
-  sweepReport?: LinkedSweepReport
+  /** The learner's latest click on the ultrasound image: what was under it and around it. */
+  ultrasoundPick?: { n: number; near: string[]; centerName: string | null } | null
 }
 const labelFor = (mesh: THREE.Object3D, reveal: boolean) =>
   mesh.userData.role === 'node' && !reveal
@@ -174,10 +174,20 @@ export function LinkedModelView(props: Props) {
   // The selector, mesh picking and letter callouts share this exact order.
   const unnamedCandidates = options.filter((object) => candidateIds.includes(object.name))
   const identifying = !config.demonstration && !config.reveal
-  const candidates = identifying ? unnamedCandidates : options
-  const landmarkIds = config.linkedLesson ? LINKED_LANDMARKS[config.linkedLesson] : []
+  /*
+   * Landmarks are found on the ultrasound image, not labelled on the anatomy model (owner
+   * feedback of 2026-10-12: naming the carina and main bronchi is too basic for an EBUS course).
+   * The 3D model is therefore a named reference throughout and never a blind lettered quiz.
+   */
+  const modelBlind = false
+  const candidates = modelBlind ? unnamedCandidates : options
+  // The advance-and-withdraw task asks for a position in the image, not a landmark or a sweep.
+  const alongAirway = config.linkedVariant === 'along-airway'
+  // The scope lesson's task asks for two white-light views in turn, not a landmark or a sweep.
+  const airwayView = config.linkedVariant === 'airway-view'
+  const landmarkIds =
+    config.linkedLesson && !alongAirway && !airwayView ? LINKED_LANDMARKS[config.linkedLesson] : []
   const landmarkTarget = landmarkIds.find((id) => !evidence.identifiedStructures?.includes(id))
-  const landmarkMode = landmarkTarget === 'transducer_face' ? 'scope' : 'anatomy'
   const host = useRef<HTMLDivElement>(null)
   const controller = useRef<Controller | null>(null)
   const latest = useRef({
@@ -187,7 +197,7 @@ export function LinkedModelView(props: Props) {
     regions,
     isolate,
     wholeScope,
-    identifying,
+    identifying: modelBlind,
     unnamedCandidates,
     hovered,
     showNames,
@@ -225,7 +235,7 @@ export function LinkedModelView(props: Props) {
       regions,
       isolate,
       wholeScope,
-      identifying,
+      identifying: modelBlind,
       unnamedCandidates,
       hovered,
       showNames,
@@ -624,7 +634,7 @@ export function LinkedModelView(props: Props) {
       const markersOn =
         !state.config.locked &&
         state.mode !== 'section' &&
-        (state.identifying ? !!state.landmarkTarget || state.showNames : state.showNames)
+        state.showNames
       callouts?.render(camera, markersOn, state.selection, state.hovered, state.showNames ? SHORT_NAMES : null)
       renderCompass()
       element.dataset.modelTriangles = String(renderer.info.render.triangles)
@@ -874,6 +884,8 @@ export function LinkedModelView(props: Props) {
         render()
       },
       onEngagement: setEngaged,
+      // The camera buttons overlay the canvas inside this stage.
+      surface: element.closest<HTMLElement>('.linked-stage'),
     })
     controller.current = {
       update,
@@ -936,34 +948,30 @@ export function LinkedModelView(props: Props) {
     controller.current?.reset()
   }, [wholeAnatomy, isolate])
   const sweep = evidence.sweeps?.[evidence.approach]
-  const letterOf = (id: string) => {
-    const index = unnamedCandidates.findIndex((object) => object.name === id)
-    return index < 0 ? '' : String.fromCharCode(65 + index)
-  }
-  function checkLandmark() {
-    if (config.locked || !landmarkTarget || !selection) return
-    if (selection !== landmarkTarget) {
-      const letter = letterOf(selection)
+  // A click on the ultrasound image answers the current "find the …" task.
+  const pick = props.ultrasoundPick
+  useEffect(() => {
+    if (!pick || config.locked || !identifying || !landmarkTarget) return
+    if (pick.near.includes(landmarkTarget)) {
+      onEvidence({
+        identifiedStructures: [...new Set([...(evidence.identifiedStructures ?? []), landmarkTarget])],
+      })
       setLandmarkFeedback(
-        (letter ? 'Structure ' + letter + ' is the ' : 'That is the ') +
-          (SHORT_NAMES[selection] ?? 'structure shown') +
-          ', not the ' +
-          LANDMARK_NAMES[landmarkTarget] +
-          '. ' +
-          LANDMARK_HINTS[landmarkTarget],
+        'Correct: that is the ' + linkedLandmarkName(config.linkedLesson, landmarkTarget) + '.',
       )
       return
     }
-    onEvidence({
-      identifiedStructures: [...new Set([...(evidence.identifiedStructures ?? []), selection])],
-    })
     setLandmarkFeedback(
-      'Identified: ' +
-        LANDMARK_NAMES[selection] +
-        '. Compare its position with the neighboring structures.',
+      (pick.centerName
+        ? 'That is the ' + pick.centerName + ', not the '
+        : 'That is tissue with no named structure in it, not the ') +
+        linkedLandmarkName(config.linkedLesson, landmarkTarget) +
+        '. ' +
+        linkedLandmarkHint(config.linkedLesson, landmarkTarget),
     )
-    setSelection('')
-  }
+    // Only a new click is an answer; the task and evidence are read as they are at that click.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pick])
   const selectNamed = (id: string) => {
     const object = roots.flatMap((root) => {
       const found = root.getObjectByName(id)
@@ -978,13 +986,13 @@ export function LinkedModelView(props: Props) {
   const selectedIndex = candidates.findIndex((object) => object.name === selection)
   const structureSelector = (
     <label>
-      {identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
+      {modelBlind ? 'Select an unnamed structure' : 'Inspect a structure'}
       <select
-        aria-label={identifying ? 'Select an unnamed structure' : 'Inspect a structure'}
-        value={identifying ? (selectedIndex < 0 ? '' : String(selectedIndex)) : selection}
+        aria-label={modelBlind ? 'Select an unnamed structure' : 'Inspect a structure'}
+        value={modelBlind ? (selectedIndex < 0 ? '' : String(selectedIndex)) : selection}
         onChange={(e) =>
           selectNamed(
-            identifying && e.target.value !== ''
+            modelBlind && e.target.value !== ''
               ? (candidates[Number(e.target.value)]?.name ?? '')
               : e.target.value,
           )
@@ -992,8 +1000,8 @@ export function LinkedModelView(props: Props) {
       >
         <option value="">Choose a structure</option>
         {candidates.map((object, i) => (
-          <option key={object.name} value={identifying ? String(i) : object.name}>
-            {identifying
+          <option key={object.name} value={modelBlind ? String(i) : object.name}>
+            {modelBlind
               ? 'Structure ' + String.fromCharCode(65 + i)
               : labelFor(object, config.reveal)}
           </option>
@@ -1037,15 +1045,37 @@ export function LinkedModelView(props: Props) {
       </div>
     )
   const sweepStatus =
-    identifying && config.linkedLesson !== 'acoustic-contact' && !config.locked
+    identifying &&
+    config.linkedLesson !== 'acoustic-contact' &&
+    // The CT-map lesson asks for the model section, not a sweep; its task line says so.
+    config.linkedLesson !== 'ct-map' &&
+    !alongAirway &&
+    !airwayView &&
+    !config.locked
       ? describeLinkedSweep({
           sweep,
           targetVisible: !!props.targetVisible,
           frameReady: !!props.frameReady,
           contact: props.contactQuality,
-          lastEvent: props.sweepReport?.event ?? null,
-          lastResetProgress: props.sweepReport?.resetProgress ?? null,
           targetName: props.targetName ?? 'The model target',
+        })
+      : null
+  const alongStatus =
+    identifying && alongAirway && !config.locked
+      ? describeAlongAirway({
+          targetLateral: props.targetVisible ? props.targetLateral : null,
+          frameReady: !!props.frameReady,
+          contact: props.contactQuality,
+          targetName: props.targetName ?? 'The model target',
+        })
+      : null
+  const airwayStatus =
+    identifying && airwayView && !config.locked
+      ? describeAirwayView({
+          opticalWallMm: props.opticalWallMm,
+          contact: props.contactQuality,
+          airwayViewed: !!evidence.airwayViewed,
+          frameReady: !!props.frameReady,
         })
       : null
   return (
@@ -1063,56 +1093,102 @@ export function LinkedModelView(props: Props) {
       )}
       {!models && !error && !concealed && <p role="status">Checking and loading teaching models…</p>}
       {identifying && !config.locked && landmarkTarget && (
-        <div className="linked-landmark-task">
-          <h3>Find the {LANDMARK_NAMES[landmarkTarget]}</h3>
-          <p>
-            Click its letter on the 3D {landmarkMode} model, then check. “Names” on the model shows
-            what each letter is.
-          </p>
-          {mode !== landmarkMode && (
-            <button
-              onClick={() => {
-                setMode(landmarkMode)
-                choose('')
-              }}
-            >
-              Open {landmarkMode === 'scope' ? 'Scope' : 'Anatomy'} model for this check
-            </button>
-          )}
-          {models && mode === landmarkMode && (
-            <div className="linked-landmark-controls">
-              {structureSelector}
-              <button disabled={!selection} onClick={checkLandmark}>
-                Check landmark
-              </button>
-            </div>
-          )}
-          {selectedIndex >= 0 && mode === landmarkMode && (
-            <p className="linked-selection" aria-live="polite">
-              Structure {String.fromCharCode(65 + selectedIndex)} selected — highlighted in violet
-              {showNames && SHORT_NAMES[selection] ? ` (${SHORT_NAMES[selection]})` : ''}.
+        <div className="linked-landmark-task" data-landmark-target={landmarkTarget}>
+          <h3>
+            Find the {linkedLandmarkName(config.linkedLesson, landmarkTarget)} on the ultrasound
+          </h3>
+          <p>Rotate the scope until it is in the image, then click it.</p>
+          {landmarkFeedback && (
+            <p role="status" data-landmark-feedback>
+              {landmarkFeedback}
             </p>
           )}
-          {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
+          {/* What the numbers on the image are: each structure found so far stays outlined. */}
+          {(evidence.identifiedStructures?.length ?? 0) > 0 && (
+            <p data-landmarks-found>
+              Outlined on the image:{' '}
+              {evidence
+                .identifiedStructures!.map(
+                  (id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id),
+                )
+                .join(' · ')}
+            </p>
+          )}
+        </div>
+      )}
+      {identifying && !config.locked && alongAirway && (
+        <div className="linked-landmark-task" data-along-airway-task>
+          <h3>Bring the node to the middle of the image</h3>
+          <p>
+            The node is outlined and the dashed line marks the middle. Advance or withdraw the
+            scope; the rotation stays where it is.
+          </p>
+        </div>
+      )}
+      {identifying && !config.locked && airwayView && (
+        <div className="linked-landmark-task" data-airway-view-task>
+          <h3>Flex down, then up</h3>
+          <p>
+            Flex the tip down until the airway ahead sits in the middle of the white-light view,
+            then up until the wall fills it and tissue echoes return.
+          </p>
         </div>
       )}
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
         <p role="status" data-landmarks-identified className="linked-task-line">
-          Landmarks identified:{' '}
+          Found on ultrasound:{' '}
           {landmarkIds
-            .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
+            .map((id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id))
             .join(' · ')}
-          . Acquire the required ultrasound sweep.
+          .{' '}
+          {/* The line names the step the lesson is actually waiting for (owner feedback of
+              2026-10-12): this lesson asks for the model section, not a sweep. */}
+          {config.linkedLesson !== 'ct-map' ? (
+            /* Once the sweep is done the line under the controls says so; this one used to go on
+               asking for it beside "Sweep done" (flow review of 2026-11-10). */
+            sweepStatus?.state.startsWith('complete') ? (
+              ''
+            ) : (
+              'Now sweep the scope rotation through the node.'
+            )
+          ) : !evidence.modelSectionViewed ? (
+            <>
+              Next: open the model section to see this level as a slice.{' '}
+              <button data-open-model-section onClick={() => setMode('section')}>
+                Open Model section
+              </button>
+            </>
+          ) : props.targetVisible ? (
+            'Model section opened. The node is in the ultrasound image: select “Continue with this image”.'
+          ) : (
+            'Model section opened. Now rotate the scope until the node is in the ultrasound image.'
+          )}
         </p>
       )}
+      {/* The held image keeps its outlines; this says what each number is. */}
+      {config.locked &&
+        !config.demonstration &&
+        !alongAirway &&
+        !airwayView &&
+        (evidence.identifiedStructures?.length ?? 0) > 0 && (
+          <p className="linked-task-line" data-landmarks-legend>
+            On your image:{' '}
+            {evidence
+              .identifiedStructures!.map(
+                (id, index) => index + 1 + ' ' + linkedLandmarkName(config.linkedLesson, id),
+              )
+              .join(' · ')}
+          </p>
+        )}
       {config.demonstration && (
         <div className="linked-demo">
-          <strong>Worked demonstration</strong>
-          <span>Change one command at a time and watch all three views.</span>
+          <strong>Try it</strong>
+          <span>Rotate, flex or advance the scope and watch all three views change together.</span>
           <div className="guided-tabs">
-            <button onClick={() => props.onDemo('roll')}>Demonstrate rotation</button>
-            <button onClick={() => props.onDemo('flexion')}>Demonstrate flexion</button>
-            <button onClick={() => props.onDemo('reset')}>Reset example</button>
+            <button onClick={() => props.onDemo('roll')}>Rotate the scope</button>
+            <button onClick={() => props.onDemo('flexion')}>Flex the tip</button>
+            <button onClick={() => props.onDemo('advance')}>Advance the scope</button>
+            <button onClick={() => props.onDemo('reset')}>Reset</button>
           </div>
         </div>
       )}
@@ -1222,21 +1298,42 @@ export function LinkedModelView(props: Props) {
         >
           <div role="status">
             <strong>{sweepStatus.heading}</strong>
-            <p data-sweep-in-plane-text>{sweepStatus.inPlane}</p>
+            <p data-sweep-next>{sweepStatus.next}</p>
           </div>
-          <p>{sweepStatus.waiting}</p>
-          {sweepStatus.resetReason && <p data-sweep-reset-reason>{sweepStatus.resetReason}</p>}
           {sweepStatus.progress && (
             <p data-sweep-progress>
-              This pass so far: {sweepStatus.progress.samples} of {sweepStatus.progress.minSamples}{' '}
-              paused frames with the target, {sweepStatus.progress.span}° of{' '}
-              {sweepStatus.progress.minSpanDeg}° rotation.
+              Rotation covered: {Math.min(sweepStatus.progress.span, sweepStatus.progress.minSpanDeg)}° of{' '}
+              {sweepStatus.progress.minSpanDeg}°
             </p>
           )}
-          <details>
-            <summary>How this exercise counts a sweep</summary>
-            <p>{SWEEP_TOLERANCE_NOTE}</p>
-          </details>
+        </div>
+      )}
+      {alongStatus && (
+        <div
+          className="linked-sweep"
+          data-along-airway-state={alongStatus.state}
+          data-target-lateral={
+            props.targetVisible && typeof props.targetLateral === 'number'
+              ? props.targetLateral.toFixed(3)
+              : ''
+          }
+        >
+          <div role="status">
+            <strong>{alongStatus.heading}</strong>
+            <p data-along-airway-next>{alongStatus.next}</p>
+          </div>
+        </div>
+      )}
+      {airwayStatus && (
+        <div
+          className="linked-sweep"
+          data-airway-view-state={airwayStatus.state}
+          data-airway-viewed={String(!!evidence.airwayViewed)}
+        >
+          <div role="status">
+            <strong>{airwayStatus.heading}</strong>
+            <p data-airway-view-next>{airwayStatus.next}</p>
+          </div>
         </div>
       )}
       {!concealed && (
@@ -1249,7 +1346,7 @@ export function LinkedModelView(props: Props) {
           </p>
           <p className="guided-label" data-observer-caption>
             {config.reveal && mode !== 'section' && 'Hover, tap or focus a marker to name a structure. '}
-            {identifying &&
+            {modelBlind &&
               mode !== 'section' &&
               'Letters refer to the 3D model: hovering a letter highlights its structure, and hovering the model highlights its letter. '}
             {OBSERVER_CAPTION} Observer controls change your viewpoint only.
@@ -1261,8 +1358,8 @@ export function LinkedModelView(props: Props) {
           </p>
           {!config.locked && models && (
             <>
-              {(!identifying || !landmarkTarget || mode !== landmarkMode) && structureSelector}
-              {selection && !identifying && (
+              {structureSelector}
+              {selection && !modelBlind && (
                 <p className="linked-selection" role="status">
                   Selected:{' '}
                   {labelFor(
@@ -1272,7 +1369,7 @@ export function LinkedModelView(props: Props) {
                   )}
                 </p>
               )}
-              {identifying && selection && STRUCTURE_FEATURES[selection] && (
+              {modelBlind && selection && STRUCTURE_FEATURES[selection] && (
                 <p className="linked-selection-description">
                   Selected structure: {STRUCTURE_FEATURES[selection]}
                 </p>

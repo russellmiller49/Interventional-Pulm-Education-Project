@@ -1,10 +1,11 @@
 import { teachingNumberErrors } from '@/features/learning-module/numbers/teachingNumbers'
 
-import { LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS } from '../content/curriculum'
 import { SOURCES } from '../content/sources'
 import { EBUS_NUMBERS } from '../content/teachingNumbers'
 
-const lesson = (id: string) => LESSONS.find((entry) => entry.id === id)!
+// Numbers and boundary notes belong to content units; five units now sit inside another lesson.
+const lesson = (id: string) => CONTENT_LESSONS.find((entry) => entry.id === id)!
 const copy = (id: string) => lesson(id).paragraphs.join(' ')
 
 describe('EBUS Guided teaching numbers', () => {
@@ -43,7 +44,7 @@ describe('EBUS Guided teaching numbers', () => {
   })
 
   it('leaves a boundary note only where the model has a real limit', () => {
-    const withNote = LESSONS.filter((entry) => entry.boundary).map((entry) => entry.id)
+    const withNote = CONTENT_LESSONS.filter((entry) => entry.boundary).map((entry) => entry.id)
     expect(withNote).toEqual([
       'acoustic-contact',
       'contact-cutaway-model',

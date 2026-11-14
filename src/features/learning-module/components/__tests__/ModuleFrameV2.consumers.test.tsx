@@ -6,7 +6,9 @@ import { join } from 'node:path'
 import { BaxterCrrtModuleFrame } from '@/features/baxter-crrt/components/BaxterCrrtModuleFrame'
 import { BronchoscopyFoundationsModuleFrame } from '@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsModuleFrame'
 import { CardiohelpModuleFrame } from '@/features/cardiohelp-ecmo/components/CardiohelpModuleFrame'
+import { DolphinModuleFrame } from '@/features/dolphin-bronchoscopy/components/DolphinModuleFrame'
 import { EbusModuleFrame } from '@/features/ebus-guided/components/ModuleFrame'
+import { EusbModuleFrame } from '@/features/eus-b-guided/components/ModuleFrame'
 import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2'
 import { McsModuleFrame } from '@/features/mechanical-circulatory-support/components/McsModuleFrame'
 import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
@@ -121,6 +123,25 @@ const consumers: readonly FrameCase[] = [
     localeNotice: 'div[role=note]',
   },
   {
+    name: 'Dolphin Bronchoscopy',
+    english: (
+      <DolphinModuleFrame locale="en" activeHref="/dolphin-bronchoscopy">
+        {body}
+      </DolphinModuleFrame>
+    ),
+    otherLocale: (
+      <DolphinModuleFrame locale="es" activeHref="/dolphin-bronchoscopy">
+        {body}
+      </DolphinModuleFrame>
+    ),
+    activity: (
+      <DolphinModuleFrame locale="en" activeHref="/dolphin-bronchoscopy/learn" activityMode>
+        {body}
+      </DolphinModuleFrame>
+    ),
+    localeNotice: 'div[role=note]',
+  },
+  {
     name: 'EBUS guided course',
     english: (
       <EbusModuleFrame locale="en" active="Overview">
@@ -136,6 +157,25 @@ const consumers: readonly FrameCase[] = [
       <EbusModuleFrame locale="en" active="Learn" activity>
         {body}
       </EbusModuleFrame>
+    ),
+    localeNotice: 'p[role=note]',
+  },
+  {
+    name: 'EUS-B guided course',
+    english: (
+      <EusbModuleFrame locale="en" active="Overview">
+        {body}
+      </EusbModuleFrame>
+    ),
+    otherLocale: (
+      <EusbModuleFrame locale="es" active="Overview">
+        {body}
+      </EusbModuleFrame>
+    ),
+    activity: (
+      <EusbModuleFrame locale="en" active="Learn" activity>
+        {body}
+      </EusbModuleFrame>
     ),
     localeNotice: 'p[role=note]',
   },
@@ -229,7 +269,9 @@ const consumerSources = [
   'src/features/baxter-crrt/components/BaxterCrrtModuleFrame.tsx',
   'src/features/bronchoscopy-foundations/components/BronchoscopyFoundationsModuleFrame.tsx',
   'src/features/cardiohelp-ecmo/components/CardiohelpModuleFrame.tsx',
+  'src/features/dolphin-bronchoscopy/components/DolphinModuleFrame.tsx',
   'src/features/ebus-guided/components/ModuleFrame.tsx',
+  'src/features/eus-b-guided/components/ModuleFrame.tsx',
   'src/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2.tsx',
   'src/features/mechanical-circulatory-support/components/McsModuleFrame.tsx',
   'src/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame.tsx',
@@ -302,7 +344,7 @@ describe('shared module frame: what its consumers receive', () => {
   })
 
   it('lists every file that renders the shared frame', () => {
-    // A tenth consumer must be added above, so it is characterised before the frame changes.
+    // A twelfth consumer must be added above, so it is characterised before the frame changes.
     const found = readdirSync(join(process.cwd(), 'src'), { recursive: true, encoding: 'utf8' })
       .filter((path) => path.endsWith('.tsx') && !path.endsWith('.test.tsx'))
       .map((path) => join('src', path))

@@ -90,7 +90,10 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   expect(document.querySelector('[data-extended-technique]')).toBeNull()
   expect(screen.getByRole('img', { name: /Flexible bronchoscope:/ })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Steering and suction' }))
-  expect(screen.getByRole('img', { name: /Angulation lever, suction control/ })).toBeVisible()
+  expect(screen.getByRole('img', { name: /Angulation lever on the rear/ })).toBeVisible()
+  expect(
+    screen.getByRole('img', { name: /Suction valve and working-channel port on the front/ }),
+  ).toBeVisible()
   expect(document.querySelector('[data-prediction-choices]')).toBeNull()
   clickPrimary()
   await settle()
@@ -98,7 +101,9 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   clickPrimary()
   await settle()
   expect(screen.getByRole('heading', { name: 'Depth changes the distance' })).toBeVisible()
-  clickPrimary() // demonstration advance
+  // The controls are live before any example; the example is optional (owner, 2026-11-03).
+  expect(controlsFieldset()).not.toBeDisabled()
+  fireEvent.click(pilotButton('Watch the example')) // demonstration advance
   expect(document.querySelector('[data-readout="depthMm"] dd')).toHaveTextContent('12 mm')
   expect(controlsFieldset()).toBeDisabled()
   clickPrimary() // demonstration withdraw
@@ -120,7 +125,10 @@ test('the grip and depth are taught in view, and a demonstration does not count 
   expect(currentStepId()).toBe(lesson.steps[unitIndex(lesson, 'depth')].id) // feedback never auto-advances
   clickPrimary()
   await settle()
-  expect(document.querySelector('[data-pilot-cue]')).toBeNull()
+  expect(document.querySelector('[data-pilot-teaching]')).toHaveAttribute(
+    'data-pilot-teaching',
+    'bend',
+  )
   expect(goalStates()).toEqual(['false'])
 })
 
@@ -192,7 +200,7 @@ test('every five-controls activity can be left without doing it, and nothing is 
   expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 })
 
-test('an unfinished reload and review keep nothing and do not pretend to restore the task', async () => {
+test('an unfinished reload returns to the screen reached and restores nothing of the task', async () => {
   const { lesson } = await mountSection('five-controls')
   const afterDepth = unitIndex(lesson, 'depth') + 1
   await performFiveControlsLearn(lesson, afterDepth)
@@ -203,7 +211,9 @@ test('an unfinished reload and review keep nothing and do not pretend to restore
   expect(currentStepId()).toBe(lesson.steps[afterDepth].id)
   cleanup()
   await mountSection('five-controls')
-  expect(currentStepId()).toBe(lesson.steps[0].id)
+  // The place comes back. The task on that screen opens fresh, with nothing marked done.
+  expect(currentStepId()).toBe(lesson.steps[afterDepth].id)
+  expect(nowPrimary()).toBeDisabled()
   expect(selfPaced().reviewedSectionIds).toEqual([])
 })
 

@@ -2,7 +2,7 @@ import { isBronchSectionId } from './sectionIds'
 
 /**
  * The fifteen sections the rewrite ends at, in order (rewrite plan, 2026-10-08). All fifteen exist
- * now; `what-completion-means` is the one section still to retire.
+ * now, and every section the rewrite retires is gone from the course.
  */
 export const REWRITE_SECTION_ORDER = [
   'clinical-question',
@@ -84,6 +84,16 @@ export const RETIRED_OBJECTIVE_REASONS: Readonly<Record<string, string>> = {
     'Brief 15 cuts the sort of eight procedures by compartment and guidance. Section 12 teaches the sampling tools a fellow uses first.',
   'M16-O4':
     'Brief 15 moves fluoroscopy to section 12, which teaches radiation safety under its own outcome. Separate training for advanced procedures is cut.',
+  'M18-O1':
+    'An online course cannot run a faculty-observed simulation. The closing screen says what comes next at the bedside.',
+  'M18-O2':
+    'Transfer to a changed view or condition is assessed in each section’s final check, not as its own section.',
+  'M18-O3':
+    'Turning feedback into a next objective happens after a supervised case. The closing screen tells the fellow to ask for it.',
+  'M18-O4':
+    'The difference between finishing the course, readiness and privileges is the closing screen’s one statement, no longer a section.',
+  'M18-O5':
+    'Transfer to an altered view or device is assessed in the sections on the lost view and the ventilated patient.',
   'M06-O5':
     'The fifteen sections have no CT-tracing activity. Naming an airway on a rolled view is assessed in the right lung.',
 }

@@ -5,7 +5,10 @@ import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
-import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
+import {
+  firstPathwaySectionId,
+  nextPathwaySection,
+} from '@/features/learning-module/curriculum/types'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { type NowCardAction, type NowCardModel } from '@/features/learning-module/stage/NowCard'
@@ -29,7 +32,10 @@ import {
 } from '../scope/types'
 import { microCasesForSection } from '../../content/microCases'
 import { isBronchSectionId } from '../../content/sectionIds'
-import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
+import {
+  BENCH_APPROACH_DEPTH_MM,
+  benchTargetObservation,
+} from '../../engine/scope/scopeBenchTarget'
 import {
   bronchSection,
   bronchoscopyFoundationsPathway,
@@ -38,6 +44,7 @@ import {
 import { bronchSectionLinkTarget } from '../../content/pathwayResolver'
 import {
   BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
+  BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF,
   BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF,
   BRONCHOSCOPY_FOUNDATIONS_NAV_BASE,
   bronchCaseLinkTarget,
@@ -60,6 +67,9 @@ import {
   withSurveySnapshot,
   writeBronchSelfPacedRecord,
   type BronchSelfPacedRecord,
+  clearBronchSectionPlaces,
+  readBronchSectionPlace,
+  writeBronchSectionPlace,
 } from '../../engine/selfPacedProgress'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../../engine/scope/scopeCaption'
 import type { ScopeCase } from '../../engine/scope/scopeCase'
@@ -69,6 +79,7 @@ import {
   scopeGoalStatuses,
 } from '../../engine/scope/scopeGoalEvaluation'
 import {
+  blockedGoalSentence,
   GOAL_CLAIM_TAG,
   GOAL_MODEL_LIMIT,
   goalListHeading,
@@ -137,7 +148,11 @@ export function BronchStageHost({
       key={`${sectionId}:${restartCount}`}
       sectionId={sectionId}
       locale={locale}
-      onRestart={() => setRestartCount((count) => count + 1)}
+      onRestart={() => {
+        // A restarted section opens at its first screen, on this visit and the next.
+        writeBronchSectionPlace(sectionId, null)
+        setRestartCount((count) => count + 1)
+      }}
     />
   )
 }
@@ -246,7 +261,8 @@ function BronchStageSessionView({
   const [scopeCase, setScopeCase] = useState<ScopeCase | null>(null)
   const [caseFailed, setCaseFailed] = useState(false)
   const [caseLoadGeneration, setCaseLoadGeneration] = useState(0)
-  const [pilotAttempts, setPilotAttempts] = useState<Record<string, boolean>>({})
+  // Which steps' examples the learner has opened, so the button says Watch, then Replay.
+  const [examplesWatched, setExamplesWatched] = useState<Record<string, boolean>>({})
   const [pilotHints, setPilotHints] = useState<Record<string, boolean>>({})
   const [storageFailed, setStorageFailed] = useState(false)
   const saveRecord = useCallback(
@@ -293,7 +309,14 @@ function BronchStageSessionView({
   const demonstration = useScopeDemonstration(activeStep, scopeCase)
   const hasDemonstration = !!(activeStep.learn?.demonstration ?? activeStep.course?.demonstration)
     ?.length
-  const practicing = !hasDemonstration || pilotAttempts[activeStep.id] === true
+  /*
+   * The controls do not wait for the example (owner feedback, 2026-11-03: a learner who went
+   * straight to the controls found them dead behind "Try with guidance"). The learner's attempt is
+   * the step's own scope state, which the example never touches (`useScopeDemonstration` plays on a
+   * copy), so the first use of a control is simply the attempt's first move. "Try with guidance"
+   * after the example starts the attempt again from a fresh scope, as before. Watching is optional.
+   */
+  const exampleWatched = examplesWatched[activeStep.id] === true
 
   /* ---------------------------------------------------------------- *
    * The case and the scope states
@@ -353,6 +376,31 @@ function BronchStageSessionView({
   useEffect(() => {
     saveRecord((record) => withSectionOpened(record, lesson.sectionId))
   }, [lesson.sectionId, saveRecord])
+
+  // Return to the screen the learner had reached. The place is read once, when the section mounts,
+  // and applied after mount, so the server's first screen and the browser's first render agree.
+  // Each earlier screen is moved past, exactly as "continue without answering" does: nothing is
+  // marked done, no answer comes back and the screen opens fresh.
+  const [resumeStepId] = useState(() => readBronchSectionPlace(sectionId))
+  const resumeIndex = Math.max(
+    resumeStepId ? lesson.steps.findIndex((step) => step.id === resumeStepId) : 0,
+    0,
+  )
+  const resumeStarted = useRef(false)
+  useEffect(() => {
+    if (resumeStarted.current) return
+    resumeStarted.current = true
+    for (let past = 0; past < resumeIndex; past++) dispatch({ type: 'SKIP_PAST', index: past })
+  }, [resumeIndex, dispatch])
+
+  // Keep the place: the screen the learner is on, once past the first. A finished section and a
+  // section still on its first screen keep none, so they open at the start. Nothing is written
+  // until the return above has landed.
+  useEffect(() => {
+    if (liveIndex < resumeIndex) return
+    const place = !finished && liveIndex > 0 ? (lesson.steps[liveIndex]?.id ?? null) : null
+    writeBronchSectionPlace(lesson.sectionId, place)
+  }, [resumeIndex, finished, liveIndex, lesson])
 
   useEffect(() => {
     if (!finished || completionRecorded.current) return
@@ -457,6 +505,14 @@ function BronchStageSessionView({
     router.push({ pathname: BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF, query: { section: nextId } })
   }
 
+  /** The course's first section, at its first task. In the first section it restarts it. */
+  function restartCourse() {
+    const firstId = firstPathwaySectionId(bronchoscopyFoundationsPathway)
+    clearBronchSectionPlaces()
+    if (firstId === sectionId) onRestart()
+    else goToSection(firstId)
+  }
+
   function finish() {
     dispatch({ type: 'CONFIRM_THROUGH', index: activeIndex })
     dispatch({ type: 'FINISH' })
@@ -466,8 +522,12 @@ function BronchStageSessionView({
     if (!paneView) return
     demonstration.stop()
     dispatch({ type: 'SCOPE_RESET', stepId: activeStep.id, view: paneView, scopeCase })
-    setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
     setSpotlight(null)
+  }
+
+  function watchExample() {
+    setExamplesWatched((current) => ({ ...current, [activeStep.id]: true }))
+    demonstration.start()
   }
 
   /** The nearest earlier teaching the learner has already been through, for "Review the teaching". */
@@ -519,6 +579,8 @@ function BronchStageSessionView({
     : goals.map((goal) => ({ goal, met: false, claim: scopeGoalClaim(goal.test) }))
   const goalsMetNow = goalStatuses.map((status) => status.met)
   const goalsClaim = scopeGoalsClaim(goals)
+  /** A rewritten section's goal card says what to do and when it is done, in plain words. */
+  const plainGoals = lesson.section.authoringContract === 2
   /** Where the tip is now, so a met goal is never read as a statement about the present view. */
   const liveLocationLine =
     goals.length > 0 && activeScopeState ? scopeNowLine(activeScopeState) : null
@@ -566,6 +628,8 @@ function BronchStageSessionView({
     goals.length > 0 &&
     !treeItem &&
     goalInteraction.view.mode === 'guided-walk' &&
+    // A naming record asks for the names; it does not also hand them out.
+    goalInteraction.view.ledger?.naming !== true &&
     !goalInteraction.view.controls.includes('branchLabels') &&
     activeScopeState?.inputs.branchLabels !== true &&
     activeScopeState?.script?.phase !== 'unidentified'
@@ -781,28 +845,27 @@ function BronchStageSessionView({
       }
       case 'scope-task':
         if (activeStep.learn || hasDemonstration) {
-          if (demonstration.state || !practicing)
+          // The example plays on its own copy of the scope, step by step, with the controls held.
+          if (demonstration.state)
             return {
               ...base,
-              status: demonstration.state
-                ? 'Demonstration only. These movements are the example, not your own attempt.'
-                : 'The example is available before you try. You can also start your own attempt, or continue without it.',
-              primary: demonstration.state
-                ? demonstration.finished
-                  ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
-                  : { label: 'Next demonstration movement', onActivate: demonstration.next }
-                : { label: 'Watch the example', onActivate: demonstration.start },
+              status:
+                'Showing the example, not your attempt. Select Try with guidance to use the controls yourself.',
+              primary: demonstration.finished
+                ? { label: 'Try with guidance', onActivate: beginPilotAttempt }
+                : { label: 'Next demonstration movement', onActivate: demonstration.next },
               secondary: demonstration.finished
-                ? { label: 'Replay the example', onActivate: demonstration.start }
+                ? { label: 'Replay the example', onActivate: watchExample }
                 : { label: 'Try with guidance', onActivate: beginPilotAttempt },
             }
+          // The controls are live from the start; the example is one button away, never a gate.
           return {
             ...base,
             status: workDone
-              ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim))
+              ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim, plainGoals))
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
-                : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
+                : undefined,
             primary: workDone
               ? isLastStep
                 ? finishAction
@@ -813,14 +876,17 @@ function BronchStageSessionView({
                   disabledReason: goalsReason,
                 },
             secondary: hasDemonstration
-              ? { label: 'Replay the example', onActivate: demonstration.start }
+              ? {
+                  label: exampleWatched ? 'Replay the example' : 'Watch the example',
+                  onActivate: watchExample,
+                }
               : { label: 'Reset this attempt', onActivate: beginPilotAttempt },
           }
         }
         if (workDone)
           return {
             ...base,
-            status: scopeDoneLead(goalsClaim),
+            status: scopeDoneLead(goalsClaim, plainGoals),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -843,7 +909,7 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: scopeDoneLead(goalsClaim),
+            status: scopeDoneLead(goalsClaim, plainGoals),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -872,7 +938,7 @@ function BronchStageSessionView({
     <>
       {goals.length > 0 ? (
         <p className={styles.goalGroupHeading} id={goalHeadingId} data-goal-group={goalsClaim}>
-          {goalListHeading(goalsClaim, goalsMetNow.every(Boolean))}
+          {goalListHeading(goalsClaim, goalsMetNow.every(Boolean), plainGoals)}
         </p>
       ) : null}
       <ul
@@ -888,7 +954,7 @@ function BronchStageSessionView({
             {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
             <span>
               {/* Only a card that carries both kinds needs to mark them apart row by row. */}
-              {goalsClaim === 'mixed' ? (
+              {goalsClaim === 'mixed' && !plainGoals ? (
                 <span className={styles.goalClaimTag} data-goal-claim-tag={claim}>
                   {GOAL_CLAIM_TAG[claim]}
                 </span>
@@ -898,10 +964,11 @@ function BronchStageSessionView({
           </li>
         ))}
       </ul>
-      {goals.length > 0 ? (
+      {/* A rewritten section says where the tip is once, in the pane beside the view. */}
+      {goals.length > 0 && !plainGoals ? (
         <p className={styles.goalLimit} data-goal-basis={goalsClaim} data-goal-now>
           {liveLocationLine ? `${liveLocationLine} ` : ''}
-          {lesson.section.authoringContract === 2 ? null : GOAL_MODEL_LIMIT}
+          {GOAL_MODEL_LIMIT}
         </p>
       ) : null}
     </>
@@ -1231,19 +1298,28 @@ function BronchStageSessionView({
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
   // Controls belong to actual scope work. A question step has no scope controls to use.
   const scopeLive = interaction.kind === 'scope-task' || interaction.kind === 'observe'
+  // Held only while the example plays (its status line says how to take over), never before it.
   const controlsEnabled =
-    !deciding && !lookingBack && !finished && scopeLive && !demonstration.state && practicing
+    !deciding && !lookingBack && !finished && scopeLive && !demonstration.state
   const lockedReason = demonstration.state
-    ? 'Demonstration. Select Try with guidance to start with a fresh scope.'
-    : !practicing
-      ? 'Watch the example or select Try with guidance to use the controls.'
-      : finished
-        ? 'You reached the end of this section. Restart the section to practice again.'
-        : deciding
-          ? 'The scope rests while this question is open. Its controls are used on the hands-on steps.'
-          : !scopeLive && !lookingBack
-            ? 'The scope rests on this step. Its controls open on the next hands-on step.'
-            : undefined
+    ? undefined
+    : finished
+      ? 'You reached the end of this section. Restart the section to practice again.'
+      : deciding
+        ? 'The scope rests while this question is open. Its controls are used on the hands-on steps.'
+        : !scopeLive && !lookingBack
+          ? 'The scope rests on this step. Its controls open on the next hands-on step.'
+          : undefined
+  // Said unasked when this attempt can no longer meet a goal (a broken "without"), with the way
+  // out. The five-controls bench says it in its own status line instead.
+  const blockedSentence =
+    goalInteraction && activeScopeState && !activeStep.learn && !demonstration.state
+      ? (blockedGoalSentence(
+          goals,
+          activeScopeState,
+          goalInteraction.view.controls.includes('reset'),
+        ) ?? undefined)
+      : undefined
   const pausedReason =
     !deciding && lookingBack
       ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
@@ -1346,10 +1422,17 @@ function BronchStageSessionView({
           : null
         return (
           <>
+            {view.benchSuction ? (
+              <p className={styles.figureCaption}>
+                Bench fluid model: the liquid level and emptying rate illustrate aspiration, not
+                clinical volume or suction performance.
+              </p>
+            ) : null}
             {target ? (
               <p role="status" data-target-status>
                 Gold target: {target.position}. Practice depth: {Math.round(displayedState.depthMm)}{' '}
-                mm; band 12–16 mm. Authored exercise values.
+                mm; practice band {BENCH_APPROACH_DEPTH_MM.min}–{BENCH_APPROACH_DEPTH_MM.max} mm.
+                Bench exercise distances.
               </p>
             ) : null}
             <ScopePane
@@ -1383,9 +1466,11 @@ function BronchStageSessionView({
               goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
               caption={locationCaption}
               treeAnswer={treeAnswer}
-              spotlightKey={helpNow?.control ?? undefined}
+              spotlightKey={helpNow?.control ?? (blockedSentence ? 'reset' : undefined)}
               helpTarget={helpNow?.target ?? null}
-              helpSentence={helpNow?.sentence}
+              // A ruled-out goal is explained once, by the blocked line; help would only repeat it.
+              helpSentence={blockedSentence ? undefined : helpNow?.sentence}
+              blockedSentence={blockedSentence}
               referenceLabels={
                 referenceNamesOffered
                   ? {
@@ -1427,9 +1512,13 @@ function BronchStageSessionView({
     </StageTeachingScope>
   )
 
+  // Screens passed by returning to a saved place were not skipped on this visit.
+  const resumedPastIds = new Set(lesson.steps.slice(0, resumeIndex).map((step) => step.id))
   const movedPastTitles = [
     ...new Set(
-      progress.movedPastIds.map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
+      progress.movedPastIds
+        .filter((id) => !resumedPastIds.has(id))
+        .map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
     ),
   ]
 
@@ -1460,6 +1549,7 @@ function BronchStageSessionView({
       onHelp={() => setHelpOpen(true)}
       onRestart={onRestart}
       restartLabel="Restart section"
+      onRestartCourse={restartCourse}
       saveAndExitHref={BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}
     />
   )
@@ -1518,7 +1608,7 @@ function BronchStageSessionView({
                 // The hub carries the course's one boundary statement; a section says only what
                 // happens to the learner's work.
                 <p data-stage-footer-note>
-                  Answers are not saved. Reloading starts this section again from its first screen.
+                  Your answers are not saved. This device remembers the screen you were on.
                 </p>
               ) : (
                 <p>
@@ -1744,6 +1834,7 @@ function CompletionCard({
   const integratedCase = CAPSTONE_CASES.find((entry) => entry.pairedSectionId === lesson.sectionId)
   const practiceCase = microCasesForSection(lesson.sectionId)[0]
   const { section } = lesson
+  const next = nextSectionId ? bronchSection(nextSectionId) : null
   return (
     <section
       className={styles.completion}
@@ -1752,29 +1843,20 @@ function CompletionCard({
       aria-label="End of section"
     >
       <p className={styles.kicker}>End of section</p>
-      <p data-completion-reviewed>
-        {reviewed
-          ? 'This section is marked reviewed on this device.'
-          : 'This section is not marked reviewed.'}{' '}
-        The mark is yours to change; it records nothing about your answers.{' '}
-        <button
-          type="button"
-          className={styles.completionLink}
-          data-toggle-reviewed
-          disabled={!hydrated}
-          onClick={() =>
-            writeBronchSelfPacedRecord(
-              withSectionReviewed(readBronchSelfPacedRecord(), lesson.sectionId, !reviewed),
-            )
-          }
-        >
-          {reviewed ? 'Undo: not reviewed yet' : 'Mark as reviewed'}
-        </button>
-      </p>
+      <h3 className={styles.completionTitle} data-completion-title>
+        You have finished section {lesson.index + 1} of {lesson.total}: {lesson.title}.
+      </h3>
+      {next ? (
+        <p data-completion-next>
+          <strong>
+            Next: {next.title} · {next.minutes} min.
+          </strong>{' '}
+          {next.clinicalQuestion}
+        </p>
+      ) : null}
       {movedPast.length > 0 ? (
         <p data-completion-moved-past>
-          You moved on without completing: {movedPast.join('; ')}. Restart the section whenever you
-          want to try them.
+          You skipped: {movedPast.join('; ')}. Restart the section to try them.
         </p>
       ) : null}
       {section.physicalSkillNote ? (
@@ -1820,23 +1902,37 @@ function CompletionCard({
             href={bronchSectionLinkTarget(nextSectionId)}
             data-next-section={nextSectionId}
           >
-            {lesson.steps[0]?.learn
-              ? `Next lesson: ${bronchSection(nextSectionId).title}`
-              : 'Continue to the next section'}
+            Start the next section
           </Link>
         ) : (
           <Link
             className={shellStyles.nowPrimary}
-            href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}
-            data-next-section="assess"
+            href={BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF}
+            data-next-section="closing"
           >
-            Try the integrated cases
+            Finish: what comes next
           </Link>
         )}
         <Link className={shellStyles.nowSecondary} href={BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}>
           Back to the overview
         </Link>
       </div>
+      <p className={styles.completionMark} data-completion-reviewed>
+        {reviewed ? 'Marked as reviewed on the overview.' : 'Not marked as reviewed.'}{' '}
+        <button
+          type="button"
+          className={styles.completionLink}
+          data-toggle-reviewed
+          disabled={!hydrated}
+          onClick={() =>
+            writeBronchSelfPacedRecord(
+              withSectionReviewed(readBronchSelfPacedRecord(), lesson.sectionId, !reviewed),
+            )
+          }
+        >
+          {reviewed ? 'Remove the mark' : 'Mark as reviewed'}
+        </button>
+      </p>
     </section>
   )
 }

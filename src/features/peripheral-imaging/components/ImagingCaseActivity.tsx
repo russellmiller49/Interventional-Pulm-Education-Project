@@ -10,7 +10,7 @@ import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_PRACTICE_HREF } from '../cont
 import { recordImagingLocation } from '../engine/selfPacedProgress'
 import { ImagingCaseDecision } from './ImagingCaseDecision'
 import { CaseFigure } from './figures/CaseFigure'
-import { SignalImage } from './stage/TeachingPanels'
+import { WashedOutProjection } from './figures/CheckImages'
 import styles from './stage/imaging-stage.module.css'
 
 /**
@@ -57,18 +57,7 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
 
       {(caseId === 'signal-practice-1' ||
         caseId === 'signal-practice-2' ||
-        caseId === 'field-practice-1') && (
-        <section className={styles.teachingCard} data-case-image>
-          <SignalImage
-            factor="contrast"
-            label="Conceptual illustration of the described appearance"
-          />
-          <p>
-            A drawing of the appearance described, not a device capture. Use the clinical context
-            supplied with it; appearance alone does not identify its cause.
-          </p>
-        </section>
-      )}
+        caseId === 'field-practice-1') && <WashedOutProjection />}
 
       <ImagingCaseDecision
         item={microCase.item}

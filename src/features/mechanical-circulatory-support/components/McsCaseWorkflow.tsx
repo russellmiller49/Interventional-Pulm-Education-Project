@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type Dispatch, type ReactNode } from 'react'
-import { Eye, RotateCcw, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, RotateCcw, ShieldAlert } from 'lucide-react'
 import type { McsAction, McsSimulationState } from '../engine'
 import { mcsActionDisplayList } from '../content/actionDisplayNames'
 import { mcsClaimChecksForCase } from '../content/claimSourceMap'
@@ -13,17 +13,47 @@ import { mcsPresentationTitle } from '../content/casePresentation'
 import { mcsNameWithMechanism } from '../content/deviceNaming'
 import { McsClaimSourceChecks, McsSourceReviewNotice } from './McsClaimSourceChecks'
 import styles from './mechanical-circulatory-support.module.css'
+import flowStyles from './stage/mcs-flow.module.css'
 
+/**
+ * How a case sits inside a Learn section when it runs there rather than on the Practice page.
+ *
+ * A section paired to a case ends on it (owner, 2026-10-17, as ICU hemodynamics did on
+ * 2026-10-14): the case is the section's last task, inside the section's task card, and the way out
+ * goes back to the section rather than to Practice.
+ */
+export interface McsCaseEmbedding {
+  readonly sectionTitle: string
+  /** One-based position of the section on the pathway. */
+  readonly sectionNumber: number
+  /** What a case on another mechanism applies instead, said on its strip. */
+  readonly applies?: string
+  /** Exit case: close the case and go back to the section. */
+  readonly onReturnToSection: () => void
+  /** The end of the case: back to the section, which is then finished. */
+  readonly onCaseFinished: () => void
+}
+
+/**
+ * One case: its brief, the readings, the optional prediction, the controls and the worked
+ * explanation. The engine is the caller's; this is what the learner reads and works.
+ *
+ * `embedded` runs the same case as a Learn section's last task. The section's stage is then the
+ * frame, a one-line strip names the case and its section in place of the kicker and title, and
+ * Exit case and the end of the case go back to the section.
+ */
 export function McsCaseWorkflow({
   state,
   dispatch,
   observations,
   controls,
+  embedded,
 }: {
   state: McsSimulationState
   dispatch: Dispatch<McsAction>
   observations?: ReactNode
   controls?: ReactNode
+  embedded?: McsCaseEmbedding
 }) {
   const [hintVisible, setHintVisible] = useState(false)
   const scenario = state.scenario
@@ -31,6 +61,18 @@ export function McsCaseWorkflow({
     (option) => option.id === state.selectedPredictionId,
   )
   const selectedFits = selectedOption?.id === scenario?.correctPredictionId
+  const resetButton = (
+    <button
+      type="button"
+      className={styles.resetButton}
+      onClick={() => {
+        setHintVisible(false)
+        dispatch({ type: 'RESET' })
+      }}
+    >
+      <RotateCcw aria-hidden="true" /> Reset
+    </button>
+  )
   if (!scenario)
     return (
       <section
@@ -76,23 +118,36 @@ export function McsCaseWorkflow({
       aria-labelledby="case-workflow-heading"
     >
       <header>
-        <div>
-          <span className={styles.kicker}>
-            {scenario.kind === 'capstone' ? 'OPTIONAL INTEGRATED WALKTHROUGH' : 'GUIDED CASE'} ·{' '}
-            {scenario.id}
-          </span>
-          <h2 id="case-workflow-heading">{mcsPresentationTitle(scenario)}</h2>
-        </div>
-        <button
-          type="button"
-          className={styles.resetButton}
-          onClick={() => {
-            setHintVisible(false)
-            dispatch({ type: 'RESET' })
-          }}
-        >
-          <RotateCcw aria-hidden="true" /> Reset
-        </button>
+        {embedded ? (
+          <p id="case-workflow-heading" className={flowStyles.caseStrip} data-case-strip>
+            Case · {mcsPresentationTitle(scenario)} · the last task of Section{' '}
+            {embedded.sectionNumber}
+            {embedded.applies ? `, on ${embedded.applies}` : ''}
+          </p>
+        ) : (
+          <div>
+            <span className={styles.kicker}>
+              {scenario.kind === 'capstone' ? 'OPTIONAL INTEGRATED WALKTHROUGH' : 'GUIDED CASE'} ·{' '}
+              {scenario.id}
+            </span>
+            <h2 id="case-workflow-heading">{mcsPresentationTitle(scenario)}</h2>
+          </div>
+        )}
+        {embedded ? (
+          <div className={flowStyles.caseHeaderActions}>
+            {resetButton}
+            <button
+              type="button"
+              className={styles.resetButton}
+              data-case-exit
+              onClick={embedded.onReturnToSection}
+            >
+              <ArrowLeft aria-hidden="true" /> Exit case
+            </button>
+          </div>
+        ) : (
+          resetButton
+        )}
       </header>
       <McsSourceReviewNotice />
       <dl className={styles.caseIdentity} data-case-identity>
@@ -104,7 +159,9 @@ export function McsCaseWorkflow({
           <dt>Support pathway</dt>
           <dd>
             {scenario.device === 'impella'
-              ? 'Impella (microaxial pump) · the pump in use is named in the Support row above'
+              ? `Impella (microaxial pump) · the pump in use is named ${
+                  embedded ? 'under Device · mechanism' : 'in the Support row'
+                } above`
               : mcsNameWithMechanism(scenario.device)}
           </dd>
         </div>
@@ -416,6 +473,16 @@ export function McsCaseWorkflow({
             </div>
           </div>
         </section>
+      ) : null}
+      {/* The end of the case inside a section: the way back, where the explanation ends. */}
+      {state.completed && embedded ? (
+        <div className={flowStyles.caseFinished} data-case-finished>
+          <p role="status">Case finished. Nothing about this run is saved.</p>
+          <button type="button" onClick={embedded.onCaseFinished} data-case-back-to-section>
+            Back to Section {embedded.sectionNumber}: {embedded.sectionTitle}
+            <ArrowRight aria-hidden="true" />
+          </button>
+        </div>
       ) : null}
     </section>
   )

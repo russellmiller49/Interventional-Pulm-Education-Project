@@ -141,8 +141,8 @@ const seeds: readonly DrillSeed[] = [
     unsafeWhy:
       'That treats a measuring fault as a prescription problem. The scale is still wrong, so the error keeps growing, and you have now added a second change on top of it.',
     criticalErrorCandidate:
-      'Leaving the cause in place lets the error reach the gain/loss limit. At the limit the fluid pumps stop for good and the treatment has to be ended.',
-    deviceResponseBoundary: `PrisMax adds up the fluid error over the last ${N('gain-loss-window')}. Reaching the gain/loss limit suspends treatment permanently: the fluid pumps will not restart and the set must be changed.`,
+      'Leaving the cause in place lets the error reach the gain/loss limit. At the limit the fluid pumps stop and this treatment has to be ended.',
+    deviceResponseBoundary: `PrisMax adds up the fluid error over the last ${N('gain-loss-window')}. Reaching the gain/loss limit ends the current treatment: the fluid pumps will not restart and the set is discarded.`,
     inspectionDomain:
       'each scale and its bag, lines hanging freely without tension, clamps, bags touching the machine or each other, and the effluent bag',
     correctionBoundary:

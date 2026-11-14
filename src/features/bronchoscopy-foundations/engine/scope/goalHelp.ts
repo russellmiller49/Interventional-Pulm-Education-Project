@@ -1,9 +1,18 @@
-import { minus, plus, projectOptical, times, unit } from '@/lib/bronchoscopy-core/frame'
+import {
+  minus,
+  plus,
+  projectOptical,
+  times,
+  unit,
+  type OpticalFrame,
+} from '@/lib/bronchoscopy-core/frame'
 import { sampleEdgePose } from '@/lib/airway-anatomy/scope-state'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
 import type {
+  AccessoryPosition,
+  AccessoryState,
   AirwayLabel,
   ScopeControlKey,
   ScopeEventId,
@@ -12,10 +21,19 @@ import type {
   ScopeViewSpec,
 } from '../../components/scope/types'
 import { airwayDisplayName, labelAncestry, treeNodeByLabel } from '../../content/airwayTree'
-import { scopeGoalTestMet } from './scopeGoalEvaluation'
+import { namingSubject } from './inspectionLedger'
+import { accessoryKind } from './scopeAccessory'
+import { brokenWithout, scopeGoalTestMet } from './scopeGoalEvaluation'
+import {
+  ACCESSORY_CHECK_WORDS,
+  ACCESSORY_COMMAND_WORDS,
+  ACCESSORY_POSITION_BUTTON_WORDS,
+  ACCESSORY_TOOL_WORDS,
+} from './scopeMetrics'
 import type { ScopeCase } from './scopeCase'
 import { aimAt } from './scopeFrame'
 import { normalizeRotationDeg } from './scopeInputs'
+import { guidedFork } from './scopeMotion'
 import { tipBaseFrame } from './scopePose'
 import { reduceScope } from './scopeReducer'
 import type { ScopeRuntimeState } from './scopeRuntime'
@@ -150,7 +168,16 @@ function steeringAlong(
 ): { readonly rotateBy: number; readonly deflectBy: number } | null {
   if (!state.engine) return null
   const base = tipBaseFrame(state.engine, view, scopeCase)
-  const aim = aimAt(base, plus(base.position, times(direction, 20)))
+  return steeringToward(base, plus(base.position, times(direction, 20)), state)
+}
+
+/** The turn and bend that bring a point to the centre of the picture a frame gives. */
+function steeringToward(
+  base: OpticalFrame,
+  point: Vec3,
+  state: ScopeState,
+): { readonly rotateBy: number; readonly deflectBy: number } {
+  const aim = aimAt(base, point)
   // The same direction is reached by turning the other way round and bending the other way.
   const options = [
     { rotation: aim.rotationDeg, deflection: aim.deflectionDeg },
@@ -227,8 +254,23 @@ function steer(
         ? `Advance: ${opening} comes into view as the tip goes on.`
         : `Advance: an advance from here goes into ${opening}.`,
     }
-  // To see an opening, point the axis at it; to go through one, point along its branch.
   const frame = scopeOpticalFrame(state.pose)
+  // To go through the fork just ahead, bring the opening that leads on to the centre of the
+  // picture the fork is read from: the engine's own rule (`guidedFork`), asked rather than copied.
+  const fork =
+    !seeing && state.engine && view.mode === 'guided-walk'
+      ? guidedFork(state.engine.edgeId, state.inputs, { view, scopeCase }, state.engine.distanceMm)
+      : null
+  const lead = fork ? leadingOpening(scopeCase, state.engine!.edgeId, pin.edgeId) : null
+  const leadOpening =
+    fork && lead !== null ? fork.openings.find((o) => o.edgeId === lead) : undefined
+  if (fork && leadOpening && fork.chosenEdgeId === lead)
+    return {
+      control: 'advance',
+      target: pin.label,
+      sentence: `Advance: the tip is pointed the way to ${opening}.`,
+    }
+  // To see an opening, point the axis at it; to go through one further on, point along its branch.
   const child = scopeCase.index.edgesById.get(pin.edgeId)
   const node = child ? scopeCase.index.nodesById.get(child.startNodeId) : undefined
   const direction =
@@ -238,7 +280,10 @@ function steer(
           minus(sampleEdgePose(child, Math.min(BRANCH_PROBE_MM, child.lengthMm)).point, node.lps),
           frame.forward,
         )
-  const steering = steeringAlong(direction, state, view, scopeCase)
+  const steering =
+    fork && leadOpening
+      ? steeringToward(fork.base, leadOpening.aimPoint, state)
+      : steeringAlong(direction, state, view, scopeCase)
   const projected = projectOptical(pin.pointLps, frame, OPTICAL_ASPECT, OPTICAL_FOV_DEG)
   const inField = projected !== null && Math.hypot(projected.x * OPTICAL_ASPECT, projected.y) < 1
   const outside = inField ? '' : ' It is outside the field of view now.'
@@ -255,8 +300,47 @@ function steer(
   }
 }
 
+/** The opening of the fork at the end of `edgeId` that leads to `towardEdgeId`, if any does. */
+function leadingOpening(scopeCase: ScopeCase, edgeId: number, towardEdgeId: number): number | null {
+  let current: number | null = towardEdgeId
+  for (let guard = 0; current !== null && guard < scopeCase.graph.edges.length; guard += 1) {
+    const edge = scopeCase.index.edgesById.get(current)
+    const above: number | null = edge
+      ? (scopeCase.index.nodesById.get(edge.startNodeId)?.parentEdgeId ?? null)
+      : null
+    if (above === edgeId) return current
+    current = above
+  }
+  return null
+}
+
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/**
+ * What to tell the assistant next. While the assistant's report has not been checked against the
+ * scope view, the next move is the check, not a second command: that is the misreport's lesson.
+ */
+function accessoryCommandHelp(target: AccessoryState, state: ScopeRuntimeState): GoalHelp {
+  const kind = accessoryKind(target)
+  const command = kind
+    ? ACCESSORY_COMMAND_WORDS[kind].find((entry) => entry.state === target)
+    : undefined
+  const phase = state.script?.id === 'assistant-misreport' ? state.script.phase : null
+  if (phase === 'misreported')
+    return {
+      control: 'verifyAccessory',
+      target: null,
+      sentence: `Your assistant has answered. Select ${ACCESSORY_CHECK_WORDS} before the tool moves.`,
+    }
+  return {
+    control: 'accessory',
+    target: null,
+    sentence: command
+      ? `${phase === 'revealed' ? 'The scope view disagrees with the report. ' : ''}Under Tell your assistant, choose ${command.words}.`
+      : 'Use the tool controls under the view.',
+  }
 }
 
 function eventHelp(
@@ -299,13 +383,21 @@ function eventHelp(
         sentence: 'Use the highlighted control.',
       }
     case 'accessory':
-    case 'accessory-moved':
-      return { control: 'accessory', target: null, sentence: 'Use the accessory controls.' }
+      return accessoryCommandHelp(value as AccessoryState, state)
+    case 'accessory-moved': {
+      const kind = accessoryKind(state.inputs.accessory)
+      const where = kind ? ACCESSORY_TOOL_WORDS[kind].where : 'Where the tool is'
+      return {
+        control: 'accessory',
+        target: null,
+        sentence: `Under ${where}, choose ${ACCESSORY_POSITION_BUTTON_WORDS[value as AccessoryPosition]}.`,
+      }
+    }
     case 'accessory-state-verified':
       return {
         control: 'verifyAccessory',
         target: null,
-        sentence: 'Check the accessory against the image.',
+        sentence: `Select ${ACCESSORY_CHECK_WORDS}, with the tool at the tip or beyond it.`,
       }
     case 'returned-to-trachea':
       return {
@@ -356,6 +448,11 @@ export function goalHelp(
   view: ScopeViewSpec,
   scopeCase: ScopeCase | null,
 ): GoalHelp | null {
+  // A goal this attempt has ruled out moves on only with a fresh attempt.
+  if (brokenWithout(test, state))
+    return view.controls.includes('reset')
+      ? { control: 'reset', target: null, sentence: 'Reset the scope to start a fresh attempt.' }
+      : null
   const pending = pendingRequirement(test, state)
   if (!pending) return null
   switch (pending.kind) {
@@ -364,6 +461,15 @@ export function goalHelp(
     case 'location':
       return steer(state, view, scopeCase, pending.airway, 'enter')
     case 'ledger':
+      // A naming record's help never says which segment is which: that is the question.
+      if (view.ledger?.naming)
+        return {
+          control: 'declare',
+          target: null,
+          sentence: namingSubject(view, state)
+            ? 'Choose this segment’s name from the list under the controls.'
+            : 'Drive into a segment you have not named yet. Its list of names opens under the controls.',
+        }
       return {
         control: 'declare',
         target: pending.airway,

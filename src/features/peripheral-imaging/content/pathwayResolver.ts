@@ -123,12 +123,13 @@ export const IMAGING_PHASES: readonly ImagingPhase[] = Object.freeze([
     id: 'context',
     title: 'Understand the image and its context',
     description: 'Follow image formation, control effects and the relationship to planning CT.',
-    sectionIds: ['chain-walk', 'good-image', 'current-anatomy'],
+    sectionIds: ['chain-walk', 'good-image', 'current-anatomy', 'airway-anatomy'],
   },
   {
     id: 'fluoroscopy',
-    title: 'Optimize 2D fluoroscopy',
-    description: 'Compare projection, conspicuity, field and temporal sampling in a coached case.',
+    title: 'Create the contrast',
+    description:
+      'Choose the projection from the CT, use the anatomy behind the nodule, then collimate, time and work the 2D image in order.',
     sectionIds: ['projection', 'signal', 'field', 'time', 'two-dimensional'],
   },
   {
@@ -194,7 +195,7 @@ export function imagingPathwayComposition(): ImagingPathwayComposition {
   }
 }
 
-/** "19 sections in 6 chapters · 207 min". */
+/** "20 sections in 6 chapters · 219 min". */
 export function imagingCompositionLine(): string {
   const composition = imagingPathwayComposition()
   return `${composition.total} sections in ${composition.byPhase.length} chapters · ${composition.minutes} min`

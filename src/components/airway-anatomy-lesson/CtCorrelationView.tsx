@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
+import { getNode } from '@/lib/airway-anatomy-lesson/airway-graph'
 import {
   loadCtCorrelation,
   type CtCorrelationData,
@@ -89,7 +90,7 @@ export function CtCorrelationView({ focusNodeId, className }: CtCorrelationViewP
           <img
             key={`${focusNodeId}-${plane}`}
             src={plane === 'axial' ? structure.axial : structure.coronal}
-            alt={`${plane === 'axial' ? 'Axial' : 'Coronal'} CT slice at the ${focusNodeId} with the airway marked`}
+            alt={`${plane === 'axial' ? 'Axial' : 'Coronal'} CT slice with the crosshair on the ${getNode(focusNodeId)?.fullName ?? focusNodeId}`}
             className="absolute inset-0 h-full w-full object-contain"
             loading="lazy"
             draggable={false}
@@ -111,8 +112,8 @@ export function CtCorrelationView({ focusNodeId, className }: CtCorrelationViewP
       <p className="text-[11px] leading-4 text-muted-foreground">
         The crosshair marks this airway on the patient&apos;s CT.{' '}
         {plane === 'axial'
-          ? 'Anterior is up; the patient’s right is on the left of the image.'
-          : 'Superior is up; the patient’s right is on the left of the image.'}
+          ? 'Anterior is up and the slice is seen from the feet, so the patient’s right is on the left of the image.'
+          : 'Superior is up and the slice is seen from the front, so the patient’s right is on the left of the image.'}
       </p>
     </div>
   )

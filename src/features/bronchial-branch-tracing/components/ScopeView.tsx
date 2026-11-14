@@ -26,6 +26,20 @@ export interface ScopeOpeningLabel extends ScopeOpening {
   caption?: string
   tone: OpeningTone
   ariaLabel: string
+  /**
+   * Set while this opening can be chosen: a click on its number takes it. The picture is one
+   * image to a screen reader, so the task card's own buttons stay the keyboard's way to choose.
+   */
+  onPick?: () => void
+  /** This opening is the one pointed at in another pane: lit here too. */
+  hot?: boolean
+  /** The pointer came onto, or left, this opening's number. */
+  onHover?: (on: boolean) => void
+  /**
+   * Not an opening: where the lesion lies from the scope, beyond the airway wall. Drawn as a
+   * dashed ring with its name, never as something the scope sees.
+   */
+  lesion?: boolean
 }
 
 /** The patient directions that lie across the scope's view, with where each sits on its rim. */
@@ -50,10 +64,41 @@ const COMPASS_RADIUS = 43
 /** Letters nearer than this are moved apart along the rim. */
 const COMPASS_CLEARANCE = 9
 
-export function compassLetters(direction: Vec3, up: Vec3, level: boolean): CompassLetter[] {
+/**
+ * The map's own words, past the segmental ostium: medial and lateral by the lung the route is in,
+ * abbreviated so that L never means both left and lateral.
+ */
+function segmentalAxes(side: 'right' | 'left') {
+  const medial: [string, string] = ['Med', 'medial'],
+    lateral: [string, string] = ['Lat', 'lateral']
+  return [
+    {
+      positive: side === 'right' ? medial : lateral,
+      negative: side === 'right' ? lateral : medial,
+      vector: [1, 0, 0] as Vec3,
+    },
+    {
+      positive: ['Post', 'posterior'] as [string, string],
+      negative: ['Ant', 'anterior'] as [string, string],
+      vector: [0, 1, 0] as Vec3,
+    },
+    {
+      positive: ['Sup', 'superior'] as [string, string],
+      negative: ['Inf', 'inferior'] as [string, string],
+      vector: [0, 0, 1] as Vec3,
+    },
+  ]
+}
+
+export function compassLetters(
+  direction: Vec3,
+  up: Vec3,
+  level: boolean,
+  segmental?: 'right' | 'left',
+): CompassLetter[] {
   const basis = cameraBasis(direction, up)
   const letters: CompassLetter[] = []
-  for (const axis of COMPASS_AXES) {
+  for (const axis of segmental ? segmentalAxes(segmental) : COMPASS_AXES) {
     const [x, y] = projectDirection(basis, axis.vector)
     const length = Math.hypot(x, y)
     // An axis that runs along the line of sight has no side on this screen.
@@ -98,6 +143,10 @@ export function ScopeView({
   moving,
   caption,
   phase,
+  segmental,
+  onReady,
+  falloffMm,
+  plainRim = false,
 }: {
   position: Vec3
   direction: Vec3
@@ -106,9 +155,24 @@ export function ScopeView({
   moving: boolean
   caption: string
   phase: string
+  /** Past the segmental ostium: the rim in the map's words, for this lung. */
+  segmental?: 'right' | 'left'
+  /** Told when the airway surface is drawn, and when it is lost. */
+  onReady?: (ready: boolean) => void
+  /** How far the scope's light carries here, in millimetres. */
+  falloffMm?: number
+  /** No patient directions on the rim: which way is up is what the learner is working out. */
+  plainRim?: boolean
 }) {
   const [projected, setProjected] = useState<ProjectedOpening[]>([])
   const [ready, setReady] = useState(false)
+  const reportReady = useCallback(
+    (value: boolean) => {
+      setReady(value)
+      onReady?.(value)
+    },
+    [onReady],
+  )
   // The canvas re-projects whenever this list changes identity, so it is rebuilt only when the
   // anchors themselves change, not on every render of the bench.
   const anchorKey = JSON.stringify(
@@ -117,8 +181,9 @@ export function ScopeView({
   const anchors = useMemo(() => JSON.parse(anchorKey) as ScopeOpening[], [anchorKey])
   const onProject = useCallback((results: ProjectedOpening[]) => setProjected(results), [])
   const compass = useMemo(
-    () => compassLetters(direction, up, lookKind(direction) === 'level'),
-    [direction, up],
+    () =>
+      plainRim ? [] : compassLetters(direction, up, lookKind(direction) === 'level', segmental),
+    [direction, up, segmental, plainRim],
   )
   const placed = moving
     ? []
@@ -136,6 +201,7 @@ export function ScopeView({
         .map((v) => v.toFixed(3))
         .join(',')}`}
       data-scope-moving={moving || undefined}
+      data-scope-plain-rim={plainRim || undefined}
     >
       <ScopeCanvas
         position={position}
@@ -143,7 +209,8 @@ export function ScopeView({
         up={up}
         openings={anchors}
         onProject={onProject}
-        onReady={setReady}
+        onReady={reportReady}
+        falloffMm={falloffMm}
       />
       <svg
         className={styles.scopeOverlay}
@@ -172,43 +239,85 @@ export function ScopeView({
           </text>
         ))}
         {ready &&
-          placed.map((opening) => (
-            <g
-              key={opening.id}
-              data-scope-opening={opening.text}
-              data-opening-tone={opening.tone}
-              data-opening-seen={opening.seen}
-              aria-label={opening.ariaLabel}
-            >
-              <circle
-                cx={opening.x}
-                cy={opening.y}
-                r="4.6"
-                className={styles.openingBadge}
-                strokeDasharray={opening.seen ? undefined : '1.2 1'}
-              />
-              <text
-                x={opening.x}
-                y={opening.y}
-                className={styles.openingNumber}
-                textAnchor="middle"
-                dominantBaseline="central"
-              >
-                {opening.text}
-              </text>
-              {opening.caption && (
+          placed.map((opening) =>
+            opening.lesion ? (
+              <g key={opening.id} data-scope-lesion aria-label={opening.ariaLabel}>
+                <circle cx={opening.x} cy={opening.y} r="9" className={styles.scopeLesionRing} />
                 <text
                   x={opening.x}
-                  y={opening.y + 8.2}
-                  className={styles.openingCaption}
+                  y={opening.y}
+                  className={styles.scopeLesionName}
                   textAnchor="middle"
                   dominantBaseline="central"
                 >
-                  {opening.caption}
+                  {opening.text}
                 </text>
-              )}
-            </g>
-          ))}
+                {opening.caption && (
+                  <text
+                    x={opening.x}
+                    y={opening.y + 12.4}
+                    className={styles.scopeLesionNote}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {opening.caption}
+                  </text>
+                )}
+              </g>
+            ) : (
+              <g
+                key={opening.id}
+                data-scope-opening={opening.text}
+                data-opening-tone={opening.tone}
+                data-opening-seen={opening.seen}
+                data-opening-pick={opening.onPick ? true : undefined}
+                data-opening-hot={opening.hot || undefined}
+                className={
+                  opening.onPick
+                    ? styles.openingPick
+                    : opening.onHover
+                      ? styles.openingLive
+                      : undefined
+                }
+                onClick={opening.onPick}
+                onPointerEnter={opening.onHover ? () => opening.onHover!(true) : undefined}
+                onPointerLeave={opening.onHover ? () => opening.onHover!(false) : undefined}
+                aria-label={opening.ariaLabel}
+              >
+                {/* A wider target than the badge: an opening is chosen with one click on it. */}
+                {opening.onPick && (
+                  <circle cx={opening.x} cy={opening.y} r="7.5" className={styles.openingHit} />
+                )}
+                <circle
+                  cx={opening.x}
+                  cy={opening.y}
+                  r="4.6"
+                  className={styles.openingBadge}
+                  strokeDasharray={opening.seen ? undefined : '1.2 1'}
+                />
+                <text
+                  x={opening.x}
+                  y={opening.y}
+                  className={styles.openingNumber}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {opening.text}
+                </text>
+                {opening.caption && (
+                  <text
+                    x={opening.x}
+                    y={opening.y + 8.2}
+                    className={styles.openingCaption}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {opening.caption}
+                  </text>
+                )}
+              </g>
+            ),
+          )}
       </svg>
     </div>
   )

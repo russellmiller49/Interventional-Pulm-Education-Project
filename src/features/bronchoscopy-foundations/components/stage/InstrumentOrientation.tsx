@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { ControlHeadSchematic } from './ControlHeadSchematic'
 import styles from './bronch-stage.module.css'
 
 /** A labeled prerequisite reference, never an identification test or completion event. */
-/** `plain`: a rewritten section shows the picture with its source and no note about review. */
-export function InstrumentOrientation({ plain = false }: { readonly plain?: boolean } = {}) {
+export function InstrumentOrientation() {
   const [detail, setDetail] = useState(false)
   return (
     <section
@@ -24,77 +24,11 @@ export function InstrumentOrientation({ plain = false }: { readonly plain?: bool
       </div>
       {detail ? (
         <>
-          <svg
-            viewBox="0 0 520 340"
-            role="img"
-            aria-labelledby="bronch-controls-title bronch-controls-desc"
-            className={styles.instrumentFigure}
-          >
-            <title id="bronch-controls-title">
-              Angulation lever, suction control and distal bending section
-            </title>
-            <desc id="bronch-controls-desc">
-              Authored component diagram. The angulation lever on the handle bends the distal
-              section. The separate suction control operates suction through the working channel.
-            </desc>
-            <rect
-              x="215"
-              y="65"
-              width="65"
-              height="140"
-              rx="24"
-              fill="#283d4a"
-              stroke="#bad8df"
-              strokeWidth="3"
-            />
-            <path d="M232 76 L204 47 L210 39 L251 67" fill="#82cbd0" />
-            <rect x="266" y="73" width="32" height="15" rx="6" fill="#b1d2da" />
-            <path
-              d="M248 205 C245 262 350 305 412 244 Q430 222 418 199"
-              fill="none"
-              stroke="#46616b"
-              strokeWidth="12"
-            />
-            <path
-              d="M412 244 Q430 222 418 199"
-              fill="none"
-              stroke="#55c5c6"
-              strokeWidth="12"
-              strokeDasharray="4 2"
-            />
-            <g stroke="#275b66" strokeWidth="2" fill="none">
-              <path d="M190 43 H204" />
-              <path d="M302 79 H337" />
-              <path d="M310 275 L280 289 H198" />
-            </g>
-            <g fill="#123641" fontSize="16" fontFamily="sans-serif">
-              <text x="15" y="40">
-                Angulation lever
-              </text>
-              <text x="15" y="61">
-                Thumb bends the tip
-              </text>
-              <text x="338" y="62">
-                Suction control
-              </text>
-              <text x="338" y="84">
-                Index finger
-              </text>
-              <text x="290" y="163">
-                Control section / handle
-              </text>
-              <text x="20" y="285">
-                Insertion tube
-              </text>
-              <text x="328" y="322">
-                Distal bending section
-              </text>
-            </g>
-            <path d="M402 304 L416 247" stroke="#275b66" strokeWidth="2" />
-          </svg>
+          <ControlHeadSchematic />
           <p>
-            Authored component diagram, not an instruction sheet for a particular device. Lever
-            layout, bending limits and suction controls vary by model.
+            The thumb moves the angulation lever on the back of the scope. On the front, the index
+            finger presses the suction valve. Instruments enter through the separate working-channel
+            port below it.
           </p>
         </>
       ) : (
@@ -148,11 +82,6 @@ export function InstrumentOrientation({ plain = false }: { readonly plain?: bool
           </p>
         </>
       )}
-      <p className={styles.figureCaption}>
-        {plain
-          ? 'Source: S1, PDF 89–97; S3, PDF 80.'
-          : 'Existing teaching photograph and authored diagram · clinical/media review pending. Source: S1, PDF 89–97; hand-position qualifications: S3, PDF 80.'}
-      </p>
     </section>
   )
 }

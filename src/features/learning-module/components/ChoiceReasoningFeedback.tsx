@@ -79,8 +79,13 @@ export function ChoiceReasoningFeedback({
    * describes the verdict as offering it; this card never did, so the three surfaces that render
    * it for the concept links and citations could not keep a step's promise to "read why the other
    * answers do not fit". The ECMO round put a module-local copy beside this card. Passing the
-   * choices here is the shared answer: the card folds every choice but the chosen one under the
-   * same summary `AnswerVerdict` uses. Omitted, the card renders exactly as before.
+   * choices here is the shared answer: the card folds the choices that do not fit under the same
+   * summary `AnswerVerdict` uses. Omitted, the card renders exactly as before.
+   *
+   * The best-supported choice is never one of those (SHARED-FEEDBACK-02). After any other
+   * selection it is named above the fold, under the label `AnswerVerdict` gives it, with its own
+   * rationale. The card tells the two apart by `plausibility`, the same field it reads for the
+   * outcome label, so a caller passes nothing more.
    */
   readonly alternatives?: readonly ClinicalLearningChoice[]
 }) {
@@ -91,6 +96,25 @@ export function ChoiceReasoningFeedback({
   })
   const isUnsafe = choice.plausibility === 'unsafe'
   const others = alternatives?.filter((candidate) => candidate.id !== choice.id) ?? []
+  /*
+   * Everything the learner did not take, in two groups. Until November 2026 they were one list
+   * headed "Why the other answers do not fit", which after a selection that was not the best one
+   * filed the best-supported answer under that heading (SHARED-FEEDBACK-02). The heading now sits
+   * over the choices it is true of, and the best-supported answer is stated on its own, open,
+   * where a learner who took another option reads it without unfolding anything. Nothing new is
+   * disclosed: this card renders only after the commitment, and the same label and rationale were
+   * already one click away.
+   */
+  const bestSupported = others.filter((candidate) => candidate.plausibility === 'best')
+  const doNotFit = others.filter((candidate) => candidate.plausibility !== 'best')
+  const bestSupportedHeading =
+    choice.plausibility === 'best'
+      ? bestSupported.length > 1
+        ? 'Other best-supported answers'
+        : 'Another best-supported answer'
+      : bestSupported.length > 1
+        ? 'Best-supported answers'
+        : 'Best-supported answer'
 
   return (
     <article
@@ -130,7 +154,30 @@ export function ChoiceReasoningFeedback({
         <p className="mt-1 text-slate-200">{explanation}</p>
       </div>
 
-      {others.length > 0 ? (
+      {bestSupported.length > 0 ? (
+        <div
+          className="mt-3 rounded-xl border border-emerald-300/40 bg-emerald-950/20 p-3 text-sm leading-6"
+          data-best-supported-answers
+        >
+          <strong className="text-white" data-keyed-answer-label>
+            {bestSupportedHeading}
+          </strong>
+          <ul className="mt-1 grid gap-2 text-slate-200">
+            {bestSupported.map((candidate) => (
+              <li
+                key={candidate.id}
+                data-other-answer={candidate.id}
+                data-other-answer-role="keyed"
+              >
+                <span className="font-semibold text-white">{candidate.label}</span> —{' '}
+                {candidate.rationale}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {doNotFit.length > 0 ? (
         <details
           className="mt-3 rounded-xl border border-white/15 bg-black/10 p-3 text-sm leading-6"
           data-other-answers-panel
@@ -139,8 +186,12 @@ export function ChoiceReasoningFeedback({
             Why the other answers do not fit
           </summary>
           <ul className="mt-2 grid gap-2 text-slate-200" data-other-answers>
-            {others.map((candidate) => (
-              <li key={candidate.id} data-other-answer={candidate.id}>
+            {doNotFit.map((candidate) => (
+              <li
+                key={candidate.id}
+                data-other-answer={candidate.id}
+                data-other-answer-role="alternative"
+              >
                 <span className="font-semibold text-white">{candidate.label}</span> —{' '}
                 {candidate.rationale}
               </li>

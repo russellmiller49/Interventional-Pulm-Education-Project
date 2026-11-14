@@ -146,3 +146,24 @@
 .flow [data-device='drager-evita-v800-v600'] [data-native-monitor] :is(span, small) {
   color: #42616a;
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * A case run as the last task of a Learn section: the same card, inside the section's task body.
+ * ---------------------------------------------------------------------------------------------- */
+.caseStrip {
+  margin: 0;
+  color: #71e1e5;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.flow[data-section-case] {
+  border: 1px solid #345158;
+  border-radius: 0.8rem;
+}
+.flow[data-section-case] h2[data-case-title] {
+  margin: 0;
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  line-height: 1.25;
+}

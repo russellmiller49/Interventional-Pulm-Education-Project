@@ -1,3 +1,4 @@
+import { BENCH_AIM_TOLERANCE_DEG, BENCH_APPROACH_DEPTH_MM } from '../engine/scope/scopeBenchTarget'
 import type { ScopeGoal, ScopeGoalTest, ScopeViewSpec } from '../components/scope/types'
 
 /**
@@ -40,7 +41,8 @@ const combineView = {
 const transferView = { ...combineView, benchTarget: TRANSFER_BENCH_TARGET } as const
 const suctionView = {
   ...BENCH,
-  controls: ['suction', 'reset'],
+  controls: ['advance', 'withdraw', 'suction', 'reset'],
+  benchSuction: true,
   readouts: ['depthMm', 'suction'],
 } as const
 
@@ -53,8 +55,8 @@ const depthGoal = goal(
     type: 'all',
     tests: [
       { type: 'event-sequence', events: ['advanced', 'withdrawn'] },
-      { type: 'metric', metric: 'depthMm', op: '>=', value: 0 },
-      { type: 'metric', metric: 'depthMm', op: '<=', value: 0 },
+      { type: 'metric', metric: 'depthMm', op: '>=', value: -4 },
+      { type: 'metric', metric: 'depthMm', op: '<=', value: 4 },
     ],
   },
 )
@@ -62,8 +64,8 @@ const bendGoal = goal('bend-and-release', 'Bend the tip, then return it to strai
   type: 'all',
   tests: [
     { type: 'event-sequence', events: ['control-used:deflection', 'control-used:deflection'] },
-    { type: 'metric', metric: 'deflectionDeg', op: '>=', value: 0 },
-    { type: 'metric', metric: 'deflectionDeg', op: '<=', value: 0 },
+    { type: 'metric', metric: 'deflectionDeg', op: '>=', value: -6 },
+    { type: 'metric', metric: 'deflectionDeg', op: '<=', value: 6 },
   ],
 })
 function targetGoal(view: ScopeViewSpec): ScopeGoal {
@@ -73,9 +75,13 @@ function targetGoal(view: ScopeViewSpec): ScopeGoal {
     {
       type: 'all',
       tests: [
-        { type: 'bench-target', point: view.benchTarget!.point, toleranceDeg: 5 },
-        { type: 'metric', metric: 'depthMm', op: '>=', value: 12 },
-        { type: 'metric', metric: 'depthMm', op: '<=', value: 16 },
+        {
+          type: 'bench-target',
+          point: view.benchTarget!.point,
+          toleranceDeg: BENCH_AIM_TOLERANCE_DEG,
+        },
+        { type: 'metric', metric: 'depthMm', op: '>=', value: BENCH_APPROACH_DEPTH_MM.min },
+        { type: 'metric', metric: 'depthMm', op: '<=', value: BENCH_APPROACH_DEPTH_MM.max },
         { type: 'event', event: 'advanced' },
         { type: 'without', event: 'bench-advanced-off-target' },
       ],
@@ -139,18 +145,18 @@ export const FIVE_CONTROLS_TASKS: Readonly<Record<FiveControlsTaskId, FiveContro
   suction: {
     view: suctionView,
     goals: [
-      goal('suction-on-off', 'Apply suction, then release it.', {
+      goal('suction-on-off', 'Aspirate fluid, then release suction.', {
         type: 'event-sequence',
-        events: ['suction-applied', 'suction-released'],
+        events: ['bench-fluid-aspirated', 'suction-released'],
       }),
     ],
   },
   'suction-repeat': {
     view: suctionView,
     goals: [
-      goal('suction-repeat', 'Apply suction, then release it.', {
+      goal('suction-repeat', 'Aspirate fluid, then release suction.', {
         type: 'event-sequence',
-        events: ['suction-applied', 'suction-released'],
+        events: ['bench-fluid-aspirated', 'suction-released'],
       }),
     ],
   },

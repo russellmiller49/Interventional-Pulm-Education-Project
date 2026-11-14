@@ -1441,7 +1441,129 @@
 }
 .heartFigure .physiologyViewport {
   margin: 0;
+  border-radius: 0;
+}
+
+/*
+ * In the lesson the view shares a column with its status and key, in a window that does not
+ * scroll as a page. Its height follows the window so the three are on screen together.
+ */
+[data-surface='heart-3d'] .heartFigure .physiologyViewport {
+  height: clamp(340px, 44vh, 440px);
+  min-height: 0;
+}
+
+/*
+ * The heart view's buttons sit in a bar above the canvas. As an overlay they covered the top of
+ * the model, where the catheter comes in from the superior vena cava.
+ */
+.heartFigure .physiologyOrientation {
+  position: static;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #244955;
+  border-bottom: 0;
   border-radius: 0.9rem 0.9rem 0 0;
+  background: #071c26;
+  pointer-events: auto;
+}
+
+/* Six arrow buttons in one unbreakable row are wider than a phone at 200% text. */
+.heartFigure .physiologyKeyboardControls {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* The key under the view: a mark, then what it stands for. */
+.heartKey {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.heartKey ul {
+  display: grid;
+  /* Never wider than the column: at 200% text a fixed 13rem track pushed the page sideways. */
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: 0.2rem 0.9rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.heartKey li {
+  min-width: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.heartKey i {
+  flex: 0 0 1.6rem;
+  height: 0;
+  border-top: 3px solid #ffd23f;
+}
+
+.heartKey i[data-key-mark='structure'] {
+  height: 0.7rem;
+  border: 0;
+  border-radius: 0.2rem;
+  background: #4fb0ff;
+}
+
+.heartKey details {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.heartKey summary {
+  width: max-content;
+  max-width: 100%;
+  color: #9fc5c8;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.heartKey details span {
+  display: block;
+  margin-top: 0.3rem;
+}
+
+/* Which way the heart is facing, on the foot of the canvas where only the great vessels run off. */
+.heartOrientationNote {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 0.6rem;
+  z-index: 5;
+  margin: 0;
+  color: #c9dddb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  pointer-events: none;
+  text-shadow: 0 0 4px #04161c;
+}
+
+.heartKey i[data-key-mark='axis'] {
+  border-top: 2px dashed #7edbd2;
+}
+
+.heartKey i[data-key-mark='tubing'] {
+  border-top: 2px solid #c7dde0;
+}
+
+/* The heart model's own two blood colours (its "CT Venous" and "CT Arterial" materials). */
+.heartKey i[data-key-mark='to-lungs'],
+.heartKey i[data-key-mark='from-lungs'] {
+  height: 0.7rem;
+  border: 0;
+  border-radius: 0.2rem;
+  background: #3579b8;
+}
+
+.heartKey i[data-key-mark='from-lungs'] {
+  background: #d44d3c;
 }
 .physiologyAnatomyHud {
   display: grid;
@@ -2709,6 +2831,21 @@
   background: var(--teal-soft);
 }
 
+.formulaFaults {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 1rem 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #6d4c12;
+  background: #fff0cc;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.formulaFaults p {
+  margin: 0;
+}
+
 .formulaGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2751,8 +2888,8 @@
 .formulaGrid article > p {
   grid-column: 1 / -1;
   margin: 0;
-  color: #866022;
-  font-size: 0.63rem;
+  color: #6d4c12;
+  font-size: 0.72rem;
   line-height: 1.35;
 }
 .notInterpretable {
@@ -2824,6 +2961,34 @@
   border: 1px solid var(--teaching-line);
   border-radius: 0.8rem;
   background: #fbfdfc;
+}
+
+/*
+ * A part of the cardiac-output method read as a page of its own. The lists inside were drawn for
+ * the light card the Explain card puts them on, so the page gives them the same card, at the
+ * page's type size.
+ */
+.methodPageSurface {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #d5e3e1;
+  border-radius: 0.8rem;
+  background: #fbfdfc;
+  color: #24393d;
+}
+
+.methodPageSurface > :first-child {
+  margin-top: 0;
+}
+
+.methodPageSurface > dl,
+.methodPageSurface > ul,
+.methodPageSurface > ol,
+.methodPageSurface > p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .measurementTeachingCardHeading {
@@ -5854,12 +6019,182 @@
   background: #fceef1;
 }
 
+/* A part of a reference card the learner has already read, as a closed heading that opens in place. */
+.repeatedPart {
+  margin-block: 0.5rem;
+}
+.repeatedPart > summary {
+  padding: 0.45rem 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.repeatedPart[open] > summary {
+  margin-bottom: 0.4rem;
+}
+
 .thermoTrialCurve {
   width: 100%;
   min-height: 130px;
   border: 1px solid #28454e;
   border-radius: 0.6rem;
   background: #07171d;
+}
+/* The names of the reference curve's parts, on the drawing (`named`). */
+.thermoCurveNames text {
+  fill: #d7e8ea;
+  font-size: 9px;
+  font-weight: 700;
+}
+/* The walk's normal reference in the lesson's visual column, under the catheter map. */
+.walkReference {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  color: #eaf4f4;
+}
+.walkReference > h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.walkReference > p {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/*
+ * One calculated value, drawn top to bottom in the lesson's visual column: its inputs, the formula,
+ * the result. Where the worked episode fills it in, an input's edge says where it came from, and
+ * so do its words: measured is a solid teal edge, calculated a dashed one, an input the formula
+ * cannot use a dotted red one. Drawn without numbers, every input has the same plain edge.
+ */
+.derivedValueFigure {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.75rem;
+  color: #eaf4f4;
+  background: rgba(255, 255, 255, 0.03);
+}
+.derivedValueFigure figcaption {
+  margin-bottom: 0.2rem;
+  line-height: 1.4;
+}
+.derivedValueStage {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.derivedValueInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.derivedValueInputs li {
+  display: grid;
+  gap: 0.15rem;
+  align-content: start;
+  padding: 0.55rem 0.65rem;
+  border: 2px solid rgba(163, 206, 209, 0.45);
+  border-radius: 0.6rem;
+  background: #10262b;
+  line-height: 1.4;
+}
+.derivedValueInputs li[data-provenance='measured'] {
+  border-color: #36c3ca;
+}
+.derivedValueInputs li[data-provenance='calculated'] {
+  border-style: dashed;
+  border-color: #ffbf62;
+}
+.derivedValueInputs li[data-usable='false'] {
+  border-style: dotted;
+  border-color: #ff6b73;
+}
+.derivedValueInputs li span {
+  font-size: 0.95rem;
+}
+.derivedValueInputs li small {
+  color: #9fb4b7;
+  font-size: 0.8rem;
+}
+.derivedValueArrow {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 1.1rem;
+  line-height: 1;
+  text-align: center;
+}
+.derivedValueFormula {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.6rem;
+  background: #07171d;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+.derivedValueGradient {
+  margin: 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.derivedValueResult {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #76d69b;
+  border-radius: 0.6rem;
+  background: #10262b;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.derivedValueResult[data-derived-result='available-with-caution'] {
+  border-style: dashed;
+  border-color: #ffbf62;
+}
+.derivedValueResult[data-derived-result='withheld'] {
+  border-style: dotted;
+  border-color: #ff6b73;
+}
+.derivedValueResult[data-derived-result='not-shown'] {
+  border-color: rgba(163, 206, 209, 0.45);
+}
+.derivedValueNote {
+  margin: 0.2rem 0 0;
+  color: #9fb4b7;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* The flow section's reference curve in the lesson's visual column: the drawing, then its parts in words. */
+.thermoReferenceFigure {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(163, 206, 209, 0.22);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+.thermoReferenceFigure figcaption {
+  display: grid;
+  gap: 0.35rem;
+  line-height: 1.5;
+}
+.thermoReferenceFigure figcaption span {
+  color: #9fb4b7;
+  font-size: 0.9rem;
 }
 
 .curveFeatureList {

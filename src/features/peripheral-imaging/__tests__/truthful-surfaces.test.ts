@@ -9,10 +9,6 @@ import {
 } from '../content/routes'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingStageLesson } from '../content/stageLessons'
-import {
-  fixedExampleEvidence,
-  illustrativeOnlyExampleIdentities,
-} from '../content/teachingExamples'
 import { transferOrigin } from '../content/transferOrigins'
 import { LESSONS } from '../data/lessons'
 
@@ -37,12 +33,10 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
           // No visual at all: a written scenario, and it says so.
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/read the scenario|stated evidence/i)
-        } else if (fixedExampleEvidence(sectionId, round) === 'illustrative-model') {
-          // A visual the question cannot be read off: it is named as a teaching model, and the
-          // learner is sent to the written scenario.
+        } else if (step.activity.visual === 'dose') {
+          // A procedure record, not an image.
           expect(step.instruction).not.toMatch(/inspect the image/i)
-          expect(step.instruction).toMatch(/answer from the written scenario/i)
-          expect(step.instruction).toMatch(/teaching model/i)
+          expect(step.instruction).toMatch(/^Read the procedure record\./)
         } else {
           // A visual that is the evidence keeps its image-based instruction.
           expect(step.instruction).toMatch(/inspect the image|stated evidence/i)
@@ -51,22 +45,17 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
     }
   })
 
-  it('exactly three checks are declared illustrative, and nothing else is relabelled', () => {
-    // The declaration is per question and round. Holding the list here means a fourth check cannot
-    // quietly lose its image-based framing, and the transfer rounds cannot be caught by it.
-    expect(illustrativeOnlyExampleIdentities()).toEqual([
-      'current-anatomy:example:0',
-      'changing-anatomy:example:0',
-      'staff-protection:example:0',
-    ])
-    for (const sectionId of peripheralImagingSectionIds)
-      expect(fixedExampleEvidence(sectionId, 1)).toBe('depicts-the-question')
-    // The two checks whose image really is the evidence keep it.
-    expect(fixedExampleEvidence('chain-walk', 0)).toBe('depicts-the-question')
-    expect(fixedExampleEvidence('cbct-acquisition', 0)).toBe('depicts-the-question')
+  it('no check sends the learner away from its own image', () => {
+    // Owner follow-up, 2026-10-12: a check shows the image it asks about or is a written scenario.
+    // No instruction disclaims an image, so none may be shown that the question cannot be read off.
+    for (const sectionId of peripheralImagingSectionIds) {
+      const lesson = imagingStageLesson(sectionId)
+      for (const step of lesson.steps)
+        expect(step.instruction).not.toMatch(/not the situation|section’s example|teaching model/i)
+    }
   })
 
-  it('the six text-only checks read as scenarios', () => {
+  it('the seven text-only checks read as scenarios', () => {
     const textOnly = peripheralImagingSectionIds.filter((sectionId) => {
       const lesson = imagingStageLesson(sectionId)
       return lesson.steps[lesson.predictionStepIndex].activity.visual === 'case'
@@ -79,6 +68,9 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
       'dts-interpretation',
       'fixed-suite',
       'mobile-suite',
+      // Owner follow-up, 2026-10-12: a hand in the primary beam is not on the section's image.
+      // (Sections 4 and 16 show their findings on images of their own.)
+      'staff-protection',
       'suite-cases',
     ])
     for (const sectionId of textOnly) {
@@ -112,15 +104,17 @@ describe('reports 1.4 and 8.2 — a heading names the task the activity runs', (
     expect(evidence.id).toBe('imaging-questions:evidence')
   })
 
-  it("the last section's matching activity names the components it matches to", () => {
+  it("the last section's hands-on step names the run-through it is, on the geometry lab", () => {
+    // Expert-session round, part 2 (A7): the matching task of report 8.2 became a run-through of
+    // one nodule through the workflow. The step keeps its record key.
     const lesson = imagingStageLesson('suite-cases')
-    const sort = lesson.steps.find((step) => step.interaction.kind === 'sort')!
-    expect(sort.id).toBe('suite-cases:guided')
-    expect(sort.title).toBe('Match each finding to its component of image formation')
-    if (sort.interaction.kind !== 'sort') throw new Error('unreachable')
-    // Its origins really are the six components, and no decision is asked for.
-    expect(sort.interaction.sort.origins).toHaveLength(6)
-    expect(sort.title).not.toMatch(/decision/i)
+    const act = lesson.steps.find((step) => step.interaction.kind === 'lab-task')!
+    expect(act.id).toBe('suite-cases:guided')
+    expect(act.title).toBe('Wedge, project, collimate and inspect')
+    if (act.interaction.kind !== 'lab-task') throw new Error('unreachable')
+    expect(act.interaction.lab).toBe('geometry')
+    expect(act.suite.controls).toEqual(['wedge', 'orbit', 'tilt', 'field', 'zoom'])
+    expect(lesson.steps.some((step) => step.interaction.kind === 'sort')).toBe(false)
   })
 
   it('pins the remaining reading screen whose title still says choose', () => {
@@ -199,16 +193,10 @@ describe('report PR2 — a reviewed section points at its own practice case, and
       (sectionId) => microCasesForSection(sectionId).length === 0,
     )
     expect(mapped.length).toBeGreaterThan(0)
-    // These six have no authored practice case; the reviewed card must link nothing for them
-    // rather than borrow another section's case.
-    expect(unmapped).toEqual([
-      'imaging-questions',
-      'chain-walk',
-      'good-image',
-      'current-anatomy',
-      'projection',
-      'suite-cases',
-    ])
+    // These four have no authored practice case; the reviewed card must link nothing for them
+    // rather than borrow another section's case. (Sections 4 and 5 gained theirs in the
+    // expert-session round.)
+    expect(unmapped).toEqual(['imaging-questions', 'chain-walk', 'good-image', 'suite-cases'])
     for (const sectionId of mapped)
       expect(microCasesForSection(sectionId)[0].sectionId).toBe(sectionId)
   })

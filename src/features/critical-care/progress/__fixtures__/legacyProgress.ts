@@ -10,6 +10,7 @@ import {
   ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY,
   ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY,
 } from '@/features/icu-hemodynamics/engine/progress'
+import { ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY } from '@/features/icu-hemodynamics/engine/selfPacedProgress'
 import { publicIcuScenarioManifestById } from '@/features/icu-simulation/content/publicScenarioManifest'
 import {
   ICU_SIMULATION_PROGRESS_STORAGE_KEY,
@@ -48,6 +49,12 @@ export const everyLegacyProgressStorageKey = [
   BAXTER_CRRT_PROGRESS_STORAGE_KEY,
   ICU_SIMULATION_PROGRESS_STORAGE_KEY,
   ICU_SIMULATION_SESSION_STORAGE_KEY,
+] as const
+
+/** What the readers open, in order: hemodynamics keeps its self-paced record under its own key. */
+export const everyProgressStorageKeyRead = [
+  ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY,
+  ...everyLegacyProgressStorageKey,
 ] as const
 
 export const emptyLegacyProgressFixtures: Readonly<Record<string, string>> = Object.freeze({})

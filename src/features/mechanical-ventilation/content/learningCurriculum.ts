@@ -85,6 +85,16 @@ export const ventilationStages: readonly {
 export interface VentilationLearningUnit {
   readonly id: string
   readonly title: string
+  /**
+   * The topic, in the words a fellow would look it up by: "Peak and plateau pressure". It leads
+   * the section's question in the Sections menu, the lesson's header line and the Learn page, so a
+   * section can be found by name.
+   *
+   * It is on screen before any answer, in every section (the Sections menu lists all fourteen), so
+   * it names the subject and never the finding: it must pass every section's
+   * `precommitDenyPatterns` (see `ventilationSectionSpecErrors`). Section 7 is "Expiratory time"
+   * for that reason; its deny list bars the name of what the learner is about to find.
+   */
   readonly shortTitle: string
   readonly stage: VentilationStage
   readonly minutes: number
@@ -117,7 +127,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'breathing-with-support',
     title: 'Follow one supported breath',
-    shortTitle: 'The whole breath',
+    shortTitle: 'The breath cycle',
     stage: 'orientation',
     minutes: 5,
     objective: 'breath',
@@ -131,10 +141,10 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     explanation:
       'A ventilator helps move gas into the respiratory system. A signal starts inspiration, support is delivered, inspiration ends, and gas flows out. Moving gas supports breathing; oxygen transfer and CO₂ removal still depend on the patient’s lungs and circulation.',
     checklist: [
-      'Find the beginning of inspiration.',
-      'Follow gas moving in.',
-      'Find the change to expiration.',
-      'Follow gas moving out before the next breath.',
+      'Find where inspiration begins: the trigger.',
+      'Follow inspiratory flow into the lungs.',
+      'Find where inspiration ends: cycling.',
+      'Follow expiratory flow out, before the next breath begins.',
     ],
     example: {
       situation: 'Watch the normal supported breath below. The patient is passive in this drawing.',
@@ -152,7 +162,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'waveform-anatomy',
     title: 'Three traces, one breath',
-    shortTitle: 'Read the traces',
+    shortTitle: 'Ventilator waveforms',
     stage: 'foundation',
     minutes: 6,
     objective: 'breath',
@@ -190,7 +200,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'controls-and-goals',
     title: 'What you set. What you check.',
-    shortTitle: 'Settings and results',
+    shortTitle: 'Ventilator settings',
     stage: 'foundation',
     minutes: 6,
     objective: 'breath',
@@ -226,7 +236,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'mechanics-load-and-pressure',
     title: 'Where does the pressure go?',
-    shortTitle: 'Pressure and load',
+    shortTitle: 'Peak and plateau pressure',
     stage: 'mechanism',
     minutes: 8,
     objective: 'mechanics',
@@ -266,7 +276,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'modes-and-breath-delivery',
     title: 'What does this breath hold constant?',
-    shortTitle: 'Breath delivery',
+    shortTitle: 'Volume and pressure control',
     stage: 'mechanism',
     minutes: 8,
     objective: 'breath',
@@ -304,7 +314,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'lung-protection',
     title: 'Is this breath appropriate for this lung?',
-    shortTitle: 'Lung protection',
+    shortTitle: 'Lung-protective ventilation',
     stage: 'mechanism',
     minutes: 7,
     objective: 'mechanics',
@@ -316,12 +326,13 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     spine: 'delivery',
     analogy:
       'Choose a container’s fill by its capacity, not by the weight of everything around it.',
-    explanation: `Size the breath to the lung, and lung size follows height and sex, not weight. Predicted body weight (PBW) for a man is ${N('pbw-male')}; for a woman, ${N('pbw-female')}. In ARDS the goal is ${N('vt-ards-goal')}, within ${N('vt-ards-range')}, with plateau pressure ${N('pplat-limit')} and driving pressure (plateau minus PEEP) ${N('driving-pressure-limit')}. If the plateau is over the limit, step the tidal volume down by 1 mL/kg, to a minimum of 4 mL/kg.`,
+    explanation: `Size the breath to the lung, and lung size follows height and sex, not weight. Predicted body weight (PBW) for a man is ${N('pbw-male')}; for a woman, ${N('pbw-female')}. In ARDS the goal is ${N('vt-ards-goal')}, within ${N('vt-ards-range')}, with plateau pressure ${N('pplat-limit')}. If the plateau is over the limit, step the tidal volume down by 1 mL/kg, to a minimum of 4 mL/kg. Driving pressure is plateau minus total PEEP: set PEEP plus any intrinsic PEEP. It needs a passive patient, with the plateau read on an inspiratory pause and total PEEP on an end-expiratory hold. The commonly taught reference is ${N('driving-pressure-reference')}. Higher values track with higher mortality in observational data, and AARC 2024 lists ${N('driving-pressure-aarc-target')} as a target on a conditional, low-certainty suggestion. Trials of limiting it have not shown lower mortality. Use it to question the breath; it does not replace the tidal volume and plateau goals, and a value under the reference does not clear a high plateau.`,
     checklist: [
       'Calculate PBW from height and sex.',
       'Express the delivered tidal volume in mL/kg PBW.',
       `Read a plateau on a relaxed patient with a ${N('pplat-pause')} pause.`,
-      'Subtract PEEP for the driving pressure.',
+      'Read total PEEP with an end-expiratory hold on the same relaxed patient.',
+      'Subtract total PEEP, not set PEEP, from the plateau for the driving pressure.',
     ],
     example: {
       situation:
@@ -329,7 +340,8 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       reasoning: [
         'PBW is 50 + 2.3 × (70 − 60) = 73 kg. The scale weight does not enter.',
         '550 mL ÷ 73 kg is 7.5 mL/kg. The goal of 6 mL/kg is 440 mL.',
-        'If the plateau is 32 cmH₂O on PEEP 10, the driving pressure is 22 cmH₂O. Both are over their limits.',
+        `The plateau reads 32 cmH₂O. An end-expiratory hold reads 10 on set PEEP 10, so there is no intrinsic PEEP, and the driving pressure is 32 − 10 = 22 cmH₂O. The plateau is over its limit and the driving pressure is well above the reference of ${N('driving-pressure-reference')}.`,
+        'Had the hold read 14, total PEEP would be 14 and the driving pressure 32 − 14 = 18 cmH₂O. Subtracting set PEEP would have overstated it by the 4 cmH₂O of intrinsic PEEP. The plateau would still be over its limit.',
       ],
       conclusion:
         'Step the tidal volume down toward 440 mL and repeat the plateau after each change.',
@@ -340,6 +352,9 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       'ats-ards-2024',
       'amato-driving-pressure-2015',
       'aarc-assessment-2024',
+      'aoyama-driving-pressure-2018',
+      'bugedo-driving-pressure-2017',
+      'agrafiotis-driving-pressure-rcts-2026',
     ],
     caseIds: ['MV-01', 'MV-03'],
     visual: 'protection',
@@ -347,7 +362,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'expiration-and-air-trapping',
     title: 'Does the breath have time to finish?',
-    shortTitle: 'Time to empty',
+    shortTitle: 'Expiratory time',
     stage: 'mechanism',
     minutes: 8,
     objective: 'mechanics',
@@ -391,7 +406,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'triggering-and-cycling',
     title: 'Do the two breath clocks agree?',
-    shortTitle: 'Patient and machine timing',
+    shortTitle: 'Triggering and cycling',
     stage: 'mechanism',
     minutes: 8,
     objective: 'interaction',
@@ -433,7 +448,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'oxygenation-response',
     title: 'Did oxygenation improve at a cost?',
-    shortTitle: 'Oxygenation and tolerance',
+    shortTitle: 'Oxygenation and PEEP',
     stage: 'mechanism',
     minutes: 7,
     objective: 'gas-exchange',
@@ -472,7 +487,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'ventilation-and-co2',
     title: 'What will change the CO₂?',
-    shortTitle: 'Effective ventilation',
+    shortTitle: 'CO₂ and minute ventilation',
     stage: 'mechanism',
     minutes: 7,
     objective: 'gas-exchange',
@@ -515,7 +530,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'waveform-reading-sequence',
     title: 'Read the whole breath in order',
-    shortTitle: 'A systematic read',
+    shortTitle: 'Systematic waveform reading',
     stage: 'application',
     minutes: 7,
     objective: 'interaction',
@@ -558,7 +573,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'dyssynchrony-mechanisms',
     title: 'Locate the mismatch before changing support',
-    shortTitle: 'Explain the mismatch',
+    shortTitle: 'Patient–ventilator dyssynchrony',
     stage: 'application',
     minutes: 8,
     objective: 'interaction',
@@ -599,7 +614,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'safety-reassessment-and-human-factors',
     title: 'The alarm and the person',
-    shortTitle: 'Patient first',
+    shortTitle: 'Alarms and reassessment',
     stage: 'application',
     minutes: 7,
     objective: 'safety',
@@ -642,7 +657,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'high-peak-pressure-integration',
     title: 'One alarm, different patients',
-    shortTitle: 'Put it together',
+    shortTitle: 'High peak pressure',
     stage: 'integration',
     minutes: 10,
     objective: 'safety',

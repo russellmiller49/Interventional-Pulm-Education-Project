@@ -41,9 +41,11 @@ test('target derivatives are bounded, hash checked and leave every original nati
   expect(manifest.sourceSha256).toBe(native.sourceSha256)
   expect(manifest.sourceGraphSha256).toBe(native.sourceGraphSha256)
   expect(manifest.sourceLabeledGraphSha256).toBe(native.nomenclature.sourceLabeledGraphSha256)
-  expect(manifest.targets).toHaveLength(13)
-  expect(new Set(manifest.targets.map((t) => t.segment.code)).size).toBe(10)
-  expect(manifest.assets.reduce((n, a) => n + a.bytes, 0)).toBeLessThan(1_200_000)
+  expect(manifest.targets).toHaveLength(18)
+  expect(new Set(manifest.targets.map((t) => t.segment.code)).size).toBe(15)
+  // 1,101,884 bytes for the first thirteen lesions; five more in November 2026 brought it to
+  // 1,210,796, and the bound was raised from 1.2 MB with them.
+  expect(manifest.assets.reduce((n, a) => n + a.bytes, 0)).toBeLessThan(1_300_000)
   const paths = readdirSync('public/branch-tracing/targets-v1', { recursive: true })
     .filter((p) => String(p).endsWith('.png'))
     .map(String)
@@ -154,9 +156,9 @@ test('complete routes preserve target placement, the c3 source fixtures and all 
     for (let k = trace.range[0]; k <= trace.range[1]; k++)
       expect(readFileSync(`public${nativeImageUrl(k)}`).length).toBeGreaterThan(0)
   }
-  // Practice reaches every lesion: thirteen lesions in ten segments, each by its own route.
+  // Practice reaches every lesion: eighteen lesions in fifteen segments, each by its own route.
   expect([...TARGET_IDS].sort()).toEqual(manifest.targets.map((t) => t.id).sort())
   expect(
     new Set(TARGET_IDS.map((id) => targetForTrace(traceForTarget(id)).segment.code)).size,
-  ).toBe(10)
+  ).toBe(15)
 })

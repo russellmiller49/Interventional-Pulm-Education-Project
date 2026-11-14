@@ -45,6 +45,33 @@ export function clickPrimary() {
   fireEvent.click(button)
 }
 
+/** "Skip the case · finish the section", on a section's last task when that task is its case. */
+export function skipCaseButton(): HTMLButtonElement | null {
+  return (
+    [...document.querySelectorAll<HTMLButtonElement>('[data-now-card] [data-now-secondary]')].find(
+      (button) => /^Skip the case/.test(button.textContent?.trim() ?? ''),
+    ) ?? null
+  )
+}
+
+export function skipCase() {
+  const button = skipCaseButton()
+  if (!button) throw new Error(`No Skip the case on step ${currentStepId()}`)
+  fireEvent.click(button)
+}
+
+/**
+ * Move past the current task without doing it, as a learner leaving every step would: the walk's
+ * own skip, Skip the case on a section's last task, and the Now card's primary everywhere else.
+ * (The primary on the case step starts the case, which is doing it.)
+ */
+export function leaveTask() {
+  const skip = document.querySelector<HTMLButtonElement>('[data-skip-task]')
+  if (skip) fireEvent.click(skip)
+  else if (skipCaseButton()) skipCase()
+  else clickPrimary()
+}
+
 /** Perform the real numbered-region selections, without bypassing host commitments. */
 export function identifyComponents(mode: ComponentMode) {
   for (const component of componentOrder) {

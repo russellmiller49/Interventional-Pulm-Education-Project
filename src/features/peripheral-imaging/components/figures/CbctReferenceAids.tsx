@@ -63,7 +63,7 @@ export function FixedMobileComparison() {
         {FIXED_MOBILE_MODEL_NOTE}
       </p>
       <p className={styles.note} data-comparison-limit>
-        {FIXED_MOBILE_LIMIT} Drawn from this course’s Sections 12 to 14 and{' '}
+        {FIXED_MOBILE_LIMIT} Drawn from this course’s Sections 13 to 15 and{' '}
         {sourceIds.map(shortCitation).join(', ')}.
       </p>
     </section>
@@ -79,7 +79,7 @@ export function TeamReadinessAid() {
   const roles = [...new Set(TEAM_READINESS_ROWS.map((row) => row.role))]
   return (
     <section className={`${styles.figure} ${styles.readiness}`} data-team-readiness>
-      <p className={styles.kicker}>Before a CBCT spin, confirm · teaching aid</p>
+      <p className={styles.kicker}>Before a CBCT spin, confirm</p>
       <p className={styles.modelLabel} data-readiness-status>
         {TEAM_READINESS_STATUS}
       </p>

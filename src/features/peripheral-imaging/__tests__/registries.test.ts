@@ -58,7 +58,6 @@ describe('the content registries validate clean at import', () => {
       'good-image',
       'dts-interpretation',
       'two-dimensional',
-      'suite-cases',
     ])
     const labSections = Object.keys(IMAGING_LAB_GOALS)
     for (const sectionId of labSections) expect(peripheralImagingSectionIds).toContain(sectionId)

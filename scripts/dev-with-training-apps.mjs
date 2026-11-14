@@ -110,6 +110,12 @@ try {
       watch(resolve(root, directory), { recursive: true }, (_, filename) => {
         if (!filename || filename.split(/[/\\]/).some((part) => ignored.has(part))) return
         if (filename.endsWith('.tsbuildinfo')) return
+        // Vite writes `vite.config.ts.timestamp-<n>.mjs` beside its config on every build and
+        // removes it again. Counting that as a source change made each build schedule the next
+        // one, for ever. The same goes for the directory events a rebuilt `dist` raises on its
+        // parent, which carry no file name.
+        if (filename.includes('.timestamp-')) return
+        if (!/\.[a-z0-9]+$/i.test(filename)) return
         for (const app of targets) schedule(app)
       }),
     )

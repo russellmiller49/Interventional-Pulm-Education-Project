@@ -20,10 +20,10 @@ export function BronchoscopyFoundationsHub() {
           Prepare for supervised bronchoscopy
         </h1>
         <p className="max-w-3xl text-base leading-7 text-muted-foreground">
-          A guided introduction to adult flexible bronchoscopy: prepare the patient and instrument,
-          learn the controls, inspect normal airways, and reason through sampling, deterioration and
-          documentation. General clinical knowledge is assumed; prior bronchoscopy experience is
-          not.
+          Fifteen short sections take you through one adult flexible bronchoscopy. Plan it, prepare
+          the scope and the patient, drive to the carina, survey both lungs, sample, and respond
+          when something goes wrong. You need general clinical knowledge. You do not need to have
+          held a scope.
         </p>
         <div>
           <BronchContinueCta />
@@ -32,21 +32,18 @@ export function BronchoscopyFoundationsHub() {
           {bronchCompositionLine()}
         </p>
         <p className="max-w-3xl leading-7">
-          Each lesson teaches its concepts and examples before any question. Questions and
-          activities are optional: open the explanation first, try again, or continue without
-          answering. Some lessons use an instrument workspace; others use airway images, a patient
-          case or an examination record. You can open any lesson; prerequisites suggest an order and
-          never lock the course.
+          Each section teaches first, then asks. You can skip any question or activity, open its
+          explanation, or try it again. Open the sections in any order. The order here is the order
+          of a procedure.
         </p>
         <p className="text-sm leading-6 text-muted-foreground" data-competence-statement>
-          Self-paced online learning does not establish procedural competence. Hand skill, equipment
-          readiness and clinical judgment are built under supervision. The models use one teaching
-          anatomy with authored geometry or scripted observations; follow current device
-          instructions and local policy.
+          An online course cannot show that you can perform a bronchoscopy. You build the hand skill
+          on the bench and at the bedside. The faculty who watch you judge when you are ready, and
+          your institution grants privileges.
         </p>
         <p className="text-sm leading-6 text-muted-foreground" data-storage-statement>
-          This device keeps where you left off and the sections you open, mark reviewed or mark to
-          review later. Answers, attempts and scope positions are not saved, and nothing is scored.
+          This device remembers where you left off and the sections you opened or marked. Your
+          answers are not saved and nothing is scored.
         </p>
       </section>
       <section aria-labelledby="bronch-map-heading">
@@ -68,7 +65,7 @@ export function BronchoscopyFoundationsHub() {
           Integrated cases
         </Link>
         <Link className="min-h-11 py-3 text-primary" href={BRONCHOSCOPY_FOUNDATIONS_REFERENCE_HREF}>
-          Reference, sources and model limits
+          Reference and sources
         </Link>
       </nav>
     </div>

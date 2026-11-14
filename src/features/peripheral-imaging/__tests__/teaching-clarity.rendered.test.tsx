@@ -9,6 +9,7 @@ import { SectionGlossary } from '../components/stage/SectionGlossary'
 import { LabDock } from '../components/suite/LabDock'
 import { DosePanels } from '../components/suite/views/DoseView'
 import { SignalReadout } from '../components/suite/views/SignalView'
+import { tableCrossing } from '../lib/rayCrossingTable'
 import { StaffPanels } from '../components/suite/views/StaffView'
 import { resolveSuiteInputs } from '../components/suite/suiteViewSpec'
 import { DOSE_NOTE_TEMPLATE_LINES } from '../content/doseQuantities'
@@ -114,10 +115,13 @@ describe('report CW3 — terms are defined where a learner lands, and reachable 
     // A term taught in full elsewhere links that section.
     const cbct = glossary.querySelector('[data-glossary-term="cbct"] [data-glossary-taught-in]')!
     expect(cbct.getAttribute('href')).toBe(sectionHref('cbct-acquisition'))
-    // Every definition says where its words come from.
+    // A definition names its source where it has one. How the course computes a quantity is a
+    // note for the authors and is not shown.
     for (const entry of glossary.querySelectorAll('[data-glossary-term]')) {
-      expect(entry.querySelector('small')?.textContent?.trim().length).toBeGreaterThan(5)
+      const small = entry.querySelector('small')
+      if (small) expect(small.textContent?.trim().length).toBeGreaterThan(5)
     }
+    expect(glossary.textContent).not.toMatch(/model computes it/)
   })
 
   it('Help keeps its navigation role first and adds the terms and the one statement about the models', () => {
@@ -174,7 +178,7 @@ describe('reports CW4 and 1.6 — the opening question is shown where it is aske
 })
 
 describe('report CW1 — a reused closing question is labelled review, links its section, and keeps every affordance', () => {
-  it('labels Section 10’s closing question as optional review of Section 5 with a link, unchanged in identity', () => {
+  it('labels the DTS acquisition section’s closing question as optional review of the projection section with a link, unchanged in identity', () => {
     const lesson = skipToTransfer('dts-acquisition')
     const origin = transferOrigin('dts-acquisition')!
     expect(document.querySelector('[data-now-focus] h2')?.textContent).toBe(
@@ -185,8 +189,9 @@ describe('report CW1 — a reused closing question is labelled review, links its
     )!
     expect(link.getAttribute('href')).toBe(sectionHref('projection'))
     expect(link.textContent).toContain(`Section ${origin.origin.number}`)
+    // The question belongs to the projection section and is first shown at the end of the next one.
     expect(document.querySelector('[data-now-focus] p')?.textContent).toMatch(
-      /it first appears at the end of Section 6/,
+      new RegExp(`it first appears at the end of Section ${origin.origin.number + 1}\\b`),
     )
     const step = lesson.steps[lesson.transferStepIndex]
     if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
@@ -372,7 +377,8 @@ describe('reports 4.1 and 5.1 — the reconstruction comparison leads with the a
     const full = comparison.querySelector<HTMLDetailsElement>('[data-reconstruction-full]')!
     expect(full.open).toBe(false)
     expect(full.querySelector('[data-reconstruction="cone-beam"]')).not.toBeNull()
-    expect(full.textContent).toMatch(/Model boundary/)
+    expect(full.textContent).toMatch(/In this course\./)
+    expect(full.textContent).not.toMatch(/Model boundary/)
     expect(
       comparison
         .querySelector('[data-reconstruction-elsewhere="cone-beam"] a')
@@ -522,12 +528,30 @@ describe('reports 2.11, 3.9, 7.1, 7.3 and 3.6 — the suite panels explain their
     )
   })
 
-  it('the target-ray readout says what the strip is and names no organ', () => {
-    render(<SignalReadout profile={null} />)
+  it('the path readout names the anatomy over the nodule, with no millimetre table', () => {
+    const crossing = tableCrossing(0, 0)
+    render(
+      <SignalReadout
+        crossing={crossing}
+        segments={[
+          { start: [0, -150, 0], end: [0, -130, 0], kind: 'chestWall', lengthMm: 20 },
+          { start: [0, -130, 0], end: [0, -125, 0], kind: 'rib', lengthMm: 5 },
+          { start: [0, -125, 0], end: [0, -29, 0], kind: 'lung', lengthMm: 96 },
+          { start: [0, -29, 0], end: [0, -11, 0], kind: 'nodule', lengthMm: 18 },
+          { start: [0, -11, 0], end: [0, 60, 0], kind: 'mediastinum', lengthMm: 71 },
+        ]}
+      />,
+    )
     const meaning = document.querySelector('[data-ray-meaning]')?.textContent ?? ''
-    expect(meaning).toMatch(/One X-ray path from the tube through the target/)
-    expect(meaning).toMatch(/does not name the organ/)
-    expect(meaning).not.toMatch(/heart|mediastinum/)
+    expect(meaning).toMatch(/X-ray path from the tube through the centre of the nodule/)
+    expect(meaning).toMatch(/superimposed on the nodule/)
+    // The frontal view of this nodule: behind the heart, with a posterior rib on the path.
+    expect(document.querySelector('[data-ray-crossing]')?.textContent).toBe(
+      'Over the nodule: Heart and mediastinum, rib',
+    )
+    const legend = [...document.querySelectorAll('[data-ray-structure]')].map((n) => n.textContent)
+    expect(legend).toEqual(['Nodule', 'Heart and mediastinum', 'Rib', 'Lung', 'Chest wall'])
+    expect(document.body.textContent).not.toMatch(/\bmm\b|density/)
   })
 })
 
@@ -587,7 +611,7 @@ describe('owner items closed on 2026-10-08 — taught as ordinary teaching, with
     render(<SectionGlossary sectionId={sectionId} variant="teaching" />)
     const entry = document.querySelector(`[data-glossary-term="${term}"]`)!
     expect(entry.getAttribute('data-glossary-status')).toBe('existing')
-    expect(entry.querySelector('small')?.textContent).toMatch(/^Written for this course from \S/)
+    expect(entry.querySelector('small')?.textContent).toMatch(/^Based on \S/)
     expect(entry.textContent).not.toMatch(/draft|awaiting|review/i)
   })
 })

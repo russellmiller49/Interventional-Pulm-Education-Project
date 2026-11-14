@@ -108,9 +108,7 @@ export function ExaminationWorkspace({
     <section className={styles.examination} aria-label="Case-specific examination record">
       <header>
         <p className={styles.eyebrow}>
-          {caseData.sourceType === 'model-case'
-            ? 'Model case · Observed acquisition'
-            : 'Authored written case · Supplied facts'}
+          {caseData.sourceType === 'model-case' ? 'Simulator case · Your image' : 'Written case'}
         </p>
         <h3>{caseData.title}</h3>
         <p>{caseData.context}</p>

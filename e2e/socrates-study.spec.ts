@@ -327,7 +327,112 @@ for (const viewport of [
     expect(before.zoomRatio).toBeGreaterThan(0)
   })
 
-test('admin monitoring/export and standalone builder case fields', async ({ page, context }) => {
+test('Site Admin navigation opens the shared library and legacy bookmarks redirect safely', async ({
+  page,
+  context,
+}) => {
+  await login(context, 'admin')
+  await page.goto('/en/admin')
+  await expect(page.getByRole('heading', { name: 'Site admin dashboard' })).toBeVisible()
+  await page.getByRole('link', { name: 'SOCRATES Library', exact: true }).click()
+  await expect(page).toHaveURL(/\/en\/socrates-library$/)
+  await expect(
+    page.getByRole('heading', { name: 'Shared slide library', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText('All changes saved to the team.')).toBeVisible()
+  await page.screenshot({
+    path: 'test-results/socrates/library-navigation-1440.png',
+    fullPage: true,
+  })
+  const cards = page.getByRole('button', { name: 'Edit slide', exact: true })
+  const count = await cards.count()
+  expect(count).toBeGreaterThan(0)
+  await cards.first().click()
+  await expect(page.getByLabel(/Module assignment for/)).toBeVisible()
+  for (const mode of ['teaching', 'testing']) {
+    await page.getByRole('button', { name: `Preview ${mode}`, exact: true }).click()
+    await expect(
+      page.getByText(mode === 'teaching' ? 'Guided teaching' : 'Tissue only', { exact: true }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: 'Return to editing' }).click()
+    await expect(page.getByLabel('Case vignette')).toBeVisible()
+  }
+  await page.getByRole('button', { name: '← All slides' }).click()
+  await expect(cards).toHaveCount(count)
+  await page.getByText('Earlier saved slides', { exact: true }).click()
+  await page.getByRole('link', { name: 'Open earlier saved slides', exact: true }).click()
+  await expect(page).toHaveURL(/\/en\/socrates-library\/legacy$/)
+  await expect(page.getByLabel('Slide catalog')).toBeVisible()
+  await page.getByRole('link', { name: 'Return to SOCRATES Library' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Shared slide library', exact: true }),
+  ).toBeVisible()
+  for (const locale of ['en', 'es', 'zh-CN']) {
+    const response = await page.request.get(`/${locale}/socrates-builder`, { maxRedirects: 0 })
+    expect(response.status()).toBe(307)
+    expect(response.headers().location).toBe(`/${locale}/socrates-library`)
+  }
+  await page.goto('/en/socrates-builder')
+  await expect(page).toHaveURL(/\/en\/socrates-library$/)
+  await expect(
+    page.getByRole('heading', { name: 'Shared slide library', exact: true }),
+  ).toBeVisible()
+})
+
+test('library and retired builder navigation keep editor authorization', async ({
+  page,
+  context,
+}) => {
+  const routes = ['/en/socrates-library', '/en/socrates-builder', '/en/socrates-library/legacy']
+  for (const route of routes) {
+    const response = await page.request.get(route, { maxRedirects: 0 })
+    expect(response.status()).toBe(307)
+    expect(new URL(response.headers().location, response.url()).pathname).toBe('/en/login')
+  }
+  await login(context)
+  for (const route of routes) {
+    const response = await page.request.get(route, { maxRedirects: 0 })
+    expect(response.status()).toBe(307)
+    const destination = new URL(response.headers().location, response.url())
+    expect(destination.pathname).toBe('/en/dashboard')
+    expect(destination.searchParams.get('required')).toBe('socrates_editor')
+  }
+})
+
+test('earlier saved slides protect unsaved work when returning to the library', async ({
+  page,
+  context,
+}) => {
+  await login(context, 'admin')
+  await page.goto('/en/socrates-library/legacy')
+  const vignette = page.getByLabel('Case vignette')
+  const original = await vignette.inputValue()
+  const edited = original + '\nSynthetic unsaved return-link check.'
+  await vignette.fill(edited)
+  const returnLink = page.getByRole('link', { name: 'Return to SOCRATES Library', exact: true })
+  const dialogPromise = page.waitForEvent('dialog', { timeout: 10000 })
+  const clickPromise = returnLink.click({ noWaitAfter: true })
+  const dialog = await dialogPromise
+  expect(dialog.type()).toBe('beforeunload')
+  await dialog.dismiss()
+  await clickPromise
+  await expect(page).toHaveURL(/\/en\/socrates-library\/legacy$/)
+  await expect(vignette).toHaveValue(edited)
+  await page.getByRole('button', { name: 'Save draft', exact: true }).click()
+  await expect(page.getByText(/Draft revision \d+ saved/)).toBeVisible()
+  let unexpectedDialogs = 0
+  page.on('dialog', async (next) => {
+    unexpectedDialogs++
+    await next.dismiss()
+  })
+  await returnLink.click()
+  await expect(page).toHaveURL(/\/en\/socrates-library$/)
+  expect(unexpectedDialogs).toBe(0)
+  await page.goto('/en/socrates-library/legacy')
+  await expect(vignette).toHaveValue(edited)
+})
+
+test('admin monitoring/export and earlier saved slide case fields', async ({ page, context }) => {
   await login(context, 'admin')
   await page.goto('/en/admin/socrates')
   await expect(page.getByRole('heading', { name: 'SOCRATES study dashboard' })).toBeVisible()
@@ -340,7 +445,7 @@ test('admin monitoring/export and standalone builder case fields', async ({ page
   expect(await csv.text()).not.toMatch(/PRIVATE_|@synthetic/)
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: 'test-results/socrates/admin-1440.png', fullPage: true })
-  await page.goto('/en/socrates-builder')
+  await page.goto('/en/socrates-library/legacy')
   await expect(page.getByRole('heading', { name: 'SOCRATES slide builder' })).toBeVisible()
   await expect(page.getByLabel('Case vignette')).toBeVisible()
   await page.getByLabel('Case vignette').fill('Synthetic edited vignette')
@@ -421,7 +526,7 @@ for (const viewport of [
   }) => {
     await login(context, 'admin')
     await page.setViewportSize(viewport)
-    await page.goto('/en/socrates-builder')
+    await page.goto('/en/socrates-library/legacy')
     await page
       .getByLabel('Slide catalog')
       .getByRole('button', { name: /Synthetic narrative case/ })

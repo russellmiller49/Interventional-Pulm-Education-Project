@@ -33,10 +33,12 @@ async function enlargeText(page: Page) {
 async function openLesson(page: Page, lesson: string, continues = 0) {
   await page.goto(`${MCS}/learn?lesson=${lesson}`)
   await page.waitForSelector('[data-now-card], [data-prerequisite-reference]')
+  // A section with a reference before the patient: "Skip to the patient" before its last page,
+  // "Begin the patient example" on it.
   const reference = page.locator('[data-prerequisite-reference] button', {
-    hasText: 'Continue to the model',
+    hasText: /^(Skip to the patient|Begin the patient example)$/,
   })
-  if (await reference.count()) await reference.click()
+  if (await reference.count()) await reference.first().click()
   await expect(page.locator('[data-now-card]')).toBeVisible()
   for (let index = 0; index < continues; index += 1) {
     await page.locator('[data-now-primary]').click()
@@ -60,17 +62,34 @@ for (const size of [
     await page.setViewportSize(size)
     await openLesson(page, 'mcs-foundations-signals')
     await page.evaluate(() => window.scrollTo(0, 0))
-    const top = page.locator('[data-step-bar-continue]')
-    await expect(top).toBeInViewport()
+    // The one way on is the task card's Continue, pinned to the foot of the text pane.
+    const primary = page.locator('[data-now-footer="pinned"] [data-now-primary]')
+    await expect(primary).toBeInViewport()
+    await expect(page.locator('[data-now-primary]')).toHaveCount(1)
+    // The simulated time is on the clock bar at the head of the simulator. With two panes (a task
+    // body of 75rem or more) it is beside the card on arrival; narrower, the workspace is one pane
+    // and the simulator, clock first, follows the text in it.
+    const time = page.locator('[data-flow-visual] [data-clock-bar] [data-clock-time]')
+    const text = (await page.locator('[data-flow-teaching]').boundingBox())!
+    const visual = (await page.locator('[data-flow-visual]').boundingBox())!
+    if (visual.x >= text.x + text.width) await expect(time).toBeInViewport()
+    else {
+      expect(visual.y).toBeGreaterThanOrEqual(text.y + text.height - 1)
+      await time.scrollIntoViewIfNeeded()
+      await expect(time).toBeInViewport()
+      expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    }
     const paint = await page.evaluate(() => ({
-      continueBg: getComputedStyle(document.querySelector('[data-step-bar-continue]')!)
-        .backgroundColor,
+      continueBg: getComputedStyle(
+        document.querySelector('[data-now-footer="pinned"] [data-now-primary]')!,
+      ).backgroundColor,
       saveBg: getComputedStyle(document.querySelector('[data-stage-save-exit]')!).backgroundColor,
-      identity: document.querySelector('[data-session-identity]')!.textContent,
+      clock: document.querySelector('[data-clock-bar]')!.textContent,
     }))
     expect(paint.saveBg).toBe('rgba(0, 0, 0, 0)')
     expect(paint.continueBg).not.toBe('rgba(0, 0, 0, 0)')
-    expect(paint.identity).not.toMatch(/seed \d+/i)
+    expect(paint.clock).toMatch(/\d+\.\d s/)
+    expect(paint.clock).not.toMatch(/seed \d+/i)
   })
 }
 
@@ -354,15 +373,19 @@ test('presentation leaves the model alone: theme, resize, disclosures, drawer an
   page,
 }) => {
   await openLesson(page, 'iabp-efficacy-limits', 1)
-  const playback = page.locator('details:has(> summary:text-is("Display playback"))')
-  await playback.locator('summary').click()
-  const pause = playback.getByRole('button', { name: 'Pause display playback' })
-  if (await pause.count()) await pause.click()
-  await expect(playback.getByRole('button', { name: 'Play display playback' })).toBeVisible()
+  // The clock bar is the one transport: pause the circulation so any change of time is the
+  // operation's own.
+  const clock = page.locator('[data-flow-visual] [data-clock-bar]')
+  if ((await clock.getAttribute('data-clock-state')) === 'running')
+    await clock.locator('[data-clock-run]').click()
+  await expect(clock).toHaveAttribute('data-clock-state', 'paused')
+  await expect(clock.getByRole('button', { name: 'Run' })).toBeVisible()
   await page.locator('fieldset[data-prediction-choices] input[type="radio"]').nth(2).check()
   const read = () =>
     page.evaluate(() => ({
-      identity: document.querySelector('[data-session-identity]')?.textContent,
+      clock: `${document.querySelector('[data-clock-bar]')?.getAttribute('data-clock-state')} · ${
+        document.querySelector('[data-clock-time]')?.textContent
+      }`,
       step: document
         .querySelector('[data-critical-care-activity-shell]')
         ?.getAttribute('data-stage'),
@@ -383,7 +406,14 @@ test('presentation leaves the model alone: theme, resize, disclosures, drawer an
   const monitor = page.locator('[data-monitor-disclosure] > summary')
   await monitor.click()
   await monitor.click()
-  await page.locator('[data-run-details] > summary').click()
+  const taskMap = page.locator('[data-task-map] > summary')
+  await taskMap.click()
+  await taskMap.click()
+  const allControls = page.getByRole('button', { name: 'All device controls' })
+  await allControls.click()
+  await expect(allControls).toHaveAttribute('aria-expanded', 'true')
+  await allControls.click()
+  await expect(allControls).toHaveAttribute('aria-expanded', 'false')
   await page.locator('[data-sections-drawer] summary').click()
   await page.keyboard.press('Escape')
   await page.keyboard.press('Tab')

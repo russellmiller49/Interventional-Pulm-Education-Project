@@ -172,9 +172,11 @@ it('resets the whole capstone on history navigation and rejects stale callbacks 
   click('Record the first 30 minutes')
   click('Review observations and continue')
   answer(/Before the pump; the access lumen/)
-  fireEvent.change(screen.getByRole('combobox', { name: 'CRRT lesson' }), {
-    target: { value: 'crrt-anticoagulation' },
-  })
+  fireEvent.click(
+    document.querySelector<HTMLButtonElement>(
+      '[data-sections-drawer] button[data-section="crrt-anticoagulation"]',
+    )!,
+  )
   window.history.replaceState(
     {},
     '',

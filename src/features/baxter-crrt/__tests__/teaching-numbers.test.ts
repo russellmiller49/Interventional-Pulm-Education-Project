@@ -119,7 +119,11 @@ describe('CRRT teaching numbers', () => {
       CRRT_NUMBERS.rows
         .filter((row) => row.sources.some((citation) => citation.sourceId === sourceId))
         .map((row) => row.id)
-    expect(citedBy('TEXT-BRENNER-RECTOR-12E-CH64')).toEqual(['postfilter-ica-ceiling'])
+    // dose-prescribed added 2026-11-13: Brenner gives 25–30 mL/kg/h to account for interruptions.
+    expect(citedBy('TEXT-BRENNER-RECTOR-12E-CH64')).toEqual([
+      'dose-prescribed',
+      'postfilter-ica-ceiling',
+    ])
     expect(citedBy('TEXT-CLINICAL-HANDBOOK-NEPHROLOGY-2024')).toEqual([
       'systemic-ica',
       'citrate-monitoring',

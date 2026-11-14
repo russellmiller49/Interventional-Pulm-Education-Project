@@ -86,17 +86,21 @@ describe('the hub', () => {
     expect(
       screen.getByRole('heading', { name: 'Prepare for supervised bronchoscopy' }),
     ).toBeVisible()
-    expect(screen.getByText(/A guided introduction to adult flexible/)).toHaveTextContent(
-      'prior bronchoscopy experience is not',
+    expect(screen.getByText(/Fifteen short sections take you through/)).toHaveTextContent(
+      'You do not need to have held a scope.',
     )
-    expect(document.querySelector('[data-competence-statement]')).toHaveTextContent(
-      'Self-paced online learning does not establish procedural competence.',
+    // The one statement of what an online course cannot show, with no course-talk in it.
+    const competence = document.querySelector('[data-competence-statement]')!
+    expect(document.querySelectorAll('[data-competence-statement]')).toHaveLength(1)
+    expect(competence).toHaveTextContent(
+      'An online course cannot show that you can perform a bronchoscopy.',
     )
+    expect(document.body.textContent).not.toMatch(/authored|model limits|teaching profile/i)
     expect(document.querySelector('[data-storage-statement]')).toHaveTextContent(
-      'Answers, attempts and scope positions are not saved',
+      'Your answers are not saved and nothing is scored.',
     )
-    expect(screen.getByText(/Questions and activities are optional/)).toHaveTextContent(
-      'never lock the course',
+    expect(screen.getByText(/You can skip any question or activity/)).toHaveTextContent(
+      'Open the sections in any order.',
     )
     expect(document.body.textContent).not.toMatch(EXAM_WORDS)
   })
@@ -109,9 +113,10 @@ describe('the hub', () => {
       'href',
       '/bronchoscopy-foundations/assess',
     )
-    expect(
-      screen.getByRole('link', { name: /Reference, sources and model limits/ }),
-    ).toHaveAttribute('href', '/bronchoscopy-foundations/reference')
+    expect(screen.getByRole('link', { name: /Reference and sources/ })).toHaveAttribute(
+      'href',
+      '/bronchoscopy-foundations/reference',
+    )
   })
 
   it('resumes the section left and shows the learner’s own marks on the chips', () => {
@@ -155,15 +160,15 @@ describe('the hub', () => {
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
   })
 
-  it('sends a learner who has marked every section reviewed to the integrated cases', () => {
+  it('sends a learner who has marked every section reviewed to the closing screen', () => {
     let record = createEmptyBronchSelfPacedRecord()
     for (const id of BRONCH_SECTION_IDS) record = withSectionReviewed(record, id, true)
     store(record)
     render(<BronchoscopyFoundationsHub />)
     const cta = ctas()[0]
     expect(cta).toHaveAttribute('data-bronch-continue', 'complete')
-    expect(cta).toHaveAttribute('href', '/bronchoscopy-foundations/assess')
-    expect(cta.textContent).toMatch(/integrated cases/)
+    expect(cta).toHaveAttribute('href', '/bronchoscopy-foundations/learn/complete')
+    expect(cta.textContent).toMatch(/read what comes next/)
   })
 
   it('gives the Learn landing the same door and the same map', async () => {

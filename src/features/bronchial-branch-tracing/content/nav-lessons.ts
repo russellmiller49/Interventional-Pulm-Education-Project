@@ -1,43 +1,65 @@
-import type { CtTrace } from './ct-types'
+import type { CtNoduleTarget, CtTrace } from './ct-types'
+import { junctionFeedbackPacket } from './junction-feedback'
 import { optionLumenAreaMm2 } from '../engine/junction-feedback'
 import type { NavPlan, NavStation, NavStep } from '../engine/nav-session'
-import { traceById } from '../geometry/native-ct'
+import type { PlanPart } from '../engine/plan-session'
+import type { TripPlan } from '../engine/trip-session'
+import { mappedForks } from '../engine/arc-map'
+import { CT_TARGETS, traceById } from '../geometry/native-ct'
 
 /**
- * The lessons: eight short trips of the scope, each teaching one idea about reading a route off
- * the CT.
+ * The lessons, built on the simplified bronchial branch tracing of Mortimer and Saghaie
+ * (J Clin Med 2025;14:8009): plan from the lesion back to its segment, draw the segment's
+ * ostium as a circle with four directions, draw each division to the lesion as arcs nested in
+ * the arc before, then drive the scope with that map.
  *
- * A lesson is one or more *trips*. A trip is a stretch of one route: the forks from `from` to
- * `through` (or to the end of the route when it arrives at the lesion). At each fork the learner
- * matches the CT to the scope, identifies the openings on the CT, chooses the one toward the
- * lesion and drives on. A trip can ask for fewer steps at a fork; the bench does the rest.
+ * A lesson is one or more *trips*. A trip can plan (some or all of the planning parts), drive
+ * (a stretch of one route, from `from` to `through` or on to the lesion), or both, planning first.
  *
  * Levels, slice numbers and directions shown beside a fork are read from the route geometry at
- * run time, never typed here. The prose below says what to look for and why.
+ * run time, never typed here. The prose below says what to look for and why, and never says which
+ * way a branch goes before the learner has drawn it.
  *
- * Source for the method, the four fork patterns and the subsegment letters: Kurimoto & Morita,
- * Bronchial Branch Tracing (Springer 2020), chapters 1 and 2.
+ * The scope's roll at each fork follows Kurimoto and Morita, Bronchial Branch Tracing (Springer
+ * 2020), chapters 1 and 2.
  */
 export interface NavStationSpec {
-  /** Which steps to ask for here; the default asks for every step the fork supports. */
+  /** Which steps to ask for here. */
   steps?: readonly NavStep[]
   /** The bench demonstrates this fork. */
   worked?: boolean
   /** Said once on arriving at this fork: what is different here and what to look for. */
   teach?: string
 }
+export interface PlanTripSpec {
+  parts: readonly PlanPart[]
+  /** The bench demonstrates: "Show me" leads at every check. */
+  worked?: boolean
+  /** The map is on the bench already; the learner can clear it and draw their own. */
+  prefilled?: boolean
+  /** Number the branches of each division on the CT while the map is drawn. */
+  locators?: boolean
+  /** Said at the start of each part. */
+  teach?: Partial<Record<PlanPart, string>>
+  /** Said at a mapped division, by checkpoint id. */
+  divisions?: Readonly<Record<string, string>>
+}
 export interface NavTripSpec {
   traceId: string
   /** Short name on the trip list: "The carina". */
   title: string
-  /** First fork of the trip, by checkpoint id. */
-  from: string
+  /** Said at the start of the trip. */
+  intro: string
+  /** Planning on the CT before the scope moves. */
+  plan?: PlanTripSpec
+  /** First fork of the drive, by checkpoint id. A trip without one plans and does not drive. */
+  from?: string
   /** Last fork; defaults to the last fork of the route. */
   through?: string
   /** Drive on from the last fork to the end of the route, beside the lesion. */
   arrive?: boolean
-  /** Said at the start of the trip. */
-  intro: string
+  /** Ask for the openings to be marked on the CT at forks where they can be. */
+  identify?: boolean
   /** Per fork, by checkpoint id. */
   stations?: Readonly<Record<string, NavStationSpec>>
   /** Opening names stay hidden until the learner has chosen. */
@@ -53,11 +75,11 @@ export interface NavLesson {
   objective: string
   /** The one idea, in a sentence or two. */
   concept: string
-  /** The Kurimoto & Morita fork pattern this lesson carries, where it carries one. */
-  pattern?: string
   trips: readonly NavTripSpec[]
   /** Said on the closing screen. */
   closing: string
+  /** No hints: a check says what is off, not how to fix it. */
+  unaided?: boolean
 }
 
 /** The trachea and a main bronchus: the first two forks of every route. */
@@ -98,41 +120,150 @@ export function identifiable(trace: CtTrace, checkpointIndex: number) {
 }
 
 /**
- * The steps a fork is asked for when a trip does not say. A fork whose lumens are too small to
- * click is only chosen at: the bench turns the CT there and numbers the openings.
+ * True when a trip may ask for a fork's openings to be marked: its lumens can be clicked, and its
+ * written explanation exists. The forks of the routes added in November 2026 have clickable
+ * lumens and no explanation yet, so no trip marks them until one is written for each.
  */
-export function defaultSteps(trace: CtTrace, checkpointIndex: number): NavStep[] {
-  return identifiable(trace, checkpointIndex) ? ['match', 'identify', 'choose'] : ['choose']
+export function markable(trace: CtTrace, checkpointIndex: number) {
+  return (
+    identifiable(trace, checkpointIndex) &&
+    Boolean(junctionFeedbackPacket(trace.checkpoints[checkpointIndex].id))
+  )
 }
 
 /**
- * A whole route from the trachea to the lesion, as Practice and Assess run it. The trachea and
- * main bronchus are chosen, not marked: they are the same two forks on every route.
+ * The steps a fork is asked for when a trip that marks openings does not say. A fork that cannot
+ * be marked (lumens too small to click, or no explanation written) is only chosen at: the bench
+ * turns the CT there and numbers the openings.
  */
-export function routePlan(trace: CtTrace): NavPlan {
+export function defaultSteps(trace: CtTrace, checkpointIndex: number): NavStep[] {
+  return markable(trace, checkpointIndex) ? ['match', 'identify', 'choose'] : ['choose']
+}
+/** The steps at a fork on a drive that follows a map: the openings were read off the CT in planning. */
+export const MAP_STEPS: readonly NavStep[] = ['match', 'choose']
+
+export interface DriveOptions {
+  /** The learner has shown they can turn the CT: no fork waits for it. */
+  matchOptional: boolean
+  /**
+   * Fly through the central airways on a drive that follows a map (the default). False: the
+   * learner chooses at every fork from the trachea.
+   */
+  cruise?: boolean
+}
+
+/**
+ * How many forks, from the start of a drive that follows a map, the scope flies through.
+ *
+ * The learner knows the airways down to the segments, so the drive's work begins at the fork that
+ * gives off the segmental bronchus: the last fork before the first division the map draws. Every
+ * fork above it is flown through. A fork the trip has something to say at, or asks its own steps
+ * of (`held`), is stopped at, and so is every fork after it.
+ */
+export function cruiseCount(
+  trace: CtTrace,
+  target: CtNoduleTarget,
+  stations: readonly { checkpointIndex: number; held?: boolean }[],
+): number {
+  const firstMapped = mappedForks(trace, target)[0]
+  if (firstMapped === undefined) return 0
+  const above = stations.filter((station) => station.checkpointIndex < firstMapped).length
+  const firstHeld = stations.findIndex((station) => station.held)
+  const count = Math.max(0, above - 1)
+  return firstHeld < 0 ? count : Math.min(count, firstHeld)
+}
+
+/**
+ * The route Practice and the closing set drive, after planning: the central airways flown
+ * through, then every fork chosen at.
+ */
+export function routePlan(trace: CtTrace, options: DriveOptions): NavPlan {
   const stations: NavStation[] = []
   trace.checkpoints.forEach((checkpoint, checkpointIndex) => {
-    if (!checkpoint.decision) return
-    stations.push({
-      checkpointIndex,
-      steps:
-        checkpointIndex < CENTRAL_STATIONS
-          ? ['match', 'choose']
-          : defaultSteps(trace, checkpointIndex),
-    })
+    if (checkpoint.decision) stations.push({ checkpointIndex, steps: MAP_STEPS })
   })
-  return { traceId: trace.id, stations, arrive: true }
+  // A route that ends at no lesion has no map to begin at, so nothing on it is flown through.
+  const cruised =
+    options.cruise === false || !TARGET_FOR_TRACE[trace.id]
+      ? 0
+      : cruiseCount(trace, plannedTarget(trace), stations)
+  return {
+    traceId: trace.id,
+    stations: stations.map((station, i) => (i < cruised ? { ...station, cruise: true } : station)),
+    arrive: true,
+    matchOptional: options.matchOptional,
+  }
+}
+
+/** The lesion each route is planned to: the route a lesion opens (`content/targets.ts`). */
+export const TARGET_FOR_TRACE: Readonly<Record<string, string>> = {
+  'right-upper-apical': 'r-apical-anterior',
+  'right-upper-distal': 'r-apical-posterior',
+  'upper-oblique-lateral': 'r-anterior-upper',
+  'upper-oblique-medial': 'r-anterior-lower',
+  'middle-lobe-lateral': 'r-middle-lateral',
+  'middle-lobe-cranial': 'r-middle-medial-a',
+  'middle-lobe-caudal': 'r-middle-medial-b',
+  'right-lower-basal': 'r-anterior-basal',
+  'left-upper-division': 'l-apicoposterior',
+  'left-upper-anterior': 'l-anterior',
+  'left-lingula': 'l-inferior-lingula',
+  'left-lower-returning': 'l-superior',
+  'left-lower-basal': 'l-lateral-basal',
+  'right-upper-posterior': 'r-posterior',
+  'right-lower-superior': 'r-superior',
+  'right-lower-lateral-basal': 'r-lateral-basal',
+  'left-lingula-superior': 'l-superior-lingula',
+  'left-lower-posterior-basal': 'l-posterior-basal',
+}
+export function plannedTarget(trace: CtTrace): CtNoduleTarget {
+  const target = CT_TARGETS.find((t) => t.id === TARGET_FOR_TRACE[trace.id])
+  if (!target) throw new Error(`Route ${trace.id} has no lesion to plan to`)
+  return target
 }
 
 export interface BuiltTrip {
   spec: NavTripSpec
   trace: CtTrace
-  plan: NavPlan
+  /** The lesion the route ends at; null only for a route that ends at none (central-right). */
+  target: CtNoduleTarget | null
+  trip: TripPlan
   /** Arrival text by station index. */
   teach: (string | undefined)[]
+  /** Text at each mapped division, by division index. */
+  divisionTeach: (string | undefined)[]
 }
-export function buildTrip(spec: NavTripSpec): BuiltTrip {
+export function buildTrip(spec: NavTripSpec, options: DriveOptions): BuiltTrip {
   const trace = traceById(spec.traceId)
+  const target = TARGET_FOR_TRACE[trace.id] ? plannedTarget(trace) : null
+  if (spec.plan && !target)
+    throw new Error(`Trip ${spec.traceId} plans, but its route has no lesion`)
+  const divisions = spec.plan && target ? mappedForks(trace, target) : []
+  for (const id of Object.keys(spec.plan?.divisions ?? {}))
+    if (!divisions.some((ci) => trace.checkpoints[ci].id === id))
+      throw new Error(`Trip ${spec.traceId} teaches ${id}, which its map does not draw`)
+  const planSpec = spec.plan
+    ? {
+        traceId: trace.id,
+        targetId: target!.id,
+        parts: spec.plan.parts,
+        worked: spec.plan.worked,
+        ...(spec.plan.prefilled ? { prefilled: true } : {}),
+      }
+    : null
+  if (!spec.from) {
+    if (!planSpec) throw new Error(`Trip ${spec.traceId} neither plans nor drives`)
+    if (spec.stations || spec.arrive || spec.through)
+      throw new Error(`Trip ${spec.traceId} plans only, but names forks to drive`)
+    return {
+      spec,
+      trace,
+      target,
+      trip: { plan: planSpec, nav: null },
+      teach: [],
+      divisionTeach: divisions.map((ci) => spec.plan?.divisions?.[trace.checkpoints[ci].id]),
+    }
+  }
   const forks = trace.checkpoints
     .map((checkpoint, index) => ({ checkpoint, index }))
     .filter(({ checkpoint }) => checkpoint.decision)
@@ -150,26 +281,48 @@ export function buildTrip(spec: NavTripSpec): BuiltTrip {
   for (const id of Object.keys(spec.stations ?? {}))
     if (!chosen.some(({ checkpoint }) => checkpoint.id === id))
       throw new Error(`Trip ${spec.traceId} names ${id}, which it does not visit`)
+  // A drive that follows a map flies through the central airways, up to the first fork the
+  // lesson has something to say at.
+  const cruised =
+    target && options.cruise !== false && spec.plan?.parts.includes('arcs') && !spec.identify
+      ? cruiseCount(
+          trace,
+          target,
+          chosen.map(({ checkpoint, index }) => {
+            const station = spec.stations?.[checkpoint.id]
+            return { checkpointIndex: index, held: Boolean(station?.teach || station?.steps) }
+          }),
+        )
+      : 0
+  const nav: NavPlan = {
+    traceId: trace.id,
+    arrive: Boolean(spec.arrive),
+    matchOptional: options.matchOptional,
+    stations: chosen.map(({ checkpoint, index }, i) => {
+      const station = spec.stations?.[checkpoint.id]
+      return {
+        checkpointIndex: index,
+        steps: station?.steps ?? (spec.identify ? defaultSteps(trace, index) : MAP_STEPS),
+        worked: station?.worked ?? spec.worked,
+        ...(i < cruised ? { cruise: true } : {}),
+      }
+    }),
+  }
   return {
     spec,
     trace,
-    plan: {
-      traceId: trace.id,
-      arrive: Boolean(spec.arrive),
-      stations: chosen.map(({ checkpoint, index }) => {
-        const station = spec.stations?.[checkpoint.id]
-        return {
-          checkpointIndex: index,
-          steps: station?.steps ?? defaultSteps(trace, index),
-          worked: station?.worked ?? spec.worked,
-        }
-      }),
-    },
+    target,
+    trip: { plan: planSpec, nav },
     teach: chosen.map(({ checkpoint }) => spec.stations?.[checkpoint.id]?.teach),
+    divisionTeach: divisions.map((ci) => spec.plan?.divisions?.[trace.checkpoints[ci].id]),
   }
 }
 
-export const NAV_LESSONS: readonly NavLesson[] = [
+/** The ostium circle, said the same way wherever it is taught. */
+const OSTIUM_CHECKLIST =
+  'Work out the circle in three steps. First, which way does the segment run from its ostium? That direction and its opposite lie along your line of sight, so they are not on the circle. Second, read the other four off the CT: looking toward the head, the axial CT as drawn is the view; toward the feet, it is that CT mirrored; along the slice, face that way with your head up, and your right is the circle’s right. Third, turn the circle to however you hold the scope, but never mirror it.'
+
+const AUTHORED: readonly NavLesson[] = [
   {
     id: 'carina-orientation',
     title: 'Why the CT looks backwards',
@@ -184,13 +337,14 @@ export const NAV_LESSONS: readonly NavLesson[] = [
         title: 'The carina',
         from: 'junction-1',
         through: 'junction-1',
+        identify: true,
         intro:
           'The scope is in the lower trachea, looking down at the carina, held the ordinary way with anterior at the top. Beside it is the axial CT at the same level, as the radiologist displays it.',
         stations: {
           'junction-1': {
             steps: ['match', 'identify'],
             teach:
-              'Look at the letters on both pictures. The scope shows the patient’s right on the right. The CT shows it on the left, because the CT is drawn from the feet. The two are mirror images, so one flip matches them. Once they match, an opening on the right of the scope is the lumen on the right of the CT.',
+              'Look at the letters on both pictures. The scope shows the patient’s right on the right; the CT shows it on the left, because the CT is drawn from the feet. They are mirror images, so one flip matches them. Once they match, an opening on the right of the scope is the lumen on the right of the CT.',
           },
         },
       },
@@ -200,7 +354,7 @@ export const NAV_LESSONS: readonly NavLesson[] = [
         from: 'junction-14',
         through: 'junction-14',
         intro:
-          'The scope has climbed into RB1, the apical bronchus of the right upper lobe. Two things changed: it now looks straight up toward the head, and it has rolled so the right chest wall is at the bottom of the view. Kurimoto and Morita display the right upper lobe this way.',
+          'The scope has climbed into RB1, the apical bronchus of the right upper lobe. It now looks straight up toward the head, and it has rolled so the right chest wall is at the bottom of the view, as Kurimoto and Morita display the right upper lobe.',
         stations: {
           'junction-14': {
             steps: ['match'],
@@ -211,7 +365,7 @@ export const NAV_LESSONS: readonly NavLesson[] = [
       },
     ],
     closing:
-      'Looking down an airway, flip the CT. Looking up an airway, do not flip it; turn it until the letters agree. Every fork from here on starts with that check.',
+      'Looking down an airway, the CT is mirrored. Looking up an airway, it is not; it only needs turning. After this lesson, turning the CT is your choice: keep it as the radiologist shows it and turn it in your head, or turn it on the screen.',
   },
   {
     id: 'two-levels',
@@ -227,6 +381,7 @@ export const NAV_LESSONS: readonly NavLesson[] = [
         title: 'Right main bronchus to the middle lobe bronchus',
         from: 'junction-2',
         through: 'junction-10',
+        identify: true,
         intro:
           'The lesion is in the medial segment of the middle lobe. The scope is in the right main bronchus. You will work two forks and drive through each.',
         stations: {
@@ -236,278 +391,382 @@ export const NAV_LESSONS: readonly NavLesson[] = [
           },
           'junction-5': {
             teach:
-              'The bronchus intermedius divides into the middle lobe bronchus in front and the lower lobe bronchus behind. Both lie just below the fork, a few slices apart. In the scope the middle lobe opening is the upper one, because anterior is at the top; on the matched CT it is the lumen nearer the top of the image.',
+              'The bronchus intermedius divides into the middle lobe bronchus in front and the lower lobe bronchus behind. Both lie just below the fork, a few slices apart. In the scope the middle lobe opening is the upper one, because anterior is at the top.',
           },
           'junction-10': { steps: [] },
         },
       },
     ],
     closing:
-      'A fork on the CT is a few slices deep, not one picture. Scroll from the parent until a wall appears between two lumens; each daughter is named on the slice where it stands alone.',
+      'A fork on the CT is a few slices deep, not one picture. Scroll from the parent until a wall appears between two lumens; each daughter is named on the slice where it stands alone. Every map is built from that scrolling.',
   },
   {
-    id: 'middle-lobe-flat',
-    title: 'A fork that lies in one slice',
+    id: 'start-at-the-lesion',
+    title: 'Start at the lesion',
     minutes: 8,
     objective:
-      'Trace a horizontal bronchus and its horizontal daughters across a single CT slice, and reach a lesion in the lateral segment of the middle lobe.',
+      'Find the airway that runs into a peripheral lesion on the CT, follow it back to its segmental bronchus, and name that bronchus.',
     concept:
-      'A bronchus that runs in the plane of the CT is seen as a channel, not a ring. When its daughters are horizontal too, scrolling does not separate them: they separate side to side within the slice.',
-    pattern: 'Horizontal–horizontal',
-    trips: [
-      {
-        traceId: 'middle-lobe-lateral',
-        title: 'Middle lobe bronchus to the lateral segment',
-        from: 'junction-10',
-        arrive: true,
-        intro:
-          'The lesion is in the lateral segment of the middle lobe, RS4. The scope is in the middle lobe bronchus, which runs forward and outward almost in the plane of the CT.',
-        stations: {
-          'junction-10': {
-            teach:
-              'Here the scope looks along the slice, not through it, with the head at the top of its view. The CT cannot show head and feet as sides; it shows them as slice level. Both daughters lie on the same slice and part side to side: RB4 runs outward toward the chest wall, RB5 runs on forward.',
-          },
-          'junction-19': {
-            teach:
-              'RB4 divides again in the same plane, and the scope has turned to look straight out toward the chest wall. Front and back are now its left and right, so the CT takes a quarter turn. Scrolling will not separate these two either: follow each channel across the image from the fork.',
-          },
-        },
-      },
-    ],
-    closing:
-      'For a horizontal–horizontal fork, stay on the slice and follow the channels sideways. The scope’s left and right are the CT’s left and right once the letters agree; its up and down are slice level.',
-  },
-  {
-    id: 'rb5-up-or-down',
-    title: 'One daughter climbs, one drops',
-    minutes: 7,
-    objective:
-      'Tell the two daughters of a horizontal bronchus apart by slice level, and reach a lesion through each.',
-    concept:
-      'Seen along a horizontal parent, one daughter can sit above the other. The CT shows that as a difference in level: the upper opening is found by scrolling toward the head, the lower by scrolling toward the feet.',
-    pattern: 'Horizontal–vertical',
-    trips: [
-      {
-        traceId: 'middle-lobe-caudal',
-        title: 'RB5 to the lower subsegment',
-        from: 'junction-20',
-        arrive: true,
-        worked: true,
-        intro:
-          'The scope is in RB5, the medial segmental bronchus of the middle lobe. This lesion is reached through RB5b, the daughter that drops. Watch the bench work this trip; the next one is yours.',
-        stations: {
-          'junction-20': {
-            teach:
-              'RB5 runs forward and the scope looks along it, with the head at the top. It divides into RB5a, which carries on forward, and RB5b, which drops toward the feet. In the scope RB5a is the upper opening and RB5b the lower. On the CT that is a difference in level: RB5a is found a few slices toward the head, RB5b a few toward the feet.',
-          },
-        },
-      },
-      {
-        traceId: 'middle-lobe-cranial',
-        title: 'RB5 to the upper subsegment',
-        from: 'junction-20',
-        arrive: true,
-        intro:
-          'The same fork, a different lesion: this one is reached through RB5a, the daughter that carries on forward.',
-        stations: {
-          'junction-20': {
-            teach:
-              'The same two openings as before. This time the lesion lies a little above the fork’s level, not below it. Find each daughter on its own slice, then decide which one heads for the lesion’s level.',
-          },
-        },
-      },
-    ],
-    closing:
-      'When the scope shows one opening above another, the CT answer is in the slice numbers. The lesion’s own slice tells you which daughter to take.',
-  },
-  {
-    id: 'look-up-rul',
-    title: 'Looking up into the right upper lobe',
-    minutes: 9,
-    objective:
-      'Re-match the CT when the scope turns up into the right upper lobe, and follow a vertical bronchus to a lesion in the apical segment.',
-    concept:
-      'A bronchus that runs straight up or down crosses slice after slice as a small round lumen. Its fork is seen end-on: one ring becomes two as you scroll.',
-    pattern: 'Vertical',
+      'A route is planned backwards, from the lesion. Find the airway that enters it and follow it toward the hilum, slice by slice: that tells you which segment the route lies in, and the map starts at that segment’s ostium.',
     trips: [
       {
         traceId: 'right-upper-apical',
-        title: 'Right main bronchus to the apical segment',
-        from: 'junction-2',
-        arrive: true,
-        intro:
-          'The lesion is in the apical segment of the right upper lobe, RS1. The scope starts in the right main bronchus, looking down, so the first job is to flip the CT.',
-        stations: {
-          'junction-2': {
-            steps: ['match', 'choose'],
-            teach:
-              'You worked this fork in the last lesson. The lesion is high in the right lung: decide which opening goes up.',
-          },
-          'junction-4': {
-            teach:
-              'The scope has turned sideways into the upper lobe bronchus. It is looking out toward the right chest wall, along the slice, with the head at the top of its view. The mirrored CT no longer matches: turn it until front and back sit where the scope has them.',
-          },
-          'junction-7': {
-            teach:
-              'The scope is climbing now and has rolled so the right chest wall is at the bottom of its view: the display Kurimoto and Morita use for the right upper lobe. RB2 runs backward in the plane of this slice; RB1 climbs toward the apex. Scroll toward the head and RB1 is the lumen that keeps going.',
-          },
-          'junction-14': {
-            teach:
-              'A vertical fork, seen end-on. Scroll toward the head and one ring becomes two. Kurimoto and Morita name the posterior one RB1a and the anterior one RB1b.',
+        title: 'A lesion in the right upper lobe',
+        intro: 'The scope plays no part yet: this is the CT work done before the procedure.',
+        plan: {
+          parts: ['lesion', 'segment'],
+          teach: {
+            lesion:
+              'An airway that runs into the lesion is a bronchus sign. The airways out here are a millimeter or two across, which is why planning uses thin slices. A break in the wall of a larger airway is where a small branch leaves. A small pulmonary artery runs beside each airway; where the airway is hard to see, follow the artery.',
+            segment:
+              'Go a slice at a time and stop at the segmental bronchus: the largest airway on the way back that still supplies this segment alone. Beyond it the airway joins the lobar bronchus, or a trunk it shares with other segments. Its ostium is where the map starts.',
           },
         },
       },
+      {
+        traceId: 'middle-lobe-caudal',
+        title: 'A lesion in the middle lobe',
+        intro:
+          'The same two steps in another lobe. Try it on your own first; help is there if you want it.',
+        plan: { parts: ['lesion', 'segment'] },
+      },
     ],
     closing:
-      'Entering an upper lobe the scope first looks sideways along the slice, then up toward the head. Each time its view turns, turn the CT until the letters agree. A vertical bronchus is traced as a ring that holds its place from slice to slice.',
+      'Every plan starts with the airway into the lesion, traced back to its segment. If there is no bronchus sign, trace the airway that gives the best approach to the lesion.',
   },
   {
-    id: 'oblique',
-    title: 'Daughters that move across and up',
-    minutes: 9,
+    id: 'stand-at-the-ostium',
+    title: 'Stand at the ostium',
+    minutes: 8,
     objective:
-      'Follow an oblique daughter that moves across the image and through the stack at once, on the right and on the left.',
+      'Picture the bronchoscopic view at a segmental ostium and label the four directions around it, without mirroring them.',
     concept:
-      'An oblique branch leaves a horizontal parent with both sideways and up-or-down motion. On the CT its lumen walks across the image as you scroll. The left upper division is displayed with the opposite quarter turn to the right upper lobe.',
-    pattern: 'Horizontal–oblique',
+      'Imagine the scope at the segment’s ostium, looking in. The map starts as a circle: that view, with the four directions that lie across it written round the edge. How you hold the scope decides where the circle starts, never which way round it goes.',
     trips: [
       {
-        traceId: 'upper-oblique-lateral',
-        title: 'RB3 to the anterior segment',
-        from: 'junction-8',
-        arrive: true,
+        traceId: 'right-upper-apical',
+        title: 'RB1: looking up',
         intro:
-          'The lesion is in the anterior segment of the right upper lobe, RS3. The scope is in RB3, which runs forward and outward almost in the plane of the CT.',
-        stations: {
-          'junction-8': {
-            teach:
-              'RB3 is horizontal, so the scope looks along the slice with the head at the top. Both openings are on the same slice here: one carries on forward, the other turns out toward the chest wall.',
-          },
-          'junction-16': {
-            teach:
-              'Now the daughters part by level: one climbs as it runs outward, the other drops. In the scope they are one above the other. Scroll a few slices each way from the fork and watch each lumen move across the image.',
+          'The lesion from the last lesson lies in RB1, the apical segment of the right upper lobe.',
+        plan: {
+          parts: ['frame'],
+          teach: {
+            frame: OSTIUM_CHECKLIST,
           },
         },
       },
       {
         traceId: 'left-upper-division',
-        title: 'Left main bronchus to the upper division',
-        from: 'junction-3',
-        through: 'junction-47',
+        title: 'LB1+2: looking up on the left',
         intro:
-          'Now the left side. The lesion is in the apicoposterior segment, LS1+2. The scope starts in the left main bronchus.',
+          'Now the left side: LB1+2, the apicoposterior segment of the left upper lobe. It also runs up toward the head.',
+        plan: {
+          parts: ['frame'],
+          teach: {
+            frame:
+              'The same three steps. Once it is checked, compare it with RB1’s: what stayed in place, and what changed sides?',
+          },
+        },
+      },
+      {
+        traceId: 'middle-lobe-caudal',
+        title: 'RB5: looking along the slice',
+        intro:
+          'RB5, the medial segment of the middle lobe, runs forward almost in the plane of the CT. Stand at its ostium and look in.',
+        plan: { parts: ['frame'] },
+      },
+    ],
+    closing:
+      'The circle is the view into the ostium. Up or down the airway, the axial CT gives it directly or mirrored; along the slice, face the way the segment runs with your head up. Any roll is yours to choose. Orientation now lives in the circle, so turning the CT on screen is optional.',
+  },
+  {
+    id: 'nested-arcs',
+    title: 'Draw the map',
+    minutes: 10,
+    objective:
+      'Draw each division from a segmental ostium to a lesion as arcs nested inside the arc before it, and mark the branch that reaches the lesion.',
+    concept:
+      'At each division the airway splits in two, sometimes three. Draw each branch as an arc on the side of the circle it leaves toward, relative to its sibling, and draw the next division inside the arc of the branch that goes on. The map need not be exact: each branch must be on the right side of its sibling.',
+    trips: [
+      {
+        traceId: 'right-upper-apical',
+        title: 'RB1 to the lesion',
+        intro:
+          'Back to the RB1 lesion. Set up the circle again, then draw the divisions from the RB1 ostium to the lesion.',
+        plan: {
+          parts: ['frame', 'arcs'],
+          locators: true,
+          teach: {
+            frame: 'The same circle as before, in whatever roll you chose.',
+            arcs: 'The numbers on the CT mark the branches once they separate. Ask which way each branch moves compared with the other: that is its side of the current arc. The branch that goes on toward the lesion is the airway you followed back from it.',
+          },
+          divisions: {
+            'junction-14':
+              'The first division of RB1, seen end-on: scrolling toward the head, one ring becomes two. Watch which way each ring moves as you scroll.',
+            'junction-61':
+              'The last division before the lesion. When you mark the branch that reaches it, the map puts the star there.',
+          },
+        },
+      },
+      {
+        traceId: 'right-upper-distal',
+        title: 'The same ostium, another lesion',
+        intro:
+          'A second lesion in the same segment: the same circle, different branches. The CT numbers are off, so find the branches yourself.',
+        plan: { parts: ['frame', 'arcs'] },
+      },
+    ],
+    closing:
+      'A map is a circle, an arc for every branch at every division, and a star. Number the divisions in the order the scope will meet them.',
+  },
+  {
+    id: 'drive-with-the-map',
+    title: 'Drive with the map',
+    minutes: 6,
+    objective:
+      'Drive the scope from the trachea to a lesion using your map past the segmental ostium, and recognize and back out of a branch that leads away.',
+    concept:
+      'Above the segment the scope flies through airways you know and stops at the fork where the segment’s bronchus leaves. From the segmental ostium the map takes over: at each division, take the opening on the side of the arc that holds the star. A branch that leads away shows a division that is not on your map: back out.',
+    trips: [
+      {
+        traceId: 'right-upper-apical',
+        title: 'Trachea to the RB1 lesion',
+        intro:
+          'The RB1 lesion again, with the map from the last lesson already on the bench. The scope flies through the airways you know and stops where RB1 leaves. At the second division past the ostium, take the branch that leads away on purpose, this once, to see what it looks like.',
+        plan: { parts: ['frame', 'arcs'], prefilled: true },
+        from: 'junction-1',
+        arrive: true,
         stations: {
-          'junction-3': {
-            steps: ['match', 'choose'],
+          'junction-14': {
             teach:
-              'The left main bronchus divides into the upper lobe bronchus, which runs outward and forward, and the lower lobe bronchus, which runs down and back. The lesion is high in the left lung.',
+              'You are at the RB1 ostium: the view your circle drew. From here, match each division to the map.',
           },
-          'junction-21': {
+          'junction-30': {
             teach:
-              'The scope has turned into the left upper lobe bronchus and is looking outward and forward, along the slice, with the head at the top. It is at an angle to both of the CT’s axes, so the CT is set to the book’s display for the left upper division: a quarter turn clockwise, with front and back where the scope has them. Separate the two openings: the upper division climbs, the lingular bronchus LB4+5 drops.',
+              'Take the opening that does not hold the star. Compare the division that comes into view with your map: nothing on the map is drawn there. Back out to this fork.',
           },
-          'junction-23': {
+          'junction-61': {
             teach:
-              'The scope is now looking up the upper division with the left chest wall at the bottom of its view: the mirror image of the right upper lobe display. LB3 runs forward; LB1+2 climbs up and back. Each lumen moves across the image as you scroll toward the head.',
+              'The scope has turned as it went deeper, so the map may sit rotated against the view. Turn the map to the scope, on screen or in your head, before you choose.',
           },
-          'junction-47': { steps: [] },
         },
       },
     ],
     closing:
-      'An oblique daughter is traced by scrolling and following: its lumen moves a little each slice. Right upper lobe and left upper division take opposite quarter turns, each with its own chest wall at the bottom.',
+      'Past the segment, the map chooses for you. When the view stops matching it, back out to the last division you are sure of and look again.',
+  },
+  {
+    id: 'views-that-help',
+    title: 'Views that help',
+    minutes: 10,
+    objective:
+      'Use a coronal or sagittal reconstruction beside the axial CT to see a segment that runs forward, backward or out toward the chest wall, and map it.',
+    concept:
+      'An axial slice cuts across airways that run up and down, so scrolling it shows each division as one ring becoming two. A segment that runs forward or back is cut across by a coronal reconstruction instead, and one that runs out toward the chest wall by a sagittal. Mortimer and Saghaie suggest a pairing for each segment: a starting point; use whatever shows the airway.',
+    trips: [
+      {
+        traceId: 'upper-oblique-medial',
+        title: 'A lesion in the right upper lobe',
+        intro:
+          'Another lesion in the right upper lobe. Plan it from the lesion; once you have named its segment, open a reconstruction before you draw the map.',
+        plan: {
+          parts: ['lesion', 'segment', 'views', 'frame', 'arcs'],
+          teach: {
+            views:
+              'Open the coronal view beside the axial CT and scroll it to the segment. A click on it moves the axial CT to the same place. Turn the axial CT too if that helps; none of this is checked.',
+          },
+        },
+      },
+      {
+        traceId: 'middle-lobe-lateral',
+        title: 'A lesion in the middle lobe',
+        intro:
+          'A lesion in the middle lobe. Plan it the same way, and choose your own views this time.',
+        plan: { parts: ['lesion', 'segment', 'views', 'frame', 'arcs'] },
+      },
+    ],
+    closing:
+      'Use the views that show the airway. The suggested pairing is a start, not a rule: anatomy varies and so do the bronchoscopists reading it.',
   },
   {
     id: 'turn-back',
     title: 'A route that comes back up',
-    minutes: 8,
+    minutes: 9,
     objective:
-      'Follow a route whose slice direction reverses, and recognise from the scope when the CT is no longer mirrored.',
+      'Plan, map and drive to a lower-lobe lesion whose route runs down and then turns back toward the head.',
     concept:
-      'A route can run down and then turn back toward the head. The slice numbers reverse; the airway connection does not. When the scope turns to look toward the head, the flip comes off the CT.',
+      'A route can run down and then turn back toward the head. The slice numbers reverse; the airway connection does not. Tracing back from the lesion follows the connection, so the reversal does not mislead you.',
     trips: [
       {
         traceId: 'left-lower-returning',
-        title: 'Left main bronchus to the superior segment',
-        from: 'junction-3',
-        arrive: true,
+        title: 'A lesion in the left lower lobe',
         intro:
-          'The lesion is in the superior segment of the left lower lobe, LS6. It lies above the fork that leads to it, so this route goes down and then comes back up.',
+          'The lesion is in the left lower lobe, yet it lies above the fork where the left main bronchus divides. Plan it from the lesion, then drive.',
+        plan: { parts: ['lesion', 'segment', 'frame', 'arcs'] },
+        from: 'junction-1',
+        arrive: true,
         stations: {
           'junction-3': {
-            steps: ['match', 'choose'],
             teach:
-              'The lesion is in the lower lobe, but look at its slice: it is above this fork. Do not let the level decide for you. Decide by which lobe it is in.',
+              'The lesion is in the lower lobe, but its slice is above this fork. Decide by the lobe it is in, not by its level.',
           },
           'junction-6': {
             teach:
-              'The scope is looking down the lower lobe bronchus with anterior at the top, so the CT is mirrored here: flip it. The lower lobe bronchus gives off LB6 from its back wall, while the basal trunk carries on down. In the scope LB6 is the lower opening, because posterior is at the bottom.',
-          },
-          'junction-11': {
-            teach:
-              'LB6 runs backward, and the scope with it: it is looking toward the back, along the slice, with the head at the top. Seen from in front like this, the patient’s left is on the scope’s right, the same as a standard CT. The flip comes off. From here the route climbs and the slice numbers rise as you advance.',
+              'The lower lobe bronchus gives off LB6 from its back wall, while the basal trunk carries on down. The lesion’s segment is the one you named in planning.',
           },
         },
       },
     ],
     closing:
-      'Follow the lumen from the last certain connection, whichever way the slice numbers run. Check the letters each time the scope turns: once it looks backward or toward the head, the CT is the right way round.',
+      'Follow the connection, whichever way the slice numbers run. A plan made from the lesion back already has the connection in it.',
   },
   {
     id: 'navigate',
-    title: 'Navigate to a lesion',
+    title: 'Plan and navigate',
     minutes: 10,
-    objective:
-      'Plan and drive a whole route from the trachea to a peripheral lesion, matching, identifying and choosing at every fork.',
+    objective: 'Plan, map and drive a whole route from the trachea to a peripheral lesion.',
     concept:
-      'A peripheral lesion is reached by taking the right opening at every fork. Each fork is the same four moves: match the CT, identify the openings, choose toward the lesion, drive on.',
+      'The whole method, start to finish: the airway into the lesion, back to its segment, the circle at the ostium, the arcs to the lesion, then the drive.',
     trips: [
       {
-        traceId: 'right-lower-basal',
-        title: 'Worked route: trachea to the anterior basal segment',
+        traceId: 'middle-lobe-cranial',
+        title: 'Worked: a lesion in the middle lobe',
+        intro:
+          'The bench works this one from the lesion to the scope’s arrival. Step through it and watch what it reads at each step.',
+        plan: { parts: ['lesion', 'segment', 'frame', 'arcs'], worked: true },
         from: 'junction-1',
         arrive: true,
         worked: true,
-        intro:
-          'The lesion is in the anterior basal segment of the right lower lobe, RS8. The bench works this route from the trachea; step through it and watch what it reads at each fork.',
-        stations: {
-          'junction-1': { steps: ['match', 'choose'] },
-          'junction-2': { steps: ['match', 'choose'] },
-          'junction-9': {
-            teach:
-              'The lower lobe bronchus gives off RB6 from its back wall and carries on down as the basal trunk. The lesion is far below this fork, in a basal segment.',
-          },
-        },
       },
       {
         traceId: 'left-lower-basal',
-        title: 'Your route: trachea to the lateral basal segment',
+        title: 'Yours: a lesion in the left lower lobe',
+        intro: 'Your turn. The openings are numbered but not named until you have chosen.',
+        plan: { parts: ['lesion', 'segment', 'frame', 'arcs'] },
         from: 'junction-1',
         arrive: true,
         independent: true,
-        intro:
-          'Your turn. The lesion is in the lateral basal segment of the left lower lobe, LS9. The openings are numbered but not named until you have chosen.',
-        stations: {
-          'junction-1': { steps: ['match', 'choose'] },
-          'junction-3': { steps: ['match', 'choose'] },
-        },
       },
     ],
     closing:
-      'That is the method: at every fork, match, identify, choose, drive. Practice has thirteen lesions to reach the same way.',
+      'That is the method: from the lesion back to the segment, a circle at the ostium, an arc for every branch, then the drive. Practice has eighteen lesions to plan and reach the same way.',
   },
 ]
 
-export const lessonById = (id: string | undefined) => NAV_LESSONS.find((l) => l.id === id)
+/**
+ * The course is for bronchoscopists who know the airways down to the segments, so it opens on
+ * planning. Reading the CT against the scope at the central airways is not a lesson they must
+ * sit through: it is a short check at the front, with nothing explained before each check, and
+ * the two lessons that teach it slowly are kept as refreshers for whoever wants them.
+ */
+const REFRESHER_IDS = ['carina-orientation', 'two-levels']
+/** Reading the CT against the scope, taught slowly: open to all, on nobody's way. */
+export const REFRESHER_LESSONS: readonly NavLesson[] = AUTHORED.filter((lesson) =>
+  REFRESHER_IDS.includes(lesson.id),
+)
+/** The course, in order: planning from the lesion, the map, the drive, the whole method. */
+export const NAV_LESSONS: readonly NavLesson[] = AUTHORED.filter(
+  (lesson) => !REFRESHER_IDS.includes(lesson.id),
+)
+
+/**
+ * Three forks, each asking only for the CT to be turned to the scope: looking down the trachea
+ * (a mirror), looking up into the right upper lobe (a quarter turn) and looking up into the left
+ * upper lobe (the other quarter turn). Optional, and nothing waits on it.
+ */
+export const ORIENTATION_CHECK: NavLesson = {
+  id: 'orientation-check',
+  title: 'Orientation check',
+  minutes: 3,
+  objective:
+    'Turn an axial CT to face the way the bronchoscope does at three forks: looking down the trachea, looking up into the right upper lobe, and looking up into the left upper lobe.',
+  concept:
+    'An axial CT is drawn as if you stood at the patient’s feet looking toward the head. Which way the scope looks, and how it has rolled, decides whether the CT must be mirrored or turned to face the same way.',
+  unaided: true,
+  trips: [
+    {
+      traceId: 'central-right',
+      title: 'The carina',
+      from: 'junction-1',
+      through: 'junction-1',
+      intro:
+        'The scope is in the lower trachea, looking down at the carina. Turn the CT until its letters sit where the scope has them, then check.',
+      stations: { 'junction-1': { steps: ['match'] } },
+    },
+    {
+      traceId: 'right-upper-apical',
+      title: 'Looking up into the right upper lobe',
+      from: 'junction-14',
+      through: 'junction-14',
+      intro: 'The scope is in RB1, the apical bronchus of the right upper lobe, looking up.',
+      stations: { 'junction-14': { steps: ['match'] } },
+    },
+    {
+      traceId: 'left-upper-division',
+      title: 'Looking up into the left upper lobe',
+      from: 'junction-23',
+      through: 'junction-23',
+      intro: 'The scope is in the upper division of the left upper lobe bronchus, looking up.',
+      stations: { 'junction-23': { steps: ['match'] } },
+    },
+  ],
+  closing:
+    'Looking down an airway, the CT is mirrored. Looking up an airway, it is not: it only needs turning, one way in the right upper lobe and the other way in the left.',
+}
+
+/** What the check's closing card says, by whether all three forks matched at the first check. */
+export const ORIENTATION_CHECK_RESULT = {
+  matched:
+    'All three matched at the first check. From here on the course never waits for the CT to be turned: turn it on screen or in your head, and Check my turn stays beside the CT.',
+  notYet:
+    'At least one fork did not match at the first check, or was shown. The two refresher lessons take the mirror and the turn slowly. They are optional: planning is open from the course overview whenever you want it.',
+} as const
+
+/** Every lesson that has an address: the check, the course, the refreshers. */
+export const ALL_LESSONS: readonly NavLesson[] = [
+  ORIENTATION_CHECK,
+  ...NAV_LESSONS,
+  ...REFRESHER_LESSONS,
+]
+export type LessonKind = 'check' | 'course' | 'refresher'
+export const lessonKind = (id: string): LessonKind =>
+  id === ORIENTATION_CHECK.id ? 'check' : REFRESHER_IDS.includes(id) ? 'refresher' : 'course'
+
+export const lessonById = (id: string | undefined) => ALL_LESSONS.find((l) => l.id === id)
+/** A course lesson's number, from 1; the check and the refreshers have none (0). */
 export const lessonNumber = (id: string) => NAV_LESSONS.findIndex((l) => l.id === id) + 1
-export const lessonAfter = (id: string) =>
-  NAV_LESSONS[NAV_LESSONS.findIndex((l) => l.id === id) + 1]
+/** "Lesson 4 · Drive with the map", "Orientation check", "Refresher · Two openings, two slices". */
+export function lessonLabel(lesson: NavLesson, separator = ' · ') {
+  const kind = lessonKind(lesson.id)
+  if (kind === 'check') return lesson.title
+  if (kind === 'refresher') return `Refresher${separator}${lesson.title}`
+  return `Lesson ${lessonNumber(lesson.id)}${separator}${lesson.title}`
+}
+/**
+ * What follows a lesson: the next course lesson; after the check, or after the last refresher,
+ * the first course lesson; after the last course lesson, nothing (Practice).
+ */
+export function lessonAfter(id: string): NavLesson | undefined {
+  const kind = lessonKind(id)
+  if (kind === 'check') return NAV_LESSONS[0]
+  if (kind === 'refresher')
+    return REFRESHER_LESSONS[REFRESHER_LESSONS.findIndex((l) => l.id === id) + 1] ?? NAV_LESSONS[0]
+  return NAV_LESSONS[NAV_LESSONS.findIndex((l) => l.id === id) + 1]
+}
 export const totalMinutes = () => NAV_LESSONS.reduce((sum, lesson) => sum + lesson.minutes, 0)
 
 /** Lesson groups for the hub, by lesson id. */
 export const LESSON_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Orientation', ids: ['carina-orientation'] },
-  { label: 'The loop, on the right', ids: ['two-levels', 'middle-lobe-flat', 'rb5-up-or-down'] },
-  { label: 'Looking up and across', ids: ['look-up-rul', 'oblique'] },
-  { label: 'Coming back, and going all the way', ids: ['turn-back', 'navigate'] },
+  { label: 'Before you start (optional)', ids: [ORIENTATION_CHECK.id] },
+  {
+    label: 'Planning from the lesion',
+    ids: ['start-at-the-lesion', 'stand-at-the-ostium', 'nested-arcs'],
+  },
+  { label: 'Driving with the map', ids: ['drive-with-the-map', 'views-that-help'] },
+  { label: 'The whole method', ids: ['turn-back', 'navigate'] },
+  { label: 'Refreshers: reading the CT against the scope', ids: REFRESHER_IDS },
 ]
+/** Finishing this lesson shows the learner can turn the CT to the scope. */
+export const ORIENTATION_LESSON = 'carina-orientation'
+/** Turning the CT is asked for in these lessons, whatever the learner has shown before. */
+export const MATCH_REQUIRED_LESSONS: readonly string[] = [ORIENTATION_LESSON, ORIENTATION_CHECK.id]

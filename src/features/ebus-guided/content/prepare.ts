@@ -17,6 +17,12 @@ export const prepareLessons: Lesson[] = [
       'Linear EBUS places an ultrasound transducer beside the airway and displays a needle in its imaging plane. EBUS-TBNA can obtain material for diagnosis and nodal staging. Radial EBUS, used to localize peripheral lesions, serves a different procedural role.',
       'A diagnostic procedure asks what the lesion is. A staging procedure asks where tumor has spread. A malignant sample from one accessible node may answer the first question while leaving other relevant stations unexamined. State both questions when both affect care.',
       'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
+      /*
+       * The N categories, where the course first leans on them (flow review of 2026-11-10: they
+       * were tested in lessons 1, 12 and 15 and taught in the staging lesson). TNM ninth edition
+       * keeps these definitions; the staging lesson adds the N2a/N2b split and the sampling order.
+       */
+      'In lung cancer the nodal extent is the N category, counted from the side of the primary: ipsilateral hilar and intrapulmonary nodes are N1, ipsilateral mediastinal and subcarinal nodes are N2, and contralateral mediastinal or hilar nodes, or any supraclavicular or scalene node, are N3. A staging examination therefore has to look at both sides of the mediastinum.',
     ],
     checklist: [
       'Name the decision the result will change.',
@@ -38,12 +44,12 @@ export const prepareLessons: Lesson[] = [
           'A result from one station does not supply the rest of the nodal map.',
         ],
         [
-          'Whether the ultrasound probe was linear',
-          'Probe type is known from the procedure and does not resolve nodal extent.',
+          'Whether the station 7 result needs surgical confirmation',
+          'A positive EBUS-TBNA aspirate stands on its own. It is a negative result with high clinical suspicion that may need surgical staging.',
         ],
         [
-          'Whether the same station should be renamed after cytology',
-          'Station identity is anatomical; pathology does not change its name.',
+          'Whether the disease is N1 or N2',
+          'A positive subcarinal node is already N2. What is unknown is whether contralateral (N3) stations are involved.',
         ],
       ),
       hint: 'A diagnostic procedure asks what the lesion is. A staging procedure asks where tumor has spread.',
@@ -75,12 +81,12 @@ export const prepareLessons: Lesson[] = [
           'A sample sufficient for one diagnostic stain may not satisfy all ancillary tests.',
         ],
         [
-          'It eliminates the need to label the station',
-          'Every sample still needs an anatomical source.',
+          'It decides which station is sampled first',
+          'Sampling order follows staging logic (N3, then N2, then N1), not the test request.',
         ],
         [
-          'It determines the diagnosis before acquisition',
-          'Planning preserves options; it does not establish pathology.',
+          'It lets ROSE stand in for the final pathology report',
+          'ROSE judges adequacy during the procedure. The diagnosis and ancillary tests still come from the laboratory.',
         ],
       ),
       hint: 'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
@@ -94,12 +100,12 @@ export const prepareLessons: Lesson[] = [
           'Flow cytometry, microbiology, or additional tissue may be needed; agree on handling before obtaining material.',
         ],
         [
-          'Assigning a lung-cancer N category to every enlarged node',
-          'N classification describes regional tumor involvement in the relevant cancer context, not all adenopathy.',
+          'The N3-to-N1 order for a systematic staging survey',
+          'That order prevents false upstaging in lung cancer. Here the open question is the diagnosis, so the specimen plan comes first.',
         ],
         [
-          'Treating a negative aspirate as exclusion of every possible diagnosis',
-          'Negative sampling has diagnosis-specific limits, especially when architecture or additional testing is needed.',
+          'Referral for mediastinoscopy, because EBUS cannot diagnose lymphoma',
+          'EBUS-TBNA diagnoses many lymphomas when material is sent for flow cytometry. Surgical biopsy is kept for when architecture is needed.',
         ],
       ),
       hint: 'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
@@ -125,13 +131,13 @@ export const prepareLessons: Lesson[] = [
       'A positive sample and a complete examination answer different questions.',
       'Plan tissue handling before the first pass.',
     ],
-    sources: ['ers2026', 'chest2024', 'ics2023'],
+    sources: ['ers2026', 'chest2024', 'ics2023', 'iaslc9'],
   },
   {
     id: 'preparation',
-    title: 'Preparation and the airway plan',
+    title: 'Preparation, sedation and the airway plan',
     topic: 'Prepare',
-    minutes: 7,
+    minutes: 8,
     objective:
       'Identify unresolved preparation issues that should pause an elective EBUS procedure.',
     recall: 'The clinical question and likely specimen requirements should already be defined.',
@@ -140,6 +146,14 @@ export const prepareLessons: Lesson[] = [
       `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel the sources differ: ACCP 2022 says ${N('clopidogrel-accp')} a procedure, BTS 2013 says ${N('clopidogrel-bts')} a biopsy, and ICS/IAB 2023 allows continuing it for EBUS-TBNA when the risk of thrombosis outweighs the risk of bleeding. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
       `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
       `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
+      /*
+       * Sedation and airway (owner decision of 2026-11-10 to add them). The owner verified the CHEST
+       * 2016 sedation statement on 2026-11-10. The airway sentences are practice points, not a
+       * guideline; by his direction of the same day they describe laryngeal-mask and
+       * endotracheal-tube access as depending on device position and on what the procedure
+       * requires, not as absolute.
+       */
+      'EBUS-TBNA is done under moderate sedation, deep sedation or general anesthesia; CHEST 2016 suggests that either moderate or deep sedation is acceptable. The choice shapes the airway plan. Under moderate sedation the scope passes the cords with topical anesthesia, and cough and movement can limit how long a stable window lasts. With a laryngeal mask or an endotracheal tube, which stations can be reached depends on where the device sits and on what the procedure requires: a laryngeal mask generally leaves more of the upper trachea accessible, while an endotracheal tube may overlie the high paratracheal stations unless it is positioned to expose them. Say before induction which stations must be reached, so the airway can be chosen and positioned for them.',
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
     checklist: [
@@ -161,8 +175,8 @@ export const prepareLessons: Lesson[] = [
         'The hold differs by drug and by renal function, and the reason it was started decides how safely it can be held. None of that is known yet.',
       ],
       [
-        'Proceed because needle aspiration cannot cause important bleeding',
-        'Needle aspiration still carries bleeding risk; the assumption is unsafe.',
+        'Proceed, because EBUS-TBNA is a low-bleeding-risk procedure',
+        'The risk is low, not zero, and an unidentified anticoagulant has not been accounted for.',
       ],
       [
         'Apply the clopidogrel hold without identifying the medication',
@@ -188,12 +202,12 @@ export const prepareLessons: Lesson[] = [
         'A checklist supports coordination; it does not remove procedural risk.',
       ],
       [
-        'Complications are no longer possible',
-        'Preparation reduces avoidable problems without guaranteeing safety.',
+        'Bleeding risk is back to that of an untreated patient',
+        'Holding a drug lowers the bleeding risk without removing it, and the thrombotic risk has gone up.',
       ],
       [
-        'The ultrasound findings are already known',
-        'The imaging examination has not yet occurred.',
+        'The airway plan is settled for the rest of the case',
+        'The plan is a starting point. Sedation depth, oxygenation and ventilation are reassessed throughout.',
       ],
     ),
     transfer: q(
@@ -204,36 +218,35 @@ export const prepareLessons: Lesson[] = [
         `The scope is ${N('scope-tip-diameter')} at its tip. It has to pass with room left to ventilate around it, and that is settled before the procedure starts.`,
       ],
       [
-        'Whether the image gain can compensate for the narrow conduit',
-        'Gain changes ultrasound display, not airway patency.',
+        'Pass a radial EBUS probe through the same tube instead',
+        'Radial EBUS localizes peripheral lesions. It does not give real-time needle guidance for mediastinal nodes.',
       ],
       [
-        'Whether specimen labels can be prepared after the procedure',
-        'Labeling is separate and does not solve the airway constraint.',
+        'Lower the tidal volume so ventilation continues around the scope',
+        'Smaller breaths do not make room in the tube. The scope still fills most of the lumen and airway pressure rises.',
       ],
     ),
     takeaways: [
       'Unresolved readiness issues require a pause.',
       'Know the antiplatelet intervals, and identify any anticoagulant before you start.',
     ],
-    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f'],
+    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f', 'chest2016'],
   },
   {
     id: 'scope-orientation',
     title: 'Scope orientation and the imaging plane',
     topic: 'Prepare',
-    minutes: 8,
-    objective: 'Relate scope rotation to a change in the ultrasound plane.',
-    recall: 'A linear EBUS transducer lies on one side of the distal scope.',
+    minutes: 10,
+    objective:
+      'Relate rotating, advancing and withdrawing the scope to what each does to the ultrasound image.',
+    recall:
+      'The convex EBUS transducer sits on one side of the scope tip, just beyond the lens and the working-channel outlet.',
     concept: 'Endoscopic and ultrasound views answer different questions',
     paragraphs: [
-      'The bronchoscopic view locates the tip within the airway. The ultrasound sector displays tissue beyond the wall along the transducer’s plane. These are related views with different perspectives; neither alone supplies a complete anatomical map.',
-      'Scope rotation changes the direction of the sector. Tip flexion and advancement also change the relationship to the wall. In this activity, change rotation alone and compare the ultrasound with the Anatomy and Bronchoscopy views.',
-      'The ultrasound sector lies in a plane that contains the scope’s long axis. In this model, image right is toward the patient’s head; check the orientation convention of the processor you use.',
-      'In this model, 0° is the preset’s authored depth axis; it is not a universal anatomical direction.',
-      'In this model the target stays visible over a wide rotation range because the modeled node is large and close to the airway. Do not read the range as the rotation a real node tolerates.',
-      'Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
-      'The calibrated station start assists positioning. Finding a structure from that start is a scan-plane exercise, not a demonstration of independent airway navigation.',
+      'The bronchoscopic view shows where the tip is in the airway. The ultrasound image shows the tissue beyond the wall, as a thin slice that runs along the length of the scope from the transducer. You need both: white light to know where you are, ultrasound to see what lies beside you.',
+      'The green orientation dot at the upper right of the ultrasound image marks the proximal (cephalad) side of the view. Image right is toward the patient’s head, image left is toward the tip of the scope, and the needle enters the image from the side of the dot.',
+      'Rotating the scope turns that slice around the airway. A structure enters and leaves the image although neither the scope tip nor the node has moved along the airway.',
+      'Advancing or withdrawing slides the slice along the airway instead. A structure that stays in the plane moves across the image: toward the green dot as you advance, away from it as you withdraw. Flexing the tip presses the transducer against the wall. In this lesson you rotate first, then advance and withdraw.',
     ],
     checklist: [
       'Locate the carina and main bronchi.',
@@ -255,12 +268,12 @@ export const prepareLessons: Lesson[] = [
           'A two-dimensional sector samples different tissue as the scope rotates.',
         ],
         [
-          'The node changed histology during the sweep',
-          'An immediate reversible image change reflects acquisition, not tissue diagnosis.',
+          'The transducer lost contact with the airway wall',
+          'Lost contact blanks the whole image with air reverberation. Here one structure leaves while the surrounding tissue stays in view.',
         ],
         [
-          'The processor measured a new node size automatically',
-          'No measurement was performed. Apparent dimensions may vary with the plane.',
+          'The node moved out of view with respiration',
+          'Respiratory motion is cyclical and shifts everything in the image together. A change that follows your rotation and reverses with it is the plane.',
         ],
       ),
       imagePolicy: 'none',
@@ -273,23 +286,36 @@ export const prepareLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Identify the transducer surface in Scope model and check your selection. Sweep slowly from a plane without the target, through several sections of it, until it leaves on the far side; then return to a visible section. Pause for each ultrasound image. Orbit changes only your viewpoint.',
+        'Move the Scope rotation slider through at least 20° and watch the node enter and leave the ultrasound image. When the subcarinal node is in the image, click it, and finish with it in view.',
+    },
+    // The second movement (2026-11-10): the same node, held in plane, with the scope moved along
+    // the airway so the node starts at one edge of the image.
+    transferLab: {
+      kind: 'simulator',
+      linkedLesson: 'scope-orientation',
+      linkedVariant: 'along-airway',
+      goal: 'centre',
+      presetKey: 'station_7_node_a::rms',
+      controls: ['advance'],
+      initialRoll: 0,
+      instruction:
+        'The scope has been moved along the airway, and the rotation is set so the node stays in the plane. The node, outlined in green, now sits to one side of the image. Use the Scope position slider to advance or withdraw, watch the node slide across the image, and finish with it on the dashed middle line.',
     },
     observation: {
       ...q(
         'orientation-observe',
         'The target becomes visible after your rotation. Which statement is justified?',
         [
-          'The rendered sector now intersects the target',
-          'Visibility confirms this modeled plane intersects the structure. It does not confirm a diagnosis.',
+          'The imaging plane now passes through the node',
+          'Seeing the node means the plane cuts through it. That alone does not name the station or say what the node contains.',
         ],
         [
-          'The bronchoscope advanced into a different lobe',
-          'Rotation alone did not command advancement.',
+          'The scope tip is now level with a different station',
+          'Rotation turns the plane around the airway at the same level. The tip has not moved along the airway.',
         ],
         [
-          'The displayed structure is suitable for puncture without further checks',
-          'Station identity, vascular relationships, and a safe path still need assessment.',
+          'The image now shows the node’s largest diameter',
+          'One section that shows the node is not necessarily its widest. Sweep through it to find the largest short axis.',
         ],
       ),
       imagePolicy: 'retained-acquisition',
@@ -302,17 +328,21 @@ export const prepareLessons: Lesson[] = [
           'Whether the section through the node changed',
           'Size assessment depends on the selected imaging plane and visible borders.',
         ],
-        ['Whether its stage has decreased', 'A scan-plane change does not change tumor stage.'],
         [
-          'Whether the gain control can recover the prior diameter',
-          'Gain changes received-signal brightness, not the geometric plane.',
+          'Whether the frame was frozen in a different respiratory phase',
+          'Respiration shifts the node a little but does not change its diameter. The section through it does.',
+        ],
+        [
+          'Whether more gain would bring back the earlier border',
+          'Gain brightens the returning echoes. It does not move the plane back to the node’s center.',
         ],
       ),
       imagePolicy: 'none',
     },
-    diagram: 'stations',
+    diagram: 'station-map',
     takeaways: [
       'A sector is a slice through anatomy.',
+      'Rotation takes a structure out of the plane; advancing or withdrawing slides it across the image.',
       'Correlate the ultrasound plane with airway landmarks.',
     ],
     sources: ['ics2023', 'simulation'],

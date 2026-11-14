@@ -111,6 +111,50 @@
   gap: 4rem;
   padding: 2rem 0 2.5rem;
 }
+/* The hero's pictures: the lesion on its CT, and the map that reaches it. */
+.heroSide {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+}
+.methodPoster {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+}
+.methodPoster figcaption {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.methodPoster figcaption strong {
+  color: inherit;
+  font-size: 1rem;
+  color: #e7f1f3;
+}
+.posterLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #a5e9e7;
+  border-radius: 9px;
+  color: #a5e9e7;
+  font-weight: 700;
+  text-decoration: none;
+}
+/* Beside the way in: the demonstration, for a learner who would rather see it once first. */
+.watchFirst {
+  margin: 0.5rem 0 1rem 0.6rem;
+  vertical-align: top;
+  padding-block: 0.7rem;
+}
 .hero h1 {
   font-size: clamp(2.1rem, 4vw, 3.5rem);
   line-height: 1.08;
@@ -216,6 +260,25 @@
   color: #b3e5e3;
   text-decoration: underline;
 }
+.cruiseChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: 46rem;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.cruiseChoice input {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.22rem;
+}
+.cruiseChoice strong {
+  color: var(--text, #e8f1f2);
+}
 .small {
   color: var(--muted) !important;
   font-size: 0.8rem;
@@ -233,8 +296,10 @@
     flex: 1;
     min-height: 0;
   }
+  /* In a bench the section tabs give their row to the pictures: the bench's own bar leads back
+     to the course overview or the lesion list, where the tabs are. */
   .module[data-activity='true'] > nav {
-    flex: 0 0 auto;
+    display: none;
   }
 }
 @media (max-width: 760px) {

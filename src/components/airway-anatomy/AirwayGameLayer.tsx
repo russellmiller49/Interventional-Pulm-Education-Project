@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import {
   ChevronsUp,
+  CornerUpLeft,
   Flame,
   Gauge,
   Lightbulb,
@@ -33,7 +34,14 @@ import {
   type Difficulty,
   type GameTarget,
 } from '@/lib/airway-anatomy/airway-game'
+import {
+  buildBranchDebrief,
+  missedBranchEdgeId,
+  type BranchDebrief,
+} from '@/lib/airway-anatomy/branch-debrief'
+import { createGraphIndex } from '@/lib/airway-anatomy/scope-state'
 import type {
+  AirwayAnatomyCaseManifest,
   AirwayGraph,
   CenterlineLabels,
   ScopePoseSnapshot,
@@ -68,6 +76,8 @@ export interface AirwayGameView {
   countdownValue: number
   currentTarget: GameTarget | null
   wrongTurns: number
+  /** The last turn off the route to the current target, with the landmark that separates them. */
+  branchDebrief: BranchDebrief | null
   hintsOn: boolean
   hasTargets: boolean
   lastResult: { abbr: string; points: number; stars: 1 | 2 | 3; clean: boolean; key: number } | null
@@ -95,6 +105,8 @@ interface UseAirwayGameParams {
   enabled: boolean
   graph: AirwayGraph | null
   labels: CenterlineLabels | null
+  /** Reviewed ostium names, so the debrief names a branch as the in-view labels do. */
+  ostialLandmarks?: AirwayAnatomyCaseManifest['ostialLandmarks']
   snapshot: ScopePoseSnapshot | null
   onResetScope: () => void
 }
@@ -125,6 +137,7 @@ export function useAirwayGame({
   enabled,
   graph,
   labels,
+  ostialLandmarks,
   snapshot,
   onResetScope,
 }: UseAirwayGameParams): AirwayGameController {
@@ -132,6 +145,7 @@ export function useAirwayGame({
     () => (graph && labels ? buildGameTargets(graph, labels) : []),
     [graph, labels],
   )
+  const graphIndex = useMemo(() => (graph ? createGraphIndex(graph) : null), [graph])
 
   const [status, setStatus] = useState<GameStatus>('idle')
   const [difficultyId, setDifficultyId] = useState<Difficulty['id']>('landmarks')
@@ -142,6 +156,7 @@ export function useAirwayGame({
   const [bestCombo, setBestCombo] = useState(0)
   const [hits, setHits] = useState(0)
   const [wrongTurns, setWrongTurns] = useState(0)
+  const [missedEdgeId, setMissedEdgeId] = useState<number | null>(null)
   const [durationSec, setDurationSec] = useState(90)
   const [timeLeftSec, setTimeLeftSec] = useState(90)
   const [countdownValue, setCountdownValue] = useState(3)
@@ -216,6 +231,7 @@ export function useAirwayGame({
     wrongTurnsRef.current = 0
     offCorridorRef.current = false
     setWrongTurns(0)
+    setMissedEdgeId(null)
   }, [])
 
   const registerHit = useCallback(() => {
@@ -290,6 +306,7 @@ export function useAirwayGame({
       setBestCombo(0)
       setHits(0)
       setWrongTurns(0)
+      setMissedEdgeId(null)
       setLastResult(null)
       setResults(null)
 
@@ -306,6 +323,7 @@ export function useAirwayGame({
     setStatus('idle')
     setResults(null)
     setLastResult(null)
+    setMissedEdgeId(null)
   }, [clearTimers])
 
   const playAgain = useCallback(() => start(difficultyRef.current.id), [start])
@@ -362,7 +380,8 @@ export function useAirwayGame({
   const currentTarget =
     status === 'playing' || status === 'countdown' ? (queue[queueIndex] ?? null) : null
 
-  // Arrival + wrong-turn detection off the shared scope snapshot.
+  // Arrival + wrong-turn detection off the shared scope snapshot. The fork of the last wrong turn
+  // stays on screen until the target is reached, so its landmark is there while re-steering.
   useEffect(() => {
     if (status !== 'playing' || !currentTarget || !snapshot) return
     const edgeId = snapshot.edgeId
@@ -371,6 +390,7 @@ export function useAirwayGame({
         offCorridorRef.current = true
         wrongTurnsRef.current += 1
         setWrongTurns(wrongTurnsRef.current)
+        setMissedEdgeId(graphIndex ? missedBranchEdgeId(currentTarget, edgeId, graphIndex) : edgeId)
       }
     } else {
       offCorridorRef.current = false
@@ -378,7 +398,21 @@ export function useAirwayGame({
     if (isArrived(currentTarget, edgeId)) {
       registerHit()
     }
-  }, [snapshot, status, currentTarget, registerHit])
+  }, [snapshot, status, currentTarget, registerHit, graphIndex])
+
+  const branchDebrief = useMemo(
+    () =>
+      currentTarget && missedEdgeId != null && graphIndex && labels
+        ? buildBranchDebrief({
+            index: graphIndex,
+            labels,
+            ostialLandmarks,
+            target: currentTarget,
+            pickedEdgeId: missedEdgeId,
+          })
+        : null,
+    [currentTarget, missedEdgeId, graphIndex, labels, ostialLandmarks],
+  )
 
   const comboMultiplier = 1 + Math.min(Math.max(combo, 0), 6) * 0.15
 
@@ -395,6 +429,7 @@ export function useAirwayGame({
     countdownValue,
     currentTarget,
     wrongTurns,
+    branchDebrief,
     hintsOn,
     hasTargets: allTargets.length > 0,
     lastResult,
@@ -596,6 +631,11 @@ export function GameHudOverlay({
             </button>
           )}
 
+          {/* The last turn off the route, kept low in the frame so the lumen stays clear. */}
+          {view.status === 'playing' && view.branchDebrief && (
+            <BranchDebriefCard debrief={view.branchDebrief} color={lobeColor} />
+          )}
+
           {/* Countdown */}
           {view.status === 'countdown' && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/45 backdrop-blur-[1px]">
@@ -652,6 +692,51 @@ function GameGuide({
             }}
           >
             <ChevronsUp className="h-9 w-9" style={{ color }} strokeWidth={2.75} />
+          </div>
+        </div>
+      }
+    </HandoffContent>
+  )
+}
+
+/**
+ * What the learner entered, which branch the route takes at that fork, and the scope landmark and
+ * CT direction that separate the two. Three short lines, so the next attempt can start at once.
+ */
+function BranchDebriefCard({ debrief, color }: { debrief: BranchDebrief; color: string }) {
+  return (
+    <HandoffContent>
+      {
+        <div
+          role="status"
+          aria-label="Last branch entered"
+          className="absolute inset-x-0 bottom-11 flex justify-center px-2.5"
+        >
+          <div className="w-[min(94%,460px)] rounded-lg border border-amber-400/40 bg-slate-950/85 px-3 py-2 text-[11px] leading-snug text-slate-300 shadow backdrop-blur">
+            <p className="flex items-start gap-1.5 text-xs text-slate-100">
+              <CornerUpLeft className="mt-px h-3.5 w-3.5 shrink-0 text-amber-300" />
+              <span>
+                Entered <strong className="text-amber-200">{debrief.picked}</strong>; intended{' '}
+                <strong style={{ color }}>{debrief.intended}</strong>
+                {debrief.intended !== debrief.target ? `, toward ${debrief.target}` : ''}.
+              </span>
+            </p>
+            {debrief.scope && (
+              <p className="mt-1">
+                <span className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
+                  Scope
+                </span>{' '}
+                {debrief.scope}
+              </p>
+            )}
+            {debrief.ct && (
+              <p className="mt-0.5">
+                <span className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
+                  CT
+                </span>{' '}
+                {debrief.ct}
+              </p>
+            )}
           </div>
         </div>
       }

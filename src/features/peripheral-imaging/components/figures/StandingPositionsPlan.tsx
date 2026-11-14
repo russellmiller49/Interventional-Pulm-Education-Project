@@ -63,7 +63,7 @@ export function StandingPositionsPlan({
         viewBox="0 0 360 250"
         className={`${styles.svgFigure} ${styles.planSvg}`}
         role="img"
-        aria-label="Top-down schematic of the room. The patient lies on the table. The X-ray tube is on the near side and the detector on the far side, with the primary beam crossing the patient from tube to detector. Position 1 is beside the tube housing, position 2 is farther along the table on the tube side, and position 3 is across on the detector side. All three are about the same distance from the table."
+        aria-label="Plan of the room from above. The patient lies on the table. The X-ray tube is on the near side and the detector on the far side, with the primary beam crossing the patient from tube to detector. Position 1 is beside the tube housing, position 2 is farther along the table on the tube side, and position 3 is across on the detector side. All three are about the same distance from the table."
         data-standing-plan
       >
         <text x="8" y="16" fill="#9fb6bb" fontSize="11">

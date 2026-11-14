@@ -663,6 +663,9 @@ export function CardiohelpConsole({
     unlockTimerRef.current = null
   }
 
+  // A console the learner cannot operate is drawn as a picture of one (see the physical panel).
+  const picture = !controlsEnabled
+
   return (
     <section
       id="cardiohelp-console"
@@ -723,7 +726,7 @@ export function CardiohelpConsole({
         </p>
       )}
 
-      <div className={styles.deviceShell}>
+      <div className={styles.deviceShell} data-console-picture={picture || undefined}>
         <div className={styles.deviceBrandRow}>
           <span>CARDIOHELP-i</span>
           <small>Original schematic · not manufacturer endorsed</small>
@@ -852,7 +855,31 @@ export function CardiohelpConsole({
             </nav>
           </div>
 
-          <aside className={styles.physicalPanel} aria-label="Physical console controls">
+          {/*
+            In a reading-only section the physical controls are a picture, and drawn as one.
+
+            They were ordinary buttons at half strength, two of them still pressable (the lock and
+            the alarm-audio switch), and a tester reported "the button on the right doesn't work"
+            (2026-10-23). Here every control in the column is off, the column is marked and drawn
+            as an outline rather than as raised buttons, and it carries its own label, so nothing
+            in it invites a press. The screen tabs, Home and Menu stay live, as the note above the
+            device says.
+          */}
+          <aside
+            className={styles.physicalPanel}
+            aria-label="Physical console controls"
+            aria-describedby={picture ? 'cardiohelp-console-picture-label' : undefined}
+            data-console-picture={picture || undefined}
+          >
+            {picture ? (
+              <p
+                id="cardiohelp-console-picture-label"
+                className={styles.consolePictureLabel}
+                data-console-picture-label
+              >
+                Picture · not live here
+              </p>
+            ) : null}
             <div className={styles.powerIndicators}>
               <span data-on={state.device.powerSource === 'ac'}>
                 <Zap aria-hidden="true" /> AC
@@ -912,6 +939,7 @@ export function CardiohelpConsole({
             <button
               type="button"
               className={styles.physicalButton}
+              disabled={picture}
               onClick={() => {
                 if (!state.device.locked) dispatch({ type: 'TOGGLE_LOCK' })
               }}
@@ -1061,6 +1089,7 @@ export function CardiohelpConsole({
             <button
               type="button"
               className={styles.audioButton}
+              disabled={picture}
               aria-pressed={state.device.alarmAudioEnabled}
               onClick={() => dispatch({ type: 'TOGGLE_ALARM_AUDIO' })}
             >

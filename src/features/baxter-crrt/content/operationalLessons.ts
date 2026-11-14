@@ -34,8 +34,7 @@ export const crrtOperationalTasks: Partial<
       exampleId: 'hardware-reference',
       kind: 'guided',
       operation: 'hardware',
-      instruction:
-        'Explore the four hardware regions, then trace the fluid destinations below. These selections explain functions; they do not operate a machine.',
+      instruction: 'Explore the four hardware regions, then trace the fluid destinations below.',
       teaching: [
         'You have followed blood and fluid through the circuit and separated prescribed rates from projected delivery. Now connect those paths to the hardware before starting a reference run.',
         'By the end of this lesson, use the patient context, pressure pattern, pump state and recorded delivery to assess an interruption and verify the response to an action.',
@@ -91,7 +90,7 @@ export const crrtOperationalTasks: Partial<
           'recorded',
           'The effluent volume collected over the same 24 hours.',
           true,
-          `Delivered dose is the effluent actually collected, divided by weight and by the hours in the interval. For run B that is 1,900 × 18 ÷ 24 ÷ 80, about 17.8 mL/kg/h, which is under the delivered target of ${N('dose-delivered')}. Run A delivered its full 23.75. Losses like this are why you prescribe ${N('dose-prescribed')}.`,
+          `Delivered dose is the effluent actually collected, divided by weight and by the hours in the interval. For run B that is 1,900 × 18 ÷ 24 ÷ 80, about 17.8 mL/kg/h, which is under the delivered target of ${N('dose-delivered')}. Run A delivered its full 23.75. Losses like this are why ${N('dose-prescribed')} is commonly prescribed.`,
         ),
         choice(
           'pressure',
@@ -243,7 +242,7 @@ export const crrtOperationalTasks: Partial<
       exampleId: 'delivery-run-04',
       run: 'delivery',
       kind: 'read',
-      instruction: 'Read the prepared reference before advancing its clock.',
+      instruction: 'Read the run setup before you advance the clock.',
       teaching: [
         'Use the prior circuit and dose concepts to calculate whole-patient balance from recorded delivery, distinguish a net-removal adjustment from solute-support flows, and plan clinical reassessment when considering liberation.',
         'This fresh run is a guided version of Practice case CRRT-04, prepared with the same setup steps: 80 kg, CVVHD, blood 120 mL/min, dialysate 1,800 mL/h and machine patient fluid removal (PFR) 100 mL/h. No treatment time has elapsed. These are teaching inputs, not a recommended prescription.',
@@ -371,12 +370,13 @@ export const crrtOperationalTasks: Partial<
       title: 'Reassess the need for ongoing support',
       exampleId: 'clinical-reassessment-worked',
       kind: 'read',
-      instruction:
-        'Work through the clinical reassessment domains. This is a clinical reasoning example, not a simulated kidney-recovery result.',
+      instruction: 'Work through the clinical reassessment domains.',
       teaching: [
         'Start with the original indication for CRRT and whether it persists. Reassess evidence of native kidney recovery, including urine output and the course of kidney function in context; no single urine threshold in this lesson establishes readiness.',
         'Worked example: the initial fluid overload has improved and urine output has increased. That invites reassessment, but does not establish adequate native solute or acid–base control. Review current and anticipated fluid inputs, output, solute and acid–base needs, and hemodynamic stability before planning a trial off support.',
         'If a trial off is clinically appropriate, specify what to monitor, when to review fluid and laboratory trends, who reassesses, and the findings that prompt escalation or renewed support. Align the plan with goals of care and local practice. The engine here does not model recovery of native kidney function.',
+        'Coming off CRRT may mean moving to intermittent hemodialysis rather than stopping kidney support. The usual trigger to consider that move is hemodynamic stability without vasopressors, and volume overload should be corrected first: patients still on vasopressors, or carrying a large positive cumulative balance, are more likely to become hypotensive on intermittent runs.',
+        `While CRRT runs, review what else the circuit removes. It clears ${N('amino-acid-loss')} of amino acids along with water-soluble vitamins and trace elements, so feed to ${N('nutrition-energy')} and ${N('nutrition-protein')} of protein a day. Most CRRT solutions contain no phosphate, and hypophosphatemia appears ${N('hypophosphatemia-onset')} of starting; once the initial hyperphosphatemia of AKI is corrected, use a phosphate-containing solution or scheduled replacement. Phosphate-containing solutions contain no glucose, so watch for hypoglycemia and euglycemic ketoacidosis in a patient with no nutrition or other glucose source. Dialyzable drugs, antimicrobials above all, usually need more than the intermittent-hemodialysis dose but less than the dose for normal kidney function: dose them with an ICU pharmacist who knows CRRT, and use drug levels where you can.`,
         'The physical stop, return/discard, disconnection and restart sequences remain outside this exercise. Use the exact manufacturer instructions and local protocol for those decisions.',
       ],
     },

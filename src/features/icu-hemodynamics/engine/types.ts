@@ -181,6 +181,11 @@ export interface StoredWedgeRecord {
    */
   readonly physiologicalEpisode: number
   readonly sessionId: string
+  /**
+   * What was wrong with the wedge signal when this value was stored. The number keeps its error
+   * after the line is repaired, so the fault stays with it. Absent on a constructed state.
+   */
+  readonly signalFaults?: readonly DerivedSignalFault[]
 }
 
 /**
@@ -343,6 +348,17 @@ export interface InterpretationValue {
   interpretation?: string
 }
 
+/** A fault in the pressure signal and the measurements it makes unreliable. */
+export interface DerivedSignalFault {
+  readonly id: string
+  /** Short enough to sit in brackets after a measurement: "transducer not zeroed". */
+  readonly label: string
+  /** The full explanation a learner reads. */
+  readonly reason: string
+  /** The `derivedInputDefinitions` ids this fault reaches. */
+  readonly inputIds: readonly string[]
+}
+
 export interface DerivedHemodynamics {
   cardiacIndexLMinM2: InterpretationValue
   strokeVolumeMl: InterpretationValue
@@ -379,6 +395,11 @@ export interface HemodynamicCaseDefinition {
   station: string
   title: string
   shortTitle: string
+  /**
+   * About how long one unhurried run takes: brief, signals, an action or two, the debrief and the
+   * transfer. A case that is the last task of a section adds this to the section's minutes.
+   */
+  minutes: number
   presentation: string
   learningObjectives: readonly string[]
   initialParameters: CirculationParameters
@@ -525,7 +546,8 @@ export interface DerivedHemodynamicsInput {
   measurements: Partial<HemodynamicMeasurements>
   bodySurfaceAreaM2?: number | null
   ppvContext?: FluidResponsivenessContext
-  inputsStale?: boolean
+  /** A result is withheld when any of these reaches a measurement it needs, and only then. */
+  signalFaults?: readonly DerivedSignalFault[]
 }
 
 export interface ThermodilutionGenerationInput {

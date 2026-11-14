@@ -1,0 +1,852 @@
+/* Feature-local theme and sizing; the shared lesson-stage files are used unchanged. */
+.moduleShell {
+  --ink: #eaf4f4;
+  --muted: #a9bec3;
+  --stage-muted: #a9bec3;
+  --stage-ink: var(--ink);
+  --stage-panel: var(--panel);
+  --stage-panel-2: var(--panel-2);
+  --stage-line: var(--line);
+  --stage-accent: var(--cyan-bright);
+  --stage-red: var(--red);
+  --stage-amber: var(--amber);
+  --stage-green: var(--green);
+  --stage-type-floor: 0.875rem;
+  --panel: #122c34;
+  --panel-2: #1a3741;
+  --panel-3: #254953;
+  --line: rgba(170, 210, 219, 0.24);
+  --cyan: #43c8c9;
+  --cyan-bright: #85e4df;
+  --surface-base: #081b22;
+  --amber: #ffcf8c;
+  --red: #ff9098;
+  --green: #88d8ac;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at top right, #184c5755, transparent 55%), var(--surface-base);
+  min-height: 100vh;
+  padding: clamp(14px, 2vw, 32px);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+.moduleShell button,
+.moduleShell a,
+.moduleShell input,
+.moduleShell summary {
+  touch-action: manipulation;
+}
+.moduleShell button:focus-visible,
+.moduleShell a:focus-visible,
+.moduleShell input:focus-visible,
+.moduleShell summary:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 3px;
+}
+.moduleShell button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.moduleShell a {
+  color: var(--cyan-bright);
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Course pages */
+.page {
+  max-width: 1200px;
+  margin: auto;
+  padding: 25px 0;
+  line-height: 1.6;
+}
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 35px;
+  align-items: center;
+  padding: 25px 0 34px;
+  border-bottom: 1px solid var(--line);
+}
+.hero h1 {
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 12px 0 20px;
+}
+.learnTitle {
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 750;
+  line-height: 1.15;
+  margin: 8px 0 12px;
+}
+.eyebrow {
+  color: var(--cyan-bright);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  margin: 0;
+}
+.muted {
+  color: var(--stage-muted);
+  font-size: 14px;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid var(--cyan-bright);
+  border-radius: 9px;
+  background: var(--cyan-bright);
+  color: #082129;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.moduleShell a.button {
+  color: #082129;
+}
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.secondary:hover {
+  border-color: var(--cyan);
+}
+.skipLink,
+.inlineLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.skipLink:hover,
+.inlineLink:hover {
+  color: var(--ink);
+}
+.inlineLink {
+  color: var(--cyan-bright);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 18px 0;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 18px 20px;
+  margin: 22px 0;
+}
+.card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+.card ul,
+.card ol {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+.card ul {
+  list-style: disc;
+}
+.card ol {
+  list-style: decimal;
+}
+.map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin: 25px 0;
+}
+.map .card {
+  margin: 0;
+}
+.upNext {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--cyan-bright);
+  color: #082129;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.notice {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: 9px;
+  background: var(--panel);
+  padding: 12px 15px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.notice h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+/* The survey route */
+.route {
+  margin: 0;
+  min-width: 0;
+}
+.route svg {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  max-height: 46vh;
+  height: auto;
+  margin: 0 auto;
+}
+.route figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.routeLumen {
+  fill: none;
+  stroke: #5c8791;
+  stroke-width: 15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+.routeDiaphragm {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+}
+.routeNote {
+  fill: var(--muted);
+  font-size: 13px;
+}
+.routeStop {
+  fill: var(--panel-3);
+  stroke: var(--cyan-bright);
+  stroke-width: 2;
+}
+.routeNumber {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.routeLabel {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.route [data-current='true'] .routeStop {
+  fill: var(--cyan-bright);
+}
+.route [data-current='true'] .routeNumber {
+  fill: #082129;
+}
+
+/* What each route reaches */
+.reach {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.reach caption {
+  text-align: left;
+  font-weight: 700;
+  padding-bottom: 8px;
+}
+.reach th,
+.reach td {
+  border-top: 1px solid var(--line);
+  padding: 8px 10px 8px 0;
+  text-align: left;
+  vertical-align: top;
+}
+.reach thead th {
+  border-top: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.reach tbody th {
+  font-weight: 600;
+}
+
+/* Lesson */
+.lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+}
+.landmarks {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.landmarks h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan-bright);
+}
+.prose .landmarks ol,
+.landmarks ol {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+  list-style: decimal;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.landmarks li::marker {
+  font-weight: 700;
+}
+.stationsWrap {
+  container-type: inline-size;
+}
+.stations {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.stations caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 8px;
+  color: var(--muted);
+}
+.stations th,
+.stations td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.stations thead th {
+  border-top: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stations tbody th {
+  white-space: nowrap;
+  font-weight: 700;
+}
+.stations tbody th small {
+  display: block;
+  max-width: 14ch;
+  white-space: normal;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.stations ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 3px;
+  list-style: decimal;
+}
+.stations p {
+  margin: 0 0 4px;
+}
+/* In a narrow place, such as a dialog, each station is a block with its three parts under it. */
+@container (max-width: 760px) {
+  .stations thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .stations,
+  .stations caption,
+  .stations tbody,
+  .stations tr,
+  .stations th,
+  .stations td {
+    display: block;
+  }
+  .stations tr {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  .stations tbody th,
+  .stations td {
+    padding: 2px 0;
+    border-top: 0;
+  }
+  .stations tbody th {
+    font-size: 16px;
+  }
+  .stations tbody th small {
+    display: inline;
+    max-width: none;
+    margin-left: 8px;
+  }
+  .stations td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+.lessonBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.lessonTitle {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.lessonTitle h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 2px 0 0;
+}
+.lessonMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.lessonMeta progress {
+  width: 110px;
+  height: 8px;
+  accent-color: var(--cyan-bright);
+}
+.lessonActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.more {
+  position: relative;
+}
+.more summary {
+  list-style: none;
+}
+.more summary::-webkit-details-marker {
+  display: none;
+}
+.moreMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: grid;
+  min-width: 190px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 6px;
+  box-shadow: 0 12px 30px #0008;
+}
+.moreMenu button,
+.moreMenu a {
+  display: block;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.moreMenu button:hover,
+.moreMenu a:hover {
+  background: var(--panel-3);
+}
+.work {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.textPane {
+  min-width: 0;
+}
+.textPane:focus {
+  outline: none;
+}
+.stagePane {
+  min-width: 0;
+}
+.stagePane[hidden] {
+  display: none;
+}
+.lesson[data-arrange='hidden'] .textPane {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.embed {
+  display: grid;
+  min-width: 0;
+}
+.embed iframe {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #04090c;
+}
+.embed [role='status'] {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Text inside a task card */
+.prose {
+  display: grid;
+  gap: 18px;
+  line-height: 1.6;
+}
+.prose p {
+  margin: 0 0 10px;
+}
+.prose ol,
+.prose ul {
+  margin: 0 0 12px;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose ul {
+  list-style: disc;
+}
+.finish {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 22px 24px;
+  line-height: 1.6;
+}
+.finish h2 {
+  font-size: 1.4rem;
+  font-weight: 750;
+  margin: 6px 0 12px;
+}
+.finish ul {
+  list-style: disc;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.sources {
+  margin: 10px 0;
+  font-size: 14px;
+}
+.sources summary {
+  cursor: pointer;
+  color: var(--cyan-bright);
+  font-weight: 600;
+}
+.sources ul {
+  list-style: disc;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+/* Questions */
+.choices {
+  border: 0;
+  padding: 0;
+  margin: 10px 0;
+  min-width: 0;
+}
+.choices legend {
+  font-weight: 650;
+  line-height: 1.5;
+  padding: 0 0 12px;
+}
+.choices label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 9px;
+  margin: 9px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.choices label:hover {
+  border-color: var(--cyan);
+}
+.choices label[data-selected='true'] {
+  border-color: var(--cyan-bright);
+  background: #18505b44;
+}
+.choices:disabled label {
+  cursor: default;
+  border-color: var(--line);
+  color: var(--muted);
+}
+.choices input {
+  margin-top: 4px;
+  accent-color: var(--cyan-bright);
+  flex: none;
+}
+.checkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 10px 0;
+}
+.questionFeedback :global([data-answer-verdict][data-plausibility='unsafe']) {
+  border-left-style: double;
+  border-left-width: 8px;
+  padding-left: 14px;
+}
+.explanation {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px 15px;
+  margin: 12px 0;
+  line-height: 1.55;
+  display: grid;
+  gap: 8px;
+}
+.explanation p {
+  margin: 0;
+}
+.explanation ul {
+  list-style: disc;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.explanation li[data-unsafe='true'] {
+  border-left: 3px solid #b76868;
+  padding-left: 8px;
+}
+
+/* The instruction row of a scope task */
+.strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.2fr) auto;
+  gap: 8px 22px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 10px 16px;
+}
+.strip h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 1px 0 2px;
+}
+.strip h2:focus {
+  outline: none;
+}
+.stripText p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.kicker {
+  color: var(--cyan-bright);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.requirements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.requirements li {
+  display: grid;
+  grid-template-columns: 1.2em minmax(0, 1fr);
+  gap: 6px;
+  position: relative;
+}
+.requirements li[data-met='true'] {
+  color: var(--green);
+}
+.stripActions {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.stripLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+/* The course outline, in the shared dialog */
+.outline {
+  display: grid;
+  gap: 14px;
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 10px;
+}
+.outline h3 {
+  margin: 0 0 6px;
+  color: #6ed7cd;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.outline ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+  list-style: decimal;
+}
+.outline .outlineTasks {
+  margin: 6px 0 4px;
+}
+
+/*
+ * The fixed workspace: at 1024 x 700 and up the lesson takes exactly the window, the page does not
+ * scroll, and a pane that is longer than its room scrolls by itself. Below that everything flows
+ * with the document and the lab grows with its content.
+ */
+.moduleShell[data-activity-mode='true'] {
+  padding: 12px clamp(10px, 2vw, 28px);
+}
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+    padding: 10px clamp(10px, 1.6vw, 24px) 12px;
+  }
+  .lesson {
+    flex: 1;
+    min-height: 0;
+  }
+  .work {
+    flex: 1;
+    min-height: 0;
+  }
+  .lesson[data-arrange='hidden'] .work {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .lesson[data-arrange='beside'] .work {
+    grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.9fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .lesson[data-arrange='beside'] .stagePane {
+    order: -1;
+  }
+  .lesson[data-arrange='console'] .work {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .textPane {
+    min-height: 0;
+    overflow: auto;
+  }
+  .lesson[data-arrange='console'] .textPane {
+    overflow: visible;
+  }
+  .stagePane,
+  .embed {
+    min-height: 0;
+  }
+  .embed[data-fill='true'] {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .embed[data-fill='true'] iframe {
+    height: 100%;
+  }
+  /* A briefing with a drawing or a table puts it beside the text when there is room. */
+  .lesson[data-arrange='hidden'] .prose[data-brief-figure] {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .strip {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .choices label,
+  .secondary,
+  .button {
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
+}

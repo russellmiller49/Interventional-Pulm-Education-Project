@@ -169,7 +169,9 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
     render(<McsWorkbench section="practice" initialDevice="iabp" />)
-    expect(screen.getByText(/Teaching simulator\./i)).toBeInTheDocument()
+    expect(document.querySelector('details[data-mcs-boundary] summary')).toHaveTextContent(
+      /^Teaching simulator/,
+    )
     expect(
       screen.getByRole('region', { name: /Synchronized mechanical-support bedside monitor/i }),
     ).toBeInTheDocument()
@@ -406,14 +408,11 @@ describe('Mechanical Circulatory Support learner interface', () => {
       }
     })
 
-    it('states that this is a teaching simulator in front, with no release checklist', async () => {
+    it('states that this is a teaching simulator, with no release checklist', async () => {
       const { container } = await renderHub()
-      const governance = container.querySelector('[data-review-governance]')
-      expect(governance).not.toBeNull()
-      const statement = within(governance as HTMLElement).getByText(
-        /This is a teaching simulator\./i,
-      )
-      expect(statement.closest('details')).toBeNull()
+      // Once, in the frame's closed disclosure (2026-10-17).
+      expect(container.querySelectorAll('details[data-mcs-boundary]')).toHaveLength(1)
+      expect(container.querySelector('[data-review-governance]')).toBeNull()
       expect(container.querySelector('[data-reviewer-layer]')).toBeNull()
       expect(container.textContent).not.toMatch(/Publication awaits review/i)
     })

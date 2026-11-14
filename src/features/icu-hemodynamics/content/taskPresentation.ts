@@ -10,11 +10,40 @@ export type HemodynamicsPresentationKind =
   | 'calculation-lab'
   | 'case'
 
+/**
+ * A drawing the section keeps beside its text, where the step has no simulator of its own.
+ *
+ * `pac-parts` is the catheter with its four parts marked (`PacComponentSchematic`). Walked on
+ * screen in November 2026, the opening section was a single centred text column on all six tasks,
+ * with this drawing below the fold of the first one and nowhere on the other five.
+ *
+ * `td-curve` is the flow section's reference thermodilution curve with its parts named. That
+ * section's reading, its two questions and its two Explain cards described a temperature curve in
+ * words (baseline, onset, peak, decay) with no curve beside them; the one drawing sat inside the
+ * second page of the first task, its marks unnamed.
+ *
+ * `derived-value` is one calculated value drawn as what goes into it, its formula and what comes
+ * out (`DerivedValueFigure`). The derived-values section had no drawing at all: its reading, its
+ * two questions and its two Explain cards were text about equations.
+ *
+ * `normal-reference` is the normal tracing for the chamber the walk is standing in. It used to
+ * be the first thing in the walk's task card, with the stop's text and Next stop a few screens
+ * under it: pressing Next stop changed a tracing that had scrolled out of view (owner,
+ * 2026-11-11). It now sits under the catheter map and changes in place.
+ */
+export type HemodynamicsSectionFigure =
+  | 'none'
+  | 'pac-parts'
+  | 'td-curve'
+  | 'derived-value'
+  | 'normal-reference'
+
 export interface HemodynamicsTaskPresentation {
   readonly kind: HemodynamicsPresentationKind
   readonly monitor: 'none' | 'pac' | 'arterial' | 'all'
   readonly anatomy: 'none' | 'map' | 'paired' | 'optional'
   readonly controls: boolean
+  readonly figure: HemodynamicsSectionFigure
 }
 
 /** Presentation only: no title matching, state construction, dispatch, or progression. */
@@ -22,8 +51,39 @@ export function hemodynamicsTaskPresentation(
   section: HemodynamicsSectionId,
   step: Pick<HemodynamicsStageStep, 'surface' | 'interaction' | 'teaching' | 'anatomy'>,
 ): HemodynamicsTaskPresentation {
+  return { ...simulatorPresentation(section, step), figure: sectionFigure(section, step) }
+}
+
+function sectionFigure(
+  section: HemodynamicsSectionId,
+  step: Pick<HemodynamicsStageStep, 'interaction'>,
+): HemodynamicsSectionFigure {
+  const task = step.interaction.kind
+  if (section === 'why-measure' && task !== 'case') return 'pac-parts'
+  // Not the tasks that draw their own curves (the series, the disagreement) or the Fick reading.
+  if (
+    section === 'thermodilution-series' &&
+    (task === 'read' || task === 'prediction' || task === 'explain')
+  )
+    return 'td-curve'
+  // Not the workbenches, which lay out their own inputs and results.
+  if (
+    section === 'derived-hemodynamics' &&
+    (task === 'provenance-drill' || task === 'prediction' || task === 'explain')
+  )
+    return 'derived-value'
+  if (section === 'waveform-interpretation' && task === 'walk') return 'normal-reference'
+  return 'none'
+}
+
+function simulatorPresentation(
+  section: HemodynamicsSectionId,
+  step: Pick<HemodynamicsStageStep, 'surface' | 'interaction' | 'teaching' | 'anatomy'>,
+): Omit<HemodynamicsTaskPresentation, 'figure'> {
   const task = step.interaction.kind
   const reading = task === 'read' || task === 'explain'
+  // A section's last task is its case, which brings its own monitor and workspace.
+  if (task === 'case') return { kind: 'case', monitor: 'none', anatomy: 'none', controls: false }
   switch (section) {
     case 'why-measure':
       return { kind: 'concept', monitor: 'none', anatomy: 'none', controls: false }
@@ -42,7 +102,9 @@ export function hemodynamicsTaskPresentation(
     case 'waveform-interpretation':
       return {
         kind: 'waveform-reader',
-        monitor: task === 'prediction' ? 'pac' : 'none',
+        // The walk's instruction compares the live shape with the normal reference, so the live
+        // strip is on screen for it (it was not, until November 2026).
+        monitor: task === 'prediction' || task === 'walk' ? 'pac' : 'none',
         anatomy: task === 'walk' || task === 'prediction' ? 'map' : 'none',
         controls: true,
       }

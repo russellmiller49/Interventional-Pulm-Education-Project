@@ -29,7 +29,15 @@ export interface TreeMapProps {
   readonly current: AirwayLabel | null
   readonly tipLps: Vec3 | null
   readonly treeAnswer?: TreeAnswer
+  /**
+   * Airways a naming record has still to hear named. Their pins stay where they are and show a
+   * question mark instead of the name, so the map fills in as the learner names them.
+   */
+  readonly unnamed?: readonly AirwayLabel[]
 }
+
+/** What an unnamed pin says to assistive technology, in place of the name it withholds. */
+export const UNNAMED_PIN_WORDS = 'A segment not named yet'
 
 const TIP_RADIUS = 2.5
 
@@ -41,7 +49,7 @@ const TIP_RADIUS = 2.5
 export const MAP_FRAME_NOTE =
   'Map: a front (coronal) view, so the patient’s right is on the map’s left, head at the top.'
 
-export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps) {
+export function TreeMap({ map, lit, current, tipLps, treeAnswer, unnamed }: TreeMapProps) {
   if (!map) {
     return (
       <div
@@ -66,61 +74,77 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
       aria-label="The airway map"
       {...{ [SCOPE_DOM.map]: '' }}
     >
-      <div className={styles.mapBox} style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}>
-        <svg
-          className={styles.mapSvg}
-          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <g transform={layout.transform}>
-            {map.paths.map((path, index) => (
+      {/* The box the drawing fits in; beside the scope view it is held to the view's height. */}
+      <div className={styles.mapStage} data-map-stage>
+        <div className={styles.mapBox} style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}>
+          <svg
+            className={styles.mapSvg}
+            viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <g transform={layout.transform}>
+              {map.paths.map((path, index) => (
+                <path
+                  key={`${path.label ?? 'unlabeled'}-${index}`}
+                  d={path.d}
+                  strokeWidth={path.widthMm}
+                  data-airway-path={path.label ?? 'unlabeled'}
+                  data-lit={path.label && litSet.has(path.label) ? 'true' : undefined}
+                />
+              ))}
+              {tip ? (
+                <circle
+                  className={styles.mapTip}
+                  cx={tip[0]}
+                  cy={tip[1]}
+                  r={TIP_RADIUS}
+                  data-scope-tip=""
+                />
+              ) : null}
+            </g>
+            {layout.pins.map((pin) => (
               <path
-                key={`${path.label ?? 'unlabeled'}-${index}`}
-                d={path.d}
-                strokeWidth={path.widthMm}
-                data-airway-path={path.label ?? 'unlabeled'}
-                data-lit={path.label && litSet.has(path.label) ? 'true' : undefined}
+                key={pin.label}
+                className={styles.mapLeader}
+                d={`M${pin.anchor[0]},${pin.anchor[1]} L${pin.x},${pin.y}`}
               />
             ))}
-            {tip ? (
-              <circle
-                className={styles.mapTip}
-                cx={tip[0]}
-                cy={tip[1]}
-                r={TIP_RADIUS}
-                data-scope-tip=""
-              />
-            ) : null}
-          </g>
-          {layout.pins.map((pin) => (
-            <path
-              key={pin.label}
-              className={styles.mapLeader}
-              d={`M${pin.anchor[0]},${pin.anchor[1]} L${pin.x},${pin.y}`}
-            />
-          ))}
-        </svg>
-        {layout.pins.map(({ label, x, y }) => {
-          const choice = treeAnswer?.choices.find((candidate) => candidate.airway === label)
-          const shared = {
-            className: styles.mapPin,
-            style: { left: `${(x / MAP_WIDTH) * 100}%`, top: `${(y / MAP_HEIGHT) * 100}%` },
-            'aria-current': label === current ? ('location' as const) : undefined,
-            'data-lit': litSet.has(label) ? 'true' : undefined,
-            [SCOPE_DOM.pin]: label,
-          }
-          return choice ? (
-            <label key={label} htmlFor={treeChoiceInputId(treeAnswer!.name, choice.id)} {...shared}>
-              {label}
-            </label>
-          ) : (
-            <span key={label} {...shared}>
-              {label}
-            </span>
-          )
-        })}
+          </svg>
+          {layout.pins.map(({ label, x, y }) => {
+            const choice = treeAnswer?.choices.find((candidate) => candidate.airway === label)
+            const withheld = unnamed?.includes(label) === true
+            const shared = {
+              className: styles.mapPin,
+              style: { left: `${(x / MAP_WIDTH) * 100}%`, top: `${(y / MAP_HEIGHT) * 100}%` },
+              'aria-current': label === current ? ('location' as const) : undefined,
+              'data-lit': litSet.has(label) ? 'true' : undefined,
+              'data-unnamed': withheld ? 'true' : undefined,
+              'aria-label': withheld ? UNNAMED_PIN_WORDS : undefined,
+              [SCOPE_DOM.pin]: label,
+            }
+            if (withheld)
+              return (
+                <span key={label} {...shared}>
+                  ?
+                </span>
+              )
+            return choice ? (
+              <label
+                key={label}
+                htmlFor={treeChoiceInputId(treeAnswer!.name, choice.id)}
+                {...shared}
+              >
+                {label}
+              </label>
+            ) : (
+              <span key={label} {...shared}>
+                {label}
+              </span>
+            )
+          })}
+        </div>
       </div>
       <p className={styles.mapFrame} data-frame-badge="map">
         {MAP_FRAME_NOTE}

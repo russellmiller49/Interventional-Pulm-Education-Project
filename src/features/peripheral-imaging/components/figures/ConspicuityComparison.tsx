@@ -7,6 +7,8 @@ import {
   signedDegrees,
   teachingFigure,
 } from '../../content/teachingFigures'
+import { tableCrossing } from '../../lib/rayCrossingTable'
+import { rayCrossingLabel } from '../../lib/rayStructures'
 import { FigureCanvas } from './FigureCanvas'
 import { conspicuityImages, type ConspicuityImages, type LesionMark } from './teachingFigureModel'
 import { useFigureComputation } from './useFigureComputation'
@@ -14,11 +16,10 @@ import { useTeachingVolume } from './useTeachingData'
 import styles from './figures.module.css'
 
 const PANEL_LABELS: Readonly<Record<string, string>> = {
-  reference:
-    'Frontal projection computed from the teaching CT, collimated around the modeled lesion',
-  noise: 'The same projection with simulated quantum noise',
-  scatter: 'The same view with the collimator open and a drawn veil',
-  superimposition: `Projection at C-arm obliquity ${signedDegrees(CONSPICUITY_SET.changedView.orbit)}, collimated around the modeled lesion`,
+  reference: 'Frontal projection, collimated around the lesion',
+  noise: 'The same projection with quantum noise',
+  scatter: 'The same view with the collimator open and a scatter veil',
+  superimposition: `Projection at C-arm obliquity ${signedDegrees(CONSPICUITY_SET.changedView.orbit)}, collimated around the lesion`,
 }
 
 function LesionCircle({ mark }: { readonly mark: LesionMark }) {
@@ -60,18 +61,17 @@ export function ConspicuityComparison() {
       data-teaching-figure={declaration.id}
       data-figure-state={state}
     >
-      <p className={styles.kicker}>Three look-alike causes, on the course’s CT</p>
+      <p className={styles.kicker}>Three look-alike causes</p>
       <p className={styles.modelLabel} data-model-label>
         {declaration.label}
       </p>
       {state === 'failed' ? (
         <p className={styles.status} role="status">
-          The teaching CT could not be loaded here, so these examples are not drawn. The section’s
-          text still describes each cause.
+          The images could not be loaded here. The section’s text describes each cause.
         </p>
       ) : state === 'loading' ? (
         <p className={styles.status} role="status">
-          Preparing the examples from the teaching CT…
+          Preparing the images…
         </p>
       ) : null}
       <div className={styles.quadGrid}>
@@ -101,30 +101,27 @@ export function ConspicuityComparison() {
             {panel.id === 'superimposition' && model ? (
               <p className={styles.panelCaption} data-ray-readout>
                 Here the C-arm obliquity is {signedDegrees(changed)} ({obliquityDirection(changed)}
-                ). Soft-tissue-like CT on the ray through the lesion:{' '}
-                {model.rays.reference.softTotal} mm frontal, {model.rays.changed.softTotal} mm at{' '}
-                {signedDegrees(changed)}.
+                ). Over the nodule frontally: {rayCrossingLabel(tableCrossing(0, 0))}. At{' '}
+                {signedDegrees(changed)}: {rayCrossingLabel(tableCrossing(changed, 0))}.
               </p>
             ) : null}
-            {panel.id === 'superimposition' &&
-            model &&
-            model.rays.changed.softTotal < model.rays.reference.softTotal ? (
+            {panel.id === 'superimposition' && model ? (
               // PR #279 sanity review: the section's later demonstration uses another angle. The
               // two are not in conflict, and this says what each one shows.
               <p className={styles.panelCaption} data-later-example-note>
-                This {signedDegrees(changed)} comparison shortens the model’s soft-tissue path on
-                the target ray; the later {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)}{' '}
-                example shows a different pattern, with the overlap redistributed along the ray.
+                The later {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)} example shows a
+                different overlap. Over the nodule at{' '}
+                {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)}:{' '}
+                {rayCrossingLabel(tableCrossing(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY, 0))}.
               </p>
             ) : null}
           </figure>
         ))}
       </div>
       <p className={styles.note}>
-        The dashed circle marks where the model nodule projects: it is part-solid and faint on any
-        projection in this model. The model names density classes, not organs. Appearance alone does
-        not settle the cause, so use the context as well: the field size, the dose-rate readout and
-        the planning CT.
+        The dashed circle marks where the nodule projects: it is part-solid and faint on every
+        projection. Appearance alone does not settle the cause, so use the context as well: the
+        field size, the dose-rate readout and the planning CT.
       </p>
     </section>
   )

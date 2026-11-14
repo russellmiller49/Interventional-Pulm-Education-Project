@@ -1,6 +1,12 @@
 import { BRONCH_SECTION_IDS, type BronchSectionId } from './pathway'
 import { BRONCH_SECTIONS, bronchSection } from './sections'
-import { bronchSectionItems, practiceAttemptKey, type BronchStageItem } from './stageItems'
+import {
+  bronchSectionItems,
+  practiceAttemptKey,
+  vignetteStageItems,
+  type BronchStageItem,
+} from './stageItems'
+import { VIGNETTES, type VignetteTopic } from './vignettes'
 
 /**
  * The practice layer: one-decision cases paired to the section whose mechanism they use, listed in
@@ -11,12 +17,24 @@ export interface BronchMicroCase {
   readonly id: string
   readonly sectionId: BronchSectionId
   readonly manifestCaseId?: string
+  /** Set on a vignette with numbers: the topic it is listed under. */
+  readonly vignetteTopic?: VignetteTopic
   readonly presentationTitle: string
   readonly situation: string
   readonly stage: BronchStageItem
 }
 
-const ALL: readonly BronchMicroCase[] = BRONCH_SECTIONS.flatMap((section) => {
+const VIGNETTE_CASES: readonly BronchMicroCase[] = VIGNETTES.map((vignette, index) => ({
+  id: vignette.id,
+  sectionId: vignette.sectionId,
+  vignetteTopic: vignette.topic,
+  presentationTitle: vignette.presentationTitle,
+  situation: vignette.situation,
+  stage: vignetteStageItems[index],
+}))
+
+/** The sections' own cases, in the order the course teaches them, then the vignettes by topic. */
+const SECTION_CASES: readonly BronchMicroCase[] = BRONCH_SECTIONS.flatMap((section) => {
   const items = bronchSectionItems(section.id)
   return section.practice.map((entry, index): BronchMicroCase => {
     const stage = items.practice[index]
@@ -33,6 +51,8 @@ const ALL: readonly BronchMicroCase[] = BRONCH_SECTIONS.flatMap((section) => {
   })
 })
 
+const ALL: readonly BronchMicroCase[] = [...SECTION_CASES, ...VIGNETTE_CASES]
+
 export const bronchMicroCaseById: ReadonlyMap<string, BronchMicroCase> = new Map(
   ALL.map((entry) => [entry.id, entry] as const),
 )
@@ -41,8 +61,14 @@ export function bronchMicroCasesInPathwayOrder(): readonly BronchMicroCase[] {
   return ALL
 }
 
+/** A section's own short cases. The vignettes are listed by topic, apart from the sections. */
 export function microCasesForSection(sectionId: BronchSectionId): readonly BronchMicroCase[] {
-  return ALL.filter((entry) => entry.sectionId === sectionId)
+  return SECTION_CASES.filter((entry) => entry.sectionId === sectionId)
+}
+
+/** The vignettes with numbers under one topic, in their written order. */
+export function vignetteCasesForTopic(topic: VignetteTopic): readonly BronchMicroCase[] {
+  return VIGNETTE_CASES.filter((entry) => entry.vignetteTopic === topic)
 }
 
 /** The first-attempt key of a case's decision. */

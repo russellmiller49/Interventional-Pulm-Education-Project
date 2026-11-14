@@ -1,3 +1,5 @@
+import { findFrame, findFrameSize, type FindFrameId } from './findFrames'
+
 /**
  * The real teaching media the course can put in the Simulator panel, by id. The files already ship
  * under `public/`: three annotated bronchoscope photographs, thirty endoscopic stills from one
@@ -100,6 +102,45 @@ export type MediaRef =
     }
   /** The annotated normal survey, cued to this structure's stop. */
   | { readonly kind: 'survey-clip'; readonly structureId: StillStructureId }
+
+/**
+ * Stills the course cuts for itself, in place of the shared identify-quiz frame for that airway.
+ *
+ * The quiz set picks the frame on which an airway's outline is largest, which for the right main
+ * bronchus is a view from well inside it. A fellow first meets that bronchus from the trachea, so
+ * its still here is the frame just above the carina with the left main opening still in view
+ * (educator feedback, 2026-10-13). The frame and its outline come from the same annotated survey,
+ * cut by `scripts/bronchoscopy-foundations/build-find-frames.mjs`.
+ */
+const COURSE_STILLS: Partial<
+  Record<StillStructureId, { readonly frameId: FindFrameId; readonly markerId: string }>
+> = {
+  rmb: { frameId: 'right-main-origin', markerId: 'rmb' },
+}
+
+export interface CourseStill {
+  readonly src: string
+  readonly width: number
+  readonly height: number
+  /** The airway's outline on that frame, as flat x, y pairs in the frame's coordinates. */
+  readonly outline: readonly number[]
+  readonly sourceFrame: number
+}
+
+/** The course's own still for an airway, when it has one; otherwise the quiz set's is used. */
+export function courseStill(structureId: StillStructureId): CourseStill | null {
+  const pick = COURSE_STILLS[structureId]
+  if (!pick) return null
+  const frame = findFrame(pick.frameId)
+  const marker = frame.markers.find((candidate) => candidate.id === pick.markerId)
+  if (!marker) throw new Error(`Frame ${pick.frameId} has no outline for ${pick.markerId}.`)
+  return {
+    src: frame.src,
+    ...findFrameSize(frame),
+    outline: marker.points,
+    sourceFrame: frame.sourceFrame,
+  }
+}
 
 export function isStillStructureId(value: unknown): value is StillStructureId {
   return typeof value === 'string' && (STILL_STRUCTURE_IDS as readonly string[]).includes(value)

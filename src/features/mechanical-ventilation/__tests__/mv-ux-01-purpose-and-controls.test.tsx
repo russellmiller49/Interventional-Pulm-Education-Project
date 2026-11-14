@@ -66,7 +66,7 @@ function openQuestion(questionId: string) {
   fireEvent.change(picker(), { target: { value: String(index) } })
 }
 
-/** The purpose line: the paragraph under the "Optional reinforcement" eyebrow. */
+/** The purpose line: the paragraph under the "Question" eyebrow. */
 function purposeText() {
   const card = document.querySelector<HTMLElement>('[data-reinforcement]')!
   return card.querySelectorAll('p')[1].textContent ?? ''

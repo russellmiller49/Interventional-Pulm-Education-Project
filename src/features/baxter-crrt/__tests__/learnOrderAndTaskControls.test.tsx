@@ -5,7 +5,12 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 
 import { BaxterCrrtHub } from '../components/BaxterCrrtHub'
 import { BaxterCrrtLearn } from '../components/BaxterCrrtLearn'
-import { baxterCrrtCurriculum, nextRecommendedCrrtActivity } from '../content'
+import {
+  baxterCrrtAdditionalCaseIds,
+  baxterCrrtCoreCaseIds,
+  baxterCrrtCurriculum,
+  nextRecommendedCrrtActivity,
+} from '../content'
 import { baxterCrrtLearnLessons } from '../content/learnLessons'
 import { BAXTER_CRRT_LEARN_LESSON_IDS } from '../content/learnerRegistry'
 import { crrtLearnTasks } from '../content/learnTasks'
@@ -14,7 +19,9 @@ import { readCrrtSelfPacedProgress, recordCrrtVisit } from '../selfPacedProgress
 
 /**
  * CRRT-FELLOW-03 — F-10 (one canonical Learn order) and F-13 (the exercise leads, skip stays
- * visible and secondary, and a disabled completion names exactly what is left).
+ * visible and secondary, and a disabled completion names exactly what is left). Tester report
+ * 2026-11-05: one lesson list on the hub, and one Skip in place of the jump button and the
+ * "Continue without this exercise" box.
  */
 
 jest.mock('@/features/critical-care/analytics', () => ({ recordCriticalCareEvent: jest.fn() }))
@@ -49,6 +56,17 @@ async function settle() {
 
 beforeEach(() => window.localStorage.clear())
 
+/** "Lesson 4 of 8", as the lesson bar prints it above the lesson's title. */
+function lessonBarNumber() {
+  return document.querySelector('[data-lesson-shell] h1')!.previousElementSibling
+}
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu, closed. */
+function openLessonMenu() {
+  act(() => {
+    document.querySelector<HTMLDetailsElement>('[data-crrt-lesson-menu]')!.open = true
+  })
+}
+
 describe('one canonical Learn order (F-10)', () => {
   it('the registry, the lesson list and the pathway carry the same eight lessons in one order', () => {
     expect(baxterCrrtLearnLessons.map((lesson) => lesson.id)).toEqual([
@@ -78,17 +96,25 @@ describe('one canonical Learn order (F-10)', () => {
 
   it('the lesson picker, the header number and previous/next agree on the middle lesson', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
-    expect(screen.getByText('Lesson 4 of 8')).toBeInTheDocument()
-    const picker = screen.getByRole('combobox', { name: 'CRRT lesson' })
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 4 of 8')
+    const picker = screen.getByRole('navigation', { name: 'CRRT lessons sections' })
     expect(
       within(picker)
-        .getAllByRole('option')
-        .map((option) => option.textContent),
+        .getAllByRole('button')
+        .map((option) => option.getAttribute('aria-label')),
     ).toEqual(baxterCrrtLearnLessons.map((lesson, index) => `${index + 1}. ${lesson.title}`))
+    expect(within(picker).getByRole('button', { current: 'step' })).toHaveAccessibleName(
+      `4. ${baxterCrrtLearnLessons[3].title}`,
+    )
+    expect(document.querySelector('[data-sections-drawer] summary')).toHaveTextContent(
+      'Lessons4 of 8',
+    )
     const steps = screen.getByRole('navigation', { name: 'Previous and next lesson' })
+    expect(within(steps).getByRole('button', { name: /^Previous lesson: 3\. / })).not.toBeVisible()
+    openLessonMenu()
     expect(within(steps).getByRole('button', { name: /^Previous lesson: 3\. / })).toBeVisible()
     fireEvent.click(within(steps).getByRole('button', { name: /^Next lesson: 5\. / }))
-    expect(screen.getByText('Lesson 5 of 8')).toBeInTheDocument()
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 5 of 8')
     expect(new URL(window.location.href).searchParams.get('lesson')).toBe(
       'crrt-alarms-troubleshooting',
     )
@@ -100,10 +126,10 @@ describe('one canonical Learn order (F-10)', () => {
     first.unmount()
     render(<BaxterCrrtLearn initialLessonId={BAXTER_CRRT_LEARN_LESSON_IDS[7]} />)
     expect(screen.getByText('Last lesson')).toBeInTheDocument()
-    expect(screen.getByText('Lesson 8 of 8')).toBeInTheDocument()
+    expect(lessonBarNumber()).toHaveTextContent('Lesson 8 of 8')
   })
 
-  it('the hub map numbers lessons in that order and labels stations as topical groups', async () => {
+  it('the hub keeps one numbered lesson list, each lesson with a line on what it teaches', async () => {
     render(<BaxterCrrtHub />)
     await settle()
     const sequence = screen.getByRole('list', { name: 'Recommended Learn sequence' })
@@ -114,14 +140,36 @@ describe('one canonical Learn order (F-10)', () => {
     expect(links.map((link) => link.textContent?.match(/^\d+/)?.[0])).toEqual(
       BAXTER_CRRT_LEARN_LESSON_IDS.map((_, index) => String(index + 1)),
     )
-    expect(screen.getByText(/They are not a required order/)).toBeInTheDocument()
-    // A station chip keeps the lesson's canonical number, whichever station holds it.
-    for (const unit of baxterCrrtCurriculum) {
-      for (const lessonId of unit.lessonIds) {
-        const number = BAXTER_CRRT_LEARN_LESSON_IDS.indexOf(lessonId) + 1
-        expect(screen.getAllByText(new RegExp(`^Lesson ${number} · `)).length).toBeGreaterThan(0)
-      }
+    // All eight lessons, each with its one-line blurb (tester report, 2026-11-05).
+    for (const [index, lesson] of baxterCrrtLearnLessons.entries()) {
+      expect(links[index]).toHaveTextContent(lesson.title)
+      expect(links[index]).toHaveTextContent(lesson.summary)
     }
+    // No second, topical list of the same lessons: the map links each lesson exactly once.
+    const map = screen.getByRole('region', { name: 'Curriculum map' })
+    for (const lessonId of BAXTER_CRRT_LEARN_LESSON_IDS) {
+      expect(map.querySelectorAll(`a[href$="?lesson=${lessonId}"]`)).toHaveLength(1)
+    }
+    expect(screen.queryByText(/Topic station/)).toBeNull()
+    expect(screen.queryByText(/They are not a required order/)).toBeNull()
+  })
+
+  it('every practice case the topic stations used to link is still one click away in Practice', async () => {
+    render(<BaxterCrrtHub />)
+    await settle()
+    const practice = screen.getByRole('link', { name: 'Open practice' })
+    expect(practice).toHaveAttribute('href', '/baxter-crrt/practice')
+    expect(practice.closest('article')).toHaveTextContent(
+      `${baxterCrrtCoreCaseIds.length} core cases and ${baxterCrrtAdditionalCaseIds.length} additional`,
+    )
+    // The Practice Cases list carries every core and additional case the stations grouped
+    // (pinned in practiceAssess.ui.test.tsx); the stations held nothing else.
+    expect(baxterCrrtCurriculum.flatMap((unit) => unit.coreCaseIds)).toEqual([
+      ...baxterCrrtCoreCaseIds,
+    ])
+    expect(baxterCrrtCurriculum.flatMap((unit) => unit.additionalCaseIds)).toEqual([
+      ...baxterCrrtAdditionalCaseIds,
+    ])
   })
 
   it('Resume follows the same order from the existing local record', async () => {
@@ -141,18 +189,6 @@ describe('one canonical Learn order (F-10)', () => {
       'href',
       `/baxter-crrt/learn?lesson=${BAXTER_CRRT_LEARN_LESSON_IDS[1]}`,
     )
-  })
-
-  it('shows a visited station note as its own wrapping pill, not in the number circle (F-20)', async () => {
-    const unit = baxterCrrtCurriculum[0]
-    for (const lessonId of unit.lessonIds) recordCrrtVisit({ section: 'learn', id: lessonId })
-    for (const caseId of unit.coreCaseIds) recordCrrtVisit({ section: 'practice', id: caseId })
-    render(<BaxterCrrtHub />)
-    await settle()
-    const note = screen.getByText('Every lesson and core case here opened', { exact: false })
-    const heading = note.closest('div')!
-    expect(within(heading).getByText('1', { exact: false })).not.toBe(note)
-    expect(note.className).not.toBe(heading.querySelector('span')!.className)
   })
 })
 
@@ -179,16 +215,17 @@ describe('in-lesson outline for the long alarms lesson (X-03)', () => {
   })
 })
 
-describe('exercise controls follow the exercise (F-13)', () => {
-  const actions = () => screen.getByRole('group', { name: 'Continue from this task' })
+describe('exercise controls follow the exercise (F-13), with one Skip', () => {
+  const actions = () => screen.getByRole('group', { name: 'Task actions' })
+  const skip = () => screen.getByRole('button', { name: 'Skip this task' })
 
-  it('leads with the completion button and a named reason, and keeps skip beside it', () => {
+  it('leads with the completion button and a named reason, with Skip beside it', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-circuit-pressures" />)
     const group = actions()
     const buttons = within(group).getAllByRole('button')
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Review observations and continue',
-      'Continue without this exercise',
+      'Skip',
     ])
     const primary = buttons[0]
     expect(primary).toBeDisabled()
@@ -198,10 +235,13 @@ describe('exercise controls follow the exercise (F-13)', () => {
     // The controls come after the exercise, not before it.
     const workbench = document.querySelector('[data-crrt-circuit-workbench]')!
     expect(workbench.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    // The skip is a full, focusable button — not hidden, not a tiny link.
-    const skip = within(group).getByRole('button', { name: 'Continue without this exercise' })
-    skip.focus()
-    expect(document.activeElement).toBe(skip)
+    // One Skip, a full focusable button; no jump button or second skip elsewhere on the task.
+    expect(
+      screen.getAllByRole('button', { name: /Skip|continue without|continue controls/i }),
+    ).toEqual([skip()])
+    expect(screen.queryByText(/Where to look/)).toBeNull()
+    skip().focus()
+    expect(document.activeElement).toBe(skip())
   })
 
   it('counts this visit’s own selections and updates the reason until the task is ready', () => {
@@ -222,41 +262,59 @@ describe('exercise controls follow the exercise (F-13)', () => {
       name: 'Review observations and continue',
     })
     expect(primary).toBeEnabled()
+    // With the way on available, Skip leaves: the row never offers two ways forward.
+    expect(within(actions()).getAllByRole('button')).toEqual([primary])
     fireEvent.click(primary)
     expect(
       screen.getByRole('heading', { level: 2, name: 'Add the fluids one path at a time' }),
     ).toBeVisible()
   })
 
-  it('continuing without the exercise marks nothing as reviewed', () => {
+  it('Skip marks nothing as reviewed and puts focus on the next task heading', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-circuit-pressures" />)
-    fireEvent.click(
-      within(actions()).getByRole('button', { name: 'Continue without this exercise' }),
-    )
+    fireEvent.click(skip())
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: crrtLearnTasks['crrt-circuit-pressures']![1].title,
+    })
+    expect(heading).toHaveFocus()
     fireEvent.click(screen.getByText(/^Lesson tasks ·/))
     const map = screen.getByText(/^Lesson tasks ·/).closest('details')!
     expect(within(map).queryByText(/· reviewed$/)).toBeNull()
     expect(within(map).getAllByRole('button')[0]).not.toHaveTextContent('reviewed')
   })
 
-  it('a reading task keeps its single Continue on the card and has no exercise controls', () => {
+  it('a reading task keeps its single Continue on the card and has no Skip', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-indications-modality" />)
-    expect(screen.queryByRole('group', { name: 'Continue from this task' })).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Task actions' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Skip this task' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveAttribute('data-now-primary')
   })
 
-  it('an exercise with its own check keeps only the optional skip here', () => {
+  it('an exercise with its own check carries only Skip after it, until its own continue appears', () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-circuit-pressures" />)
-    for (let step = 0; step < 4; step++)
-      fireEvent.click(
-        within(actions()).getByRole('button', { name: 'Continue without this exercise' }),
-      )
-    const group = actions()
+    for (let step = 0; step < 3; step++) fireEvent.click(skip())
+    // Task 4: the pressure lab, which has its own commit, reveal and continue.
     expect(
-      within(group)
+      within(actions())
         .getAllByRole('button')
         .map((b) => b.textContent),
-    ).toEqual(['Continue without this exercise'])
-    expect(group).toHaveTextContent('This exercise has its own check and continue buttons above.')
+    ).toEqual(['Skip'])
+    fireEvent.click(skip())
+    // Task 5: a question; Skip sits in the question's own row beside Check reasoning.
+    const question = screen.getByRole('region', { name: 'Application check' })
+    expect(screen.queryByRole('group', { name: 'Task actions' })).toBeNull()
+    expect(
+      within(question)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Show worked explanation', 'Check reasoning', 'Skip'])
+    fireEvent.click(within(question).getAllByRole('radio')[0])
+    fireEvent.click(within(question).getByRole('button', { name: 'Check reasoning' }))
+    // Feedback brings its own continue; Skip goes.
+    expect(screen.queryByRole('button', { name: 'Skip this task' })).toBeNull()
+    expect(
+      within(question).getByRole('button', { name: 'Review feedback and continue' }),
+    ).toBeInTheDocument()
   })
 })

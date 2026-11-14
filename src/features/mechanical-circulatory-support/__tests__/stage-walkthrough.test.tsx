@@ -2,10 +2,10 @@
  * Every section, walked on the lesson stage through the interface.
  *
  * The tables run over the registries rather than a list retyped here, so a tenth section cannot
- * arrive without arriving in these tests too. What is pinned: the step order and the gate, the
- * verdicts stating their outcome, the action predicate satisfied by a visible control, the
- * before-and-after table, the transfer patient, the one persisted record — written once, and only
- * when the transfer answer is committed and its work done — and Back.
+ * arrive without arriving in these tests too. What is pinned: the step order with every task
+ * reachable, the verdicts stating their outcome, the action predicate satisfied by a visible
+ * control, the before-and-after table, the transfer patient and its work, that no completion is
+ * persisted however far a learner gets, the clock, and Back.
  */
 import { act, fireEvent, screen, within } from '@testing-library/react'
 
@@ -50,6 +50,10 @@ import {
 } from '../test-support/mcsStage'
 import { mockRouterPush } from '../test-support/mcsWorkbenchStubs'
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 const sections = mcsSectionLearningContracts.map(
   (contract) => [contract.sectionId, contract] as const,
 )
@@ -67,9 +71,22 @@ describe('the stage: one progression per section', () => {
     mountSection(sectionId)
     const lesson = buildMcsStageLesson(sectionId)
     expect(currentStepId()).toBe(lesson.steps[0].id)
-    const navigation = screen.getByRole('list', { name: 'All lesson tasks' })
-    for (const step of lesson.steps)
-      expect(within(navigation).getByRole('button', { name: step.title })).toBeEnabled()
+    // Tasks in this section: one row per task, in order. The task on screen is the current row and
+    // its button is the one that cannot be pressed; every other task can be opened from here.
+    const navigation = document.querySelector<HTMLElement>('[data-step-list]')
+    expect(navigation).not.toBeNull()
+    const rows = within(navigation!).getAllByRole('listitem')
+    expect(rows).toHaveLength(lesson.steps.length)
+    lesson.steps.forEach((step, index) => {
+      const button = within(rows[index]).getByRole('button')
+      expect(button.textContent).toMatch(
+        new RegExp(`^${step.ordinal}\\. ${escapeRegExp(step.title)}`),
+      )
+      if (index === 0) {
+        expect(rows[index]).toHaveAttribute('data-step-state', 'current')
+        expect(button).toHaveAttribute('aria-current', 'step')
+      } else expect(button).toBeEnabled()
+    })
     expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
   })
 
@@ -79,8 +96,14 @@ describe('the stage: one progression per section', () => {
       mountSection(sectionId)
       const lesson = buildMcsStageLesson(sectionId)
       const spec = mcsSectionSpec(sectionId)
-      const phases = lesson.steps.map((step) => step.phase)
+      // The five phases close the section; a paired section's case follows them as its last task.
+      const phases = lesson.steps
+        .filter((step) => step.interaction.kind !== 'case')
+        .map((step) => step.phase)
       expect(phases.slice(-5)).toEqual(['predict', 'act', 'observe', 'explain', 'transfer'])
+      expect(lesson.steps.at(-1)?.interaction.kind).toBe(
+        lesson.practicePairing ? 'case' : 'transfer',
+      )
 
       if (spec.walksTheLoop) {
         expect(nowCard().textContent).toMatch(/Follow three support pathways/)
@@ -94,7 +117,7 @@ describe('the stage: one progression per section', () => {
       expect(storedLessonIds()).toEqual([])
       continueStep()
 
-      // Predict: nothing past it is reachable until the commitment.
+      // Predict: the way on is open before the commitment; the commitment states its verdict.
       expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
       expect(nowPrimary()).toBeEnabled()
       commitPrediction(sectionId)
@@ -104,20 +127,24 @@ describe('the stage: one progression per section', () => {
       expect(storedLessonIds()).toEqual([])
       continueFromVerdict()
 
-      // Act: the primary waits for the section's own predicate, then a visible control satisfies it.
+      // Act: the way on is open throughout; a visible control satisfies the section's predicate.
       expect(currentStepId()).toBe(`${sectionId}-act`)
       expect(nowPrimary()).toBeEnabled()
       performAction(sectionId)
       expect(nowPrimary()).not.toBeDisabled()
-      // MCS-PRE-REVIEW-04 (F07/F39): the status names the kind of step instead of one boilerplate line.
-      expect(nowStatus()).toMatch(/Optional model exercise/)
       continueStep()
 
       // Observe: the readings captured on entry to Act beside the live ones.
       expect(currentStepId()).toBe(`${sectionId}-observe`)
       const table = document.querySelector('[data-before-after]')
       expect(table).toBeInTheDocument()
-      expect(table?.querySelectorAll('tbody tr')).toHaveLength(
+      // The three-device table has no signal rows; elsewhere every observed signal has one row,
+      // under "Named in this task" or "Other readings".
+      expect(
+        table?.querySelectorAll(
+          sectionId === 'mcs-foundations-mechanisms' ? 'tbody tr' : 'tbody tr[data-signal]',
+        ),
+      ).toHaveLength(
         sectionId === 'mcs-foundations-mechanisms' ? 4 : lesson.contract.observedSignals.length,
       )
       for (const cell of table?.querySelectorAll('tbody td') ?? []) {
@@ -145,12 +172,25 @@ describe('the stage: one progression per section', () => {
         'data-verdict-outcome',
         'correct',
       )
-      expect(document.querySelector('[data-stage-completion]')).toBeInTheDocument()
+      // Nothing finishes on the transfer: a paired section goes on to its case, answered or not.
+      const completion = () => document.querySelector('[data-stage-completion]')
+      expect(completion()).toBeNull()
       performTransferWork(sectionId)
       expect(document.querySelector('[data-transfer-work]')).toHaveAttribute('data-met', 'true')
-      expect(document.querySelector('[data-stage-completion]')).toBeInTheDocument()
+      expect(document.querySelector('[data-transfer-work-status]')).toHaveTextContent(
+        'Done on this patient.',
+      )
+      expect(completion()).toBeNull()
+      if (lesson.practicePairing) {
+        expect(nowPrimary()?.textContent).toMatch(/^Continue to the case/)
+        continueStep()
+        expect(currentStepId()).toBe(`${sectionId}-case`)
+        expect(nowCard().querySelector('h2')?.textContent).toBe(
+          `Apply it: ${lesson.practicePairing.title}`,
+        )
+        expect(completion()).toBeNull()
+      }
       expect(storedLessonIds()).toEqual([])
-      expect(nowStatus()).toMatch(/Optional self-check on a new patient/i)
     },
   )
 })
@@ -187,7 +227,9 @@ describe('the stage: verdicts, Back, sources, help', () => {
     expect(currentStepId()).toBe('lvad-parameters-assessment-act')
     fireEvent.click(document.querySelector('[data-now-back]') as HTMLElement)
     expect(currentStepId()).toBe('lvad-parameters-assessment-predict')
-    expect(nowStatus()).toMatch(/Review: captured state/)
+    // Looking back: the task as it was left, the circulation held, the commitment still there.
+    expect(nowStatus()).toMatch(/An earlier task, as you left it/)
+    expect(document.querySelector('[data-clock-bar]')).toHaveAttribute('data-clock-state', 'held')
     expect(document.querySelector('[data-verdict] [data-verdict-outcome]')).toHaveAttribute(
       'data-verdict-outcome',
       'correct',
@@ -219,7 +261,9 @@ describe('the stage: verdicts, Back, sources, help', () => {
     mountSection('lvad-alarms-emergencies')
     fireEvent.click(screen.getByRole('button', { name: /What do I do now/ }))
     const dialog = document.querySelector('dialog')
-    expect(dialog?.textContent).toContain('Step 1 of 6')
+    expect(dialog?.textContent).toContain(
+      `Task 1 of ${buildMcsStageLesson('lvad-alarms-emergencies').steps.length}`,
+    )
     expect(dialog?.textContent).toContain(
       buildMcsStageLesson('lvad-alarms-emergencies').steps[0].title,
     )
@@ -263,20 +307,25 @@ describe('the stage: verdicts, Back, sources, help', () => {
     })
   })
 
-  it('offers the paired case by presentation, and says when it applies a different mechanism', () => {
+  it('ends on the paired case by presentation, and says when it applies a different mechanism', () => {
     mountSection('lvad-alarms-emergencies')
     workThroughSection('lvad-alarms-emergencies')
-    const pairing = document.querySelector('[data-practice-pairing]')
-    expect(pairing).toHaveAttribute('data-practice-pairing', 'next-in-unit')
-    expect(pairing?.textContent).toMatch(/different mechanism/)
-    expect(pairing?.textContent).toMatch(/power interruption/i)
+    continueStep()
+    expect(nowCard().querySelector('h2')?.textContent).toMatch(/power interruption/i)
+    fireEvent.click(nowPrimary()!)
+    expect(document.querySelector('[data-case-strip]')?.textContent).toMatch(
+      /the last task of Section 8, on its power check, not its thrombosis pattern/,
+    )
+    // Nothing leaves the section for Practice.
+    expect(document.querySelector('[data-practice-pairing]')).toBeNull()
+    expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
   it('mounts a selected later-phase URL at its reference without invented work', () => {
     mountSection('iabp-timing-triggering', 'explain')
     expect(currentStepId()).toBe('iabp-timing-triggering-explain')
     expect(document.querySelector('[data-stage-resumed-note]')?.textContent).toMatch(
-      /Opened at explain with the starting patient/i,
+      /Reopened at the task you left, with the patient as it starts/i,
     )
     expect(storedLessonIds()).toEqual([])
   })
@@ -284,13 +333,22 @@ describe('the stage: verdicts, Back, sources, help', () => {
   it('ticks the simulation while mounted and stops when unmounted', () => {
     jest.useFakeTimers()
     const { unmount } = mountSection('lvad-parameters-assessment')
-    const before = document.querySelector('[data-session-identity]')?.textContent
+    const clockTime = () => document.querySelector('[data-clock-time]')?.textContent ?? ''
+    // A guided section opens with the circulation paused; Run in the clock bar starts it.
+    expect(document.querySelector('[data-clock-bar]')).toHaveAttribute('data-clock-state', 'paused')
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-clock-run]')!)
+    expect(document.querySelector('[data-clock-bar]')).toHaveAttribute(
+      'data-clock-state',
+      'running',
+    )
+    const before = clockTime()
     act(() => {
       jest.advanceTimersByTime(1000)
     })
-    expect(document.querySelector('[data-session-identity]')?.textContent).toBeDefined()
-    expect(before).toBeDefined()
+    expect(clockTime()).not.toBe(before)
+    expect(jest.getTimerCount()).toBeGreaterThan(0)
     unmount()
+    expect(jest.getTimerCount()).toBe(0)
     act(() => {
       jest.advanceTimersByTime(1000)
     })

@@ -99,8 +99,8 @@ export function commitChainChoice(pattern: RegExp) {
 }
 
 export function goalStates(): readonly string[] {
-  // The checklist is printed in the control dock (report 2.13); a step with no suite pane keeps it
-  // on the Now card. Never both.
+  // The checklist is printed once, in the task card of the text column (owner feedback,
+  // 2026-10-11). The second selector is the static room view's list, which no step uses.
   return [...document.querySelectorAll('[data-step-goals] li, [data-suite-goals] li')].map(
     (item) => item.getAttribute('data-met') ?? 'unknown',
   )
@@ -201,17 +201,34 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       setRange('orbit', 25)
       for (let i = 0; i < 6; i++) clickPrimary()
       break
+    case 'airway-anatomy':
+      if (observe) {
+        setSelect('airways', 'LLL')
+        setRange('orbit', -30)
+        setToggle('airwayNames', false)
+      } else {
+        setSelect('airways', 'RLL')
+        setSelect('airways', 'RML')
+      }
+      break
     case 'projection':
-      setRange('orbit', observe ? 0 : 35)
+      // LAO 24° leaves only lung over the nodule (the obliquity is read off the axial CT).
+      setRange('orbit', observe ? 0 : -24)
       break
     case 'signal':
-      setRange('orbit', -35)
+      // At LAO 20° a posterior rib lies over the nodule; 3° cranial takes it off.
+      setRange('orbit', -20)
+      setRange('tilt', 3)
       break
     case 'field':
       if (observe) {
         setToggle('crop', true)
         setRange('zoom', 1.5)
-      } else setRange('field', 90)
+      } else {
+        // Two stages: the field for the tool path, then the spine out of the field.
+        setRange('field', 70)
+        setRange('field', 40)
+      }
       break
     case 'time':
       if (observe) {
@@ -224,9 +241,23 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       setRange('zoom', 1.5)
       break
     case 'two-dimensional':
-      setRange('orbit', 35)
+      setRange('orbit', -20)
       setRange('field', 90)
       setRange('zoom', 1.5)
+      break
+    case 'suite-cases':
+      if (observe) {
+        setRange('orbit', -5)
+        setRange('tilt', 3)
+        setSelect('wedge', '0')
+        setRange('orbit', -24)
+        setRange('tilt', 0)
+      } else {
+        setSelect('wedge', '15')
+        setRange('orbit', -9)
+        setRange('field', 70)
+        setRange('zoom', 1.5)
+      }
       break
     case 'current-anatomy':
       if (observe) clickControl('capture')
@@ -240,8 +271,10 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       }
       break
     case 'dts-acquisition':
-      if (observe) setRange('sweep', 50)
-      else {
+      if (observe) {
+        setRange('sweep', 50)
+        setRange('sweepCenter', -20)
+      } else {
         setRange('plane', -18)
         setRange('plane', 0)
       }

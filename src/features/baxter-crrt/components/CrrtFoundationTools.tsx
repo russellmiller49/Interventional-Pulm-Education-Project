@@ -17,6 +17,12 @@ import { CRRT_FOUNDATION_CONSTRUCTION, projectFoundationFluidBalance } from '../
 import { calculateCrrtMachineFluidLedger } from '../circuitFluidLedger'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import type { CrrtFoundationTool } from '../content/foundationLessons'
+import { CrrtAccessSiteButton, useCrrtAccessSite } from './CrrtAccessSite'
+import {
+  CrrtLessonVisual,
+  useCrrtLessonVisualPlacement,
+  type CrrtLessonVisualSlot,
+} from './CrrtLessonVisual'
 import { CrrtPilotCircuit, type CrrtPilotPressureSignals } from './CrrtPilotCircuit'
 import { CrrtLivePressureStation } from './CrrtLivePressureStation'
 import { CrrtMembraneTransport, type CrrtTransportMechanism } from './CrrtMembraneTransport'
@@ -92,13 +98,20 @@ const fluidStops: readonly { id: CrrtCircuitPathId; label: string; text: string 
   },
 ]
 const modalityIds = ['scuf', 'cvvh', 'cvvhd', 'cvvhdf'] as const
-const modalityText: Record<string, string> = {
-  scuf: 'SCUF — slow continuous ultrafiltration: water removal without dialysate or replacement-supported filtration in this simplified view.',
-  cvvh: 'CVVH — continuous venovenous hemofiltration: replacement-supported filtration carries solute with water by convection.',
+/** What each acronym stands for, printed on its own button so it is read before it is pressed. */
+const modalityNames: Record<(typeof modalityIds)[number], string> = {
+  scuf: 'Slow continuous ultrafiltration',
+  cvvh: 'Continuous venovenous hemofiltration',
+  cvvhd: 'Continuous venovenous hemodialysis',
+  cvvhdf: 'Continuous venovenous hemodiafiltration',
+}
+/** What the selected modality does, shown under the buttons beside the circuit. */
+const modalityText: Record<(typeof modalityIds)[number], string> = {
+  scuf: 'SCUF removes water only. No dialysate and no replacement fluid run, so little solute is cleared.',
+  cvvh: 'CVVH filters water out of the blood, and solute is carried across with it (convection). Replacement fluid enters the blood path to put most of that volume back.',
   cvvhd:
-    'CVVHD — continuous venovenous hemodialysis: dialysate supports diffusion across the membrane.',
-  cvvhdf:
-    'CVVHDF — continuous venovenous hemodiafiltration: dialysate and replacement-supported filtration combine diffusive and convective transport.',
+    'CVVHD runs dialysate on the other side of the membrane. Solute crosses down its concentration gradient (diffusion), and the dialysate leaves as effluent without entering the blood.',
+  cvvhdf: 'CVVHDF runs both: dialysate for diffusion and replacement fluid for convection.',
 }
 
 function Circuit({
@@ -112,12 +125,16 @@ function Circuit({
   paths?: readonly CrrtCircuitPathId[]
   pressure?: CrrtPilotPressureSignals
 }) {
+  // In a lesson, the picture behind the PATIENT circle: the catheter in its vein.
+  const accessSite = useCrrtAccessSite()
   return (
     <CrrtPilotCircuit
       presentation="focused"
       overlayId={overlay}
       highlightedNodeId={node}
       visiblePathIds={paths}
+      accessSite={accessSite?.site}
+      accessSiteControl={<CrrtAccessSiteButton />}
       running={false}
       setReady
       fluidsReady
@@ -129,12 +146,38 @@ function Circuit({
   )
 }
 
-/** Local layout only: the existing circuit and selection state remain authoritative. */
-function CircuitWorkbench({ controls, children }: { controls: ReactNode; children: ReactNode }) {
+/** The circuit as lesson 1 introduces it: the blood path, no modality and no readings. */
+export function CrrtReferenceCircuit() {
+  return <Circuit />
+}
+
+/**
+ * Local layout only: the existing circuit and selection state remain authoritative.
+ *
+ * In a two-pane lesson the drawing goes to the right pane and the selections stay in the text,
+ * under the instruction; anywhere else the drawing follows its selections as it always has.
+ */
+function CircuitWorkbench({
+  controls,
+  slot = 'lead',
+  children,
+}: {
+  controls: ReactNode
+  /** Where the drawing stands in a lesson's picture pane; a task's subject leads. */
+  slot?: CrrtLessonVisualSlot
+  children: ReactNode
+}) {
+  const placement = useCrrtLessonVisualPlacement()
   return (
-    <div className={styles.circuitWorkbench} data-crrt-circuit-workbench>
+    <div
+      className={styles.circuitWorkbench}
+      data-crrt-circuit-workbench
+      data-crrt-drawing={placement}
+    >
       <div className={styles.circuitControls}>{controls}</div>
-      <div className={styles.circuitVisual}>{children}</div>
+      <CrrtLessonVisual slot={slot}>
+        <div className={styles.circuitVisual}>{children}</div>
+      </CrrtLessonVisual>
     </div>
   )
 }
@@ -157,7 +200,7 @@ export interface CrrtToolProgress {
 const toolNoun: Partial<Record<CrrtFoundationTool, string>> = {
   'blood-walk': 'stops',
   'fluid-walk': 'fluid paths',
-  modalities: 'views',
+  modalities: 'modalities',
   'pressure-sites': 'pressure readouts',
   mechanisms: 'mechanisms',
   'transport-comparison': 'changes',
@@ -194,6 +237,7 @@ export function CrrtFoundationToolView({
   onReady?: (response: string) => void
   onProgress?: (progress: CrrtToolProgress) => void
 }) {
+  const accessSite = useCrrtAccessSite()
   const [selected, setSelected] = useState<string | null>(null)
   const [visited, setVisited] = useState<readonly string[]>([])
   const [changed, setChanged] = useState(false)
@@ -241,7 +285,10 @@ export function CrrtFoundationToolView({
     setVisited((current) => (current.includes(id) ? current : [...current, id]))
   }
   const selectedCount = ids.filter((id) => visited.includes(id)).length
-  const controls = (items: readonly { id: string; label: string }[], ordered = false) => (
+  const controls = (
+    items: readonly { id: string; label: string; detail?: string }[],
+    ordered = false,
+  ) => (
     // The count sits in the same row as the buttons, so it adds no height between the controls
     // and the circuit they drive (the pair must stay on one screen).
     <div className={styles.controlRow}>
@@ -254,8 +301,20 @@ export function CrrtFoundationToolView({
             aria-pressed={selected === item.id}
             onClick={() => select(item.id)}
           >
-            {item.label}
-            {visited.includes(item.id) ? ' ✓' : ''}
+            {item.detail ? (
+              <>
+                <span className={styles.controlName}>
+                  {item.label}
+                  {visited.includes(item.id) ? ' ✓' : ''}
+                </span>{' '}
+                <small className={styles.controlDetail}>{item.detail}</small>
+              </>
+            ) : (
+              <>
+                {item.label}
+                {visited.includes(item.id) ? ' ✓' : ''}
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -273,57 +332,67 @@ export function CrrtFoundationToolView({
     return (
       <>
         <p className={styles.caption}>
-          Normal circuit orientation · follow access → blood pump → filter → return. No patient run
-          is active.
+          Follow the blood: access lumen → blood pump → filter → return lumen.
         </p>
-        <Circuit />
+        <CrrtLessonVisual>
+          <Circuit />
+        </CrrtLessonVisual>
       </>
     )
   if (tool === 'blood-walk' || tool === 'fluid-walk') {
     const blood = bloodStops.find((s) => s.id === selected)
     const fluid = fluidStops.find((s) => s.id === selected)
+    // The explanation of the selection sits under the buttons, beside the circuit, so it appears
+    // where the learner is looking rather than below the drawing (tester report, 2026-11-05).
     return (
-      <>
-        <CircuitWorkbench
-          controls={controls(
-            tool === 'blood-walk' ? bloodStops : fluidStops,
-            tool === 'blood-walk',
-          )}
-        >
-          <Circuit
-            overlay={tool === 'fluid-walk' ? 'cvvhdf' : 'blood-path'}
-            node={blood?.id}
-            paths={
-              tool === 'fluid-walk' ? [...bloodPathIds, ...(fluid ? [fluid.id] : [])] : undefined
-            }
-          />
-        </CircuitWorkbench>
-        <p className={styles.observation} aria-live="polite">
-          {tool === 'blood-walk'
-            ? (blood?.text ?? 'Select Patient access to begin.')
-            : (fluid?.text ?? 'Select a fluid path to trace it.')}
-        </p>
-      </>
+      <CircuitWorkbench
+        controls={
+          <>
+            {controls(tool === 'blood-walk' ? bloodStops : fluidStops, tool === 'blood-walk')}
+            <p className={styles.observation} aria-live="polite" data-crrt-selection-explanation>
+              {tool === 'blood-walk'
+                ? (blood?.text ?? 'Select Patient access to begin.')
+                : (fluid?.text ?? 'Select a fluid path to trace it.')}
+            </p>
+          </>
+        }
+      >
+        <Circuit
+          overlay={tool === 'fluid-walk' ? 'cvvhdf' : 'blood-path'}
+          node={blood?.id}
+          paths={
+            tool === 'fluid-walk' ? [...bloodPathIds, ...(fluid ? [fluid.id] : [])] : undefined
+          }
+        />
+      </CircuitWorkbench>
     )
   }
   if (tool === 'modalities') {
+    const modality = modalityIds.find((id) => id === selected)
     const overlay = (
-      selected === 'cvvh' ? 'cvvh-post' : (selected ?? 'blood-path')
+      modality === 'cvvh' ? 'cvvh-post' : (modality ?? 'blood-path')
     ) as CrrtCircuitOverlayId
     return (
-      <>
-        <CircuitWorkbench
-          controls={controls(modalityIds.map((id) => ({ id, label: id.toUpperCase() })))}
-        >
-          <Circuit overlay={overlay} />
-        </CircuitWorkbench>
-        <p className={styles.observation} aria-live="polite">
-          {selected ? modalityText[selected] : 'Select a modality to reveal its active paths.'}
-        </p>
-        <p className={styles.caption}>
-          Conceptual configuration only. No numeric flows or device settings are applied.
-        </p>
-      </>
+      <CircuitWorkbench
+        controls={
+          <>
+            {controls(
+              modalityIds.map((id) => ({
+                id,
+                label: id.toUpperCase(),
+                detail: modalityNames[id],
+              })),
+            )}
+            <p className={styles.observation} aria-live="polite" data-crrt-selection-explanation>
+              {modality
+                ? modalityText[modality]
+                : 'Select a modality to see what it does and which paths it uses.'}
+            </p>
+          </>
+        }
+      >
+        <Circuit overlay={overlay} />
+      </CircuitWorkbench>
     )
   }
   if (tool === 'pressure-sites') {
@@ -349,6 +418,8 @@ export function CrrtFoundationToolView({
           <CrrtPilotCircuit
             presentation="focused"
             overlayId="pressure-profile"
+            accessSite={accessSite?.site}
+            accessSiteControl={<CrrtAccessSiteButton />}
             highlightedSignalId={detail?.id}
             running={false}
             setReady
@@ -434,7 +505,9 @@ export function CrrtFoundationToolView({
             ))}
           </tbody>
         </table>
-        <Circuit overlay="pressure-profile" />
+        <CrrtLessonVisual>
+          <Circuit overlay="pressure-profile" />
+        </CrrtLessonVisual>
         <p>
           No fault label or physical finding is supplied. Localize only as far as these readings
           support.
@@ -444,8 +517,11 @@ export function CrrtFoundationToolView({
   }
   if (tool === 'mechanisms') {
     return (
+      // The task is about the membrane, so in the picture pane the filter inset leads and the
+      // circuit, which shows where that filter sits, follows it.
       <div className={styles.mechanismWorkbench}>
         <CircuitWorkbench
+          slot="support"
           controls={controls([
             { id: 'diffusion', label: 'Diffusion' },
             { id: 'convection', label: 'Convection' },
@@ -459,9 +535,11 @@ export function CrrtFoundationToolView({
             node="filter"
           />
         </CircuitWorkbench>
-        <CrrtMembraneTransport
-          selected={(selected as CrrtTransportMechanism | null) ?? 'diffusion'}
-        />
+        <CrrtLessonVisual slot="lead">
+          <CrrtMembraneTransport
+            selected={(selected as CrrtTransportMechanism | null) ?? 'diffusion'}
+          />
+        </CrrtLessonVisual>
       </div>
     )
   }
@@ -534,16 +612,14 @@ export function CrrtFoundationToolView({
             ))}
           </tbody>
         </table>
-        <Circuit
-          overlay="cvvhdf"
-          paths={crrtCircuitOverlay('cvvhdf').activePathIds.filter(
-            (id) => id !== 'pre-filter-replacement',
-          )}
-        />
-        <p>
-          Conceptual transport direction and calculated fluid flows; no applied device prescription
-          or quantitative patient solute response.
-        </p>
+        <CrrtLessonVisual>
+          <Circuit
+            overlay="cvvhdf"
+            paths={crrtCircuitOverlay('cvvhdf').activePathIds.filter(
+              (id) => id !== 'pre-filter-replacement',
+            )}
+          />
+        </CrrtLessonVisual>
       </>
     )
   }
@@ -587,7 +663,9 @@ export function CrrtFoundationToolView({
           contributes only during the assumed 21 running hours. All results are projected from
           entered assumptions.
         </p>
-        <Circuit overlay="cvvhd" />
+        <CrrtLessonVisual>
+          <Circuit overlay="cvvhd" />
+        </CrrtLessonVisual>
       </>
     )
   }

@@ -18,7 +18,9 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/api/scope-calibration',
   '/login',
   '/pocus',
+  '/privacy',
   '/signup',
+  '/terms',
   '/verify-email',
   '/auth/update-password',
 ])
@@ -27,6 +29,13 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
+  // The dolphin synchronized bronchoscopy case, beside the human one, and the whole-dolphin 3D
+  // anatomy model: in development, reachable by direct link.
+  '/learn/anatomy/dolphin-airway',
+  '/learn/anatomy/dolphin',
+  // The Dolphin Bronchoscopy module for veterinarians, built on the two dolphin pages above: in
+  // development, reachable by direct link, noindex.
+  '/dolphin-bronchoscopy',
   '/baxter-crrt',
   '/cardiohelp-ecmo',
   // Phase D1 device-intelligence routes (decision D-03 as modified, 2026-08-08): every new
@@ -46,10 +55,19 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // The bronchoscopy foundations course is in development alongside the earlier intro course,
   // which keeps `/intro-bronchoscopy` and its enrollment gate until the owner decides on a cutover.
   '/bronchoscopy-foundations',
+  // The IP Board Navigator: a personalized objective-level learning layer over the board-prep
+  // library, in development. Reachable by direct link without an account, noindex.
+  '/board-navigator',
   '/ebus-guided',
+  // The EUS-B guided course: reachable by direct link, noindex. Its lab is a public training
+  // embed of the EBUS course build, like the simulator's.
+  '/eus-b-guided',
   // The EUS-B simulator is a development preview: reachable by direct link, noindex. Its page
   // embeds a standalone entry of the EBUS course build, which is already a public training embed.
   '/eus-b-simulator',
+  // The Literature Atlas tester preview: a read-only evidence map framed from the Atlas service
+  // through `/api/literature-atlas/`. Reachable by direct link without an account, noindex.
+  '/literature-atlas',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
   '/procedures',
@@ -89,7 +107,14 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // The bronchoscopy foundations course (hub, Learn, Practice, Assess, Reference) is in development
   // and reachable by direct link, noindex. `/intro-bronchoscopy` is a separate module.
   '/bronchoscopy-foundations',
+  // The Dolphin Bronchoscopy module (hub, Learn, Practice, Integrated cases, Reference).
+  '/dolphin-bronchoscopy',
+  // The IP Board Navigator (Today, knowledge map, repair lab, progress, curriculum).
+  '/board-navigator',
   '/ebus-guided',
+  // The EUS-B guided course (overview, lessons).
+  '/eus-b-guided',
+  '/literature-atlas',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
   '/preference-cards',
@@ -391,6 +416,11 @@ export function resolveSiteModuleId(pathname: string) {
     return null
   }
 
+  // The beta review address of the live anatomy lesson counts as the lesson itself.
+  if (normalizedPathname === '/development-beta/live-anatomy/lesson') {
+    return 'intro-bronchoscopy:airway-anatomy'
+  }
+
   if (first === 'board-prep') {
     return segments[1] ? `board-prep:${segments[1]}` : 'board-prep'
   }
@@ -477,13 +507,21 @@ export function resolveSiteModuleId(pathname: string) {
     return 'peripheral-imaging'
   }
 
+  if (first === 'dolphin-bronchoscopy') return 'dolphin-bronchoscopy'
+
   if (first === 'ebus-guided') return 'ebus-guided'
 
+  if (first === 'eus-b-guided') return 'eus-b-guided'
+
   if (first === 'eus-b-simulator') return 'eus-b-simulator'
+
+  if (first === 'literature-atlas') return 'literature-atlas'
 
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'
   }
+
+  if (first === 'board-navigator') return 'board-navigator'
 
   if (
     first === 'pccm-intro-course' ||

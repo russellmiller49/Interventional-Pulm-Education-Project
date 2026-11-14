@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-10 (after section 15, the last section). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-12 (after the integrated cases). Start the next session from this file.
 
 ## Why this work exists
 
@@ -13,37 +13,44 @@ supervisor" answers.
 
 ## Where things stand
 
-The rewrite through section 12 is on `main` (merged 2026-10-10, `12d2c8ca`): #349, #350, #352,
-#355, #358, #359, #360, #362, #364, #368, #369, #371, #373, #374 and #375, with #351 (the
-3D-retry fix) and #376 (the authoring-rules test). #348 is closed.
+All fifteen sections are on `main`: #349 to #375 were merged on 2026-10-10 with #351 and #376,
+#377 (section 13) and #378 (section 15, with capstone C09) the next day, and #381 (four
+teaching gaps in sections 13 and 15, from the review of those two) after that. #348 is closed.
 
-Two PRs are open and not yet reviewed:
+One PR is open, and it holds everything since:
 
-| PR   | Branch                  | State                                                                                                              |
-| ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| #377 | `claude/bf-rewrite-s13` | Draft, targets `main`. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.          |
-| #378 | `claude/bf-rewrite-s15` | Draft, stacked on #377. Section 15, the ventilated patient (new id); two sections retired; the pressure-limit fix. |
+| PR   | Branch                       | State                                                                                                     |
+| ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| #391 | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
 
-Merge #377, then #378. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s15`. Until both
-are merged, branch the next change from that branch and stack its PR on #378; afterwards branch
-from `origin/main`. The local copies of the merged stack branches are behind origin.
+It replaces five stacked drafts, which carried the same commits one step at a time: #380 (hub and
+closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
+cases). All five were closed on 2026-10-12, each with a note pointing here; their branches
+still exist. `main` was merged into the combined branch on 2026-10-12
+with no conflict.
+
+The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
+`claude/bf-integrated-cases`, the last of the stacked branches. Its unstaged
+`.claude/launch.json` blocks a merge of `main` there, so the combined branch was made in a
+temporary checkout. Branch the next change from `origin/main` once #391 is merged.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. All fifteen sections are written. Next: the hub and the closing screen (item 6 under "What is
-   left"), which retires `what-completion-means`, the last first-contract section.
+2. The fifteen sections, the hub, the closing screen, the image bank, the vignettes, the mixed
+   sets and the integrated cases are written. Left in the plan's practice and assessment (item
+   7 under "What is left"): cleaning the older practice items, and replacing the 108 objectives
+   with about 25. Self-check mode is still Russell's decision.
 3. Things to know before that change:
-   - `what-completion-means` is the fixture for the first-contract sort and prediction tests
-     (`stage-host.test.tsx`, `actions-and-feedback.test.tsx`, `self-paced-summaries.test.tsx`).
-     Move them to the matching activity in `pre-use-check`.
-   - Its objectives M18-O1 to O5 are core. Home them or list them in
-     `RETIRED_OBJECTIVE_REASONS`.
-   - Once every section is rewritten, `sectionValidation.ts` fails the build unless a third of
-     the questions show an image. The course is at 29 of 99. Retiring the last first-contract
-     section turns that gate on, so the image bank (item 7) or a decision on the gate comes
-     first.
+   - With the image bank and the vignettes the course shows an image in 79 of 187 questions,
+     so the one-third rule is met. Without the bank it is 29 of 137.
+   - First-contract code is now dead and still in the tree: the old fields in `content/types.ts`
+     (`recognizeTitle`, `why`, `newConcept`, `incrementSentence`, `controlStrip`,
+     `modelBoundary`, `steps`), the `!rewritten` branches in `sectionValidation.ts`,
+     `BronchStageHost.tsx`, `BronchCourseTeaching.tsx` and `BronchPilotTeaching.tsx`, the
+     first-contract verdict frames, and the report-only branch of `check-section.ts`. Removing
+     it is its own change; `authoringContract: 2` can then go too.
+   - `TubeCrossSection.tsx` and the scope pane's tube mode are unused. Ask before removing them.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -59,6 +66,8 @@ Owner decisions so far (2026-10-08):
 - The right lung's prediction stays as reworded in `b06c9009`. It was ambiguous before; see the
   lesson under "Traps".
 - The fellow-session gate on the remaining sections is removed.
+- 2026-10-11, hub and closing screen: the one-third image rule blocks publication and no
+  longer fails the build. The printable faculty observation form is left for a later change.
 - 2026-10-10, section 13: rescue drugs are named and no dose is printed, lipid emulsion
   included. Review-register R14 stands. This answers plan decision 4 for section 13.
 - Methylene blue: the expert panel's regimen (signed). Flumazenil and naloxone: the product-label
@@ -92,7 +101,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #377 and #378 reviewed and merged.** Everything before them is on `main`.
+1. **Get #391 reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
@@ -125,7 +134,7 @@ sections no longer wait for sessions with the pilot.
    `systematic-survey`, `describe-findings`) on 2026-10-09, and section 11
    (`washing-and-lavage`), section 12 (`biopsy-and-specimens`) and section 13
    (`deterioration`) on 2026-10-10, and section 15 (`ventilated-patient`) the same day. None
-   remains. The course lists 16 sections: the fifteen and `what-completion-means`.
+   remains. The course lists the fifteen sections.
    Notes from section 15:
    - `scope-in-a-tube` and `icu-physiology` are retired. M16-O1, O2, O5 and O6 are homed in
      section 15; M16-O3 (the procedure taxonomy) and M16-O4 (radiation and separate training)
@@ -413,11 +422,113 @@ sections no longer wait for sessions with the pilot.
      `biopsy-and-specimens` and `ventilated-patient`. Apply the content fixes the briefs name
      (foreign-body aspiration is an indication; site choice from the CT; raising pressure limits is
      recommended, not unsafe).
-6. **Rewrite the hub and the closing screen.** The hub still says "authored geometry". It carries
-   the course's one boundary statement.
-7. **Practice and assessment:** the image bank, about 40 vignettes with numbers, four evolving
-   cases, mixed sets of ten, the eight integrated cases with labels hidden until after the answer,
-   and about 25 objectives replacing the 108. Self-check mode is plan decision 5, not yet made.
+6. **The hub and the closing screen: done (2026-10-11).**
+   - The hub's copy is rewritten and carries one statement of what an online course cannot
+     show. "Authored geometry", "model limits" and the paragraph on optional questions are gone.
+   - The closing screen is `/bronchoscopy-foundations/learn/complete`
+     (`BronchoscopyFoundationsClosing.tsx`): what each phase covered, what the course cannot
+     show, four things to do next, and a count of sections opened and reviewed on this device.
+     The last section's end card and the hub's all-reviewed button both lead to it.
+   - `what-completion-means` is retired. M18-O1 to O5 are in `RETIRED_OBJECTIVE_REASONS`. A
+     saved place or a link that names it opens section 15, as the forward map already said.
+   - The module frame's notice on every page lost "authored teaching model", "anatomy profile"
+     and "No dose … is a recommendation", which the taught numbers contradict. It now reads
+     "For education only. Follow your device’s instructions for use and your local protocol."
+   - The helpers `teach` and `debrief` are removed from `courseFlow.ts`; nothing used them.
+   - Tests that used the old section now use `ventilated-patient` (a sort, a prediction with a
+     situation, and the last section). The walk in `stage-host.test.tsx` runs the transfer
+     before the closing checklist, as every rewritten section does.
+   - Still course-talk outside the lessons, not touched: the atlas page's "Authored teaching
+     media, pending review", and the practice landing's empty state.
+   - For Russell to confirm: the hub's four paragraphs; the closing screen's wording, above all
+     "What this course cannot show" and the four next steps; the shorter notice on every page;
+     retiring M18-O1 to O5.
+7. **Practice and assessment.** The image bank is done (2026-10-11); the rest is open.
+   - The image bank is `/bronchoscopy-foundations/practice/images` (`content/imageBank.ts`,
+     `components/BronchImageBank.tsx`), linked from the Practice landing. It has 50 questions:
+     25 openings, each asked once upright and once rotated, in five fixed sets of ten that mix
+     both lungs. An opening's two questions are never in the same set. Nothing is saved.
+   - It reuses the 12 lung frames the two lung sections already show and the course's own
+     click control, not `AirwayIdentifyQuiz`: that component picks from a list of names, has no
+     context line, no rotation and no keyboard path. The plan's 30 quiz stills carry one outline
+     each, so they cannot be clicked on; the survey frames carry them all.
+   - 25 of the 32 outlined openings are asked. The seven left out could only be told apart by
+     an orientation cue no one has stated: RB7, RB8 and RB9 on the intermedius frame, RB8 and
+     RB10 on the right basal frame, LB9 and LB10 on the left lower lobe frame. The larynx frames
+     are left out too: their outlines are named by the side of the picture.
+   - The orientation cues are the lung sections' own, turned with the picture
+     (`cueSentence`). They were read from the survey's outlines and still wait for Russell.
+   - The bank counts toward the image share: `imageShareBlockers` and `publishBlockers` take
+     the number of bank questions, and `check-section.ts --all --report` prints it and runs
+     `imageBankErrors` (the copy rules through `findCopyErrors`, the frames, and the set rules).
+   - `docs/bronchoscopy-foundations/media-register.json` lists only the six right-lung frames;
+     the larynx and left-lung frames were cut later and the register was not rebuilt. The bank
+     adds no picture. Rights and de-identification are pending on every file.
+   - For Russell to confirm: the 25 rationales; the cues, above all the rotated ones; whether
+     an upright and a rotated question on one opening count as two; the seven openings left out.
+   - The vignettes are done (2026-10-11): `content/vignettes.ts`, forty cases in eight topics
+     of five (antithrombotics and platelets, lidocaine by weight, lavage return and counts,
+     methemoglobinemia, pneumothorax after biopsy, the tube and the ventilator, massive
+     hemoptysis, sedation and its reversal). Each is a practice case (`vg-<slug>`) listed by
+     topic on the Practice landing, after the sections' own cases, and opens on the same case
+     page.
+   - A vignette tests only a number a section already teaches (a test holds this). No lipid or
+     methylene blue dose is asked. The two methemoglobin treatment levels are used; the
+     teaching-gaps change adds them to section 13.
+   - Three lidocaine vignettes and one lavage vignette are marked `sums`: their options and
+     reasons carry amounts added up from the case, as the dose ledger does. `caseCopyErrors`
+     in `authoringRules.ts` holds a standalone case to the copy rules; `vignetteErrors` adds
+     the key-length and test-wise checks. `check-section.ts --all --report` runs both.
+   - A vignette takes its sources and objective ids from its paired section's first question.
+     No page was read for them.
+   - `microCasesForSection` returns a section's own cases only; `vignetteCasesForTopic` gives
+     the vignettes. The case page's previous and next links run through both lists.
+   - The copy gate refuses "wrong" and "correct" in a vignette, the verb included ("correct the
+     value"). The stage-item schema throws at import, so the whole registry fails to load.
+   - For Russell to confirm: all forty keys and reasons, written from general knowledge. Most in
+     need of a look: the stent case (postpone, not hold); the daily-benzodiazepine case (hold
+     flumazenil while he breathes); biopsy of one lung in a sitting; pain as the forceps open;
+     the ARDS case (defer); raising the tidal volume when delivered volume falls; the three
+     hemoptysis airway cases; the culture below the threshold.
+   - Mixed sets are done (2026-10-12): `content/practiceSets.ts` deals all 79 practice cases
+     into eight fixed sets of ten (the last holds nine). The sections' own cases are dealt one
+     from each section in turn, the vignettes one from each topic in turn, and the two streams
+     alternate, so a set is half vignettes and never puts two cases from one section or topic
+     side by side. The sets are fixed because nothing is saved.
+   - A case opened from a set carries `?set=N`; its way on stays in the set and its last case
+     offers the next set. A set the case is not in is ignored.
+   - The Practice landing leads with the sets. The by-section and by-topic lists are behind a
+     closed disclosure, "Browse every case by section and topic".
+   - A practice case names its section only after an answer or with the explanation open. An
+     integrated case shows its section and its "safety-critical decision" label the same way.
+     This reverses an earlier choice to name the section first; the plan asks for it.
+   - The integrated cases are done (2026-10-12): all eight in `content/capstone.ts` are
+     rewritten in the second person with a patient and numbers, and a key that is a move.
+     `capstoneRuleErrors` (`content/capstoneRules.ts`) holds them to the copy rules through
+     `caseCopyErrors`, to `unsafe` only on the paired section's reflex, to the key-length rule
+     and to the test-wise cap. A Jest test now runs it and `capstoneErrors`, which only the
+     script ran before.
+   - Their register numbers resolve through `capstoneItem` in `stageItems.ts`. Before this a
+     `num()` token in a case would have printed raw.
+   - C01 and C16 now pair with `washing-and-lavage`. C16 is a real case (an unwedged sample
+     sent as a lavage) and no longer "a question from a lecture"; its guard against a colony
+     count is removed and its two retired objectives are replaced by M12-O5 and M12-O6.
+   - What each asks now: C01 the lavage site from the CT; C04 the airway plan before a scope
+     in stridor; C05 scope out and ventilate; C06 keep the wedge, suction gently, right side
+     down; C07 a saline pot and more biopsies; C09 scope out when the volume falls; C10 what
+     the report says; C16 a washing is not a lavage.
+   - The ids, their order and the five `critical` flags are unchanged. Four cases carry one
+     `unsafe` choice each (C04, C05, C06, C09), each the paired section's reflex. The plan's
+     mismatch "C05c" and finding F-08 (C06's wait-to-speak option) are resolved by the rewrite.
+   - The review register refuses "90 seconds" (R06) anywhere, a bleed's duration included.
+   - For Russell to confirm: all eight keys and reasons, written from general knowledge. Most
+     in need of a look: C04 (theatre, anesthesia and rigid bronchoscopy before any scope); C16
+     (an unwedged 40 mL sample read as a washing); C10's report line; the new pairings.
+   - Still open: the plan's clean-up of the older practice items (findings F-01 to F-07 and
+     F-09 are in sections since rewritten, so check which still apply; the mismatches C08d
+     and `mc-handle-turns-view-static`; the three stems that give the key away); and about 25
+     objectives replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15).
+     Self-check mode is plan decision 5, not yet made.
 8. **Abnormal images** for sections 8, 10, 12 and 14. Bleeding has no image questions until these
    exist. Rights and de-identification are still pending on all 100 registered files.
 9. **Re-decide the review-register refusal rows** (R25, R26 and others) row by row with Russell.
@@ -444,9 +555,8 @@ npx eslint src/features/bronchoscopy-foundations
 BRONCH_FOUNDATIONS_BASE_URL=http://localhost:3120 npx playwright test -c playwright.bronchoscopy-foundations.config.ts -g "<title>"
 ```
 
-State at handoff (section 13): 40 Jest suites pass; type check and lint are clean; the
-end-to-end cases that touch section 13 pass against the dev server on port 3133 (21 cases). The
-full end-to-end suite has not been run. Nine Jest suites in other features fail in this checkout and were not touched by this work.
+State at handoff (hub and closing screen): 40 Jest suites pass; type check and lint are clean;
+the full end-to-end suite passes against the dev server on port 3133.
 
 ## Traps
 

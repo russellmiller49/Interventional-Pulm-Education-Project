@@ -7,9 +7,9 @@ import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
 import {
-  baxterCrrtCurriculum,
+  baxterCrrtAdditionalCaseIds,
+  baxterCrrtCoreCaseIds,
   getBaxterCrrtCaseCatalogEntry,
-  isCrrtCurriculumUnitComplete,
   nextRecommendedCrrtActivity,
   type BaxterCrrtRecommendedActivity,
 } from '../content/curriculum'
@@ -58,7 +58,6 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
   // F-20: these are opened-on-this-device records, never completion. The recommendation helper
   // still receives them under its historical parameter names; nothing reads them as a result.
   const visitedLessons = new Set(progress.visitedLessonIds)
-  const visitedCases = new Set(progress.visitedCaseIds.map((id) => id.toUpperCase()))
   const visited = {
     completedLessonIds: progress.visitedLessonIds,
     completedPracticeCaseIds: progress.visitedCaseIds,
@@ -180,9 +179,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
         <section className={styles.curriculumMap} aria-labelledby="crrt-map-heading">
           <div className={styles.sectionHeading}>
             <div>
-              <span className={styles.kicker}>
-                Eight lessons · six topic stations · ten core cases
-              </span>
+              <span className={styles.kicker}>Eight lessons · ten core cases · one challenge</span>
               <h2 id="crrt-map-heading">Curriculum map</h2>
             </div>
             <span className={styles.completionSummary}>
@@ -190,8 +187,9 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             </span>
           </div>
 
-          {/* F-10: one authored lesson order. The stations below group lessons and cases by
-              topic; they are not a second sequence, so each lesson keeps its number here. */}
+          {/* One lesson list (tester report, 2026-11-05): the eight lessons in their one authored
+              order (F-10), each with a line on what it teaches. The topic stations that repeated
+              these lessons beside their cases are gone; the cases are all in Practice. */}
           <div className={styles.learnSequence}>
             <h3 id="crrt-learn-sequence-heading">Recommended Learn sequence</h3>
             <ol aria-labelledby="crrt-learn-sequence-heading" data-crrt-learn-sequence>
@@ -208,87 +206,30 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
                       data-visited={visitedLesson}
                     >
                       <span className={styles.lessonIndex}>{crrtLessonNumber(lessonId)}</span>
-                      <span>{lesson?.title ?? lessonId}</span>
+                      <span className={styles.lessonText}>
+                        <strong>{lesson?.title ?? lessonId}</strong>
+                        {lesson?.summary ? <span>{lesson.summary}</span> : null}
+                      </span>
                       {visitedLesson ? <VisitedMarker /> : null}
                     </Link>
                   </li>
                 )
               })}
             </ol>
-            <p>
-              The stations below group the same lessons with their practice cases by topic. They are
-              not a required order: each lesson keeps its number from this sequence, and everything
-              stays open.
-            </p>
           </div>
 
-          <ol className={styles.stationList}>
-            {baxterCrrtCurriculum.map((unit) => {
-              const allOpened = isCrrtCurriculumUnitComplete(visited, unit)
-              return (
-                <li key={unit.id} className={styles.stationCard} data-all-opened={allOpened}>
-                  <div className={styles.stationHeading}>
-                    <span className={styles.stationNumber}>
-                      <span className="sr-only">Topic station </span>
-                      {unit.station}
-                    </span>
-                    <div>
-                      <h3>{unit.title}</h3>
-                      <p>{unit.summary}</p>
-                    </div>
-                    {allOpened ? (
-                      <span className={styles.stationVisited}>
-                        <Eye aria-hidden="true" /> Every lesson and core case here opened
-                        <span className="sr-only"> on this device; not a record of completion</span>
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className={styles.curriculumChips}>
-                    {unit.lessonIds.map((lessonId) => {
-                      const lesson = baxterCrrtLearnLessonById.get(lessonId)
-                      const visitedLesson = visitedLessons.has(lessonId)
-                      return (
-                        <Link
-                          key={lessonId}
-                          data-visited={visitedLesson}
-                          href={{
-                            pathname: `${baxterCrrtNavBase}/learn`,
-                            query: { lesson: lessonId },
-                          }}
-                        >
-                          <BookOpen aria-hidden="true" />
-                          <span>
-                            Lesson {crrtLessonNumber(lessonId)} · {lesson?.title ?? lessonId}
-                          </span>
-                          {visitedLesson ? <VisitedMarker /> : null}
-                        </Link>
-                      )
-                    })}
-                    {unit.coreCaseIds.map((caseId) => {
-                      const visitedCase = visitedCases.has(caseId)
-                      const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                      return (
-                        <Link
-                          key={caseId}
-                          data-visited={visitedCase}
-                          href={{
-                            pathname: `${baxterCrrtNavBase}/practice`,
-                            query: { case: caseId },
-                          }}
-                        >
-                          <ClipboardList aria-hidden="true" />
-                          <span>
-                            {caseId} · {entry.title}
-                          </span>
-                          {visitedCase ? <VisitedMarker /> : null}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
+          <article className={styles.capstoneCard} data-kind="practice">
+            <ClipboardList aria-hidden="true" />
+            <div>
+              <span>Practice</span>
+              <h3>PrisMax practice cases</h3>
+              <p>
+                {baxterCrrtCoreCaseIds.length} core cases and {baxterCrrtAdditionalCaseIds.length}{' '}
+                additional ones, grouped by topic in the Cases list. Open any case in any order.
+              </p>
+            </div>
+            <Link href={`${baxterCrrtNavBase}/practice`}>Open practice</Link>
+          </article>
 
           <article className={styles.capstoneCard} data-available>
             <GraduationCap aria-hidden="true" />

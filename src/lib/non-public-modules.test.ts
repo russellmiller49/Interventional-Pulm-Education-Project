@@ -5,6 +5,9 @@ import {
   nonPublicModules,
 } from './non-public-modules'
 import { isPublicPath, isPublicUnlistedPath, getRequiredEntitlement } from './site-auth/access'
+import { isDraftModulePath } from './draft-modules'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 describe('non-public module index', () => {
   it('never lists a module as non-public that is publicly indexable', () => {
@@ -36,7 +39,10 @@ describe('non-public module index', () => {
   it('reads access from the site gate rather than recording it', () => {
     // Derived, not stored — so the page cannot claim a level the proxy does not enforce.
     expect(moduleAccessMode('/critical-care')).toBe('direct-link')
+    expect(moduleAccessMode('/literature-atlas')).toBe('direct-link')
     expect(moduleAccessMode('/login')).toBe('public')
+    expect(moduleAccessMode('/terms')).toBe('public')
+    expect(moduleAccessMode('/privacy')).toBe('public')
     expect(moduleAccessMode('/dashboard')).toBe('sign-in')
   })
 })
@@ -46,6 +52,7 @@ describe('beta direct-link access', () => {
     '/preference-cards',
     '/critical-care',
     '/pleural-procedures/pleural-ultrasound-simulator',
+    '/literature-atlas',
   ]
 
   it.each(betaLinkModules)('lets a signed-out beta tester open %s', (path) => {
@@ -53,6 +60,27 @@ describe('beta direct-link access', () => {
     // Public alone is not enough — it must also be unlisted, which is what applies
     // noindex/nofollow/noarchive in the proxy.
     expect(isPublicUnlistedPath(path)).toBe(true)
+  })
+
+  it('opens both synchronized airway cases and the dolphin anatomy model by direct link', () => {
+    for (const path of [
+      '/learn/anatomy/airway',
+      '/learn/anatomy/dolphin-airway',
+      '/learn/anatomy/dolphin',
+    ]) {
+      expect(moduleAccessMode(path)).toBe('direct-link')
+      expect(isDraftModulePath(path)).toBe(false)
+      expect(nonPublicModules.some((entry) => entry.path === path)).toBe(true)
+      // The proxy lets these through, but a layout draft guard would still answer 404 to
+      // everyone but site admins in production, which no dev server shows.
+      const segments = ['src', 'app', '[locale]', ...path.split('/').filter(Boolean)]
+      for (let depth = 3; depth <= segments.length; depth++) {
+        const layout = join(process.cwd(), ...segments.slice(0, depth), 'layout.tsx')
+        if (existsSync(layout)) {
+          expect(readFileSync(layout, 'utf8')).not.toContain('assertDraftModulesEnabled')
+        }
+      }
+    }
   })
 
   it('extends the preference-card bypass to its subroutes', () => {

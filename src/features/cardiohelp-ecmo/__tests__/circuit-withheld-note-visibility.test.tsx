@@ -94,7 +94,7 @@ describe('the withholding note carries its own class', () => {
     expect(note).not.toBeNull()
     expect(note!.className).toBe('circuitWithheldNote')
     expect(note!.className).not.toMatch(/circuitPanHint/)
-    expect(note!.textContent).toMatch(/once you have committed your prediction/i)
+    expect(note!.textContent).toMatch(/hidden until you answer/i)
   })
 
   it('is the only thing that disappears when the placements are disclosed', () => {

@@ -26,7 +26,7 @@ export const MONITOR_TREND_WORDS: Readonly<Record<MonitorTrend, string>> = {
 }
 
 /** The one line under the monitor. A case's values are written for it, not computed. */
-export const MONITOR_BOUNDARY = 'Teaching case. The values are written for this case.'
+export const MONITOR_BOUNDARY = 'Values for this case.'
 
 /** A reading's number as the monitor shows it: "91 %", "118/72 mmHg". */
 export function readingValue(reading: MonitorReading): string | null {

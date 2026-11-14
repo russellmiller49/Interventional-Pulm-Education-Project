@@ -536,7 +536,8 @@ describe('E · teaching copy says what the model does', () => {
     )
   })
 
-  it('S1-5: halving the cardiac output says which value was set and what delivery became', () => {
+  // Revised 2026-10-13: a halving now sets the exact half, so there is no nearest-step note to read.
+  it('S1-5: halving the cardiac output sets exactly half, and delivery halves with it', () => {
     let state = createReferenceSimulationState('vv-reference')
     state = [...steps(8)].reduce(ecmoSimulationReducer, state)
     render(<OxygenDeliveryExplorer state={state} sourceIds={[]} />)
@@ -544,12 +545,15 @@ describe('E · teaching copy says what the model does', () => {
       'aria-valuetext',
       expect.stringContaining('%'),
     )
-    fireEvent.click(screen.getByRole('button', { name: /Halve the cardiac output/i }))
-    expect(document.querySelector('[data-delivery-nearest-step]')?.textContent).toMatch(
-      /nearest step,\s*2\.3.*rather than exactly half/s,
+    fireEvent.change(screen.getByLabelText('Try a comparison'), {
+      target: { value: 'halve-cardiac-output' },
+    })
+    expect(document.querySelector('[data-delivery-nearest-step]')).toBeNull()
+    expect(document.querySelector('[data-delivery-control="cardiacOutput"]')?.textContent).toMatch(
+      /2\.25 L\/min/,
     )
     expect(document.querySelector('[data-delivery-total]')?.parentElement?.textContent).toMatch(
-      /51% of it/,
+      /50% of the starting/,
     )
   })
 

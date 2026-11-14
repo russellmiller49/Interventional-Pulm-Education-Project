@@ -44,7 +44,7 @@ it.each(Object.keys(ecmoDrillSpecs))(
     const prediction = lesson.steps[lesson.predictionStepIndex]
     fireEvent.click(document.querySelector(`[data-step-id="${prediction.id}"] button`)!)
     const before = latestState()
-    fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show answer' }))
     expect(document.querySelector('[data-optional-explanation]')).not.toBeNull()
     expect(latestState().scenario.prediction).toEqual({
       committed: false,
@@ -53,7 +53,7 @@ it.each(Object.keys(ecmoDrillSpecs))(
       direction: null,
     })
     expect(latestState().history).toEqual(before.history)
-    fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
     expect(latestState().scenario.prediction.committed).toBe(false)
     expect(document.querySelector(`[data-step-id="${prediction.id}"]`)).not.toHaveAttribute(
       'data-step-state',

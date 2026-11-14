@@ -119,7 +119,6 @@ function Harness() {
         }
         onLabReset={() => setLab(emptyLabState(labId, baseView.sectionId))}
         controlsEnabled={!locked && !answer && !paused}
-        lockedReason={paused ? undefined : 'Choose your prediction before changing the model.'}
         pausedReason="Reviewing the earlier state."
         spotlightKey={spotlight ? 'depth' : undefined}
         goals={[

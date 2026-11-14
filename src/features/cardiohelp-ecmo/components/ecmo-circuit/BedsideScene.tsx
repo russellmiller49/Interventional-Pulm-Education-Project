@@ -27,6 +27,7 @@ import {
 } from './constants'
 import { drainageChatterActive } from './chatter'
 import { applyBedsidePanFrameRules, lockBedsidePanOnNewInstance } from './panning'
+import { bedsideViewWindow } from './framing'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -152,6 +153,24 @@ export function BedsideScene({
     const instance = controls.current
     if (!instance) return
     applyBedsidePanFrameRules(instance, delta, reduceMotion, interacting.current)
+  })
+
+  /*
+   * The scene fills its canvas.
+   *
+   * `bedsideViewWindow` chooses which part of the authored view the canvas shows, so the bed, the
+   * console and the gas source reach the edges of the pane at any size, with room kept for the
+   * label rails. It is written to the camera here, per frame, because the canvas is resized by its
+   * container (the pane, the full-width view, a window resize) and R3F rewrites the projection on
+   * each resize. Applied only when the size changed.
+   */
+  const fittedTo = useRef('')
+  useFrame(({ camera, size }) => {
+    const key = `${size.width}x${size.height}`
+    if (fittedTo.current === key || !(camera instanceof THREE.PerspectiveCamera)) return
+    fittedTo.current = key
+    const view = bedsideViewWindow(size.width, size.height)
+    camera.setViewOffset(view.fullWidth, view.fullHeight, view.x, view.y, view.width, view.height)
   })
 
   /*

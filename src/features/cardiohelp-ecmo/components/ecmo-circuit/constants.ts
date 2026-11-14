@@ -13,6 +13,22 @@ export const BLENDER_ASSET = `${ASSET_ROOT}/sweep-gas-blender.glb`
 
 export const PATIENT_POSITION: [number, number, number] = [-1.35, -0.405, -0.3]
 export const PATIENT_SCALE = 0.92
+
+/**
+ * Which way the patient's own left points, in the patient model's frame.
+ *
+ * `patient-femoral-access.glb` is authored supine in the runtime frame: head toward −z, feet toward
+ * +z, anterior surface up (+y). It is placed with a positive scale and no rotation. A supine
+ * patient's left is superior × anterior, which here is (0, 0, −1) × (0, 1, 0) = (+1, 0, 0). So the
+ * patient's LEFT is +x and the patient's RIGHT is −x.
+ *
+ * That is the opposite of the viewer's-frame naming the asset scripts use ("x right";
+ * `left_vein` at −x in `scripts/cardiohelp-ecmo/build_fidelity_assets.py`). Reading those names as
+ * anatomy is how ECMO-OWNER-12 came to record the scene and the pressure-zone map as draining from
+ * opposite groins when they drain from the same one. `circuit-map-laterality.test.tsx` checks this
+ * axis against the model file.
+ */
+export const PATIENT_LEFT_AXIS: [number, number, number] = [1, 0, 0]
 export const FLOOR_Y = -0.72
 
 /**

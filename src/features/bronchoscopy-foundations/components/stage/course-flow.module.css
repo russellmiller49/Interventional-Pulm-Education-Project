@@ -121,6 +121,12 @@
 .workspace {
   min-width: 0;
 }
+.sectionEnd {
+  max-width: 65rem;
+  margin: 0 auto 1.5rem;
+  outline: none;
+  scroll-margin-top: var(--bronch-focus-clear-top, 6rem);
+}
 .status {
   padding: 0.8rem 1rem;
   border-left: 3px solid var(--cyan-bright);
@@ -310,6 +316,176 @@
 .sharedAirway figcaption {
   color: var(--muted);
 }
+/* A reading screen with a picture: the text is one column and the figure the other. On a narrow
+ * screen they stack with the figure first, which is also their order in the document. */
+.teachText,
+.teachFigure {
+  display: grid;
+  gap: 1.35rem;
+  min-width: 0;
+}
+.teachText > section {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.teachFigure :global([data-instrument-orientation]) {
+  min-width: 0;
+  background: var(--panel);
+}
+.teachFigure .sharedAirway svg {
+  max-height: min(60vh, 34rem);
+}
+/* Pictures drawn from the 3D airway: one, or a grid of two across, each with its caption. */
+.stills {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.stillsHeading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+.stillsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.stills[data-count='1'] .stillsGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.still {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  min-width: 0;
+  align-content: start;
+}
+.stillButton {
+  display: block;
+  padding: 0;
+  border: 1px solid var(--line, #c9d3d8);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: #0c1824;
+  cursor: zoom-in;
+}
+.stillButton:focus-visible {
+  outline: 3px solid var(--focus, #1d5fd1);
+  outline-offset: 2px;
+}
+.stillButton img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.still figcaption {
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.stillsNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+/* A set of pictures is held to the window's height, so the whole set, captions and note included,
+ * sits above the continuation bar; each picture opens larger when pressed. One picture is as tall
+ * as the window allows; four, in two rows, are narrower still. */
+.teachFigure > .stills[data-count='1'] {
+  max-width: max(18rem, min(38rem, calc((100dvh - 29rem) / 0.75)));
+}
+.teachFigure > .stills[data-count='4'] {
+  max-width: max(21rem, min(38rem, calc((100dvh - 34rem) / 0.75)));
+}
+/* Three pictures go in one row beside the text, and on any short window: a third picture alone on
+ * a second row costs a row's height for one picture. */
+@media (min-width: 1050px), (max-height: 820px) {
+  .stills[data-count='3'] .stillsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .teachFigure > .stills[data-count='3'] {
+    max-width: 38rem;
+  }
+}
+/* On a short window four go in one row too, at the figure's full width. */
+@media (max-height: 820px) {
+  .stills[data-count='4'] .stillsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .teachFigure > .stills[data-count='4'] {
+    max-width: 38rem;
+  }
+}
+.stillLarge {
+  display: block;
+  max-width: 100%;
+  max-height: 78dvh;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+}
+/* A figure is no wider than reads well, and narrower on a short screen, so a 4:3 photograph keeps
+ * its height above the continuation bar on a 768-pixel-high laptop. */
+.teachFigure > *,
+.course[data-course-presentation='illustrated'] .reading > .workspace > * {
+  max-width: min(38rem, max(20rem, calc((100dvh - 23rem) * 1.25)));
+}
+@media (min-width: 1050px) {
+  .reading:has(> .teaching[data-teach-layout='paired']),
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) {
+    max-width: 84rem;
+  }
+  .teaching[data-teach-layout='paired'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-areas: 'text figure';
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  .teachText {
+    grid-area: text;
+  }
+  .teachFigure {
+    grid-area: figure;
+    position: sticky;
+    top: var(--bronch-focus-clear-top, 6rem);
+  }
+  /* The section's own picture arrives in the workspace slot; it takes the same right-hand place. */
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  .course[data-course-presentation='illustrated'] .reading:has(> .workspace) > * {
+    grid-column: 1;
+  }
+  .course[data-course-presentation='illustrated'] .reading > .workspace {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: var(--bronch-focus-clear-top, 6rem);
+  }
+}
+/* The shared instrument lab draws with the site's theme tokens (HSL triplets read as
+   `hsl(var(--token))`). Here they point at this course's dark palette — panel, line, ink, muted and
+   the bright cyan — so the lab matches the page whichever theme the site is in. Its two drawings
+   keep their own white panels. The module shell sets `--muted` to a hex colour for its own text,
+   which `hsl(var(--muted))` cannot read; inside the lab it is the triplet again. */
+.instrumentLab {
+  --foreground: 180 31% 94%;
+  --card: 191 46% 12%;
+  --border: 188 25% 32%;
+  --primary: 182 69% 67%;
+  --primary-foreground: 187 70% 11%;
+  --muted: 190 43% 16%;
+  --muted-foreground: 188 14% 67%;
+  min-width: 0;
+  color: var(--ink);
+}
 .storageFailure {
   padding: 1rem;
   border: 2px solid var(--amber);
@@ -366,6 +542,108 @@
   .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
 ) {
   scroll-padding-bottom: 1rem;
+}
+/* A scope task on a laptop or wider: the text, the goals and the way on are the left column, and
+ * the scope with its controls is the right column, starting at the top of the lesson so the view,
+ * the goal and the controls are on screen together. The document order is unchanged (heading, way
+ * on, scope, text), which is also the order on a narrow screen. */
+@media (min-width: 1050px) {
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection']) .lesson {
+    display: grid;
+    grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+    grid-template-areas:
+      'head work'
+      'bar work'
+      'coach work';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 1.75rem;
+    align-items: start;
+    padding-top: 1rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .taskHeading {
+    grid-area: head;
+    margin-bottom: 0.9rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .taskHeading
+    h2 {
+    font-size: 1.45rem;
+    margin: 0.25rem 0 0.5rem;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation {
+    grid-area: bar;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    p {
+    text-align: left;
+  }
+  /* Back and the ways on share one wrapping row in the narrow column. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    .actions {
+    justify-content: flex-start;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .continuation
+    .forward {
+    display: contents;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .skillGrid {
+    display: contents;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace {
+    grid-area: work;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .coaching {
+    grid-area: coach;
+    border-left: 0;
+    padding-left: 0;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .sectionEnd {
+    grid-column: 1 / -1;
+  }
+  /* The caption line above the scope already says where the tip is; the row of level names under
+   * it repeats that and costs a row of height above the view. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-spine-strip]) {
+    display: none;
+  }
+  /* The opening-names switch shares the caption's line, at its right end, and does not take a row
+   * of its own. That row is what keeps the controls on screen at 768 pixels high once the scope
+   * prints a message under the view. */
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(:global([data-location-caption])) {
+    position: relative;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(:global([data-location-caption]))
+    > :global([data-reference-labels-control]) {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .course:is([data-course-presentation='skill'], [data-course-presentation='inspection'])
+    .workspace
+    :global([data-scope-scene]):has(> :global([data-reference-labels-control]))
+    :global([data-location-caption]) {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    margin: 0;
+    padding-right: 13rem;
+  }
 }
 @media (max-width: 650px) {
   .lesson {

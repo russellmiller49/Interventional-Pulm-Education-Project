@@ -17,7 +17,6 @@ import { section as systematicSurvey } from './systematic-survey'
 import { section as ventilatedPatient } from './ventilated-patient'
 import { section as viewLoss } from './view-loss'
 import { section as washingAndLavage } from './washing-and-lavage'
-import { section as whatCompletionMeans } from './what-completion-means'
 
 /**
  * The section registry: every authored section, in the canonical order of `sectionIds.ts`,
@@ -41,7 +40,6 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   deterioration,
   bleedingPriorities,
   ventilatedPatient,
-  whatCompletionMeans,
 ]
 
 const registryErrors = [

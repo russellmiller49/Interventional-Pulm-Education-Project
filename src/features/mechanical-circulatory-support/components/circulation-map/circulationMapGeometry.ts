@@ -155,6 +155,12 @@ export interface McsMapPathwayShape {
   readonly componentAt: { readonly x: number; readonly y: number }
   readonly inletAt?: { readonly x: number; readonly y: number }
   readonly outletAt?: { readonly x: number; readonly y: number }
+  /**
+   * The blood the device moves: `venous` before the lungs (the map's blue limb), `arterial` after
+   * them (its red limb). The inlet and outlet marks are drawn in that colour. A device that moves
+   * no blood (the balloon) has neither mark and no entry.
+   */
+  readonly blood?: 'venous' | 'arterial'
 }
 
 /*
@@ -177,6 +183,7 @@ export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
     componentAt: { x: RIGHT_X, y: 340 },
     inletAt: { x: RIGHT_X, y: 292 },
     outletAt: { x: RIGHT_X, y: 398 },
+    blood: 'arterial',
   },
   {
     id: 'right-pump',
@@ -185,6 +192,7 @@ export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
     componentAt: { x: 96, y: 330 },
     inletAt: { x: LEFT_X - 4, y: 496 },
     outletAt: { x: LEFT_X - 4, y: 150 },
+    blood: 'venous',
   },
   {
     id: 'durable-pump',
@@ -193,6 +201,7 @@ export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
     componentAt: { x: 946, y: 354 },
     inletAt: { x: RIGHT_X + 46, y: 316 },
     outletAt: { x: RIGHT_X + 4, y: 392 },
+    blood: 'arterial',
   },
 ]
 

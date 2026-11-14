@@ -21,6 +21,12 @@ const ROUTE_FOR_TARGET: Readonly<Record<string, string>> = {
   'l-inferior-lingula': 'left-lingula',
   'l-superior': 'left-lower-returning',
   'l-lateral-basal': 'left-lower-basal',
+  // Added November 2026: the segments that had no lesion and whose routes lie in the shipped CT.
+  'r-posterior': 'right-upper-posterior',
+  'r-superior': 'right-lower-superior',
+  'r-lateral-basal': 'right-lower-lateral-basal',
+  'l-superior-lingula': 'left-lingula-superior',
+  'l-posterior-basal': 'left-lower-posterior-basal',
 }
 
 export interface LobeGroup {
@@ -36,6 +42,12 @@ const LOBES: { lobe: string; segments: string[] }[] = [
 ]
 
 export const targetById = (id: string) => CT_TARGETS.find((target) => target.id === id)
+/** "Right upper lobe": the lobe a lesion is in, said where its segment is not yet to be named. */
+export function lobeOf(target: CtNoduleTarget): string {
+  const lobe = LOBES.find((l) => l.segments.includes(target.segment.code))
+  if (!lobe) throw new Error(`No lobe listed for segment ${target.segment.code}`)
+  return lobe.lobe
+}
 export function traceForTarget(targetId: string): CtTrace {
   const traceId = ROUTE_FOR_TARGET[targetId]
   if (!traceId) throw new Error(`No route is named for lesion ${targetId}`)

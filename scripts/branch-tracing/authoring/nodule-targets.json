@@ -132,6 +132,56 @@
         "bronchusCode": "LB9"
       },
       "approachCode": "LB9"
+    },
+    {
+      "id": "r-posterior",
+      "terminalEdgeId": 111,
+      "segment": {
+        "code": "RS2",
+        "name": "Right posterior segment",
+        "bronchusCode": "RB2"
+      },
+      "approachCode": "RB2"
+    },
+    {
+      "id": "r-superior",
+      "terminalEdgeId": 150,
+      "segment": {
+        "code": "RS6",
+        "name": "Right lower lobe superior segment",
+        "bronchusCode": "RB6"
+      },
+      "approachCode": "RB6"
+    },
+    {
+      "id": "l-superior-lingula",
+      "terminalEdgeId": 258,
+      "segment": {
+        "code": "LS4",
+        "name": "Left superior lingular segment",
+        "bronchusCode": "LB4"
+      },
+      "approachCode": "LB4"
+    },
+    {
+      "id": "l-posterior-basal",
+      "terminalEdgeId": 107,
+      "segment": {
+        "code": "LS10",
+        "name": "Left posterior basal segment",
+        "bronchusCode": "LB10"
+      },
+      "approachCode": "LB10"
+    },
+    {
+      "id": "r-lateral-basal",
+      "terminalEdgeId": 325,
+      "segment": {
+        "code": "RS9",
+        "name": "Right lateral basal segment",
+        "bronchusCode": "RB9"
+      },
+      "approachCode": "RB9"
     }
   ],
   "traceTargets": {
@@ -151,6 +201,11 @@
     "left-lingula": "l-inferior-lingula",
     "left-lower-returning": "l-superior",
     "right-lower-basal": "r-anterior-basal",
-    "left-lower-basal": "l-lateral-basal"
+    "left-lower-basal": "l-lateral-basal",
+    "right-upper-posterior": "r-posterior",
+    "right-lower-superior": "r-superior",
+    "left-lingula-superior": "l-superior-lingula",
+    "left-lower-posterior-basal": "l-posterior-basal",
+    "right-lower-lateral-basal": "r-lateral-basal"
   }
 }

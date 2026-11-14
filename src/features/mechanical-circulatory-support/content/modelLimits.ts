@@ -1,6 +1,9 @@
-/** What the simulator is, stated once: on the hub and on the closing screen. */
+/** What the simulator is: stated by the frame on every page, and in full on a closing screen. */
 
-/** The module's one boundary statement. Shown on the hub, the module frame and the closing screen. */
+/**
+ * The module's boundary statement, in full, for a section's closing screen. The module frame carries
+ * the same statement, in short, as its closed "Teaching simulator" disclosure.
+ */
 export const MCS_TEACHING_SIMULATOR_STATEMENT =
   'This is a teaching simulator. Its numbers come from a model of the circulation, not from a patient or a real console. At the bedside, work from the patient, the device in front of you and its instructions for use.'
 

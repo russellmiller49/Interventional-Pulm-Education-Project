@@ -10,6 +10,11 @@ import {
 import { CRRT_SIMULATED_ALERT_BOUNDARY, crrtSimulatedAlertLabel } from '../content/alertLabels'
 import { crrtHardwareFunctionTeaching } from '../content/operationalLessons'
 import { crrtDeliveryStateWords } from '../content/stateLabels'
+import {
+  CRRT_FILTRATION_FRACTION_SHORT_NAME,
+  formatCrrtFiltrationFraction,
+} from '../content/filtrationFraction'
+import { selectCrrtFiltrationFraction } from '../engine/circuitDelivery'
 import { totalExternalInputRateMlHour, totalExternalOutputRateMlHour } from '../engine/fluidModel'
 import type { CrrtLearnEvidence } from '../learnEvidence'
 import {
@@ -76,87 +81,98 @@ export function CrrtOperationalTool({
         <FluidChart run={run} missingUrine={task.operation === 'missing-chart'} />
       ) : (
         <>
-          <PatientAndDelivery run={run} />
-          {command ? (
-            <div className={styles.observation}>
-              <p>{command.explanation}</p>
-              <button type="button" onClick={() => onAction({ type: 'command', id: command.id })}>
-                {command.label}
-              </button>
-            </div>
-          ) : null}
-          {response && run.id !== 'workflow' && run.id !== 'delivery' ? (
-            <p role="status" className={styles.observation}>
-              {response}
-            </p>
-          ) : null}
-          {task.operation === 'setup' ? (
-            <>
-              <p className={styles.caption}>
-                Enter → review/apply → complete modeled preparation → start. End treatment and
-                reload are outside this task; use Restart lesson to begin again.
+          {/* Four parts in reading order. They are plain groups (no box of their own) except in
+              a lesson's picture pane, which leads with the action and the instrument it changes
+              (`crrt-foundations.module.css`). */}
+          <div className={styles.runPart} data-run-part="summary">
+            <PatientAndDelivery run={run} />
+          </div>
+          <div className={styles.runPart} data-run-part="action">
+            {command ? (
+              <div className={styles.observation}>
+                <p>{command.explanation}</p>
+                <button type="button" onClick={() => onAction({ type: 'command', id: command.id })}>
+                  {command.label}
+                </button>
+              </div>
+            ) : null}
+            {response && run.id !== 'workflow' && run.id !== 'delivery' ? (
+              <p role="status" className={styles.observation}>
+                {response}
               </p>
-              {simulation.device.deliveryState !== 'running' ? (
-                <PrismaxPilotInterface
-                  presentation="guided-setup"
-                  caseContext={{
-                    caseId: session.caseDefinition.id,
-                    title: 'CVVHD setup with an 80 kg patient',
-                    pathway: 'learn',
-                  }}
-                  state={session.interfaceState}
-                  dispatch={(action) => onAction({ type: 'device', action })}
-                  operationsDisplay={operations}
-                />
-              ) : (
-                <p role="status" className={styles.observation}>
-                  The modeled treatment has started. The applied settings are shown above; no
-                  observation time or delivery volume has yet accumulated. Continue to record the
-                  normal reference.
+            ) : null}
+          </div>
+          <div className={styles.runPart} data-run-part="instrument">
+            {task.operation === 'setup' ? (
+              <>
+                <p className={styles.caption}>
+                  Enter → review/apply → complete modeled preparation → start. End treatment and
+                  reload are outside this task; use Restart lesson to begin again.
                 </p>
-              )}
-            </>
-          ) : null}
-          {showPressures ? (
-            <>
-              <CrrtLivePressureDevice
-                operations={operations}
-                selectedSignalId={selected}
-                onSelectSignal={setSelected}
-              >
-                <CrrtPilotCircuit
-                  bloodFlow={operations.treatmentContext.bloodFlow}
-                  presentation="live-focused"
-                  overlayId="cvvhd"
-                  running={simulation.device.bloodPumpRunning}
-                  setReady={
-                    simulation.access.status === 'configured' &&
-                    simulation.access.accessConnected &&
-                    simulation.access.returnConnected
-                  }
-                  fluidsReady={simulation.circuit.bags.every((b) => b.connected && !b.scaleOpen)}
-                  bloodFlowMlMin={operations.flows?.bloodFlowMlMin ?? null}
-                  dialysateFlowMlHour={operations.flows?.dialysateFlowMlHour ?? null}
-                  patientFluidRemovalMlHour={operations.flows?.patientFluidRemovalMlHour ?? null}
-                  flows={operations.flows}
-                  highlightedSignalId={selected}
-                  pressure={{
-                    access: operations.pressures.accessPressureMmHg,
-                    filter: operations.pressures.filterPressureMmHg,
-                    return: operations.pressures.returnPressureMmHg,
-                    effluent: operations.pressures.effluentPressureMmHg,
-                    TMP: operations.pressures.transmembranePressureMmHg,
-                    filterDrop: operations.pressures.filterPressureDropMmHg,
-                  }}
-                />
-              </CrrtLivePressureDevice>
-              {run.id === 'access' ? <AlarmRecord run={run} /> : null}
-            </>
-          ) : null}
-          {task.operation === 'net-change' || task.operation === 'net-observe' ? (
-            <NetRemovalComparison run={run} />
-          ) : null}
-          {task.operation !== 'setup' ? <DeliveryTimeline run={run} /> : null}
+                {simulation.device.deliveryState !== 'running' ? (
+                  <PrismaxPilotInterface
+                    presentation="guided-setup"
+                    caseContext={{
+                      caseId: session.caseDefinition.id,
+                      title: 'CVVHD setup with an 80 kg patient',
+                      pathway: 'learn',
+                    }}
+                    state={session.interfaceState}
+                    dispatch={(action) => onAction({ type: 'device', action })}
+                    operationsDisplay={operations}
+                  />
+                ) : (
+                  <p role="status" className={styles.observation}>
+                    The modeled treatment has started. The applied settings are shown above; no
+                    observation time or delivery volume has yet accumulated. Continue to record the
+                    normal reference.
+                  </p>
+                )}
+              </>
+            ) : null}
+            {showPressures ? (
+              <>
+                <CrrtLivePressureDevice
+                  operations={operations}
+                  selectedSignalId={selected}
+                  onSelectSignal={setSelected}
+                >
+                  <CrrtPilotCircuit
+                    bloodFlow={operations.treatmentContext.bloodFlow}
+                    presentation="live-focused"
+                    overlayId="cvvhd"
+                    running={simulation.device.bloodPumpRunning}
+                    setReady={
+                      simulation.access.status === 'configured' &&
+                      simulation.access.accessConnected &&
+                      simulation.access.returnConnected
+                    }
+                    fluidsReady={simulation.circuit.bags.every((b) => b.connected && !b.scaleOpen)}
+                    bloodFlowMlMin={operations.flows?.bloodFlowMlMin ?? null}
+                    dialysateFlowMlHour={operations.flows?.dialysateFlowMlHour ?? null}
+                    patientFluidRemovalMlHour={operations.flows?.patientFluidRemovalMlHour ?? null}
+                    flows={operations.flows}
+                    highlightedSignalId={selected}
+                    pressure={{
+                      access: operations.pressures.accessPressureMmHg,
+                      filter: operations.pressures.filterPressureMmHg,
+                      return: operations.pressures.returnPressureMmHg,
+                      effluent: operations.pressures.effluentPressureMmHg,
+                      TMP: operations.pressures.transmembranePressureMmHg,
+                      filterDrop: operations.pressures.filterPressureDropMmHg,
+                    }}
+                  />
+                </CrrtLivePressureDevice>
+              </>
+            ) : null}
+          </div>
+          <div className={styles.runPart} data-run-part="record">
+            {showPressures && run.id === 'access' ? <AlarmRecord run={run} /> : null}
+            {task.operation === 'net-change' || task.operation === 'net-observe' ? (
+              <NetRemovalComparison run={run} />
+            ) : null}
+            {task.operation !== 'setup' ? <DeliveryTimeline run={run} /> : null}
+          </div>
         </>
       )}
     </section>
@@ -203,6 +219,7 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
   const therapy = s.deliveredTherapy
   const f = display.flows
   const rates = s.scenario.externalFluidRates
+  const filtration = selectCrrtFiltrationFraction(s)
   return (
     <>
       {run.id === 'access' || run.id === 'fluid' ? (
@@ -241,6 +258,14 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
         <div>
           <dt>Applied patient fluid removal</dt>
           <dd>{number(f?.patientFluidRemovalMlHour ?? null)} mL/h</dd>
+        </div>
+        <div data-crrt-filtration-fraction={filtration.status}>
+          <dt>{CRRT_FILTRATION_FRACTION_SHORT_NAME}</dt>
+          <dd>
+            {filtration.fraction === null
+              ? filtration.reason
+              : formatCrrtFiltrationFraction(filtration.fraction)}
+          </dd>
         </div>
         <div>
           <dt>Modeled pumps</dt>

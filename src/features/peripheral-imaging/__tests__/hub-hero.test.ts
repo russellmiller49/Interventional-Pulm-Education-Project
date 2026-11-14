@@ -9,7 +9,12 @@ import { PerspectiveCamera, Vector3 } from 'three'
 import { ROOM_FIXTURE, ROOM_HERO } from '../../../../scripts/peripheral-imaging/room-fixture'
 import { cameraPose } from '../components/suite/cameraPose'
 import { roomBounds } from '../components/suite/Room'
-import { chainStopAnchors, roomMonitorOffset, suiteFrame } from '../components/suite/suiteModel'
+import {
+  chainStopAnchors,
+  roomMonitorOffset,
+  suiteFrame,
+  toScene,
+} from '../components/suite/suiteModel'
 import { resolveSuiteInputs } from '../components/suite/suiteViewSpec'
 
 describe('the hub picture', () => {
@@ -51,16 +56,17 @@ describe('the hub picture', () => {
       monitorOffset,
     })
     const camera = new PerspectiveCamera(42, ROOM_HERO.width / ROOM_HERO.height, 1, 12000)
-    camera.position.set(...pose.position)
-    camera.up.set(...pose.up)
-    camera.lookAt(...pose.target)
+    // The pose and the anchors are in the patient frame; the picture is drawn in the renderer's.
+    camera.position.set(...toScene(pose.position))
+    camera.up.set(...toScene(pose.up))
+    camera.lookAt(...toScene(pose.target))
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
     expect(ROOM_HERO.width).toBe(IMAGING_HUB_HERO.width)
     expect(ROOM_HERO.height).toBe(IMAGING_HUB_HERO.height)
     const anchors = chainStopAnchors(frame, monitorOffset)
     for (const stop of CHAIN_STOPS) {
-      const point = new Vector3(...anchors[stop.id]).project(camera)
+      const point = new Vector3(...toScene(anchors[stop.id])).project(camera)
       const [x, y] = IMAGING_HUB_HERO.anchors[stop.id]
       expect(Math.abs(((point.x + 1) / 2) * 100 - x)).toBeLessThan(0.1)
       expect(Math.abs(((1 - point.y) / 2) * 100 - y)).toBeLessThan(0.1)

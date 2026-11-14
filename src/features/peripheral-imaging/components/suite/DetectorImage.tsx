@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useThree } from '@react-three/fiber'
-import { BufferGeometry, Float32BufferAttribute } from 'three'
+import { BufferGeometry, DoubleSide, Float32BufferAttribute, FrontSide } from 'three'
 import { type Point3 } from '../../lib/physics'
 import type { DrrTextureSource } from './drrTextureSource'
 
@@ -17,9 +17,15 @@ export interface DetectorQuadFrame {
 export function DetectorImage({
   frame,
   source,
+  doubleSided = false,
+  idle = '#263b4a',
 }: {
   frame: DetectorQuadFrame
   source: DrrTextureSource | null
+  /** For a screen that is read from the side its axes face away from. */
+  doubleSided?: boolean
+  /** What the surface shows while there is no image. */
+  idle?: string
 }) {
   const invalidate = useThree((state) => state.invalidate)
   const [ready, setReady] = useState(source?.state === 'ready')
@@ -52,7 +58,8 @@ export function DetectorImage({
     <mesh geometry={geometry}>
       <meshBasicMaterial
         map={ready && source ? source.texture : null}
-        color={ready ? '#ffffff' : '#263b4a'}
+        color={ready ? '#ffffff' : idle}
+        side={doubleSided ? DoubleSide : FrontSide}
         toneMapped={false}
       />
     </mesh>

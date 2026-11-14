@@ -11,6 +11,11 @@
 .panel {
   color-scheme: dark;
   display: grid;
+  /*
+   * One column that takes the width it is given. Left to size itself, the column grew to its
+   * widest child (612 px in the oxygenation panel) and the text pane clipped the rest.
+   */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.7rem;
   align-content: start;
   padding: 0.8rem;
@@ -1074,6 +1079,12 @@
 
 .referenceValues {
   display: grid;
+  /*
+   * The card keeps the width it is given, so the PEEP and FiO2 tables scroll inside
+   * `.peepTableScroll` as intended. Sized by its content, the card grew to the tables' 589 px and
+   * the text pane cut off the goal values beside it.
+   */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.4rem;
   padding: 0.55rem 0.65rem;
   border: 1px solid #3d6a72;

@@ -202,11 +202,13 @@ export function CaseContentEditor({
         )}
         <h3>Annotation / color key</h3>
         <p className={styles.fieldHint}>
-          This key explains the provider’s existing color image. It does not create, recolor or
-          classify pixels and is separate from drawing teaching regions. Add an entry, enter its
-          provider-approved label and exact #RRGGBB color, then add the reviewed meaning. Repeat for
-          each relevant entry. Check the actual provider mapping before marking the key reviewed.
-          Save the draft and inspect Preview teaching view; publication is separate.
+          UCSD Slide Viewer slides show the provider’s tissue key automatically when no custom
+          entries are added. This key explains the provider’s existing color image. It does not
+          create, recolor or classify pixels and is separate from drawing teaching regions. Add an
+          entry, enter its provider-approved label and exact #RRGGBB color, then add the reviewed
+          meaning. Repeat for each relevant entry. Check the actual provider mapping before marking
+          the key reviewed. Save the draft and inspect Preview teaching view; publication is
+          separate.
         </p>
         {content.annotationLegend.entries.map((entry, index) => (
           <fieldset key={index}>

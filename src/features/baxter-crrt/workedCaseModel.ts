@@ -7,6 +7,7 @@ import {
   type CrrtLearningExperience,
   type CrrtLearningSessionState,
 } from './engine/learningSession'
+import { selectCrrtFiltrationFraction } from './engine/circuitDelivery'
 import { accessDysfunctionFraction } from './engine/simulation'
 import type { CrrtSimulationState } from './engine/types'
 import {
@@ -39,6 +40,7 @@ export const crrtWorkedSignalIds = [
   'filter-drop',
   'urea-marker',
   'hematocrit',
+  'filtration-fraction',
 ] as const
 
 export type CrrtWorkedSignalId = (typeof crrtWorkedSignalIds)[number]
@@ -66,6 +68,7 @@ export const crrtWorkedSignals: Readonly<Record<CrrtWorkedSignalId, CrrtWorkedSi
     'filter-drop': { label: 'Filter pressure drop', unit: 'mmHg', decimals: 1 },
     'urea-marker': { label: 'Small-solute marker', unit: 'mmol/L', decimals: 1 },
     hematocrit: { label: 'Hematocrit', unit: '%', decimals: 0 },
+    'filtration-fraction': { label: 'Filtration fraction (estimate)', unit: '%', decimals: 1 },
   })
 
 export interface CrrtWorkedSnapshot {
@@ -99,6 +102,10 @@ export function snapshotCrrtWorkedSignals(state: CrrtSimulationState): CrrtWorke
     'filter-drop': finiteOrNull(pressures.prismaxFilterPressureDropMmHg),
     'urea-marker': finiteOrNull(patient?.solutes['urea-marker']?.concentrationPerLiter),
     hematocrit: patient ? patient.hematocritFraction * 100 : null,
+    // The fraction the circuit is working at now, from the flows; null while nothing is filtered.
+    'filtration-fraction': ((fraction) => (fraction === null ? null : fraction * 100))(
+      selectCrrtFiltrationFraction(state).fraction,
+    ),
   }
   return Object.freeze({
     timeSeconds: state.simulationTimeSeconds,
@@ -412,10 +419,12 @@ export function selectCrrtWorkedFilterTerms(
   state: CrrtSimulationState,
 ): CrrtWorkedFilterTerms | null {
   const parameters = state.scenario.modelConfiguration.filter
-  const filtrationFraction = state.scenario.modelConfiguration.filtrationFraction
+  // The scenario's switch for carrying the quantity; the value itself comes from the flows.
+  const carried = state.scenario.modelConfiguration.filtrationFraction
+  const filtrationFraction = Math.min(1, selectCrrtFiltrationFraction(state).fraction ?? 0)
   if (
     !parameters ||
-    filtrationFraction === null ||
+    carried === null ||
     state.patient.status !== 'configured' ||
     state.access.status !== 'configured' ||
     state.prescription.status !== 'configured'

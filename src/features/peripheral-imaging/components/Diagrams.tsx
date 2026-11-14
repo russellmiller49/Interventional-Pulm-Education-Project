@@ -51,10 +51,9 @@ export function MPR({
         role="img"
         aria-label={
           plane +
-          ' CT context with analytic teaching ' +
-          (slab ? 'slab' : 'slice at ' + position + ' millimeters') +
+          (slab ? ' thick slab' : ' plane at ' + position + ' millimeters') +
           '. ' +
-          (radius ? 'Target cross-section visible. ' : 'Target not intersected. ') +
+          (radius ? 'Lesion cross-section visible. ' : 'Lesion not in this plane. ') +
           (shaftVisible || windowVisible
             ? 'Tool section visible.'
             : 'Tool is outside this thin section.')

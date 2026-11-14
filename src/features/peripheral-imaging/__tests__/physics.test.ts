@@ -6,6 +6,7 @@ import {
   kapMicroGyM2,
   projectPoint,
   projectToDetector,
+  rollAboutLongAxis,
   toolTipForDepth,
   LESION_CENTER,
   type Point3,
@@ -112,5 +113,30 @@ describe('dimensioned teaching arithmetic', () => {
     expect(kapGyCm2(12, 100)).toBe(1.2)
     expect(kapMicroGyM2(1)).toBe(100)
     expect(kapMicroGyM2(25)).toBe(2500)
+  })
+})
+
+describe('a wedge under the patient is a change of obliquity', () => {
+  it('projects a rolled point at an obliquity exactly as the unrolled point at that obliquity less the roll', () => {
+    const points: Point3[] = [LESION_CENTER, [0, -100, 40], [-120, 60, -80], [150, -130, 120]]
+    for (const point of points)
+      for (const wedge of [15, 30, -20])
+        for (const [orbit, tilt] of [
+          [0, 0],
+          [25, 0],
+          [-40, 12],
+          [10, -20],
+        ]) {
+          const rolled = projectToDetector(rollAboutLongAxis(point, wedge), orbit, tilt)
+          const viewed = projectToDetector(point, orbit - wedge, tilt)
+          expect(rolled[0]).toBeCloseTo(viewed[0], 9)
+          expect(rolled[1]).toBeCloseTo(viewed[1], 9)
+        }
+  })
+
+  it('lifts the patient’s left side for a positive wedge', () => {
+    const [, y] = rollAboutLongAxis([100, 0, 0], 30)
+    expect(y).toBeGreaterThan(0)
+    expect(rollAboutLongAxis([0, 0, 50], 30)[2]).toBe(50)
   })
 })

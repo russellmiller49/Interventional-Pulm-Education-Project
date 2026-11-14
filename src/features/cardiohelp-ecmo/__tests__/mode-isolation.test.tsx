@@ -217,7 +217,13 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 
-    expect(screen.getByText(/femoral artery → arterial circulation/i)).toBeInTheDocument()
+    // The cannulation is drawn and named on the map itself; the boxed configuration line beside
+    // the heading went in 2026-10-23 (its sentence now opens the circuit walk).
+    expect(svgLabel('RETURN LIMB · POSITIVE PRESSURE · TO FEMORAL ARTERY')).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: /VA ECMO femoral-femoral circuit schematic/i }),
+    ).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/femoral-femoral configuration/i)
     expect(svgLabel('MIXING REGION VARIES')).toBeInTheDocument()
     expect(svgLabel('DISTAL LIMB CHECK')).toBeInTheDocument()
     expect(

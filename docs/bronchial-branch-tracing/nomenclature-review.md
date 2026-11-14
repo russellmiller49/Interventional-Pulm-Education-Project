@@ -43,6 +43,25 @@ The owner explicitly requested named airway segments in place of CT level number
 
 The route breadcrumb also retains intermediate named bronchi that fall between sampled checkpoints. Clinical accuracy grading, mucosal ostial labels and new-patient validation remain outside this ungraded preview. Named targets do not reveal the reference lumen coordinates before the existing submission boundary.
 
+## Added November 10, 2026: five routes in segments that had no lesion
+
+| Trace                      | Source edges sampled | Checkpoint sequence                                 |
+| -------------------------- | -------------------- | --------------------------------------------------- |
+| right-upper-posterior      | 12, 26, 55, 111      | RB2 (proximal) → RB2 (midportion) → RB2 (distal)    |
+| right-lower-superior       | 17, 37, 78, 150      | RB6 (proximal) → RB6 (midportion) → RB6 (distal)    |
+| left-lingula-superior      | 42, 88, 166, 258     | LB4 (proximal) → LB4 (midportion) → LB4 (distal)    |
+| left-lower-posterior-basal | 25, 53, 107          | LB10 (proximal) → LB10 (midportion) → LB10 (distal) |
+| right-lower-lateral-basal  | 137, 223, 325        | RB9 (proximal) → RB9 (midportion) → RB9 (distal)    |
+
+Every one of these edges already carried its segment's label in the labelled case (`centerline_labels.json`); the annotator checks each against that label. The first edge of each chain is recorded with the same basis as the other existing labels, and the edges after it keep the segment's label with no a/b/c or finer suffix assigned. No name was inferred from graph depth, edge order or screen position, and no new anatomical judgement was made.
+
+Two things follow that a reader should know:
+
+- **Four fork daughters on older routes changed their displayed name.** RB2, RB6, LB4 and LB10 were already shown as the branch not taken at a fork on existing routes, under the labelled case's own wording ("Right Upper Lobe Posterior segmental bronchus"). They now have authored names in the same form as the rest ("Right posterior segmental bronchus"). Their codes did not change.
+- **Edge 72 has no label in the source and none was authored.** The RB9 route passes through it, between the basal bronchus and the fork that gives off RB9 and RB10. It inherits "R basal" from its parent, as the build script does for any unlabelled continuation.
+
+These five names have not had the owner's read.
+
 ## Reproduction
 
 Run `python3 scripts/branch-tracing/label_native_traces.py` from this worktree. The Slicer export uses the same annotator. Clinical naming decisions are explicit in `scripts/branch-tracing/authoring/airway-nomenclature.json`; they are not generated from graph depth or CT slice indices.

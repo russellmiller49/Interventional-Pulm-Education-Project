@@ -23,7 +23,7 @@ it.each(mcsStageLessonIds)(
   (id) => {
     mountSection(id, 'predict')
     expect(nowPrimary()).toBeEnabled()
-    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show explanation' }))
+    fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show answer' }))
     expect(document.querySelector('[data-provided-explanation]')).toBeInTheDocument()
     expect(document.querySelector('[data-verdict]')).toBeNull()
     expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
@@ -34,11 +34,19 @@ it.each(mcsStageLessonIds)(
 )
 it.each(mcsStageLessonIds)('%s offers all supported controls before answering', (id) => {
   mountSection(id, 'predict')
-  fireEvent.click(screen.getByRole('button', { name: 'Explore all supported controls' }))
-  expect(screen.getByRole('slider', { name: 'Preload' })).toBeEnabled()
-  expect(
-    screen.getByRole('button', { name: 'Observe and capture 8 simulated seconds' }),
-  ).toBeEnabled()
+  // Every control the device has sits with the simulator, closed until asked for: several of its
+  // labels name a section's answer.
+  const exploration = document.querySelector<HTMLElement>(
+    '[data-mcs-visual] [data-full-exploration]',
+  )
+  expect(exploration).not.toBeNull()
+  const toggle = within(exploration!).getByRole('button', { name: 'All device controls' })
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(within(exploration!).queryByRole('slider', { name: 'Preload' })).toBeNull()
+  fireEvent.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  expect(within(exploration!).getByRole('slider', { name: 'Preload' })).toBeEnabled()
+  expect(within(exploration!).getByRole('button', { name: 'Run 8 s and capture' })).toBeEnabled()
   expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
 })
 it.each(mcsStageLessonIds)('%s never calls a skipped experiment a captured observation', (id) => {
@@ -53,9 +61,11 @@ it('opens an unvisited earlier task as fresh exploration from a transfer deep li
   mountSection(id, 'transfer')
   const lesson = buildMcsStageLesson(id)
   const step = lesson.steps.find((step) => step.interaction.kind === 'action')!
-  const map = screen.getByRole('list', { name: 'All lesson tasks' })
+  const map = document.querySelector<HTMLElement>('[data-step-list]')!
   fireEvent.click(within(map).getByRole('button', { name: new RegExp(step.title) }))
-  expect(document.querySelector('[data-session-identity]')).not.toHaveTextContent('Captured review')
+  // Fresh exploration, not a look back: the circulation runs and nothing says "as you left it".
+  expect(document.querySelector('[data-clock-bar]')).not.toHaveAttribute('data-clock-state', 'held')
+  expect(document.querySelector('[data-now-status]')?.textContent ?? '').toBe('')
   expect(screen.getByRole('slider', { name: 'Inflation vs notch' })).toBeEnabled()
   expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)
   fireEvent.change(screen.getByRole('slider', { name: 'Inflation vs notch' }), {

@@ -222,6 +222,19 @@ export const SOURCES: Source[] = [
     limitation:
       'Dose estimation requires geometry and corrections; this module does not estimate individual skin dose.',
   },
+  {
+    id: 'chassagnon',
+    authors: 'Chassagnon G, Morel B, Carpentier E, Ducou Le Pointe H, Sirinelli D.',
+    title: 'Tracheobronchial branching abnormalities: lobe-based classification scheme.',
+    publication: 'Radiographics. 36:358–373.',
+    year: 2016,
+    url: 'https://doi.org/10.1148/rg.2016150115',
+    kind: 'Technical review',
+    supports:
+      'The segmental bronchial nomenclature in common use, and the branching variants a bronchoscopist should expect.',
+    limitation:
+      'A radiology review of branching anomalies on CT. It does not address fluoroscopic projection: where each bronchus runs in this course is measured on the course’s own CT.',
+  },
 ]
 
 export const SOURCE_BY_ID: ReadonlyMap<SourceId, Source> = new Map(

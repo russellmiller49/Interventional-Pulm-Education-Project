@@ -37,7 +37,27 @@ export const ECMO_NUMBER_ONLY_SOURCES = [
     title:
       'Taha AR, Caridi-Scheible M, Leiendecker ER, Miller CF, eds. ECMO: A Practical Guide to Management. Springer Nature Switzerland; 2024.',
   },
+  {
+    id: 'TEXT-CLARIZIA-ATLAS-CARDIAC-2024',
+    title:
+      'Clarizia NA, Soltesz E. Approaches and Techniques for Extracorporeal Membrane Oxygenation. In: Atlas of Cardiac Surgical Techniques. 3rd ed. Elsevier; 2024:329-341.',
+  },
+  {
+    id: 'ecmo-book-ch14',
+    title: 'The ECMO Book - Physiology of Retrograde Flow. Chapter 14.',
+  },
+  {
+    id: 'elso-ecpr-2021',
+    title:
+      'Richardson ASC, Tonna JE, Nanjayya V, et al. Extracorporeal Cardiopulmonary Resuscitation in Adults. Interim Guideline Consensus Statement From the Extracorporeal Life Support Organization. ASAIO J. 2021;67:221-228.',
+  },
 ] as const
+
+/** Rows added with the left-ventricular unloading response. */
+const CHECK_LV_UNLOADING = { ...CHECK, checkedOn: '2026-11-01' } as const
+
+/** Rows added with the differential-hypoxemia lesson's separate actions. */
+const CHECK_DIFFERENTIAL_HYPOXEMIA = { ...CHECK, checkedOn: '2026-11-01' } as const
 
 const cite = (
   sourceId: string,
@@ -51,6 +71,10 @@ const IFU_LIMITS = '§14.10.2 Warning Limits, Alarm Limits and Interventions, pp
 const HEI = 'TEXT-HEI-ELS-2023'
 const SCHMIDT = 'TEXT-SCHMIDT-ECMO-ADULTS-2022'
 const TAHA = 'TEXT-TAHA-ECMO-PRACTICAL-2024'
+const CLARIZIA = 'TEXT-CLARIZIA-ATLAS-CARDIAC-2024'
+const ELSO_DUAL_CIRCULATION = 'elso-dual-circulation-2024'
+const ELSO_ECPR = 'elso-ecpr-2021'
+const ECMO_BOOK_RETROGRADE = 'ecmo-book-ch14'
 
 export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
   'pven-factory-limits': {
@@ -249,6 +273,111 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
     ],
     ...CHECK,
   },
+  'lv-ejection-pulsatility': {
+    label: 'Arterial pulse pressure taken as adequate for left-ventricular ejection on VA ECMO',
+    value: 'above 10 mmHg',
+    class: 'expert-reference',
+    sources: [
+      cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, Left Ventricular Venting, p. 85'),
+    ],
+    note: 'Clarizia and Soltesz: reached with inotropic therapy, afterload reduction, AV synchrony and more PEEP. A wider pulse does not by itself show that the ventricle has recovered (Taha, Ch. 9, p. 139).',
+    ...CHECK_LV_UNLOADING,
+  },
+  'va-map-goal': {
+    label: 'Mean arterial pressure goal on VA ECMO',
+    value: 'above 65 mmHg',
+    class: 'expert-reference',
+    sources: [cite(TAHA, 2024, 'Ch. 9 Patient Care while on ECMO, Table 9.1, p. 140')],
+    note: 'The same table gives a pulse-pressure goal above 25 mmHg for daily monitoring. The 10 mmHg line on p. 85 is the venting decision, which is what this module teaches.',
+    ...CHECK_LV_UNLOADING,
+  },
+  'lv-unloading-flow': {
+    label: 'Circuit flow in the left-ventricular loading lesson after it is turned down',
+    value: 'about 3.0 L/min',
+    appliesTo: 'The lesson patient at 2,400 rpm, down from about 4.0 L/min at 3,200 rpm',
+    class: 'teaching-convention',
+    sources: [cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, pp. 84–85')],
+    note: 'A round figure chosen for this patient. The source gives the rule, the lowest acceptable flow, and no number.',
+    ...CHECK_LV_UNLOADING,
+  },
+  'lv-unloading-response': {
+    label: 'Simulated response of a loading left ventricle',
+    value:
+      'pulse pressure 8 mmHg with one move and 12 mmHg with both; native output 1.2 and 1.6 L/min',
+    appliesTo: 'The lesson patient, from a pulse pressure of 5 mmHg and native output of 0.8 L/min',
+    class: 'teaching-convention',
+    sources: [
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, pp. 84–85'),
+      cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
+      cite('ecmo-book-ch14', 2023, 'Ch. 14 Physiology of Retrograde Flow, venting options, p. 153'),
+    ],
+    note: 'The sources give the direction and the 10 mmHg line, not a size or a rate. The values are set so that either move alone stays under the line and the two together cross it. A real ventricle may not respond.',
+    ...CHECK_LV_UNLOADING,
+  },
+  'mixing-point-pulse-pressure': {
+    label:
+      'Right-arm pulse pressure at which the mixing point often lies beyond the innominate artery',
+    value: 'above 20 mmHg',
+    appliesTo: 'Femoral VA ECMO',
+    class: 'consensus',
+    sources: [
+      cite(
+        ELSO_DUAL_CIRCULATION,
+        2024,
+        'Dynamic nature of the mixing point in the setting of dual circulation',
+      ),
+    ],
+    note: 'An estimate from the pulse. The paper says the mixing point cannot be readily measured, and that a mechanical left-ventricular vent moves it further down the aorta.',
+    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
+    checkedBy: 'Claude, against the full text in PubMed Central',
+  },
+  'ecmo-minimum-oxygenation': {
+    label: 'Minimum arterial oxygenation target on ECMO',
+    value: 'SaO₂ 80% with PaO₂ above 50 mmHg',
+    class: 'expert-reference',
+    sources: [cite(TAHA, 2024, 'Ch. 9 Patient Care while on ECMO, p. 139')],
+    note: 'A floor for ECMO patients generally, not a right-arm goal. Badulak 2024 leaves the acceptable range to the bedside team and ties treatment to tissue hypoxia.',
+    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
+  },
+  'ecpr-saturation-target': {
+    label: 'Arterial saturation target after ECPR',
+    value: '92–97%',
+    class: 'guideline',
+    sources: [
+      cite(ELSO_ECPR, 2021, 'Further Care Within the First Few Hours'),
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, p. 86, quoting the same guideline'),
+    ],
+    note: 'Written to avoid hyperoxia after ECPR. No source read gives a right-arm target for differential hypoxemia, so the lesson shows this beside the Taha floor and names which is which.',
+    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
+    checkedBy: 'Claude, against the full text in PubMed Central',
+  },
+  'va-peep-pulmonary-edema': {
+    label: 'PEEP to consider on VA ECMO for pulmonary edema and left-ventricular afterload',
+    value: 'at least 10 cmH₂O',
+    class: 'guideline',
+    sources: [cite(ELSO_ECPR, 2021, 'Further Care Within the First Few Hours')],
+    note: 'Written for patients after ECPR, as "consider". The nearest published PEEP for this decision. No source read gives a PEEP or FiO₂ for differential hypoxemia itself.',
+    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
+    checkedBy: 'Claude, against the full text in PubMed Central',
+  },
+  'differential-ventilator-right-arm': {
+    label: 'Simulated right-arm SpO₂ with the ventilator raised',
+    value: '86%',
+    appliesTo: 'The lesson patient, from 82%, and the Practice case patient, from 78%',
+    class: 'teaching-convention',
+    sources: [
+      cite(
+        ECMO_BOOK_RETROGRADE,
+        2023,
+        'Ch. 14 Physiology of Retrograde Flow, mitigation of upper-body hypoxia, pp. 158–159',
+      ),
+      cite(ELSO_DUAL_CIRCULATION, 2024, 'Implications for clinical management, Hypoxemia'),
+      cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, p. 86'),
+    ],
+    note: 'The sources give the direction, not a size or a rate. The value is set to improve and stay low, so the plan still has a reason, and it matches the ventilator card in the Practice case. A real shunt may not respond.',
+    ...CHECK_DIFFERENTIAL_HYPOXEMIA,
+  },
   'air-entrainment-rate': {
     label: 'Air entering the circuit',
     value: 'about 4% of patients',
@@ -297,6 +426,28 @@ export const ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES = Object.freeze({
   ],
   source: cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, p. 86'),
 } as const)
+
+/**
+ * What the ventilator does not treat in differential hypoxemia: why the lungs are failing.
+ * The ECMO Book, Ch. 14 Physiology of Retrograde Flow, pp. 158–159.
+ */
+export const ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES = Object.freeze({
+  moves: [
+    'Treat why the lungs are failing: diuresis for pulmonary edema, antibiotics for pneumonia, secretion clearance for mucus plugging, bronchodilators for bronchospasm.',
+    'Recheck left-ventricular venting, because an under-vented ventricle floods the lungs.',
+  ],
+  source: cite(
+    ECMO_BOOK_RETROGRADE,
+    2023,
+    'Ch. 14 Physiology of Retrograde Flow, mitigation of upper-body hypoxia, pp. 158–159',
+  ),
+} as const)
+
+/**
+ * What the differential-hypoxemia lesson carries out and what it only plans. The drill's Explain is
+ * its authored panel, so the panel and the scenario's debrief print this one sentence.
+ */
+export const ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD = `In this lesson the right radial gas and the ventilator are carried out. The gas confirms the pattern and changes no reading. The ventilator lifts the right arm to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} while the femoral and post-oxygenator saturations stay high, because it acts on the native lungs. The lung cause and V-AV or VV are a recorded plan, so a right arm that stays low on the monitor is the patient before those moves.`
 
 /**
  * Resuming after an arterial bubble stop on the CARDIOHELP-i, in order.

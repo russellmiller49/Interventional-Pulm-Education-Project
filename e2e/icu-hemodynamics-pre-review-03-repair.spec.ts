@@ -500,6 +500,9 @@ interface Together {
  * For each enabled control: is there one scroll position at which the control and every live
  * pressure strip it changes are wholly inside the window, below the site header? A sticky monitor
  * is allowed to follow the scroll; the answer is read from where things actually end up.
+ *
+ * In the desktop Learn workspace (2026-10-16) the page does not scroll: the visual pane does, and
+ * "the window" is that pane's visible box. The nearest scrolling ancestor is the one scrolled.
  */
 function measureTogether(page: Page, scope: string, controls: string): Promise<Together[]> {
   return page.evaluate(
@@ -521,6 +524,28 @@ function measureTogether(page: Page, scope: string, controls: string): Promise<T
         return bottom
       }
       const root = document.querySelector(scope)!
+      const owner = (() => {
+        for (let el = root.parentElement; el && el !== document.body; el = el.parentElement) {
+          const overflow = getComputedStyle(el).overflowY
+          if ((overflow === 'auto' || overflow === 'scroll') && el.scrollHeight > el.clientHeight)
+            return el
+        }
+        return null
+      })()
+      const viewTop = () =>
+        owner ? Math.max(owner.getBoundingClientRect().top, headerBottom()) : headerBottom()
+      const viewBottom = () =>
+        owner
+          ? Math.min(owner.getBoundingClientRect().bottom, window.innerHeight)
+          : window.innerHeight
+      const scrollHome = () => {
+        if (owner) owner.scrollTop = 0
+        else window.scrollTo({ top: 0, behavior: 'instant' })
+      }
+      const scrollByY = (dy: number) => {
+        if (owner) owner.scrollTop += dy
+        else window.scrollBy({ top: dy, behavior: 'instant' })
+      }
       const strips = () =>
         [
           ...root.querySelectorAll(
@@ -532,22 +557,22 @@ function measureTogether(page: Page, scope: string, controls: string): Promise<T
         if ((control as HTMLButtonElement).disabled || control.closest('fieldset:disabled'))
           continue
         if (control.getBoundingClientRect().height === 0) continue
-        window.scrollTo({ top: 0, behavior: 'instant' })
+        scrollHome()
         await frame()
         const boxes = [control, ...strips()].map((element) => element.getBoundingClientRect())
         const top = Math.min(...boxes.map((box) => box.top))
         const bottom = Math.max(...boxes.map((box) => box.bottom))
-        window.scrollBy({ top: top - headerBottom() - 8, behavior: 'instant' })
+        scrollByY(top - viewTop() - 8)
         await frame()
         let box = control.getBoundingClientRect()
-        if (box.bottom > window.innerHeight - 4) {
-          window.scrollBy({ top: box.bottom - window.innerHeight + 8, behavior: 'instant' })
+        if (box.bottom > viewBottom() - 4) {
+          scrollByY(box.bottom - viewBottom() + 8)
           await frame()
           box = control.getBoundingClientRect()
         }
-        const header = headerBottom()
-        const whole = (rect: DOMRect) =>
-          rect.top >= header - 1 && rect.bottom <= window.innerHeight + 1
+        const header = viewTop()
+        const end = viewBottom()
+        const whole = (rect: DOMRect) => rect.top >= header - 1 && rect.bottom <= end + 1
         rows.push({
           control: (control.getAttribute('aria-label') ?? control.textContent ?? control.id)
             .trim()
@@ -561,11 +586,11 @@ function measureTogether(page: Page, scope: string, controls: string): Promise<T
               ?.textContent?.slice(0, 24) ??
             'task',
           span: Math.round(bottom - top),
-          available: Math.round(window.innerHeight - header),
+          available: Math.round(end - header),
           together: whole(box) && strips().every((plot) => whole(plot.getBoundingClientRect())),
         })
       }
-      window.scrollTo({ top: 0, behavior: 'instant' })
+      scrollHome()
       return rows
     },
     { scope, controls },

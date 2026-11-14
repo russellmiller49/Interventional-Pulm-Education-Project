@@ -19,7 +19,7 @@ export const ROOM_FIXTURE: SuiteViewSpec = {
   ],
   variant: 'fixed',
   monitor: 'hidden',
-  defaults: { orbit: 45, tilt: 0 },
+  defaults: { orbit: 20, tilt: 0 },
   bindings: [],
   controls: [],
   readouts: [],
@@ -31,6 +31,7 @@ export const ROOM_HERO = {
   width: 2400,
   height: 1000,
   background: '#061519',
-  output: 'public/peripheral-imaging/room-hero.png',
+  // Renamed with the 2026-11-10 re-render so no cache serves the earlier picture under new labels.
+  output: 'public/peripheral-imaging/room-suite.png',
   maximumBytes: 400_000,
 } as const

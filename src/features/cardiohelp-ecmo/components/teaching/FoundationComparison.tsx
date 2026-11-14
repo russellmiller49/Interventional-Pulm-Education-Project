@@ -113,11 +113,20 @@ export function FoundationComparison({
       aria-label="Before and after comparison"
     >
       <h3>Before / After / Change</h3>
+      {/*
+        One line on when the two columns were read. It said "modeled time 8 s … modeled time 14 s.
+        Values retained from this comparison." and closed the table with a caveat that every value
+        is simulated; a tester (2026-10-13) asked whether either was necessary. The interval is the
+        part a learner uses.
+      */}
       <p className={styles.comparisonTiming} role="status">
-        Before: modeled time {before.simulationTime} s.
         {comparison
-          ? ` After: modeled time ${comparison.after.simulationTime} s. Values retained from this comparison.`
-          : ' Run the guided comparison to add the result.'}
+          ? `${
+              comparison.after.simulationTime > before.simulationTime
+                ? `After is read ${comparison.after.simulationTime - before.simulationTime} seconds after the change.`
+                : 'Before and after, side by side.'
+            } The readings that changed are highlighted.`
+          : 'Run the comparison to fill in After and Change.'}
       </p>
       {actionId === 'load-return-resistance' ? (
         <p>
@@ -151,7 +160,13 @@ export function FoundationComparison({
                     ),
                   )
             return (
-              <tr key={key} data-comparison-signal={key}>
+              <tr
+                key={key}
+                data-comparison-signal={key}
+                // Lit once the comparison has run, so the eye finds what moved (tester feedback,
+                // 2026-10-14: "I'm not exactly sure which value was changing").
+                data-changed={comparison && delta !== null ? delta !== 0 : undefined}
+              >
                 <th scope="row">
                   {label}
                   {unit ? <span className={styles.comparisonUnit}>{unit}</span> : null}
@@ -172,10 +187,6 @@ export function FoundationComparison({
           })}
         </tbody>
       </table>
-      <p className={styles.comparisonTiming}>
-        All values are simulated. A missing reading stays unavailable; a comparison is not a bedside
-        target or dose-response.
-      </p>
     </section>
   )
 }

@@ -7,8 +7,10 @@ import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProg
 import { inspectionReport } from '../engine/inspectionReport'
 import {
   availableSurveySnapshot,
+  BRONCH_PLACE_STORAGE_KEY,
   BRONCH_SELF_PACED_STORAGE_KEY,
   parseBronchSelfPacedRecord,
+  readBronchSectionPlace,
   readBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
@@ -170,7 +172,7 @@ async function walkByLeavingEveryStep(lesson: BronchStageLesson) {
  * own reviewed mark — with no answer saved anywhere.
  */
 describe('the opening screen', () => {
-  it.each(['what-completion-means', 'right-side', 'bleeding-priorities'] as const)(
+  it.each(['ventilated-patient', 'right-side', 'bleeding-priorities'] as const)(
     'opens %s with its clinical question and its memory hook',
     async (sectionId) => {
       const { lesson } = await mountSection(sectionId)
@@ -212,7 +214,7 @@ describe('a question in a rewritten section', () => {
 
 describe('a sort section on the stage', () => {
   it('walks a matching section from the read to the reviewed mark, saving no answer', async () => {
-    const { lesson } = await mountSection('what-completion-means')
+    const { lesson } = await mountSection('ventilated-patient')
     const steps = lesson.steps
     expect(currentStepId()).toBe(steps[0].id)
     expect(screen.getByRole('heading', { name: steps[0].title })).toBeInTheDocument()
@@ -220,8 +222,8 @@ describe('a sort section on the stage', () => {
     expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
     expect(document.querySelector('[data-step-list]')).toBeNull()
     expect(storedRecord()).toMatchObject({
-      lastSectionId: 'what-completion-means',
-      visitedSectionIds: ['what-completion-means'],
+      lastSectionId: 'ventilated-patient',
+      visitedSectionIds: ['ventilated-patient'],
       reviewedSectionIds: [],
     })
 
@@ -268,21 +270,20 @@ describe('a sort section on the stage', () => {
       : [matchTheSet, answerTheQuestion])
       await part()
 
-    await reachCourseStep(lesson, stepOfKind(lesson, 'explain'))
-    expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
-    expect(document.querySelector('[data-explain-recap] [data-answer-verdict]')).not.toBeNull()
-    expect(document.querySelector('[data-teaching-block="anchor"]')).not.toBeNull()
-    expect(document.querySelector('[data-new-concept]')).not.toBeNull()
-    expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
-    clickPrimary()
-    await settle()
-
+    // A rewritten section checks with new details first and closes on its checklist.
     const transfer = steps[lesson.transferStepIndex]
     await reachCourseStep(lesson, transfer)
     expect(currentStepId()).toBe(transfer.id)
     commitById(otherChoiceId(transfer))
     // Any answer but the keyed one: the verdict depends on which distractor the section offers.
     expect(['not-correct', 'unsafe']).toContain(verdictOutcome())
+    clickPrimary()
+    await settle()
+
+    await reachCourseStep(lesson, stepOfKind(lesson, 'explain'))
+    expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
+    expect(document.querySelector('[data-explain-recap] [data-answer-verdict]')).not.toBeNull()
+    expect(document.querySelector('[data-teaching-block="anchor"]')).not.toBeNull()
     while (nowPrimary()) {
       clickPrimary()
       await settle()
@@ -291,16 +292,15 @@ describe('a sort section on the stage', () => {
     const completion = document.querySelector('[data-section-completion]')!
     expect(completion).toHaveAttribute('data-reviewed', 'true')
     expect(completion.querySelector('[data-completion-moved-past]')).toBeNull()
-    expect(completion.textContent).toContain(
-      'Self-paced online learning does not establish procedural competence.',
-    )
-    // After the last section the way on is the integrated cases.
-    const next = BRONCH_SECTION_IDS[BRONCH_SECTION_IDS.indexOf('what-completion-means') + 1]
+    // The hub and the closing screen carry the one statement of what the course cannot show.
+    expect(completion.textContent).not.toContain('does not establish procedural competence')
+    // After the last section the way on is the closing screen.
+    const next = BRONCH_SECTION_IDS[BRONCH_SECTION_IDS.indexOf('ventilated-patient') + 1]
     expect(completion.querySelector('[data-next-section]')).toHaveAttribute(
       'data-next-section',
-      next ?? 'assess',
+      next ?? 'closing',
     )
-    expect(storedRecord()?.reviewedSectionIds).toEqual(['what-completion-means'])
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['ventilated-patient'])
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 
     fireEvent.click(completion.querySelector('[data-toggle-reviewed]')!)
@@ -312,7 +312,7 @@ describe('a sort section on the stage', () => {
   })
 
   it('lets a learner look back without losing the live step, and restarts with nothing kept', async () => {
-    const { lesson } = await mountSection('what-completion-means')
+    const { lesson } = await mountSection('ventilated-patient')
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
     clickPrimary()
@@ -335,30 +335,59 @@ describe('a sort section on the stage', () => {
     expect(storedRecord()?.reviewedSectionIds).toEqual([])
   })
 
-  it('opens at the first step whatever phase the address names, and restores no answer after a reload', async () => {
-    const { lesson } = await mountSection('what-completion-means')
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
-    commitById(otherChoiceId(lesson.steps[lesson.predictionStepIndex]))
+  it('returns to the screen reached whatever phase the address names, and restores no answer after a reload', async () => {
+    const { lesson } = await mountSection('ventilated-patient')
+    const check = lesson.steps[lesson.predictionStepIndex]
+    await reachCourseStep(lesson, check)
+    commitById(otherChoiceId(check))
+    expect(readBronchSectionPlace('ventilated-patient')).toBe(check.id)
     cleanup()
 
     window.history.replaceState(
       null,
       '',
-      '/bronchoscopy-foundations/learn?section=what-completion-means&phase=explain',
+      '/bronchoscopy-foundations/learn?section=ventilated-patient&phase=explain',
     )
-    await mountSection('what-completion-means')
-    expect(currentStepId()).toBe(lesson.steps[0].id)
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
+    await mountSection('ventilated-patient')
+    await settle()
+    // The place comes back; the answer does not, and nothing before it is marked done.
+    expect(currentStepId()).toBe(check.id)
     expect(verdictOutcome()).toBeNull()
     expect(document.querySelector('[data-prediction-choices] input:checked')).toBeNull()
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+    expect(storedRecord()?.reviewedSectionIds).toEqual([])
+
+    // Restarting the section forgets the place, on this visit and the next.
+    fireEvent.click(screen.getByRole('button', { name: /Restart section/ }))
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    expect(readBronchSectionPlace('ventilated-patient')).toBeNull()
+    cleanup()
+    await mountSection('ventilated-patient')
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+  })
+
+  it('keeps no place for a finished section, and does not list resumed screens as skipped', async () => {
+    const { lesson } = await mountSection('ventilated-patient')
+    const check = lesson.steps[lesson.predictionStepIndex]
+    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex + 1])
+    cleanup()
+    await mountSection('ventilated-patient')
+    await settle()
+    expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex + 1].id)
+    await finishSection(lesson)
+    const movedPast = document.querySelector('[data-completion-moved-past]')?.textContent ?? ''
+    expect(movedPast).not.toContain(check.title)
+    expect(readBronchSectionPlace('ventilated-patient')).toBeNull()
+    expect(localStorage.getItem(BRONCH_PLACE_STORAGE_KEY)).toBeNull()
   })
 })
 
 /** Self-paced contract (BF-01): explanation first, back to teaching, on without answering. */
 describe('optional questions and activities', () => {
   it('opens a question’s explanation before an answer, returns to the teaching, and moves on without answering', async () => {
-    const { lesson } = await mountSection('what-completion-means')
+    const { lesson } = await mountSection('ventilated-patient')
     const check = lesson.steps[lesson.predictionStepIndex]
     await reachCourseStep(lesson, check)
     fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))

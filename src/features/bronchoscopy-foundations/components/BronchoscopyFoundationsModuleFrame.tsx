@@ -55,9 +55,7 @@ export const BRONCHOSCOPY_FOUNDATIONS_SAFETY_NOTICE = (
   <>
     <strong>Learn the reasoning. Build the hand skill under supervision.</strong>{' '}
     <span>
-      For education only. The simulator is an authored teaching model on one de-identified anatomy
-      profile. No dose, device dimension, ventilator setting or sampling rule here is a
-      recommendation. Follow current device instructions, local policy and supervising judgment.
+      For education only. Follow your device’s instructions for use and your local protocol.
     </span>
   </>
 )

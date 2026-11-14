@@ -59,7 +59,7 @@ export function IcuHemodynamicsOverviewV2() {
               href={'/icu-hemodynamics/practice' as Route}
               className="inline-flex min-h-11 items-center rounded-xl border px-5 py-3 text-sm font-semibold"
             >
-              Open the cases
+              All cases (also inside their sections)
             </Link>
           </div>
           <p className={`${styles.composition} mt-4`} data-pathway-composition>

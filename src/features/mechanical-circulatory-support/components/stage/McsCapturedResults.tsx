@@ -1,11 +1,12 @@
 import { mcsDeviceNaming } from '../../content/deviceNaming'
+import { mcsOrderObservedSignals } from '../../content/observeFocus'
 import type { McsObservedSignal } from '../../content/sectionLearningContracts'
 import {
   mcsConfigurationLabel,
   mcsObservedDirection,
   type McsDeviceComparison,
 } from '../../engine/learningSession'
-import type { McsDeviceKind, McsSimulationState } from '../../engine/types'
+import type { McsDerivedMetrics, McsDeviceKind, McsSimulationState } from '../../engine/types'
 import styles from './mcs-stage.module.css'
 
 export type McsComparisonRecords = Partial<Record<McsDeviceKind, McsDeviceComparison>>
@@ -41,9 +42,9 @@ export function McsFlowArithmetic({ records }: { readonly records: McsComparison
   if (!reference || pumps.length === 0) {
     return (
       <p data-flow-arithmetic="awaiting">
-        The arithmetic appears here once the IABP and at least one pump have been captured on the
-        Act step. Until then: the pump line rises, the native line falls as the pump takes over, and
-        effective systemic delivery rises by the difference between the two.
+        Run the IABP and at least one pump on the comparison task and the arithmetic appears here.
+        In short: the pump line rises, the native line falls as the pump takes over, and effective
+        systemic delivery rises by the difference between the two.
       </p>
     )
   }
@@ -64,7 +65,7 @@ export function McsFlowArithmetic({ records }: { readonly records: McsComparison
             <li key={device} data-flow-arithmetic-device={device}>
               <strong>{label}:</strong> pump estimate{' '}
               <span data-delta="device">{signed(pump)}</span>, concurrent native{' '}
-              <span data-delta="native">{signed(native)}</span>, modeled effective{' '}
+              <span data-delta="native">{signed(native)}</span>, effective{' '}
               <span data-delta="effective">{signed(effective)}</span>.{' '}
               {Math.abs(remainder) < 0.015
                 ? `${pump.toFixed(2)} ${native >= 0 ? '+' : '−'} ${Math.abs(native).toFixed(2)} ${
@@ -76,9 +77,9 @@ export function McsFlowArithmetic({ records }: { readonly records: McsComparison
         })}
       </ul>
       <p>
-        The balloon has no pump line, so its pump estimate counts as zero here. These are this run’s
-        modeled values at nominal settings; they compare what each mechanism does and are not
-        equivalent doses or a reason to choose a device.
+        The balloon has no pump line, so it counts as zero here. Each device ran at its nominal
+        setting, and nominal settings are not equivalent doses: the comparison shows what each
+        mechanism does, not which device to choose.
       </p>
     </div>
   )
@@ -86,15 +87,14 @@ export function McsFlowArithmetic({ records }: { readonly records: McsComparison
 export function McsDeviceComparisonTable({ records }: { records: McsComparisonRecords }) {
   return (
     <div className={styles.block} data-retained-comparison>
-      <h3>Three retained device results</h3>
+      <h3>The three devices on one patient</h3>
       <p>
-        One reference patient throughout. Each selection resets patient and compartments, then
-        observes eight simulated seconds. No additional patient variables changed. Nominal settings
-        are not equivalent doses.
+        The same patient each time, at each device’s nominal setting, read eight seconds after the
+        device starts.
       </p>
       <div className={styles.tableScroll}>
         <table className={styles.grammar} data-before-after data-device-comparison-table>
-          <caption>Observed in this run</caption>
+          <caption>Readings by device</caption>
           <thead>
             <tr>
               <th scope="col">Quantity</th>
@@ -108,7 +108,7 @@ export function McsDeviceComparisonTable({ records }: { records: McsComparisonRe
               [
                 ['nativeFlowLMin', 'Concurrent native', 'L/min', 2],
                 ['deviceFlowLMin', 'Pump estimate', 'L/min', 2],
-                ['effectiveSystemicFlowLMin', 'Modeled effective', 'L/min', 2],
+                ['effectiveSystemicFlowLMin', 'Effective systemic', 'L/min', 2],
                 ['pulsePressureMmHg', 'Pulse pressure', 'mm Hg', 0],
               ] as const
             ).map(([key, label, unit, digits]) => (
@@ -129,11 +129,9 @@ export function McsDeviceComparisonTable({ records }: { records: McsComparisonRe
           </tbody>
         </table>
       </div>
-      <p>
-        IABP has no separate pump-flow stream. A dash means that device has not yet been observed.
-      </p>
+      <p>IABP has no separate pump-flow stream. A dash means that device has not been run yet.</p>
       <details>
-        <summary>Captured configurations and patient identity</summary>
+        <summary>Settings for each run</summary>
         {(['iabp', 'impella', 'lvad'] as const).map((device) => {
           const record = records[device]
           return (
@@ -141,8 +139,8 @@ export function McsDeviceComparisonTable({ records }: { records: McsComparisonRe
               {record ? mcsConfigurationLabel(record.state) : device.toUpperCase()}
               <small>
                 {record
-                  ? `Captured at ${record.capturedAtSeconds.toFixed(2)} s · observation ${record.observationSeconds} s · same patient`
-                  : 'Awaiting selection and observation'}
+                  ? `Started at ${record.capturedAtSeconds.toFixed(2)} s · read ${record.observationSeconds} s later · same patient`
+                  : 'Not run yet'}
               </small>
             </p>
           )
@@ -162,7 +160,7 @@ export function McsDeviceComparisonTable({ records }: { records: McsComparisonRe
             records.lvad.state.metrics.effectiveSystemicFlowLMin -
               records.iabp.state.metrics.effectiveSystemicFlowLMin,
           ).toFixed(2)}{' '}
-          L/min. This is a model comparison, not evidence for choosing a device.
+          L/min.
         </p>
       ) : null}
     </div>
@@ -175,12 +173,18 @@ export function McsCapturedResults({
   signals,
   inspectOnly = false,
   providedExample = false,
+  focus,
 }: {
   before: McsSimulationState | null
   after: McsSimulationState
   signals: readonly McsObservedSignal[]
   inspectOnly?: boolean
   providedExample?: boolean
+  /**
+   * The readings the task's instruction names (`mcsObserveFocus`). They are listed first under
+   * their own heading and never dimmed, moved or not; absent, the table is in authored order.
+   */
+  focus?: readonly (keyof McsDerivedMetrics)[]
 }) {
   const format = (value: number | boolean | null | undefined, digits: number) =>
     value == null
@@ -190,61 +194,91 @@ export function McsCapturedResults({
           ? 'yes'
           : 'no'
         : value.toFixed(digits)
+  const groups = mcsOrderObservedSignals(signals, focus ?? [])
+  const row = (signal: McsObservedSignal, named: boolean) => {
+    const first = before?.metrics[signal.key]
+    const last = after.metrics[signal.key]
+    const noStream = signal.key === 'deviceFlowLMin' && after.device.kind === 'iabp'
+    const direction =
+      !noStream && typeof first === 'number' && typeof last === 'number'
+        ? mcsObservedDirection(first, last, signal.digits)
+        : undefined
+    return (
+      <tr
+        key={signal.key}
+        data-signal={signal.key}
+        data-level={signal.level}
+        data-changed={direction === undefined ? undefined : direction !== 'unchanged'}
+        data-named={named || undefined}
+      >
+        <th scope="row">
+          {signal.label}{' '}
+          <small>
+            {signal.unit} · {signal.level}
+          </small>
+        </th>
+        <td>{noStream ? 'No separate stream' : format(first, signal.digits)}</td>
+        <td>{noStream ? 'No separate stream' : format(last, signal.digits)}</td>
+        <td data-change>
+          {noStream
+            ? 'Not a pump-flow measurement'
+            : typeof first === 'number' && typeof last === 'number'
+              ? `${mcsObservedDirection(first, last, signal.digits)} (${(last - first).toFixed(signal.digits)} ${signal.unit === '%' ? 'percentage points' : signal.unit})`
+              : '—'}
+        </td>
+      </tr>
+    )
+  }
   return (
     <div className={styles.block} data-captured-results>
       <p>
-        <strong>{providedExample ? 'Provided model reference.' : 'Observed in this run.'}</strong>{' '}
-        {mcsConfigurationLabel(after)}. {providedExample ? 'Reference at' : 'Captured at'}{' '}
-        {after.timeSeconds.toFixed(2)} simulated seconds
-        {before ? `; baseline at ${before.timeSeconds.toFixed(2)} s` : ''}.
+        <strong>{providedExample ? 'Worked example.' : 'Your run.'}</strong>{' '}
+        {mcsConfigurationLabel(after)}, read at {after.timeSeconds.toFixed(2)} s
+        {before ? ` (start at ${before.timeSeconds.toFixed(2)} s)` : ''}.
       </p>
       {inspectOnly ? (
         <p>
-          Reading is an inspection, not a physiological intervention. Any difference is model
-          settling or sampling.
+          Inspecting changes nothing in the patient; a small difference between the two columns is
+          beat-to-beat variation.
         </p>
       ) : null}
       <div className={styles.tableScroll}>
-        <table className={styles.grammar} data-before-after>
+        <table className={`${styles.grammar} ${styles.capturedTable}`} data-before-after>
           <caption>
-            {providedExample
-              ? 'Provided reference readings; no action recorded'
-              : 'Captured model readings'}
+            {providedExample ? 'Worked example readings' : 'Readings before and after'}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Quantity / unit</th>
+              <th scope="col">Reading</th>
               <th scope="col">Before</th>
-              <th scope="col">{providedExample ? 'Current reference' : 'After'}</th>
-              <th scope="col">Observed change</th>
+              <th scope="col">{providedExample ? 'Now' : 'After'}</th>
+              <th scope="col">Change</th>
             </tr>
           </thead>
-          <tbody>
-            {signals.map((signal) => {
-              const first = before?.metrics[signal.key]
-              const last = after.metrics[signal.key]
-              const noStream = signal.key === 'deviceFlowLMin' && after.device.kind === 'iabp'
-              return (
-                <tr key={signal.key} data-signal={signal.key} data-level={signal.level}>
-                  <th scope="row">
-                    {signal.label}{' '}
-                    <small>
-                      {signal.unit} · {signal.level}
-                    </small>
+          {focus?.length ? (
+            <>
+              <tbody data-named-readings>
+                <tr data-group-heading>
+                  <th colSpan={4} scope="rowgroup">
+                    Named in this task
                   </th>
-                  <td>{noStream ? 'No separate stream' : format(first, signal.digits)}</td>
-                  <td>{noStream ? 'No separate stream' : format(last, signal.digits)}</td>
-                  <td>
-                    {noStream
-                      ? 'Not a pump-flow measurement'
-                      : typeof first === 'number' && typeof last === 'number'
-                        ? `${mcsObservedDirection(first, last, signal.digits)} (${(last - first).toFixed(signal.digits)} ${signal.unit === '%' ? 'percentage points' : signal.unit})`
-                        : '—'}
-                  </td>
                 </tr>
-              )
-            })}
-          </tbody>
+                {groups.named.map((signal) => row(signal, true))}
+              </tbody>
+              {groups.others.length ? (
+                <tbody data-other-readings>
+                  <tr data-group-heading>
+                    <th colSpan={4} scope="rowgroup">
+                      Other readings
+                    </th>
+                  </tr>
+                  {groups.others.map((signal) => row(signal, false))}
+                </tbody>
+              ) : null}
+            </>
+          ) : (
+            <tbody>{signals.map((signal) => row(signal, false))}</tbody>
+          )}
         </table>
       </div>
     </div>

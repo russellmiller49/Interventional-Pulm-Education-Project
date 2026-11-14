@@ -1,88 +1,109 @@
 import { describe, expect, it } from 'vitest'
 import {
+  LINKED_ALONG_AIRWAY,
   emptyLinkedSweep,
-  LINKED_SWEEP_TOLERANCES,
   stepLinkedSweep,
   type LinkedSweep,
 } from '../../../../../src/lib/ebus-linked-contract'
-import { describeLinkedSweep, SWEEP_TOLERANCE_NOTE } from './sweepStatus'
+import { describeAirwayView, describeAlongAirway, describeLinkedSweep } from './sweepStatus'
 
-const base = {
-  frameReady: true,
-  contact: 1,
-  lastEvent: null,
-  lastResetProgress: null,
-  targetName: 'The example node',
-}
-describe('sweep status is derived from sampler state only (EBUS-PRE-REVIEW-03)', () => {
-  it('tells a learner who starts inside the target that frames do not count yet', () => {
-    const s = describeLinkedSweep({ ...base, sweep: emptyLinkedSweep(), targetVisible: true })
-    expect(s.state).toBe('inside-start')
-    expect(s.inPlane).toContain('is in this plane now')
-    expect(s.waiting).toMatch(/begin from a plane without the target/)
-    expect(s.progress).toBeNull()
+const base = { frameReady: true, contact: 1, targetName: 'The node' }
+const step = (sweep: LinkedSweep, roll: number, visible: boolean, contact = 1) =>
+  stepLinkedSweep(sweep, { roll, frameId: `f${roll}:${visible}:${contact}`, visible, contact })
+
+describe('rotation sweep', () => {
+  it('asks for rotation before anything has been sampled', () => {
+    const s = describeLinkedSweep({ ...base, sweep: emptyLinkedSweep(), targetVisible: false })
+    expect(s.state).toBe('start')
+    expect(s.next).toMatch(/Scope rotation slider/)
   })
-  it('reports outside, crossing with remaining requirements, and complete', () => {
-    let sweep: LinkedSweep = emptyLinkedSweep()
-    sweep = stepLinkedSweep(sweep, { roll: 85, frameId: 'f1', visible: false, contact: 1 }).sweep
-    expect(describeLinkedSweep({ ...base, sweep, targetVisible: false }).state).toBe('outside')
-    sweep = stepLinkedSweep(sweep, { roll: 80, frameId: 'f2', visible: true, contact: 1 }).sweep
-    const crossing = describeLinkedSweep({ ...base, sweep, targetVisible: true })
-    expect(crossing.state).toBe('crossing')
-    expect(crossing.progress).toEqual({ samples: 1, minSamples: 5, span: 0, minSpanDeg: 20 })
-    expect(crossing.waiting).toContain('4 more paused frames with the target')
-    expect(crossing.waiting).toContain('20° more rotation')
-    for (const [roll, id] of [
-      [70, 'f3'],
-      [60, 'f4'],
-      [50, 'f5'],
-      [40, 'f6'],
-    ] as const)
-      sweep = stepLinkedSweep(sweep, { roll, frameId: id, visible: true, contact: 1 }).sweep
-    const enough = describeLinkedSweep({ ...base, sweep, targetVisible: true })
-    expect(enough.waiting).toContain('enough frames and rotation')
-    const done = stepLinkedSweep(sweep, { roll: 30, frameId: 'f7', visible: false, contact: 1 })
+  it('completes after 20° of rotation with the node seen, however large the steps', () => {
+    let sweep = step(emptyLinkedSweep(), 85, false).sweep
+    expect(describeLinkedSweep({ ...base, sweep, targetVisible: false }).state).toBe('sweeping')
+    // One drag of the slider: a single large step onto the node.
+    const done = step(sweep, 55, true)
     expect(done.event).toBe('complete')
-    expect(describeLinkedSweep({ ...base, sweep: done.sweep, targetVisible: false }).state).toBe(
-      'complete',
+    sweep = done.sweep
+    expect(sweep).toMatchObject({ phase: 'complete', span: 30, samples: 1 })
+    expect(describeLinkedSweep({ ...base, sweep, targetVisible: true }).state).toBe('complete')
+    expect(describeLinkedSweep({ ...base, sweep, targetVisible: false }).state).toBe(
+      'complete-off-target',
     )
   })
-  it('names every reset cause with its numbers', () => {
-    const reset = (event: Parameters<typeof describeLinkedSweep>[0]['lastEvent']) =>
-      describeLinkedSweep({
-        ...base,
-        sweep: { ...emptyLinkedSweep(), outside: true },
-        targetVisible: false,
-        lastEvent: event,
-        lastResetProgress: { samples: 3, span: 10 },
-      }).resetReason
-    expect(reset('reset-reversed')).toMatch(/direction reversed/)
-    expect(reset('reset-step')).toContain(`larger than ${LINKED_SWEEP_TOLERANCES.maxStepDeg}°`)
-    expect(reset('reset-contact')).toContain(`below ${LINKED_SWEEP_TOLERANCES.minContact}`)
-    expect(reset('reset-early-exit')).toContain('after 3 paused frames over 10°')
-    expect(reset('sample')).toBeNull()
+  it('counts rotation in either direction and says how much is left', () => {
+    let sweep = step(emptyLinkedSweep(), 10, true).sweep
+    sweep = step(sweep, 18, true).sweep
+    sweep = step(sweep, 4, true).sweep
+    expect(sweep).toMatchObject({ phase: 'crossing', span: 14, startRoll: 4 })
+    expect(describeLinkedSweep({ ...base, sweep, targetVisible: true }).next).toMatch(/6° more/)
+    expect(step(sweep, 24, true).sweep.phase).toBe('complete')
   })
-  it('explains a too-fast entry and a lost window without touching the sweep', () => {
-    const fast = describeLinkedSweep({
-      ...base,
-      sweep: emptyLinkedSweep(),
-      targetVisible: true,
-      lastEvent: 'entered-too-fast',
-    })
-    expect(fast.state).toBe('entered-too-fast')
-    const lost = describeLinkedSweep({
-      ...base,
-      sweep: emptyLinkedSweep(),
-      targetVisible: false,
-      contact: 0.2,
-    })
-    expect(lost.state).toBe('no-window')
-    expect(lost.waiting).toContain('0.20')
+  it('does not complete on rotation that never showed the node', () => {
+    let sweep = step(emptyLinkedSweep(), 90, false).sweep
+    sweep = step(sweep, 60, false).sweep
+    expect(sweep.phase).toBe('find-edge')
+    expect(describeLinkedSweep({ ...base, sweep, targetVisible: false }).next).toMatch(
+      /comes into the image/,
+    )
   })
-  it('states the tolerances as authored exercise tolerances, not clinical thresholds', () => {
-    expect(SWEEP_TOLERANCE_NOTE).toContain('at least 5 times')
-    expect(SWEEP_TOLERANCE_NOTE).toContain('at least 20°')
-    expect(SWEEP_TOLERANCE_NOTE).toContain('12° or less')
-    expect(SWEEP_TOLERANCE_NOTE).toContain('not clinical thresholds')
+  it('ignores frames without tissue contact instead of restarting', () => {
+    let sweep = step(emptyLinkedSweep(), 10, true).sweep
+    const lost = step(sweep, 40, true, 0.2)
+    expect(lost.event).toBe('no-contact')
+    expect(lost.sweep).toMatchObject({ span: 0, samples: 1 })
+    sweep = lost.sweep
+    expect(describeLinkedSweep({ ...base, sweep, contact: 0.2, targetVisible: false }).state).toBe(
+      'no-window',
+    )
+  })
+})
+
+describe('advance and withdraw', () => {
+  const at = (targetLateral: number | null, extra: Partial<typeof base> = {}) =>
+    describeAlongAirway({ ...base, ...extra, targetLateral })
+  it('says where the node is across the image, and stops at the middle', () => {
+    expect(at(0.63).state).toBe('right')
+    expect(at(0.38).state).toBe('left')
+    expect(at(0.5).state).toBe('centre')
+    expect(at(0.5 + LINKED_ALONG_AIRWAY.centreHalfWidth).state).toBe('centre')
+    expect(at(0.5 + LINKED_ALONG_AIRWAY.centreHalfWidth + 0.01).state).toBe('right')
+    expect(at(0.5).next).toMatch(/Continue with this image/)
+  })
+  it('never says which way to move: that is the task', () => {
+    for (const lateral of [0.3, 0.4, 0.6, 0.7]) {
+      const status = at(lateral)
+      expect(status.heading).toMatch(/^Node (left|right) of the middle$/)
+      expect(status.next).toBe(
+        'Advance or withdraw with the Scope position slider until the node sits in the middle of the image.',
+      )
+    }
+  })
+  it('reports a node that has left the image and a lost window', () => {
+    expect(at(null).state).toBe('out')
+    expect(at(null).next).toMatch(/the other way along the airway/)
+    expect(at(0.5, { contact: 0.2 }).state).toBe('no-window')
+    expect(at(0.5, { frameReady: false }).state).toBe('pending')
+  })
+})
+
+describe('look along the airway, then bring back the image', () => {
+  const view = (opticalWallMm: number | null, contact: number, airwayViewed: boolean) =>
+    describeAirwayView({ opticalWallMm, contact, airwayViewed, frameReady: true })
+  it('asks for the airway view first, even with the tip already on the wall', () => {
+    expect(view(9, 0.45, false).state).toBe('find-airway')
+    expect(view(4, 1, false).state).toBe('find-airway')
+    expect(view(4, 1, false).heading).toBe('Flex the tip down')
+  })
+  it('says what the airway view costs, then asks for the wall', () => {
+    const airway = view(20, 0.04, true)
+    expect(airway.state).toBe('airway')
+    expect(airway.next).toMatch(/no ultrasound image/)
+    expect(view(9, 0.45, true).state).toBe('find-wall')
+    expect(view(4, 1, true).state).toBe('wall')
+    expect(view(4, 1, true).next).toMatch(/Continue with this image/)
+  })
+  it('does not count deep downward flexion as the wall, whatever the contact index says', () => {
+    expect(view(21, 1, true).state).toBe('airway')
+    expect(describeAirwayView({ opticalWallMm: 4, contact: 1, airwayViewed: true, frameReady: false }).state).toBe('pending')
   })
 })

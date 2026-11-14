@@ -15,12 +15,12 @@ import { SUITE_DOM, type ImagingSuitePaneProps } from './types'
  * lock, under the chain caption, with the chain answer fieldset when a step asks for one.
  *
  * Everything the stage needs is honoured here: the controls disable while the learner decides or
- * looks back and the pane says why, the goals are listed, the boundary sentence is printed, and
+ * looks back and the pane says why, the goals are listed, and
  * every change reaches the session through `onLabChange`. When Codex's `SuiteScenePane` declares
  * a mode ready, `ImagingSuitePane` stops routing that mode here.
  */
 export function SuiteFallback(props: ImagingSuitePaneProps) {
-  const { view, lab, onLabChange, lockedReason, pausedReason, goals, onRepresentationReady } = props
+  const { view, lab, onLabChange, pausedReason, goals, onRepresentationReady } = props
   const controlsEnabled = false
   useEffect(() => {
     onRepresentationReady?.(false)
@@ -40,14 +40,14 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
       }}
     >
       <p role="status">
-        The required imaging view is unavailable. Image-based tasks cannot be completed. Reload to
-        retry; teaching and source references remain accessible.
+        The imaging view could not be loaded, so the image-based steps cannot be completed here.
+        Reload to retry; the text and the references remain available.
       </p>
       <ChainCaptionStrip lit={view.litStop} caption={props.chainCaption} />
       {props.chainAnswer ? <ChainAnswerFieldset answer={props.chainAnswer} /> : null}
-      {!controlsEnabled && (lockedReason ?? pausedReason) ? (
+      {!controlsEnabled && pausedReason ? (
         <p className={styles.reason} role="status">
-          {lockedReason ?? pausedReason}
+          {pausedReason}
         </p>
       ) : null}
       {view.lab && !props.independent ? (
@@ -79,9 +79,6 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
           ))}
         </ul>
       ) : null}
-      <p className={styles.boundary} {...{ [SUITE_DOM.boundary]: '' }}>
-        <strong>Model boundary.</strong> {view.boundary}
-      </p>
       {props.children}
     </div>
   )

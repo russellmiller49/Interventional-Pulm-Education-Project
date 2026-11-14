@@ -19,7 +19,10 @@ import {
 } from '../../lib/ctProjection'
 import {
   beamDirection,
+  collimatedFieldRect,
   DEFAULT_GEOMETRY,
+  DETECTOR_FIELD,
+  FIELD_CONTEXT,
   LESION_CENTER,
   LESION_RADIUS,
   magnificationAt,
@@ -257,6 +260,68 @@ export function conspicuityImages(volume: Uint8Array): ConspicuityImages {
       reference: targetRay(volume, referenceView.orbit, referenceView.tilt, sample),
       changed: targetRay(volume, changedView.orbit, changedView.tilt, sample),
     },
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Section 7 · the check's two fields
+ * ------------------------------------------------------------------ */
+
+/** The collimation section's projection, and the two fields its check compares. */
+export const FIELD_COMPARISON = {
+  orbit: 25,
+  tilt: 0,
+  sizePx: 192,
+  openField: 100,
+  tightField: 45,
+} as const
+
+export interface FieldComparisonImages {
+  readonly open: Uint8ClampedArray
+  readonly tight: Uint8ClampedArray
+  /** The tight field's square, in image pixels. */
+  readonly tightRect: { readonly x: number; readonly y: number; readonly size: number }
+  readonly lesion: LesionMark
+  /** Landmarks 1 and 2. */
+  readonly landmarks: readonly (readonly [number, number])[]
+  /** The planned tool path, start and end. */
+  readonly path: readonly [readonly [number, number], readonly [number, number]]
+}
+
+export function fieldComparisonImages(volume: Uint8Array): FieldComparisonImages {
+  const { orbit, tilt, sizePx, tightField } = FIELD_COMPARISON
+  const image = projectCt(ctSampler(volume), {
+    orbit,
+    tilt,
+    sizePx,
+    fieldMm: DETECTOR_FIELD,
+    centre: [0, 0, 0],
+  })
+  const scale = sizePx / DETECTOR_FIELD
+  const rect = collimatedFieldRect(tightField, orbit, tilt)
+  const tightRect = {
+    x: (rect.left + DETECTOR_FIELD / 2) * scale,
+    y: (DETECTOR_FIELD / 2 - (rect.bottom + rect.side)) * scale,
+    size: rect.side * scale,
+  }
+  const exposed = new Uint8Array(sizePx * sizePx)
+  for (let row = 0; row < sizePx; row++)
+    for (let col = 0; col < sizePx; col++)
+      if (
+        col + 0.5 >= tightRect.x &&
+        col + 0.5 <= tightRect.x + tightRect.size &&
+        row + 0.5 >= tightRect.y &&
+        row + 0.5 <= tightRect.y + tightRect.size
+      )
+        exposed[row * sizePx + col] = 1
+  const at = (point: Point3) => projectionPixelOf(image, point, orbit, tilt)
+  return {
+    open: projectionPixels(image.lineIntegral),
+    tight: projectionPixels(image.lineIntegral, { exposed }),
+    tightRect,
+    lesion: lesionMark(image, orbit, tilt),
+    landmarks: [at(FIELD_CONTEXT[0].point), at(FIELD_CONTEXT[1].point)],
+    path: [at(FIELD_CONTEXT[2].point), at(FIELD_CONTEXT[3].point)],
   }
 }
 

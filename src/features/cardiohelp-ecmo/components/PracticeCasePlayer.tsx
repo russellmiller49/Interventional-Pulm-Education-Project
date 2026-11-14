@@ -77,7 +77,7 @@ const faultLabels: Record<FaultId, string> = {
   'ac-power-loss': 'Restore verified AC power and backup readiness',
   'flow-sensor-failure': 'Restore or replace the flow measurement',
   'differential-hypoxemia': 'Confirm at the right arm and raise ventilator support',
-  'lv-loading': 'Lower flow, add an inotrope, call for a vent',
+  'lv-loading': 'Record the plan for volume removal and the vent',
   'ecmo-not-initiated': 'Complete readiness, configure support, and start ECMO',
   'hemorrhagic-hypovolemia': 'Control hemorrhage and restore effective preload',
   'tension-pneumothorax': 'Relieve the obstructive thoracic cause',

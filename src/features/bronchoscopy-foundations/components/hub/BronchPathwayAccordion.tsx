@@ -12,7 +12,7 @@ import {
   reviewedBronchSectionIds,
   type BronchPathwayGroup,
 } from '../../content/pathwayResolver'
-import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF } from '../../content/routes'
+import { BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF } from '../../content/routes'
 import type { BronchSelfPacedRecord } from '../../engine/selfPacedProgress'
 import styles from '../bronchoscopy-foundations-hub.module.css'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
@@ -119,7 +119,7 @@ export function BronchStoredPathwayAccordion({ id }: { readonly id?: string }) {
  * Resolves through `nextBronchSection` and nothing else. A fresh learner is sent to section one; a
  * returning learner back to the section they were in unless they marked it reviewed, otherwise to
  * the first section not marked reviewed; a learner who has marked every section, to the
- * integrated cases.
+ * closing screen.
  */
 export function BronchContinueCta({ className }: { readonly className?: string }) {
   const { record, hydrated } = useBronchoscopyFoundationsRecord()
@@ -127,11 +127,11 @@ export function BronchContinueCta({ className }: { readonly className?: string }
   if (!next) {
     return (
       <Link
-        href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}
+        href={BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF}
         className={className ?? styles.continue}
         data-bronch-continue="complete"
       >
-        <span>Every section marked reviewed — try the integrated cases</span>
+        <span>Every section reviewed — read what comes next</span>
         <ArrowRight aria-hidden="true" />
       </Link>
     )

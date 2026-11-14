@@ -29,6 +29,7 @@ export type SourceId =
   | 'pritchett'
   | 'icrp'
   | 'skin'
+  | 'chassagnon'
 export interface Source {
   id: SourceId
   authors: string

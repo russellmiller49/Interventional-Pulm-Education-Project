@@ -59,8 +59,8 @@ jest.mock(
   }),
 )
 jest.mock('@/features/bronchoscopy-foundations/components/BronchCaseActivity', () => ({
-  BronchCaseActivity: ({ caseId }: { caseId: string }) => (
-    <div data-testid="bronch-practice-case" data-id={caseId} />
+  BronchCaseActivity: ({ caseId, set }: { caseId: string; set?: number }) => (
+    <div data-testid="bronch-practice-case" data-id={caseId} data-set={set ?? ''} />
   ),
 }))
 jest.mock(
@@ -75,6 +75,14 @@ jest.mock(
     BronchoscopyFoundationsReference: () => <div data-testid="bronch-reference" />,
   }),
 )
+jest.mock('@/features/bronchoscopy-foundations/components/BronchImageBank', () => ({
+  BronchImageBank: ({ set }: { set: number }) => (
+    <div data-testid="bronch-image-bank" data-set={set} />
+  ),
+}))
+jest.mock('@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsClosing', () => ({
+  BronchoscopyFoundationsClosing: () => <div data-testid="bronch-closing" />,
+}))
 jest.mock('@/features/bronchoscopy-foundations/components/reference/AirwayStillAtlas', () => ({
   AirwayStillAtlas: () => <div data-testid="bronch-atlas" />,
 }))
@@ -83,7 +91,13 @@ import BronchoscopyFoundationsPage, { generateMetadata as overviewMetadata } fro
 import BronchoscopyFoundationsAssessPage, {
   generateMetadata as assessMetadata,
 } from './assess/page'
+import BronchoscopyFoundationsClosingPage, {
+  generateMetadata as closingMetadata,
+} from './learn/complete/page'
 import BronchoscopyFoundationsLearnPage, { generateMetadata as learnMetadata } from './learn/page'
+import BronchoscopyFoundationsImageBankPage, {
+  generateMetadata as imageBankMetadata,
+} from './practice/images/page'
 import BronchoscopyFoundationsPracticePage, {
   generateMetadata as practiceMetadata,
 } from './practice/page'
@@ -105,7 +119,9 @@ describe('bronchoscopy foundations route family', () => {
     for (const generate of [
       overviewMetadata,
       learnMetadata,
+      closingMetadata,
       practiceMetadata,
+      imageBankMetadata,
       assessMetadata,
       referenceMetadata,
       atlasMetadata,
@@ -197,6 +213,32 @@ describe('bronchoscopy foundations route family', () => {
     expect(screen.queryByTestId('bronch-practice-case')).not.toBeInTheDocument()
   })
 
+  it('keeps a case in the mixed set the address names, and ignores a set the case is not in', async () => {
+    const { PRACTICE_SETS } = jest.requireActual<
+      typeof import('@/features/bronchoscopy-foundations/content/practiceSets')
+    >('@/features/bronchoscopy-foundations/content/practiceSets')
+    const inFirst = PRACTICE_SETS[0][3]
+    for (const [set, shown] of [
+      ['1', '1'],
+      [['1', '2'], '1'],
+      ['2', ''],
+      ['x', ''],
+      [undefined, ''],
+    ] as const) {
+      const view = render(
+        await BronchoscopyFoundationsPracticePage({
+          params: params('en'),
+          searchParams: Promise.resolve({
+            case: inFirst.id,
+            ...(set === undefined ? {} : { set: set as string | string[] }),
+          }),
+        }),
+      )
+      expect(screen.getByTestId('bronch-practice-case')).toHaveAttribute('data-set', shown)
+      view.unmount()
+    }
+  })
+
   it('renders Practice and Assess landings inside the frame with their nav hrefs', async () => {
     const practice = render(await BronchoscopyFoundationsPracticePage({ params: params('en') }))
     expect(screen.getByTestId('bronch-practice-landing')).toBeInTheDocument()
@@ -231,5 +273,38 @@ describe('bronchoscopy foundations route family', () => {
       '/bronchoscopy-foundations/reference',
     )
     expect(screen.getByTestId('bronch-frame')).toHaveAttribute('data-locale', 'es')
+  })
+
+  it('opens the image bank at the set the address names, and at the first for anything else', async () => {
+    for (const [query, set] of [
+      [undefined, '1'],
+      [{ set: '3' }, '3'],
+      [{ set: ['2', '4'] }, '2'],
+      [{ set: '99' }, '1'],
+      [{ set: 'x' }, '1'],
+    ] as const) {
+      const view = render(
+        await BronchoscopyFoundationsImageBankPage({
+          params: params('en'),
+          searchParams: query ? Promise.resolve(query as { set?: string | string[] }) : undefined,
+        }),
+      )
+      expect(screen.getByTestId('bronch-image-bank')).toHaveAttribute('data-set', set)
+      expect(screen.getByTestId('bronch-frame')).toHaveAttribute(
+        'data-active',
+        '/bronchoscopy-foundations/practice',
+      )
+      view.unmount()
+    }
+  })
+
+  it('renders the closing screen inside the frame, under the Learn nav item', async () => {
+    render(await BronchoscopyFoundationsClosingPage({ params: params('en') }))
+    expect(screen.getByTestId('bronch-closing')).toBeInTheDocument()
+    expect(screen.getByTestId('bronch-frame')).toHaveAttribute(
+      'data-active',
+      '/bronchoscopy-foundations/learn',
+    )
+    expect(screen.getByTestId('bronch-frame')).toHaveAttribute('data-activity', 'false')
   })
 })

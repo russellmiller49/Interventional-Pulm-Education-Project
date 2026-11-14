@@ -53,10 +53,12 @@ for (const condition of [
     }
     const save = page.getByRole('button', { name: 'Save & exit', exact: true })
     await expect(save).toHaveAccessibleDescription(disclosure)
+    // Said on the button (description and tooltip), not printed across the header (tester
+    // feedback, 2026-10-23: a redundant banner on every section).
+    await expect(save).toHaveAttribute('title', disclosure)
     const note = page.locator('[data-ecmo-save-location-note]')
     await expect(note).toHaveText(disclosure)
-    await note.scrollIntoViewIfNeeded()
-    await expect(note).toBeInViewport()
+    await expect(note).toHaveClass(/sr-only/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await page.screenshot({ path: test.info().outputPath('save-location-notice.png') })
     const shell = page.locator('[data-ecmo-shell="learn"]')
@@ -100,10 +102,10 @@ test('saved Practice link names the location and preserves its existing destinat
   await page.goto(entry)
   const save = page.getByRole('button', { name: 'Save & exit', exact: true })
   await expect(save).toHaveAccessibleDescription(disclosure)
+  await expect(save).toHaveAttribute('title', disclosure)
   const note = page.locator('[data-ecmo-save-location-note]')
   await expect(note).toHaveText(disclosure)
-  await note.scrollIntoViewIfNeeded()
-  await expect(note).toBeInViewport()
+  await expect(note).toHaveClass(/sr-only/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   const shell = page.locator('[data-ecmo-shell="practice"]')
   await expect(shell).toHaveAttribute('data-stage', 'brief')

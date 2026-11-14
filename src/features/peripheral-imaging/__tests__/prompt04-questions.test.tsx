@@ -14,14 +14,11 @@ import {
   INTERPRETATION_CHECKS,
   RETIRED_INTERPRETATION_CHECKS,
 } from '../content/interpretationChecks'
+import { INDEPENDENT_IMAGE_PANEL_SECTIONS } from '../content/learningActivities'
 import { imagingMicroCaseById } from '../content/microCases'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingSectionItems } from '../content/stageItems'
 import { imagingStageLesson } from '../content/stageLessons'
-import {
-  fixedExampleEvidence,
-  illustrativeOnlyExampleIdentities,
-} from '../content/teachingExamples'
 import { transferOrigin, transferReviewInstruction } from '../content/transferOrigins'
 import { QUESTION_BY_ID, QUESTIONS } from '../data/questions'
 import {
@@ -203,7 +200,7 @@ describe('question identity and versioning', () => {
     const case5 = imagingCaseById.get('case-5-v2')!.item
     expect(case5.correctChoiceIds).toEqual(['a'])
     expect(case5.stem).toBe(
-      'Linked thin axial, coronal and sagittal planes from a CBCT spin show the modeled lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
+      'Linked thin axial, coronal and sagittal planes from a CBCT spin show the lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
     )
     expect(case5.stem).not.toMatch(/fictional/i)
     expect(PLAUSIBILITY(case5.choices)).toMatchObject({
@@ -223,13 +220,12 @@ describe('question identity and versioning', () => {
     for (const item of [s1, s6, s16, case4, case5, case8]) expect(item.reviewStatus).toBe('draft')
   })
 
-  it('keeps the Section 16 check’s image declared as the section’s teaching model, not evidence', () => {
-    expect(fixedExampleEvidence('changing-anatomy', 0)).toBe('illustrative-model')
-    expect(illustrativeOnlyExampleIdentities()).toEqual([
-      'current-anatomy:example:0',
-      'changing-anatomy:example:0',
-      'staff-protection:example:0',
-    ])
+  it('gives the Section 16 check its own image of the appearance its stem describes', () => {
+    const lesson = imagingStageLesson('changing-anatomy')
+    const step = lesson.steps[lesson.predictionStepIndex]
+    expect(step.activity.visual).toBe('suite')
+    expect(INDEPENDENT_IMAGE_PANEL_SECTIONS).toContain('changing-anatomy')
+    expect(step.instruction).toMatch(/^Inspect the image and acquisition context\./)
   })
 
   it('labels the two reviews of choose-1 truthfully now Section 1 renders its new check instead', () => {
@@ -282,17 +278,17 @@ describe('practice case 9 keeps its id and loses what the model cannot support (
     const key = practice.item.choices.find((choice) => choice.id === 'a')!.rationale
     expect(key).toBe(question.choices[0].rationale)
     // What this figure establishes, stated as this figure's.
-    expect(key).toMatch(/^In this teaching figure, /)
-    expect(key).toMatch(/the projection stands for the current acquisition/)
-    expect(key).toMatch(/deliberately contains the modeled catheter/)
-    expect(key).toMatch(/the three planes match the planning CT and contain no catheter/)
-    expect(key).toMatch(/In this model, planes reconstructed from the current acquisition/)
-    expect(key).toMatch(/in this example, the planes were drawn from the planning CT/)
+    expect(key).toMatch(/^In this example the projection is the current acquisition/)
+    expect(key).toMatch(/and shows the catheter/)
+    expect(key).toMatch(/the three planes match the planning CT and show no catheter/)
+    expect(key).toMatch(/Planes reconstructed from this acquisition would show that catheter/)
+    expect(key).toMatch(/So, here, the planes were drawn from the planning CT/)
+    expect(key).toMatch(/The inference rests on what this figure shows/)
     // What it does not claim.
     expect(key).toMatch(
       /catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system/,
     )
-    expect(question.takeaway).toMatch(/In this teaching case, /)
+    expect(question.takeaway).toMatch(/In this case, /)
     expect(question.takeaway).toMatch(/so here the missing catheter identifies those planes/)
     expect(question.takeaway).toMatch(
       /Outside this case, catheter absence alone is not a universal sign of prior-derived content/,
@@ -343,6 +339,8 @@ describe('integrated-case slots and their old addresses', () => {
       'case-6',
       'case-7',
       'case-8-v2',
+      // Expert-session round, part 2: planning the projection from the CT.
+      'case-9',
     ])
     expect(LEGACY_INTEGRATED_CASE_ADDRESSES).toEqual({
       'case-4': 'case-4-v2',
@@ -355,7 +353,7 @@ describe('integrated-case slots and their old addresses', () => {
       expect(imagingCaseById.get(current)!.item.id).toBe(`capstone:${current}`)
     }
     expect(resolveIntegratedCaseAddress('case-1')).toBe('case-1')
-    expect(resolveIntegratedCaseAddress('case-9')).toBeNull()
+    expect(resolveIntegratedCaseAddress('case-10')).toBeNull()
     expect(resolveIntegratedCaseAddress('constructor')).toBeNull()
     // A case title names the situation; the image-based case's no longer states its finding.
     expect(imagingCaseById.get('case-5-v2')!.presentationTitle).not.toMatch(/beyond/i)

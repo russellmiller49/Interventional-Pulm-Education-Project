@@ -657,6 +657,23 @@ const allStaticResults: SiteSearchResult[] = [
     ],
   },
   {
+    title: 'Dolphin Bronchoscopy',
+    description:
+      'Self-paced module for veterinarians on bottlenose dolphin bronchoscopy: airway map, numbered branches, sedation and topical lidocaine, passing the laryngeal spout, survey, lavage and complications.',
+    href: '/dolphin-bronchoscopy',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'dolphin',
+      'cetacean',
+      'marine mammal',
+      'veterinary bronchoscopy',
+      'blowhole',
+      'tracheal bronchus',
+      'NMMP',
+    ],
+  },
+  {
     title: 'IP Registry',
     description:
       'Procedure-suite registry concept for interventional pulmonology workflow and quality tracking.',

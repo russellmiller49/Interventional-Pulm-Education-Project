@@ -1,0 +1,65 @@
+/*
+ * The flowing task body, shared by the critical-care modules (lifted from ECMO's
+ * `ActivityFlow.module.css`, which keeps its own copy).
+ *
+ * One column by default; on a wide window a step with a visual sets its teaching column beside it,
+ * with the extra width going to the visual. Each module's stylesheet may tune the measures through
+ * the two custom properties below without restating the grid.
+ */
+.content {
+  --flow-teaching-min: 280px;
+  --flow-teaching-max: 26rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  min-width: 0;
+  margin-block: 1rem;
+}
+
+.explanation,
+.visual,
+.response {
+  min-width: 0;
+}
+
+.response:empty {
+  display: none;
+}
+
+/* A step with nothing to teach beside its visual gives the visual the width. */
+.explanation:empty {
+  display: none;
+}
+
+.visual {
+  isolation: isolate;
+}
+
+@media (min-width: 1100px) {
+  .content[data-has-visual]:not(:has(> .explanation:empty)) {
+    grid-template-columns: minmax(var(--flow-teaching-min), 0.7fr) minmax(0, 1.3fr);
+    align-items: start;
+  }
+  .content[data-has-visual][data-visual-first]:not(:has(> .explanation:empty)) {
+    grid-template-columns: minmax(0, 1.3fr) minmax(var(--flow-teaching-min), 0.7fr);
+  }
+  .content[data-has-visual][data-stacked] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .content[data-has-visual] > .response {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Wide windows: the teaching column keeps a reading measure; the visual takes the rest. */
+@media (min-width: 1500px) {
+  .content[data-has-visual]:not(:has(> .explanation:empty)) {
+    grid-template-columns: minmax(22rem, var(--flow-teaching-max)) minmax(0, 1fr);
+  }
+  .content[data-has-visual][data-visual-first]:not(:has(> .explanation:empty)) {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, var(--flow-teaching-max));
+  }
+  .content[data-has-visual][data-stacked] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

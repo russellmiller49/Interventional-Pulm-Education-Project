@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { createBronchoscopyMaterial } from '@/lib/airway-anatomy/airway-render'
+import { createScopeMaterial, setScopeReach } from './scope-material'
 import type { Vec3 } from '../geometry/coordinates'
 import { SCOPE_FOV_DEG } from '../geometry/route-stations'
 import styles from './nav-bench.module.css'
@@ -187,9 +187,39 @@ function OpeningProjector({
   return null
 }
 
-function Surface({ geometry }: { geometry: THREE.BufferGeometry }) {
-  const material = useMemo(() => createBronchoscopyMaterial(), [])
+/**
+ * How far the scope's light narrows to a cone about its line of sight: 0 lights the whole view
+ * evenly, 1 dims the rim to a fifth. Part-way, the wall beside the lens falls off toward the rim
+ * as it does in a bronchoscope's picture, and a small airway is no longer one even pink.
+ */
+const HEADLIGHT_CONE = 0.7
+
+function Surface({
+  geometry,
+  direction,
+  falloffMm,
+}: {
+  geometry: THREE.BufferGeometry
+  direction: Vec3
+  falloffMm: number
+}) {
+  const { invalidate } = useThree()
+  const material = useMemo(() => {
+    const made = createScopeMaterial()
+    made.uniforms.uHeadlightFalloff.value = HEADLIGHT_CONE
+    return made
+  }, [])
+  // The light reaches as far as suits the airway the scope is in.
+  useEffect(() => {
+    setScopeReach(material, falloffMm)
+    invalidate()
+  }, [material, falloffMm, invalidate])
   useEffect(() => () => material.dispose(), [material])
+  // The light travels with the lens: its cone follows the line of sight.
+  useEffect(() => {
+    ;(material.uniforms.uHeadlightAxis.value as THREE.Vector3).set(...direction).normalize()
+    invalidate()
+  }, [material, direction, invalidate])
   return <mesh geometry={geometry} material={material} dispose={null} />
 }
 
@@ -200,10 +230,13 @@ export function ScopeCanvas({
   openings,
   onProject,
   onReady,
+  falloffMm = 23,
 }: {
   position: Vec3
   direction: Vec3
   up: Vec3
+  /** How far the scope's light carries, in millimetres: shorter in a narrower airway. */
+  falloffMm?: number
   /** Openings to place in the view. Pass none while the scope is moving. */
   openings: ScopeOpening[]
   onProject: (results: ProjectedOpening[]) => void
@@ -278,9 +311,8 @@ export function ScopeCanvas({
         }}
       >
         <color attach="background" args={['#081118']} />
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[200, -400, 200]} intensity={2} />
-        <Surface geometry={geometry} />
+        {/* No scene lights: the surface's own shader lights it from the lens. */}
+        <Surface geometry={geometry} direction={direction} falloffMm={falloffMm} />
         <ScopeCamera position={position} direction={direction} up={up} />
         {openings.length > 0 && (
           <OpeningProjector

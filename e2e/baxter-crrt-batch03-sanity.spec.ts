@@ -1,5 +1,14 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 
+/** The lesson bar prints "CRRT · Lesson N of 8" above the lesson's title. */
+const lessonNumber = (page: Page) => page.locator('[data-lesson-module="baxter-crrt"] p:has(+ h1)')
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 const practice = '/en/baxter-crrt/practice?case='
 const lesson = '/en/baxter-crrt/learn?lesson='
 
@@ -183,19 +192,30 @@ test('sanity 03: every Cases option is reachable and all four group boundaries s
 })
 
 for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`sanity 03: keyboard jump reaches visible controls immediately (${reducedMotion})`, async ({
+  test(`sanity 03: keyboard Skip lands visible focus on the next task immediately (${reducedMotion})`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion })
     await page.goto(lesson + 'crrt-circuit-pressures')
-    await page.getByRole('button', { name: "Go to this task's continue controls" }).focus()
+    // Tester report 2026-11-05: the jump button and its "Continue from this task" target are
+    // gone; one Skip sits in the exercise's own action row.
+    await expect(
+      page.getByRole('button', { name: "Go to this task's continue controls" }),
+    ).toHaveCount(0)
+    const skip = page
+      .getByRole('group', { name: 'Task actions' })
+      .getByRole('button', { name: 'Skip this task' })
+    await skip.focus()
     await page.keyboard.press('Enter')
-    const target = page.getByRole('group', { name: 'Continue from this task' })
-    // No retry or animation wait: focus must be visible at the moment it moves.
-    await visibleFocus(target)
+    // No retry or animation wait: focus must be visible on the next task the moment it moves.
+    await visibleFocus(
+      page.getByRole('heading', { level: 2, name: 'Add the fluids one path at a time' }),
+    )
     await page.keyboard.press('Tab')
     await expect(
-      target.getByRole('button', { name: 'Continue without this exercise' }),
+      page
+        .locator('[data-crrt-circuit-workbench]')
+        .getByRole('button', { name: 'Dialysate', exact: true }),
     ).toBeFocused()
   })
 }
@@ -298,18 +318,21 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
   page,
 }) => {
   await page.goto(lesson + 'crrt-indications-modality')
-  const picker = page.getByRole('combobox', { name: 'CRRT lesson' })
-  const lessons = await picker
-    .locator('option')
-    .evaluateAll((es) =>
-      es.map((el) => ({ id: (el as HTMLOptionElement).value, label: el.textContent! })),
-    )
+  const picker = page.locator('[data-sections-drawer]')
+  const lessons = await picker.locator('button[data-section]').evaluateAll((es) =>
+    es.map((el) => ({
+      id: el.getAttribute('data-section')!,
+      label: el.getAttribute('aria-label')!,
+    })),
+  )
   expect(lessons).toHaveLength(8)
   for (const [index, item] of lessons.entries()) {
-    await picker.selectOption(item.id)
+    await picker.locator('summary').click()
+    await picker.locator(`button[data-section="${item.id}"]`).click()
     await expect(page).toHaveURL(new RegExp(`lesson=${item.id}$`))
-    await expect(page.getByText(`Lesson ${index + 1} of 8`, { exact: true })).toBeVisible()
+    await expect(lessonNumber(page)).toHaveText(new RegExp(`Lesson ${index + 1} of 8$`))
     const nav = page.getByRole('navigation', { name: 'Previous and next lesson' })
+    await openLessonMenu(page)
     if (index > 0)
       await expect(
         nav.getByRole('button', { name: `Previous lesson: ${lessons[index - 1].label}` }),
@@ -324,7 +347,7 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
     await outline.locator('summary').click()
     await outline.getByRole('button').last().click()
     await expect(outline.getByRole('button').last()).not.toContainText('reviewed')
-    const skip = page.getByRole('button', { name: 'Continue without this exercise', exact: true })
+    const skip = page.getByRole('button', { name: 'Skip this task', exact: true })
     if (await skip.count()) await skip.click()
     else await page.getByRole('button', { name: 'Continue', exact: true }).click()
     await expect(
@@ -333,7 +356,8 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
         exact: index === 7,
       }),
     ).toBeVisible()
-    // The header control; the end card offers the same operation under the same words (F-25).
+    // The menu's control; the end card offers the same operation under the same words (F-25).
+    await openLessonMenu(page)
     await page.getByRole('button', { name: 'Restart lesson', exact: true }).first().click()
     await expect(page.getByText(/^Lesson tasks · 1 of/)).toBeVisible()
     expect(
@@ -365,7 +389,7 @@ test('sanity 03: long task outline visits do not complete tasks; Save and exit p
   const resume = page.getByRole('link', { name: /Continue to the next topic/ })
   await expect(resume).toContainText('Lesson 1:')
   await resume.click()
-  await expect(page.getByText('Lesson 1 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 1 of 8$/)
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem('baxter-crrt-progress-v3')!).completedLessonIds,

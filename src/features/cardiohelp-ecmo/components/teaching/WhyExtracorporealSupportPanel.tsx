@@ -107,8 +107,8 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
               Oxygen delivery, component by component
             </h3>
             <p className="mt-3 text-sm leading-6">
-              Tissues need oxygen delivered in flowing blood. Delivery depends on both how much
-              blood reaches them and how much oxygen that blood carries.
+              Oxygen reaches the tissues in flowing blood. How much is delivered depends on two
+              things: how much blood reaches the tissue, and how much oxygen that blood is carrying.
             </p>
             <p
               className="my-4 rounded-xl border p-3 text-base font-semibold"
@@ -128,10 +128,22 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
               considered alongside delivery.
             </p>
             <p className="mt-2 text-sm leading-6">
-              ECMO supports gas exchange, and in VA also circulation, while the underlying problem
-              is addressed.
+              VV ECMO supports gas exchange. VA ECMO supports gas exchange and the circulation.
+              Neither treats the underlying disease; both buy time while it is treated.
             </p>
           </section>
+          {/*
+            The arithmetic belongs to this step and no other. It used to follow every block of the
+            section, so the worked example on the next task ended with the same sliders the learner
+            had just used; a tester (2026-10-13) reported it as repeated from the previous step.
+          */}
+          <details className={`${styles.section} mt-4`}>
+            <summary className="cursor-pointer font-semibold">Try the numbers</summary>
+            <OxygenDeliveryExplorer
+              state={state}
+              sourceIds={OXYGEN_DELIVERY_ARITHMETIC_SOURCE_IDS}
+            />
+          </details>
         </FoundationTeachingBlock>
         <FoundationTeachingBlock id="support-example" title="Review the worked example">
           <section className={styles.section} aria-labelledby="support-example-heading">
@@ -141,7 +153,8 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
             <p className="mt-3 text-sm leading-6">
               <strong>Worked example.</strong> Oxygen demand rises while blood flow, hemoglobin, and
               saturation stay unchanged. Oxygen delivery has not increased, but the amount needed
-              has. The unchanged saturation does not settle the balance.
+              has. The saturation looks the same as before, yet delivery no longer keeps up with
+              demand.
             </p>
             {/*
               S1-6 (ECMO-FELLOW-04): both sentences pointed at a circuit "beside you". This section
@@ -156,39 +169,8 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
               Support does not treat the underlying lung injury, cardiac lesion, bleeding, or
               sepsis. The cause still needs assessment and treatment.
             </p>
-            <p className="mt-2 text-sm leading-6">
-              This is a conceptual example: oxygen demand remains fixed in the live simulation.
-            </p>
           </section>
         </FoundationTeachingBlock>
-        <details className={styles.section}>
-          <summary className="cursor-pointer font-semibold">
-            Explore the delivery arithmetic
-          </summary>
-          <OxygenDeliveryExplorer state={state} sourceIds={OXYGEN_DELIVERY_ARITHMETIC_SOURCE_IDS} />
-        </details>
-        <details className={styles.section}>
-          <summary className="cursor-pointer font-semibold">
-            Current components and model detail
-          </summary>
-          <ComponentBar
-            label="Oxygen content · derived estimate"
-            detail="Hemoglobin-bound oxygen only; not a measured device output."
-            fraction={oxygenContent / 22}
-            value={`${oxygenContent.toFixed(1)} mL/dL`}
-          />
-          <ComponentBar
-            label="Native cardiac output · model value"
-            detail="Kept separate from displayed circuit blood flow."
-            fraction={patient.nativeCardiacOutputLpm / 8}
-            value={`${patient.nativeCardiacOutputLpm.toFixed(1)} L/min`}
-          />
-          <GuidedValue
-            guide={ecmoDerivedValueGuides.oxygenConsumption}
-            value={consumption}
-            headingLevel={3}
-          />
-        </details>
       </div>
     )
 

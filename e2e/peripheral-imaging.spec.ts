@@ -213,7 +213,8 @@ test('projection teaching, comparison, explanation before an answer, retry and r
   // The demonstration did not do the learner's work: no Continue, but a way on without it.
   await expect(primary(page)).toHaveCount(0)
   await expect(skip(page)).toHaveText('Skip this step')
-  await setRange(page, 'C-arm obliquity', 35)
+  // LAO 24° changes the projection and leaves only lung over the nodule (expert-session round).
+  await setRange(page, 'C-arm obliquity', -24)
   await primary(page).click()
   await setRange(page, 'C-arm obliquity', 0)
   await primary(page).click()
@@ -279,7 +280,7 @@ test('field crop and zoom preserve a saved acquisition and restricted context ca
   await primary(page).click()
   await expect(primary(page)).toBeEnabled({ timeout: 60000 })
   await page.getByRole('button', { name: 'Crop the baseline stored frame', exact: true }).click()
-  await expect(page.locator('[data-current-image]')).toContainText('acquired field 100%')
+  await expect(page.locator('[data-current-image]')).toContainText('field 100%')
   await page.getByRole('button', { name: 'Zoom the baseline stored frame', exact: true }).click()
   await expect(page.locator('[data-current-image] [data-monitor-zoom]')).toHaveAttribute(
     'data-monitor-zoom',
@@ -290,12 +291,26 @@ test('field crop and zoom preserve a saved acquisition and restricted context ca
   await capture(page, info, 'field-stored-zoom.png')
   await expectNoStoredResponses(page)
   await primary(page).click()
-  await setRange(page, 'Collimated field width', 45)
+  // Owner's teaching, 2026-10-11: two fields. Straight to a tight field takes the spine out of
+  // it, and the display range with it, but the field for the tool path was never held.
+  await expect(page.locator('[data-current-image]')).toHaveAttribute('data-display-gain', '1.00')
+  await setRange(page, 'Collimated field width', 40)
   await expect(primary(page)).toHaveCount(0)
   await expect(skip(page)).toBeVisible()
   await expect(page.locator('[data-readout="contextRetained"]')).toContainText('no')
-  await setRange(page, 'Collimated field width', 90)
+  await expect(page.locator('[data-readout="spineInField"]')).toContainText('no')
+  await expect
+    .poll(async () =>
+      Number(await page.locator('[data-current-image]').getAttribute('data-display-gain')),
+    )
+    .toBeGreaterThan(1.8)
+  await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(1)
+  await setRange(page, 'Collimated field width', 70)
+  await expect(page.locator('[data-readout="contextRetained"]')).toContainText('yes')
+  await expect(page.locator('[data-readout="spineInField"]')).toContainText('yes')
+  await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(2)
   await expect(primary(page)).toBeEnabled()
+  await capture(page, info, 'field-two-stage-collimation.png')
 })
 
 test('timing changes depict separate within-frame and between-frame effects with reduced motion', async ({
@@ -504,7 +519,7 @@ test('a practice case explains itself before an answer, repeats freely, moves on
   }
 })
 
-test('all nineteen sections render their authored explanation and visual, without architecture panels', async ({
+test('every section renders its authored explanation and visual, without architecture panels', async ({
   page,
 }, info) => {
   test.setTimeout(420_000)
@@ -573,12 +588,8 @@ test('acquisition movement invalidates readiness and the sampling check example 
   await setRange(page, 'Tip along needle axis', 10)
   await setRange(page, 'Anterior / posterior offset', 0)
   await primary(page).click()
-  await page
-    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
-    .check()
-  await page
-    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
-    .uncheck()
+  await page.getByRole('checkbox', { name: 'Thick slab (combine depths)', exact: true }).check()
+  await page.getByRole('checkbox', { name: 'Thick slab (combine depths)', exact: true }).uncheck()
   await page.getByRole('checkbox', { name: 'Reveal geometric explanation', exact: true }).check()
   await primary(page).click()
   await expect(page.locator('[data-sampling-state]')).toHaveAttribute(
@@ -610,7 +621,7 @@ test('required-image failure counts nothing as seen, keeps explanation and retry
   // Contract change (PI-01): the failed image no longer holds the learner on this step.
   await expect(skip(page)).toHaveText('Continue without the image')
   await skip(page).click()
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await expect(page.locator('[data-now-status]')).toContainText('without completing it')
   await expectNoStoredResponses(page)
@@ -637,7 +648,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await capture(page, info, `projection-${width}.png`)
     await primary(page).focus()
     await page.keyboard.press('Enter')
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
     await expect(page.locator('[data-now-focus]')).toBeFocused()
   }
   for (const width of [900, 1440]) {
@@ -650,7 +661,7 @@ test('laptop, tablet, small phone, keyboard and text zoom keep a single task flo
     await primary(page).scrollIntoViewIfNeeded()
     await capture(page, info, `projection-text-200-percent-${width}.png`)
     await primary(page).click()
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:alignment')
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection:bronchi')
   }
 })
 
@@ -703,13 +714,18 @@ for (const id of [
     await openSection(page, id)
     await advanceReading(page, id)
     if (id === 'projection') {
-      await controlRange(page, 'orbit', 35)
+      // LAO 24° leaves only lung over the nodule: the obliquity read off the axial CT.
+      await controlRange(page, 'orbit', -24)
+      await expect(page.locator('[data-readout="rayCrosses"]')).toContainText('Lung only')
       await primary(page).click()
       await controlRange(page, 'orbit', 0)
       await primary(page).click()
     }
     if (id === 'field') {
-      await controlRange(page, 'field', 90)
+      // Two stages: the field for the tool path, then the spine out of the field.
+      await controlRange(page, 'field', 70)
+      await controlRange(page, 'field', 40)
+      await expect(page.locator('[data-readout="spineInField"]')).toContainText('no')
       await primary(page).click()
       await controlCheck(page, 'crop')
       await controlRange(page, 'zoom', 1.5)
@@ -727,6 +743,9 @@ for (const id of [
       await controlRange(page, 'plane', 0)
       await primary(page).click()
       await controlRange(page, 'sweep', 50)
+      // Expert-session round, part 2: centre the arc where the heart and spine are off the nodule.
+      await controlRange(page, 'sweepCenter', -20)
+      await expect(page.locator('[data-readout="rayCrossesAtCentre"]')).toContainText('Rib')
       await primary(page).click()
       // PR #279 sanity review (F3, CHK-S10): the check is the written scenario its stem is, with no
       // reconstructed plane beside it, so it offers no plane to browse and no plane readout.
@@ -739,7 +758,7 @@ for (const id of [
       await page.locator('#peripheral-imaging-control-center').click()
       for (const key of ['target', 'clearance', 'state', 'protection'])
         await controlCheck(page, key)
-      await page.locator('#peripheral-imaging-control-captured').click()
+      await page.getByRole('button', { name: 'Run the CBCT spin', exact: true }).click()
       await expect(page.locator('[data-readout="captured"]')).toContainText('yes', {
         timeout: 60000,
       })
@@ -841,7 +860,7 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
   await expect(page.locator('[data-baseline-image] img')).toHaveCount(1)
   const fingerprint = async () => page.locator('[data-baseline-image] img').getAttribute('src')
   const baseline = await fingerprint()
-  await controlRange(page, 'orbit', 35)
+  await controlRange(page, 'orbit', -24)
   await page.getByText('Course outline', { exact: true }).click()
   await page.setViewportSize({ width: 1024, height: 768 })
   await page.getByText('Course outline', { exact: true }).click()
@@ -849,7 +868,7 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
   await primary(page).click()
   expect((await fingerprint()) === baseline).toBe(true)
   await page.getByRole('button', { name: 'Back', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Save baseline image' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Save baseline image' })).toHaveCount(0)
   expect((await fingerprint()) === baseline).toBe(true)
   await page.getByRole('button', { name: /Return to step/ }).click()
   await page.getByText('Review earlier activities', { exact: true }).click()
@@ -1447,27 +1466,19 @@ async function reachWalkCheckWithObliquity(page: Page, priorObliquity: number | 
 async function fixedExampleReading(page: Page) {
   await expect(page.locator('[data-authored-example]')).toHaveCount(1)
   return page.evaluate(() => {
-    const value = (key: string) =>
-      (document.getElementById(`peripheral-imaging-control-${key}`) as HTMLInputElement | null)
-        ?.value ?? null
-    const output = (key: string) =>
-      document
-        .querySelector(`output[for="peripheral-imaging-control-${key}"]`)
-        ?.textContent?.trim() ?? null
+    // A fixed example offers no control (owner feedback, 2026-10-11): its acquisition context is
+    // the caption under the image.
+    const context =
+      document.querySelector('[data-authored-example] [data-acquisition-context]')?.textContent ??
+      ''
     return {
       identity: document
         .querySelector('[data-authored-example]')
         ?.getAttribute('data-authored-example'),
-      orbit: value('orbit'),
-      tilt: value('tilt'),
-      orbitShown: output('orbit'),
-      tiltShown: output('tilt'),
-      dockDisabled:
-        document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')?.disabled ?? null,
-      lockedReason:
-        Array.from(document.querySelectorAll('[data-suite-locked], .reason, p'))
-          .map((node) => node.textContent?.trim() ?? '')
-          .find((text) => /stays fixed so the question and the image match/.test(text)) ?? null,
+      orbitShown: context.match(/C-arm obliquity (-?\d+°)/)?.[1] ?? null,
+      tiltShown: context.match(/beam tilt (-?\d+°)/)?.[1] ?? null,
+      controls: document.querySelectorAll('[data-authored-example] :is(input, select, button)')
+        .length,
     }
   })
 }
@@ -1490,11 +1501,9 @@ test('report 2.1: the fixed example is one authored image whatever the learner s
   }
   const [first, ...rest] = readings
   expect(first.reading.identity).toBe('chain-walk:example:0')
-  expect(first.reading.orbit).toBe('0')
-  expect(first.reading.tilt).toBe('0')
   expect(first.reading.orbitShown).toBe('0°')
-  expect(first.reading.dockDisabled).toBe(true)
-  expect(first.reading.lockedReason).not.toBeNull()
+  expect(first.reading.tiltShown).toBe('0°')
+  expect(first.reading.controls).toBe(0)
   for (const other of rest) expect(other.reading).toEqual(first.reading)
 
   // Reading, revealing and retrying the example is not work performed.
@@ -1824,12 +1833,13 @@ for (const size of [
       expect(seen.lit!.fraction).toBeGreaterThan(0.99)
       expect(seen.text!.visiblePx).toBeGreaterThan(200)
       expect(seen.text!.top).toBeGreaterThanOrEqual(0)
-      // Beside it, not below it.
+      // Beside it, not below it; and on the left, where the reading starts (owner feedback,
+      // 2026-10-11).
       const [scene, text] = await Promise.all([
         page.locator('[data-suite-viewport]').boundingBox(),
         page.locator('[data-walk-stop]').boundingBox(),
       ])
-      expect(text!.x).toBeGreaterThanOrEqual(scene!.x + scene!.width)
+      expect(text!.x + text!.width).toBeLessThanOrEqual(scene!.x)
     }
     await together()
     const titles = new Set<string>()
@@ -2026,27 +2036,30 @@ test('report 2.9, 2.10, 2.13 and 2.15: cue before the figure, checklist with the
   expect(footer.position).toBe('sticky')
   expect(footer.background).toMatch(/^rgb\(/)
 
-  // 2.13 — PDF p.21/p.27: "the changes listed below" pointed at a list under the fold.
+  // 2.13 — PDF p.21/p.27: "the changes listed below" pointed at a list under the fold. Owner
+  // feedback, 2026-10-11 (slide 5): the list is the text column's task card, on the left beside
+  // the image and its controls, and the dock holds no second copy.
   await advanceToKind(page, 'good-image', 'lab-task')
   await sceneReady(page)
-  await expect(page.locator('[data-now-status]')).toContainText('listed with the controls')
-  await expect(page.locator('[data-step-goals]')).toHaveCount(0)
+  await expect(page.locator('[data-now-status]')).toContainText('checklist')
+  await expect(page.locator('[data-dock-goals]')).toHaveCount(0)
+  await expect(page.locator('[data-step-goals]')).toHaveCount(1)
   const list = await inUncoveredBand(page, {
-    goals: '[data-dock-goals]',
+    goals: '[data-task-card] [data-step-goals]',
     controls: '[data-suite-controls]',
     image: '[data-current-image] canvas',
   })
   expect(list.goals!.fraction).toBeGreaterThan(0.99)
   expect(list.image!.fraction).toBeGreaterThan(0.9)
-  const [goals, controls] = await Promise.all([
-    page.locator('[data-dock-goals]').boundingBox(),
-    page.locator('[data-suite-controls]').boundingBox(),
+  expect(list.controls!.fraction).toBeGreaterThan(0.9)
+  const [goals, image] = await Promise.all([
+    page.locator('[data-task-card]').boundingBox(),
+    page.locator('[data-current-image] canvas').boundingBox(),
   ])
-  // In the same dock, directly above the controls it is about.
-  expect(Math.abs(goals!.x - controls!.x)).toBeLessThan(40)
-  expect(controls!.y - (goals!.y + goals!.height)).toBeLessThan(40)
-  // A real change ticks the list where the learner is looking.
-  const unmet = page.locator('[data-dock-goals] li[data-met="false"]')
+  // The text column leads: the task is to the left of the image it is done on.
+  expect(goals!.x + goals!.width).toBeLessThanOrEqual(image!.x)
+  // A real change ticks the list where the learner is reading.
+  const unmet = page.locator('[data-step-goals] li[data-met="false"]')
   const before = await unmet.count()
   expect(before).toBeGreaterThan(0)
   await controlRange(page, 'orbit', 35)
@@ -2081,7 +2094,9 @@ test('report 3.8: the pulse strip has the width of its card, one text size, and 
       }
     })
   const first = await reading()
-  expect(first.span).toBeGreaterThan(200)
+  // The strip shares its row with the text column now (owner feedback, 2026-10-11), so at 1280 px
+  // it is narrower than when the workbench had the page to itself; the defect was about 100 px.
+  expect(first.span).toBeGreaterThan(160)
   expect(first.svgText).toBe(0)
   expect(first.sizes).toHaveLength(1)
   // The scale is fixed, so a lower pulse rate visibly spreads the samples: the causal picture.
@@ -2139,7 +2154,9 @@ test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that
   await toggle.focus()
   await page.keyboard.press('Space')
   await expect(plane).toHaveAttribute('data-dts-overlay', 'shown')
-  await expect(page.locator('[data-dts-overlay-note]')).toContainText('not something detected')
+  await expect(page.locator('[data-dts-overlay-note]')).toContainText(
+    'a DTS system does not display them',
+  )
   // The "tool" example opens on the tool's plane: the tool is in it, the target 18 mm away.
   await expect(page.locator('[data-dts-mark="tool"]')).toHaveAttribute('data-in-plane', 'true')
   await expect(page.locator('[data-dts-mark="target"]')).toHaveAttribute('data-in-plane', 'false')
@@ -2264,11 +2281,11 @@ test('report 6.2 and 6.4: controls beside the planes, and the slab shown with th
     expect(thin!.width).toBeGreaterThan(110)
     await expect(pair.locator('[data-slab-pair-view="thin"] svg')).toHaveAttribute(
       'aria-label',
-      /teaching slice at/,
+      /plane at/,
     )
     await expect(pair.locator('[data-slab-pair-view="slab"] svg')).toHaveAttribute(
       'aria-label',
-      /teaching slab/,
+      /thick slab/,
     )
   }
   await capture(page, info, 'fellow2-64-slab-pairs.png')
@@ -2420,14 +2437,15 @@ for (const condition of [
       )
     }
     await sceneReady(page)
-    // Stacked, in reading order: the scene, then the text about it. No pinned side column, and so
-    // no fixed-height panel with a scrollbar of its own.
+    // Stacked, in reading order: the text for the component, then the scene it is highlighted in
+    // (owner feedback, 2026-10-11: text leads). No pinned side column, and so no fixed-height
+    // panel with a scrollbar of its own.
     const [scene, text] = await Promise.all([
       page.locator('[data-suite-viewport]').boundingBox(),
       page.locator('[data-walk-stop]').boundingBox(),
     ])
-    expect(text!.y).toBeGreaterThan(scene!.y)
-    const explanation = page.locator('[data-current-task] > div').nth(1)
+    expect(text!.y).toBeLessThan(scene!.y)
+    const explanation = page.locator('[data-current-task] > [data-text-column]')
     expect(await explanation.evaluate((node) => getComputedStyle(node).position)).toBe('static')
     expect(
       await explanation.evaluate((node) => node.scrollHeight - node.clientHeight),
@@ -2574,7 +2592,7 @@ test('slab comparison keeps each thin section tied to its own live plane slider'
     await expect(thin.locator('figcaption')).toHaveText(`Thin plane · ${position} mm`)
     await expect(thin.locator('svg')).toHaveAttribute(
       'aria-label',
-      new RegExp(`slice at ${position} millimeters`),
+      new RegExp(`plane at ${position} millimeters`),
     )
     await expect.poll(async () => (await pixels())[index]).not.toBe(before[index])
     const after = await pixels()
@@ -2700,7 +2718,7 @@ test('report CW1: a reused closing question is labelled optional review with a l
   const origin = page.locator('[data-transfer-origin="projection"] [data-transfer-origin-link]')
   await expect(origin).toHaveAttribute('href', /section=projection/)
   await expect(page.locator('[data-now-focus]')).toContainText(
-    'it first appears at the end of Section 6',
+    'it first appears at the end of Section 7',
   )
   await capture(page, info, 'fellow3-cw1-review-1440.png')
   // The explanation opens before any answer.
@@ -2940,7 +2958,7 @@ test('prompt 04: practice case 9 draws its model planes and keeps their provenan
   const figure = '[data-case-figure="practice:dts-interpretation-practice-1:figure"]'
   await figureReady(page, figure)
   await expect(page.locator(`${figure} [data-model-label]`)).toHaveText(
-    'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
+    'One projection with the catheter in place, three reconstructed planes, and the planning CT through the same lesion.',
   )
   await figureCanvasesDrawn(page, figure, false)
   await expect(page.locator(`${figure} canvas`)).toHaveCount(5)
@@ -2990,7 +3008,7 @@ test('prompt 04: the replaced integrated-case addresses redirect, and case 5 rea
   await expect(page.locator(figure)).toHaveCount(0)
   await page.goto(`${base()}/en/peripheral-imaging/assess?case=case-5-v2`)
   await expect(page.locator(`${figure} [data-model-label]`)).toContainText(
-    'Not a patient acquisition',
+    'Linked thin axial, coronal and sagittal planes through the lesion and the needle.',
   )
   await expect(page.locator(`${figure} [data-sampling-case-planes] svg[role="img"]`)).toHaveCount(3)
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
@@ -2998,9 +3016,9 @@ test('prompt 04: the replaced integrated-case addresses redirect, and case 5 rea
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
   await page.locator('[data-now-primary]').click()
   await expect(page.locator('[data-readout="window"]')).toHaveText(
-    'Sampling window partly intersects the modeled lesion',
+    'Sampling window partly intersects the lesion',
   )
-  await expect(page.locator('[data-readout="tip"]')).toContainText('Outside the modeled lesion')
+  await expect(page.locator('[data-readout="tip"]')).toContainText('Outside the lesion')
   await capture(page, info, 'prompt04-case5-checked.png')
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
@@ -3111,6 +3129,30 @@ test('PR #279 repair F1 and F4: Section 9 draws the measured rays and both whole
   }
 })
 
+test('owner follow-up 2026-10-12: the Section 4 and 16 checks draw the finding they ask about', async ({
+  page,
+}, info) => {
+  for (const [sectionId, figure, panels, shot] of [
+    ['current-anatomy', '[data-opacity-comparison]', 2, 'check-dependent-opacity.png'],
+    ['changing-anatomy', '[data-motion-planes]', 3, 'check-motion-planes.png'],
+  ] as const) {
+    await advanceToKind(page, sectionId, 'prediction')
+    const selector = `[data-authored-example] ${figure}`
+    await figureReady(page, selector)
+    await expect(page.locator(`${selector} canvas`)).toHaveCount(panels)
+    await figureCanvasesDrawn(page, selector, false)
+    // The image is the evidence: no suite view, no controls, and nothing disclaiming it.
+    await expect(page.locator('[data-suite-scene]')).toHaveCount(0)
+    await expect(page.locator('[data-suite-controls]')).toHaveCount(0)
+    await expect(page.locator('[data-now-card]')).toContainText('Inspect the image')
+    await expect(page.locator('[data-current-task]')).not.toContainText(
+      /not the situation|section’s example|simulated/i,
+    )
+    await page.locator(figure).scrollIntoViewIfNeeded()
+    await capture(page, info, shot)
+  }
+})
+
 test('PR #279 repair F2: practice case 9’s key rationale is bound to this teaching case', async ({
   page,
 }, info) => {
@@ -3122,10 +3164,9 @@ test('PR #279 repair F2: practice case 9’s key rationale is bound to this teac
   const verdict = page.locator('[data-answer-verdict]')
   await expect(verdict).toHaveAttribute('data-verdict-outcome', 'correct')
   const text = await page.locator('[data-practice-case]').innerText()
-  expect(text).toContain(
-    'In this teaching figure, the projection stands for the current acquisition',
-  )
-  expect(text).toContain('in this example, the planes were drawn from the planning CT')
+  expect(text).toContain('In this example the projection is the current acquisition')
+  expect(text).toContain('So, here, the planes were drawn from the planning CT')
+  expect(text).toContain('The inference rests on what this figure shows')
   expect(text).toContain('catheter absence alone is not a universal sign of prior-derived content')
   expect(text).not.toMatch(/could not be missed|cannot be absent|absence marks/i)
   await verdict.scrollIntoViewIfNeeded()
@@ -3298,7 +3339,7 @@ for (const condition of PROMPT04_CONDITIONS) {
       if (selector.includes('data-teaching-figure')) {
         await figureReady(page, selector)
         await expect(page.locator(`${selector} [data-model-label]`)).toBeVisible()
-        if (!selector.includes('artifact-strip')) await figureCanvasesDrawn(page, selector, phone)
+        await figureCanvasesDrawn(page, selector, phone)
       }
       // Tables stay inside their figure: columns when there is room, labelled blocks when not.
       for (const table of await page.locator(`${selector} table`).all()) {
@@ -3329,3 +3370,373 @@ for (const condition of PROMPT04_CONDITIONS) {
     await expect(dialog).not.toBeVisible()
   })
 }
+
+/* ------------------------------------------------------------------ *
+ * AABIP expert session (2026-10): name the anatomy over the nodule, set up before the first
+ * image, and centre the DTS arc. Values come from the table baked from the course CT
+ * (`data/rayCrossings.json`), which model-truth holds to the atlas.
+ * ------------------------------------------------------------------ */
+
+test('expert session: the projection readout names the anatomy over the nodule as the C-arm moves', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'projection', 'lab-task')
+  const readout = page.locator('[data-readout="rayCrosses"] dd')
+  await controlRange(page, 'orbit', 0)
+  await controlRange(page, 'tilt', 0)
+  await expect(readout).toHaveText('Heart and mediastinum, rib')
+  // A 3° caudal nudge takes the posterior rib off the path through the nodule.
+  await controlRange(page, 'tilt', -3)
+  await expect(readout).toHaveText('Heart and mediastinum')
+  // The two-axis example's obliquity clears the heart.
+  await controlRange(page, 'tilt', 0)
+  await controlRange(page, 'orbit', -20)
+  await expect(readout).toHaveText('Rib')
+})
+
+test('expert session: the signal view draws the path through the nodule by named anatomy, without millimetres', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'signal', 'lab-task')
+  const panel = page.locator('[data-ray-profile-state]')
+  await expect(panel).toHaveAttribute('data-ray-profile-state', 'ready', { timeout: 60000 })
+  await controlRange(page, 'orbit', 0)
+  await controlRange(page, 'tilt', 0)
+  await expect(page.locator('[data-ray-crossing]')).toHaveText(
+    'Over the nodule: Heart and mediastinum, rib',
+  )
+  const legend = await page.locator('[data-ray-structure]').allTextContents()
+  expect(legend).toEqual(expect.arrayContaining(['Nodule', 'Heart and mediastinum', 'Rib', 'Lung']))
+  await expect(panel).not.toContainText(/\bmm\b/)
+})
+
+test('expert session: Section 4 sets up ventilation and position with a supine-versus-wedged figure', async ({
+  page,
+}) => {
+  await openSection(page, 'current-anatomy')
+  await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'current-anatomy:setup')
+  const column = page.locator('[data-text-column]')
+  await expect(column).toContainText('Prevent atelectasis before the first image')
+  await expect(column).toContainText('Position the patient so the lesion side is up')
+  const figure = page.locator('[data-teaching-figure="current-anatomy:wedge-dependency"]')
+  await expect(figure).toHaveAttribute('data-figure-state', 'ready', { timeout: 60000 })
+  await expect(figure.locator('[data-figure-canvas="drawn"]')).toHaveCount(2)
+  await expect(figure.locator('[data-vertebral-level]')).toHaveCount(2)
+})
+
+test('expert session: the DTS compare step moves the arc’s centre and reconstructs a tilted plane', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'dts-acquisition', 'observe')
+  await expect(page.locator('#peripheral-imaging-control-sweepCenter')).toBeVisible()
+  await expect(page.locator('[data-readout="rayCrossesAtCentre"] dd')).toHaveText(
+    'Heart and mediastinum, rib',
+  )
+  await controlRange(page, 'plane', 0)
+  await controlRange(page, 'sweepCenter', -20)
+  await expect(page.locator('[data-readout="rayCrossesAtCentre"] dd')).toHaveText('Rib')
+  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready', {
+    timeout: 60000,
+  })
+  await expect(page.locator('[data-focus-readout]')).toContainText('the nodule is in focus')
+  // The position overlay is placed for a frontal arc only.
+  await expect(page.locator('[data-dts-overlay-toggle]')).toHaveCount(0)
+})
+
+/* ------------------------------------------------------------------ *
+ * Expert session, part 2 (2026-10-20): the rules the educators' slides confirmed, on the lab. Every
+ * angle here is pinned in model-truth.test.ts (`content/angleRules.ts`).
+ * ------------------------------------------------------------------ */
+
+test('expert session, part 2: at LAO 20° a posterior rib lies over the nodule and 3° cranial takes it off', async ({
+  page,
+}) => {
+  await advanceToKind(page, 'signal', 'lab-task')
+  const readout = page.locator('[data-readout="rayCrosses"] dd')
+  await controlRange(page, 'orbit', -20)
+  await controlRange(page, 'tilt', 0)
+  await expect(readout).toHaveText('Rib')
+  await controlRange(page, 'tilt', 3)
+  await expect(readout).toHaveText('Lung only')
+  await expect(page.locator('[data-now-status]')).toContainText('Checklist complete')
+})
+
+test('expert session, part 2: Section 19 runs one nodule through the workflow on a wedge', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await advanceToKind(page, 'suite-cases', 'lab-task')
+  const anatomy = page.locator('[data-readout="rayCrosses"] dd')
+  const view = page.locator('[data-readout="viewObliquityDeg"] dd')
+  await expect(page.locator('#peripheral-imaging-control-wedge')).toBeEnabled({ timeout: 60000 })
+  await page.locator('#peripheral-imaging-control-wedge').selectOption('15')
+  await controlRange(page, 'orbit', -9)
+  // The C-arm is at LAO 9°; through the rolled chest the projection is LAO 24°.
+  await expect(view).toHaveText('-24°')
+  await expect(anatomy).toHaveText('Lung only')
+  await controlRange(page, 'field', 70)
+  await controlRange(page, 'zoom', 1.5)
+  await expect(page.locator('[data-now-status]')).toContainText('Checklist complete')
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'suite-cases:compare')
+  await controlRange(page, 'orbit', -5)
+  await expect(anatomy).toHaveText('Rib')
+  await controlRange(page, 'tilt', 3)
+  await expect(anatomy).toHaveText('Lung only')
+  await page.locator('#peripheral-imaging-control-wedge').selectOption('0')
+  await controlRange(page, 'tilt', 0)
+  await controlRange(page, 'orbit', -24)
+  await expect(view).toHaveText('-24°')
+  await expect(anatomy).toHaveText('Lung only')
+  await expect(primary(page)).toBeEnabled()
+})
+
+test('the fluoroscopic image draws the ribs, and bone is coloured by depth only where the angles are worked', async ({
+  page,
+}, info) => {
+  // Owner request, 2026-11-10: the rib over the nodule and the effect of tilt have to be seen on
+  // the image, not only read from the readout.
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('signal')
+  const ribs = lesson.steps.find((step) => step.id.endsWith(':ribs'))!
+  await openSection(page, 'signal')
+  for (let guard = 0; guard < 12; guard++) {
+    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    await primary(page).click()
+  }
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
+  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+    'data-projection-state',
+    'ready',
+    { timeout: 90000 },
+  )
+  const canvas = page.locator('[data-current-image] canvas')
+  await expectImageSignal(canvas)
+  /** Pixels that are not grey, and the brightness of the lung beside the nodule. */
+  const read = () =>
+    canvas.evaluate((node) => {
+      const c = node as HTMLCanvasElement
+      const gl = c.getContext('webgl2')!
+      const pixels = new Uint8Array(c.width * c.height * 4)
+      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+      let coloured = 0
+      for (let i = 0; i < pixels.length; i += 4)
+        if (Math.abs(pixels[i] - pixels[i + 2]) > 24) coloured++
+      // A vertical line through the left lung, clear of the heart: ribs cross it as bright bands.
+      const col = Math.round(c.width * 0.78)
+      const profile: number[] = []
+      for (let row = Math.round(c.height * 0.35); row < Math.round(c.height * 0.7); row++)
+        profile.push(pixels[(row * c.width + col) * 4])
+      return { coloured, swing: Math.max(...profile) - Math.min(...profile) }
+    })
+  const grey = await read()
+  expect(grey.coloured).toBe(0)
+  // Ribs and the lung between them: before, this profile was nearly flat.
+  expect(grey.swing).toBeGreaterThan(20)
+  await capture(page, info, 'fluoro-ribs-grey.png')
+
+  const toggle = page.locator('[data-bone-depth-toggle]')
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('[data-bone-depth-legend]')).toContainText('carries no depth')
+  await expect.poll(async () => (await read()).coloured).toBeGreaterThan(2000)
+  await capture(page, info, 'fluoro-ribs-depth.png')
+  await toggle.click()
+  await expect.poll(async () => (await read()).coloured).toBe(0)
+
+  // A check holds its image fixed and offers nothing that would read the answer off it.
+  const check = lesson.steps[lesson.predictionStepIndex]
+  for (let guard = 0; guard < 12; guard++) {
+    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === check.id) break
+    if ((await primary(page).count()) > 0 && (await primary(page).isEnabled()))
+      await primary(page).click()
+    else await skip(page).click()
+  }
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', check.id)
+  await expect(page.locator('[data-bone-depth-toggle]')).toHaveCount(0)
+})
+
+test('the bronchial tree is drawn and named on the frontal image, and withheld on its check', async ({
+  page,
+}, info) => {
+  // Owner request, 2026-11-11: bring FluoroView's airway anatomy into the course. The tree is drawn
+  // from the CT in one section, by lobe and by segment, and its names are hidden where they are asked.
+  test.setTimeout(480_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('airway-anatomy')
+  const goTo = async (stepId: string) => {
+    for (let guard = 0; guard < 12; guard++) {
+      if ((await page.locator('[data-stage]').getAttribute('data-stage')) === stepId) break
+      // Every step on the way is either a reading step or one whose checklist is already done.
+      await expect(primary(page)).toBeEnabled({ timeout: 90000 })
+      await primary(page).click()
+    }
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', stepId)
+  }
+  const ready = () =>
+    expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
+  const overlay = page.locator('[data-current-image] [data-airway-overlay]')
+  const labels = () =>
+    overlay
+      .locator('[data-airway-label]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-airway-label')))
+
+  await openSection(page, 'airway-anatomy')
+  await ready()
+  // The section opens on the image as fluoroscopy gives it: no bronchus is drawn, and no tool.
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-target-overlay]')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Frontal · whole tree by lobe' }).click()
+  await expect(overlay).toHaveAttribute('data-airway-show', 'all')
+  expect((await labels()).sort()).toEqual(
+    ['BI', 'LLL', 'LMB', 'LUL', 'RLL', 'RMB', 'RML', 'RUL', 'trachea'].sort(),
+  )
+  await expect(page.locator('[data-current-image] [data-airway-legend]')).toContainText(
+    'Fluoroscopy shows the trachea and the main bronchi',
+  )
+  // The trachea is drawn where the image shows it: over the midline, in the upper half.
+  const trachea = await overlay.locator('[data-airway-key="trachea"]').first().boundingBox()
+  const image = await page.locator('[data-current-image] canvas').boundingBox()
+  expect(Math.abs(trachea!.x + trachea!.width / 2 - (image!.x + image!.width / 2))).toBeLessThan(
+    image!.width * 0.06,
+  )
+  expect(trachea!.y + trachea!.height).toBeLessThan(image!.y + image!.height * 0.55)
+  await capture(page, info, 'airway-whole-tree.png')
+
+  // Hands-on: one lobe at a time, a colour and a name for each segmental bronchus.
+  const act = lesson.steps.find((step) => step.interaction.kind === 'lab-task')!
+  await goTo(act.id)
+  await ready()
+  // Until the checklist is done the step offers Skip, not Continue.
+  await expect(primary(page)).toHaveCount(0)
+  const airways = page.locator('#peripheral-imaging-control-airways')
+  await airways.selectOption('RLL')
+  await expect(overlay).toHaveAttribute('data-airway-show', 'RLL')
+  expect(await labels()).toEqual(expect.arrayContaining(['RB6', 'RB7', 'RB8', 'RB9', 'RB10']))
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('RB6')
+  // Each segmental bronchus has its first two centimetres drawn heavier, and RB6's is the shortest
+  // on the frontal image: it runs along the beam.
+  const stemLength = (key: string) =>
+    overlay
+      .locator(`[data-airway-stem="${key}"] path`)
+      .first()
+      .evaluate((node) => (node as SVGPathElement).getTotalLength())
+  const stems = await Promise.all(['RB6', 'RB7', 'RB8', 'RB9', 'RB10'].map(stemLength))
+  expect(stems[0]).toBe(Math.min(...stems))
+  await capture(page, info, 'airway-right-lower-lobe.png')
+  await airways.selectOption('LUL')
+  await expect(page.locator('[data-readout="airwaysDrawn"]')).toContainText('LB1+2, LB3, LB4, LB5')
+  await expect(primary(page)).toBeEnabled()
+
+  // Observe: a lobe from a second angle, then the names hidden.
+  const observe = lesson.steps.find((step) => step.interaction.kind === 'observe')!
+  await goTo(observe.id)
+  await ready()
+  await airways.selectOption('LLL')
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('LB6')
+  await controlRange(page, 'orbit', -30)
+  await expect(page.locator('[data-readout="airwayShortest"]')).not.toContainText('LB6')
+  await capture(page, info, 'airway-left-lower-lobe-lao.png')
+  await page.locator('#peripheral-imaging-control-airwayNames').setChecked(false)
+  await expect(overlay.locator('[data-airway-label]')).toHaveCount(0)
+  await expect(page.locator('[data-readout="airwayShortest"]')).toContainText('Names hidden')
+  await expect(primary(page)).toBeEnabled()
+
+  // The check: the left lower lobe drawn without a name anywhere on the screen.
+  const check = lesson.steps[lesson.predictionStepIndex]
+  await goTo(check.id)
+  await ready()
+  await expect(overlay).toHaveAttribute('data-airway-show', 'LLL')
+  await expect(overlay.locator('[data-airway-label]')).toHaveCount(0)
+  await expect(overlay.locator('[data-airway-stem]')).toHaveCount(4)
+  await expect(page.locator('#peripheral-imaging-control-airways')).toHaveCount(0)
+  const suite = page.locator('[data-suite-scene]')
+  await expect(suite).not.toContainText(/LB6|LB7\+8|LB9|LB10/)
+  await capture(page, info, 'airway-check.png')
+})
+
+test('Projection: the bronchi over the nodule are drawn without a tool, and rotation takes them off it', async ({
+  page,
+}, info) => {
+  // Airway anatomy, part 3 (owner go-ahead 2026-11-11): one reading step in Projection applies
+  // parallax to the bronchi. Four segmental bronchi cross the nodule on the frontal image; LAO 30°
+  // takes the anterior one off it, RAO 30° the posterior two, and LB7+8 stays.
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lesson = imagingStageLesson('projection')
+  const step = lesson.steps.find(
+    (entry) => entry.title === 'Find which bronchus stays over the nodule',
+  )!
+  const ready = () =>
+    expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
+  const overlay = page.locator('[data-current-image] [data-airway-overlay]')
+  const over = page.locator('[data-readout="airwaysOverLesion"]')
+
+  await openSection(page, 'projection')
+  await ready()
+  // The section opens on the tool and the lesion, with no bronchus drawn.
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(1)
+  await expect(primary(page)).toBeEnabled({ timeout: 90000 })
+  await primary(page).click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', step.id)
+  await ready()
+
+  // Frontal: the four bronchi, named, and no tool.
+  await expect(overlay).toHaveAttribute('data-airway-show', 'lesion')
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-target-overlay]')).toHaveCount(1)
+  expect(
+    (
+      await overlay
+        .locator('[data-airway-label]')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-airway-label')))
+    ).sort(),
+  ).toEqual(['LB10', 'LB5', 'LB7+8', 'LB9'])
+  await expect(overlay.locator('[data-airway-stem]')).toHaveCount(0)
+  await expect(over).toContainText('LB5, LB7+8, LB9, LB10')
+  await expect(page.locator('[data-readout="separationMm"]')).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-airway-legend]')).toContainText(
+    'cross the outline of the nodule on the frontal image',
+  )
+  // Rotation is the only control; the bronchi drawn are not the learner's to change here.
+  await expect(page.locator('#peripheral-imaging-control-orbit')).toBeVisible()
+  await expect(page.locator('#peripheral-imaging-control-airways')).toHaveCount(0)
+  await capture(page, info, 'projection-bronchi-frontal.png')
+
+  await page.getByRole('button', { name: 'LAO 30° · the anterior bronchus leaves' }).click()
+  await ready()
+  await expect(over).toContainText('LB7+8, LB9, LB10')
+  await expect(over).not.toContainText('LB5')
+  await capture(page, info, 'projection-bronchi-lao.png')
+
+  await page.getByRole('button', { name: 'RAO 30° · the posterior bronchi leave' }).click()
+  await ready()
+  await expect(over).toHaveText(/LB7\+8\s*$/)
+  await expect(page.locator('[data-readout="rayCrosses"]')).toContainText('Heart')
+  await capture(page, info, 'projection-bronchi-rao.png')
+
+  // The learner can turn the C-arm between the examples and the readout follows.
+  await controlRange(page, 'orbit', 10)
+  await expect(over).toContainText('LB5, LB7+8')
+  await expect(over).not.toContainText('LB9')
+
+  // The next step is the section's own again: the tool is back and no bronchus is drawn.
+  await primary(page).click()
+  await ready()
+  await expect(overlay).toHaveCount(0)
+  await expect(page.locator('[data-current-image] [data-tip-overlay]')).toHaveCount(1)
+})

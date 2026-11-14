@@ -1,8 +1,7 @@
-import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent } from '@testing-library/react'
 
-import { LessonHost } from '../components/LessonHost'
-import { LESSONS } from '../content/curriculum'
-import { activitiesForLesson } from '../content/stage'
+import { CONTENT_LESSONS } from '../content/curriculum'
+import { openUnitAcquisition, unitById } from '../testing/unit-acquisition'
 import { labGoalMet, labGoalRequirements, type Lab } from '../content/types'
 import {
   CONTACT_MODES,
@@ -71,20 +70,10 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-const lessonFor = (id: string) => LESSONS.find((lesson) => lesson.id === id)!
+const lessonFor = unitById
 const gainLesson = lessonFor('gain-contrast')
 const contactLesson = lessonFor('contact-cutaway-model')
-
-/** Open a lesson and continue to its acquisition step. */
-function openAcquisition(lessonId: string) {
-  const lesson = lessonFor(lessonId)
-  render(<LessonHost lesson={lesson} />)
-  const activities = activitiesForLesson(lesson)
-  const target = activities.findIndex((activity) => activity.interaction === 'acquire')
-  for (let step = 0; step < target; step++)
-    fireEvent.click(document.querySelector('[data-now-primary]') as HTMLButtonElement)
-  return lesson
-}
+const openAcquisition = openUnitAcquisition
 
 const recordedFrame = (over: Partial<RecordedFrameSource> = {}): RecordedFrameSource => ({
   type: 'recorded-frame',
@@ -208,10 +197,10 @@ describe('the observation carries which contact condition produced the frame', (
 
     const identity = document.querySelector('[data-evidence-identity]') as HTMLElement
     expect(identity.dataset.evidenceIdentity).toBe('held')
-    expect(identity.textContent).toContain('Contact condition held: contact with a reflector.')
+    expect(identity.textContent).toContain('Contact condition: contact with a reflector.')
     // The authored check is untouched; it is the evidence that stops being anonymous.
     expect(contactLesson.observation.prompt).toBe(
-      LESSONS.find((lesson) => lesson.id === 'contact-cutaway-model')!.observation.prompt,
+      lessonFor('contact-cutaway-model').observation.prompt,
     )
   })
 
@@ -293,11 +282,11 @@ describe('the acquisition says what is still open', () => {
       gainObservation({ lastAction: 'contrast' }),
     ).filter((requirement) => !requirement.met)
     expect(open.map((requirement) => requirement.id)).toEqual(['gain-last'])
-    expect(open[0].text).toMatch(/varies one control/i)
+    expect(open[0].text).toBe('Make gain the last control you move.')
   })
 
   it('agrees with the gate for every lab in the course', () => {
-    const labs = LESSONS.flatMap((lesson) => [lesson.lab, lesson.transferLab]).filter(
+    const labs = CONTENT_LESSONS.flatMap((lesson) => [lesson.lab, lesson.transferLab]).filter(
       (lab): lab is Lab => !!lab,
     )
     expect(labs.length).toBeGreaterThan(10)
@@ -316,13 +305,15 @@ describe('the acquisition says what is still open', () => {
       (item) => (item as HTMLElement).dataset.requirement,
     )
     expect(listed).toContain('gain-last')
-    expect(listed).toContain('frame-ready')
+    // Image-sync conditions are not steps the learner takes, so they are not listed.
+    expect(listed).not.toContain('frame-ready')
   })
 
   it('does not tell a recorded lab it moved an observer camera', () => {
     openAcquisition('gain-contrast')
     const status = document.querySelector('[data-acquisition-status]')!.textContent ?? ''
-    expect(status).toContain('Selecting a recording is not yet an acquisition')
+    expect(status).toContain('Work through the steps below.')
+    expect(status).toContain('Still to do:')
     expect(status).not.toContain('observer camera')
   })
 })
@@ -348,7 +339,11 @@ describe('the advance row', () => {
   it('keeps the explanation slot present whether or not it has anything to say', () => {
     openAcquisition('gain-contrast')
     const note = document.querySelector('[data-advance-note]')!
-    expect(note.textContent).toMatch(/Finish the acquisition steps/)
+    // The note names the first outstanding step, the same one that heads the list above.
+    expect(note.textContent).toBe(
+      'To turn this on: ' +
+        document.querySelector('[data-acquisition-outstanding] li')!.textContent,
+    )
 
     fireEvent.click(document.querySelector('[data-skip-acquisition]') as HTMLButtonElement)
     expect(document.querySelector('[data-advance-note]')).not.toBeNull()
@@ -424,15 +419,8 @@ describe('the model reference comes from the current plane', () => {
     expect(phantomPlaneReference(recommended).axisMm).toBeCloseTo(16, 10)
   })
 
-  it('does not relax what the activity accepts', () => {
-    // The sweep steps still need every plane of every shape, as before this batch.
-    expect(MODEL_STEPS.measurement).toEqual([
-      'sphere-sweep',
-      'ellipsoid-sweep',
-      'adjacent-sweep',
-      'lobulated-sweep',
-      'short-axis-record',
-    ])
+  it('asks for one sweep and one measurement', () => {
+    expect(MODEL_STEPS.measurement).toEqual(['ellipsoid-sweep', 'short-axis-record'])
     const partial = measurementAt('ellipsoid', 0, 'short')
     expect(partial.steps).not.toContain('ellipsoid-sweep')
   })

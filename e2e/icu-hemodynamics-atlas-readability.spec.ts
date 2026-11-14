@@ -80,14 +80,11 @@ for (const condition of [
   test(`atlas prose and keyboard return at ${condition.width}, ${condition.theme}, ${condition.rootText}% root text`, async ({
     page,
   }) => {
-    // The site theme toggle is available in the desktop header. Choose it there before
-    // resizing, so mobile coverage does not depend on an absent desktop-only control.
+    // A lesson on a desktop window hides the site menu, and its theme toggle with it. The site
+    // theme follows the system setting when the learner has stored no choice, so set that.
+    await page.emulateMedia({ colorScheme: condition.theme })
     await page.setViewportSize({ width: 1440, height: 900 })
     const atlas = await openAtlas(page)
-    await page.waitForFunction(() => /\b(dark|light)\b/.test(document.documentElement.className))
-    if (!(await page.locator('html').getAttribute('class'))?.split(' ').includes(condition.theme)) {
-      await page.getByRole('button', { name: /Toggle dark mode/i }).click()
-    }
     await expect(page.locator('html')).toHaveClass(new RegExp(`\\b${condition.theme}\\b`))
     await page.setViewportSize(condition)
     if (condition.rootText === 200) {

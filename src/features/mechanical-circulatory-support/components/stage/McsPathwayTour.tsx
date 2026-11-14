@@ -13,10 +13,7 @@ export function McsPathwayTour() {
   ]
   return (
     <section className={styles.tour} data-annotated-pathway-comparison>
-      <p>
-        Conceptual pathway reference · changing this drawing does not select a device in the
-        patient.
-      </p>
+      <p>Choose a pathway to study. This changes the drawing, not the patient’s device.</p>
       <nav aria-label="Study one support pathway at a time">
         {[
           'IABP (counterpulsation)',
@@ -58,7 +55,7 @@ export function McsPathwayTour() {
  */
 const SKETCH_DESCRIPTIONS = {
   native:
-    'Conceptual circulation: veins to right heart to lungs to left ventricle, across the aortic valve, to the aorta, and back through the body. Unsupported conceptual route, not a simulated patient baseline.',
+    'Conceptual circulation: veins to right heart to lungs to left ventricle, across the aortic valve, to the aorta, and back through the body, with no device.',
   iabp: 'Conceptual circulation with a balloon in the descending aorta, on the return side of the loop. The balloon has no inlet, no outlet and no pump-flow route of its own.',
   impella:
     'Conceptual circulation with a microaxial pump lying across the aortic valve: its inlet is inside the left ventricle and its outlet is in the aorta, so it takes blood across the valve, parallel to native ejection.',

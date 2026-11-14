@@ -56,7 +56,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Apply the relationship',
       block: 'application',
       instruction:
-        'Use the information in this separate teaching case to interpret the saturation. Choose an answer, then submit it.',
+        'A new patient. Decide what the saturation does and does not tell you about oxygen delivery.',
       lookIn: steps('the answer choices below'),
     },
     {
@@ -66,7 +66,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'application',
       attribution: true,
       instruction:
-        'For each proposed change, choose blood flow, oxygen content, or oxygen consumption. Submit the set to read the reasoning.',
+        'For each change, choose the part of the oxygen balance it acts on: blood flow, oxygen content, or oxygen consumption.',
       lookIn: steps('the changes to attribute below'),
     },
     {
@@ -85,7 +85,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Follow the blood',
       block: 'blood-path',
       instruction:
-        'Follow blood from drainage through the pump and membrane lung to return. The same segment is marked on the existing circuit map.',
+        'Follow blood from drainage through the pump and membrane lung to return. Each stop is highlighted in yellow on the circuit map.',
       lookIn: teaching('Circuit walk'),
     },
     {
@@ -103,7 +103,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Find the pressure measurements',
       block: 'pressure-sites',
       instruction:
-        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with Δp, the pressure drop the console calculates between pInt and pArt; the readouts show its running value as the Δp trend.',
+        'Select pVen, pInt, pArt and Δp on the left, one at a time. The circuit map rings where each one is measured. Δp, the pressure drop the console calculates between pInt and pArt, is not a fourth sensor; the readouts show it as the Δp trend.',
       lookIn: teaching('Pressure measurements'),
     },
     {
@@ -112,7 +112,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Compare circuit and patient readings',
       block: 'circuit-patient',
       instruction:
-        'Read circuit pArt alongside the independent patient monitor. These measurements describe different places.',
+        'Compare the circuit’s pArt with the patient’s MAP. Both are highlighted in yellow: pArt on the circuit map, MAP on the bedside monitor.',
       lookIn: teaching('Circuit pressure and patient pressure'),
     },
     {
@@ -124,9 +124,13 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Locate a measurement on the map',
       block: 'application',
       mapRetrieval: true,
+      // The labels are withheld until the answer is in; the host now honours `mapRetrieval` (it
+      // passed "full" for every task, and a tester answered with the pInt label in view).
+      // The question itself is in its own card beside the map (tester feedback, 2026-10-23: the
+      // task read as step-by-step text rather than a question), so this line only points at it.
       instruction:
-        'An optional check on the circuit map. The map keeps its pressure labels; only the circuit-walk highlighting is off. Select the numbered location that answers the question, then submit beside the map.',
-      lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
+        'Answer the question below, using the circuit map. The map’s sensor labels are hidden until you answer.',
+      lookIn: { pane: 'simulator', landmark: 'the question card and the circuit map' },
     },
     {
       id: 'transfer',
@@ -146,7 +150,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       block: 'pump-setting',
       walkStopId: 'walk-pump-under-load',
       instruction:
-        'Identify pump speed as the selected setting and blood flow as its measured result. Read how drainage and downstream resistance affect that relationship.',
+        'Read the two numbers on the left: pump speed is the setting, blood flow is the result. The next tasks change one thing at a time and watch the other.',
       lookIn: teaching('Setting and resulting flow'),
     },
     {
@@ -157,18 +161,8 @@ export const ecmoFoundationTeachingTasks: Readonly<
       actionId: 'increase-rpm',
       walkStopId: 'walk-pump-under-load',
       instruction:
-        'Use Increase pump speed by 300 rpm below. The guided control restores the reference, changes only speed, and retains the response after six modeled seconds.',
+        'Use Increase pump speed by 300 rpm below, then read what changed: flow, pVen, and the pressures after the pump.',
       lookIn: comparison('The speed comparison'),
-    },
-    {
-      id: 'observe',
-      phase: 'observe',
-      title: 'Compare the result',
-      block: 'pump-result',
-      comparisonOf: 'act',
-      instruction:
-        'Read Before, After, and Change for flow and pressures. These are the saved values from your speed comparison.',
-      lookIn: steps('the saved comparison below'),
     },
     {
       id: 'loading',
@@ -206,8 +200,8 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Apply the loading principle',
       block: 'application',
       instruction:
-        'Use the speed, flow, and drainage-pressure trend in this separate case. Select a place on the map and submit beside it.',
-      lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
+        'Use the speed, flow and drainage-pressure trend in this case to decide where the problem is.',
+      lookIn: { pane: 'simulator', landmark: 'the question card and the circuit map' },
     },
   ],
   'blood-flow-versus-sweep': [

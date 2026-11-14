@@ -28,6 +28,7 @@ export function QuestionBody({
   unavailableReason,
   readOnly = false,
   onExplanationChange,
+  verdictFrames,
 }: {
   question: Question
   selected: string
@@ -39,6 +40,8 @@ export function QuestionBody({
   unavailableReason?: string
   readOnly?: boolean
   onExplanationChange?: (open: boolean) => void
+  /** Verdict titles for checks that read an image rather than make a clinical decision. */
+  verdictFrames?: { best: string; 'incorrect-mechanism': string; unsafe: string }
 }) {
   const [explanationOpen, setExplanationOpen] = useState(false)
   const [hintOpen, setHintOpen] = useState(false)
@@ -153,11 +156,13 @@ export function QuestionBody({
            * (EBUS-PRE-REVIEW-01, L4-2). This says what the concern is instead. The outcome label
            * ("Not correct, and unsafe.") and the assertive announcement are the card's and stay.
            */
-          frames={{
-            best: 'This addresses the clinical question',
-            'incorrect-mechanism': 'Reconsider this interpretation',
-            unsafe: 'Unsafe — this would put a real patient at risk',
-          }}
+          frames={
+            verdictFrames ?? {
+              best: 'This addresses the clinical question',
+              'incorrect-mechanism': 'Reconsider this interpretation',
+              unsafe: 'Unsafe — this would put a real patient at risk',
+            }
+          }
           explanationHeading="Reasoning"
         />
       )}

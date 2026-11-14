@@ -43,7 +43,7 @@ export function LessonDemonstration({
   const localViewMemory = useRef<SuiteViewMemory>({})
   const viewMemory = savedViewMemory ?? localViewMemory
   const example = examples[index] ?? examples[0]
-  const base = suiteViewForStep(sectionId)
+  const base = suiteViewForStep(sectionId, activity.view)
   const view = {
     ...(sectionId === 'dts-interpretation'
       ? { ...base, lab: demo?.lab, bindings: suiteViewForStep('dts-acquisition').bindings }
@@ -132,6 +132,7 @@ export function LessonDemonstration({
             key={replay}
             viewMemory={viewMemory}
             presentation={activity.presentation}
+            comparable={examples.length > 1}
             onRepresentationReady={onRepresentationReady}
             view={view}
             lab={lab}

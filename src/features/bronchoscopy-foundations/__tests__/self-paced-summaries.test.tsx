@@ -1,5 +1,6 @@
-import { cleanup } from '@testing-library/react'
+import { cleanup, render } from '@testing-library/react'
 
+import { BronchoscopyFoundationsClosing } from '../components/BronchoscopyFoundationsClosing'
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
 import { bronchSection } from '../content/sections'
 import type { AuthoredItem } from '../content/types'
@@ -137,21 +138,18 @@ function firstMatch(text: string, pattern: RegExp): string | null {
 }
 
 describe('what finishing this course means (BF-03)', () => {
-  it('teaches training records without claiming this course issues a completion record or keeps answers', () => {
-    const text = learnerStrings('what-completion-means').join('\n')
+  it('says on the closing screen what the course cannot show, and issues no record', () => {
+    render(<BronchoscopyFoundationsClosing />)
+    const text = document.querySelector('[data-bronch-closing]')?.textContent ?? ''
+    expect(text).toContain('None of them shows your hands on a scope in a patient.')
+    expect(text).toContain('your institution grants privileges')
     expect(
       firstMatch(
         text,
-        /issued by this course|record this course issues|Finishing this course establishes|finished every section of this course|the course’s completion record|decisions (mostly )?held|targeted remediation|this course sees activities, answers/i,
+        /issued by this course|this course (issues|certifies|grants|signs off)|certificate|sign-off|completion record/i,
       ),
     ).toBeNull()
-    expect(text.includes('This self-paced course issues no such record')).toBe(true)
-    expect(text.includes('this self-paced course does neither')).toBe(true)
-    expect(
-      bronchSection('what-completion-means').physicalSkillNote?.includes(
-        'not part of this self-paced course, which neither runs nor requires it',
-      ),
-    ).toBe(true)
+    cleanup()
   })
 
   it.each(BRONCH_SECTION_IDS)(
@@ -166,20 +164,18 @@ describe('what finishing this course means (BF-03)', () => {
     },
   )
 
-  it('summarizes only what this course keeps and ignores everything the earlier record holds', async () => {
+  it('counts on the closing screen only what this course keeps, not the earlier record', () => {
     const earlier = earlierRecordWithEverything()
     localStorage.setItem(BRONCH_STORAGE_KEY, earlier)
-    await mountSection('what-completion-means')
-    const summary = document.querySelector('[data-learning-record-summary]')
-    expect(summary).not.toBeNull()
-    const text = summary?.textContent ?? ''
-    expect(text).toContain('0 marked reviewed by you')
-    expect(text).toContain('No finished lower-airway survey.')
-    expect(text).toContain('does not establish procedural competence')
+    render(<BronchoscopyFoundationsClosing />)
+    const text = document.querySelector('[data-closing-record]')?.textContent ?? ''
+    expect(text).toContain(`0 of ${BRONCH_SECTION_IDS.length} sections opened`)
+    expect(text).toContain('0 marked reviewed')
     expect(
       firstMatch(text, /master|certif|passed|readiness|\bscore|unaided|worked through/i),
     ).toBeNull()
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
+    cleanup()
   })
 
   it('does not let a survey saved under the earlier record stand in for the learner’s own', async () => {

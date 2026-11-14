@@ -5,7 +5,7 @@ import { imagingLearnerCopyErrors } from './learnerCopy'
  * The hub's picture of the suite, and where each stop of the chain sits in it.
  *
  * The picture is a still of the suite's own `room` mode, rendered offline so the front door opens no
- * WebGL context: `public/peripheral-imaging/room-hero.png`, regenerated with
+ * WebGL context: `public/peripheral-imaging/room-suite.png`, regenerated with
  * `npx tsx scripts/peripheral-imaging/render-room-hero.ts` from the fixture in
  * `scripts/peripheral-imaging/room-fixture.ts`, with its provenance in `room-hero.json`. The hub
  * therefore needs no live view spec of its own; a change to the picture is a change to that fixture.
@@ -36,41 +36,38 @@ export interface ImagingHubHero {
   readonly anchors: Readonly<Record<ChainStopId, readonly [number, number]>>
   /** Which side of its anchor each on-figure label sits, chosen so no two labels collide. */
   readonly labelSide: Readonly<Record<ChainStopId, 'left' | 'right'>>
-  readonly boundary: string
 }
 
 export const IMAGING_HUB_HERO: ImagingHubHero = {
-  src: '/peripheral-imaging/room-hero.png',
+  src: '/peripheral-imaging/room-suite.png',
   width: 2400,
   height: 1000,
-  alt: 'A peripheral bronchoscopy suite: a patient on the procedure table under a C-arm, the beam drawn as a cone from the X-ray source beneath the table to the detector above, and a workstation with a monitor on a boom to the right.',
+  alt: 'A peripheral bronchoscopy suite: a draped patient lies on the procedure table with the chest inside a C-arm, the beam drawn as a cone from the X-ray tube beneath the table to the flat-panel detector above, and a cart to the left carrying the image processor and the display.',
   lede: 'The suite every section is worked on, and where each component of image formation sits in it.',
   where: {
-    source: 'the housing beneath the table',
-    beam: 'the cone rising from it',
+    source: 'the tube housing beneath the table',
+    beam: 'the cone rising from it through the table',
     patient: 'the figure on the table, the chest seen through the skin',
-    detector: 'the panel above the patient',
-    reconstruction: 'the workstation on the right',
-    display: 'the monitor on the boom beside it',
+    detector: 'the flat panel above the chest',
+    reconstruction: 'the cabinet on the cart to the left',
+    display: 'the screen above it',
   },
   anchors: {
-    source: [50.2, 69.8],
-    beam: [45.6, 56.3],
-    patient: [40.0, 39.8],
-    detector: [33.3, 20.1],
-    reconstruction: [70.5, 48.4],
-    display: [75.1, 39.3],
+    source: [56.2, 77.8],
+    beam: [58.1, 63.7],
+    patient: [60.3, 46.1],
+    detector: [63.2, 24.2],
+    reconstruction: [33.0, 56.1],
+    display: [30.0, 47.1],
   },
   labelSide: {
-    source: 'right',
-    beam: 'right',
+    source: 'left',
+    beam: 'left',
     patient: 'left',
-    detector: 'left',
+    detector: 'right',
     reconstruction: 'left',
-    display: 'right',
+    display: 'left',
   },
-  boundary:
-    'A schematic room and C-arm around a CT-derived chest. The head, pillow and draped body are drawn for context. No device, dimension or clearance is represented.',
 }
 
 export function validateImagingHubHero(): readonly string[] {
@@ -98,7 +95,6 @@ export function validateImagingHubHero(): readonly string[] {
   errors.push(
     ...imagingLearnerCopyErrors('The hub picture lede', hero.lede, { allowDigits: false }),
   )
-  errors.push(...imagingLearnerCopyErrors('The hub picture boundary', hero.boundary))
   return errors
 }
 

@@ -32,10 +32,13 @@ export const completeLessons: Lesson[] = [
       'difficulty-predict',
       'The scope view is stable and tissue echoes are present, but the target’s far border is outside the sector. What should be adjusted first?',
       ['The depth field', 'The acquisition problem is framing, rather than absent contact.'],
-      ['The specimen container', 'Handling does not change the displayed field.'],
       [
-        'The needle force',
-        'Force does not restore missing image context and should not substitute for it.',
+        'The gain setting',
+        'Gain brightens what is already displayed; it cannot show tissue beyond the bottom of the sector.',
+      ],
+      [
+        'The balloon inflation',
+        'More balloon improves coupling, which is already adequate here; it does not extend the field.',
       ],
     ),
     matching: matching(
@@ -56,12 +59,12 @@ export const completeLessons: Lesson[] = [
         'The same control or maneuver cannot solve every acquisition failure.',
       ],
       [
-        'To allow sampling before the image is restored',
-        'Safe imaging conditions still need to be established.',
+        'To work through every correction in a fixed order',
+        'The observed failure tells you which correction applies; running all of them costs time and patient tolerance.',
       ],
       [
-        'To guarantee the next pass will be diagnostic',
-        'Even a corrected approach has diagnostic limits.',
+        'To decide when adding suction will solve the problem',
+        'Suction addresses a scant aspirate; it does not fix lost contact, framing or a lost tip, and it worsens a bloody sample.',
       ],
     ),
     transfer: q(
@@ -164,12 +167,12 @@ export const completeLessons: Lesson[] = [
         'Fever with chest discomfort after EBUS-TBNA raises concern for mediastinal infection, and new breathlessness for pneumothorax. Both need examination and imaging the same day.',
       ],
       [
-        'Reassurance that symptoms are always expected after EBUS',
-        'That assumption can delay recognition of infection or another complication.',
+        'Reassurance, since transient fever is common after bronchoscopy',
+        'Transient fever alone can follow bronchoscopy, but fever with worsening chest pain needs assessment for mediastinitis.',
       ],
       [
-        'Waiting for the pathology report before assessing symptoms',
-        'Pending pathology does not defer evaluation of deterioration.',
+        'An empirical oral antibiotic, with review at the results visit',
+        'Treating without examination and imaging can miss mediastinitis, an abscess or a pneumothorax.',
       ],
       true,
     ),
@@ -213,12 +216,12 @@ export const completeLessons: Lesson[] = [
         'Absence of malignant cells in uninformative material does not exclude disease in the target.',
       ],
       [
-        'The station is definitively free of malignancy',
-        'That conclusion exceeds the specimen evidence.',
+        'A true negative, if the needle was seen within the node',
+        'Seeing the needle in the node supports targeting, but the specimen itself must contain representative material.',
       ],
       [
-        'The entire staging examination is automatically positive',
-        'A nonrepresentative sample is not proof of malignancy either.',
+        'Negative for malignancy, with lower confidence',
+        'Without lymphoid or lesional material the specimen cannot be called negative at any confidence; it is nondiagnostic.',
       ],
     ),
     matching: matching(
@@ -247,12 +250,12 @@ export const completeLessons: Lesson[] = [
         'The report must enable the next clinical decision and result communication.',
       ],
       [
-        'It calls all completed procedures diagnostically successful',
-        'Procedural completion and diagnostic success are different.',
+        'It gives the short axis of every node that was sampled',
+        'Sizes are worth recording, but they do not tell the reader what was not assessed or who acts on the result.',
       ],
       [
-        'It removes inaccessible targets from the record',
-        'Those limitations are essential to interpretation.',
+        'It summarizes the mediastinum as positive or negative',
+        'A one-word summary hides unsampled and nonrepresentative stations, which the next decision depends on.',
       ],
     ),
     transfer: q(

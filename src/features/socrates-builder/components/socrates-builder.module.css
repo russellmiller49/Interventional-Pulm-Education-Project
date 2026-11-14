@@ -290,6 +290,11 @@
   align-self: start;
 }
 
+.annotationKey {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--builder-line);
+}
+
 .viewerToolbar {
   display: flex;
   align-items: center;

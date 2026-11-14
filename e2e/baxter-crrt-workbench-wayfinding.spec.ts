@@ -1,5 +1,14 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 
+/** The lesson bar prints "CRRT · Lesson N of 8" above the lesson's title. */
+const lessonNumber = (page: Page) => page.locator('[data-lesson-module="baxter-crrt"] p:has(+ h1)')
+/** Previous/next, the restarts and the storage notes are in the lesson bar's Menu. */
+async function openLessonMenu(page: Page) {
+  const menu = page.locator('[data-crrt-lesson-menu]')
+  if (!(await menu.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await menu.locator('> summary').click()
+}
+
 /**
  * CRRT-FELLOW-03 — readable workbench, Help, Cases, role, Learn order, task controls, circuit,
  * membrane and pressure arithmetic, measured in a real browser. Every check reads rendered
@@ -227,26 +236,28 @@ test('role perspective keeps the run and says it changes nothing', async ({ page
 
 test('Learn: one order across hub, picker, previous/next and resume', async ({ page }) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-indications-modality')
-  await expect(page.getByText('Lesson 1 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 1 of 8$/)
   await page.goto('/en/baxter-crrt')
   const sequence = page.getByRole('list', { name: 'Recommended Learn sequence' })
   await expect(sequence.getByRole('listitem')).toHaveCount(8)
   const resume = page.getByRole('link', { name: /Continue to the next topic/ })
   await expect(resume).toContainText('Lesson 2: Circuit anatomy and pressure localization')
   await resume.click()
-  await expect(page.getByText('Lesson 2 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 2 of 8$/)
   const steps = page.getByRole('navigation', { name: 'Previous and next lesson' })
+  await openLessonMenu(page)
   await steps.getByRole('button', { name: /^Next lesson: 3\. / }).click()
   await expect(page).toHaveURL(/lesson=crrt-solute-transport/)
-  await expect(page.getByText('Lesson 3 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 3 of 8$/)
   await page.goBack()
-  await expect(page.getByText('Lesson 2 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 2 of 8$/)
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-pressure-profile-integration')
-  await expect(page.getByText('Lesson 8 of 8')).toBeVisible()
+  await expect(lessonNumber(page)).toHaveText(/Lesson 8 of 8$/)
+  await openLessonMenu(page)
   await expect(steps.getByText('Last lesson')).toBeVisible()
 })
 
-test('Learn task: the exercise leads, the reason names what is left, skip stays usable', async ({
+test('Learn task: the exercise leads, the reason names what is left, one Skip until ready', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
@@ -254,10 +265,11 @@ test('Learn task: the exercise leads, the reason names what is left, skip stays 
   const work = page.locator('[data-crrt-circuit-workbench]')
   const first = work.getByRole('button', { name: 'Patient access' })
   const last = work.getByRole('button', { name: /^Patient return/ })
-  const circuit = work.locator('svg[data-overlay]')
+  // At this width the lesson is two panes: the stops are in the text, the drawing beside them.
+  const circuit = page.locator('[data-crrt-visual-pane] svg[data-overlay]')
 
-  // The enlarged circuit and its first stop fit one screen together, within the systemic
-  // adjacency budget (pair span under 680 px), and the drawing is larger than the old 0.60.
+  // The circuit and its first stop fit one screen together, within the systemic adjacency
+  // budget (pair span under 680 px), and the drawing is larger than the old 0.60.
   await first.scrollIntoViewIfNeeded()
   const [stop, drawing] = [(await first.boundingBox())!, (await circuit.boundingBox())!]
   expect(
@@ -268,14 +280,29 @@ test('Learn task: the exercise leads, the reason names what is left, skip stays 
     const viewBox = (svg as SVGSVGElement).viewBox.baseVal
     return Math.min(box.width / viewBox.width, box.height / viewBox.height)
   })
-  expect(scale).toBeGreaterThan(0.7)
+  // 0.73 while the drawing had the page's full width; beside the text at 1280 px it is 0.65.
+  expect(scale).toBeGreaterThan(0.6)
 
-  await page.getByRole('button', { name: "Go to this task's continue controls" }).click()
-  const actions = page.getByRole('group', { name: 'Continue from this task' })
-  await expect(actions).toBeFocused()
+  // Tester report 2026-11-05: no jump button and no "Continue from this task" box. One Skip sits
+  // in the exercise's own action row beside the completion button.
+  await expect(
+    page.getByRole('button', { name: "Go to this task's continue controls" }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('group', { name: 'Continue from this task' })).toHaveCount(0)
+  await expect(page.getByText('Where to look:')).toHaveCount(0)
+  const actions = page.getByRole('group', { name: 'Task actions' })
   const primary = actions.getByRole('button', { name: 'Review observations and continue' })
   await expect(primary).toBeDisabled()
   await expect(actions).toContainText('Still to select, in order: Patient access')
+
+  // Skip is a full-size button, reachable by keyboard, and the only skip on the page.
+  const skip = actions.getByRole('button', { name: 'Skip this task' })
+  await expect(skip).toHaveText('Skip')
+  await expect(page.getByRole('button', { name: /skip|continue without/i })).toHaveCount(1)
+  const skipBox = (await skip.boundingBox())!
+  expect(skipBox.height).toBeGreaterThanOrEqual(44)
+  await skip.focus()
+  await expect(skip).toBeFocused()
 
   // Keyboard through the stops, first to last.
   for (const name of [
@@ -294,17 +321,22 @@ test('Learn task: the exercise leads, the reason names what is left, skip stays 
   await expect(last).toHaveAttribute('aria-pressed', 'true')
   await expect(work.getByText('6 of 6 stops selected')).toBeVisible()
   await expect(primary).toBeEnabled()
+  // With the way on available, Skip leaves: the row never offers two ways forward.
+  await expect(skip).toHaveCount(0)
 
-  // Skip is a full-size button, reachable by keyboard.
-  const skip = actions.getByRole('button', { name: 'Continue without this exercise' })
-  const skipBox = (await skip.boundingBox())!
-  expect(skipBox.height).toBeGreaterThanOrEqual(44)
-  await skip.focus()
-  await expect(skip).toBeFocused()
+  // Continuing replaces the task; focus lands on the next task's heading.
+  await primary.focus()
+  await page.keyboard.press('Enter')
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Add the fluids one path at a time' }),
+  ).toBeFocused()
 })
 
 test('circuit expanded view: keyboard open, size, Escape back to the button', async ({ page }) => {
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-circuit-pressures')
+  // The task's own drawing is moved into the picture pane once the page is live; until then the
+  // pane shows the reference circuit, whose button goes when the drawing arrives.
+  await expect(page.locator('[data-crrt-visual-slot] svg[data-overlay]')).toBeVisible()
   const expand = page.getByRole('button', { name: 'Expand circuit' })
   await expand.focus()
   await page.keyboard.press('Enter')
@@ -343,7 +375,7 @@ test('membrane comparison and pressure arithmetic render beside their teaching',
 
   await page.goto('/en/baxter-crrt/learn?lesson=crrt-circuit-pressures')
   for (let step = 0; step < 2; step++)
-    await page.getByRole('button', { name: 'Continue without this exercise' }).click()
+    await page.getByRole('button', { name: 'Skip this task' }).click()
   const tmp = page.getByRole('region', { name: 'How this TMP is calculated now' })
   const drop = page.getByRole('region', { name: 'How this filter pressure drop is calculated now' })
   await expect(tmp).toContainText('(50 + 20) ÷ 2 − (−20) + (−18) = 37 mmHg')

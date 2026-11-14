@@ -1,5 +1,6 @@
-import type { LabGoal } from '../engine/labGoalEvaluation'
+import { FIELD_FOR_PATH_MAX, type LabGoal } from '../engine/labGoalEvaluation'
 import { ACQUISITION_CHECK_KEYS, type LabMetricId } from '../engine/labMetrics'
+import { ANGLE_EXAMPLES } from './angleRules'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import type { ImagingSectionId } from './pathway'
 
@@ -54,12 +55,12 @@ const capturedGoal: LabGoal = {
   type: 'flag',
   key: 'captured',
   value: true,
-  label: 'Capture the checked model setup',
+  label: 'Run the CBCT spin on the centered, checked setup',
 }
 const movedAfterCapture: LabGoal = {
   type: 'event',
   id: 'moved-after-capture',
-  label: 'Move the setup after capturing, and watch readiness lapse',
+  label: 'After the spin, change the lesion offset and see the checks clear',
 }
 
 export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, SectionLabGoals>>> = {
@@ -110,12 +111,45 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     ],
     watch: ['storedShiftMm', 'currentShiftMm', 'contourStale'],
   },
+  'airway-anatomy': {
+    act: [
+      {
+        type: 'event',
+        id: 'airway-lower-lobe-seen',
+        label: 'Draw a lower lobe and find its superior segmental bronchus',
+      },
+      {
+        type: 'event',
+        id: 'airway-lobes-compared',
+        label: 'Draw a second lobe and find the bronchus it shows shortest',
+      },
+    ],
+    observe: [
+      {
+        type: 'event',
+        id: 'airway-lobe-rotated',
+        label: 'With one lobe drawn, rotate the C-arm by twenty degrees or more',
+      },
+      {
+        type: 'flag',
+        key: 'airwayNames',
+        value: false,
+        label: 'Hide the names and name the bronchi yourself',
+      },
+    ],
+    watch: ['airwaysDrawn', 'airwayShortest'],
+  },
   projection: {
     act: [
       {
         type: 'event',
         id: 'touched-orbit',
         label: 'Change the projection with tool and lesion held fixed',
+      },
+      {
+        type: 'event',
+        id: 'lung-only-seen',
+        label: 'Find an obliquity and tilt with only lung over the nodule',
       },
     ],
     observe: [
@@ -136,6 +170,12 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         id: 'touched-orbit',
         label: 'Compare a different CT projection with the baseline',
       },
+      {
+        type: 'event',
+        id: 'rib-moved-by-tilt',
+        label:
+          'With the heart off the nodule, nudge the beam tilt until a rib moves onto or off it',
+      },
     ],
     observe: [],
     watch: [],
@@ -144,15 +184,13 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     act: [
       {
         type: 'event',
-        id: 'touched-field',
-        label: 'Adjust physical collimation around the target',
+        id: 'path-kept-collimated',
+        label: 'Narrow the field with the planned tool path and both landmarks still inside it',
       },
       {
-        type: 'metric',
-        metric: 'contextRetained',
-        op: 'eq',
-        value: true,
-        label: 'Retain the modeled target, planned excursion and both landmarks',
+        type: 'event',
+        id: 'spine-excluded',
+        label: 'Then, with the tool at the lesion, narrow it until the spine is out of the field',
       },
     ],
     observe: [
@@ -167,7 +205,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         label: 'Enlarge the stored image and inspect its acquisition metadata',
       },
     ],
-    watch: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    watch: ['irradiatedAreaPct', 'contextRetained', 'spineInField', 'zoomAddsExposure'],
   },
   time: {
     act: [
@@ -189,9 +227,11 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
   'two-dimensional': {
     act: [
       {
-        type: 'event',
-        id: 'touched-orbit',
-        label: 'Choose another projection to inspect the relationship',
+        type: 'metric',
+        metric: 'mediastinumOnRay',
+        op: 'eq',
+        value: false,
+        label: 'Project the nodule clear of the heart',
       },
       {
         type: 'event',
@@ -203,7 +243,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         metric: 'contextRetained',
         op: 'eq',
         value: true,
-        label: 'Keep the modeled excursion and required landmarks in the field',
+        label: 'Keep the planned tool path and both landmarks in the field',
       },
       { type: 'event', id: 'touched-zoom', label: 'Inspect the stored image with display zoom' },
     ],
@@ -229,8 +269,15 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         id: 'touched-sweep',
         label: 'Change the DTS arc and compare its depth uncertainty',
       },
+      {
+        type: 'metric',
+        metric: 'rayCrossesAtCentre',
+        op: 'eq',
+        value: 'Rib',
+        label: 'Move the centre of the arc until the heart and spine are off the nodule',
+      },
     ],
-    watch: ['sweepDeg', 'planeMm'],
+    watch: ['sweepDeg', 'sweepCentreDeg', 'rayCrossesAtCentre', 'planeMm'],
   },
   'cbct-acquisition': {
     act: [centeredGoal, ...acquisitionChecks, capturedGoal],
@@ -247,11 +294,11 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-offsetX',
-        label: 'Model a setup move and inspect the changed scout',
+        label: 'Change the horizontal offset and inspect the scout',
       },
     ],
     observe: [],
-    watch: ['centered', 'ready'],
+    watch: ['centered'],
   },
   'mobile-suite': {
     act: [
@@ -263,7 +310,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       },
     ],
     observe: [],
-    watch: ['centered', 'ready'],
+    watch: ['centered'],
   },
   'tool-confirmation': {
     act: [
@@ -313,7 +360,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-distance',
-        label: 'Change staff distance and compare the idealized exposure path',
+        label: 'Change the operator’s distance from the patient',
       },
     ],
     observe: [
@@ -331,11 +378,70 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-area',
-        label: 'Change the modeled area input at fixed kerma',
+        label: 'Change the field area at fixed air kerma',
       },
     ],
     observe: [],
     watch: ['kapGyCm2', 'kapMicroGyM2'],
+  },
+  // Expert-session round, part 2 (A7): one nodule through the workflow. Every goal holds at once at
+  // a 15° wedge and LAO 9° (model-truth.test.ts); the nudge and the clear view without the wedge
+  // are the comparison.
+  'suite-cases': {
+    act: [
+      {
+        type: 'value',
+        key: 'wedge',
+        op: 'eq',
+        value: ANGLE_EXAMPLES.wedge.wedge,
+        label: 'Put the wedge under the left side',
+      },
+      {
+        type: 'value',
+        key: 'orbit',
+        op: 'abs-lte',
+        value: ANGLE_EXAMPLES.runThroughOrbitLimit,
+        label: 'Keep the C-arm within the obliquity the docked platform allows',
+      },
+      {
+        type: 'metric',
+        metric: 'rayCrosses',
+        op: 'eq',
+        value: 'Lung only',
+        label: 'Reach a projection with only lung over the nodule',
+      },
+      {
+        type: 'metric',
+        metric: 'irradiatedAreaPct',
+        op: 'lte',
+        value: (FIELD_FOR_PATH_MAX * FIELD_FOR_PATH_MAX) / 100,
+        label: 'Narrow the collimated field around the lesion',
+      },
+      {
+        type: 'metric',
+        metric: 'contextRetained',
+        op: 'eq',
+        value: true,
+        label: 'Keep the planned tool path and both landmarks in the field',
+      },
+      { type: 'event', id: 'touched-zoom', label: 'Inspect the stored image with display zoom' },
+    ],
+    observe: [
+      {
+        type: 'event',
+        id: 'rib-moved-by-tilt',
+        label: 'Nudge the beam tilt until a rib moves onto or off the nodule',
+      },
+      { type: 'value', key: 'wedge', op: 'eq', value: 0, label: 'Take the wedge out' },
+      {
+        type: 'metric',
+        metric: 'rayCrosses',
+        op: 'eq',
+        value: 'Lung only',
+        label: 'Find the clear projection again with the C-arm alone',
+      },
+    ],
+    watch: ['viewObliquityDeg', 'rayCrosses', 'contextRetained'],
   },
 }
 

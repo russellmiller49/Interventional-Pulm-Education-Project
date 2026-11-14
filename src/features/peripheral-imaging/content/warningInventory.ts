@@ -15,6 +15,11 @@
  * in Help and on the closing screen — and review-status labels no longer render at all, so the
  * `unresolved-status` class is empty. A figure limit stays only where a learner could take a
  * modeled value or drawing for a real one.
+ *
+ * Plain-language sweep (owner direction, 2026-10-11): builder words — "modeled", "teaching model",
+ * "CT-derived", "simulated", "Not a patient acquisition" — no longer render. A figure's label is a
+ * plain caption of what it shows; the per-section model boundary no longer prints anywhere, and
+ * the limits that remain are single plain sentences beside the value they qualify.
  */
 export type WarningCategory =
   | 'general-provenance'
@@ -58,15 +63,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'Example titles, cues and control-group legends that said "fictional"',
     selector: '[data-look-for], [data-model-controls] legend',
     treatment: 'reworded',
-    note: '"Fictional" became "modeled", the word the DTS overlay already uses; the statement that these are not real devices stays where it qualifies a figure.',
-  },
-  {
-    id: 'held-example-banner',
-    category: 'figure-limitation',
-    where: 'The banner over a check’s held image',
-    selector: '[data-suite-scene] [role="status"]',
-    treatment: 'kept',
-    note: 'Says whether the image depicts the question or is the section’s teaching model (PI-FELLOW-01).',
+    note: 'Neither "fictional" nor "modeled" renders: the lesion, the tool and the catheter are named plainly. The one needle limit is in the glossary entry for the side-cutting window.',
   },
   {
     id: 'dts-overlay-note',
@@ -74,7 +71,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The DTS overlay note',
     selector: '[data-dts-overlay-note]',
     treatment: 'kept',
-    note: 'Drawn from the model’s coordinates, not detected in the image.',
+    note: 'The marks show the true positions; a DTS system does not display them.',
   },
   {
     id: 'scout-legend-limits',
@@ -82,12 +79,12 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The CBCT scout legend',
     selector: '[data-cbct-state] [data-scout-legend]',
     treatment: 'reworded',
-    note: 'Plain-language legend that keeps the teaching tolerance and the not-a-clearance-check limit.',
+    note: 'Plain-language legend: the field of view, the centering box and the space the C-arm sweeps through.',
   },
   {
     id: 'primary-beam-callout',
     category: 'immediate-safety',
-    where: 'Section 17, "Keep hands out of the primary beam"',
+    where: 'Section 18, "Keep hands out of the primary beam"',
     selector: '[data-safety-callout]',
     treatment: 'kept',
     note: 'Report 7.4: set apart as its own callout rather than left inside the paragraph.',
@@ -106,20 +103,20 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     where: 'The label on a figure inside a practice or integrated case',
     selector: '[data-case-figure] [data-model-label]',
     treatment: 'kept',
-    note: 'Teaching model or schematic, and what it is not (a patient acquisition, a scatter measurement); printed before the image.',
+    note: 'A plain caption of what the figure shows, printed before the image.',
   },
   {
     id: 'teaching-figure-model-label',
     category: 'figure-limitation',
-    where: 'The label on a Prompt 04 teaching figure (Sections 6, 9 and 16)',
+    where: 'The label on a Prompt 04 teaching figure (Sections 7, 10 and 17)',
     selector: '[data-teaching-figure] [data-model-label]',
     treatment: 'kept',
-    note: 'Names the CT-derived model, which effects are simulated or drawn, and where no honest image exists.',
+    note: 'A plain caption of what the figure shows.',
   },
   {
     id: 'fixed-mobile-model-note',
     category: 'figure-limitation',
-    where: 'Under the fixed and mobile comparison (Sections 13 and 14)',
+    where: 'Under the fixed and mobile comparison (Sections 14 and 15)',
     selector: '[data-fixed-mobile-comparison] [data-model-note]',
     treatment: 'kept',
     note: 'The scenes draw the same field for both, so a learner does not read a device difference into them.',
@@ -127,7 +124,7 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
   {
     id: 'readiness-aid-status',
     category: 'figure-limitation',
-    where: 'The first line of the team-readiness aid (Section 12)',
+    where: 'The first line of the team-readiness aid (Section 13)',
     selector: '[data-team-readiness] [data-readiness-status]',
     treatment: 'kept',
     note: 'One line: a team check by role, which a unit’s own checklist may add to.',

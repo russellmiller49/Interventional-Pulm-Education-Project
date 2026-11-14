@@ -1,0 +1,26 @@
+/*
+ * The fit-to-width surface, shared by the critical-care modules (lifted from the ECMO module, which
+ * keeps its own copy). A device console that cannot lay out below its own minimum width is scaled
+ * rather than squeezed; "actual size" turns the surface into a horizontal scroller instead.
+ */
+
+.fitSurface {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/*
+ * No reserved scrollbar gutter: `scrollbar-gutter: stable` here reserved a vertical-scrollbar strip
+ * (17 px at 1280 wide) inside a surface that never scrolls vertically, taking it from the console.
+ */
+.fitSurface[data-fit-mode='actual'] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
+.fitContent {
+  transform-origin: top left;
+}

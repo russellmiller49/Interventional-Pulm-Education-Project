@@ -245,11 +245,6 @@
   font-weight: 700;
 }
 
-.heroBoundary {
-  margin: 0;
-  font-size: 0.8125rem;
-}
-
 /* Report O5: on-figure labels. Each list item is a zero-size point at the component's anchor; its
    label hangs off that point on the side that keeps it clear of the others, joined by a short rule,
    so the dot marks the object and the label never covers it. */

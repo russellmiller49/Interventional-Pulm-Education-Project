@@ -1,6 +1,7 @@
 import type { AirwayLabel } from '../components/scope/types'
 import type { BronchLearnUnit } from './learnUnit'
 import type { BronchSectionId } from './sectionIds'
+import type { TeachingStillId } from './teachingStills'
 
 /** Learn presentation and disclosure are independent of item identity and engine phases. */
 export type CoursePresentation = 'illustrated' | 'skill' | 'inspection' | 'case' | 'report'
@@ -27,6 +28,11 @@ export type CourseVisual =
   | 'tool-states'
   | 'radiation-safety'
   | 'specimen-containers'
+  | 'orientation-compass'
+  /** The shared instrument lab: forceps, brush and needle, each worked from the handle. */
+  | 'instrument-lab'
+  /** Pictures drawn from the course's 3D models, named in the screen's `stills`. */
+  | 'stills'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -43,14 +49,12 @@ export interface CourseChunk {
   readonly act?: string
   /** The stops of the section's labelled tour this screen walks, in the section's order. */
   readonly tour?: readonly AirwayLabel[]
+  /** With `visual: 'stills'`: the pictures beside this screen's text, in order. */
+  readonly stills?: readonly TeachingStillId[]
+  /** A line over those pictures, when the set needs naming. */
+  readonly stillsHeading?: string
 }
 
-const teach = (
-  id: string,
-  title: string,
-  blocks: readonly string[],
-  visual: CourseVisual = 'none',
-): CourseChunk => ({ id, title, kind: 'teach', presentation: 'illustrated', blocks, visual })
 const practice = (
   title: string,
   presentation: CoursePresentation,
@@ -71,16 +75,6 @@ const check = (id: 'check' | 'transfer', title = 'Use what you learned'): Course
   presentation: 'case',
   blocks: [],
   visual: 'none',
-})
-const debrief = (blocks: readonly string[]): CourseChunk => ({
-  id: 'review',
-  title: 'Review the reasoning',
-  kind: 'debrief',
-  presentation: 'illustrated',
-  blocks,
-  visual: 'none',
-  anchor: true,
-  grammar: true,
 })
 
 // ── Rewritten sections ───────────────────────────────────────────────────────────────────────────
@@ -231,16 +225,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     },
     {
       ...practice(
-        'Depth again, without the cue',
-        'skill',
-        'Make the card look closer, then return to the starting depth.',
-      ),
-      id: 'depth-repeat',
-      blocks: [],
-      act: 'depth-repeat',
-    },
-    {
-      ...practice(
         'Bend the tip',
         'skill',
         'Watch the lever and the tip, then bend and release the tip yourself.',
@@ -248,16 +232,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       id: 'bend',
       blocks: ['bend'],
       act: 'bend',
-    },
-    {
-      ...practice(
-        'The bend again, without the cue',
-        'skill',
-        'Change the direction the tip faces, then bring it back to straight.',
-      ),
-      id: 'bend-repeat',
-      blocks: [],
-      act: 'bend-repeat',
     },
     {
       ...practice(
@@ -297,16 +271,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       id: 'suction',
       blocks: ['suction'],
       act: 'suction',
-    },
-    {
-      ...practice(
-        'Suction again, without the cue',
-        'skill',
-        'Apply suction, then release it. Watch whether the tip moves.',
-      ),
-      id: 'suction-repeat',
-      blocks: [],
-      act: 'suction-repeat',
     },
     screen(
       'in-the-airway',
@@ -359,7 +323,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Drive into the middle lobe and the superior segment',
       'inspection',
-      'The scope starts where the bronchus intermedius ends, with opening names off. Meet the three goals.',
+      'The scope starts in the bronchus intermedius: the middle lobe opening is at the top of the view and the lower lobe is ahead. Opening names are off. Meet the three goals.',
     ),
     check('transfer', 'Count the basal openings'),
     close(['common-errors']),
@@ -463,7 +427,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Cross the cords',
       'inspection',
-      'Watch the cords through a few breaths, then cross as they part. Below them, name the trachea.',
+      'Watch the cords through a few breaths, then cross as they part and go on into the trachea.',
     ),
     screen(
       'trachea-and-carina',
@@ -472,11 +436,18 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ['trachea-and-carina'],
       { visual: 'tour', tour: ['TR', 'RMSB', 'LMSB'] },
     ),
+    screen(
+      'where-you-stand',
+      'Where you stand turns the picture',
+      'Choose where you are standing, and watch the view above the carina turn.',
+      ['where-you-stand'],
+      { visual: 'orientation-compass' },
+    ),
     {
       ...practice(
         'Into each main bronchus, and back',
         'inspection',
-        'Start in the trachea. Reach the carina, enter the right main bronchus, come back, then enter the left.',
+        'Start in the trachea. Reach the carina, enter the right main bronchus and come back. Then do the same on the left.',
       ),
       id: 'carina',
       act: 'carina',
@@ -484,15 +455,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     screen('holding', 'Hold the view', 'Read how to keep the scope still while others work.', [
       'holding-the-view',
     ]),
-    {
-      ...practice(
-        'Hold above the carina',
-        'inspection',
-        'The assistant will speak. Acknowledge, capture an image, and stay where you are until the hold ends.',
-      ),
-      id: 'hold-view',
-      act: 'hold',
-    },
     check('transfer', 'Lost after a cough'),
     close(['common-errors']),
   ],
@@ -549,7 +511,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     practice(
       'Survey both lungs',
       'inspection',
-      'Start above the carina. Enter each segment, and record it in the table under the controls. RB10 is narrowed.',
+      'Start above the carina. Drive into a segment and a list of names opens under the controls: choose the one you are in. A segment named drops off the list. Name all of them.',
     ),
     check('transfer', 'A mass in the right upper lobe'),
     close(['common-errors']),
@@ -640,6 +602,13 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ['through-the-channel', 'endobronchial-biopsy'],
       { visual: 'section' },
     ),
+    screen(
+      'working-the-tools',
+      'Work each tool through the channel',
+      'Read the order, then take the forceps, the brush and the needle through it in the lab below.',
+      ['working-the-handle'],
+      { visual: 'instrument-lab' },
+    ),
     {
       ...practice(
         'Name four tool states',
@@ -653,7 +622,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ...practice(
         'Run a brush exchange',
         'skill',
-        'Watch the exchange once, then run it yourself. Your assistant’s report is not always right. Check the state before the brush moves.',
+        'Load the brush, push it out beyond the tip, then bring it back covered. Your assistant’s report is not always right: check the scope view before the brush comes back. An unsafe move means starting again.',
       ),
       demonstration: [
         {
@@ -723,27 +692,56 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
   deterioration: [
     hook('The saturation is falling'),
     check('check', 'Why is he restless?'),
-    screen('opening', 'Open every event the same way', 'Read the three moves that come first.', [
-      'opening-bundle',
-    ]),
+    screen(
+      'opening',
+      'Open every event the same way',
+      'Read the three moves that come first.',
+      ['opening-bundle'],
+      { visual: 'stills', stills: ['deterioration-clear-view'] },
+    ),
     screen(
       'breathing',
       'Low oxygen, and too much sedation',
       'Learn the two cards. Most events start here.',
       ['desaturation', 'oversedation'],
+      {
+        visual: 'stills',
+        stills: [
+          'deterioration-scope-in-lobe',
+          'deterioration-scope-in-trachea',
+          'deterioration-trace-sedated',
+        ],
+      },
     ),
-    screen('spasm', 'The larynx and the bronchi', 'Learn the two cards and how they differ.', [
-      'laryngospasm',
-      'bronchospasm',
-    ]),
-    screen('circulation', 'Pressure and pleura', 'Learn the two cards. One of them cannot wait.', [
-      'hypotension',
-      'pneumothorax',
-    ]),
-    screen('topical', 'When the topical drug is the cause', 'Learn the two cards.', [
-      'anesthetic-toxicity',
-      'methemoglobinemia',
-    ]),
+    screen(
+      'spasm',
+      'The larynx and the bronchi',
+      'Learn the two cards and how they differ.',
+      ['laryngospasm', 'bronchospasm'],
+      {
+        visual: 'stills',
+        stills: [
+          'deterioration-cords-open',
+          'deterioration-cords-shut',
+          'deterioration-bronchi-narrowed',
+          'deterioration-trace-spasm',
+        ],
+      },
+    ),
+    screen(
+      'circulation',
+      'Pressure and pleura',
+      'Learn the two cards. One of them cannot wait.',
+      ['hypotension', 'pneumothorax'],
+      { visual: 'stills', stills: ['deterioration-pneumothorax', 'deterioration-tension'] },
+    ),
+    screen(
+      'topical',
+      'When the topical drug is the cause',
+      'Learn the two cards.',
+      ['anesthetic-toxicity', 'methemoglobinemia'],
+      { visual: 'stills', stills: ['deterioration-oximeter-plateau'] },
+    ),
     practice(
       'One patient, four decisions',
       'case',
@@ -755,26 +753,49 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
   'bleeding-priorities': [
     hook('Blood fills the view'),
     check('check', 'What matters most?'),
-    screen('threat', 'Why a small bleed matters', 'Read why the first moves are what they are.', [
-      'the-threat',
-    ]),
+    screen(
+      'threat',
+      'Why a small bleed matters',
+      'Read why the first moves are what they are.',
+      ['the-threat'],
+      { visual: 'stills', stills: ['bleeding-held-in-segment', 'bleeding-floods-both-lungs'] },
+    ),
     screen(
       'first-moves',
       'The first moves, in order',
       'Learn the card. You will use it on the patient who follows.',
       ['first-moves'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-scope-wells-up', 'bleeding-wedge-close', 'bleeding-side-down'],
+      },
     ),
-    screen('escalation', 'When the first moves fail', 'Read what comes after the card.', [
+    screen(
       'escalation',
-    ]),
+      'When the first moves fail',
+      'Read what comes after the card.',
+      ['escalation'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-scope-at-carina', 'bleeding-blocker', 'bleeding-tube-in-other-lung'],
+      },
+    ),
     practice(
       'One patient, four decisions',
       'case',
       'Read the monitor, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    screen('grade', 'Grade the bleed', 'Four grades, by what it took to stop the bleeding.', [
-      'nashville',
-    ]),
+    screen(
+      'grade',
+      'Grade the bleed',
+      'Four grades, by what it took to stop the bleeding.',
+      ['nashville'],
+      {
+        visual: 'stills',
+        stills: ['bleeding-wedge-close', 'bleeding-blocker', 'bleeding-tube-in-other-lung'],
+        stillsHeading: 'What it took, from least to most',
+      },
+    ),
     check('transfer', 'Grade a different bleed'),
     close(['common-errors']),
   ],
@@ -805,6 +826,12 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'peak-and-plateau',
     ]),
     screen(
+      'tidal-volume',
+      'Raising the tidal volume',
+      'Read when a bigger breath helps and when it harms.',
+      ['raising-tidal-volume'],
+    ),
+    screen(
       'falling',
       'When ventilation falls',
       'Learn the card, then read what suction does to the lung.',
@@ -817,27 +844,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     ),
     check('transfer', 'A different mode'),
     close(['common-errors']),
-  ],
-  'what-completion-means': [
-    teach('evidence', 'Understand what your record can establish', [
-      'records-in-a-file',
-      'this-fellows-file',
-      'four-records',
-      'where-this-course-sits',
-    ]),
-    practice(
-      'Distinguish the kinds of learning evidence',
-      'case',
-      'Match each evidence statement to the claim it can support. Keep online participation, saved answers, physical skill and supervised clinical performance separate.',
-    ),
-    check('check', 'Interpret a learner’s available evidence'),
-    teach('supervised-next', 'Turn feedback into a next practice objective', [
-      'manual-tools',
-      'what-evidence-shows',
-      'next-objective',
-    ]),
-    debrief(['common-errors']),
-    check('transfer', 'Recognize the limits of transfer'),
   ],
 }
 

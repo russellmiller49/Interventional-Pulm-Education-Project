@@ -12,8 +12,9 @@ import { SequenceActivity } from '../components/SequenceActivity'
 import { QuestionExplanation } from '../components/QuestionExplanation'
 import { useLessonChromeClearance } from '../components/useLessonChromeClearance'
 import { FINAL_CASES, PRACTICE_CASES } from '../content/cases'
-import { LESSONS } from '../content/curriculum'
+import { LESSONS, lessonById } from '../content/curriculum'
 import { activitiesForLesson } from '../content/stage'
+import { openUnitAcquisition, unitById } from '../testing/unit-acquisition'
 import { taskErrors, newExamination } from '../engine/examination'
 import { MODEL_WINDOW_CASE, EXAMINATION_CASE } from '../content/examination-cases'
 import { initialModelState, modelReducer, type NeedleState } from '@/lib/ebus-model-contract'
@@ -287,9 +288,13 @@ describe('evidence identity', () => {
     // The first check on this lesson's held activity is the authored air-gap scenario (L5-1):
     // it declares no retained-acquisition policy, so it is not a reading of whatever the learner
     // holds. Driven with a real acquisition in the browser; here the wording rule is pinned.
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    const held = activitiesForLesson(lesson).find((activity) => activity.image === 'held')!
-    expect(held.instruction).toContain('This is the image you acquired')
+    // The contact model is the second unit of the contact lesson since 2026-11-10.
+    const lesson = unitById('contact-cutaway-model')
+    const held = activitiesForLesson(lessonById('contact-cutaway-model')!).find(
+      (activity) => activity.image === 'held' && activity.lessonId === lesson.id,
+    )!
+    expect(held.questions).toEqual(['observation'])
+    expect(held.instruction).toContain('This is the image you continued with')
     expect(lesson.question.imagePolicy).not.toBe('retained-acquisition')
     expect(lesson.observation.imagePolicy).toBe('retained-acquisition')
   })
@@ -297,15 +302,16 @@ describe('evidence identity', () => {
   it('names what the pane beside the task is, and never calls a reference an acquisition', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'ct-map')!
     render(<LessonHost lesson={lesson} />)
+    // The prediction comes first and shows no figure; the briefing after it shows the reference.
+    expect(document.querySelector('[data-evidence-identity]')).toBeNull()
+    fireEvent.click(document.querySelector('[data-now-primary]')!)
     const identity = document.querySelector('[data-evidence-identity]')!
     expect(identity).toHaveAttribute('data-evidence-identity', 'supplied')
-    expect(identity.textContent).toContain('not an acquisition of yours')
+    expect(identity.textContent).toBe('Reference figure.')
   })
 
   it('says a live workbench is holding nothing yet', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!)
+    openUnitAcquisition('contact-cutaway-model')
     expect(document.querySelector('[data-evidence-identity]')).toHaveAttribute(
       'data-evidence-identity',
       'live',
@@ -313,9 +319,7 @@ describe('evidence identity', () => {
   })
 
   it('does not claim a held image when the acquisition was skipped', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!) // the acquisition
+    openUnitAcquisition('contact-cutaway-model')
     fireEvent.click(screen.getByRole('button', { name: 'Continue without an image' }))
     expect(document.querySelector('[data-evidence-identity]')).toHaveAttribute(
       'data-evidence-identity',
@@ -389,7 +393,7 @@ describe('ordering', () => {
     for (const step of order) fireEvent.click(screen.getByRole('button', { name: step.text }))
     fireEvent.click(screen.getByRole('button', { name: 'Check sequence' }))
     expect(screen.getByRole('status').textContent).toContain(
-      'Your step 1 is the first that differs',
+      'Your step 1 is the first that is out of order',
     )
     expect(onComplete).not.toHaveBeenCalled()
   })
@@ -408,6 +412,7 @@ describe('the skip is available but not the brightest thing on the screen', () =
   it('steps back while a task is open, and leads only when the primary cannot', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'clinical-question')!
     render(<LessonHost lesson={lesson} />)
+    fireEvent.click(document.querySelector('[data-now-primary]')!) // past the prediction
     fireEvent.click(document.querySelector('[data-now-primary]')!) // into the matching task
     const advance = document.querySelector('[data-now-primary]')!
     expect(advance.textContent).toContain('without completing this task')
@@ -416,9 +421,7 @@ describe('the skip is available but not the brightest thing on the screen', () =
   })
 
   it('keeps the hold as the filled button while it is disabled, and the skip a text link', () => {
-    const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
-    render(<LessonHost lesson={lesson} />)
-    fireEvent.click(document.querySelector('[data-now-primary]')!)
+    openUnitAcquisition('contact-cutaway-model')
     const hold = document.querySelector('[data-now-primary]')!
     expect(hold).toBeDisabled()
     expect(hold).toHaveAttribute('data-prominent')
@@ -527,40 +530,58 @@ describe('the examination record', () => {
   })
 })
 
-/* L21-4: a stop after a plane change answered with the resistance message. */
-describe('the needle model separates a lost plane from resistance', () => {
-  const advanceToLiveTip = () => {
+/*
+ * L21-4: each reason the needle is held gets its own message. The rebuilt lab (2026-11-11) has no
+ * event buttons, so the reasons are the learner's own: the tip turned out of the image, a stop
+ * set too long, an exposed needle at removal.
+ */
+describe('the needle lab says why the needle is held', () => {
+  const inNode = () => {
     let state = initialModelState('needle') as NeedleState
-    state = modelReducer(state, { type: 'sheath', value: 1 }) as NeedleState
-    state = modelReducer(state, { type: 'secure' }) as NeedleState
-    state = modelReducer(state, { type: 'extend' }) as NeedleState
-    expect(state.steps).toContain('live-tip')
+    for (const action of [
+      { type: 'sheath', value: 1 },
+      { type: 'secure' },
+      { type: 'stop', value: 19 },
+      { type: 'needle', value: 19 },
+    ])
+      state = modelReducer(state, action) as NeedleState
+    expect(state.steps).toContain('in-node')
     return state
   }
 
-  it('tells a plane-change stop to restore the view of the tip', () => {
-    const lost = modelReducer(advanceToLiveTip(), { type: 'lost' }) as NeedleState
-    const stopped = modelReducer(lost, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('not identified in the imaging plane')
-    expect(stopped.notice).not.toContain('adding force')
-    expect(stopped.steps).toContain('lost-tip-stop')
-    expect(stopped.stopped).toBe(true)
+  it('tells a lost tip to be brought back by turning the scope, not by advancing', () => {
+    const lost = modelReducer(inNode(), { type: 'rotate', value: 6 }) as NeedleState
+    expect(lost.notice).toContain('The tip has left the image')
+    expect(lost.notice).toContain('turn the scope back')
+    const drawnBack = modelReducer(lost, { type: 'needle', value: 15 }) as NeedleState
+    const pushed = modelReducer(drawnBack, { type: 'needle', value: 19 }) as NeedleState
+    expect(pushed.extension).toBe(15)
+    expect(pushed.notice).toContain('Do not advance')
+    expect(pushed.notice).not.toContain('stop was set too long')
   })
 
-  it('keeps the resistance message for a resistance stop', () => {
-    const resisted = modelReducer(advanceToLiveTip(), { type: 'resistance' }) as NeedleState
-    const stopped = modelReducer(resisted, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('do not overcome resistance by adding force')
-    expect(stopped.steps).toContain('resistance-stop')
+  it('credits the recovery only when the tip returns', () => {
+    const lost = modelReducer(inNode(), { type: 'rotate', value: 6 }) as NeedleState
+    expect(lost.steps).not.toContain('tip-recovered')
+    const back = modelReducer(lost, { type: 'rotate', value: 0 }) as NeedleState
+    expect(back.steps).toContain('tip-recovered')
+    expect(back.notice).toBe('The tip is back in the image.')
   })
 
-  it('names both when both are true', () => {
-    const lost = modelReducer(advanceToLiveTip(), { type: 'lost' }) as NeedleState
-    const both = modelReducer(lost, { type: 'resistance' }) as NeedleState
-    const stopped = modelReducer(both, { type: 'stop' }) as NeedleState
-    expect(stopped.notice).toContain('out of the imaging plane')
-    expect(stopped.notice).toContain('adding force')
-    expect(stopped.steps).toEqual(expect.arrayContaining(['lost-tip-stop', 'resistance-stop']))
+  it('names a stop set too long, and never credits it', () => {
+    let state = initialModelState('needle') as NeedleState
+    for (const action of [
+      { type: 'sheath', value: 1 },
+      { type: 'secure' },
+      { type: 'stop', value: 22 },
+    ])
+      state = modelReducer(state, action) as NeedleState
+    expect(state.steps).not.toContain('stop')
+    expect(state.notice).toContain('can pass the far side of the node')
+    const through = modelReducer(state, { type: 'needle', value: 22 }) as NeedleState
+    expect(through.notice).toContain('The stop was set too long')
+    expect(through.notice).not.toContain('The tip has left the image')
+    expect(through.steps).not.toContain('in-node')
   })
 })
 

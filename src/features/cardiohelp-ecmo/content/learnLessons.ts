@@ -3,6 +3,7 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import {
   ECMO_AIR_RESUME,
   ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES,
   ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
   ECMO_EMERGENCY_DRIVE_SENTENCE,
   ECMO_LV_DISTENSION_MOVES,
@@ -103,6 +104,20 @@ function pathwaySectionTitle(supportMode: SupportMode, scenarioId: string): stri
 function lessonObjectives(scenarioId: string): readonly string[] {
   return [ecmoSectionSpec(scenarioId).objective]
 }
+
+/** Pump speed that brings the LV-loading patient to the `lv-unloading-flow` row. */
+const LV_UNLOADING_SPEED_RPM = 2400
+
+/** Long enough for each move's response in `LV_UNLOADING_RESPONSE` to show on the monitor. */
+const LV_UNLOADING_SETTLE_ACTIONS: readonly SimulationAction[] = Array.from({ length: 3 }, () => ({
+  type: 'STEP' as const,
+}))
+
+/** Long enough for the right arm to reach `DIFFERENTIAL_VENTILATOR_RESPONSE` on the monitor. */
+const DIFFERENTIAL_VENTILATOR_SETTLE_ACTIONS: readonly SimulationAction[] = Array.from(
+  { length: 6 },
+  () => ({ type: 'STEP' as const }),
+)
 
 function step(
   definition: Omit<GuidedWalkthroughStep, 'actions' | 'expectedResponse'> &
@@ -262,9 +277,9 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'The pump is stopped: which channels still mean anything?',
       instruction:
-        'Open Parameter list. In this settled initial pump-off state pVen, pInt, pArt and the Δp trend show the unavailable indication rather than a number. Work out what the console can still tell you here, and why the pressure channels are not part of it.',
+        'Open the Parameter list on the console. With the pump stopped, flow reads 0 and the pressures show dashes. Which readings still tell you something, and why are the pressures blank?',
       rationale:
-        'Dashes are a statement, not a gap. The three pressure locations distinguish drainage limitation, return obstruction and oxygenator resistance, but they are flow-dependent circuit-pressure patterns that this educational model does not report in the settled pump-off state. Flow is different: with the sensor connected, zero is a real reading rather than an absent one.',
+        'The pressures are read to tell a drainage problem, a return obstruction and oxygenator resistance apart, and all three only mean something while blood is flowing, so this simulator leaves them blank with the pump stopped. Flow is different: its sensor is connected, so 0 L/min is a real reading. The speed setting, power source and alarm state still mean what they say.',
       actionLabel: 'Open Parameter list',
       actions: [{ type: 'SET_SCREEN', screen: 'parameters' }],
       expectedResponse: [
@@ -279,7 +294,7 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Bring a reference circuit up before touring the rest',
       instruction:
-        'Bring the pump up to 3200 rpm on the rotary control. Hold the control rather than tapping it — the simulated setpoint climbs progressively while it is held. This is a reference circuit brought up so the console has something to report; it is not the startup sequence, which comes later on a fresh one.',
+        'The console locks its controls against accidental changes. Press and hold Hold to unlock for a second, then press and hold the up arrow beside the speed dial until it reads 3200 rpm. This only gives the tour a running circuit; the startup sequence comes later, on a fresh one.',
       rationale:
         'Meeting every tile on a stopped circuit would teach the wrong first impression of what each one looks like, so the tour needs a circuit that is working. What it does not need is a completed startup — nothing here has been diagnostically checked or inspected, and none of it counts toward the pre-use sequence. The progressive climb simulates a ramp; it is not a claim about how any particular unit brings a pump up.',
       actionLabel: 'Ramp to 3200 rpm',
@@ -1550,27 +1565,71 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
-        id: 'verify-and-escalate-mixing',
+        id: 'confirm-right-arm',
         target: 'patient-monitor',
-        title: 'Confirm at the right arm, then treat the native lungs first',
-        instruction: `${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize} Then, in order: ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.join(' ')}`,
+        title: 'Confirm at the right arm',
+        instruction: `${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize} Draw a right radial gas and read it beside the oximeter, the femoral saturation and the post-oxygenator saturation. This step measures. It treats nothing.`,
+        rationale: `The innominate artery leaves the arch just after the coronaries, so the right arm is the first place you can sample what the native lungs are sending to the heart and the brain. A femoral sample or a left-hand oximeter can read circuit blood and reassure you falsely. A right-arm pulse pressure ${ECMO_NUMBERS.value('mixing-point-pulse-pressure')} often puts the mixing point beyond the innominate, and this patient reads 22 mmHg.`,
+        actionLabel: 'Draw a right radial gas',
+        actions: [{ type: 'DRAW_RIGHT_RADIAL_GAS' }],
+        expectedResponse: [
+          'Right radial gas reads SaO₂ 82%, matching the oximeter',
+          'Right-arm, femoral and post-oxygenator saturations do not move',
+          'The right-arm alarm stays on',
+        ],
+      },
+      {
+        id: 'raise-ventilator',
+        target: 'patient-monitor',
+        title: 'Treat the native lungs: raise the ventilator',
+        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Raise ventilator FiO₂ and PEEP. ELSO’s ECPR guidance says to consider a PEEP of ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
         rationale:
           'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the ventilator is the first lever: FiO₂, PEEP and recruitment. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
-        actionLabel: 'Confirm at the right arm and raise ventilator support',
+        actionLabel: 'Raise ventilator FiO₂ and PEEP and advance 6 seconds',
+        actions: [{ type: 'RAISE_VENTILATOR_SUPPORT' }, ...DIFFERENTIAL_VENTILATOR_SETTLE_ACTIONS],
+        expectedResponse: [
+          `Right-arm SpO₂ rises to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} and stays flagged low`,
+          'Femoral and post-oxygenator saturations stay high, because the ventilator acts on the native lungs and not on the circuit',
+          'Pulse pressure, native output and circuit flow hold',
+        ],
+      },
+      {
+        id: 'recheck-right-arm',
+        target: 'patient-monitor',
+        title: 'Recheck at the same arm',
+        instruction: `Repeat the right radial gas. Read the SaO₂ against two published lines: Taha 2024 gives a minimum on ECMO of ${ECMO_NUMBERS.value('ecmo-minimum-oxygenation')}, and ELSO 2021 targets ${ECMO_NUMBERS.value('ecpr-saturation-target')} after ECPR.`,
+        rationale:
+          'Titrate the ventilator on the right-arm gas and the membrane on the post-oxygenator gas. The femoral saturation cannot show what the ventilator did, because that blood came through the membrane.',
+        actionLabel: 'Repeat the right radial gas',
+        actions: [{ type: 'DRAW_RIGHT_RADIAL_GAS' }],
+        expectedResponse: [
+          `Right radial gas reads SaO₂ ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}, matching the oximeter`,
+          'That sits between the two published lines: better, and still low',
+        ],
+      },
+      {
+        id: 'verify-and-escalate-mixing',
+        target: 'patient-monitor',
+        title: 'Plan for what the ventilator does not treat',
+        instruction: `The ventilator raises what the lungs can deliver. It does not treat why they are failing. Commit to the next moves: ${ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES.moves.join(' ')} If the right arm stays low, change the configuration. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.slice(2).join(' ')} None of these is carried out in this lesson, so this step records the plan and changes no reading.`,
+        rationale: `Confirming named the problem and the ventilator bought oxygen. Neither treated the cause. Ventilator support has a ceiling too: pushed far enough it injures the lungs it is meant to help. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[1]}`,
+        actionLabel: 'Record the plan for the lung cause and V-AV or VV',
         actions: [{ type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' }],
         expectedResponse: [
-          'Right radial gas confirms the oximeter',
-          'Ventilator FiO₂ and PEEP raised; V-AV or conversion to VV planned if the right arm stays low',
+          'The lung cause and V-AV or VV show as planned, not carried out, on the patient monitor',
+          'Right-arm, femoral and post-oxygenator saturations read as they did before this step',
         ],
       },
     ],
     reassessment: {
       target: 'patient-monitor',
       instruction:
-        'Recheck right-radial and lower-body oxygenation, native ejection, lung status, circuit gas transfer, and perfusion.',
+        'Recheck right-radial and lower-body oxygenation, native ejection, lung status, circuit gas transfer, and perfusion. The size and speed of this response belong to this simulation. A right arm that stays low goes to the plan you recorded, not to ever higher ventilator settings.',
       expectedResponse: [
-        'Right-radial oxygenation begins to improve',
-        'The two circulations remain explicitly compared',
+        `Right-arm SpO₂ holds at ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}, better and still flagged low`,
+        'Femoral saturation stays high, so the two sites still read apart',
+        `Pulse pressure stays ${ECMO_NUMBERS.value('mixing-point-pulse-pressure')}, so the heart is still ejecting native blood`,
+        'The pattern stays active, because the lung cause and V-AV or VV have not been carried out',
       ],
     },
   }),
@@ -1591,25 +1650,75 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
+        id: 'lower-flow',
+        target: 'console',
+        title: 'Turn circuit flow down',
+        instruction: `Confirm on echo that the ventricle is not ejecting, then bring the pump down to ${LV_UNLOADING_SPEED_RPM} rpm. Flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')}. MAP is the check on how far it can go: keep it ${ECMO_NUMBERS.value('va-map-goal')}.`,
+        rationale:
+          'More VA flow is more afterload for a ventricle that is not ejecting. Flow comes down to the lowest that still perfuses, so the pressure the valve has to open against falls.',
+        actionLabel: `Lower pump speed to ${LV_UNLOADING_SPEED_RPM} rpm`,
+        actions: [{ type: 'SET_RPM', rpm: LV_UNLOADING_SPEED_RPM }],
+        expectedResponse: [
+          `Speed setpoint reads ${LV_UNLOADING_SPEED_RPM} rpm`,
+          `Console flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')}`,
+        ],
+      },
+      {
+        id: 'read-flow-response',
+        target: 'patient-monitor',
+        title: 'Read what lower flow did by itself',
+        instruction:
+          'Let three seconds run, then read pulse pressure, aortic-valve opening, native output and MAP on the patient monitor.',
+        rationale: `Less afterload widens the pulse, but a ventricle this weak may still not open the valve. A pulse pressure still ${ECMO_NUMBERS.value('lv-vent-pulsatility')} says lower flow has not been enough.`,
+        actionLabel: 'Advance 3 seconds and read the ventricle',
+        actions: LV_UNLOADING_SETTLE_ACTIONS,
+        expectedResponse: [
+          `Pulse pressure wider, still ${ECMO_NUMBERS.value('lv-vent-pulsatility')}`,
+          'Aortic valve still not observed to open',
+          `MAP still ${ECMO_NUMBERS.value('va-map-goal')}`,
+        ],
+      },
+      {
+        id: 'start-inotrope',
+        target: 'patient-monitor',
+        title: 'Add an inotrope so the ventricle ejects',
+        instruction:
+          'Hold flow where it is and start an inotrope, then let three seconds run and read the same signals.',
+        rationale:
+          'An inotrope raises contractility, so a ventricle that could not open the valve can now eject against the lower pressure. Some texts call this a chemical vent.',
+        actionLabel: 'Start an inotrope and advance 3 seconds',
+        actions: [{ type: 'START_INOTROPE' }, ...LV_UNLOADING_SETTLE_ACTIONS],
+        expectedResponse: [
+          'Inotrope shows as running on the patient monitor',
+          `Pulse pressure ${ECMO_NUMBERS.value('lv-ejection-pulsatility')}`,
+          'Aortic valve observed to open, and native output higher',
+          'Pulmonary congestion still marked',
+        ],
+      },
+      {
         id: 'escalate-lv-loading',
         target: 'patient-monitor',
-        title: 'Unload the left ventricle',
-        instruction: `Confirm with echo, then in order: ${ECMO_LV_DISTENSION_MOVES.moves.join(' ')}`,
+        title: 'Plan volume removal and the vent',
+        instruction: `The valve is opening and the chest has not changed. Commit to the next two moves: ${ECMO_LV_DISTENSION_MOVES.moves.slice(2).join(' ')} Neither is carried out in this lesson, so this step records the plan and changes no reading.`,
         rationale:
-          'More VA flow is more afterload for a ventricle that is not ejecting. Lowering flow and giving an inotrope let the valve open; if pulsatility does not return, the ventricle is vented mechanically before it distends, the lungs flood and thrombus forms.',
-        actionLabel: 'Lower flow, add an inotrope, call for a vent',
+          'Ejection does not clear the lungs by itself, so volume comes off next. The vent is named now so that a ventricle that loses its pulse is vented before it distends, the lungs flood and thrombus forms.',
+        actionLabel: 'Record the plan for volume removal and the vent',
         actions: [{ type: 'CORRECT_FAULT', fault: 'lv-loading' }],
         expectedResponse: [
-          'Flow titrated down and inotrope started',
-          `A vent is placed if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}`,
+          'Volume removal and the vent show as planned, not carried out, on the patient monitor',
+          'Pulse pressure, the valve and the chest read as they did before this step',
         ],
       },
     ],
     reassessment: {
       target: 'patient-monitor',
-      instruction:
-        'Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow.',
-      expectedResponse: ['Pulsatility begins to improve', 'The aortic valve opens again'],
+      instruction: `Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow. The size and speed of this response belong to this simulation. A ventricle that stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')} is vented; do not wait for it to answer.`,
+      expectedResponse: [
+        `Pulse pressure stays ${ECMO_NUMBERS.value('lv-ejection-pulsatility')}`,
+        'The aortic valve is observed to open',
+        'Pulmonary congestion is still marked, because volume removal and the vent have not been carried out',
+        `Circuit flow holds at ${ECMO_NUMBERS.value('lv-unloading-flow')}`,
+      ],
     },
   }),
   standardLesson({

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Languages } from 'lucide-react'
+import { Info, Languages } from 'lucide-react'
 
 import { ModuleFrameV2 } from '@/features/learning-module/components/ModuleFrameV2'
 import { HandoffContent } from '@/i18n/handoff'
@@ -11,16 +11,17 @@ import { mcsModuleNavItems } from './McsModuleNav'
 import styles from './mechanical-circulatory-support.module.css'
 
 /**
- * The module frame. The hub and the case surfaces keep the module's light theme; a lesson on the
- * stage runs on the dark palette its device surfaces already use, and the frame's chrome follows
- * it so the header and the workspace read as one surface.
+ * The module frame. Every MCS page is dark: the overview, the Learn page, the lessons, the
+ * practice workbench and the cases, like the other four critical care modules (owner,
+ * 2026-11-10). It was the one light module of the five. The `theme` prop stays for a caller that
+ * needs the light frame.
  */
 export function McsModuleFrame({
   locale,
   activeHref,
   activityMode = false,
   flowing = false,
-  theme = activityMode ? 'dark' : 'light',
+  theme = 'dark',
   children,
 }: {
   locale: string
@@ -49,14 +50,27 @@ export function McsModuleFrame({
           navAriaLabel="Mechanical circulatory support module sections"
           theme={theme}
           activityMode={activityMode}
+          hideSiteHeader
           safetyNotice={
-            <>
-              <strong>Teaching simulator.</strong>{' '}
-              <span>
+            /*
+              The module's one boundary statement, as a disclosure (ECMO tester feedback,
+              2026-10-13, carried here 2026-10-17).
+
+              It was a full-width banner above the first thing a learner reads. The statement is
+              unchanged and stays on every page the frame draws it on; it opens from its own name
+              rather than standing in front of the content.
+            */
+            <details className={styles.boundaryDisclosure} data-mcs-boundary>
+              <summary>
+                <strong>Teaching simulator</strong>
+                <Info aria-hidden="true" />
+                <span className="sr-only">About this simulator</span>
+              </summary>
+              <p>
                 Its numbers come from a model, not from a patient or a real console. At the bedside,
                 work from the patient and the device&rsquo;s instructions for use.
-              </span>
-            </>
+              </p>
+            </details>
           }
         >
           {locale !== 'en' ? (

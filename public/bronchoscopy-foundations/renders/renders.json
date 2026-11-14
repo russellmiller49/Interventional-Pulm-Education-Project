@@ -1,0 +1,123 @@
+{
+  "schema": "bronchoscopy_foundations_teaching_stills/v1",
+  "generatedBy": "scripts/bronchoscopy-foundations/render-teaching-stills.mjs",
+  "origin": "Drawn from the teaching airway model. Blood, devices and the scope are authored shapes placed in it. Not photographs.",
+  "width": 1200,
+  "height": 900,
+  "stills": [
+    {
+      "id": "bleeding-blocker",
+      "file": "bleeding-blocker.jpg",
+      "bytes": 56870,
+      "sha256": "a0915d8a9950004818350af745f8ef0e0a1f49364a6dfc40b77e4f47b9d983f6"
+    },
+    {
+      "id": "bleeding-floods-both-lungs",
+      "file": "bleeding-floods-both-lungs.jpg",
+      "bytes": 41456,
+      "sha256": "a922b8fd7f12ad86d70119f94d8cf03eccaf3f93d979bac220ec1f410facb4b3"
+    },
+    {
+      "id": "bleeding-held-in-segment",
+      "file": "bleeding-held-in-segment.jpg",
+      "bytes": 42435,
+      "sha256": "618ee02f50324ac9352f958612d2f8b9c8ca02f3ce4cae7acf19277313000c47"
+    },
+    {
+      "id": "bleeding-scope-at-carina",
+      "file": "bleeding-scope-at-carina.jpg",
+      "bytes": 52338,
+      "sha256": "82e1a087e4977864f37386b158037f8edca6e3066ae56ed6f415cc55f6e83ab8"
+    },
+    {
+      "id": "bleeding-scope-wells-up",
+      "file": "bleeding-scope-wells-up.jpg",
+      "bytes": 35485,
+      "sha256": "50fa892cfdac86ae3fd0262a761c75c8f548d445fedaf33d00a59d40b3b21d6a"
+    },
+    {
+      "id": "bleeding-side-down",
+      "file": "bleeding-side-down.jpg",
+      "bytes": 46073,
+      "sha256": "0a24a2f6c4762eee70ed1a9bc0f70930daf4d1b3f8812b20f56946375fc13ecb"
+    },
+    {
+      "id": "bleeding-tube-in-other-lung",
+      "file": "bleeding-tube-in-other-lung.jpg",
+      "bytes": 56029,
+      "sha256": "d01d8e13f6fb00bdd3a40fae3a677a57fd032e9ce573f3ef5e6358000982fc15"
+    },
+    {
+      "id": "bleeding-wedge-close",
+      "file": "bleeding-wedge-close.jpg",
+      "bytes": 47666,
+      "sha256": "4b5dcd06af06f89a6fb8c773b73f04cac035e47a980d7aa073b13a1fac142abf"
+    },
+    {
+      "id": "deterioration-bronchi-narrowed",
+      "file": "deterioration-bronchi-narrowed.jpg",
+      "bytes": 36351,
+      "sha256": "84f61b92beed19ce372a9a0644ad5ad25a762773ce5b8195af572e2880722c0d"
+    },
+    {
+      "id": "deterioration-clear-view",
+      "file": "deterioration-clear-view.jpg",
+      "bytes": 41075,
+      "sha256": "8c0a772cd5a77fb3251ccc92fdcdc2a3e5b0549ff056752bf9ef1fd87514a185"
+    },
+    {
+      "id": "deterioration-cords-open",
+      "file": "deterioration-cords-open.jpg",
+      "bytes": 48534,
+      "sha256": "57606d7201cfdbd927679958834960fc72f1b536c940aca4191d55df9e866d86"
+    },
+    {
+      "id": "deterioration-cords-shut",
+      "file": "deterioration-cords-shut.jpg",
+      "bytes": 45987,
+      "sha256": "8ff657d0d55a48542e3800fdcfb68d7355bb0f98d5a33eb67742b7e336155d6f"
+    },
+    {
+      "id": "deterioration-oximeter-plateau",
+      "file": "deterioration-oximeter-plateau.jpg",
+      "bytes": 49570,
+      "sha256": "24fb0b7d0fb86b5f9735802c9d9a71f4c0b3815793263e80bbe312681f02ceed"
+    },
+    {
+      "id": "deterioration-pneumothorax",
+      "file": "deterioration-pneumothorax.jpg",
+      "bytes": 73529,
+      "sha256": "fb80024a75f160e0192291bf138ce805e28cdc5dba0c7d9c89b7144148ff54b2"
+    },
+    {
+      "id": "deterioration-scope-in-lobe",
+      "file": "deterioration-scope-in-lobe.jpg",
+      "bytes": 42392,
+      "sha256": "a715a594345f41c0523115e8441982fcadd1161174ca0d92ee23c62dac9effbb"
+    },
+    {
+      "id": "deterioration-scope-in-trachea",
+      "file": "deterioration-scope-in-trachea.jpg",
+      "bytes": 40062,
+      "sha256": "b0b13fd6a5b81afc051019346cbdf8d831c21139050e9dfcdf5efead7ae03ade"
+    },
+    {
+      "id": "deterioration-tension",
+      "file": "deterioration-tension.jpg",
+      "bytes": 69238,
+      "sha256": "b87ee4ce68954c2651f6642a67336cf31f9f085062d84cd21b4db729d0aefce7"
+    },
+    {
+      "id": "deterioration-trace-sedated",
+      "file": "deterioration-trace-sedated.jpg",
+      "bytes": 70936,
+      "sha256": "d464f01fbd6b75e135359d21d265cf2f29aac279ffcf9694bc80a444b0cb7603"
+    },
+    {
+      "id": "deterioration-trace-spasm",
+      "file": "deterioration-trace-spasm.jpg",
+      "bytes": 71244,
+      "sha256": "94071b464751fed334218ef46faa1c017c12c9dbbd20f128d29724cd4d4c349d"
+    }
+  ]
+}

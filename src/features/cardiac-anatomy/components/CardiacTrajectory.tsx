@@ -113,6 +113,13 @@ interface ProgressiveSplineTubeProps {
   emissiveIntensity?: number
   radialSegments?: number
   renderOrder?: number
+  /**
+   * Draw the tube in exactly `color`, over the anatomy, without lighting or tone mapping. A lit,
+   * self-lit tube under the heart scene's lights comes out pale cream whatever colour it is given,
+   * and translucent chambers are painted over it; both matter when a key beside the view names the
+   * line by its colour.
+   */
+  unlit?: boolean
 }
 
 export function ProgressiveSplineTube({
@@ -126,6 +133,7 @@ export function ProgressiveSplineTube({
   emissiveIntensity = 0.08,
   radialSegments = 10,
   renderOrder = 20,
+  unlit = false,
 }: ProgressiveSplineTubeProps) {
   const tubularSegments = Math.max(72, points.length * 2)
   const geometry = useMemo(() => {
@@ -153,17 +161,30 @@ export function ProgressiveSplineTube({
 
   return (
     <mesh geometry={geometry} castShadow frustumCulled={false} renderOrder={renderOrder}>
-      <meshPhysicalMaterial
-        color={color}
-        depthTest={depthTest}
-        depthWrite={depthTest && opacity >= 1}
-        emissive={color}
-        emissiveIntensity={emissiveIntensity}
-        metalness={0.04}
-        opacity={opacity}
-        roughness={0.34}
-        transparent={opacity < 1}
-      />
+      {unlit ? (
+        <meshBasicMaterial
+          color={color}
+          depthTest={depthTest}
+          depthWrite={depthTest && opacity >= 1}
+          opacity={opacity}
+          toneMapped={false}
+          // In the transparent pass, so `renderOrder` puts it over see-through anatomy as well.
+          // An opaque tube is drawn before every translucent chamber and is tinted by each one.
+          transparent
+        />
+      ) : (
+        <meshPhysicalMaterial
+          color={color}
+          depthTest={depthTest}
+          depthWrite={depthTest && opacity >= 1}
+          emissive={color}
+          emissiveIntensity={emissiveIntensity}
+          metalness={0.04}
+          opacity={opacity}
+          roughness={0.34}
+          transparent={opacity < 1}
+        />
+      )}
     </mesh>
   )
 }

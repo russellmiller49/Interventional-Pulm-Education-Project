@@ -23,9 +23,14 @@ import styles from './course-flow.module.css'
  * first with the names and then without them.
  *
  * The clip and its outlines are the airway anatomy lesson's files; nothing is copied or redrawn.
+ *
+ * The picture shown before the clip plays is the clip's own first frame, cut by
+ * `scripts/bronchoscopy-foundations/build-find-frames.mjs`. The lesson's shared poster is a later
+ * frame, at the carina, and the larynx outlines of the first frame were being drawn over it
+ * (educator feedback, 2026-10-13).
  */
 const VIDEO_SRC = '/airway-lesson/airway-survey-cropped.mp4'
-const POSTER_SRC = '/airway-lesson/airway-survey-poster-cropped.jpg'
+const POSTER_SRC = '/bronchoscopy-foundations/survey/opening-frame.jpg'
 
 /** Where each part of the pass begins: the first frame the annotation set outlines the structure. */
 const PARTS = [
