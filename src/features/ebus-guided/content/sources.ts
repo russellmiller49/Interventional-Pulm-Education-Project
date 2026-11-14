@@ -28,7 +28,8 @@ export const SOURCES = [
   },
   {
     id: 'ics2023',
-    title: 'Joint ICS/IAB recommendations for EBUS-TBNA (2023)',
+    title:
+      'Mohan A, Madan K, Hadda V, et al. Guidelines for EBUS-TBNA: joint ICS/IAB recommendations. Lung India 2023;40:368-400',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10401980/',
     type: 'Guideline',
   },
@@ -136,7 +137,7 @@ export const SOURCES = [
   {
     id: 'sabath2020',
     title:
-      'Sabath BF, et al. Delayed massive hemoptysis after EBUS-TBNA. Endosc Ultrasound 2020;9:419-420',
+      'Sabath BF. Delayed massive hemoptysis after EBUS-TBNA. Endosc Ultrasound 2020;9:419-420',
     url: 'https://doi.org/10.4103/eus.eus_50_20',
     type: 'Case report',
   },

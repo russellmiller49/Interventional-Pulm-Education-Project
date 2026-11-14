@@ -148,7 +148,7 @@ describe('EBUS Guided teaching numbers', () => {
     const recovery = lesson('complications-recovery')
     expect(copy('complications-recovery')).toContain(EBUS_NUMBERS.value('complication-rate'))
     const key = recovery.question.choices.find((choice) => choice.correct)!
-    expect(key.text).toBe('Stop sampling and retract the needle fully into its sheath')
+    expect(key.text).toBe('Stop sampling and retract the needle completely into its sheath')
     expect(key.text).not.toMatch(/team|protocol|escalat/i)
   })
 
@@ -156,62 +156,77 @@ describe('EBUS Guided teaching numbers', () => {
   describe('bleeding and desaturation after the owner ruling of 2026-11-14', () => {
     const recovery = lesson('complications-recovery')
     const text = copy('complications-recovery')
+    const steps = recovery.sequence!.steps.map((step) => step.text)
     const everything = [
       text,
       ...recovery.checklist,
       ...recovery.takeaways,
+      recovery.worked.context,
       recovery.worked.reasoning,
       recovery.sequence!.prompt,
-      ...recovery.sequence!.steps.map((step) => step.text),
+      ...steps,
       recovery.sequence!.explanation,
       ...[recovery.question, recovery.observation, recovery.transfer].flatMap((item) => [
         item.prompt,
         ...item.choices.flatMap((choice) => [choice.text, choice.rationale]),
       ]),
     ].join(' ')
+    const keyOf = (item: typeof recovery.question) => item.choices.find((choice) => choice.correct)!
 
     it('retracts the needle first and never says the needle stays in', () => {
       expect(text).toMatch(/stop sampling and retract the needle completely into its sheath/)
-      expect(recovery.sequence!.steps[0].text).toBe(
-        'Stop sampling and retract the needle fully into its sheath',
-      )
-      expect(recovery.checklist[0]).toMatch(/retract the needle fully into its sheath/)
-      expect(everything).not.toMatch(/needle in\b/i)
+      expect(steps[0]).toBe('Stop sampling and retract the needle completely into its sheath')
+      expect(recovery.checklist[0]).toMatch(/retract the needle completely into its sheath/)
+      expect(everything).not.toMatch(/needle in[,;]/i)
       expect(everything).not.toMatch(/scope stays/i)
+      // Leaving the needle out is offered only as a wrong answer.
+      const left = recovery.question.choices.find((choice) => /Leave the needle/.test(choice.text))!
+      expect(left.correct).toBeFalsy()
     })
 
     it('keeps the scope at the site conditionally, and limits suction', () => {
-      expect(text).toMatch(
-        /whether to stay there depends on where the bleeding is, how brisk it is and how well the airway is controlled/,
-      )
+      expect(text).toMatch(/Stay while you can see the source and the airway is secure/)
+      expect(text).toMatch(/the airway comes before the view/)
       expect(text).toMatch(/Suction as much as you need to see .* and no more/)
-      expect(text).toMatch(/pulls a forming clot off the site/)
+      expect(text).toMatch(/suction can pull a forming clot off the site/)
     })
 
     it('offers the local measures as choices, not as a fixed sequence', () => {
-      expect(text).toMatch(/measures to pick from, not steps to work through in order/)
-      expect(recovery.sequence!.explanation).toMatch(/Only the first step is fixed/)
-      expect(recovery.sequence!.steps.map((step) => step.text).join(' ')).not.toMatch(
-        /cold saline|bleeding side down/i,
-      )
+      expect(text).toMatch(/These are options, not a sequence/)
+      expect(recovery.sequence!.explanation).toMatch(/a choice, not a list to work through/)
+      expect(steps.join(' ')).not.toMatch(/cold saline|bleeding side down/i)
       // What the evidence is, and where it comes from.
-      expect(text).toMatch(/expert practice with one published case behind it/)
-      expect(text).toMatch(/Cold saline is widely used and little studied/)
+      expect(text).toMatch(/the published support is a single case/)
+      expect(text).toMatch(/widely used and little studied/)
       expect(text).toMatch(/comes from transbronchial lung biopsy/)
+      expect(text).toMatch(/cannot be wedged/)
     })
 
     it('does not offer the ultrasound balloon as hemorrhage control', () => {
-      expect(text).toMatch(/made for acoustic contact, not for hemostasis/)
-      expect(everything).not.toMatch(/or the inflated balloon|scope tip or the balloon/)
-      const balloon = recovery.question.choices.find((choice) => /balloon/i.test(choice.text))!
-      expect(balloon.correct).toBeFalsy()
+      expect(text).toMatch(/made for acoustic contact/)
+      expect(text).toMatch(/has not been shown to control bleeding: do not rely on it/)
+      // The limit of pressing with the tip is said too.
+      expect(text).toMatch(/costs you the white-light view while you press/)
+      const balloons = [recovery.question, recovery.observation, recovery.transfer]
+        .flatMap((item) => item.choices)
+        .filter((choice) => /balloon/i.test(choice.text))
+      expect(balloons).toHaveLength(1)
+      for (const choice of balloons) expect(choice.correct).toBeFalsy()
+      expect(steps.join(' ') + recovery.checklist.join(' ')).not.toMatch(/balloon/i)
     })
 
     it('calls for help early and protects the lung that is not bleeding', () => {
       expect(text).toMatch(/call for help early, before the local measures have run out/)
-      expect(text).toMatch(/Protect the lung that is not bleeding/)
+      expect(text).toMatch(/protect the other lung/)
       expect(text).toMatch(/bronchial blocker/)
       expect(text).toMatch(/rigid or therapeutic bronchoscopy/)
+      // Help is not the last rung of the ordering task, and the keyed rationale says so as well.
+      expect(steps.join(' ')).not.toMatch(/help/i)
+      expect(recovery.sequence!.explanation).toMatch(
+        /Help is called as soon as the bleeding looks substantial, not after the measures have failed/,
+      )
+      expect(keyOf(recovery.question).rationale).toMatch(/call for help at the same time/)
+      expect(recovery.checklist[1]).toMatch(/if it is brisk, get help and protect the other lung/)
     })
 
     it('keeps desaturation a separate response, with no saturation number to wait for', () => {
@@ -222,30 +237,53 @@ describe('EBUS Guided teaching numbers', () => {
         /chest moving/,
         /scope itself obstructing/,
         /sedation slowed the breathing/,
-        /blood or secretion/,
+        /blood, secretion or bronchospasm/,
       ])
         expect(desaturation).toMatch(cause)
+      expect(desaturation).toMatch(/Give oxygen and support the airway while you find the cause/)
       expect(desaturation).toMatch(/not when the monitor reaches a set number/)
-      expect(desaturation).not.toMatch(/\d/)
       expect(desaturation).toMatch(
         /withdraw the scope, unless you need it to clear blood from the airway/,
       )
       expect(desaturation).toMatch(/airway management and assisted ventilation first/)
+      // No number anywhere in the response: not in the text, the card, the example or the check.
+      for (const surface of [
+        desaturation,
+        recovery.checklist[2],
+        recovery.worked.context,
+        recovery.worked.reasoning,
+        recovery.observation.prompt,
+        ...recovery.observation.choices.flatMap((choice) => [choice.text, choice.rationale]),
+      ])
+        expect(surface).not.toMatch(/\d/)
       expect(everything).not.toMatch(/100% oxygen/)
     })
 
-    it('cites published sources that exist in the registry', () => {
-      const registered = new Set<string>(SOURCES.map((source) => source.id))
-      for (const id of recovery.sources) expect(registered.has(id)).toBe(true)
-      expect(recovery.sources).toEqual(
-        expect.arrayContaining([
-          'ics2023',
-          'aquire2013',
-          'asano2013',
-          'bernasconi2017',
-          'sabath2020',
-        ]),
+    it('asks a keyed desaturation question in which the scope does not stay as it would for bleeding', () => {
+      expect(recovery.observation.prompt).toMatch(/saturation falls/)
+      expect(keyOf(recovery.observation).text).toBe(
+        'Open the airway, give oxygen, and withdraw the scope if recovery is not prompt',
       )
+      const wrong = recovery.observation.choices.filter((choice) => !choice.correct)
+      expect(wrong.map((choice) => choice.text).join(' ')).toMatch(/set threshold/)
+      expect(wrong.map((choice) => choice.text).join(' ')).toMatch(/as you would for bleeding/)
+      // What the replaced check taught is still taught.
+      expect(text).toMatch(/inspect the site and both main bronchi for clot/)
+    })
+
+    it('cites published sources that exist in the registry, with exact citations', () => {
+      const registered = new Map<string, string>(SOURCES.map((source) => [source.id, source.title]))
+      for (const id of recovery.sources) expect(registered.has(id)).toBe(true)
+      expect(recovery.sources).toEqual([
+        'ics2023',
+        'aquire2013',
+        'asano2013',
+        'bernasconi2017',
+        'sabath2020',
+        'davidson2020',
+      ])
+      expect(registered.get('sabath2020')).toMatch(/^Sabath BF\. /)
+      expect(registered.get('ics2023')).toMatch(/Lung India 2023;40:368-400/)
     })
   })
 
