@@ -1175,3 +1175,12 @@
   height: 4px;
   border-radius: 2px;
 }
+
+/*
+ * The Practice drill reads a catheter tip a few millimetres from the nodule, on the image alone:
+ * while the 3D view is put away the image takes what the pane and the window can afford. The
+ * image is square, so its width is also its height.
+ */
+.pane[data-monitor-size='large'] .displays[data-independent='true'] .monitor {
+  width: min(100%, 520px, max(260px, calc(100vh - 300px)));
+}

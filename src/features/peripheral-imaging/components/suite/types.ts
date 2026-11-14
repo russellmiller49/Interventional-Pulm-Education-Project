@@ -93,6 +93,8 @@ export interface SuiteInputs {
   /** The bronchi drawn from the CT, on the image and in the 3D view (`lib/airwayTree.ts`). */
   readonly airwayShow: import('../../lib/airwayTree').AirwayShow
   readonly airwayNames: boolean
+  /** The drill position whose catheter is drawn in the airways, or 'none'. */
+  readonly drillCase: string
   /** Source–isocenter, source–detector, detector field; defaults 720 / 1200 / 640 (the DRR's config). */
   readonly geometry: { readonly sod: number; readonly sid: number; readonly field: number }
   readonly fieldPercent: number
@@ -240,6 +242,11 @@ export interface ImagingSuitePaneProps {
    * no baseline to compare it with.
    */
   readonly comparable?: boolean
+  /**
+   * 'large' where the image stands alone and a small detail is being read on it (the Practice
+   * drill's catheter tip against the nodule). It applies only while the 3D view is put away.
+   */
+  readonly monitorSize?: 'large'
   readonly onRepresentationReady?: (ready: boolean) => void
   readonly children?: ReactNode
 }

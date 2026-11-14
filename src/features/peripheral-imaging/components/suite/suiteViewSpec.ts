@@ -67,6 +67,7 @@ export function resolveSuiteInputs(spec: SuiteViewSpec, values: LabValues): Suit
     showTool: true,
     airwayShow: 'off',
     airwayNames: true,
+    drillCase: 'none',
     geometry: DEFAULT_GEOMETRY,
     fieldPercent: n('field', 'field'),
     crop: false,

@@ -81,6 +81,12 @@ the segment model in the local source folder, converts both to the course frame,
   far in front of or behind the nodule each lies. Section 6 (Projection) draws the four that cross
   it on the frontal image and follows them through LAO 30° and RAO 30°; the same test file holds
   that step's sentences, examples and readout to the tree.
+- **The Practice drill.** `lib/airwayDrill.ts` parks a catheter at the end of eight branches near
+  the nodule, two for each answer to "where is the nodule from the tip" (anterior or posterior,
+  medial or lateral). The nodule is baked into the CT, so it stays and the catheter moves. The
+  positions are branch ids of `airway-tree.json`: after a rebuild of the tree,
+  `__tests__/airway-drill.test.ts` says whether each is still a fair question (far enough in
+  front or behind and to the side, and moving plainly within 30° of rotation).
 - **Limits.** The names are those the owner assigned on this CT; lobar bronchi are grouped from
   their segments because the segment model has no separate lobar surfaces. Subsegmental branches
   carry their segment's name. It is a teaching map of one patient, not a diagnostic airway map.

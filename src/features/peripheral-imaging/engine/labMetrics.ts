@@ -14,6 +14,7 @@ import {
   type Point3,
 } from '../lib/physics'
 import { AIRWAY_LOBES, AIRWAY_LOBE_KEYS } from '../content/airwayNames'
+import { DRILL_ORBIT_LIMIT } from '../lib/airwayDrill'
 import {
   AIRWAY_SEGMENTS_BY_LOBE,
   LESION_AIRWAYS,
@@ -184,6 +185,17 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       default: (lessonId) => (lessonId === 'signal' ? 0 : 22),
     },
     WEDGE_CONTROL,
+    {
+      // The Practice drill's obliquity: the same angle as `orbit`, held to what its room allows.
+      key: 'drillOrbit',
+      kind: 'range',
+      label: 'C-arm obliquity',
+      min: -DRILL_ORBIT_LIMIT,
+      max: DRILL_ORBIT_LIMIT,
+      step: 1,
+      unit: '°',
+      default: 0,
+    },
     AIRWAYS_CONTROL,
     { key: 'airwayNames', kind: 'toggle', label: 'Name the bronchi', default: true },
     {
@@ -516,7 +528,8 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
 
 /** The hidden values a lab carries that no control sets directly. */
 const HIDDEN_DEFAULTS: Readonly<Record<LabId, LabValues>> = {
-  geometry: {},
+  // The drill position whose catheter is drawn: set by the drill's own screen, never by a control.
+  geometry: { drillCase: 'none' },
   field: {},
   temporal: {},
   dts: {},
