@@ -3501,18 +3501,21 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   await page.setViewportSize({ width: 1440, height: 900 })
   const lesson = imagingStageLesson('signal')
   const ribs = lesson.steps.find((step) => step.id.endsWith(':ribs'))!
-  await openSection(page, 'signal')
-  for (let guard = 0; guard < 12; guard++) {
-    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
-    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
-    await primary(page).click()
+  const toRibs = async () => {
+    await openSection(page, 'signal')
+    for (let guard = 0; guard < 12; guard++) {
+      if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
+      await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+      await primary(page).click()
+    }
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
+    await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
   }
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
-  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
-    'data-projection-state',
-    'ready',
-    { timeout: 90000 },
-  )
+  await toRibs()
   const canvas = page.locator('[data-current-image] canvas')
   await expectImageSignal(canvas)
   /** Pixels that are not grey, and the brightness of the lung beside the nodule. */
@@ -3561,12 +3564,9 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   await display.getByRole('button', { name: 'Bone bright' }).click()
   await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-bright')
   await expect.poll(async () => Math.abs((await meanLevel()) + darkMean - 255)).toBeLessThan(12)
-  await page.reload()
-  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
-    'data-display-polarity',
-    'bone-bright',
-    { timeout: 90000 },
-  )
+  // A new page load in the same visit keeps the choice.
+  await toRibs()
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-bright')
   await page
     .getByRole('group', { name: 'Fluoroscopy display' })
     .getByRole('button', { name: 'Bone dark' })
