@@ -451,11 +451,6 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* Its note takes its own line: beside the heading in a narrow rail it was squeezed a word a line. */
-.curriculumHeading > span {
-  flex-basis: 100%;
-}
-
 .curriculumHeading div,
 .panelHeading > div,
 .sectionTitleRow > div,
@@ -473,15 +468,16 @@
   letter-spacing: -0.02em;
 }
 
+/*
+ * The rail's note ("Personal history stays local"). It was styled as a 2.7-rem number disc, which
+ * squeezed the sentence a word a line; it is a short note on its own line (2026-11-15, when the
+ * lab got its route).
+ */
 .curriculumHeading > span {
-  display: grid;
-  place-items: center;
-  width: 2.7rem;
-  height: 2.7rem;
-  border-radius: 50%;
-  color: #ffffff;
-  background: var(--teal);
-  letter-spacing: 0;
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
 }
 
 .curriculumRail > section {
@@ -3906,8 +3902,25 @@
    * read pale on near-white. Seen when the lab got its route under Practice (2026-11-15).
    */
   .experienceBar,
-  .deviceSelector {
+  .deviceSelector,
+  .workspaceViewToggle {
     background: rgba(18, 35, 38, 0.88);
+  }
+
+  /*
+   * The case panel keeps its light surface and light-theme variables, but inherited the page's
+   * light text, so its untinted headings and notes ("Playback and inspection", "Bedside actions
+   * and safety checks") were near-white on white.
+   */
+  .workflowPanel {
+    color: var(--ink);
+  }
+
+  /* White on the dark theme's lighter teal was 2:1; these sit on the page, not in a light panel. */
+  .challengeToggle button[aria-pressed='true'],
+  .overlayToggle[aria-pressed='true'],
+  .workspaceViewToggle button[aria-pressed='true'] {
+    color: #0b1618;
   }
 
   .curriculumRail > section[data-active='true'] {
