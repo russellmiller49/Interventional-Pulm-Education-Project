@@ -43,6 +43,8 @@ import { dosePlanes } from './doseModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { AirwayTree3D } from './AirwayTree3D'
+import { Catheter3D } from './Catheter3D'
+import { airwayDrillCase } from '../../lib/airwayDrill'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import { FieldView, FieldMask, FieldContextOverlay } from './views/FieldView'
 import { ProjectionView3D, projectionObjectLabels } from './views/ProjectionView3D'
@@ -440,6 +442,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const anatomyOnly = view.mode === 'projection' && !inputs.showTool
   // The bronchi over the nodule are read against the nodule, so the close-up is on it.
   const noduleCloseup = anatomyOnly && inputs.airwayShow === 'lesion'
+  // Practice drill: a catheter parked in a bronchus near the nodule.
+  const drill = view.mode === 'projection' ? airwayDrillCase(inputs.drillCase) : undefined
   // Where the learner is working the C-arm's angles on a projection, the image can colour bone by
   // depth. Not on a check (it has no controls), and not where the display range is being read from
   // the image itself.
@@ -478,6 +482,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         className={styles.pane}
         data-suite-scene
         data-task-presentation={props.presentation}
+        data-monitor-size={props.monitorSize}
         data-volume-captured={props.lab.values.captured === true ? 'true' : undefined}
         data-suite-mode={view.mode}
         data-suite-camera={displayCamera}
@@ -594,7 +599,10 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                                 room={isRoom}
                               />
                               {view.mode === 'projection' && (
-                                <AirwayTree3D show={inputs.airwayShow} offset={translation} />
+                                <>
+                                  <AirwayTree3D show={inputs.airwayShow} offset={translation} />
+                                  {drill && <Catheter3D path={drill.path} offset={translation} />}
+                                </>
                               )}
                               {showPatient && (
                                 <PatientBody
@@ -905,6 +913,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     ? { show: inputs.airwayShow, names: inputs.airwayNames }
                     : undefined
                 }
+                catheter={drill?.path}
                 displayMask={
                   fieldVisible && inputs.crop ? (
                     <FieldMask frame={frame} fieldPercent={inputs.cropWidth} crop />
@@ -964,7 +973,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       ? 'Amber contour: target lesion · white mark: tool tip · numbered crosses: landmarks 1 and 2 · dashed teal line: planned tool path'
                       : inputs.showTool
                         ? 'Amber contour: target lesion · white mark: tool tip'
-                        : 'Amber contour: target lesion'}
+                        : drill
+                          ? 'Amber contour: target lesion · white line: catheter, to its tip'
+                          : 'Amber contour: target lesion'}
               </p>
             </section>
           )}
