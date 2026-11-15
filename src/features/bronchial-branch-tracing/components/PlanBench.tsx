@@ -521,7 +521,8 @@ export function PlanBench({
     }
   else if (stage === 'arcs')
     now = {
-      kicker: kicker(`Division ${division + 1} of ${forks.length}`),
+      // No total while the map is drawn: the learner finds the count by tracing (owner, 11/15).
+      kicker: kicker(`Division ${division + 1}`),
       heading: `Draw the branches of ${divisionCheckpoint.decision!.parent.airway.code}`,
       body: arcsInstruction(
         divisionCheckpoint.decision!.parent.airway.code,

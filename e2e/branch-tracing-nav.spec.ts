@@ -1109,6 +1109,9 @@ test.describe('whole lesions', () => {
     // While the map is being drawn, nothing of the branches the route does not take is shown.
     await showUntil(page, /^plan:arcs:1$/)
     await expect(page.locator('[data-arc-map] [data-arc-reference]')).toHaveCount(0)
+    // The kicker names the division being drawn, never how many the map will have.
+    await expect(now(page)).toContainText('Division 2')
+    expect(await now(page).innerText()).not.toMatch(/Division \d+ of \d+/)
     await showUntil(page, /^plan:review$/)
     // The finished map draws the next division inside each branch the route does not take, in
     // the review's own map and on the model's.
