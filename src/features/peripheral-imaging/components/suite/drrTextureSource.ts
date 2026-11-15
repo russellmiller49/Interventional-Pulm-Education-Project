@@ -7,7 +7,11 @@ import { detectorFrameForAngles } from '@fluoroview/geometry'
 import { IMAGING_CONFIG, loadAnatomyVolume, VOLUME_ASSET } from '../../lib/anatomy'
 import { type ImagingGeometry, type Point3 } from '../../lib/physics'
 import { BONE_DEPTH_SPLIT, FLUORO_LOOK, boneShareVolume } from '../../lib/fluoroLook'
-import { DEFAULT_FLUORO_POLARITY, type FluoroPolarity } from '../../lib/displayPolarity'
+import {
+  DEFAULT_FLUORO_POLARITY,
+  polarityLook,
+  type FluoroPolarity,
+} from '../../lib/displayPolarity'
 
 /** The bone volume is derived once from the one CT every display shares. */
 let boneShare: { readonly from: Uint8Array; readonly bytes: Uint8Array } | undefined
@@ -136,7 +140,7 @@ export class DrrTextureSource {
         ...FLUORO_LOOK,
         depthTint: this.boneDepthTint ? 1 : 0,
         depthSplitLps: BONE_DEPTH_SPLIT,
-        invert: this.polarity === 'bone-dark',
+        ...polarityLook(this.polarity),
       },
       geometry: {
         isocenter_mm: (pose.anatomyTranslation?.map((n) => -n) as Point3 | undefined) ?? [0, 0, 0],

@@ -15,7 +15,7 @@ import {
   radians,
   type Point3,
 } from '../lib/physics'
-import { useFluoroPolarity } from '../lib/displayPolarity'
+import { polarityLook, useFluoroPolarity } from '../lib/displayPolarity'
 import styles from '../imaging.module.css'
 
 export function Projection({
@@ -44,11 +44,11 @@ export function Projection({
   const canvas = useRef<HTMLCanvasElement>(null)
   const renderer = useRef<VolumeDRRRenderer | null>(null)
   // The fallback image follows the same display setting as the suite's monitor.
-  const invert = useFluoroPolarity() === 'bone-dark'
-  const latest = useRef({ orbit, tilt, invert })
+  const polarity = useFluoroPolarity()
+  const latest = useRef({ orbit, tilt, polarity })
   useEffect(() => {
-    latest.current = { orbit, tilt, invert }
-  }, [orbit, tilt, invert])
+    latest.current = { orbit, tilt, polarity }
+  }, [orbit, tilt, polarity])
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
   const id = useId().replace(/:/g, '')
   const [ox, oy, oz] = registration ? [0, 0, -registration.current] : offset
@@ -67,7 +67,7 @@ export function Projection({
         cranialCaudalDeg: latest.current.tilt,
         settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
         lowRes: false,
-        look: { invert: latest.current.invert },
+        look: polarityLook(latest.current.polarity),
       })
     }
     let observer: ResizeObserver | undefined
@@ -103,7 +103,7 @@ export function Projection({
       cranialCaudalDeg: tilt,
       settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
       lowRes: true,
-      look: { invert },
+      look: polarityLook(polarity),
     })
     const timer = window.setTimeout(
       () =>
@@ -112,12 +112,12 @@ export function Projection({
           cranialCaudalDeg: tilt,
           settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
           lowRes: false,
-          look: { invert },
+          look: polarityLook(polarity),
         }),
       110,
     )
     return () => window.clearTimeout(timer)
-  }, [orbit, tilt, invert])
+  }, [orbit, tilt, polarity])
   const screen = (point: Point3, translation: Point3 = [ox, oy, oz]) => {
     const p = projectToDetector(point.map((v, i) => v + translation[i]) as Point3, orbit, tilt)
     return [256 + (p[0] / DETECTOR_FIELD) * 512, 256 - (p[1] / DETECTOR_FIELD) * 512]

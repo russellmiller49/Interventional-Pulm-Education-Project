@@ -13,6 +13,7 @@ import {
   CT_CONVENTION,
   FLUORO_POLARITY_LABELS,
   ImagePolarityContext,
+  repolarizeTable,
   setFluoroPolarity,
   useFluoroPolarity,
   type FluoroPolarity,
@@ -47,7 +48,8 @@ export interface StoredProjection {
   processing: FieldDisplay | null
   /**
    * The display polarity the pixels were read out in. Polarity is display, not acquisition: shown
-   * under the other setting, the stored frame is inverted on screen and its pixels stay as stored.
+   * under the other setting, the stored frame is redrawn on screen through `repolarize` and its
+   * pixels stay as stored.
    */
   polarity: FluoroPolarity
   label: string
@@ -304,13 +306,19 @@ export function Monitor({
                 {baseline.processing && (
                   <DisplayFilter id={`${filterId}-baseline`} display={baseline.processing} />
                 )}
+                {baseline.polarity !== polarity && (
+                  <TableFilter
+                    id={`${filterId}-repolarize`}
+                    table={repolarizeTable(baseline.polarity, polarity)}
+                  />
+                )}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={baseline.image}
                   alt=""
                   style={baselineFilter(
                     baseline.processing ? `url(#${filterId}-baseline)` : null,
-                    baseline.polarity !== polarity,
+                    baseline.polarity !== polarity ? `url(#${filterId}-repolarize)` : null,
                   )}
                 />
                 {baseline.overlay}
@@ -428,9 +436,12 @@ export function Monitor({
   )
 }
 
-/** A stored frame's CSS filter: its own display mapping, then inversion if the polarity changed. */
-function baselineFilter(mapping: string | null, invert: boolean) {
-  const filter = [mapping, invert ? 'invert(1)' : null].filter(Boolean).join(' ')
+/**
+ * A stored frame's CSS filter: its own display mapping, then, if the setting changed since it was
+ * stored, the redraw into the polarity now chosen.
+ */
+function baselineFilter(mapping: string | null, repolarize: string | null) {
+  const filter = [mapping, repolarize].filter(Boolean).join(' ')
   return filter ? { filter } : undefined
 }
 
@@ -439,7 +450,12 @@ function baselineFilter(mapping: string | null, invert: boolean) {
  * canvas: the detector texture in the 3D view and every stored pixel stay as acquired.
  */
 function DisplayFilter({ id, display }: { id: string; display: FieldDisplay }) {
-  const tableValues = display.table.join(' ')
+  return <TableFilter id={id} table={display.table} />
+}
+
+/** One grey-level table as an SVG filter: output for equally spaced inputs 0–1. */
+function TableFilter({ id, table }: { id: string; table: readonly number[] }) {
+  const tableValues = table.join(' ')
   return (
     <svg
       aria-hidden="true"

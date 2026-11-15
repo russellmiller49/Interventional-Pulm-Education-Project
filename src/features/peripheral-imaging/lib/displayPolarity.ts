@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useSyncExternalStore } from 'react'
+import type { DrrLook } from '@fluoroview/volume-drr'
 
 /**
  * Which way round the course shows a fluoroscopic image: dense structures dark, as many fluoroscopy
@@ -37,11 +38,70 @@ export const FLUORO_POLARITY_LABELS: Readonly<Record<FluoroPolarity, string>> = 
 }
 
 /**
+ * How bone dark is drawn: the inverted value (1 − the denser-is-higher value) through a window and a
+ * gamma, the way a fluoroscopy monitor's look-up table draws its image.
+ *
+ * Owner's ruling, 2026-11-15 (on #552, “the bone-dark image is pale”): “Tune contrast before merge.”
+ * A straight inversion put aerated lung near white, left the ribs faint and lost the overlays on
+ * it. Through this curve:
+ * - aerated lung is mid-to-light grey, and the curve is steep there, so a nodule in the lung differs
+ *   from the lung round it by more grey levels than on bone bright;
+ * - ribs, the spine and the mediastinum are clearly darker than the lung;
+ * - the white point sits above the brightest value, so an unattenuated beam is light grey, not glare.
+ *
+ * `inverted` = 0 (densest) to 1 (no attenuation); displayed = clamp((inverted − black) /
+ * (white − black))^gamma. Bone bright is not passed through it. Authored display values for this
+ * course's CT, as `FLUORO_LOOK` is; not a calibration of any monitor.
+ */
+export const BONE_DARK_CURVE = { black: 0, white: 1.1, gamma: 2 } as const
+
+/** The bone-dark display value, 0–1, of an inverted value. */
+export function boneDarkDisplay(inverted: number): number {
+  const { black, white, gamma } = BONE_DARK_CURVE
+  const t = Math.min(1, Math.max(0, (inverted - black) / (white - black)))
+  return t ** gamma
+}
+
+/**
  * A displayed value, 0–1, from the display curve's denser-is-higher value. The WebGL shader applies
- * the same mapping (`uInvert` in `fluoro-viewer/src/volume-drr.ts`); a test holds them together.
+ * the same mapping (`uInvert` and `uInvertCurve` in `fluoro-viewer/src/volume-drr.ts`, set by
+ * `polarityLook`); a test holds them together.
  */
 export function applyPolarity(denserIsHigher: number, polarity: FluoroPolarity): number {
-  return polarity === 'bone-dark' ? 1 - denserIsHigher : denserIsHigher
+  return polarity === 'bone-dark' ? boneDarkDisplay(1 - denserIsHigher) : denserIsHigher
+}
+
+/** What the renderer is asked for, for a polarity: the inversion and the bone-dark curve. */
+export function polarityLook(polarity: FluoroPolarity): Pick<DrrLook, 'invert' | 'invertCurve'> {
+  return {
+    invert: polarity === 'bone-dark',
+    invertCurve: [BONE_DARK_CURVE.black, BONE_DARK_CURVE.white, BONE_DARK_CURVE.gamma],
+  }
+}
+
+/** The denser-is-higher value behind a value displayed in `polarity` (the curve's inverse). */
+function denserIsHigherOf(displayed: number, polarity: FluoroPolarity): number {
+  if (polarity === 'bone-bright') return displayed
+  const { black, white, gamma } = BONE_DARK_CURVE
+  const inverted = black + (white - black) * Math.max(0, displayed) ** (1 / gamma)
+  return Math.min(1, Math.max(0, 1 - inverted))
+}
+
+/** A value displayed in `from`, as `to` displays the same pixel. */
+export function repolarize(displayed: number, from: FluoroPolarity, to: FluoroPolarity): number {
+  return from === to ? displayed : applyPolarity(denserIsHigherOf(displayed, from), to)
+}
+
+/**
+ * `repolarize` as an SVG `feFunc` table: a stored frame shown under the other setting is redrawn
+ * through it on screen; its own pixels stay as stored. The table is fine enough that a bone-dark
+ * frame comes back within a grey level of bone bright except at the densest end, which bone dark
+ * has already drawn near black.
+ */
+export function repolarizeTable(from: FluoroPolarity, to: FluoroPolarity, size = 129): number[] {
+  return Array.from({ length: size }, (_, index) =>
+    Number(repolarize(index / (size - 1), from, to).toFixed(4)),
+  )
 }
 
 /**
@@ -49,6 +109,11 @@ export function applyPolarity(denserIsHigher: number, polarity: FluoroPolarity):
  * `projectionPixels`. It stays dark in both polarities: no beam reached it.
  */
 export const UNEXPOSED_ALPHA = 254
+
+/** `applyPolarity` for a figure's 8-bit denser-is-higher value, drawn bone dark. */
+const BONE_DARK_BYTES = Uint8Array.from({ length: 256 }, (_, value) =>
+  Math.round(applyPolarity(value / 255, 'bone-dark') * 255),
+)
 
 /** Canvas pixels for a fluoroscopic figure, drawn in `polarity`. The input is not changed. */
 export function polarityPixels(
@@ -59,9 +124,9 @@ export function polarityPixels(
   for (let i = 0; i < out.length; i += 4) {
     const exposed = out[i + 3] !== UNEXPOSED_ALPHA
     if (exposed && polarity === 'bone-dark') {
-      out[i] = 255 - out[i]
-      out[i + 1] = 255 - out[i + 1]
-      out[i + 2] = 255 - out[i + 2]
+      out[i] = BONE_DARK_BYTES[out[i]]
+      out[i + 1] = BONE_DARK_BYTES[out[i + 1]]
+      out[i + 2] = BONE_DARK_BYTES[out[i + 2]]
     }
     out[i + 3] = 255
   }

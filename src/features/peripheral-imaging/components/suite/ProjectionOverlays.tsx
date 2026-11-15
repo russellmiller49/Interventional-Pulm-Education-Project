@@ -28,7 +28,8 @@ export function ProjectionOverlays({
 }) {
   const id = useId().replace(/:/g, '')
   // The nodule is denser than the lung around it: lighter on a bone-bright image, darker on a
-  // bone-dark one. The lesion contour and the tool carry a dark edge so they read on light lung.
+  // bone-dark one, at the same opacity in both. The lesion contour and the tool carry a dark edge so
+  // they read on grey lung.
   const boneDark = useContext(ImagePolarityContext) === 'bone-dark'
   const fillStops = boneDark ? ['#1c2628', '#2a3537', '#36413f'] : ['#e9ecdf', '#cad0c6', '#becac4']
   const markers = projectionMarkers(suiteFrame(orbit, tilt, geometry), depth, offset, toolFollows)
@@ -44,8 +45,8 @@ export function ProjectionOverlays({
     <svg viewBox="0 0 512 512" aria-hidden="true" data-projection-overlay>
       <defs>
         <radialGradient id={id}>
-          <stop offset="0" stopColor={fillStops[0]} stopOpacity={boneDark ? '.45' : '.7'} />
-          <stop offset=".8" stopColor={fillStops[1]} stopOpacity={boneDark ? '.22' : '.35'} />
+          <stop offset="0" stopColor={fillStops[0]} stopOpacity=".7" />
+          <stop offset=".8" stopColor={fillStops[1]} stopOpacity=".35" />
           <stop offset="1" stopColor={fillStops[2]} stopOpacity="0" />
         </radialGradient>
       </defs>

@@ -57,6 +57,7 @@ uniform float uToneHigh;
 uniform float uToneGamma;
 uniform float uDepthTint;
 uniform float uInvert;
+uniform vec3 uInvertCurve;
 uniform vec3 uDepthSplitLps;
 uniform sampler3D uBoneVolume;
 uniform float uUseBoneVolume;
@@ -84,6 +85,17 @@ float boneShare(float hu) {
   return smoothstep(uBoneLowHu, uBoneHighHu, hu);
 }
 
+// Display polarity, inverted: denser is darker. The inverted value goes through a window and a
+// gamma (uInvertCurve = black, white, gamma); (0, 1, 1) is a straight inversion.
+float invertedDisplay(float denserIsHigher) {
+  float t = clamp(
+    (1.0 - denserIsHigher - uInvertCurve.x) / (uInvertCurve.y - uInvertCurve.x),
+    0.0,
+    1.0
+  );
+  return pow(t, uInvertCurve.z);
+}
+
 float huToMu(float hu, float kvp, float bone) {
   float kvpFactor = pow(80.0 / max(kvp, 30.0), 1.35);
   float tissueDensity = max(0.0, (hu + 1000.0) / 1000.0);
@@ -103,7 +115,7 @@ void main() {
   float tEnd = tHits.y;
   if (tEnd <= tStart) {
     // Nothing attenuates this ray: it reads as air in either polarity.
-    outColor = vec4(vec3(uInvert > 0.5 ? 1.0 : 0.0), 1.0);
+    outColor = vec4(vec3(uInvert > 0.5 ? invertedDisplay(0.0) : 0.0), 1.0);
     return;
   }
 
@@ -147,7 +159,7 @@ void main() {
   intensity = pow(intensity, max(0.45, uContrastBoost) * uToneGamma);
 
   // Display polarity: denser is brighter as computed; inverted, denser is darker.
-  if (uInvert > 0.5) intensity = 1.0 - intensity;
+  if (uInvert > 0.5) intensity = invertedDisplay(intensity);
 
   vec3 color = vec3(intensity);
   if (uDepthTint > 0.0) {
@@ -198,6 +210,11 @@ export interface DrrLook {
   depthSplitLps: Vec3
   /** Display polarity: false draws denser brighter (radiograph style), true draws denser darker. */
   invert: boolean
+  /**
+   * With `invert`, the inverted value (1 − denser-is-higher) is drawn through a window and a gamma:
+   * [black, white, gamma]. [0, 1, 1] is a straight inversion.
+   */
+  invertCurve: Vec3
 }
 
 export const DEFAULT_DRR_LOOK: DrrLook = {
@@ -209,6 +226,7 @@ export const DEFAULT_DRR_LOOK: DrrLook = {
   depthTint: 0,
   depthSplitLps: [0, 0, 0],
   invert: false,
+  invertCurve: [0, 1, 1],
 }
 
 /** Additive pose overrides; changing these never uploads the CT volume again. */
@@ -351,6 +369,7 @@ export class VolumeDRRRenderer {
         uToneGamma: { value: DEFAULT_DRR_LOOK.toneGamma },
         uDepthTint: { value: 0 },
         uInvert: { value: 0 },
+        uInvertCurve: { value: new Vector3(...DEFAULT_DRR_LOOK.invertCurve) },
         uDepthSplitLps: { value: new Vector3() },
         uBoneVolume: { value: (boneTexture ?? texture) as Texture },
         uUseBoneVolume: { value: boneTexture ? 1 : 0 },
@@ -440,6 +459,7 @@ export class VolumeDRRRenderer {
     this.material.uniforms.uDepthTint.value = look.depthTint
     this.material.uniforms.uDepthSplitLps.value.set(...look.depthSplitLps)
     this.material.uniforms.uInvert.value = look.invert ? 1 : 0
+    this.material.uniforms.uInvertCurve.value.set(...look.invertCurve)
     this.material.uniforms.uMaxSteps.value = plan.sampleSteps
     this.material.uniforms.uTime.value =
       ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - this.timeStart) /
