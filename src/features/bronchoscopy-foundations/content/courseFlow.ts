@@ -348,6 +348,9 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'sedation-drugs',
     ]),
     screen('monitoring', 'Monitoring', 'Read what to watch, and in what order.', ['monitoring']),
+    screen('reversal', 'Reversal agents', 'Read when each is given, and what it costs.', [
+      'reversal',
+    ]),
     {
       ...practice(
         'One patient, three decisions',
@@ -360,7 +363,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     screen(
       'before-and-after',
       'Before, and after',
-      'Read the fasting times and the reversal doses.',
+      'Read the fasting times and the rule for going home.',
       ['before-and-after'],
     ),
     check('transfer', 'A patient in recovery'),
@@ -818,25 +821,31 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       id: 'pair-the-scope',
       act: 'pairs',
     },
-    screen('settings', 'Before the scope goes in', 'Read the adapter, then the five settings.', [
+    screen('adapter', 'The swivel adapter', 'Read how the circuit stays sealed while you work.', [
       'swivel-adapter',
-      'settings-before',
     ]),
+    screen(
+      'settings',
+      'Before the scope goes in',
+      'Read what you agree with the therapist before you start.',
+      ['settings-before'],
+    ),
     screen('reading', 'Read the ventilator', 'Read what each pattern means with the scope in.', [
       'peak-and-plateau',
     ]),
+    screen('trapped-gas', 'Trapped gas', 'Read how gas gets trapped and how it is released.', [
+      'auto-peep',
+    ]),
     screen(
       'tidal-volume',
-      'Raising the tidal volume',
-      'Read when a bigger breath helps and when it harms.',
+      'Before you change the tidal volume',
+      'Read what to weigh before anyone changes the breath.',
       ['raising-tidal-volume'],
     ),
-    screen(
-      'falling',
-      'When ventilation falls',
-      'Learn the card, then read what suction does to the lung.',
-      ['ventilation-falls', 'suction-and-recruitment'],
-    ),
+    screen('falling', 'When ventilation falls', 'Learn the card.', ['ventilation-falls']),
+    screen('afterwards', 'After the scope is out', 'Read what suction does to the lung.', [
+      'suction-and-recruitment',
+    ]),
     practice(
       'One bronchoscopy on the ventilator',
       'case',

@@ -12,6 +12,12 @@ import type { BronchSectionDefinition, MonitorReading, MonitorTrend } from '../t
  * The brief's fix: the pressure limit is raised with the respiratory therapist before the scope
  * goes in (U2, grade 3A). The first course graded that as unsafe.
  *
+ * Owner ruling of 2026-11-13 (`bf-s15-ventilated`): the ventilator is prepared with the therapist and
+ * watched, not adjusted by rote. The tidal-volume rise is one option from older guidance, never a
+ * routine step; plateau pressure is the respiratory system, not "the lung alone"; PEEP is kept
+ * unless trapped gas is the problem; opening the circuit is an emergency measure with no fixed
+ * duration; recruitment afterwards is decided on reassessment, not done after every case.
+ *
  * Cut by the brief: the tube-navigation task, the procedure-taxonomy sort, and fluoroscopy, which
  * section 12 teaches.
  *
@@ -188,15 +194,15 @@ export const section: BronchSectionDefinition = {
       id: 'settings-before',
       kind: 'pattern',
       role: 'mechanism',
-      heading: 'Set the ventilator before you go in',
-      body: 'Make these changes with the respiratory therapist. Note the baseline first.',
-      pointsLabel: 'Five settings',
+      heading: 'Prepare the ventilator with the therapist',
+      body: 'Note the baseline: delivered volume, peak and plateau pressure, saturation, blood pressure. The scope will raise resistance in the tube. Agree what you will watch and when you will come out.',
+      pointsLabel: 'Before the scope goes in',
       points: [
         `Oxygen: FiO₂ ${num('vent-fio2')}, starting ${num('vent-fio2-lead-time')} before.`,
-        'Mode: a volume-targeted mode pushes each breath past the scope.',
-        `Tidal volume: may be raised by ${num('vent-tidal-volume-increase')} if delivery falls.`,
         'Pressure limit: raise it, so the alarm does not cut each breath short.',
-        'PEEP: the scope traps gas and adds its own. Decide whether to lower it.',
+        'Volume alarms: set near baseline, so a lost breath is heard.',
+        'PEEP: keep what the lung needs. A scope in the tube is not a reason to lower it.',
+        'Tidal volume: leave it. A falling delivered volume has more than one answer.',
       ],
       claimClass: 'update',
       sourceRefs: VENTILATOR,
@@ -208,28 +214,47 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Read the ventilator with the scope in',
-      body: 'Peak pressure drives gas down the tube. Plateau pressure, measured with an inspiratory pause, is the lung alone.',
+      body: 'Peak pressure drives gas down the tube. Plateau pressure, measured with an inspiratory pause, is the recoil of the respiratory system: lung and chest wall.',
       pointsLabel: 'What each pattern means',
       points: [
-        'Peak up, plateau unchanged: the scope’s resistance. Expected.',
-        'Peak and plateau both up: more than the scope. Think trapped gas, pneumothorax, a plugged lobe, or a tube in one bronchus.',
-        'Pressure control: the pressure holds and the delivered volume falls. The high-pressure alarm does not warn you. Low-volume and low minute-ventilation alarms can, if set near baseline.',
-        'Auto-PEEP: the breath out does not finish before the next breath. Gas stacks up, the plateau rises and the blood pressure falls. A longer breath out, or a moment off the circuit, releases it.',
+        'Peak up, plateau unchanged: resistance from the scope. Expected.',
+        'Plateau up: the respiratory system has changed. Think trapped gas, pneumothorax, a plugged lobe, or a tube in one bronchus.',
+        'Volume-targeted: pressure rises to deliver the set volume. At the pressure limit the breath is cut short and delivered volume falls.',
+        'Pressure-targeted: the pressure holds and the delivered volume falls. The high-pressure alarm does not warn you. Low-volume and low minute-ventilation alarms can, if set near baseline.',
       ],
       claimClass: 'synthesis',
-      sourceRefs: [...MODES, ...TRAPPED_GAS, ALARMS],
+      sourceRefs: [...MODES, ALARMS],
       reviewItemIds: ['R29'],
+    },
+    {
+      id: 'auto-peep',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Auto-PEEP: trapped gas',
+      body: 'With a scope in the tube, the breath out may not finish before the next one starts. Gas stacks up: dynamic hyperinflation. The plateau rises and the blood pressure falls.',
+      pointsLabel: 'What to do about it',
+      points: [
+        'See it: flow has not reached zero when the next breath starts.',
+        'Relieve the obstruction: stop suction, and take the scope out when you need to.',
+        'Give time to breathe out: a slower rate or a shorter breath in, with the therapist.',
+        'Opening the circuit is an emergency measure, for severe trapped gas with a collapsing blood pressure. It costs PEEP and oxygen, so it is never routine.',
+      ],
+      claimClass: 'synthesis',
+      sourceRefs: TRAPPED_GAS,
+      localPolicyIds: ['icu_bronchoscopy_policy'],
     },
     {
       id: 'raising-tidal-volume',
       kind: 'pattern',
       role: 'mechanism',
-      heading: 'Raising the tidal volume',
-      body: `The scope can cost delivered volume. When the exhaled volume is below baseline and the plateau has not moved, raising the set volume by ${num('vent-tidal-volume-increase')} may win it back. Aim for the baseline breath, not a bigger one.`,
-      pointsLabel: 'Do not raise it further when',
+      heading: 'Before you change the tidal volume',
+      body: `The scope can cost delivered volume. Older bronchoscopy guidance allows raising the set volume by ${num('vent-tidal-volume-increase')}. That is one option, not a routine step.`,
+      pointsLabel: 'Weigh these first',
       points: [
-        'The plateau climbs. The extra gas is reaching the lung, so turn the volume back. This matters most on lung-protective settings.',
-        'The breath out does not finish. A bigger breath stacks more gas. A smaller breath protects against hyperinflation, at the cost of a rising carbon dioxide, so take the scope out.',
+        'Lung-protective limits still apply. Check the breath against predicted body weight, and check the plateau.',
+        'If the breath out does not finish, a bigger breath stacks more gas.',
+        'Smaller breaths for a few minutes are often safer. The cost is a rising carbon dioxide.',
+        'Taking the scope out restores the breath without touching the ventilator.',
       ],
       claimClass: 'synthesis',
       sourceRefs: [VENTILATOR[1], ...TRAPPED_GAS],
@@ -243,9 +268,9 @@ export const section: BronchSectionDefinition = {
       body: 'Say it out loud with the number: “Volume is down to half.”',
       steps: [
         'Take the scope out of the tube.',
-        'Give the patient time to breathe out fully.',
-        'Check that the volume and the blood pressure come back.',
-        'Not back: check the tube, listen to both sides, and look for a pneumothorax.',
+        'Read the ventilator again: delivered volume, peak, plateau, and whether the breath out finishes.',
+        'Trapped gas with a low blood pressure: give a longer breath out.',
+        'Plateau up, or no recovery: check the tube, listen to both sides, and look for a pneumothorax.',
       ],
       callForHelp: 'when the volume or the blood pressure has not recovered with the scope out.',
       claimClass: 'synthesis',
@@ -257,7 +282,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Suction empties the lung',
-      body: 'Suction takes gas as well as secretions, and the lung collapses a little with each pass. Keep passes short, with a few breaths between.\n\nAfterwards, listen to both sides, then recruit with the therapist. Then return the oxygen, tidal volume and pressure limit to baseline.',
+      body: 'Suction takes gas as well as secretions, and the lung loses volume with each pass. Keep passes short, with breaths between.\n\nAfterwards, reassess with the therapist: breath sounds, delivered volume, plateau and saturation. Return the oxygen and the pressure limit to baseline.\n\nRecruitment is not routine. Consider it only when the lung has lost volume, by a method agreed with the team.',
       claimClass: 'synthesis',
       sourceRefs: VENTILATOR,
     },
@@ -266,13 +291,13 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'common-errors',
       heading: 'Four errors to expect',
-      body: 'Each one trusts the fit or the oximeter over the ventilator.',
+      body: 'Each one trusts something other than the ventilator.',
       pointsLabel: 'The error, then the fix',
       points: [
         'The scope passes, so it fits. Passing is not ventilating. Check the margin.',
         'Watching the saturation. It falls late. Watch the delivered volume.',
         'One long pass to finish. Short passes, with breaths between.',
-        'Leaving the oxygen and the limits raised. Recruit, then return to baseline.',
+        'Leaving the oxygen and the limits raised. Reassess, then return to baseline.',
       ],
       claimClass: 'synthesis',
       sourceRefs: VENTILATOR,
@@ -526,16 +551,16 @@ export const section: BronchSectionDefinition = {
           choices: [
             {
               id: 'a',
-              label: 'Recruit the lung, then return each setting to baseline',
+              label: 'Reassess, step the settings back, then decide on recruitment',
               rationale:
-                'Both sides move air, so the higher plateau is lung that suction collapsed, not a pneumothorax. Reopen it, then bring the settings back.',
+                'Both sides move air, so the higher plateau is probably lung that suction collapsed. Whether to reopen it, and how, follows from what you find, not from routine.',
               plausibility: 'best',
             },
             {
               id: 'b',
               label: 'Return every setting to baseline now and leave',
               rationale:
-                'The settings are only half of it. The lung that suction collapsed stays collapsed until someone reopens it.',
+                'The settings are only half of it. Nobody has checked whether the lung that suction collapsed has come back.',
               plausibility: 'incorrect-mechanism',
               consequence: {
                 situation: 'Back on his old oxygen, the saturation drifts down.',
@@ -567,7 +592,7 @@ export const section: BronchSectionDefinition = {
               id: 'd',
               label: 'Pause, then go back in to look for more mucus',
               rationale:
-                'You saw the lobe clear. Another pass takes more gas from a lung that needs reopening.',
+                'You saw the lobe clear. Another pass takes more gas from a lung that has already lost volume.',
               plausibility: 'incorrect-mechanism',
               consequence: {
                 situation:
@@ -704,7 +729,7 @@ export const section: BronchSectionDefinition = {
     choices: [
       {
         id: 'a',
-        label: 'Take the scope out and plan shorter passes with a higher set pressure',
+        label: 'Take the scope out and plan shorter passes with a closer volume alarm',
         rationale:
           'In pressure control the pressure is fixed and the volume is what gives. The high-pressure alarm will not tell you, and a low-volume alarm will only if set near her baseline.',
         plausibility: 'best',
@@ -832,7 +857,7 @@ export const section: BronchSectionDefinition = {
           },
         ],
         explanation:
-          'The pressure limit protects the lung, and the plateau tells you the lung is not seeing this pressure. Set the limit with the therapist before you go in. If the volume stays low after that, come out.',
+          'The pressure limit protects the lung. An unchanged plateau tells you the extra pressure is spent in the tube, not in the chest. Set the limit with the therapist before you go in. If the volume stays low after that, come out.',
         objectiveIds: ['M16-O2'],
         outcomeIds: ['pair-and-set'],
         claimClass: 'update',
@@ -880,7 +905,7 @@ export const section: BronchSectionDefinition = {
           },
         ],
         explanation:
-          'Peak with an unchanged plateau is the tube and the scope. Peak and plateau together are the lung: a pneumothorax, a plugged lobe or a tube that has slipped into one bronchus.',
+          'Peak with an unchanged plateau is the tube and the scope. Peak and plateau together are the respiratory system: trapped gas, a pneumothorax, a plugged lobe or a tube that has slipped into one bronchus.',
         objectiveIds: ['M16-O6'],
         outcomeIds: ['read-the-ventilator'],
         claimClass: 'synthesis',

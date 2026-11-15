@@ -159,7 +159,7 @@ const ANTITHROMBOTICS = build('antithrombotics-and-platelets', [
     others: [
       [
         'Stop clopidogrel for five days, then biopsy',
-        'That is the right hold for a biopsy, at a time his stent cannot take it.',
+        'That is the usual hold, but nobody stops clopidogrel three weeks after a stent without cardiology.',
       ],
       [
         'Biopsy now on both drugs, with cold saline ready',
@@ -170,7 +170,7 @@ const ANTITHROMBOTICS = build('antithrombotics-and-platelets', [
         'Stopping both leaves a new stent with no cover at all.',
       ],
     ],
-    explanation: `Clopidogrel is stopped ${num('p2y12-hold')} before a biopsy. Three weeks after a stent that hold is not safe, so the biopsy moves, not the drug.`,
+    explanation: `The usual hold before a biopsy is ${num('p2y12-hold')}, and it is never automatic. Three weeks after a stent, interrupting clopidogrel risks stent thrombosis, so the elective biopsy moves and cardiology advises on timing. Aspirin alone would not have delayed it.`,
   },
   {
     id: 'warfarin-two-days',
@@ -461,13 +461,13 @@ const LAVAGE = build('lavage-return', [
       'A 72-year-old man has been ventilated for 9 days with a new infiltrate and fever. His antibiotics have not changed in 4 days. The lavage culture grows Pseudomonas at 10³ CFU/mL.',
     stem: 'How do you read the culture?',
     key: [
-      'As below the threshold for pneumonia',
-      'The count is tenfold under the threshold. Look for another source of the fever before treating this as pneumonia.',
+      'As below the threshold: less likely, not excluded',
+      'The count is tenfold under the threshold, so pneumonia is less likely, not excluded. Weigh it with the sample, his antibiotics and how he looks, and look for another source.',
     ],
     others: [
       [
         'As pneumonia: any growth of Pseudomonas counts',
-        'Ventilated airways are colonized. The count is what separates colonization from infection.',
+        'Ventilated airways are often colonized, so growth alone does not make the diagnosis. The count and the clinical picture do.',
       ],
       [
         'As contamination, to be ignored',
@@ -478,7 +478,7 @@ const LAVAGE = build('lavage-return', [
         'The sample is valid and the count is clear. A repeat would not change how to read it.',
       ],
     ],
-    explanation: `The threshold for suspected pneumonia on a quantitative lavage culture is ${num('vap-bal-threshold')}. A recent change of antibiotics lowers counts; his have been stable.`,
+    explanation: `The threshold for suspected pneumonia on a quantitative lavage culture is ${num('vap-bal-threshold')}. A count below it makes pneumonia less likely and does not exclude it. Read it with the quality of the sample, antibiotic exposure and the clinical probability. A recent change of antibiotics lowers counts; his have been stable.`,
   },
 ])
 
@@ -522,7 +522,7 @@ const METHEMOGLOBIN = build('methemoglobinemia', [
         'Oxygen is right and not enough. At this level with symptoms he needs the antidote.',
       ],
       [
-        'Give naloxone and flumazenil',
+        'Give a reversal agent for the sedation',
         'His breathing is not depressed. Reversal treats a problem he does not have.',
       ],
       [
@@ -530,7 +530,7 @@ const METHEMOGLOBIN = build('methemoglobinemia', [
         'His own hemoglobin is there. It needs converting back, not adding to.',
       ],
     ],
-    explanation: `Treat a patient with symptoms at a level of ${num('methb-treat-symptomatic')}, and one without symptoms at ${num('methb-treat-asymptomatic')}. The treatment is methylene blue.`,
+    explanation: `Methylene blue is usual at ${num('methb-treat-symptomatic')} with symptoms and ${num('methb-treat-asymptomatic')} without. He has symptoms and a level far above either, so the level and the patient agree.`,
   },
   {
     id: 'level-without-symptoms',
@@ -556,7 +556,7 @@ const METHEMOGLOBIN = build('methemoglobinemia', [
         'The same drug that caused it will raise the level again.',
       ],
     ],
-    explanation: `Without symptoms, treat at ${num('methb-treat-asymptomatic')}. Below that, oxygen and observation are enough, with a repeat level to show it is falling.`,
+    explanation: `The level and the patient decide together. She feels well and is far below ${num('methb-treat-asymptomatic')}, the usual point to treat without symptoms. Oxygen and observation are enough, with a repeat level to show it is falling.`,
   },
   {
     id: 'sedated-and-blue',
@@ -644,15 +644,15 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
     sectionId: 'deterioration',
     title: 'Pain an hour later',
     situation:
-      'A 64-year-old woman is an hour after transbronchial biopsy of the left lower lobe. She has sharp left chest pain on breathing in. SpO₂ is 92% on 2 L/min, down from 97%. Heart rate is 96 and blood pressure 128/78.',
+      'A 64-year-old woman is an hour after transbronchial biopsy of the left lower lobe. She has sharp left chest pain on breathing in. SpO₂ is 92% on 2 L/min, down from 97%. Heart rate is 96 and blood pressure 128/78. She speaks in full sentences.',
     key: [
       'Examine her and get a chest radiograph now',
-      'New pleuritic pain and a falling saturation after this biopsy is a pneumothorax until shown otherwise. Her pressure allows time to confirm it.',
+      'New pleuritic pain and a falling saturation after this biopsy is a pneumothorax until shown otherwise. She is talking, with a steady pulse and pressure, so there is time to confirm it.',
     ],
     others: [
       [
         'Decompress the left chest with a needle',
-        'A needle is for tension. Her pressure and heart rate are holding.',
+        'A needle is for suspected tension. She is comfortable enough to talk, with a steady pulse and pressure.',
       ],
       [
         'Give an opioid and recheck her in an hour',
@@ -663,7 +663,7 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
         'Pain after biopsy is not expected. With a falling saturation she is not safe to leave.',
       ],
     ],
-    explanation: `This is when a film is taken: ${num('cxr-after-tblb')}. A falling pressure with a rising heart rate would change the order to decompression first.`,
+    explanation: `This is when a film is taken: ${num('cxr-after-tblb')}. Worsening distress, a rising heart rate or a falling pressure would change the order to decompression first. A normal pressure alone does not make her stable.`,
   },
   {
     id: 'the-phone-call',
@@ -700,7 +700,7 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
       'A 52-year-old woman has diffuse infiltrates in both lungs. The operator has taken four transbronchial biopsies from the right lower lobe and proposes four more from the left lower lobe. SpO₂ is 94% on 2 L/min.',
     key: [
       'Take all the biopsies from one lung today',
-      'A pneumothorax on both sides at once can kill. One lung gives the tissue; the other stays untouched.',
+      'Her disease is diffuse, so one lung gives the tissue. Sampling the second adds the risk of a pneumothorax on both sides for no gain.',
     ],
     others: [
       [
@@ -713,10 +713,10 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
       ],
       [
         'Biopsy the left lung too, then get a film',
-        'A film finds a pneumothorax on both sides. It does not make it survivable.',
+        'A film finds a pneumothorax on both sides. It does not prevent one.',
       ],
     ],
-    explanation: `Biopsy one lung in a sitting. Afterwards a film is taken ${num('cxr-after-tblb')}, and she goes home knowing which symptoms bring her back.`,
+    explanation: `Avoid biopsying both lungs in one sitting unless the question cannot be answered any other way: the risk is a pneumothorax on both sides. Afterwards a film is taken ${num('cxr-after-tblb')}, and she goes home knowing which symptoms bring her back.`,
   },
   {
     id: 'pain-when-the-forceps-open',
@@ -726,12 +726,12 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
       'You are taking a transbronchial biopsy of the right lower lobe under fluoroscopy in a 61-year-old man. The forceps are far out. As they open he winces and says his chest hurts sharply.',
     key: [
       'Close the forceps and draw them back before you bite',
-      'The lung has no pain fibers and the pleura does. Pain means the forceps are at the pleura.',
+      'The pleura feels pain and the lung does not, so pain suggests the forceps are at or near the pleura. Do not bite there.',
     ],
     others: [
       [
         'Take the biopsy quickly and come out',
-        'A bite at the pleura is how a pneumothorax is made.',
+        'A bite near the pleura is how a pneumothorax is made.',
       ],
       [
         'Ask for more fentanyl, then take the biopsy',
@@ -742,7 +742,7 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
         'They stop at the pleura. That is the place not to bite.',
       ],
     ],
-    explanation: `Pain as the forceps open means pleura: withdraw a little and try again. Afterwards a film is taken ${num('cxr-after-tblb')}.`,
+    explanation: `Pain as the forceps open raises concern that they are at or near the pleura. It does not prove where they are. Withdraw before you bite, then reposition. Afterwards a film is taken ${num('cxr-after-tblb')}.`,
   },
 ])
 
@@ -806,10 +806,14 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
     situation:
       'A 59-year-old man on volume control has the diagnostic scope in an 8.0 mm tube. The pressure limit was raised and no breath is cut short. Delivered volume is 330 of a set 450 mL. Plateau pressure is unchanged and SpO₂ is 97%.',
     key: [
-      'Have the tidal volume raised',
-      'The scope is costing him volume and the lung has not changed. Raising the set volume makes up what is lost.',
+      'Shorten the pass, then come out and recheck',
+      'The loss is modest, the plateau has not moved and he is oxygenating. A short pass is tolerable, and with the scope out his breath returns without a change to the ventilator.',
     ],
     others: [
+      [
+        'Have the tidal volume raised at once',
+        'That is one option, not a reflex. First check the breath out, the plateau and his predicted body weight. A bigger breath can overdistend or trap gas.',
+      ],
       [
         'Have the pressure limit raised again',
         'No breath is being ended early, so the limit is not what is costing him volume.',
@@ -818,12 +822,8 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
         'Go on: the saturation is normal',
         'On full oxygen the saturation falls late. The volume is the earlier warning.',
       ],
-      [
-        'Have the respiratory rate raised',
-        'A faster rate shortens the time to breathe out through a crowded tube, and traps gas.',
-      ],
     ],
-    explanation: `Raise the tidal volume by ${num('vent-tidal-volume-increase')} during the procedure. If the delivered volume still falls, take the scope out.`,
+    explanation: `A smaller delivered breath has more than one answer. Shorter passes, or taking the scope out, restore it without touching the ventilator. Raising the set volume by ${num('vent-tidal-volume-increase')} is one option from older guidance, weighed against the plateau, the breath out and lung-protective limits.`,
   },
   {
     id: 'thick-plug-thin-channel',
@@ -859,7 +859,7 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
       'A 51-year-old man with severe ARDS is on an FiO₂ of 0.9 and a PEEP of 14. SpO₂ is 88% and blood pressure 96/54 on norepinephrine. The team asks for a bronchoscopy to look for a cause. He has no plugging on imaging.',
     key: [
       'Defer the bronchoscopy until he needs less support',
-      'He has no reserve to spend, and nothing on imaging that a scope would fix today.',
+      'He has no reserve to spend and nothing on imaging that a scope would fix today. The look is not urgent, so its benefit does not justify the risk.',
     ],
     others: [
       [
@@ -875,7 +875,7 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
         'Opening the circuit drops his PEEP at once, in the patient least able to lose it.',
       ],
     ],
-    explanation: `The settings buy a margin: FiO₂ ${num('vent-fio2')} for ${num('vent-fio2-lead-time')} beforehand. A patient already near those limits has no margin, and an elective look waits.`,
+    explanation: `The settings buy a margin: FiO₂ ${num('vent-fio2')} for ${num('vent-fio2-lead-time')} beforehand. A patient already near those limits has no margin, and an elective look waits. Urgency changes that: a bronchoscopy that would alter treatment today is weighed against the alternatives and the support available.`,
   },
 ])
 
@@ -914,7 +914,7 @@ const HEMOPTYSIS = build('massive-hemoptysis', [
       'A 55-year-old woman is coughing up blood faster than she can clear it. SpO₂ is 82% on a non-rebreather mask, heart rate 132, blood pressure 108/64. Nobody knows which lung is bleeding.',
     key: [
       'Intubate with a large tube, then find the side',
-      'She is drowning. A large tube secures the airway and lets a scope with a real suction channel through.',
+      'She cannot clear her airway and nobody knows the side. A large tube secures it and takes a scope that can suction. Rigid bronchoscopy does the same where it is at hand.',
     ],
     others: [
       [
@@ -930,7 +930,7 @@ const HEMOPTYSIS = build('massive-hemoptysis', [
         'Embolization treats the vessel. She will not survive the journey with this airway.',
       ],
     ],
-    explanation: `Airway first, then the side, then the source. The tube must be ${num('tube-scope-margin')} wider than a scope that can suction.`,
+    explanation: `Airway first, then the side, then the source. Here that is a large tube, or rigid bronchoscopy where the team has it. The tube must be ${num('tube-scope-margin')} wider than a scope that can suction.`,
   },
   {
     id: 'a-nebulizer-instead',
@@ -967,7 +967,7 @@ const HEMOPTYSIS = build('massive-hemoptysis', [
       'A 60-year-old man is intubated for massive hemoptysis. Through the tube you see blood welling from the left main bronchus. The right side is clear for now. SpO₂ is 86% on full oxygen.',
     key: [
       'Advance the tube into the right main bronchus over the scope',
-      'A tube in the right main ventilates the good lung and shuts the blood out of it.',
+      'It ventilates the good lung and keeps the blood out of it. A blocker in the left main bronchus does the same job if one is ready.',
     ],
     others: [
       [
@@ -983,7 +983,7 @@ const HEMOPTYSIS = build('massive-hemoptysis', [
         'That gives up the airway you have, for a view you do not need.',
       ],
     ],
-    explanation: `Selective intubation of the non-bleeding lung is the next step when position and suction fail. Grade 3 on the Nashville scale is ${num('nashville-grade-3')}.`,
+    explanation: `When position and suction fail, isolate the bleeding lung: intubate the right main bronchus here, or put a blocker in the left. A tube in the right main can cover the upper lobe opening, so confirm it ventilates. Grade 3 is ${num('nashville-grade-3')}.`,
   },
   {
     id: 'after-control',

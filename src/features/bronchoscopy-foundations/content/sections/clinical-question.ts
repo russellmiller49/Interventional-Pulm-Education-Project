@@ -176,7 +176,7 @@ export const section: BronchSectionDefinition = {
       pointsLabel: 'From plan to recovery',
       points: [
         'Plan. The CT shows a lesion in the airway, so a biopsy will answer the question.',
-        'Prepare. His clopidogrel is held, he has fasted, and the scope is checked.',
+        'Prepare. His blood thinners are planned for, he has fasted, and the scope is checked.',
         'Anesthetize. Lidocaine to the nose, throat and cords, with titrated sedation.',
         'Enter and survey. Through the cords, then every airway, the normal side first.',
         'Sample. Biopsies of the lesion, then brushings and washings.',
@@ -194,7 +194,7 @@ export const section: BronchSectionDefinition = {
       pointsLabel: 'Reasons to look',
       points: [
         'A suspected lesion in the airway, or a lobe that has collapsed without explanation',
-        'Hemoptysis with no source found',
+        'Unexplained hemoptysis, when its severity, recurrence, the imaging or the cancer risk mean a look would change management',
         'Infection or infiltrates that need directed sampling, when simpler tests have not answered',
         'Suspected foreign-body aspiration. An opacity that persists after choking is a reason to look.',
         'Treatment: clearing secretions and mucus plugs, or removing a foreign body',
@@ -224,15 +224,15 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'normal-reference',
       heading: 'Platelets and blood thinners',
-      body: 'Match the bleeding plan to the sampling. The drug holds below apply before endobronchial or transbronchial biopsy.',
+      body: 'Match the bleeding plan to the sampling. The drug holds apply before biopsy.',
       pointsLabel: 'Before you sample',
       points: [
-        `Platelets: at least ${num('platelets-bal')} for lavage, and at least ${num('platelets-biopsy')} for biopsy.`,
-        `Clopidogrel, prasugrel or ticagrelor: stop ${num('p2y12-hold')} before.`,
-        'Low-dose aspirin: continue.',
+        `Platelets: ${num('platelets-bal')} for lavage and ${num('platelets-biopsy')} for biopsy are the usual thresholds, not guarantees.`,
+        'Aspirin alone: continue, forceps biopsy included. It is not a reason to delay.',
+        `Clopidogrel, prasugrel or ticagrelor: ${num('p2y12-hold')} off before a biopsy, once the prescriber agrees.`,
         `Warfarin: stop ${num('warfarin-hold')} before, with an INR ${num('inr-before-biopsy')} on the day.`,
         `A direct oral anticoagulant: stop ${num('noac-hold')} before. The INR does not measure it.`,
-        'A recent coronary stent, or a high risk of clotting: agree the plan with the prescriber before you stop anything.',
+        'A recent coronary stent: stop nothing yourself. Postpone an elective biopsy if you can, and ask cardiology. The stent’s reason and age set the risk.',
       ],
       claimClass: 'update',
       sourceRefs: ANTITHROMBOTIC,
@@ -306,14 +306,14 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Go ahead: inspect the airways for a foreign body, with forceps ready',
               rationale:
-                'An opacity that persists after choking is an airway problem until you have looked. Aspirin continues.',
+                'An opacity that persists after choking is an airway problem until you have looked. Aspirin alone does not delay a bronchoscopy.',
               plausibility: 'best',
             },
             {
               id: 'b',
               label: 'Hold: stop his aspirin, then book him for next week',
               rationale:
-                'Low-dose aspirin continues for any bronchoscopy. The delay buys nothing and the lobe stays blocked.',
+                'Aspirin alone continues for bronchoscopy, forceps biopsy included. The delay buys nothing and the lobe stays blocked.',
               plausibility: 'incorrect-mechanism',
               consequence: {
                 situation: 'A week later he returns with a fever. More of the lobe has collapsed.',
@@ -371,15 +371,16 @@ export const section: BronchSectionDefinition = {
           choices: [
             {
               id: 'a',
-              label: 'Hold the biopsy and agree a clopidogrel plan with her cardiologist',
+              label: 'Hold the biopsy and agree an antiplatelet plan with her cardiologist',
               rationale:
-                'Clopidogrel stops before a biopsy, but a new stent can clot without it. The prescriber decides when stopping is safe.',
+                'Six weeks after a stent, stopping clopidogrel risks stent thrombosis. Do not stop it yourself. Cardiology weighs the stent against how soon she needs tissue.',
               plausibility: 'best',
             },
             {
               id: 'b',
               label: 'Go ahead as booked and biopsy on both drugs',
-              rationale: 'A biopsy on clopidogrel bleeds, and this lesion sits in a main bronchus.',
+              rationale:
+                'Biopsy on two antiplatelet drugs carries a real bleeding risk, and this lesion sits in a main bronchus.',
               plausibility: 'unsafe',
               consequence: {
                 situation:
@@ -443,7 +444,7 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Modify: lavage today, and no biopsy at this platelet count',
               rationale:
-                'His platelets are enough for lavage and too low for biopsy. Lavage answers the infection question today.',
+                'His count is above the usual threshold for lavage and below the one for biopsy. Neither is a guarantee, but lavage answers the infection question today at lower risk.',
               plausibility: 'best',
             },
             {
@@ -467,7 +468,7 @@ export const section: BronchSectionDefinition = {
               id: 'c',
               label: 'Hold everything until his platelets recover',
               rationale:
-                'Lavage is safe at this count, and he needs an organism now. Waiting delays his treatment.',
+                'Lavage is usually acceptable at this count, and he needs an organism now. Waiting delays his treatment.',
               plausibility: 'incorrect-mechanism',
               consequence: {
                 situation:
