@@ -6798,6 +6798,20 @@
   }
 }
 
+/*
+ * The Fick card carries its own ink, as its light surface needs. Section 7's reading pages draw it
+ * outside `.fickWorkbench`, whose rules gave it dark text, so its title inherited the dark shell's
+ * pale ink and nearly vanished on the white card. These are the workbench's own values, so the card
+ * looks the same inside the workbench.
+ */
+.fickCard {
+  color: #16343b;
+}
+
+.fickCard h3 {
+  color: #123b43;
+}
+
 .fickOutcome {
   display: grid;
   gap: 0.2rem;

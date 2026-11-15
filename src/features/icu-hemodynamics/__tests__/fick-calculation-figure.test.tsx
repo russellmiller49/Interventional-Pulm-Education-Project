@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { cleanup, fireEvent, render } from '@testing-library/react'
 
 import { FickCalculationFigure } from '../components/FickCalculationFigure'
@@ -276,5 +279,48 @@ describe('the drawing beside the task’s question', () => {
     fireEvent.click(document.querySelector('[data-commitment="provenance"] [data-question-check]')!)
     expect(document.querySelector('[data-provenance-outcome]')).not.toBeNull()
     held()
+  })
+})
+
+/*
+ * The Fick card's own title was pale text on its white surface on every reading page (owner
+ * ruling 2026-11-15, "Fix it in #557"): the pages draw the card outside the workbench, whose rules
+ * were the only ones giving it dark ink, so it inherited the dark shell's. The card now sets its
+ * own ink; this holds it to WCAG AA (4.5:1) against the card's surface.
+ */
+describe('the Fick card reads on its own light surface', () => {
+  const sheet = readFileSync(
+    join(__dirname, '..', 'components', 'icu-hemodynamics.module.css'),
+    'utf8',
+  )
+  const luminance = (hex: string) =>
+    [1, 3, 5]
+      .map((index) => parseInt(hex.slice(index, index + 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, v, index) => sum + [0.2126, 0.7152, 0.0722][index] * v, 0)
+  const contrast = (a: string, b: string) => {
+    const [x, y] = [luminance(a), luminance(b)]
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05)
+  }
+  /** A colour declared in the rule whose selector list is exactly `selector`. */
+  const declared = (selector: string, property: 'color' | 'background') =>
+    sheet
+      .match(new RegExp(`(?:^|\\n)${selector.replace(/[.*]/g, '\\$&')} \\{([^}]*)\\}`))?.[1]
+      .match(new RegExp(`(?:^|[;\\s])${property}: (#[0-9a-f]{6})`, 'i'))?.[1]
+
+  it('sets dark ink on the card and its title, not only inside the workbench, at 4.5:1 or more', () => {
+    const surface = declared('.fickCard,\n.disagreementCard', 'background')
+    const ink = declared('.fickCard', 'color')
+    const title = declared('.fickCard h3', 'color')
+    expect({ surface, ink, title }).toEqual({
+      surface: expect.stringMatching(/^#/),
+      ink: expect.stringMatching(/^#/),
+      title: expect.stringMatching(/^#/),
+    })
+    expect(contrast(ink!, surface!)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(title!, surface!)).toBeGreaterThanOrEqual(4.5)
+    // Inside the workbench the card keeps the workbench's own colours.
+    expect(title).toBe(declared('.fickWorkbench h3,\n.disagreementLab h3', 'color'))
+    expect(ink).toBe(declared('.fickWorkbench,\n.disagreementLab', 'color'))
   })
 })
