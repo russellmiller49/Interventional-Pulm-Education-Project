@@ -394,7 +394,9 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
       'monitor-workflow-supplied',
       'arterial-pressure-five-step-2020',
     ],
-    estimatedMinutes: 9,
+    // Set by hand, not measured: the capstone's work is in the simulator, which reading time does
+    // not count (owner ruling 2026-11-15, "Keep the capstone at 20"; `section-minutes.test.tsx`).
+    estimatedMinutes: 20,
     creditPolicy: 'competency-eligible',
     completionEvidenceAuthority: 'validated-interaction',
   },

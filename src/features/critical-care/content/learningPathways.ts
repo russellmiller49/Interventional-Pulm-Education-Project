@@ -22,7 +22,10 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
      * section specs); their minutes include the case's own (`minutes` on the case definition).
      * The rest of each figure is the section's measured reading time (owner ruling 2026-11-14:
      * task-card words at 200 a minute, `icu-hemodynamics/test-support/sectionReading.tsx`), held
-     * to the text by `icu-hemodynamics/__tests__/section-minutes.test.tsx`.
+     * to the text by `icu-hemodynamics/__tests__/section-minutes.test.tsx`. The capstone
+     * (`pac-signal-validation`) is the one exception: its work is in the simulator, which reading
+     * time does not count, so its 20 minutes are set by hand (owner ruling 2026-11-15) and named
+     * in that test's `HAND_SET_MINUTES`.
      */
     arcSentence:
       'Ask why, trust the signal, read the waveform, advance the catheter, measure, and integrate',
@@ -111,7 +114,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pac-signal-validation',
         shortTitle: 'Integrate',
         title: 'The screen that does not fit the patient',
-        minutes: 9,
+        minutes: 20,
         description:
           'One case where the numbers changed and the patient did not: walk the line, the tip, the series and the calculation before anything is treated.',
         stage: 'integration',
