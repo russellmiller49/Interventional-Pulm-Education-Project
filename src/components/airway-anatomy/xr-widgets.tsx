@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -10,12 +10,17 @@ import * as THREE from 'three'
  * and the "Bronch Quest VR" game layer.
  */
 
-/** In-scene button (plane + label). `repeat` holds-to-repeat via pointer capture + an interval. */
+/**
+ * In-scene button (plane + label). `repeat` holds-to-repeat via pointer capture + an interval. The
+ * face lightens while pressed, so a press reads in the headset even before the scene responds, and
+ * `active` marks a switch that is on.
+ */
 export function XrButton({
   label,
   position,
   size,
   primary = false,
+  active = false,
   accent,
   repeat = false,
   onTrigger,
@@ -24,11 +29,14 @@ export function XrButton({
   position: [number, number, number]
   size: [number, number]
   primary?: boolean
+  /** A switch that is on: teal face and a solid outline. */
+  active?: boolean
   /** Optional highlight color for the outline (defaults to cyan/blue by `primary`). */
   accent?: string
   repeat?: boolean
   onTrigger: () => void
 }) {
+  const [pressed, setPressed] = useState(false)
   const heldRef = useRef(false)
   const accumRef = useRef(0)
   const triggerRef = useRef(onTrigger)
@@ -50,6 +58,7 @@ export function XrButton({
     ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
       event.pointerId,
     )
+    setPressed(true)
     triggerRef.current()
     if (repeat) {
       heldRef.current = true
@@ -59,13 +68,23 @@ export function XrButton({
 
   const handleUp = (event: ThreeEvent<PointerEvent>) => {
     heldRef.current = false
+    setPressed(false)
     ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
       event.pointerId,
     )
   }
 
-  const bg = primary ? '#0e7490' : '#1e293b'
-  const outline = accent ?? (primary ? '#67e8f9' : '#93c5fd')
+  const bg = pressed
+    ? primary || active
+      ? '#22d3ee'
+      : '#475569'
+    : active
+      ? '#0f766e'
+      : primary
+        ? '#0e7490'
+        : '#1e293b'
+  const outline = accent ?? (active ? '#5eead4' : primary ? '#67e8f9' : '#93c5fd')
+  const outlineOpacity = pressed || active ? 0.9 : 0.35
   return (
     <group
       position={position}
@@ -79,7 +98,12 @@ export function XrButton({
       </mesh>
       <mesh position={[0, 0, 0.004]}>
         <planeGeometry args={[size[0] + 0.006, size[1] + 0.006]} />
-        <meshBasicMaterial color={outline} opacity={0.35} transparent toneMapped={false} />
+        <meshBasicMaterial
+          color={outline}
+          opacity={outlineOpacity}
+          transparent
+          toneMapped={false}
+        />
       </mesh>
       <XrText
         text={label}
