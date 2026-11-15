@@ -23,6 +23,7 @@ export function XrButton({
   active = false,
   accent,
   repeat = false,
+  labelSize = 48,
   onTrigger,
 }: {
   label: string
@@ -31,6 +32,8 @@ export function XrButton({
   primary?: boolean
   /** A switch that is on: teal face and a solid outline. */
   active?: boolean
+  /** Label font size on the 1024 × 256 label texture. */
+  labelSize?: number
   /** Optional highlight color for the outline (defaults to cyan/blue by `primary`). */
   accent?: string
   repeat?: boolean
@@ -110,7 +113,7 @@ export function XrButton({
         position={[0, 0, 0.008]}
         width={size[0] * 0.9}
         height={size[1] * 0.7}
-        fontSize={48}
+        fontSize={labelSize}
       />
     </group>
   )

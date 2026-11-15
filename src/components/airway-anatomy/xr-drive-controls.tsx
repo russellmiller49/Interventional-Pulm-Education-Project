@@ -9,6 +9,13 @@ import { XrButton } from './xr-widgets'
  */
 export const XR_STEER_UNITS_PER_PRESS = 3
 
+/**
+ * Label sizes on the buttons' 1024 × 256 label texture: about 1.3 cm tall for the words on the
+ * panel, double the default, so they read at arm's length in the headset.
+ */
+const LABEL_SIZE = 96
+const ARROW_LABEL_SIZE = 120
+
 /** How far the controls reach above and below their origin, in metres (for the panel backing). */
 export const XR_DRIVE_CONTROLS_EXTENT = { top: 0.085, bottom: 0.16 } as const
 
@@ -43,6 +50,7 @@ export function XrDriveControls({
         label="↑"
         position={[-0.14, 0.06, 0]}
         size={[0.06, 0.05]}
+        labelSize={ARROW_LABEL_SIZE}
         repeat
         onTrigger={() => onSteer(0, steer)}
       />
@@ -50,6 +58,7 @@ export function XrDriveControls({
         label="←"
         position={[-0.21, 0, 0]}
         size={[0.06, 0.05]}
+        labelSize={ARROW_LABEL_SIZE}
         repeat
         onTrigger={() => onSteer(-steer, 0)}
       />
@@ -57,6 +66,7 @@ export function XrDriveControls({
         label="→"
         position={[-0.07, 0, 0]}
         size={[0.06, 0.05]}
+        labelSize={ARROW_LABEL_SIZE}
         repeat
         onTrigger={() => onSteer(steer, 0)}
       />
@@ -64,6 +74,7 @@ export function XrDriveControls({
         label="↓"
         position={[-0.14, -0.06, 0]}
         size={[0.06, 0.05]}
+        labelSize={ARROW_LABEL_SIZE}
         repeat
         onTrigger={() => onSteer(0, -steer)}
       />
@@ -72,6 +83,7 @@ export function XrDriveControls({
         label="Advance"
         position={[0.14, 0.035, 0]}
         size={[0.17, 0.06]}
+        labelSize={LABEL_SIZE}
         primary
         repeat
         onTrigger={() => onMove(stepMm)}
@@ -80,6 +92,7 @@ export function XrDriveControls({
         label="Withdraw"
         position={[0.14, -0.04, 0]}
         size={[0.17, 0.06]}
+        labelSize={LABEL_SIZE}
         repeat
         onTrigger={() => onMove(-stepMm)}
       />
@@ -88,12 +101,14 @@ export function XrDriveControls({
         label="Recenter view"
         position={[-0.12, -0.135, 0]}
         size={[0.2, 0.05]}
+        labelSize={LABEL_SIZE}
         onTrigger={onRecenter}
       />
       <XrButton
         label={ctOverlayOn ? 'CT overlay: on' : 'CT overlay: off'}
         position={[0.12, -0.135, 0]}
         size={[0.2, 0.05]}
+        labelSize={LABEL_SIZE}
         active={ctOverlayOn}
         onTrigger={onToggleCtOverlay}
       />
