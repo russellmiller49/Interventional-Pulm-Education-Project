@@ -242,6 +242,90 @@
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
         "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
       }
+    },
+    {
+      "name": "claude-platform",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3124", "--webpack"],
+      "port": 3124,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3124",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
+      "name": "claude-branch-tracing",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3127", "--webpack"],
+      "port": 3127,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3127",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
+      "name": "claude-airway",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3135", "--webpack"],
+      "port": 3135,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3135",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
+      "name": "claude-ecmo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3147", "--webpack"],
+      "port": 3147,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3147",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
+      "name": "claude-crrt",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3113", "--webpack"],
+      "port": 3113,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3113",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
+      "name": "claude-main-baseline",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3170", "--webpack"],
+      "port": 3170,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3170",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
     }
   ]
 }

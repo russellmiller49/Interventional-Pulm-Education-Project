@@ -145,9 +145,10 @@ reviewed plan that first rechecks this inventory and the differently timestamped
 This comparison is limited to beta objects and their listed migration history, not the entire
 shared Endoreels database or other products' migrations.
 
-## All 11 visible modules
+## All 12 visible modules
 
-Read-only production check:
+The hub now lists 12 modules: EUS-B Guided joined after the check below, which covered the
+other 11. Read-only production check:
 `npx tsx scripts/module-beta/verify-hub-routes.ts --base-url=https://interventionalpulm.com`.
 Every wrapper below returned **307 to `/en/login?next=…`** when signed out. Every standard route
 returned **200**, `X-Frame-Options: SAMEORIGIN` and CSP `frame-ancestors 'self'`.
@@ -157,6 +158,7 @@ module content is synthetic. The separate standard-route test requests the real 
 | Module ID (wrapper suffix after `/en/development-beta/`) | Standard route after `/en`        | Live DB accepts ID |
 | -------------------------------------------------------- | --------------------------------- | ------------------ |
 | `ebus-guided`                                            | `/ebus-guided`                    | Yes                |
+| `eus-b-guided`                                           | `/eus-b-guided`                   | Not in that run    |
 | `eus-b-simulator`                                        | `/eus-b-simulator`                | Yes                |
 | `synchronized-anatomy`                                   | `/learn/anatomy/airway`           | Yes                |
 | `branch-tracing`                                         | `/learn/anatomy/branch-tracing`   | Yes                |
@@ -168,8 +170,9 @@ module content is synthetic. The separate standard-route test requests the real 
 | `mechanical-ventilation`                                 | `/mechanical-ventilation`         | Yes                |
 | `mechanical-circulatory-support`                         | `/mechanical-circulatory-support` | Yes                |
 
-All 11 stay `preview`. The four withheld catalog entries stay withheld. Signed-out redirects
-alone do not prove that a non-admin can open a module after signing in, or that all assets load.
+All 12 stay `preview`; EUS-B Guided's wrapper and route still need the same check. The four
+withheld catalog entries stay withheld. Signed-out redirects alone do not prove that a non-admin
+can open a module after signing in, or that all assets load.
 
 ## Independent-review repair evidence
 
@@ -329,9 +332,9 @@ session tokens, private object paths and screenshots out of the PR. Both account
 email-verified, profile-complete and have **no active `site_admin`**. Use separate normal browser
 profiles; no preview cookies, service keys or admin session for the reviewer steps.
 
-1. As A, open `/en/development-beta`. Confirm exactly 11 cards and walk every wrapper. Check the
-   real module frame and asset requests, not just the outer 200 response. No module needs a new
-   readiness label for this infrastructure check.
+1. As A, open `/en/development-beta`. Confirm exactly 12 cards (EUS-B Guided included) and walk
+   every wrapper. Check the real module frame and asset requests, not just the outer 200 response.
+   No module needs a new readiness label for this infrastructure check.
 2. On one chosen module, submit a complete overall review using synthetic comments. Record the
    response's review ID and creation time privately; reload and confirm all answers. Edit one
    answer, update, reload: same review ID/creation time, changed answer. The owner verifies one

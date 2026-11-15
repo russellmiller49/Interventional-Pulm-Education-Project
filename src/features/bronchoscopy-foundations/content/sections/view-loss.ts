@@ -374,9 +374,9 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'c',
-        label: 'Sheath the brush, then withdraw to the last airway you named',
+        label: 'See the brush sheathed, then withdraw to the last airway you named',
         rationale:
-          'The tool is made safe before the scope moves. Then you go back to the last lumen you were sure of.',
+          'The tool is made safe, and seen to be, before the scope moves. Then you go back to the last lumen you were sure of.',
         plausibility: 'best',
       },
       {
@@ -468,7 +468,7 @@ export const section: BronchSectionDefinition = {
           },
           {
             id: 'b',
-            label: 'Stay where you are and turn up the light on the processor',
+            label: 'Hold still and turn up the light on the processor',
             rationale:
               'The light was fine a moment ago. Check it once you are back where you can see.',
             plausibility: 'reasonable-but-incomplete',

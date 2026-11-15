@@ -1,4 +1,6 @@
 /** @jest-environment node */
+import { CRRT_NUMBERS } from '@/features/baxter-crrt/content/teachingNumbers'
+import { EBUS_NUMBERS } from '@/features/ebus-guided/content/teachingNumbers'
 import { betaModules } from './catalog'
 import { betaRollout, hubBetaModules, type BetaTesterNote } from './rollout'
 
@@ -93,5 +95,33 @@ describe('hub readiness record', () => {
         found: undefined,
       })
     }
+  })
+
+  it('states the teaching-number counts that the registers hold', () => {
+    // The hub cards quote these counts; read them from the registers so they cannot drift.
+    const limitMatching = (id: 'ebus-guided' | 'baxter-crrt', pattern: RegExp) => {
+      const limits = betaRollout[id].note?.knownLimits ?? []
+      const matches = limits.flatMap((line) => {
+        const match = pattern.exec(line)
+        return match ? [match] : []
+      })
+      expect(matches).toHaveLength(1)
+      return matches[0].slice(1).map(Number)
+    }
+
+    const ebusRows = EBUS_NUMBERS.rows as readonly { readonly signedBy: string | null }[]
+    expect(ebusRows.filter((row) => row.signedBy)).toHaveLength(0)
+    expect(
+      limitMatching('ebus-guided', /^Its (\d+) sourced teaching numbers are not yet signed off/),
+    ).toEqual([ebusRows.length])
+
+    const crrtRows = CRRT_NUMBERS.rows as readonly { readonly signedBy: string | null }[]
+    const crrtSigned = crrtRows.filter((row) => row.signedBy).length
+    expect(
+      limitMatching(
+        'baxter-crrt',
+        /^Of its (\d+) sourced teaching numbers, (\d+) are signed off by the author and (\d+) are not yet\.$/,
+      ),
+    ).toEqual([crrtRows.length, crrtSigned, crrtRows.length - crrtSigned])
   })
 })
