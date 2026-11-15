@@ -765,7 +765,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     ),
     screen(
       'first-moves',
-      'The first moves, in order',
+      'The first moves',
       'Learn the card. You will use it on the patient who follows.',
       ['first-moves'],
       {

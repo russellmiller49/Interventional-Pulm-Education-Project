@@ -89,8 +89,7 @@ export const section: BronchSectionDefinition = {
   objectives: [
     {
       objectiveId: 'M15-O2',
-      subtask:
-        'Makes the first moves for bleeding after a biopsy, in order, through one evolving case.',
+      subtask: 'Makes the first moves for bleeding after a biopsy through one evolving case.',
       evidence: 'case-decision',
     },
     {
@@ -104,7 +103,7 @@ export const section: BronchSectionDefinition = {
   prerequisites: ['view-loss', 'biopsy-and-specimens', 'deterioration'],
 
   clinicalQuestion: 'Blood fills the view after a biopsy. What do you do in the next ten seconds?',
-  objective: 'Make the first moves for airway bleeding in order, and grade the bleed afterwards.',
+  objective: 'Make the first moves for airway bleeding, and grade the bleed afterwards.',
   harmfulReflex:
     'Pulling the scope back when the view turns red. The wedge is your control: stay in.',
   harmfulReflexPatterns: [
@@ -127,7 +126,7 @@ export const section: BronchSectionDefinition = {
   outcomes: [
     {
       id: 'first-moves',
-      text: 'Make the first moves for bleeding after a biopsy in order, and escalate when they fail.',
+      text: 'Make the first moves for bleeding after a biopsy, and escalate when they fail.',
     },
     { id: 'grade-bleeding', text: 'Grade airway bleeding on the Nashville scale.' },
   ],
@@ -154,14 +153,14 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'first-moves',
       heading: 'First moves: blood after a biopsy',
-      body: 'Say it out loud, with the site: “Bleeding, right lower lobe.” Stop sampling and give oxygen. The moves below overlap, and the bleed decides which you need.',
+      body: 'Say it out loud, with the site: “Bleeding, right lower lobe.” Stop sampling and give oxygen. The moves overlap; the bleed decides which you need.',
       steps: [
         'Keep the scope in. Wedge the tip in the bleeding segment, to tamponade it and keep blood out of other airways.',
-        'Suction the central and non-bleeding airways clear. Avoid suction at the site while a clot forms.',
-        'Leave an established clot alone.',
+        'Suction at the site only as needed: let the clot form, and leave an established clot alone.',
+        'Blood past the wedge: clear central and non-bleeding airways.',
         'Cold saline, in small aliquots through the wedged scope.',
         `A topical vasoconstrictor: ${num('topical-vasoconstrictor')}.`,
-        'Turn the patient bleeding side down, to protect the other lung.',
+        'Bleeding side down, to protect the other lung.',
       ],
       callForHelp: 'early: when one wedge has not stopped it, or the oxygen saturation is falling.',
       claimClass: 'source',
@@ -319,7 +318,7 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Hold the wedge and instil cold saline',
               rationale:
-                'A red view behind a working wedge is expected. Cold saline is the next step, and the wedge stays.',
+                'A red view behind a working wedge is expected. Cold saline is a sound next move, and the wedge stays.',
               plausibility: 'best',
             },
             {

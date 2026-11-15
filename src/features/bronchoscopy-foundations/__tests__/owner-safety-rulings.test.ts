@@ -51,7 +51,7 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
       /oxygen with a jaw thrust.*positive pressure by mask/,
     )
     expect(card.steps?.[3]).toMatch(
-      /^Persistent or severe only: propofol, then a muscle relaxant and a tube/,
+      /^Persistent or severe: propofol\. Still closed: a muscle relaxant and a tube/,
     )
     expect(card.callForHelp).toMatch(/^early, for anesthesia/)
     expect(words(deterioration, 'laryngospasm')).not.toMatch(/Not breaking: propofol/)
@@ -62,7 +62,7 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
     expect(steps).toMatch(/Stop instilling and suctioning\. Withdraw to the trachea/)
     expect(steps).toMatch(/Turn the oxygen up/)
     expect(steps).toMatch(/Give albuterol/)
-    expect(steps).toMatch(/Severe or not easing: scope out, repeat it, get help/)
+    expect(steps).toMatch(/Severe or not easing: scope out, more albuterol, get help/)
   })
 
   it('ventilates first and reverses by the drug given, never both by routine [3]', () => {
@@ -83,9 +83,9 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
 
   it('images a pneumothorax first only when the whole patient allows it [5]', () => {
     const steps = block(deterioration, 'pneumothorax').steps ?? []
-    expect(steps[2]).toBe('Talking, calm, pulse and pressure steady: image first.')
+    expect(steps[2]).toBe('Talking, pressure holding, not worsening: image now, keep watching.')
     expect(steps[3]).toMatch(
-      /Distress, silent side, fast pulse or falling pressure: suspect tension, decompress first/,
+      /Severe distress with a falling pressure or saturation: suspect tension, decompress first/,
     )
     // The decompression site is unchanged: the owner chose it on 2026-11-12.
     expect(steps[4]).toMatch(
@@ -107,9 +107,9 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
   it('judges methemoglobinemia on co-oximetry and the patient together [7]', () => {
     const steps = block(deterioration, 'methemoglobinemia').steps ?? []
     expect(steps[2]).toMatch(/co-oximetry: the oximeter cannot give the level/)
-    expect(steps[3]).toMatch(/^Level and patient together decide/)
+    expect(steps[3]).toMatch(/^Level and patient decide/)
     expect(steps[3]).toMatch(
-      /usually .* with symptoms, .* without, lower with heart or lung disease/,
+      /usually at .* with symptoms, .* without, sooner with heart or lung disease/,
     )
   })
 
@@ -117,7 +117,7 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
     const c08 = deterioration.practice.find((entry) => entry.id === 'C08')!
     expect(keyOf(c08.item.choices).label).toMatch(/ultrasound or chest radiograph now/)
     expect(keyOf(c08.item.choices).rationale).toMatch(
-      /talking, with a steady pulse, pressure and saturation/,
+      /talking and not in distress, with an adequate pressure and saturation/,
     )
     expect(c08.item.explanation).toMatch(/Image first only when the whole patient allows it/)
     expect(c08.item.explanation).toMatch(/A normal pressure alone is not stability/)
@@ -138,7 +138,7 @@ describe('Section 3, sedation and topical anesthesia (bf-s03-sedation)', () => {
     const topical = block(sedation, 'topical')
     expect(topical.heading).not.toMatch(/three places/)
     const points = (topical.points ?? []).join(' ')
-    expect(points).toMatch(/Nasal approach: lidocaine gel to the nose/)
+    expect(points).toMatch(/Nasal approach: gel to the nose, and throat spray if needed/)
     expect(points).toMatch(/Oral approach: lidocaine spray to the throat/)
     expect(points).toMatch(/Every site adds to one running total/)
   })
@@ -169,6 +169,8 @@ describe('Section 3, sedation and topical anesthesia (bf-s03-sedation)', () => {
     expect(reversal).toMatch(/bring back pain and a surge in pulse and pressure/)
     expect(reversal).toMatch(/seizure in a daily benzodiazepine user/)
     expect(reversal).toMatch(/Neither replaces ventilation/)
+    // Which agent comes first after both drugs is taught with its source, not assumed.
+    expect(reversal).toMatch(/BTS advises flumazenil first, unless the opioid dose was large/)
     const flow = COURSE_FLOWS['sedation-and-monitoring']!.map((chunk) => chunk.id)
     expect(flow.indexOf('reversal')).toBeLessThan(flow.indexOf('sedation-case'))
   })
@@ -180,9 +182,9 @@ describe('Section 3, sedation and topical anesthesia (bf-s03-sedation)', () => {
       'Give no more sedative, rouse him and open his airway',
     )
     expect(keyOf(notRousing.choices).label).toBe(
-      'Scope out, ventilate by bag and mask, then naloxone',
+      'Scope out, ventilate by bag and mask, then one reversal agent',
     )
-    expect(keyOf(notRousing.choices).rationale).toMatch(/reassess before adding flumazenil/)
+    expect(keyOf(notRousing.choices).rationale).toMatch(/reassess before adding the other/)
     expect(notRousing.choices.map((choice) => choice.label).join(' ')).not.toMatch(
       /reverse both drugs/,
     )
@@ -200,18 +202,23 @@ describe('the bleeding first-move card (bf-bleeding-first-move-card)', () => {
   })
 
   it('suctions the central and non-bleeding airways, and spares the clot', () => {
-    expect(steps[1]).toMatch(/Suction the central and non-bleeding airways clear/)
-    expect(steps[1]).toMatch(/Avoid suction at the site while a clot forms/)
-    expect(steps[2]).toBe('Leave an established clot alone.')
+    expect(steps[1]).toMatch(/Suction at the site only as needed: let the clot form/)
+    expect(steps[1]).toMatch(/leave an established clot alone/)
+    expect(steps[2]).toBe('Blood past the wedge: clear central and non-bleeding airways.')
   })
 
   it('keeps oxygen, early help and the further measures, without a rigid order', () => {
     expect(card.body).toMatch(/Stop sampling and give oxygen/)
-    expect(card.body).toMatch(/The moves below overlap, and the bleed decides which you need/)
+    expect(card.body).toMatch(/The moves overlap; the bleed decides which you need/)
     expect(card.body).not.toMatch(/work down the card/)
+    for (const text of [
+      bleeding.objective,
+      ...(bleeding.outcomes ?? []).map((outcome) => outcome.text),
+    ])
+      expect(text).not.toMatch(/in order/)
     expect(card.callForHelp).toMatch(/^early/)
     expect(steps.join(' ')).toMatch(/Cold saline/)
-    expect(steps.join(' ')).toMatch(/bleeding side down, to protect the other lung/)
+    expect(steps.join(' ')).toMatch(/Bleeding side down, to protect the other lung/)
   })
 })
 
@@ -226,8 +233,9 @@ describe('Section 1, indications and referral plans (bf-s01-referral-plans)', ()
 
   it('teaches that aspirin alone never delays a bronchoscopy, biopsy included', () => {
     const plan = (block(clinicalQuestion, 'bleeding-plan').points ?? []).join(' ')
+    expect(plan).toMatch(/Aspirin alone: continue, forceps biopsy included\. Not a reason to delay/)
     expect(plan).toMatch(
-      /Aspirin alone: continue, forceps biopsy included\. It is not a reason to delay/,
+      /Two antiplatelet drugs, or an unusually high-risk procedure: plan individually/,
     )
     const [foreignBody] = frames(clinicalQuestion, 'act')
     expect(keyOf(foreignBody.choices).rationale).toMatch(
@@ -244,8 +252,8 @@ describe('Section 1, indications and referral plans (bf-s01-referral-plans)', ()
     const plan = (block(clinicalQuestion, 'bleeding-plan').points ?? []).join(' ')
     expect(plan).toMatch(/off before a biopsy, once the prescriber agrees/)
     expect(plan).toMatch(/A recent coronary stent: stop nothing yourself/)
-    expect(plan).toMatch(/Postpone an elective biopsy if you can, and ask cardiology/)
-    expect(plan).toMatch(/The stent’s reason and age set the risk/)
+    expect(plan).toMatch(/Postpone elective biopsy if you can and ask cardiology/)
+    expect(plan).toMatch(/Its reason and age set the risk/)
     const stent = frames(clinicalQuestion, 'act')[1]
     expect(keyOf(stent.choices).label).toBe(
       'Hold the biopsy and agree an antiplatelet plan with her cardiologist',
@@ -305,11 +313,11 @@ describe('the vignettes the owner named (bf-vignette-keys)', () => {
 
   it('6. no longer keys a raised tidal volume for a smaller delivered breath', () => {
     const entry = vignette('smaller-breaths')
-    expect(keyOf(entry.choices).label).toBe('Shorten the pass, then come out and recheck')
+    expect(keyOf(entry.choices).label).toBe('Come out, then plan shorter passes')
     const raise = entry.choices.find((choice) => /tidal volume raised/.test(choice.label))!
     expect(raise.plausibility).not.toBe('best')
     expect(raise.rationale).toMatch(/one option, not a reflex/)
-    expect(entry.explanation).toMatch(/one option from older guidance/)
+    expect(entry.explanation).toMatch(/one option a guideline allows/)
   })
 
   it('7. offers a second way to secure or isolate the airway in massive hemoptysis', () => {
@@ -324,7 +332,7 @@ describe('the vignettes the owner named (bf-vignette-keys)', () => {
       /A blocker in the left main bronchus does the same job/,
     )
     expect(bronchus.explanation).toMatch(
-      /can cover the upper lobe opening, so confirm it ventilates/,
+      /can cover the upper lobe opening, so check that lobe ventilates/,
     )
   })
 
@@ -374,7 +382,9 @@ describe('the integrated cases the owner named (bf-integrated-case-keys)', () =>
   it('C05 ventilates, then reverses the drug that fits', () => {
     const c05 = integrated('C05')
     expect(c05.item.explanation).not.toMatch(/naloxone and flumazenil/)
-    expect(c05.item.explanation).toMatch(/Then reverse the drug that fits/)
+    expect(c05.item.explanation).toMatch(
+      /Then one reversal agent, chosen from the doses and how he looks/,
+    )
   })
 
   it('C10 reports the obstruction as seen and the airways beyond it as not seen', () => {

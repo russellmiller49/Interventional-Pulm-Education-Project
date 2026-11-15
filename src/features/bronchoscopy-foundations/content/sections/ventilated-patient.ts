@@ -13,7 +13,7 @@ import type { BronchSectionDefinition, MonitorReading, MonitorTrend } from '../t
  * goes in (U2, grade 3A). The first course graded that as unsafe.
  *
  * Owner ruling of 2026-11-13 (`bf-s15-ventilated`): the ventilator is prepared with the therapist and
- * watched, not adjusted by rote. The tidal-volume rise is one option from older guidance, never a
+ * watched, not adjusted by rote. The tidal-volume rise is one option a guideline allows, never a
  * routine step; plateau pressure is the respiratory system, not "the lung alone"; PEEP is kept
  * unless trapped gas is the problem; opening the circuit is an emergency measure with no fixed
  * duration; recruitment afterwards is decided on reassessment, not done after every case.
@@ -201,7 +201,7 @@ export const section: BronchSectionDefinition = {
         `Oxygen: FiO₂ ${num('vent-fio2')}, starting ${num('vent-fio2-lead-time')} before.`,
         'Pressure limit: raise it, so the alarm does not cut each breath short.',
         'Volume alarms: set near baseline, so a lost breath is heard.',
-        'PEEP: keep what the lung needs. A scope in the tube is not a reason to lower it.',
+        'PEEP: keep what the lung needs. Revisit it for trapped gas, not for the scope.',
         'Tidal volume: leave it. A falling delivered volume has more than one answer.',
       ],
       claimClass: 'update',
@@ -219,7 +219,7 @@ export const section: BronchSectionDefinition = {
       points: [
         'Peak up, plateau unchanged: resistance from the scope. Expected.',
         'Plateau up: the respiratory system has changed. Think trapped gas, pneumothorax, a plugged lobe, or a tube in one bronchus.',
-        'Volume-targeted: pressure rises to deliver the set volume. At the pressure limit the breath is cut short and delivered volume falls.',
+        'Volume-targeted: pressure rises to deliver the set volume. A leak, suction or the pressure limit can still cost delivered volume.',
         'Pressure-targeted: the pressure holds and the delivered volume falls. The high-pressure alarm does not warn you. Low-volume and low minute-ventilation alarms can, if set near baseline.',
       ],
       claimClass: 'synthesis',
@@ -231,13 +231,13 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Auto-PEEP: trapped gas',
-      body: 'With a scope in the tube, the breath out may not finish before the next one starts. Gas stacks up: dynamic hyperinflation. The plateau rises and the blood pressure falls.',
+      body: 'With a scope in the tube, the breath out may not finish before the next one starts. Gas stacks up: dynamic hyperinflation. Plateau rises or delivered volume falls, and the blood pressure drops.',
       pointsLabel: 'What to do about it',
       points: [
         'See it: flow has not reached zero when the next breath starts.',
-        'Relieve the obstruction: stop suction, and take the scope out when you need to.',
-        'Give time to breathe out: a slower rate or a shorter breath in, with the therapist.',
-        'Opening the circuit is an emergency measure, for severe trapped gas with a collapsing blood pressure. It costs PEEP and oxygen, so it is never routine.',
+        'Reduce the obstruction: clear secretions, and take the scope out if needed.',
+        'Give time to breathe out: a slower rate or shorter breath in, with the therapist.',
+        'Opening the circuit is an emergency measure, for severe trapped gas with a collapsing blood pressure. It costs PEEP and oxygen, so never routine.',
       ],
       claimClass: 'synthesis',
       sourceRefs: TRAPPED_GAS,
@@ -248,7 +248,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Before you change the tidal volume',
-      body: `The scope can cost delivered volume. Older bronchoscopy guidance allows raising the set volume by ${num('vent-tidal-volume-increase')}. That is one option, not a routine step.`,
+      body: `The scope can cost delivered volume. One bronchoscopy guideline allows raising the set volume by ${num('vent-tidal-volume-increase')}. That is one option, not a routine step.`,
       pointsLabel: 'Weigh these first',
       points: [
         'Lung-protective limits still apply. Check the breath against predicted body weight, and check the plateau.',
@@ -563,7 +563,7 @@ export const section: BronchSectionDefinition = {
                 'The settings are only half of it. Nobody has checked whether the lung that suction collapsed has come back.',
               plausibility: 'incorrect-mechanism',
               consequence: {
-                situation: 'Back on his old oxygen, the saturation drifts down.',
+                situation: 'Nobody rechecks him. An hour later his saturation has drifted down.',
                 readings: ventilator(
                   ['30', 'steady'],
                   ['450', 'steady'],

@@ -187,7 +187,7 @@ export const section: BronchSectionDefinition = {
       body: 'Topical anesthesia stops the cough. Sedation does not. Put lidocaine where the scope will touch, then wait for it to work.',
       pointsLabel: 'By the route you take',
       points: [
-        'Nasal approach: lidocaine gel to the nose.',
+        'Nasal approach: gel to the nose, and throat spray if needed.',
         'Oral approach: lidocaine spray to the throat.',
         `Either way: spray as you go onto the cords and trachea, with ${num('lidocaine-spray-concentration')} lidocaine.`,
         `Nebulized lidocaine is ${num('nebulized-lidocaine')}.`,
@@ -277,7 +277,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Reversal agents',
-      body: 'Have both in the room before the first dose. Give the one that matches the drug, never both by routine. Each wears off before the sedative, so sedation can return.',
+      body: 'Have both in the room. Give the one that matches the drug, never both by routine. Each wears off before the sedative, so sedation can return.\n\nAfter both drugs: BTS advises flumazenil first, unless the opioid dose was large.',
       pointsLabel: 'The two agents',
       points: [
         `Naloxone reverses the opioid: ${num('naloxone-dose')}. It can bring back pain and a surge in pulse and pressure.`,
@@ -561,9 +561,9 @@ export const section: BronchSectionDefinition = {
             choices: [
               {
                 id: 'a',
-                label: 'Scope out, ventilate by bag and mask, then naloxone',
+                label: 'Scope out, ventilate by bag and mask, then one reversal agent',
                 rationale:
-                  'He is not breathing enough despite an open airway, so ventilate first. Slow breathing after fentanyl suggests the opioid. Reverse that, then reassess before adding flumazenil.',
+                  'He is not breathing enough despite an open airway, so ventilate first. Then give one agent, chosen from the doses and how he looks, and reassess before adding the other.',
                 plausibility: 'best',
               },
               {
@@ -587,7 +587,7 @@ export const section: BronchSectionDefinition = {
                 id: 'c',
                 label: 'Give flumazenil alone: midazolam was the last drug',
                 rationale:
-                  'He needs ventilating now, before any drug. And slow breathing after fentanyl suggests the opioid first.',
+                  'He needs ventilating now, before any drug. And the last drug given does not decide which agent comes first.',
                 plausibility: 'incorrect-mechanism',
                 consequence: {
                   situation: 'He stirs but still breathes 6 times a minute.',
@@ -657,7 +657,7 @@ export const section: BronchSectionDefinition = {
     id: 'sedation-and-monitoring-transfer',
     itemType: 'management-decision',
     situation:
-      'Recovery. A 72-year-old man had midazolam 4 mg and fentanyl 75 mcg, then flumazenil at the end of the procedure. Forty minutes later he is hard to rouse and takes 8 breaths a minute. SpO₂ is 95% on 3 L/min. His son is waiting to drive him home.',
+      'Recovery. A 72-year-old man had midazolam 4 mg and fentanyl 75 mcg, then flumazenil when he was slow to wake. Forty minutes later he is hard to rouse and takes 8 breaths a minute. SpO₂ is 95% on 3 L/min. His son is waiting to drive him home.',
     stem: 'What do you do about his discharge?',
     choices: choices(
       [

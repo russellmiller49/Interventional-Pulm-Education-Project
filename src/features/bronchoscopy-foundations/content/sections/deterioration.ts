@@ -234,7 +234,7 @@ export const section: BronchSectionDefinition = {
         'Stop stimulating. Withdraw the scope above the cords.',
         'Give high-flow oxygen with a jaw thrust.',
         'Hold continuous positive pressure by mask.',
-        'Persistent or severe only: propofol, then a muscle relaxant and a tube.',
+        'Persistent or severe: propofol. Still closed: a muscle relaxant and a tube.',
       ],
       callForHelp: 'early, for anesthesia or someone who can intubate.',
       claimClass: 'synthesis',
@@ -250,7 +250,7 @@ export const section: BronchSectionDefinition = {
         'Stop instilling and suctioning. Withdraw to the trachea.',
         'Turn the oxygen up.',
         'Give albuterol, nebulized or by inhaler.',
-        'Severe or not easing: scope out, repeat it, get help.',
+        'Severe or not easing: scope out, more albuterol, get help.',
       ],
       callForHelp: 'when the wheeze or the saturation has not improved after albuterol.',
       claimClass: 'synthesis',
@@ -280,8 +280,8 @@ export const section: BronchSectionDefinition = {
       steps: [
         'Stop sampling and take the scope out.',
         'Give high-flow oxygen.',
-        'Talking, calm, pulse and pressure steady: image first.',
-        'Distress, silent side, fast pulse or falling pressure: suspect tension, decompress first.',
+        'Talking, pressure holding, not worsening: image now, keep watching.',
+        'Severe distress with a falling pressure or saturation: suspect tension, decompress first.',
         'Needle or finger, fifth intercostal space in the mid-axillary line, or second in the midclavicular.',
       ],
       callForHelp: 'at once for tension and the drain.',
@@ -317,7 +317,7 @@ export const section: BronchSectionDefinition = {
         'Stop the topical agent.',
         'High-flow oxygen.',
         'Send co-oximetry: the oximeter cannot give the level.',
-        `Level and patient together decide. Methylene blue: usually ${num('methb-treat-symptomatic')} with symptoms, ${num('methb-treat-asymptomatic')} without, lower with heart or lung disease.`,
+        `Level and patient decide. Methylene blue: usually at ${num('methb-treat-symptomatic')} with symptoms, ${num('methb-treat-asymptomatic')} without, sooner with heart or lung disease.`,
       ],
       callForHelp: 'when oxygen does not lift it.',
       claimClass: 'synthesis',
@@ -741,14 +741,14 @@ export const section: BronchSectionDefinition = {
             id: 'a',
             label: 'Examine him and get an ultrasound or chest radiograph now',
             rationale:
-              'This is a pneumothorax until imaging says otherwise. He is talking, with a steady pulse, pressure and saturation, so there is time to confirm it at the bedside.',
+              'This is a pneumothorax until imaging says otherwise. He is talking and not in distress, with an adequate pressure and saturation, so there is time to confirm it at the bedside.',
             plausibility: 'best',
           },
           {
             id: 'b',
             label: 'Decompress the right chest with a needle straight away',
             rationale:
-              'A needle is for suspected tension. Nothing here suggests it: he talks in sentences, and his pulse, pressure and saturation are steady.',
+              'A needle is for suspected tension. Nothing here suggests it: he is talking, and his pressure and saturation are adequate.',
             plausibility: 'incorrect-mechanism',
           },
           {
@@ -767,7 +767,7 @@ export const section: BronchSectionDefinition = {
           },
         ],
         explanation:
-          'A pneumothorax can appear after the procedure has ended. Image first only when the whole patient allows it: talking, not distressed, with a steady pulse, pressure and saturation. A normal pressure alone is not stability. Worsening distress, a rising pulse or a falling pressure means decompress first.',
+          'A pneumothorax can appear after the procedure has ended. Image first only when the whole patient allows it: talking, not distressed, pressure and saturation holding. A normal pressure alone is not stability. Severe distress with a falling pressure or saturation means decompress first.',
         objectiveIds: ['M15-O3'],
         outcomeIds: ['first-moves'],
         claimClass: 'source',

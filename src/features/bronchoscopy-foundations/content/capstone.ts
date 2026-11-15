@@ -110,7 +110,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'd',
           label: 'Look in the suite with her awake, on topical lidocaine alone',
           rationale:
-            'Leaving out the sedation helps. The scope can still obstruct her, and the suite cannot rescue the airway if it does.',
+            'Leaving out the sedation helps. The scope can still obstruct her, and nobody has planned the rescue.',
           plausibility: 'incorrect-mechanism',
         },
       ],
@@ -138,7 +138,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'a',
           label: 'Take the scope out, open his airway and ventilate by bag and mask',
           rationale:
-            'He is oversedated and barely breathing. The lavage ends here: remove the scope and breathe for him. Then choose the reversal agent by the drug.',
+            'He is oversedated and barely breathing. The lavage ends here: remove the scope and breathe for him. Then choose a reversal agent by the drugs given.',
           plausibility: 'best',
         },
         {
@@ -163,7 +163,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation: `He is clearly worse, so act now: ${num('oxygen-trigger')} is the latest point, not the signal. Stop, say it, and look at him. Scope out, airway open, bag and mask. Then reverse the drug that fits, naloxone first for slow breathing after fentanyl.`,
+      explanation: `He is clearly worse, so act now: ${num('oxygen-trigger')} is the latest point, not the signal. Stop, say it, and look at him. Scope out, airway open, bag and mask. Then one reversal agent, chosen from the doses and how he looks.`,
       objectiveIds: ['M15-O1', 'M04-O3', 'M12-O6', 'M15-O4'],
       claimClass: 'synthesis',
       sourceRefs: [

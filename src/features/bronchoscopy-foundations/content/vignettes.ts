@@ -111,14 +111,14 @@ const ANTITHROMBOTICS = build('antithrombotics-and-platelets', [
       ],
       [
         'Cancel both until the count has recovered',
-        'The lavage is safe at this count, and he needs the answer now.',
+        'The lavage is usually acceptable at this count, and he needs the answer now.',
       ],
       [
         'Do the biopsy alone, as the test with the higher yield',
-        'The biopsy is the one test his count rules out.',
+        'The biopsy is the one test his count argues against.',
       ],
     ],
-    explanation: `A lavage needs ${num('platelets-bal')}. A biopsy needs ${num('platelets-biopsy')}. His count sits between the two, so the plan is the lavage alone.`,
+    explanation: `The usual thresholds are ${num('platelets-bal')} for a lavage and ${num('platelets-biopsy')} for a biopsy. His count sits between the two, so the plan is the lavage alone. The thresholds guide the decision. They do not guarantee safety.`,
   },
   {
     id: 'apixaban-this-morning',
@@ -215,7 +215,7 @@ const ANTITHROMBOTICS = build('antithrombotics-and-platelets', [
       ],
       [
         'Do a lavage and treat that as the tissue diagnosis',
-        'A lavage is safe at this count, but it does not replace a biopsy of a tumor you can see.',
+        'A lavage is usually acceptable at this count, but it does not replace a biopsy of a tumor you can see.',
       ],
       [
         'Take a single small biopsy to keep the risk low',
@@ -522,7 +522,7 @@ const METHEMOGLOBIN = build('methemoglobinemia', [
         'Oxygen is right and not enough. At this level with symptoms he needs the antidote.',
       ],
       [
-        'Give a reversal agent for the sedation',
+        'Give a reversal agent, in case it is the sedation',
         'His breathing is not depressed. Reversal treats a problem he does not have.',
       ],
       [
@@ -663,7 +663,7 @@ const PNEUMOTHORAX = build('pneumothorax-after-biopsy', [
         'Pain after biopsy is not expected. With a falling saturation she is not safe to leave.',
       ],
     ],
-    explanation: `This is when a film is taken: ${num('cxr-after-tblb')}. Worsening distress, a rising heart rate or a falling pressure would change the order to decompression first. A normal pressure alone does not make her stable.`,
+    explanation: `This is when a film is taken: ${num('cxr-after-tblb')}. Severe distress with a falling pressure or saturation would change the order to decompression first. A normal pressure alone does not make her stable.`,
   },
   {
     id: 'the-phone-call',
@@ -790,7 +790,7 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
       ],
       [
         'Raise the PEEP instead of the oxygen',
-        'The scope adds its own PEEP. More on top risks trapped gas, and does not build a reserve.',
+        'More PEEP does not build an oxygen reserve, and with a scope in the tube it risks trapped gas.',
       ],
       [
         'Take him off the ventilator and bag him by hand',
@@ -806,8 +806,8 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
     situation:
       'A 59-year-old man on volume control has the diagnostic scope in an 8.0 mm tube. The pressure limit was raised and no breath is cut short. Delivered volume is 330 of a set 450 mL. Plateau pressure is unchanged and SpO₂ is 97%.',
     key: [
-      'Shorten the pass, then come out and recheck',
-      'The loss is modest, the plateau has not moved and he is oxygenating. A short pass is tolerable, and with the scope out his breath returns without a change to the ventilator.',
+      'Come out, then plan shorter passes',
+      'With the scope out his breath returns without a change to the ventilator. The plateau has not moved, so shorter passes may be all he needs.',
     ],
     others: [
       [
@@ -823,7 +823,7 @@ const TUBE_AND_SCOPE = build('tube-and-scope', [
         'On full oxygen the saturation falls late. The volume is the earlier warning.',
       ],
     ],
-    explanation: `A smaller delivered breath has more than one answer. Shorter passes, or taking the scope out, restore it without touching the ventilator. Raising the set volume by ${num('vent-tidal-volume-increase')} is one option from older guidance, weighed against the plateau, the breath out and lung-protective limits.`,
+    explanation: `A smaller delivered breath has more than one answer. Taking the scope out, then shorter passes, restore it without touching the ventilator. Raising the set volume by ${num('vent-tidal-volume-increase')} is one option a guideline allows, weighed against the plateau, the breath out and lung-protective limits.`,
   },
   {
     id: 'thick-plug-thin-channel',
@@ -983,7 +983,7 @@ const HEMOPTYSIS = build('massive-hemoptysis', [
         'That gives up the airway you have, for a view you do not need.',
       ],
     ],
-    explanation: `When position and suction fail, isolate the bleeding lung: intubate the right main bronchus here, or put a blocker in the left. A tube in the right main can cover the upper lobe opening, so confirm it ventilates. Grade 3 is ${num('nashville-grade-3')}.`,
+    explanation: `When position and suction fail, isolate the bleeding lung: intubate the right main bronchus, or put a blocker in the left. A tube in the right main can cover the upper lobe opening, so check that lobe ventilates. Grade 3 is ${num('nashville-grade-3')}.`,
   },
   {
     id: 'after-control',

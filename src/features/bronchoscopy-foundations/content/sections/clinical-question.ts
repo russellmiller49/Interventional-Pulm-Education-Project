@@ -224,15 +224,15 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'normal-reference',
       heading: 'Platelets and blood thinners',
-      body: 'Match the bleeding plan to the sampling. The drug holds apply before biopsy.',
+      body: 'Match the bleeding plan to the sampling.',
       pointsLabel: 'Before you sample',
       points: [
         `Platelets: ${num('platelets-bal')} for lavage and ${num('platelets-biopsy')} for biopsy are the usual thresholds, not guarantees.`,
-        'Aspirin alone: continue, forceps biopsy included. It is not a reason to delay.',
+        'Aspirin alone: continue, forceps biopsy included. Not a reason to delay. Two antiplatelet drugs, or an unusually high-risk procedure: plan individually.',
         `Clopidogrel, prasugrel or ticagrelor: ${num('p2y12-hold')} off before a biopsy, once the prescriber agrees.`,
         `Warfarin: stop ${num('warfarin-hold')} before, with an INR ${num('inr-before-biopsy')} on the day.`,
         `A direct oral anticoagulant: stop ${num('noac-hold')} before. The INR does not measure it.`,
-        'A recent coronary stent: stop nothing yourself. Postpone an elective biopsy if you can, and ask cardiology. The stent’s reason and age set the risk.',
+        'A recent coronary stent: stop nothing yourself. Postpone elective biopsy if you can and ask cardiology. Its reason and age set the risk.',
       ],
       claimClass: 'update',
       sourceRefs: ANTITHROMBOTIC,
@@ -483,7 +483,8 @@ export const section: BronchSectionDefinition = {
             {
               id: 'd',
               label: 'Modify: biopsy only, and skip the lavage to save time',
-              rationale: 'That keeps the step his platelets rule out and drops the one they allow.',
+              rationale:
+                'That keeps the step his platelets argue against and drops the one they usually allow.',
               plausibility: 'incorrect-mechanism',
               consequence: {
                 situation: 'The biopsy site oozes steadily, and you have sent nothing for culture.',

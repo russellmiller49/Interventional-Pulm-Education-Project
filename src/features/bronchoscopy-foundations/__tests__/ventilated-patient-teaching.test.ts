@@ -36,7 +36,7 @@ describe('the ventilated patient, after the owner ruling of 2026-11-13', () => {
     const tidalVolume = block('raising-tidal-volume')
     expect(tidalVolume.heading).toBe('Before you change the tidal volume')
     expect(tidalVolume.body).toContain('{{num:vent-tidal-volume-increase}}')
-    expect(tidalVolume.body).toMatch(/Older bronchoscopy guidance allows/)
+    expect(tidalVolume.body).toMatch(/One bronchoscopy guideline allows/)
     expect(tidalVolume.body).toMatch(/one option, not a routine step/)
 
     const weigh = (tidalVolume.points ?? []).join(' ')
@@ -76,9 +76,7 @@ describe('the ventilated patient, after the owner ruling of 2026-11-13', () => {
   it('says how each mode answers resistance, and guarantees neither [3]', () => {
     const reading = (block('peak-and-plateau').points ?? []).join(' ')
     expect(reading).toMatch(/Volume-targeted: pressure rises to deliver the set volume/)
-    expect(reading).toMatch(
-      /At the pressure limit the breath is cut short and delivered volume falls/,
-    )
+    expect(reading).toMatch(/A leak, suction or the pressure limit can still cost delivered volume/)
     expect(reading).toMatch(/Pressure-targeted: the pressure holds and the delivered volume falls/)
     expect(reading).not.toMatch(/pushes each breath past the scope/)
   })
@@ -100,17 +98,19 @@ describe('the ventilated patient, after the owner ruling of 2026-11-13', () => {
   it('keeps PEEP unless there is a reason to change it [5]', () => {
     const settings = (block('settings-before').points ?? []).join(' ')
     expect(settings).toMatch(/PEEP: keep what the lung needs/)
-    expect(settings).toMatch(/A scope in the tube is not a reason to lower it/)
+    expect(settings).toMatch(/Revisit it for trapped gas, not for the scope/)
     expect(settings).not.toMatch(/Decide whether to lower it/)
   })
 
   it('teaches auto-PEEP by recognition, relief and time to breathe out [6]', () => {
     const trapped = words('auto-peep')
     expect(trapped).toMatch(/dynamic hyperinflation/)
-    expect(trapped).toMatch(/blood pressure falls/)
+    expect(trapped).toMatch(/Plateau rises or delivered volume falls, and the blood pressure drops/)
     expect(trapped).toMatch(/flow has not reached zero when the next breath starts/)
-    expect(trapped).toMatch(/stop suction, and take the scope out when you need to/)
-    expect(trapped).toMatch(/a slower rate or a shorter breath in/)
+    expect(trapped).toMatch(
+      /Reduce the obstruction: clear secretions, and take the scope out if needed/,
+    )
+    expect(trapped).toMatch(/a slower rate or shorter breath in/)
   })
 
   it('opens the circuit only as a qualified emergency measure, with no duration [7]', () => {
