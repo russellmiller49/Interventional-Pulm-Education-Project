@@ -108,6 +108,9 @@ describe('main site auth access helpers', () => {
       '/mechanical-ventilation/learn',
       '/zh-CN/mechanical-ventilation/practice',
       '/mechanical-ventilation/assess',
+      // The open lab, routed under Practice on 2026-11-15, shares the module's treatment.
+      '/mechanical-ventilation/practice/lab',
+      '/es/mechanical-ventilation/practice/lab',
     ]) {
       expect(isPublicPath(path)).toBe(true)
       expect(isPublicUnlistedPath(path)).toBe(true)

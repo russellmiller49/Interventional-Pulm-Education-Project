@@ -8,10 +8,14 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 
+import MechanicalVentilationLabRoute from '@/app/[locale]/mechanical-ventilation/practice/lab/page'
+
 import MechanicalVentilationCaseActivityV2 from '../components/MechanicalVentilationCaseActivityV2'
 import MechanicalVentilationLab from '../components/MechanicalVentilationLab'
 import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorConsole'
+import { MechanicalVentilationPracticePicker } from '../components/MechanicalVentilationPracticePicker'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
+import { MECHANICAL_VENTILATION_LAB_HREF } from '../content/ventilationLab'
 import { createInitialSimulationState } from '../engine'
 
 jest.mock('@/i18n/navigation', () => ({
@@ -104,6 +108,47 @@ describe('the old lung panel', () => {
   it('is still shown in the open lab', () => {
     render(<MechanicalVentilationLab />)
     act(() => jest.advanceTimersByTime(10))
+    openGraphics()
+    expect(panel()).not.toBeNull()
+  })
+})
+
+/*
+ * "Link the lab from Practice" (author's ruling, 2026-11-15): the lab has a route under Practice,
+ * Practice links to it, and the route shows the panel the cases leave off.
+ */
+describe('the lab’s route under Practice', () => {
+  it('is linked from the Practice landing', () => {
+    render(<MechanicalVentilationPracticePicker />)
+    act(() => jest.advanceTimersByTime(10))
+    const entry = document.querySelector<HTMLElement>('[data-practice-lab]')!
+    expect(within(entry).getByRole('heading', { name: 'Ventilator lab' })).toBeInTheDocument()
+    expect(within(entry).getByRole('link', { name: 'Open the ventilator lab' })).toHaveAttribute(
+      'href',
+      MECHANICAL_VENTILATION_LAB_HREF,
+    )
+    expect(MECHANICAL_VENTILATION_LAB_HREF).toBe('/mechanical-ventilation/practice/lab')
+  })
+
+  it('renders the lab in the module frame, with the panel on its Graphics screen', async () => {
+    render(await MechanicalVentilationLabRoute({ params: Promise.resolve({ locale: 'en' }) }))
+    act(() => jest.advanceTimersByTime(10))
+    expect(screen.getByRole('heading', { level: 1, name: 'Ventilator lab' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'Mechanical ventilation module' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to Practice' })).toHaveAttribute(
+      'href',
+      '/mechanical-ventilation/practice',
+    )
+    // The stand-alone lab's own header, release badge and build labels stay off this route.
+    for (const text of [
+      'Learn & Practice simulator',
+      'Unlisted tester preview',
+      'Calibration case',
+      'Training only.',
+    ])
+      expect([text, document.body.textContent?.includes(text)]).toEqual([text, false])
     openGraphics()
     expect(panel()).not.toBeNull()
   })

@@ -133,7 +133,19 @@ function CalibrationPanel({
   )
 }
 
-export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: string }) {
+export default function MechanicalVentilationLab({
+  locale = 'en',
+  hosted = false,
+}: {
+  locale?: string
+  /**
+   * Inside the module frame (`/mechanical-ventilation/practice/lab`, 2026-11-15). The frame and the
+   * route's own header carry the name, the safety boundary and the English fallback, so the lab's
+   * stand-alone header, release badges, disclaimer banner and fallback note are left out, and so is
+   * the "Calibration case" tag: release status and build labels are not for learners.
+   */
+  hosted?: boolean
+}) {
   const [state, dispatch] = useReducer(ventilationSimulationReducer, undefined, () =>
     createInitialSimulationState(),
   )
@@ -298,69 +310,82 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
     [completedCount, definition.id, definition.stationId, state.deviceId],
   )
 
+  const orientation = (
+    <div className={styles.orientationCard}>
+      <span>
+        <BookOpenCheck aria-hidden="true" /> {deviceProfile.shortName} orientation
+      </span>
+      <ol>
+        {deviceProfile.orientationSteps.map((step, index) => (
+          <li key={step}>
+            <strong>{index + 1}.</strong> {step}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+
   return (
     <main
       className={styles.moduleRoot}
+      data-hosted={hosted || undefined}
       data-publication={mechanicalVentilationPublicationStatus}
       data-device={state.deviceId}
     >
-      <header className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <div className={styles.heroBadges}>
-            <span>
-              <PublicationBadgeIcon aria-hidden="true" /> {publicationBadge.label}
-            </span>
-            <span>
-              <FlaskConical aria-hidden="true" /> Educational simulation
-            </span>
-            <span>15 cases · 5 stations</span>
+      {hosted ? (
+        <section className={styles.hostedOrientation} aria-label="Console orientation">
+          {orientation}
+        </section>
+      ) : (
+        <header className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <div className={styles.heroBadges}>
+              <span>
+                <PublicationBadgeIcon aria-hidden="true" /> {publicationBadge.label}
+              </span>
+              <span>
+                <FlaskConical aria-hidden="true" /> Educational simulation
+              </span>
+              <span>15 cases · 5 stations</span>
+            </div>
+            <p className={styles.eyebrow}>Mechanical ventilation · Learn → Practice → reassess</p>
+            <h1>Mechanical ventilation Learn & Practice simulator</h1>
+            <p>
+              Read the patient, commit to a mechanism, then practice on a functional{' '}
+              {deviceProfile.displayName} training facsimile and prove the response with waveforms,
+              mechanics, gas exchange, examination, and comfort.
+            </p>
+            <div className={styles.heroStats}>
+              <div>
+                <strong>15</strong>
+                <span>interactive cases</span>
+              </div>
+              <div>
+                <strong>5</strong>
+                <span>mechanism stations</span>
+              </div>
+              <div>
+                <strong>Open</strong>
+                <span>choose any case</span>
+              </div>
+            </div>
           </div>
-          <p className={styles.eyebrow}>Mechanical ventilation · Learn → Practice → reassess</p>
-          <h1>Mechanical ventilation Learn & Practice simulator</h1>
+          {orientation}
+        </header>
+      )}
+
+      {hosted ? null : (
+        <div className={styles.disclaimerBanner} role="note">
+          <ShieldAlert aria-hidden="true" />
           <p>
-            Read the patient, commit to a mechanism, then practice on a functional{' '}
-            {deviceProfile.displayName} training facsimile and prove the response with waveforms,
-            mechanics, gas exchange, examination, and comfort.
+            <strong>Training only.</strong> Not a clinical device, validated digital twin, treatment
+            recommendation, or substitute for the operator’s manual and local supervised practice.
+            Not manufactured, sponsored, or endorsed by {deviceProfile.manufacturer}.
           </p>
-          <div className={styles.heroStats}>
-            <div>
-              <strong>15</strong>
-              <span>interactive cases</span>
-            </div>
-            <div>
-              <strong>5</strong>
-              <span>mechanism stations</span>
-            </div>
-            <div>
-              <strong>Open</strong>
-              <span>choose any case</span>
-            </div>
-          </div>
         </div>
-        <div className={styles.orientationCard}>
-          <span>
-            <BookOpenCheck aria-hidden="true" /> {deviceProfile.shortName} orientation
-          </span>
-          <ol>
-            {deviceProfile.orientationSteps.map((step, index) => (
-              <li key={step}>
-                <strong>{index + 1}.</strong> {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </header>
+      )}
 
-      <div className={styles.disclaimerBanner} role="note">
-        <ShieldAlert aria-hidden="true" />
-        <p>
-          <strong>Training only.</strong> Not a clinical device, validated digital twin, treatment
-          recommendation, or substitute for the operator’s manual and local supervised practice. Not
-          manufactured, sponsored, or endorsed by {deviceProfile.manufacturer}.
-        </p>
-      </div>
-
-      {locale !== 'en' ? (
+      {locale !== 'en' && !hosted ? (
         <div className={styles.languageFallback} role="status">
           <Languages aria-hidden="true" />
           <p>
@@ -509,7 +534,8 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
                           </span>
                           <span>{caseDefinition.title}</span>
                           <small>
-                            {pilotCaseIds.includes(
+                            {!hosted &&
+                            pilotCaseIds.includes(
                               caseDefinition.id as (typeof pilotCaseIds)[number],
                             )
                               ? 'Calibration case · '

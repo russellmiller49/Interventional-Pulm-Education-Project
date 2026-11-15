@@ -216,6 +216,15 @@
   color: #8be4d9;
 }
 
+/* The lab inside the module frame: the console orientation on its own, its steps side by side. */
+.hostedOrientation {
+  padding: 1rem 0 1.25rem;
+}
+
+.hostedOrientation .orientationCard ol {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
 .disclaimerBanner,
 .languageFallback,
 .scopeBoundary {
@@ -437,8 +446,14 @@
 }
 
 .curriculumHeading {
+  flex-wrap: wrap;
   padding: 1rem;
   border-bottom: 1px solid var(--line);
+}
+
+/* Its note takes its own line: beside the heading in a narrow rail it was squeezed a word a line. */
+.curriculumHeading > span {
+  flex-basis: 100%;
 }
 
 .curriculumHeading div,
@@ -3881,12 +3896,17 @@
       radial-gradient(circle at 8% 4%, rgba(54, 185, 175, 0.12), transparent 28rem), #0b1618;
   }
 
-  .heroBadges span,
-  .difficultyBadge {
+  /* The case's level badge sits on the case panel, which stays light, so it keeps its own pill. */
+  .heroBadges span {
     background: rgba(18, 35, 38, 0.8);
   }
 
-  .experienceBar {
+  /*
+   * The console chooser kept its light-theme surface, so its heading and note (light ink here)
+   * read pale on near-white. Seen when the lab got its route under Practice (2026-11-15).
+   */
+  .experienceBar,
+  .deviceSelector {
     background: rgba(18, 35, 38, 0.88);
   }
 

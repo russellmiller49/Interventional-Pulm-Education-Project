@@ -54,9 +54,17 @@ export interface VentilationSectionSpec {
   readonly shapingNoteAfter?: 'first-answer' | 'second-answer'
   /**
    * Text that must not appear on any surface before the prediction is committed: the keyed
-   * answer's distinctive phrase, the case's diagnosis, the direction of the response.
+   * answer's distinctive phrase, the case's diagnosis, the direction of the response. In the
+   * teaching column a point to keep in mind, the bedside "why", the worked example, a strip note or
+   * one of this section's rows of the one table that matches waits for the first answer.
    */
   readonly precommitDenyPatterns: readonly RegExp[]
+  /**
+   * For a section that opens on a location question: words that name the place its answer is keyed
+   * to. The location card borrows Part 1's look line and hint; one that matches waits for the
+   * location answer (author's ruling, 2026-11-15).
+   */
+  readonly locationDenyPatterns?: readonly RegExp[]
   /** The Practice case offered when the section is worked through. */
   readonly practicePairing?: {
     readonly kind: 'mechanism-match' | 'next-in-unit'
@@ -243,12 +251,22 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     shapingNote:
       'In Part 2 the cycle-off ends a supported breath sooner, which also gives expiration time back.',
     shapingNoteAfter: 'second-answer',
+    /*
+     * Part 1 asks what a higher rate does to the time this patient has to empty. Since 2026-11-15
+     * (author: "conceal anything that answers the pending question") the list also refuses the
+     * answer in other words, so these wait for it: the bedside "why" ("can trap more gas when
+     * breaths arrive more frequently"), the worked example ("Increasing rate can leave even less
+     * time"), the rate row of the strip ("Fewer breaths give each expiration more time") and this
+     * section's row of the one table ("too little time to empty · … · a rate set too high").
+     */
     precommitDenyPatterns: [
       /less time for passive emptying/i,
       /shorter machine inspiration/i,
-      /trapp/i,
+      /\btrap/i,
       /auto-?peep/i,
       /hyperinflation/i,
+      /\b(less|more) time\b/i,
+      /too little time/i,
     ],
     practicePairing: { kind: 'mechanism-match', caseId: 'MV-05' },
   },
@@ -368,6 +386,12 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     shapingNote:
       'The rise time and the cycle-off are the settings this section reaches for: one shapes the start of the push, the other decides its end.',
     shapingNoteAfter: 'first-answer',
+    /*
+     * The location question is keyed to the push. Part 1's look line ("early in inspiration") and
+     * hint ("the first part of each push"), which the location card borrows, name it, so they wait
+     * for the location answer (author, 2026-11-15).
+     */
+    locationDenyPatterns: [/\binspiration\b/i, /\bpush\b/i],
     precommitDenyPatterns: [
       /faster rise with less discomfort/i,
       /shorter machine inspiration/i,

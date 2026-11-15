@@ -660,13 +660,18 @@ describe('optional questions (Q1, Q2, Q3, N5, S7-4)', () => {
     ).toHaveLength(1)
     /*
      * The strip stays open, but its note on Part 2's cycle-off gives Part 2's keyed direction, so
-     * it waits for that answer (author's ruling, 2026-11-12, "Close them before commitment").
+     * it waits for that answer (author's ruling, 2026-11-12, "Close them before commitment"); and
+     * its rate note ("Fewer breaths give each expiration more time") answers Part 1, so it waits
+     * for Part 1's (2026-11-15, "conceal anything that answers the pending question").
      */
     const strip = document.querySelector('[data-teaching-block="knob-strip"]')!
-    expect(strip.textContent).toContain('its last note waits until you have answered')
+    expect(strip.textContent).toContain(
+      'two of its notes wait until you have answered the questions they bear on',
+    )
     expect(strip.textContent).not.toContain(
       'In Part 2 the cycle-off ends a supported breath sooner',
     )
+    expect(strip.textContent).not.toContain('Fewer breaths give each expiration more time')
     expect(
       screen.queryAllByRole('radio').some((radio) => (radio as HTMLInputElement).checked),
     ).toBe(false)

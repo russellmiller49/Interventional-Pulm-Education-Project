@@ -110,6 +110,13 @@ const GOAL_STATE_MARK: Record<ExperimentGoalState, string> = {
 }
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
+/**
+ * The location question's hint where Part 1's look line, its usual hint, names the keyed place: a
+ * way of looking that goes through every stop and points at none of them.
+ */
+export const VENTILATION_LOCATION_HINT =
+  'Take the four stops on the breath map in turn. At each one, compare the airway pressure trace with the patient’s effort, and ask whether they still match.'
+
 const ventilationPathway = criticalCareLearningPathway('mechanical-ventilation')
 
 /*
@@ -488,12 +495,50 @@ function VentilationStageSession({
    * What the card says
    * ------------------------------------------------------------------------------------------ */
 
+  /*
+   * Which of the section's questions are behind the learner: answered, or moved on from. The first
+   * is the location question where the section opens on one, else Part 1's prediction.
+   */
+  const firstQuestionIndex = lesson.steps.findIndex(
+    (candidate) =>
+      candidate.interaction.kind === 'locate' ||
+      (candidate.interaction.kind === 'prediction' && candidate.interaction.round === 0),
+  )
+  const firstQuestionIsLocation = lesson.steps[firstQuestionIndex]?.interaction.kind === 'locate'
+  const answered = {
+    first:
+      (firstQuestionIsLocation
+        ? session.evidence[0].location !== undefined
+        : session.evidence[0].prediction !== undefined) || index > firstQuestionIndex,
+    second:
+      session.evidence[1].prediction !== undefined ||
+      (lesson.transferPredictionStepIndex >= 0 && index > lesson.transferPredictionStepIndex),
+  }
+  /*
+   * A location question not yet answered (author's ruling, 2026-11-15, Section 12): the breath map
+   * lights the whole breath rather than the stops this section works at, which included the keyed
+   * one, and Part 1's look line and hint, which the card borrows, wait when they name the keyed
+   * place (`locationDenyPatterns`).
+   */
+  const locationPending = interaction.kind === 'locate' && !answered.first
+  const namesLocation = (text: string) =>
+    locationPending &&
+    (lesson.spec.locationDenyPatterns ?? []).some((pattern) => pattern.test(text))
+  const litStops = locationPending ? [] : step.stops
+
   const marker = ventilationReferenceMarker(unitId, session.round)
   const inspectionFigure = simulatorTask ? inspectionFigureState(session) : null
-  const lookLine =
+  const authoredLook =
     marker && inspectionFigure
       ? markedIntervalLook(marker.markerId, inspectionFigure)
       : (step.guide?.look ?? round.look)
+  const lookLine = namesLocation(authoredLook) ? null : authoredLook
+  const questionHint =
+    interaction.kind === 'locate'
+      ? namesLocation(round.look)
+        ? VENTILATION_LOCATION_HINT
+        : round.look
+      : round.hint
   const question =
     interaction.kind === 'prediction' || interaction.kind === 'locate' ? interaction.item : null
   const questionKind = roundQuestionKind(round)
@@ -727,9 +772,11 @@ function VentilationStageSession({
       {partNotes}
       {question ? (
         <>
-          <p className={styles.note} data-step-look>
-            {lookLine}
-          </p>
+          {lookLine ? (
+            <p className={styles.note} data-step-look>
+              {lookLine}
+            </p>
+          ) : null}
           <VentilationReinforcement
             key={step.id}
             id={question.id}
@@ -737,7 +784,7 @@ function VentilationStageSession({
             prompt={question.stem}
             choices={question.choices}
             explanation={question.explanation}
-            hint={interaction.kind === 'locate' ? round.look : round.hint}
+            hint={questionHint}
             bestChoiceId={question.correctChoiceIds[0]}
             caseFit={false}
             onChoose={(choice) => {
@@ -829,44 +876,24 @@ function VentilationStageSession({
    */
   const breathMap = breathWalk ? (
     <BreathMap
-      emphasis={interaction.kind === 'walk' ? [walkStop] : step.stops}
+      emphasis={interaction.kind === 'walk' ? [walkStop] : litStops}
       caption={interaction.kind === 'walk' ? breathMapCaption([walkStop]) : undefined}
       walk={interaction.kind === 'walk' ? { selected: walkStop, onSelect: setWalkStop } : undefined}
     />
   ) : peepVisual ? null : (
-    <BreathMap variant="strip" emphasis={step.stops} />
+    <BreathMap variant="strip" emphasis={litStops} />
   )
-
-  /*
-   * Which of the section's questions are behind the learner: answered, or moved on from. The first
-   * is the location question where the section opens on one, else Part 1's prediction.
-   */
-  const firstQuestionIndex = lesson.steps.findIndex(
-    (candidate) =>
-      candidate.interaction.kind === 'locate' ||
-      (candidate.interaction.kind === 'prediction' && candidate.interaction.round === 0),
-  )
-  const firstQuestionIsLocation = lesson.steps[firstQuestionIndex]?.interaction.kind === 'locate'
-  const answered = {
-    first:
-      (firstQuestionIsLocation
-        ? session.evidence[0].location !== undefined
-        : session.evidence[0].prediction !== undefined) || index > firstQuestionIndex,
-    second:
-      session.evidence[1].prediction !== undefined ||
-      (lesson.transferPredictionStepIndex >= 0 && index > lesson.transferPredictionStepIndex),
-  }
 
   const teaching = (
     <VentilationTeachingColumn
       lesson={lesson}
       step={step}
       state={session.simulation}
-      stops={interaction.kind === 'walk' ? [walkStop] : step.stops}
+      stops={interaction.kind === 'walk' ? [walkStop] : litStops}
       roundIndex={session.round}
       showCapturedReference={!marker}
       landmarkChooser={interaction.kind === 'walk'}
-      guideLook={simulatorTask ? lookLine : undefined}
+      guideLook={simulatorTask ? (lookLine ?? undefined) : undefined}
       breathMap={breathMap}
       answered={answered}
     />
