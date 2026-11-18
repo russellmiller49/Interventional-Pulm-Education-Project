@@ -83,6 +83,8 @@ import {
 } from '@/lib/airway-anatomy/transport-frames'
 import { createLumenCollider } from '@/lib/airway-anatomy/lumen-collider'
 import { driveScope, enterFreeDrive, FLEXIBLE_TIP_RADIUS_MM } from '@/lib/airway-anatomy/drive'
+import { ScopeDriveQueue } from '@/lib/airway-anatomy/drive-queue'
+import { useScopeDriveClock } from './use-scope-drive'
 import {
   rollFrame,
   steerFrame,
@@ -263,7 +265,7 @@ export function AirwayAnatomyModule({
   const [enlarged, setEnlarged] = useState(false)
   const [trackerEnabled, setTrackerEnabled] = useState(false)
   const [trackerConnected, setTrackerConnected] = useState(false)
-  const driveQueue = useRef(0)
+  const [driveQueue] = useState(() => new ScopeDriveQueue())
   const renderedState = useRef(scopeState)
   renderedState.current = scopeState
   const frames = useMemo(
@@ -388,7 +390,7 @@ export function AirwayAnatomyModule({
     if (appliedStartKey.current === embedStartKey) return
     appliedStartKey.current = embedStartKey
     if (!loadedCase || embedStartEdgeId === undefined) return
-    driveQueue.current = 0
+    driveQueue.clear()
     // A new start is a new run: report the place again even if the edge is the same.
     reportedLocation.current = null
     setScopeState(
@@ -406,6 +408,7 @@ export function AirwayAnatomyModule({
     embedStartYawDeg,
     embedStartPitchDeg,
     loadedCase,
+    driveQueue,
   ])
 
   const graphIndex = useMemo(
@@ -526,25 +529,10 @@ export function AirwayAnatomyModule({
     [loadedCase, frames, frameForState, collider],
   )
   // Movement is integrated before publishing the pose. No viewport has its own chase camera.
-  useEffect(() => {
-    let handle = 0,
-      previous = 0
-    const tick = (now: number) => {
-      const dt = Math.min((now - previous) / 1000 || 0, 0.05)
-      previous = now
-      const amount = Math.sign(driveQueue.current) * Math.min(Math.abs(driveQueue.current), dt * 24)
-      if (amount) {
-        driveQueue.current -= amount
-        advance(amount)
-      }
-      handle = requestAnimationFrame(tick)
-    }
-    handle = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(handle)
-  }, [advance])
-  const handleMove = useCallback((delta: number) => {
-    driveQueue.current = clamp(driveQueue.current + delta, -15, 15)
-  }, [])
+  // The page's animation frames drain the drive queue; the VR scene drains it from the headset's
+  // frame loop too (`pumpDrive`), because the page's frames stop while a VR session presents.
+  const pumpDrive = useScopeDriveClock(driveQueue, advance)
+  const handleMove = useCallback((delta: number) => driveQueue.push(delta), [driveQueue])
   const applySteer = useCallback(
     (screenXDeg: number, screenYUpDeg: number) => {
       setScopeState((state) => {
@@ -581,7 +569,7 @@ export function AirwayAnatomyModule({
   )
 
   const handleRecenter = useCallback(() => {
-    driveQueue.current = 0
+    driveQueue.clear()
     setScopeState((state) => {
       if (!state || !frames) return state
       const reset = updateLookOffset(state, { yawDeg: 0, pitchDeg: 0, rollDeg: 0 })
@@ -595,7 +583,7 @@ export function AirwayAnatomyModule({
       }
       return reset
     })
-  }, [frames])
+  }, [frames, driveQueue])
   const handleAlignBranch = useCallback(
     (edgeId: number) => {
       if (!loadedCase || !frames) return
@@ -626,7 +614,7 @@ export function AirwayAnatomyModule({
   )
 
   const handleReset = useCallback(() => {
-    driveQueue.current = 0
+    driveQueue.clear()
     if (!loadedCase) return
     setScopeState(
       embedStartEdgeId !== undefined
@@ -642,7 +630,14 @@ export function AirwayAnatomyModule({
             loadedCase.manifest.interaction.initialDistanceMm,
           ),
     )
-  }, [loadedCase, embedStartEdgeId, embedStartDistanceMm, embedStartYawDeg, embedStartPitchDeg])
+  }, [
+    loadedCase,
+    embedStartEdgeId,
+    embedStartDistanceMm,
+    embedStartYawDeg,
+    embedStartPitchDeg,
+    driveQueue,
+  ])
 
   const game = useAirwayGame({
     enabled: mode === 'challenge',
@@ -1052,7 +1047,7 @@ export function AirwayAnatomyModule({
                 <button
                   className={`rounded px-3 py-2 ${!scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
                   onClick={() => {
-                    driveQueue.current = 0
+                    driveQueue.clear()
                     setScopeState((s) =>
                       s
                         ? {
@@ -1074,7 +1069,7 @@ export function AirwayAnatomyModule({
                   title={!collider ? 'Preparing validated collision geometry' : undefined}
                   className={`rounded px-3 py-2 disabled:opacity-40 ${scopeState?.freeFrame ? 'bg-cyan-300 text-slate-950' : 'text-slate-300'}`}
                   onClick={() => {
-                    driveQueue.current = 0
+                    driveQueue.clear()
                     setScopeState((s) =>
                       s && opticalFrame
                         ? collider!.clearance(opticalFrame.position) < FLEXIBLE_TIP_RADIUS_MM
@@ -1111,7 +1106,7 @@ export function AirwayAnatomyModule({
                     className="rounded border border-slate-700 px-2 py-1 text-cyan-200"
                     title={reference.expectation}
                     onClick={() => {
-                      driveQueue.current = 0
+                      driveQueue.clear()
                       setScopeOrientationProfile('flexible')
                       setScopeState(
                         createInitialScopeState(
@@ -1196,6 +1191,7 @@ export function AirwayAnatomyModule({
                 ctPlaneOpacity={ctPlaneOpacity}
                 stepMm={stepMm}
                 onMove={handleMove}
+                onDriveFrame={pumpDrive}
                 onSteer={handleSteer}
                 onRecenter={handleRecenter}
                 game={mode === 'challenge' ? game : null}
