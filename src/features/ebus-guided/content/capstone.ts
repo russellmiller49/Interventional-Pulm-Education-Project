@@ -22,6 +22,12 @@ import { locateLessons } from './locate'
  * The findings: 4L lymphocytes only; 7 malignant cells; 4R blood only at first, then lymphocytes
  * only; 11Ri malignant cells. On today's findings that is N2a, with N1 also involved, all of it
  * provisional until final pathology.
+ *
+ * Owner ruling `ebus-capstone-scenario` (2026-11-14): the scenario, the order and the station 7
+ * key stand. Two wording refinements run through every unit: a negative on-site result at 4L or
+ * 4R does not exclude malignancy (final cytopathology, its adequacy assessment and the overall
+ * staging evaluation still count), and the blood-only first aspirate at 4R is nondiagnostic, never
+ * a negative sample, with the later sample assessed on its own. The station labs stay prompted.
  */
 const stationLab = (lessonId: string): Lab => {
   const lab = locateLessons.find((lesson) => lesson.id === lessonId)?.lab
@@ -60,7 +66,8 @@ export const CAPSTONE_STATIONS: CapstoneStation[] = [
     station: '4R',
     name: 'Right lower paratracheal',
     category: 'N2',
-    finding: 'Blood only at first; further passes: lymphocytes, no malignant cells',
+    finding:
+      'First aspirate blood only: nondiagnostic. Further passes: lymphocytes, no malignant cells',
   },
   {
     unitId: 'staging-exam-11ri',
@@ -71,7 +78,7 @@ export const CAPSTONE_STATIONS: CapstoneStation[] = [
   },
 ]
 export const CAPSTONE_CONCLUSION =
-  'On today’s on-site findings: N2a. One N2 station (7) is involved, 4R and 4L were sampled without malignant cells, and 11Ri (N1) is involved. All of it is provisional until final pathology.'
+  'On today’s on-site findings: N2a, provisional until final pathology. Station 7 is the only N2 station with malignant cells, and 11Ri (N1) is also involved. At 4L and 4R the on-site smears showed lymphocytes without malignant cells, which does not exclude malignancy at those stations. The first 4R aspirate was blood only: nondiagnostic, and not counted as a negative sample. Final cytopathology, with its assessment of adequacy, and the overall staging evaluation settle the N category.'
 
 const visit = (
   entry: CapstoneStation,
@@ -122,7 +129,7 @@ export const capstoneLessons: Lesson[] = [
     paragraphs: [
       'The patient has a right upper lobe mass, suspected lung cancer, and no distant disease on PET-CT. PET-CT shows an avid right lower paratracheal node (4R), an enlarged subcarinal node (7), a small left lower paratracheal node (4L) and an avid right interlobar node (11Ri). The team has asked for systematic nodal staging by EBUS.',
       'All four nodes are on the plan. For a right lung primary, 4L is N3, 7 and 4R are N2, and 11Ri is N1. Sample in that order, so that a needle that has been through tumor is not carried into a station of a higher category.',
-      'At each station you will scan the node in the lab you used when you first met that station, and then read the on-site result. Keep each station’s specimen separate and labelled. On-site results are provisional until final pathology.',
+      'At each station you will scan the node in the lab you used when you first met that station, and then read the on-site result. Keep each station’s specimen separate and labelled. On-site results are provisional until final pathology, and a negative on-site result does not exclude malignancy at that station.',
     ],
     checklist: [
       'State the side of the primary and each station’s category.',
@@ -173,18 +180,18 @@ export const capstoneLessons: Lesson[] = [
         ['7: malignant cells', 'N2 station involved on site'],
         [
           '4R: blood only, then lymphocytes on further passes',
-          'First passes nonrepresentative; repeat sample without malignant cells',
+          'First aspirate nondiagnostic; later sample, assessed on its own, without malignant cells on site',
         ],
         ['11Ri: malignant cells', 'N1 station involved on site'],
       ],
-      'Each station gets its own line: what was sampled and what it showed. A sample of blood alone is reported as nonrepresentative, not as negative. Every line is provisional until final pathology.',
+      'Each station gets its own line: what was sampled and what it showed. A sample of blood alone is reported as nondiagnostic, not as negative, and the sample that follows it is judged on its own. Every line is provisional until final pathology.',
     ),
     transfer: q(
       'exam-report',
       'The examination is finished. Which statement do today’s findings support?',
       [
         'N2a on on-site findings: station 7 is involved, 4R and 4L were sampled without malignant cells, 11Ri is involved; final pathology is pending',
-        'One N2 station is involved, which is N2a. 11Ri is N1 and does not add an N2 station. On-site results are provisional, so the report says what is pending.',
+        'One N2 station has malignant cells, which is N2a. 11Ri is N1 and does not add an N2 station. The on-site results at 4L and 4R do not exclude malignancy there, so the category is provisional and the report says what is pending.',
       ],
       [
         'N2b: tumor was found at two stations, 7 and 11Ri',
@@ -192,12 +199,13 @@ export const capstoneLessons: Lesson[] = [
       ],
       [
         'N3 is excluded: the 4L aspirate contained lymphocytes and no malignant cells',
-        'The 4L sample represents the node and shows no malignancy so far. That is a negative sample pending final pathology, and the report says so in those words.',
+        'Lymphocytes show that the node was sampled, and no malignant cells were seen on site. That does not exclude malignancy: final cytopathology, its assessment of adequacy and the overall staging evaluation still count, and the report says so.',
       ],
     ),
     takeaways: [
       'Order by N category for this primary: N3, then N2, then N1.',
-      'A sample must represent the node before it can count as negative.',
+      'A blood-only aspirate is nondiagnostic. A sample must represent the node before it can count as negative.',
+      'A negative on-site result does not exclude malignancy; final cytopathology and the overall staging evaluation decide.',
       'Count involved N2 stations, not nodes or passes: one is N2a, more than one is N2b.',
       'Report what was sampled, what it showed, and what is pending.',
     ],
@@ -233,11 +241,11 @@ export const capstoneLessons: Lesson[] = [
       'On-site cytology from 4L: lymphocytes, no malignant cells. What does this settle?',
       [
         'The sample represents the node and shows no malignancy so far; final pathology is pending',
-        'Lymphocytes show that the needle sampled the node. An on-site reading is provisional, so the station is negative so far and the report says final pathology is pending.',
+        'Lymphocytes show that the needle sampled the node. An on-site reading is provisional and does not exclude malignancy, so the station is negative so far and the report says final pathology is pending.',
       ],
       [
         'N3 disease is excluded, and the report can say so now',
-        'An on-site reading is provisional. The station is reported as sampled, without malignant cells on site, final pathology pending.',
+        'A negative on-site reading does not exclude malignancy. The station is reported as sampled, without malignant cells on site, with final cytopathology and its adequacy assessment pending.',
       ],
       [
         'Nothing: without malignant cells the node cannot have been sampled',
@@ -257,7 +265,8 @@ export const capstoneLessons: Lesson[] = [
         'The primary, if it is sampled, comes after the nodes, so that tumor is not carried into a node.',
       ],
     ),
-    takeaway: 'Lymphocytes without malignant cells: a representative sample, negative so far.',
+    takeaway:
+      'Lymphocytes without malignant cells: a representative sample, negative on site. That does not exclude malignancy.',
   }),
   visit(seven, {
     labFrom: 'station-seven',
@@ -290,7 +299,7 @@ export const capstoneLessons: Lesson[] = [
       'On-site cytology from station 7: malignant cells. 4R and 11Ri are still on the plan. What now?',
       [
         'Go on to 4R: a second involved N2 station would change N2a to N2b',
-        'Single-station and multiple-station N2 are different categories, so the second N2 station still matters. A fresh needle may be used for the next station to reduce cross-contamination (AABIP 2025).',
+        'In the ninth edition, single-station N2 (N2a) and multiple-station N2 (N2b) are different categories, so whether 4R is involved still matters. A fresh needle may be used for the next station to reduce cross-contamination (AABIP 2025).',
       ],
       [
         'Stop: N2 is established and further stations add nothing',
@@ -350,12 +359,12 @@ export const capstoneLessons: Lesson[] = [
       'exam-4r-result',
       'The first passes at 4R return blood, with no lymphocytes and no malignant cells. What does that mean for 4R?',
       [
-        'Nothing yet: the sample does not represent the node, so make further passes',
-        'Blood alone is not a sample of the node. Further passes at 4R then return lymphocytes without malignant cells: a representative sample, negative so far.',
+        'Nothing yet: a blood-only aspirate is nondiagnostic, so make further passes',
+        'Blood alone does not show that the node was sampled, so it is nondiagnostic and is not a negative result. Further passes at 4R then return lymphocytes without malignant cells. That later sample is assessed on its own: representative, and negative on site pending final cytopathology.',
       ],
       [
         '4R is negative: no malignant cells were seen',
-        'Blood without lymphocytes does not show that the node was sampled. A negative result needs a sample that represents the node.',
+        'Blood without lymphocytes does not show that the node was sampled. It is a nondiagnostic aspirate; a negative result needs a sample that represents the node.',
       ],
       [
         '4R is involved, because station 7 is',
@@ -364,15 +373,19 @@ export const capstoneLessons: Lesson[] = [
     ),
     transfer: q(
       'exam-4r-count',
-      'Station 7 is involved and 4R is not. How many N2 stations are involved?',
-      ['One', 'Count involved stations: station 7 only. That is N2a.'],
+      'On site, station 7 shows malignant cells and the later 4R sample does not. On these findings, how many N2 stations are involved?',
+      [
+        'One',
+        'Count the stations with malignant cells: station 7 only. That is N2a for now. If final pathology finds tumor at 4R, it becomes N2b.',
+      ],
       ['Two, because two N2 stations were sampled', 'Sampled is not involved. Only 7 is involved.'],
       [
         'It depends on how many nodes at station 7 contained tumor',
         'The count is of stations, not of nodes or passes.',
       ],
     ),
-    takeaway: 'Blood alone is not a negative node. Sample again until the node is represented.',
+    takeaway:
+      'A blood-only aspirate is nondiagnostic, not negative. Sample again, and judge the new sample on its own.',
   }),
   visit(elevenRi, {
     labFrom: 'hilar-interlobar',
@@ -401,7 +414,7 @@ export const capstoneLessons: Lesson[] = [
       'On-site cytology from 11Ri: malignant cells. So far: 4L lymphocytes only, 7 malignant cells, 4R lymphocytes only. What N category do today’s findings support?',
       [
         'N2a: one N2 station is involved, and 11Ri is N1',
-        'The category is the highest one involved, N2, and one involved N2 station is N2a. 11Ri is recorded as an involved N1 station; it does not add to the N2 count.',
+        'The category is the highest one involved, N2, and one involved N2 station is N2a. 11Ri is recorded as an involved N1 station; it does not add to the N2 count. The category is provisional: final cytopathology at 4L and 4R could still change it.',
       ],
       [
         'N2b: two stations contain tumor',

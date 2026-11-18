@@ -26,6 +26,18 @@ const CHEST_2024_CHECKED = {
   checkedBy:
     'Recommendation wording read 2026-11-14 on the CHEST guideline page; full text read 2026-09-23 (EBUS-PRE-REVIEW-05 packet) and not read again',
 } as const
+/**
+ * The BF-UC190F's direction of view. It is held in the `scope-view-angle` row's note, not in a
+ * row of its own, and the scope lesson prints it from here so the two cannot drift apart.
+ */
+export const BF_UC190F_VIEW_ANGLE = '20°'
+/** The two optics rows, read again on both product pages for the owner ruling of 2026-11-14. */
+const OLYMPUS_OPTICS_CHECKED = {
+  ...UNSIGNED,
+  checkedOn: '2026-11-18',
+  checkedBy:
+    'Olympus America product pages for the BF-UC180F and the BF-UC190F, Specs, read 2026-11-14 and again 2026-11-18',
+} as const
 /** The manufacturer's product pages, which print the specifications. */
 const OLYMPUS_CHECKED = {
   ...UNSIGNED,
@@ -273,8 +285,8 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
         locator: 'Product page, Specs: Direction of View (the BF-UC190F figure in the note)',
       },
     ],
-    note: 'The angle differs between scope models: the BF-UC190F looks 20° forward-oblique, with the same 80° field. The lesson teaches the consequence, which does not depend on the exact figure.',
-    ...OLYMPUS_CHECKED,
+    note: `The angle differs between scope models: the BF-UC190F looks ${BF_UC190F_VIEW_ANGLE} forward-oblique, with the same 80° field. The lesson names both models with their own figures (owner ruling of 2026-11-14) and teaches the consequence, which is larger at the steeper angle. The simulated lens uses the BF-UC180F figures.`,
+    ...OLYMPUS_OPTICS_CHECKED,
   },
   'scope-field-of-view': {
     label: 'Convex EBUS scope, field of view',
@@ -296,7 +308,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
       },
     ],
     note: 'The BF-UC190F has the same 80° field.',
-    ...OLYMPUS_CHECKED,
+    ...OLYMPUS_OPTICS_CHECKED,
   },
   'scope-tip-diameter': {
     label: 'Convex EBUS scope, distal end',

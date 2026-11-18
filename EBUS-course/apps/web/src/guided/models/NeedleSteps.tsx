@@ -16,32 +16,37 @@ import type { NeedleHandlePart } from './NeedleHandleView'
  * model does not allow is answered with the reason, not with a greyed-out control. The list
  * replaces ten event buttons ("Introduce resistance", "Change imaging plane") that happened to the
  * learner; here the learner's own hand makes each change.
+ *
+ * Owner ruling `ebus-needle-lab-model` (2026-11-14): the six steps stand. The stop tolerance and
+ * the number of movements are said to belong to this exercise, the lost tip is said to be
+ * something this lab makes happen so that it can be recognised, and the needle is advanced only
+ * with its tip in view. The stylet is not modelled; the lesson says so.
  */
 type StepId = (typeof MODEL_STEPS.needle)[number]
 const STEP_TEXT: Record<StepId, { title: string; how: string }> = {
   sheath: {
     title: 'Bring the sheath out and lock it',
-    how: 'Move the sheath adjuster to bring the end of the sheath out beyond the scope tip, then lock it.',
+    how: 'Move the sheath adjuster until the end of the sheath is seen beyond the scope tip, then lock it. The needle never leaves a sheath that is still inside the working channel.',
   },
   stop: {
     title: 'Set the needle stop',
-    how: 'On the ultrasound picture, read the depth along the needle path to the far side of the node. Set the stop to that depth.',
+    how: `The stop is a depth limit set from the size of the node and from what lies beyond it: here, a vessel. On the ultrasound picture, read the depth along the needle path to the far side of the node and set the stop to it. This lab accepts a stop up to ${NEEDLE_LAB.stopShortMm} mm short of the far side. That tolerance belongs to this drawn node; it is not a clinical threshold.`,
   },
   'in-node': {
     title: 'Advance the needle into the node',
-    how: 'Move the needle slider and watch the tip enter the node on the ultrasound picture.',
+    how: 'Move the needle slider and watch the tip cross the airway wall and enter the node on the ultrasound picture. Advance only while you can see the tip.',
   },
   'tip-recovered': {
     title: 'Lose the tip, then bring it back',
-    how: 'With the tip in the node, turn the scope until the tip leaves the image. Turn back until it returns before moving the needle.',
+    how: 'With the tip in the node, turn the scope until the tip leaves the image, so that you see what a lost tip looks like. On a patient this happens without your meaning it to. Hold the needle still and turn back until the tip returns before you move the needle again.',
   },
   agitate: {
     title: 'Move the needle within the node',
-    how: 'With the needle slider, draw the needle back toward the near side of the node and return it to the stop. Keep the tip inside the node.',
+    how: 'With the needle slider, draw the needle back toward the near side of the node and return it to the stop. Keep the tip inside the node and in the image. The count is the minimum for this exercise; it is not the number that makes a sample adequate.',
   },
   'protected-removal': {
     title: 'Retract the needle fully',
-    how: 'Bring the needle slider all the way back so the needle is inside its sheath, then remove the assembly.',
+    how: 'Bring the needle slider all the way back so the whole needle is inside its sheath, and only then remove the assembly. An exposed needle is never drawn back through the working channel.',
   },
 }
 const signed = (degrees: number) => (degrees > 0 ? '+' : '') + degrees + '°'

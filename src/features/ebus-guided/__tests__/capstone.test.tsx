@@ -111,7 +111,8 @@ describe('what the samples support', () => {
   })
 
   it('does not call blood alone a negative node', () => {
-    expect(correct('exam-4r-result').text).toMatch(/does not represent the node/)
+    expect(correct('exam-4r-result').text).toMatch(/blood-only aspirate is nondiagnostic/)
+    expect(correct('exam-4r-result').rationale).toMatch(/does not show that the node was sampled/)
     const wrong = unit('staging-exam-4r').question.choices.find((choice) =>
       choice.text.startsWith('4R is negative'),
     )!
@@ -169,7 +170,9 @@ describe('the record of the examination', () => {
       '4R',
       '11Ri',
     ])
-    expect(within(rows[2] as HTMLElement).getByText(/Blood only at first/)).toBeVisible()
+    expect(
+      within(rows[2] as HTMLElement).getByText(/First aspirate blood only: nondiagnostic/),
+    ).toBeVisible()
     expect(screen.getByText(CAPSTONE_CONCLUSION)).toBeVisible()
   })
 

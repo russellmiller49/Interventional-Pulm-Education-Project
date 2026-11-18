@@ -181,7 +181,9 @@ describe('each question against the labels on its image', () => {
     expect(keyed('review-sample-chs').text).toMatch(/central hilar structure/)
     expect(byId('review-sample-necrosis').image).toMatchObject({ slug: 'station-7-necrosis' })
     // The still has no Doppler on it, so the stem supposes the Doppler finding and says so.
-    expect(byId('review-sample-necrosis').question.prompt).toMatch(/Suppose Doppler shows no flow/)
+    expect(byId('review-sample-necrosis').question.prompt).toMatch(
+      /No Doppler is shown on this frame\. Suppose Doppler were then applied and showed no flow/,
+    )
   })
 
   it('does not call a sample of blood negative, or a suspicious node positive', () => {
