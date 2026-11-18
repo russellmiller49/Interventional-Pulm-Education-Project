@@ -200,7 +200,7 @@ describe('the needle lab (ebus-needle-lab-model)', () => {
   it('labels five movements as the exercise minimum, not as adequate sampling', () => {
     expect(unit.lab!.needleMovements).toBe(5)
     expect(text).toMatch(/asks for 5 movements within the node/)
-    expect(text).toMatch(/fewer than the at least 10 on each pass taught in the needle lesson/)
+    expect(text).toMatch(/fewer than the at least 10 on each pass taught earlier in this lesson/)
     expect(text).toMatch(/no count of movements makes a sample adequate/)
   })
 
