@@ -28,7 +28,11 @@ import {
   PlaybackAndMeasurementNote,
   foundationFigureStep,
 } from './FoundationTeaching'
-import { MechanismReadingEvidence, MechanismWorkedExample } from './VentilationPrerequisite'
+import {
+  MechanismReadingEvidence,
+  MechanismWorkedExample,
+  curriculumWorkedExampleText,
+} from './VentilationPrerequisite'
 import { ventilationSectionSpec } from '../../content/sectionSpecs'
 import flow from './task-flow.module.css'
 import styles from './ventilation-stage.module.css'
@@ -38,6 +42,13 @@ const KNOB_STATE_LABEL = {
   'not-this': 'Not this control',
   'no-knob': 'No control',
 } as const
+
+const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'] as const
+
+/** Everything a row of the one table says, for the section's deny list. */
+function grammarRowText(row: (typeof breathGrammarRows)[number]): string {
+  return [row.whatMoved, row.where.detail, ...row.shortlist].join(' ')
+}
 
 /** The id the page footer's source list carries, so the lesson can point at it. */
 export const VENTILATION_SOURCES_ID = 'mv-section-sources'
@@ -123,13 +134,16 @@ function GuideBlock({ guide, look }: { guide: VentilationStepGuide; look?: strin
 function GrammarTable({
   onlyHighlighted,
   highlighted,
+  held,
 }: {
   onlyHighlighted: boolean
   highlighted: ReadonlySet<string>
+  /** Rows that wait for the section's first answer. */
+  held?: ReadonlySet<string>
 }) {
-  const rows = onlyHighlighted
-    ? breathGrammarRows.filter((row) => highlighted.has(row.id))
-    : breathGrammarRows
+  const rows = (
+    onlyHighlighted ? breathGrammarRows.filter((row) => highlighted.has(row.id)) : breathGrammarRows
+  ).filter((row) => !held?.has(row.id))
   return (
     <div className={styles.grammarWrap}>
       <table className={styles.grammar}>
@@ -177,6 +191,13 @@ function Disclosure({
   )
 }
 
+/** Which of the section's questions the learner has answered or moved on from. */
+export interface VentilationAnswered {
+  readonly first: boolean
+  readonly second: boolean
+}
+const NOT_ANSWERED: VentilationAnswered = { first: false, second: false }
+
 /**
  * One lesson, in the same shape in every section, in the column beside the console.
  *
@@ -214,6 +235,7 @@ export function VentilationTeachingColumn({
   landmarkChooser = false,
   guideLook,
   breathMap,
+  answered = NOT_ANSWERED,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -233,6 +255,11 @@ export function VentilationTeachingColumn({
   readonly guideLook?: string
   /** The full breath map, leading the column on the breath-walk steps. */
   readonly breathMap?: ReactNode
+  /**
+   * Whether the learner has answered, or moved on from, the section's first question (its location
+   * question, or Part 1's prediction) and Part 2's. Text that would answer one of them waits for it.
+   */
+  readonly answered?: VentilationAnswered
 }) {
   const headingId = useId()
   const { unit } = lesson
@@ -251,6 +278,59 @@ export function VentilationTeachingColumn({
   const stopCards = landmarkChooser || stops.length === 1 ? stops : []
   const foundationFigure = foundation && !orientationStep && foundationFigureStep(step)
   const mechanismEvidence = !foundation && readingStep && !orientationStep
+  /*
+   * Closed before the commitment (author's ruling, 2026-11-12, "Close them before commitment"). A
+   * point to keep in mind that the section's own deny list refuses before the first answer — Section
+   * 7's "trapped gas" — waits for that answer; so does a shaping note that gives a question's keyed
+   * direction (Section 7's note on Part 2's cycle-off, Section 12's "shapes the start of the push").
+   *
+   * The same rule, since the author's ruling of 2026-11-15 ("conceal anything that answers the
+   * pending question"), for the rest of the column: the bedside "why", the worked example, a note on
+   * the strip and this section's own rows of the one table wait for the first answer when the
+   * section's deny list refuses them (Section 7's "can trap more gas when breaths arrive more
+   * frequently", "Increasing rate can leave even less time", "Fewer breaths give each expiration
+   * more time", "too little time to empty · … · a rate set too high"). And where the first question
+   * is a location question, the table marks no rows of this section until it is answered: the
+   * marks, like the breath map's lit stops, would point at the place being asked for (Section 12).
+   */
+  const refused = (text: string | undefined) =>
+    !answered.first &&
+    Boolean(text) &&
+    spec.precommitDenyPatterns.some((pattern) => pattern.test(text ?? ''))
+  const boundary = refused(unit.boundary) ? undefined : unit.boundary
+  const whyHeld = refused(unit.why)
+  const exampleText = foundation
+    ? [unit.example.situation, ...unit.example.reasoning, unit.example.conclusion].join(' ')
+    : curriculumWorkedExampleText(lesson)
+  const exampleHeld = exampleText !== null && refused(exampleText)
+  const heldKnobs = new Set(
+    VENTILATION_CONTROL_PANEL.knobs
+      .filter((knob) => refused(spec.knobStrip[knob.id].note))
+      .map((knob) => knob.id),
+  )
+  const heldRows = new Set(rows.filter((row) => refused(grammarRowText(row))).map((row) => row.id))
+  const locationPending =
+    !answered.first && lesson.steps.some((candidate) => candidate.interaction.kind === 'locate')
+  const marksHeld = locationPending || heldRows.size > 0
+  const marked = locationPending
+    ? new Set<string>()
+    : new Set([...highlighted].filter((id) => !heldRows.has(id)))
+  const shapingHeld =
+    spec.shapingNoteAfter === 'first-answer'
+      ? !answered.first
+      : spec.shapingNoteAfter === 'second-answer'
+        ? !answered.second
+        : false
+  const heldNotes = heldKnobs.size + (spec.shapingNote && shapingHeld ? 1 : 0)
+  const stripHeldLine =
+    heldNotes === 0
+      ? 'nothing here is held back.'
+      : heldKnobs.size === 0
+        ? 'its last note waits until you have answered the question it bears on.'
+        : heldNotes === 1
+          ? 'one of its notes waits until you have answered the question it bears on.'
+          : `${COUNT_WORDS[heldNotes]} of its notes wait until you have answered the questions they bear on.`
+  const workedExampleEmpty = exampleHeld && (foundation || readingStep)
   const boundaryShown = readingStep || reveal
   const liveView = !foundation && hasVentilationTeachingPanel(lesson.panelId)
 
@@ -294,7 +374,7 @@ export function VentilationTeachingColumn({
             </ol>
           </section>
         ) : null}
-        {reveal ? (
+        {reveal && !whyHeld ? (
           <section data-teaching-block="why">
             <h4>Why it matters at the bedside</h4>
             <p>{unit.why}</p>
@@ -327,9 +407,9 @@ export function VentilationTeachingColumn({
       {mechanismEvidence ? (
         <MechanismReadingEvidence lesson={lesson} device={state.deviceId} />
       ) : null}
-      {boundaryShown && unit.boundary ? (
+      {boundaryShown && boundary ? (
         <p className={flow.note} data-teaching-block="boundary">
-          <strong>Keep in mind:</strong> {unit.boundary}
+          <strong>Keep in mind:</strong> {boundary}
         </p>
       ) : null}
 
@@ -349,12 +429,12 @@ export function VentilationTeachingColumn({
         </Disclosure>
       ) : null}
 
-      {integration ? null : (
+      {integration || workedExampleEmpty ? null : (
         <Disclosure name="Worked example" id="worked-example">
           {!foundation && !readingStep ? (
             <MechanismReadingEvidence lesson={lesson} device={state.deviceId} />
           ) : null}
-          {foundation ? (
+          {exampleHeld ? null : foundation ? (
             <div data-worked-example>
               <p>{unit.example.situation}</p>
               <ol>
@@ -391,7 +471,7 @@ export function VentilationTeachingColumn({
             </ol>
           </section>
         ) : null}
-        {!reveal ? (
+        {!reveal && !whyHeld ? (
           <section data-teaching-block="why">
             <h4>Why it matters at the bedside</h4>
             <p>{unit.why}</p>
@@ -400,9 +480,12 @@ export function VentilationTeachingColumn({
         {rows.length > 0 ? (
           <section data-teaching-block="grammar">
             <h4>The one table: what moved → where on the breath → the shortlist</h4>
-            <GrammarTable onlyHighlighted={false} highlighted={highlighted} />
+            <GrammarTable onlyHighlighted={false} highlighted={marked} held={heldRows} />
             <p className={styles.quickNote}>
-              Compare every row against this patient’s own baseline. This section’s rows are marked.
+              Compare every row against this patient’s own baseline.{' '}
+              {marksHeld
+                ? 'This section’s rows are marked once you have answered its first question.'
+                : 'This section’s rows are marked.'}
             </p>
           </section>
         ) : null}
@@ -411,22 +494,28 @@ export function VentilationTeachingColumn({
           <p className={styles.kicker}>The five main settings</p>
           <p>
             This strip is the worked reading for both parts of this section. Open it before or after
-            trying the optional questions; nothing here is held back.
+            trying the optional questions; {stripHeldLine}
           </p>
           <p>{VENTILATION_CONTROL_PANEL.sentence}</p>
           <ul className={styles.strip}>
             {VENTILATION_CONTROL_PANEL.knobs.map((knob) => {
               const entry = spec.knobStrip[knob.id]
+              const noteHeld = heldKnobs.has(knob.id)
               return (
-                <li key={knob.id} data-knob={knob.id} data-knob-state={entry.state}>
+                <li
+                  key={knob.id}
+                  data-knob={knob.id}
+                  data-knob-state={entry.state}
+                  data-note-held={noteHeld || undefined}
+                >
                   <span className={styles.knobState}>{KNOB_STATE_LABEL[entry.state]}</span>
                   <strong>{knob.consoleLabel}</strong>
-                  <span>{entry.note}</span>
+                  {noteHeld ? null : <span>{entry.note}</span>}
                 </li>
               )
             })}
           </ul>
-          {spec.shapingNote ? <p>{spec.shapingNote}</p> : null}
+          {spec.shapingNote && !shapingHeld ? <p data-shaping-note>{spec.shapingNote}</p> : null}
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.shapingSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.monitoringSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.notSettingsSentence}</p>
@@ -450,9 +539,9 @@ export function VentilationTeachingColumn({
         ) : null}
       </Disclosure>
 
-      {boundaryShown || !unit.boundary ? null : (
+      {boundaryShown || !boundary ? null : (
         <Disclosure name="Keep in mind" id="model-limits">
-          <p data-teaching-block="boundary">{unit.boundary}</p>
+          <p data-teaching-block="boundary">{boundary}</p>
         </Disclosure>
       )}
 

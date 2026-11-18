@@ -18,12 +18,14 @@ import {
   type VentilationLearningUnit,
 } from './learningCurriculum'
 import {
-  ventilationExperimentByUnit,
+  ventilationExperimentForDevice,
   type LabGoal,
   type LabMetric,
   type LabQuestionKind,
   type LabRound,
 } from './learningExperiments'
+import { consoleControlTerm } from './consoleWording'
+import { defaultVentilatorDeviceId } from './deviceProfiles'
 import { ventilationReferenceMarker } from './referenceEvidence'
 import { ventilationSectionSpec, type VentilationSectionSpec } from './sectionSpecs'
 import {
@@ -33,6 +35,7 @@ import {
   type VentilationSettingSort,
 } from './stageItems'
 import { labMetricLabels } from '../engine/learningLab'
+import type { VentilatorDeviceId } from '../engine/types'
 import { ventilationTaskPresentation, type VentilationTaskPresentation } from './taskPresentation'
 
 /**
@@ -44,8 +47,11 @@ import { ventilationTaskPresentation, type VentilationTaskPresentation } from '.
  * step, the settings sort, between Explain and the transfer. Nothing here is authored: the steps are
  * built from the curriculum, the experiments, the section specs and the items.
  *
- * Titles visible before the prediction name the presentation, never the response: an experiment
- * round's own title ("Give expiration time back") is used only on its Explain step.
+ * Titles visible before the prediction name the presentation, never the response. The task list
+ * prints every step's title from the start, so a round's own title (used on its Explain step) and
+ * the generated action titles are held to the same rule (author's ruling, 2026-11-12, "Neutral
+ * titles"); where a generated action would answer the section's question, `neutralActTitles`
+ * replaces it.
  * MV-02 supersedes that legacy sequence for oxygenation-response: four freely available steps
  * around a worked comparison, one optional interpretation and a separate actual patient.
  */
@@ -179,8 +185,9 @@ const controlNames: Partial<Record<string, { name: string; unit: string }>> = {
   peepCmH2O: { name: 'PEEP', unit: 'cmH₂O' },
   ratePerMin: { name: 'the rate', unit: '/min' },
   triggerThreshold: { name: 'the flow trigger', unit: 'L/min' },
-  etsPercent: { name: 'the cycle-off (ETS)', unit: '%' },
-  pRampMs: { name: 'the rise time (P-ramp)', unit: 'ms' },
+  // The cycle-off threshold and the rise time are named per console: see `labGoalPhrase`.
+  etsPercent: { name: 'the cycle-off threshold', unit: '%' },
+  pRampMs: { name: 'the rise time', unit: 'ms' },
 }
 
 const interventionPhrases: Record<string, string> = {
@@ -197,15 +204,24 @@ function capitalize(text: string): string {
 
 /**
  * One goal in the learner's words, lower-case: "set the inspiratory flow to 60 L/min", "perform an
- * inspiratory hold". The step titles and the experiment checklist read the same phrasing.
+ * inspiratory hold". The step titles and the experiment checklist read the same phrasing. The
+ * cycle-off threshold and the rise time carry the selected console's own label after the clinical
+ * term ("set the cycle-off threshold (Insp term) to 50%").
  */
-export function labGoalPhrase(goal: LabGoal): string {
+export function labGoalPhrase(
+  goal: LabGoal,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
+): string {
   if (goal.type === 'control') {
     const control = controlNames[goal.key]
     // "26/min" and "50%" are written closed up, as the round copy writes them; "60 L/min" is not.
     const separator = control && (control.unit === '%' || control.unit === '/min') ? '' : ' '
+    const name =
+      goal.key === 'etsPercent' || goal.key === 'pRampMs'
+        ? `the ${consoleControlTerm(deviceId, goal.key)}`
+        : control?.name
     return control
-      ? `set ${control.name} to ${goal.value}${separator}${control.unit}`
+      ? `set ${name} to ${goal.value}${separator}${control.unit}`
       : `set ${goal.key} to ${goal.value}`
   }
   if (goal.type === 'mechanics') {
@@ -221,7 +237,10 @@ export function labGoalPhrase(goal: LabGoal): string {
 }
 
 /** "Narrow the airways, then perform an inspiratory hold" — the action, in the learner's words. */
-export function roundActionTitle(round: LabRound): string {
+export function roundActionTitle(
+  round: LabRound,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
+): string {
   const maneuver = roundManeuver(round)
   if (maneuver === 'pause')
     return round.goals.some((g) => g.type === 'inspect-inspiration')
@@ -230,9 +249,9 @@ export function roundActionTitle(round: LabRound): string {
   const phrases: string[] = []
   const holds: string[] = []
   for (const goal of round.goals) {
-    if (goal.type === 'hold') holds.push(labGoalPhrase(goal))
+    if (goal.type === 'hold') holds.push(labGoalPhrase(goal, deviceId))
     else if (goal.type === 'control' || goal.type === 'mechanics' || goal.type === 'intervention')
-      phrases.push(labGoalPhrase(goal))
+      phrases.push(labGoalPhrase(goal, deviceId))
   }
   const action = [...phrases, ...holds]
   if (action.length === 0) return 'Perform the maneuver'
@@ -241,6 +260,28 @@ export function roundActionTitle(round: LabRound): string {
     return `${capitalize(phrases.join(' and '))}, then ${holds.join(' and ')}`
   }
   return capitalize(`${action.slice(0, -1).join(', ')} and ${action.at(-1)}`)
+}
+
+/*
+ * Part 1's action, where the generated title would answer the section's first question. Every task
+ * title is in the task list from the start (author's ruling, 2026-11-12, "Neutral titles"):
+ *
+ * - Section 8 asks where on the breath the unanswered efforts live (the trigger); "Set the flow
+ *   trigger to 1.5 L/min" said so.
+ * - Section 11 asks where the extra breaths come from (the trigger); "Inspect the circuit and clear
+ *   the condensate" named the cause.
+ * - Section 12 asks where the discomfort lives (inspiration); "Set the rise time to 100 ms" named
+ *   the setting that acts there.
+ * - Section 13 asks what would best target the next step (ask the patient); "Assess the patient and
+ *   establish communication" was the answer.
+ *
+ * The step's instruction still says exactly what to do once the learner is on it.
+ */
+const neutralActTitles: Readonly<Record<string, string>> = {
+  'triggering-and-cycling': 'Change one setting and watch the efforts',
+  'waveform-reading-sequence': 'Find and correct the cause at the bedside',
+  'dyssynchrony-mechanisms': 'Change one setting and watch the patient',
+  'safety-reassessment-and-human-factors': 'Act at the bedside, then watch the patient',
 }
 
 function maneuverNote(maneuver: VentilationManeuver): string {
@@ -397,9 +438,12 @@ export function ventilationStageLessonErrors(lesson: VentilationStageLesson): re
   return errors
 }
 
-export function buildVentilationStageLesson(unitId: string): VentilationStageLesson {
+export function buildVentilationStageLesson(
+  unitId: string,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
+): VentilationStageLesson {
   const unit = ventilationUnitById.get(unitId)
-  const experiment = ventilationExperimentByUnit.get(unitId)
+  const experiment = ventilationExperimentForDevice(unitId, deviceId)
   if (!unit || !experiment) throw new Error(`Unknown ventilation unit ${unitId}`)
   const spec = ventilationSectionSpec(unitId)
   const [first, second] = experiment.rounds
@@ -462,7 +506,11 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       rationale:
         'Committing to an answer before you watch is what turns watching into learning: the response then confirms or corrects something you actually thought.',
       actionLabel: 'Commit my prediction',
-      interaction: { kind: 'prediction', round: 0, item: ventilationRoundItem(unitId, 0) },
+      interaction: {
+        kind: 'prediction',
+        round: 0,
+        item: ventilationRoundItem(unitId, 0, deviceId),
+      },
       lookIn:
         unitId === 'breathing-with-support'
           ? {
@@ -478,7 +526,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     },
     {
       phase: 'act',
-      title: roundActionTitle(first),
+      title: neutralActTitles[unitId] ?? roundActionTitle(first, deviceId),
       instruction: foundation
         ? `${first.task} ${guideFor(first, true).note}`
         : actInstruction(first),
@@ -567,7 +615,11 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       rationale:
         'The same principle in a different situation. If the first answer was memorised rather than understood, this is where it shows.',
       actionLabel: 'Commit my prediction',
-      interaction: { kind: 'prediction', round: 1, item: ventilationRoundItem(unitId, 1) },
+      interaction: {
+        kind: 'prediction',
+        round: 1,
+        item: ventilationRoundItem(unitId, 1, deviceId),
+      },
       lookIn:
         unitId === 'breathing-with-support'
           ? {
@@ -583,7 +635,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     },
     {
       phase: 'transfer',
-      title: `${roundActionTitle(second)}, and watch`,
+      title: `${roundActionTitle(second, deviceId)}, and watch`,
       instruction: `${second.task}${intervalSentence(second)} ${foundation ? guideFor(second, true).note : maneuverNote(roundManeuver(second))}`,
       actionLabel:
         roundManeuver(second) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
@@ -749,11 +801,19 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
 }
 
 const lessons = new Map<string, VentilationStageLesson>()
-export function ventilationStageLesson(unitId: string): VentilationStageLesson {
-  let lesson = lessons.get(unitId)
+/**
+ * One section as a lesson, in the words of one console. Steps, ids and gates are the same on every
+ * console; only the names of the cycle-off threshold and the rise time follow the console.
+ */
+export function ventilationStageLesson(
+  unitId: string,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
+): VentilationStageLesson {
+  const key = `${deviceId}:${unitId}`
+  let lesson = lessons.get(key)
   if (!lesson) {
-    lesson = buildVentilationStageLesson(unitId)
-    lessons.set(unitId, lesson)
+    lesson = buildVentilationStageLesson(unitId, deviceId)
+    lessons.set(key, lesson)
   }
   return lesson
 }

@@ -5,7 +5,9 @@ import {
 
 import { breathStopIds, type BreathStopId } from './breathSpine'
 import { ventilationUnitById } from './learningCurriculum'
-import { ventilationExperimentByUnit, type LabRound } from './learningExperiments'
+import { defaultVentilatorDeviceId } from './deviceProfiles'
+import { ventilationExperimentsForDevice, type LabRound } from './learningExperiments'
+import { ventilatorDeviceIds, type VentilatorDeviceId } from '../engine/types'
 
 /**
  * The stage's answerable items, derived from the experiment rounds and validated at import.
@@ -50,16 +52,35 @@ function roundItem(unitId: string, roundIndex: 0 | 1, round: LabRound): Clinical
   return clinicalLearningItemSchema.parse(item)
 }
 
-const roundItems = new Map<string, ClinicalLearningItem>()
-for (const [unitId, experiment] of ventilationExperimentByUnit) {
-  experiment.rounds.forEach((round, index) => {
-    const roundIndex = index as 0 | 1
-    roundItems.set(ventilationRoundItemId(unitId, roundIndex), roundItem(unitId, roundIndex, round))
-  })
+/*
+ * One set of items per console: a stem names the cycle-off threshold and the rise time in the
+ * selected console's words (`consoleWording.ts`). Item ids do not change with the console. Every
+ * console's set is built, and so linted, at import.
+ */
+const roundItemsByDevice = new Map<VentilatorDeviceId, Map<string, ClinicalLearningItem>>()
+for (const deviceId of ventilatorDeviceIds) {
+  const items = new Map<string, ClinicalLearningItem>()
+  for (const experiment of ventilationExperimentsForDevice(deviceId)) {
+    experiment.rounds.forEach((round, index) => {
+      const roundIndex = index as 0 | 1
+      items.set(
+        ventilationRoundItemId(experiment.unitId, roundIndex),
+        roundItem(experiment.unitId, roundIndex, round),
+      )
+    })
+  }
+  roundItemsByDevice.set(deviceId, items)
 }
+const roundItems = roundItemsByDevice.get(defaultVentilatorDeviceId)!
 
-export function ventilationRoundItem(unitId: string, roundIndex: 0 | 1): ClinicalLearningItem {
-  const item = roundItems.get(ventilationRoundItemId(unitId, roundIndex))
+export function ventilationRoundItem(
+  unitId: string,
+  roundIndex: 0 | 1,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
+): ClinicalLearningItem {
+  const item = (roundItemsByDevice.get(deviceId) ?? roundItems).get(
+    ventilationRoundItemId(unitId, roundIndex),
+  )
   if (!item) throw new Error(`No prediction item for ${unitId} round ${roundIndex + 1}`)
   return item
 }

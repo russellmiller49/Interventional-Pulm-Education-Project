@@ -97,7 +97,7 @@ function holdGoalState(
 }
 
 function goalStatus(session: LabSession, goal: LabGoal): ExperimentGoalStatus {
-  const label = labGoalPhrase(goal)
+  const label = labGoalPhrase(goal, session.device)
   if (goal.type === 'hold') return { goal, label, ...holdGoalState(session, goal) }
   if (labGoalMet(goal, session)) return { goal, label, state: 'done' }
   if (goal.type === 'intervention') {

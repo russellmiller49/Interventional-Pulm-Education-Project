@@ -111,5 +111,8 @@ None. "wrong" was removed from one generated rationale; no gate was changed.
 
 - Reworded items awaiting review: all changed round strings in Sections 1–5.
 - Open E2 tickets: MV-L1, MV-L2.
+- 2026-11-14: MV-L2 ruled "Neutral titles" by the author on 2026-11-12 and built on branch
+  `claude/mv-titles-consoles-panel` (Section 3 "What the FiO₂ setting changes", Section 4 "Peak and
+  plateau after a resistance change", Section 5 "A stiffer lung on volume control").
 - Remaining surfaces: Sections 6–14 (the same pass), the Practice and Applications copy.
 - PR: not opened.

@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import type { Route } from 'next'
-import { ArrowRight, BookOpenCheck } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, FlaskConical } from 'lucide-react'
 
 import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
@@ -26,6 +26,10 @@ import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgress'
 import { readDevicePreference, saveDevicePreference } from './stage/useVentilationLabSession'
 import type { VentilatorDeviceId } from '../engine/types'
+import {
+  MECHANICAL_VENTILATION_LAB_HREF,
+  MECHANICAL_VENTILATION_LAB_SUMMARY,
+} from '../content/ventilationLab'
 import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleFrame'
 import styles from './mechanical-ventilation-hub.module.css'
 
@@ -159,6 +163,25 @@ export function MechanicalVentilationPracticePicker({
             </select>
           </div>
         </header>
+
+        {/*
+          The open lab (author's ruling, 2026-11-15, "Link the lab from Practice"): free exploration
+          on the full console, and the one place the old lung panel is kept.
+        */}
+        <section className={styles.section} aria-labelledby="mv-practice-lab" data-practice-lab>
+          <h2 id="mv-practice-lab">Ventilator lab</h2>
+          <p>{MECHANICAL_VENTILATION_LAB_SUMMARY}</p>
+          <div className={styles.chipRow}>
+            <Link
+              className={styles.chip}
+              data-kind="lab"
+              href={MECHANICAL_VENTILATION_LAB_HREF as Route}
+            >
+              <FlaskConical aria-hidden="true" />
+              Open the ventilator lab
+            </Link>
+          </div>
+        </section>
 
         {groups
           .filter((group) => group.cases.length > 0)
