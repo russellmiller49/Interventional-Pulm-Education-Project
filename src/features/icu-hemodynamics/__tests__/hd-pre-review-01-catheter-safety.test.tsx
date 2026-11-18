@@ -438,19 +438,22 @@ describe('the pulmonary-artery-return check belongs to one occlusion (L6-05)', (
 describe('the capstone screen (L9-01, L9-02)', () => {
   const capstone = capstoneState(808)
 
-  it('opens on the authored false wedge, with the balloon down', () => {
+  // Owner ruling hd-r1-false-wedge-fault (2026-11-14): the tip fault is a spontaneous wedge, which
+  // is where the tip is, not a signal artifact.
+  it('opens on a spontaneous wedge: the tip wedged with the balloon down', () => {
     expect(capstone.caseId).toBe('HD-08')
-    expect(capstone.measurementSystem.artifact).toBe('false-wedge')
+    expect(capstone.measurementSystem.artifact).toBe('none')
     expect(capstone.catheter.position).toBe('wedge')
     expect(capstone.catheter.balloonInflated).toBe(false)
   })
 
   it('says what the catheter’s state calls for, as the action to take', () => {
     const notice = catheterSimulationNotice(capstone)
-    expect(notice).toMatch(/the tip sits too far out with the balloon down/i)
-    expect(notice).toMatch(/withdraw until a clean pulmonary-artery tracing returns/i)
-    expect(notice).toMatch(/do not flush until it does/i)
-    expect(notice).toMatch(/its displayed value is not an occlusion pressure/)
+    expect(notice).toMatch(/Suspected spontaneous wedge: a wedge tracing with the balloon down/)
+    expect(notice).toMatch(/The tip may be occluding a distal branch/)
+    expect(notice).toMatch(/withdraw until the pulmonary-artery tracing returns/i)
+    expect(notice).toMatch(/do not flush or inflate/i)
+    expect(notice).toMatch(/Do not read the value as a PAWP/)
     // It is the notice, not an invented device alarm: the alarm bar stays quiet (asserted below).
     expect(notice).not.toMatch(/alarm/i)
   })
@@ -460,7 +463,7 @@ describe('the capstone screen (L9-01, L9-02)', () => {
     const readout = screen.getByRole('group', { name: 'Current PAC pressure' })
     expect(readout).toHaveTextContent(/PAC · distal/)
     expect(readout).toHaveTextContent(/balloon down/)
-    expect(readout).toHaveTextContent(/not a validated occlusion/)
+    expect(readout).toHaveTextContent(/suspected spontaneous wedge · not a validated PAWP/)
     // The claim the report caught: an occlusion mean printed over a balloon that is down.
     expect(readout).not.toHaveTextContent(/live occlusion mean/)
     expect(document.querySelector('[data-simulation-safety-notice]')?.textContent).toBe(
@@ -482,7 +485,9 @@ describe('the capstone screen (L9-01, L9-02)', () => {
   it('puts the tip before the flush in the step that says what order to work in', () => {
     const lesson = hemodynamicsStageLesson('pac-signal-validation')
     const act = lesson.steps[2]
-    expect(act.instruction).toMatch(/blocked while the tip sits in an occluding position/)
+    expect(act.instruction).toMatch(
+      /a suspected spontaneous wedge, and a flush on that lumen is blocked/,
+    )
     expect(act.instruction.indexOf('Then the tip')).toBeLessThan(
       act.instruction.indexOf('flush, read, repair'),
     )

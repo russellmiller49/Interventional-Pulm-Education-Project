@@ -13,10 +13,13 @@ import {
   calculateDerivedHemodynamics,
   faultsWithStoredWedge,
   pressureSignalFaults,
+  SPONTANEOUS_WEDGE_FAULT,
+  UNNAMED_WEDGE_FAULT,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type InterpretationValue,
 } from '../engine'
+import { isSpontaneousWedge } from '../engine/catheterSafety'
 import {
   physiologicalEpisodeWords,
   storedWedgeProvenance,
@@ -28,6 +31,11 @@ interface FormulaDrawerProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
   observedInputsOnly?: boolean
+  /**
+   * False where the case has not yet let the learner name what the tip is reading (Practice, before
+   * the model is revealed): the wedge is still withheld, without the reason giving the answer.
+   */
+  nameCatheterFault?: boolean
 }
 
 function DerivedValue({
@@ -67,7 +75,12 @@ function DerivedValue({
   )
 }
 
-export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: FormulaDrawerProps) {
+export function FormulaDrawer({
+  state,
+  dispatch,
+  observedInputsOnly = false,
+  nameCatheterFault = true,
+}: FormulaDrawerProps) {
   const derivedReviewComplete = state.signalValidationChecks.includes('derived-reviewed')
   /*
    * HD-PRE-REVIEW-02 (report L7-06, section E). A derived value is only as current as the oldest
@@ -90,7 +103,12 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
    * The wedge in use is a stored number, so it answers to the signal it was read from. Every other
    * pressure is read now and answers to the line as it stands.
    */
-  const liveFaults = pressureSignalFaults(state.measurementSystem)
+  const liveFaults = isSpontaneousWedge(state)
+    ? [
+        ...pressureSignalFaults(state.measurementSystem),
+        nameCatheterFault ? SPONTANEOUS_WEDGE_FAULT : UNNAMED_WEDGE_FAULT,
+      ]
+    : pressureSignalFaults(state.measurementSystem)
   const storedWedgeFaults = storedWedge?.record?.signalFaults
   const signalFaults =
     observedInputsOnly && storedWedgeFaults

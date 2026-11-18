@@ -176,8 +176,10 @@ describe('eight versioned management cases', () => {
     expect(tamponade.parameters.pericardialPressureMmHg).toBeGreaterThan(10)
 
     const artifact = createInitialHemodynamicState(hemodynamicCaseById.get('HD-08')!)
-    expect(artifact.measurementSystem.artifact).toBe('false-wedge')
+    // The tip fault is a spontaneous wedge: a position, with the balloon down, not a signal artifact.
+    expect(artifact.measurementSystem.artifact).toBe('none')
     expect(artifact.catheter.position).toBe('wedge')
+    expect(artifact.catheter.balloonInflated).toBe(false)
   })
 
   it('keeps related cases mechanistically distinct and uses defensible scenario endpoints', () => {

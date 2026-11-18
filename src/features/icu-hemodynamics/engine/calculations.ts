@@ -211,6 +211,28 @@ export function pressureSignalFaults(
   return faults.filter((fault): fault is DerivedSignalFault => fault !== null)
 }
 
+/**
+ * The fault a spontaneous wedge carries: the tracing looks like an occlusion pressure and is not a
+ * validated one. A fault of position, so it is not part of `pressureSignalFaults`, which describes
+ * the line; the caller knows where the tip is and whether the balloon is up.
+ */
+export const SPONTANEOUS_WEDGE_FAULT: DerivedSignalFault = {
+  id: 'spontaneous-wedge',
+  label: 'suspected spontaneous wedge',
+  reason:
+    'A wedge tracing has appeared with the balloon down: a suspected spontaneous wedge, with the tip occluding a distal branch. Its value is not a validated PAWP, so anything calculated from the wedge is withheld until the catheter is withdrawn, the pulmonary-artery tracing is confirmed and a wedge is taken properly.',
+  inputIds: [PAWP_INPUT_ID],
+}
+
+/** The same fault where the case has not yet let the learner name what the tip is reading. */
+export const UNNAMED_WEDGE_FAULT: DerivedSignalFault = {
+  id: 'spontaneous-wedge',
+  label: 'distal tracing not validated',
+  reason:
+    'The distal tracing has not been validated as a wedge pressure, so anything calculated from the wedge is withheld.',
+  inputIds: [PAWP_INPUT_ID],
+}
+
 /** The faults a wedge read off this system now would carry for as long as it stays stored. */
 export function wedgeReadingFaults(system: MeasurementSystemState): readonly DerivedSignalFault[] {
   return pressureSignalFaults(system).filter((fault) => fault.inputIds.includes(PAWP_INPUT_ID))

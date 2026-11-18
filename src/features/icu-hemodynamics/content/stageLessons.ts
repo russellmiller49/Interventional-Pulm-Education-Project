@@ -1121,7 +1121,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       // with no stated reason (report L9-02, Figure 38). Level and zero still come first, as the
       // section's control strip says; the flush now follows the move that unblocks it.
       instruction:
-        'The line first, as far as it goes: level and zero. Then the tip, because a flush on the distal lumen is blocked while the tip sits in an occluding position — bring the balloon down and the tracing back to a confirmed artery. Then finish the line: flush, read, repair. Then the series: reviewed curves, a technical reason for every exclusion.',
+        'The line first, as far as it goes: level and zero. Then the tip: the distal tracing looks like a wedge with the balloon down, a suspected spontaneous wedge, and a flush on that lumen is blocked. Do not flush or inflate; confirm the balloon is down, withdraw until the pulmonary-artery tracing returns, and confirm it. Then finish the line: flush, read, repair. Then the series: reviewed curves, a technical reason for every exclusion.',
       lookIn: {
         pane: 'simulator',
         landmark:

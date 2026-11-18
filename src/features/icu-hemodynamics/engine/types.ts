@@ -94,6 +94,12 @@ export interface CatheterState {
   storedAtEndExpiration: boolean
   forcedSafetyRecovery: boolean
   /**
+   * True while the tip sits where a case opened it: migrated into a distal branch and occluding it
+   * with the balloon down (HD-08). A teaching jump to the wedge position does not set it, so the
+   * normal wedge example is never read as this fault.
+   */
+  spontaneousWedge?: boolean
+  /**
    * Where the reading cursor sits on the captured occlusion trace, who put it there, and what the
    * trace says at that point (HD-PRE-REVIEW-02, report L6-02). `wedgeCursorTime` is kept for the
    * existing consumers and always equals `wedgeCursor.time`.

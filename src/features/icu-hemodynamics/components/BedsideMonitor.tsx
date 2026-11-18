@@ -18,7 +18,7 @@ import {
   referenceComparisonAxis,
   type PressureAxis,
 } from '../engine'
-import { catheterSimulationNotice } from '../engine/catheterSafety'
+import { catheterSimulationNotice, isSpontaneousWedge } from '../engine/catheterSafety'
 import {
   physiologicalEpisodeWords,
   storedWedgeProvenance,
@@ -266,6 +266,8 @@ export function BedsideMonitor({
   const alarmsOnThisChannel = activeAlarms.filter((alarm) => !alarmsOnOtherChannel.includes(alarm))
   const cvpScaleMaximum = lowPressureScaleMaximum(measurements.rapMmHg + 10)
   const falseWedge = state.measurementSystem.artifact === 'false-wedge'
+  // A case that opens on a migrated tip: a wedge tracing with the balloon down is not a measurement.
+  const spontaneousWedge = isSpontaneousWedge(state)
   // What the simulation itself is restricting, named as a simulation notice rather than smuggled
   // into the device alarm bar (report L9-02).
   const simulationNotice = catheterSimulationNotice(state)
@@ -306,7 +308,9 @@ export function BedsideMonitor({
               // engine deliberately draws this channel from the pulmonary-artery waveform, because
               // retained pulsatility is what an incomplete occlusion looks like — so naming it
               // PAWP asserted the one thing the tracing denies (report L9-01).
-              label: falseWedge ? 'PAC distal' : 'PAWP',
+              // A spontaneous wedge is drawn as the wedge it looks like, and named for the lumen,
+              // because nothing has validated it as an occlusion pressure.
+              label: falseWedge || spontaneousWedge ? 'PAC distal' : 'PAWP',
               minimum: 0,
               maximum: wedgeScaleMaximum,
               color: '#ffd166',
@@ -470,7 +474,7 @@ export function BedsideMonitor({
                   ? `last beat · mPAP ${value(pacTraceMetrics.mean)}, that beat’s mean`
                   : `model mPAP ${value(measurements.meanPapMmHg)}`,
               }
-            : falseWedge
+            : falseWedge && !spontaneousWedge
               ? {
                   label: 'PAC · distal',
                   value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
@@ -482,17 +486,24 @@ export function BedsideMonitor({
                     state.catheter.balloonInflated ? 'up' : 'down'
                   } · not a validated occlusion · mmHg`,
                 }
-              : {
-                  label: 'PAC · PAWP',
-                  value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
-                  // The last displayed beat, wherever in the breath it fell — not the stored,
-                  // end-expiratory value (report L6-03).
-                  detail: `${
-                    state.catheter.balloonInflated
-                      ? 'balloon occlusion'
-                      : 'occluded branch, balloon down'
-                  } · live mean, last beat, any breath phase · mmHg`,
-                }
+              : spontaneousWedge
+                ? {
+                    label: 'PAC · distal',
+                    value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                    detail:
+                      'wedge tracing · balloon down · suspected spontaneous wedge · not a validated PAWP · mmHg',
+                  }
+                : {
+                    label: 'PAC · PAWP',
+                    value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                    // The last displayed beat, wherever in the breath it fell — not the stored,
+                    // end-expiratory value (report L6-03).
+                    detail: `${
+                      state.catheter.balloonInflated
+                        ? 'balloon occlusion'
+                        : 'occluded branch, balloon down'
+                    } · live mean, last beat, any breath phase · mmHg`,
+                  }
 
   if (focus !== 'all') {
     const arterial = focus === 'arterial'
@@ -812,9 +823,14 @@ export function BedsideMonitor({
                 : state.catheter.position === 'wedge'
                   ? // "A live trace is visible" said nothing about whether that trace is an
                     // occlusion pressure. Under the false-wedge artifact it is not (report L9-01).
-                    falseWedge
-                    ? 'nothing stored · the distal trace is not a valid occlusion'
-                    : 'live occlusion trace visible · not stored'
+                    // In Practice the chamber is the learner's to name, so the reason waits.
+                    withheld && (spontaneousWedge || falseWedge)
+                    ? 'nothing stored'
+                    : spontaneousWedge
+                      ? 'nothing stored · a wedge tracing with the balloon down is not a validated PAWP'
+                      : falseWedge
+                        ? 'nothing stored · the distal trace is not a valid occlusion'
+                        : 'live occlusion trace visible · not stored'
                   : 'not captured'}
             </small>
           </div>

@@ -332,7 +332,7 @@ export function unlevelledDerivedState(seed = 510): HemodynamicSimulationState {
   )
 }
 
-/** The capstone: HD-08 as authored — a tip that reads a false wedge on a line that is high, unzeroed and ringing. */
+/** The capstone: HD-08 as authored — a spontaneous wedge, balloon down, on a line that is high, unzeroed and ringing. */
 export function capstoneState(seed = 808): HemodynamicSimulationState {
   return createInitialHemodynamicState(capstoneCase, 'learn', seed)
 }

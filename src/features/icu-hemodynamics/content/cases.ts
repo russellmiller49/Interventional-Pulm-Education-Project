@@ -261,7 +261,7 @@ const repositionCatheter = intervention({
   shortLabel: 'Restore PA position',
   category: 'assessment',
   description:
-    'Corrects wall contact or false-wedge morphology before interpreting PAWP or shooting CO.',
+    'Returns a tip that has wedged spontaneously, or is against the wall, to a confirmed PA position before a wedge is taken or a cardiac output is measured.',
   response:
     'A pulsatile PA waveform returns; repeat measurements only after position confirmation.',
   onsetSeconds: 1,
@@ -704,15 +704,16 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
   },
   {
     id: 'HD-08',
-    version: '1.0.0',
+    version: '1.1.0',
     station: 'signal-validation',
     title: 'The numbers do not fit the patient',
-    shortTitle: 'Artifacts and false wedge',
+    shortTitle: 'Artifacts and a spontaneous wedge',
     minutes: 12,
     presentation:
       'The monitor shows internally inconsistent pressures while bedside perfusion appears unchanged. The last cardiac outputs were reported as disagreeing with each other; their curves are not available in this case, so any cardiac output here has to be acquired again.',
     learningObjectives: [
-      'Recognize hydrostatic, damping, catheter-position, and injectate artifacts.',
+      'Recognize hydrostatic and damping faults on the line, and a wedge tracing that appears with the balloon down.',
+      'Treat a wedge tracing with the balloon down as a suspected spontaneous wedge: do not read it as a PAWP; do not flush; do not inflate. Withdraw until the pulmonary-artery tracing returns, and confirm it before another wedge.',
       'Restore the measurement chain before changing management.',
     ],
     initialParameters: {
@@ -724,7 +725,10 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       zeroed: false,
       transducerLevelCm: 10,
       dampingRatio: 0.28,
-      artifact: 'false-wedge',
+      // Owner ruling hd-r1-false-wedge-fault (2026-11-14): the tip fault is a spontaneous wedge, a tip
+      // that occludes a distal branch with the balloon down. That is the catheter's position below,
+      // not a signal artifact; the line keeps its own three faults (level, zero, response).
+      artifact: 'none',
       noiseAmplitudeMmHg: 0.8,
     },
     initialCatheterPosition: 'wedge',
@@ -758,7 +762,9 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Internal inconsistency is a signal-validation problem until proven otherwise. Inspect level, zero, dynamic response, catheter position, and curve technique.',
     debrief: [
       'Hydrostatic error changes all displayed invasive pressures.',
-      'Reject a false wedge and a poor thermodilution curve; do not average them in.',
+      'A wedge tracing with the balloon down is a suspected spontaneous wedge: the tip has migrated and may be occluding a distal branch. Do not read the value as a PAWP; do not flush; do not inflate. Confirm the balloon is fully deflated, withdraw until the pulmonary-artery tracing returns, and confirm it before another wedge.',
+      'It is not an incomplete balloon occlusion, which keeps pulmonary-artery pulsatility with the balloon up; not wall contact, which damps or flattens the tracing without giving it a wedge shape; and not an overdamped line, which blunts systolic and diastolic on every tracing from that line and shows on the fast-flush test.',
+      'Reject a poor thermodilution curve; do not average it in.',
     ],
     sourceIds: [...sharedSources, 'monitor-workflow-supplied'],
     safetyCriticalErrorIds: [],

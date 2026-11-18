@@ -847,6 +847,9 @@ export function createInitialHemodynamicState(
       storedWedgeMmHg: null,
       storedAtEndExpiration: false,
       forcedSafetyRecovery: false,
+      // A case that opens with the tip in the wedge position and the balloon down opens on a tip
+      // that has migrated there by itself.
+      spontaneousWedge: position === 'wedge',
       wedgeCursor: null,
       storedWedge: null,
       wedgeEpisodeCount: 0,

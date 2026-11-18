@@ -88,7 +88,12 @@ export function HemodynamicNativeWorkspace({
           {showDerived ? (
             <details>
               <summary>Calculated results and source validity</summary>
-              <FormulaDrawer state={state} dispatch={dispatch} observedInputsOnly />
+              <FormulaDrawer
+                state={state}
+                dispatch={dispatch}
+                observedInputsOnly
+                nameCatheterFault={revealModel}
+              />
             </details>
           ) : null}
         </div>
