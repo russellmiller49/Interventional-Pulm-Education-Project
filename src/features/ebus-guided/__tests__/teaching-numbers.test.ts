@@ -1,8 +1,9 @@
 import { teachingNumberErrors } from '@/features/learning-module/numbers/teachingNumbers'
 
-import { CONTENT_LESSONS } from '../content/curriculum'
+import { CONTENT_LESSONS, LESSONS } from '../content/curriculum'
 import { FEATURE_TABS } from '../content/node-features'
 import { SOURCES } from '../content/sources'
+import { activitiesForLesson } from '../content/stage'
 import { EBUS_NUMBERS } from '../content/teachingNumbers'
 
 // Numbers and boundary notes belong to content units; five units now sit inside another lesson.
@@ -180,36 +181,74 @@ describe('EBUS Guided teaching numbers', () => {
     expect(key.text).not.toMatch(/team|protocol|escalat/i)
   })
 
-  // The owner's ruling of 2026-11-14 on the bleeding and desaturation first moves.
-  describe('bleeding and desaturation after the owner ruling of 2026-11-14', () => {
-    const recovery = lesson('complications-recovery')
+  /*
+   * Bleeding and desaturation: the owner's rulings of 2026-11-14 (`ebus-bleeding-sequence-source`)
+   * and of 2026-11-15 (`r2-558-approve`, `r2-558-beyond`, `r2-558-split`).
+   */
+  describe('bleeding and desaturation after the owner rulings of 2026-11-14 and 2026-11-15', () => {
+    const bleeding = lesson('complications-recovery')
+    const desaturation = lesson('desaturation-response')
+    const host = LESSONS.find((entry) => entry.id === 'complications-recovery')!
+    const flow = activitiesForLesson(host)
+    const said = (unit: typeof bleeding) =>
+      [
+        ...unit.paragraphs,
+        ...unit.checklist,
+        ...unit.takeaways,
+        unit.worked.context,
+        unit.worked.reasoning,
+        unit.sequence!.prompt,
+        ...unit.sequence!.steps.map((step) => step.text),
+        unit.sequence!.explanation,
+        ...[unit.question, unit.observation, unit.transfer].flatMap((item) => [
+          item.prompt,
+          ...item.choices.flatMap((choice) => [choice.text, choice.rationale]),
+        ]),
+      ].join(' ')
     const text = copy('complications-recovery')
-    const steps = recovery.sequence!.steps.map((step) => step.text)
-    const everything = [
-      text,
-      ...recovery.checklist,
-      ...recovery.takeaways,
-      recovery.worked.context,
-      recovery.worked.reasoning,
-      recovery.sequence!.prompt,
-      ...steps,
-      recovery.sequence!.explanation,
-      ...[recovery.question, recovery.observation, recovery.transfer].flatMap((item) => [
-        item.prompt,
-        ...item.choices.flatMap((choice) => [choice.text, choice.rationale]),
-      ]),
-    ].join(' ')
-    const keyOf = (item: typeof recovery.question) => item.choices.find((choice) => choice.correct)!
+    const breath = copy('desaturation-response')
+    const everything = said(bleeding) + ' ' + said(desaturation)
+    const keyOf = (item: typeof bleeding.question) => item.choices.find((choice) => choice.correct)!
+
+    it('gives bleeding and desaturation a screen, a task and a decision each (r2-558-split)', () => {
+      expect(host.parts?.map((unit) => unit.id)).toEqual([
+        'complications-recovery',
+        'desaturation-response',
+      ])
+      expect(
+        flow.map((step) => [step.lessonId, step.kind, step.interaction, step.questions]),
+      ).toEqual([
+        ['complications-recovery', 'prediction', 'questions', ['question']],
+        ['complications-recovery', 'briefing', 'read', []],
+        ['complications-recovery', 'application', 'sequence', ['observation']],
+        ['desaturation-response', 'briefing', 'read', []],
+        ['desaturation-response', 'application', 'sequence', ['question']],
+        ['complications-recovery', 'transfer', 'questions', ['transfer']],
+      ])
+      // The bleeding screen holds no desaturation teaching, and the other way round.
+      expect(text).not.toMatch(/A falling saturation/)
+      expect(breath).not.toMatch(/puncture site|wedged|cold saline/i)
+      // One lesson in the course map, as before: marks and navigation count lessons, not units.
+      expect(LESSONS).toHaveLength(23)
+    })
 
     it('retracts the needle first and never says the needle stays in', () => {
       expect(text).toMatch(/stop sampling and retract the needle completely into its sheath/)
-      expect(steps[0]).toBe('Stop sampling and retract the needle completely into its sheath')
-      expect(recovery.checklist[0]).toMatch(/retract the needle completely into its sheath/)
+      expect(bleeding.sequence!.steps[0].text).toBe(
+        'Stop sampling and retract the needle completely into its sheath',
+      )
+      expect(bleeding.checklist[0]).toMatch(/retract the needle completely into its sheath/)
+      expect(keyOf(bleeding.question).text).toBe(
+        'Stop sampling and retract the needle completely into its sheath',
+      )
       expect(everything).not.toMatch(/needle in[,;]/i)
       expect(everything).not.toMatch(/scope stays/i)
-      // Leaving the needle out is offered only as a wrong answer.
-      const left = recovery.question.choices.find((choice) => /Leave the needle/.test(choice.text))!
-      expect(left.correct).toBeFalsy()
+    })
+
+    it('takes the needle assembly out for suction only after complete retraction (r2-558-beyond 1)', () => {
+      expect(text).toMatch(
+        /take the needle assembly out of the working channel, but only once the needle is completely retracted and locked, and handled as its instructions require/,
+      )
     })
 
     it('keeps the scope at the site conditionally, and limits suction', () => {
@@ -219,47 +258,62 @@ describe('EBUS Guided teaching numbers', () => {
       expect(text).toMatch(/suction can pull a forming clot off the site/)
     })
 
-    it('offers the local measures as choices, not as a fixed sequence', () => {
+    it('offers the local measures as options that depend on the bleeding and the patient (r2-558-approve 4)', () => {
+      expect(text).toMatch(
+        /depends on how severe the bleeding is, where it is, the oxygenation and how the patient is/,
+      )
       expect(text).toMatch(/These are options, not a sequence/)
-      expect(recovery.sequence!.explanation).toMatch(/a choice, not a list to work through/)
-      expect(steps.join(' ')).not.toMatch(/cold saline|bleeding side down/i)
-      // What the evidence is, and where it comes from.
-      expect(text).toMatch(/the published support is a single case/)
-      expect(text).toMatch(/widely used and little studied/)
+      expect(bleeding.sequence!.explanation).toMatch(/a choice, not a list to work through/)
+      expect(bleeding.sequence!.steps.map((step) => step.text).join(' ')).not.toMatch(
+        /cold saline|bleeding side down/i,
+      )
       expect(text).toMatch(/comes from transbronchial lung biopsy/)
       expect(text).toMatch(/cannot be wedged/)
     })
 
-    it('does not offer the ultrasound balloon as hemorrhage control', () => {
+    it('separates bronchoscope-tip pressure in the published case from transducer pressure (r2-558-approve 1)', () => {
+      expect(text).toMatch(
+        /Its published support is a single case, in which the tip of a flexible bronchoscope was held on the site/,
+      )
+      expect(text).toMatch(
+        /Pressing with the EBUS transducer is operator practice, not an evidence-based or guideline-supported maneuver/,
+      )
+      expect(text).not.toMatch(/tip of the scope, the transducer end/)
       expect(text).toMatch(/made for acoustic contact/)
       expect(text).toMatch(/has not been shown to control bleeding: do not rely on it/)
-      // The limit of pressing with the tip is said too.
-      expect(text).toMatch(/costs you the white-light view while you press/)
-      const balloons = [recovery.question, recovery.observation, recovery.transfer]
-        .flatMap((item) => item.choices)
-        .filter((choice) => /balloon/i.test(choice.text))
-      expect(balloons).toHaveLength(1)
-      for (const choice of balloons) expect(choice.correct).toBeFalsy()
-      expect(steps.join(' ') + recovery.checklist.join(' ')).not.toMatch(/balloon/i)
     })
 
-    it('calls for help early and protects the lung that is not bleeding', () => {
-      expect(text).toMatch(/call for help early, before the local measures have run out/)
-      expect(text).toMatch(/protect the other lung/)
-      expect(text).toMatch(/bronchial blocker/)
-      expect(text).toMatch(/rigid or therapeutic bronchoscopy/)
-      // Help is not the last rung of the ordering task, and the keyed rationale says so as well.
-      expect(steps.join(' ')).not.toMatch(/help/i)
-      expect(recovery.sequence!.explanation).toMatch(
-        /Help is called as soon as the bleeding looks substantial, not after the measures have failed/,
+    it('names vasoconstrictors conditionally, with no drug or dose (r2-558-beyond 3)', () => {
+      expect(text).toMatch(
+        /A topical vasoconstrictor is sometimes added: the evidence is limited, and no drug or dose suits every case/,
       )
-      expect(keyOf(recovery.question).rationale).toMatch(/call for help at the same time/)
-      expect(recovery.checklist[1]).toMatch(/if it is brisk, get help and protect the other lung/)
+      expect(everything).not.toMatch(/epinephrine|adrenaline|\bmg\b|\bmL\b|1:\d/i)
     })
 
-    it('keeps desaturation a separate response, with no saturation number to wait for', () => {
-      const desaturation = recovery.paragraphs.find((entry) => /A falling saturation/.test(entry))!
-      expect(desaturation).toMatch(/a different problem/)
+    it('distinguishes a one-sided source from a central one, without an absolute (r2-558-approve 3, r2-558-beyond 2)', () => {
+      expect(text).toMatch(/call for help early, before the local measures have run out/)
+      expect(text).toMatch(/When the source is peripheral or on one side, protect the other lung/)
+      expect(text).toMatch(/bronchial blocker/)
+      expect(text).toMatch(
+        /Selective lung isolation may not control a central source in the trachea or at the carina/,
+      )
+      expect(text).toMatch(/escalate early to therapeutic or rigid bronchoscopy/)
+      expect(everything).not.toMatch(/no side to isolate/)
+      expect(bleeding.sequence!.steps.map((step) => step.text).join(' ')).not.toMatch(/help/i)
+      expect(keyOf(bleeding.question).rationale).toMatch(/call for help at the same time/)
+    })
+
+    it('asks the post-bleeding question again, as a check of its own (r2-558-beyond 4)', () => {
+      expect(bleeding.observation.prompt).toMatch(/What do you do before any more sampling\?/)
+      expect(keyOf(bleeding.observation).text).toBe(
+        'Inspect the puncture site and both main bronchi',
+      )
+    })
+
+    it('recognizes desaturation from the patient, and looks for the cause while treating', () => {
+      expect(breath).toMatch(/a different problem/)
+      expect(breath).toMatch(/Recognize it from the patient as well as the monitor/)
+      expect(breath).toMatch(/On supplemental oxygen the saturation falls late/)
       for (const cause of [
         /airway open/,
         /chest moving/,
@@ -267,42 +321,66 @@ describe('EBUS Guided teaching numbers', () => {
         /sedation slowed the breathing/,
         /blood, secretion or bronchospasm/,
       ])
-        expect(desaturation).toMatch(cause)
-      expect(desaturation).toMatch(/Give oxygen and support the airway while you find the cause/)
-      expect(desaturation).toMatch(/not when the monitor reaches a set number/)
-      expect(desaturation).toMatch(
-        /withdraw the scope, unless you need it to clear blood from the airway/,
+        expect(breath).toMatch(cause)
+      expect(breath).toMatch(/Give oxygen and support the airway while you find the cause/)
+      expect(breath).toMatch(/not when the monitor reaches a set number/)
+    })
+
+    it('withdraws the scope promptly when the fall is significant or worsening (r2-558-approve 2)', () => {
+      expect(breath).toMatch(
+        /When the fall is significant or getting worse, withdraw the scope promptly if that is what it takes to ventilate the patient and support the airway/,
       )
-      expect(desaturation).toMatch(/airway management and assisted ventilation first/)
-      // No number anywhere in the response: not in the text, the card, the example or the check.
-      for (const surface of [
-        desaturation,
-        recovery.checklist[2],
-        recovery.worked.context,
-        recovery.worked.reasoning,
-        recovery.observation.prompt,
-        ...recovery.observation.choices.flatMap((choice) => [choice.text, choice.rationale]),
-      ])
-        expect(surface).not.toMatch(/\d/)
+      expect(breath).toMatch(
+        /Do not sit through a long failed attempt at recovery with the scope in place/,
+      )
+      expect(breath).toMatch(/The exception is blood that you need the scope to clear/)
+      expect(said(desaturation)).not.toMatch(/if (it|recovery) (does not recover|is not prompt)/)
+      expect(desaturation.checklist[2]).toBe(
+        'Significant or worsening: withdraw the scope promptly and ventilate.',
+      )
+      // No number anywhere in the desaturation response.
+      const unitText = [
+        ...desaturation.paragraphs.slice(0, 3),
+        ...desaturation.checklist,
+        desaturation.worked.context,
+        desaturation.worked.reasoning,
+        ...desaturation.sequence!.steps.map((step) => step.text),
+        desaturation.question.prompt,
+        ...desaturation.question.choices.flatMap((choice) => [choice.text, choice.rationale]),
+      ]
+      for (const surface of unitText) expect(surface).not.toMatch(/\d/)
       expect(everything).not.toMatch(/100% oxygen/)
     })
 
-    it('asks a keyed desaturation question in which the scope does not stay as it would for bleeding', () => {
-      expect(recovery.observation.prompt).toMatch(/saturation falls/)
-      expect(keyOf(recovery.observation).text).toBe(
-        'Open the airway, give oxygen, and withdraw the scope if recovery is not prompt',
+    it('keys the desaturation decision on withdrawing the scope, not on waiting', () => {
+      expect(desaturation.question.prompt).toMatch(/keeps falling after you stop/)
+      expect(keyOf(desaturation.question).text).toBe(
+        'Withdraw the scope, open the airway and ventilate with oxygen',
       )
-      const wrong = recovery.observation.choices.filter((choice) => !choice.correct)
+      const wrong = desaturation.question.choices.filter((choice) => !choice.correct)
       expect(wrong.map((choice) => choice.text).join(' ')).toMatch(/set threshold/)
       expect(wrong.map((choice) => choice.text).join(' ')).toMatch(/as you would for bleeding/)
-      // What the replaced check taught is still taught.
-      expect(text).toMatch(/inspect the site and both main bronchi for clot/)
+      expect(desaturation.sequence!.steps.map((step) => step.text)).toEqual([
+        'Stop sampling, retract the needle and undo what set it off',
+        'Give oxygen and support the airway while you find the cause',
+        'Significant or worsening: withdraw the scope and ventilate',
+        'Not recovering: escalate airway support and call for help',
+      ])
+    })
+
+    it('keeps the after-procedure teaching before the closing question', () => {
+      expect(breath).toMatch(/Complications can also present after the procedure/)
+      expect(breath).toMatch(/mediastinitis, is uncommon but important/)
+      expect(breath).toMatch(/reasons to be seen the same day/)
+      expect(flow.at(-1)!.kind).toBe('transfer')
+      expect(bleeding.transfer.prompt).toMatch(/after discharge following EBUS/)
     })
 
     it('cites published sources that exist in the registry, with exact citations', () => {
       const registered = new Map<string, string>(SOURCES.map((source) => [source.id, source.title]))
-      for (const id of recovery.sources) expect(registered.has(id)).toBe(true)
-      expect(recovery.sources).toEqual([
+      for (const id of [...bleeding.sources, ...desaturation.sources])
+        expect(registered.has(id)).toBe(true)
+      expect(bleeding.sources).toEqual([
         'ics2023',
         'aquire2013',
         'asano2013',

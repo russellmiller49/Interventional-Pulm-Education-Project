@@ -67,9 +67,10 @@ it('defines the full curriculum, unique decisions, sources, meaningful activitie
   // checks and sources.
   // The capstone (2026-11-11) is one more lesson, built from five units.
   expect(LESSONS).toHaveLength(23)
-  expect(CONTENT_LESSONS).toHaveLength(33)
+  expect(CONTENT_LESSONS).toHaveLength(34)
   expect(Object.keys(MERGED_INTO).sort()).toEqual([
     'contact-cutaway-model',
+    'desaturation-response',
     'eus-b-route-model',
     'gain-contrast',
     'measurement-phantoms',

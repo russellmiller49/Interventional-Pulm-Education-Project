@@ -78,13 +78,15 @@ describe('merged lessons', () => {
   // it has its own tests (`capstone.test.tsx`).
   const merged = LESSONS.filter((lesson) => lesson.parts && lesson.id !== 'staging-examination')
 
-  it('are five lessons of two units each (three in the needle lesson), and every step names a unit the lesson holds', () => {
+  it('are six lessons of two units each (three in the needle lesson), and every step names a unit the lesson holds', () => {
     expect(merged.map((lesson) => lesson.id)).toEqual([
       'acoustic-contact',
       'image-depth',
       'capture',
       'eus-b',
       'needle-safety',
+      // Bleeding and desaturation, each with its own screen (owner ruling of 2026-11-15).
+      'complications-recovery',
     ])
     for (const lesson of merged) {
       const units = partsOf(lesson).map((unit) => unit.id)
@@ -240,6 +242,6 @@ describe('lesson numbers a learner reads', () => {
     expect(document.querySelector('[data-course-marks]')).toHaveTextContent(
       '0 of 23 lessons reviewed',
     )
-    expect(CONTENT_LESSONS).toHaveLength(33)
+    expect(CONTENT_LESSONS).toHaveLength(34)
   })
 })

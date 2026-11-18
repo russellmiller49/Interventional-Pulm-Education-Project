@@ -198,6 +198,16 @@ const MERGED: Record<
     parts: ['needle-safety', 'needle-technique', 'needle-assembly-model'],
   },
   /*
+   * Complications (2026-11-17, owner ruling r2-558-split): bleeding and desaturation each have a
+   * screen, a task and a decision of their own.
+   */
+  'complications-recovery': {
+    title: 'Recognize complications and plan recovery',
+    objective: 'Make the first moves for bleeding and for falling oxygenation during EBUS-TBNA.',
+    minutes: 9,
+    parts: ['complications-recovery', 'desaturation-response'],
+  },
+  /*
    * The capstone (2026-11-11): one examination at four stations. Each station is a unit of its
    * own, so each brings the lab the learner already used for it.
    */

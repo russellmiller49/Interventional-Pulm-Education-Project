@@ -475,7 +475,7 @@ it('completes, shows or skips a task without a write; a skipped task with a chec
   render(<LessonHost lesson={recovery} />)
   next()
   next()
-  expect(heading('Prioritize the patient during deterioration')).toBeInTheDocument()
+  expect(heading('Order the priorities in bleeding')).toBeInTheDocument()
   next()
   expect(document.querySelector('[data-task-explanation]')).toHaveTextContent(
     'You continued without completing this task',
