@@ -10,6 +10,7 @@ import {
   type DerivedSignalFault,
   type MeasurementSystemState,
 } from '../engine'
+import { offsetCancellingInputIds, requireDerivedMetric } from '../content/derivedMetrics'
 
 const validPpvContext = {
   controlledMechanicalVentilation: true,
@@ -206,6 +207,101 @@ describe('which fault reaches which measurement', () => {
     expect(combined[0].inputIds).not.toContain('pawpMeanMmHg')
     expect(combined[1].inputIds).toEqual(['pawpMeanMmHg'])
   })
+})
+
+describe('a fixed offset and a within-beat difference', () => {
+  /**
+   * Stated by hand: the measurements each result reads only as a pulse pressure on one trace. A
+   * zero or level error adds the same offset to both terms, so it cannot reach these. PAPi reads
+   * the PA pulse pressure too, but its RAP denominator is absolute, so it still falls to an offset.
+   */
+  const readOnlyAsPulsePressure: Partial<Record<keyof DerivedHemodynamics, readonly string[]>> = {
+    pulmonaryArteryPulsatilityIndex: ['papSystolicMmHg', 'papDiastolicMmHg'],
+    pulmonaryArteryCompliance: ['papSystolicMmHg', 'papDiastolicMmHg'],
+  }
+  const metricIds = Object.keys(requiredMeasurements) as (keyof DerivedHemodynamics)[]
+  const inputIds = [...new Set(Object.values(requiredMeasurements).flat())]
+  const offsetOn = (...ids: string[]): DerivedSignalFault => ({
+    ...faultOn(...ids),
+    fixedOffset: true,
+  })
+
+  it('records exactly these offset-cancelling differences', () => {
+    for (const metricId of metricIds) {
+      expect([...offsetCancellingInputIds(requireDerivedMetric(metricId))]).toEqual(
+        readOnlyAsPulsePressure[metricId] ?? [],
+      )
+    }
+  })
+
+  it.each(Object.entries(readOnlyAsPulsePressure))(
+    '%s gives the same number when both pulse-pressure terms carry one offset',
+    (metricId, ids) => {
+      const metric = requireDerivedMetric(metricId as keyof DerivedHemodynamics)
+      const inputs: Record<string, number> = {
+        ...completeMeasurements,
+        pawpMeanMmHg: completeMeasurements.pawpMmHg,
+        strokeVolumeMl: 50,
+        bodySurfaceAreaM2: 2,
+      }
+      const base = metric.calculate(inputs)
+      for (const offset of [-7.4, 7.4, 20]) {
+        const shifted = { ...inputs }
+        for (const inputId of ids ?? []) shifted[inputId] += offset
+        expect(metric.calculate(shifted)).toBeCloseTo(base, 10)
+      }
+    },
+  )
+
+  it.each(inputIds)(
+    'a fixed offset on %s withholds the results that read it as an absolute value',
+    (inputId) => {
+      const clean = calculate()
+      const faulted = calculate([offsetOn(inputId)])
+      for (const metricId of metricIds) {
+        const absolute = requiredMeasurements[metricId].filter(
+          (id) => !(readOnlyAsPulsePressure[metricId] ?? []).includes(id),
+        )
+        if (absolute.includes(inputId)) {
+          expect(faulted[metricId].status).toBe('not-interpretable')
+        } else {
+          expect(faulted[metricId]).toEqual(clean[metricId])
+        }
+      }
+    },
+  )
+
+  it('a waveform fault on the same pair still withholds PA compliance', () => {
+    const faulted = calculate([faultOn('papSystolicMmHg', 'papDiastolicMmHg')])
+    expect(faulted.pulmonaryArteryCompliance.status).toBe('not-interpretable')
+    expect(faulted.pulmonaryArteryCompliance.reason).toBe(
+      'Unreliable input: PA systolic pressure, PA diastolic pressure (test fault).',
+    )
+  })
+
+  it.each([
+    ['not zeroed', { ...cleanSystem, zeroed: false }],
+    ['off level', { ...cleanSystem, transducerLevelCm: -10 }],
+  ] as const)('a transducer %s leaves PA compliance and PPV as they are', (_name, system) => {
+    const faults = pressureSignalFaults(system)
+    expect(faults.every((fault) => fault.fixedOffset === true)).toBe(true)
+    const clean = calculate()
+    const faulted = calculate(faults)
+    expect(faulted.pulmonaryArteryCompliance).toEqual(clean.pulmonaryArteryCompliance)
+    expect(faulted.pulsePressureVariationPercent).toEqual(clean.pulsePressureVariationPercent)
+    expect(faulted.pulmonaryArteryPulsatilityIndex.reason).toMatch(
+      /^Unreliable input: Right atrial pressure \(transducer (not zeroed|off level)\)\.$/,
+    )
+  })
+
+  it.each(['overdamped', 'underdamped'] as const)(
+    'an %s PA line withholds PA compliance',
+    (artifact) => {
+      const faults = pressureSignalFaults({ ...cleanSystem, artifact })
+      expect(faults.some((fault) => fault.fixedOffset)).toBe(false)
+      expect(calculate(faults).pulmonaryArteryCompliance.status).toBe('not-interpretable')
+    },
+  )
 })
 
 describe('derived hemodynamic calculations', () => {

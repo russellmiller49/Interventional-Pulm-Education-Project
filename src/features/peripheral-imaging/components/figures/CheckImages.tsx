@@ -99,6 +99,7 @@ export function ConspicuityPair() {
             <p className={styles.panelTitle}>{title}</p>
             <FigureCanvas
               pixels={pixels}
+              fluoroscopic
               size={CONSPICUITY_SET.sizePx}
               label={label}
               overlay={
@@ -132,6 +133,7 @@ export function WashedOutProjection() {
             the image says where one is. */}
         <FigureCanvas
           pixels={model?.scatter ?? null}
+          fluoroscopic
           size={CONSPICUITY_SET.sizePx}
           label="A low-contrast frontal projection: the vessels, the diaphragm and the soft tissue are close to the same gray"
         />
@@ -177,6 +179,7 @@ export function FieldPair() {
             <p className={styles.panelTitle}>{title}</p>
             <FigureCanvas
               pixels={pixels}
+              fluoroscopic
               size={FIELD_COMPARISON.sizePx}
               label={label}
               overlay={

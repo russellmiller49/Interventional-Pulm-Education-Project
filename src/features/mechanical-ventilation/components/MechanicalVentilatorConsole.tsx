@@ -72,6 +72,13 @@ interface MechanicalVentilatorConsoleProps {
   dispatch: Dispatch<VentilationAction>
   controlsEnabled: boolean
   allowTeachingAnnotations?: boolean
+  /**
+   * The simplified lung panel on the Graphics screen, which prints static compliance, the
+   * resistive gap and the patient's effort. Off unless a host asks for it: a case could be solved
+   * by reading it, so only the open lab shows it (author's ruling, 2026-11-12: "Hide it in cases,
+   * keep it in the lab"). It also needs `allowTeachingAnnotations`.
+   */
+  showLungPanel?: boolean
   /** Independent measurement tasks must not expose an unacquired model plateau. */
   withholdUnacquiredPlateau?: boolean
   /**
@@ -314,6 +321,7 @@ export function MechanicalVentilatorConsole({
   dispatch,
   controlsEnabled,
   allowTeachingAnnotations = true,
+  showLungPanel = false,
   withholdUnacquiredPlateau = false,
   mode = 'operate',
   guidedControlId = null,
@@ -1076,7 +1084,7 @@ export function MechanicalVentilatorConsole({
           {screen === 'graphics' ? (
             <div className={styles.graphicsScreen}>
               <WaveformLoops samples={state.waveforms} />
-              {allowTeachingAnnotations ? (
+              {allowTeachingAnnotations && showLungPanel ? (
                 <DynamicLungPanel state={state} pressureUnit={display.pressureUnit} />
               ) : null}
             </div>

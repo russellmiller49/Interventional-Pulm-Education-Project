@@ -109,6 +109,22 @@ export function MechanismReadingEvidence({
 }
 
 /** The section's separate worked example; null for the integration section, which withholds one. */
+/**
+ * The worked example's text, where this component prints the curriculum's own (situation,
+ * reasoning, conclusion); null for the sections that print a fixed note or none. The teaching
+ * column reads it to hold an example that answers the section's first question until it is answered.
+ */
+export function curriculumWorkedExampleText(lesson: VentilationStageLesson): string | null {
+  const { unit } = lesson
+  if (
+    unit.id === 'high-peak-pressure-integration' ||
+    unit.id === 'waveform-reading-sequence' ||
+    unit.id === 'triggering-and-cycling'
+  )
+    return null
+  return [unit.example.situation, ...unit.example.reasoning, unit.example.conclusion].join(' ')
+}
+
 export function MechanismWorkedExample({ lesson }: { lesson: VentilationStageLesson }) {
   const { unit } = lesson
   if (unit.id === 'high-peak-pressure-integration') return null

@@ -216,6 +216,15 @@
   color: #8be4d9;
 }
 
+/* The lab inside the module frame: the console orientation on its own, its steps side by side. */
+.hostedOrientation {
+  padding: 1rem 0 1.25rem;
+}
+
+.hostedOrientation .orientationCard ol {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
 .disclaimerBanner,
 .languageFallback,
 .scopeBoundary {
@@ -437,6 +446,7 @@
 }
 
 .curriculumHeading {
+  flex-wrap: wrap;
   padding: 1rem;
   border-bottom: 1px solid var(--line);
 }
@@ -458,15 +468,16 @@
   letter-spacing: -0.02em;
 }
 
+/*
+ * The rail's note ("Personal history stays local"). It was styled as a 2.7-rem number disc, which
+ * squeezed the sentence a word a line; it is a short note on its own line (2026-11-15, when the
+ * lab got its route).
+ */
 .curriculumHeading > span {
-  display: grid;
-  place-items: center;
-  width: 2.7rem;
-  height: 2.7rem;
-  border-radius: 50%;
-  color: #ffffff;
-  background: var(--teal);
-  letter-spacing: 0;
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
 }
 
 .curriculumRail > section {
@@ -3881,13 +3892,35 @@
       radial-gradient(circle at 8% 4%, rgba(54, 185, 175, 0.12), transparent 28rem), #0b1618;
   }
 
-  .heroBadges span,
-  .difficultyBadge {
+  /* The case's level badge sits on the case panel, which stays light, so it keeps its own pill. */
+  .heroBadges span {
     background: rgba(18, 35, 38, 0.8);
   }
 
-  .experienceBar {
+  /*
+   * The console chooser kept its light-theme surface, so its heading and note (light ink here)
+   * read pale on near-white. Seen when the lab got its route under Practice (2026-11-15).
+   */
+  .experienceBar,
+  .deviceSelector,
+  .workspaceViewToggle {
     background: rgba(18, 35, 38, 0.88);
+  }
+
+  /*
+   * The case panel keeps its light surface and light-theme variables, but inherited the page's
+   * light text, so its untinted headings and notes ("Playback and inspection", "Bedside actions
+   * and safety checks") were near-white on white.
+   */
+  .workflowPanel {
+    color: var(--ink);
+  }
+
+  /* White on the dark theme's lighter teal was 2:1; these sit on the page, not in a light panel. */
+  .challengeToggle button[aria-pressed='true'],
+  .overlayToggle[aria-pressed='true'],
+  .workspaceViewToggle button[aria-pressed='true'] {
+    color: #0b1618;
   }
 
   .curriculumRail > section[data-active='true'] {

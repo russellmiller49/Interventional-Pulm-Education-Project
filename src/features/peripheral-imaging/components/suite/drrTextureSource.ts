@@ -7,6 +7,11 @@ import { detectorFrameForAngles } from '@fluoroview/geometry'
 import { IMAGING_CONFIG, loadAnatomyVolume, VOLUME_ASSET } from '../../lib/anatomy'
 import { type ImagingGeometry, type Point3 } from '../../lib/physics'
 import { BONE_DEPTH_SPLIT, FLUORO_LOOK, boneShareVolume } from '../../lib/fluoroLook'
+import {
+  DEFAULT_FLUORO_POLARITY,
+  polarityLook,
+  type FluoroPolarity,
+} from '../../lib/displayPolarity'
 
 /** The bone volume is derived once from the one CT every display shares. */
 let boneShare: { readonly from: Uint8Array; readonly bytes: Uint8Array } | undefined
@@ -33,6 +38,7 @@ export class DrrTextureSource {
   private listeners = new Set<() => void>()
   private pose: DrrPose = { orbit: 0, tilt: 0 }
   private boneDepthTint = false
+  private polarity: FluoroPolarity = DEFAULT_FLUORO_POLARITY
   revision = 0
   state: ProjectionState = 'loading'
   private readonly contextLost = (event: Event) => {
@@ -108,6 +114,20 @@ export class DrrTextureSource {
     this.update(this.pose)
   }
 
+  /**
+   * The display polarity (`lib/displayPolarity.ts`). Every display fed by this source — the monitor,
+   * the detector in the 3D view, the monitor cart — changes with it; a stored frame keeps its own.
+   */
+  setPolarity(polarity: FluoroPolarity) {
+    if (this.polarity === polarity) return
+    this.polarity = polarity
+    this.update(this.pose)
+  }
+
+  get displayPolarity(): FluoroPolarity {
+    return this.polarity
+  }
+
   render(pose: DrrPose, lowRes = false) {
     if (this.state !== 'ready' || this.disposed) return
     const metrics = this.engine.render({
@@ -120,6 +140,7 @@ export class DrrTextureSource {
         ...FLUORO_LOOK,
         depthTint: this.boneDepthTint ? 1 : 0,
         depthSplitLps: BONE_DEPTH_SPLIT,
+        ...polarityLook(this.polarity),
       },
       geometry: {
         isocenter_mm: (pose.anatomyTranslation?.map((n) => -n) as Point3 | undefined) ?? [0, 0, 0],

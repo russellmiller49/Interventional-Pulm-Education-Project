@@ -92,12 +92,12 @@ export const criticalCareSourceConflicts: readonly CriticalCareSourceConflict[] 
         evidenceIds: ['case-based-device-therapy-hf'],
       },
     ],
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): "Teach the IFU P-level flows". The
+    // record stays for provenance (MCS-03-02 in the MCS-03 claim-review queue); it has no concept
+    // ids and no MCS surface lists it, so no learner sees it.
     handling:
-      'Retain both textbook claims as a documented source inconsistency. Do not average them, and do not use either as the current device specification — take device specifications from current device-revision labeling.',
-    conceptIds: [
-      'cc.device.selected-vs-delivered-support',
-      'cc.device.preload-afterload-dependence',
-    ],
+      'Not shown to learners (owner ruling, 2026-11-12): the module teaches the Impella CP mean flow at each P-level from the instructions for use. Do not average the two textbook claims, and do not use either as a device specification.',
+    conceptIds: [],
     reviewStatus: 'sme-review',
   },
 ])

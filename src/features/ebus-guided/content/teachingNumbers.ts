@@ -197,7 +197,7 @@ export const EBUS_NUMBERS = defineTeachingNumbers('ebus-guided', {
       },
       ics('Number of needle agitations', 'UPP (usual practice point)'),
     ],
-    note: 'A description of technique, not a recommendation: CHEST 2016 defines a pass as one entry and exit of the needle, typically with 5 to 15 agitations. ICS/IAB 2023 advises at least 10 agitations per pass as a usual practice point, on one trial in sarcoidosis that found no difference between 10 and 20. Neither makes an exact count mandatory. The needle lab asks for the low end of the range as the minimum of that exercise only.',
+    note: 'CHEST 2016 describes a pass as one entry and exit of the needle, typically with 5 to 15 agitations: a description, not a recommendation. ICS/IAB 2023 recommends at least 10 agitations per pass as a usual practice point, on one trial in sarcoidosis that found no difference between 10 and 20. The lesson teaches the ICS/IAB recommendation as technique, not as proof of specimen adequacy, which depends on the material obtained and the purpose of sampling. The needle lab asks for the low end of the range as the minimum of that exercise only.',
     ...ICS_CHECKED,
     checkedBy:
       'ICS/IAB 2023 full text read 2026-11-14 (PMC10401980); CHEST 2016 full text read 2026-09-23 (EBUS-PRE-REVIEW-05 packet), on 2026-11-14 only a secondary summary',

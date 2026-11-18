@@ -357,6 +357,13 @@ export interface DerivedSignalFault {
   readonly reason: string
   /** The `derivedInputDefinitions` ids this fault reaches. */
   readonly inputIds: readonly string[]
+  /**
+   * True when the fault adds one fixed offset to every pressure it reaches (a zero or level error).
+   * Such a fault does not reach a difference taken within one beat of one trace, so a result that
+   * reads those inputs only through such a difference (`DerivedMetricGradient.offsetCancels`) keeps
+   * them. A damping, whip or wedge fault distorts the waveform itself and leaves this unset.
+   */
+  readonly fixedOffset?: boolean
 }
 
 export interface DerivedHemodynamics {

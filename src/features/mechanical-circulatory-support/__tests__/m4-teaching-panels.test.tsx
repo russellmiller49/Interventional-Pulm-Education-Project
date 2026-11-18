@@ -63,6 +63,7 @@ import {
   mcsSectionPrimarySurfaces,
   type McsSectionLearningContract,
 } from '../content'
+import { MCS_NUMBERS } from '../content/teachingNumbers'
 import { createInitialMcsState, mcsReducer } from '../engine'
 import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../engine'
 
@@ -626,7 +627,7 @@ describe('M4 — the shared evidence contract holds for every panel', () => {
     }
   })
 
-  it('renders both Impella evidence surfaces on the placement section, with distinct semantics', () => {
+  it('teaches the IFU P-level flows on the placement section, beside the measurand clarification', () => {
     const contract = mcsSectionLearningContracts.find(
       (candidate) => candidate.sectionId === 'impella-unloading-placement',
     )!
@@ -639,11 +640,19 @@ describe('M4 — the shared evidence contract holds for every panel', () => {
     const clarification = view.container.querySelector(
       '[data-measurement-clarification="clarification.mcs.impella-cp-flow-measurands"]',
     )
-    const conflict = view.container.querySelector(
-      '[data-held-disagreement="conflict.mcs.impella-cp-textbook-flow"]',
-    )
     expect(clarification).not.toBeNull()
-    expect(conflict).not.toBeNull()
+
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): "Teach the IFU P-level flows". The
+    // textbook's two flows are not shown; the P-level mean flows come from the register.
+    expect(view.container.querySelector('[data-held-disagreement]')).toBeNull()
+    expect(view.container.textContent ?? '').not.toContain('3.5 L/min')
+    expect(
+      view.container.querySelector('[data-teaching-number="impella-cp-flow-by-level"]')
+        ?.textContent,
+    ).toContain(MCS_NUMBERS.value('impella-cp-flow-by-level'))
+    expect(
+      view.container.querySelector('[data-teaching-number="impella-cp-peak-flow"]')?.textContent,
+    ).toContain(MCS_NUMBERS.value('impella-cp-peak-flow'))
 
     // Three manufacturer measurands, each naming what it measures.
     expect(clarification!.querySelectorAll('[data-clarified-quantity]')).toHaveLength(3)
@@ -656,17 +665,8 @@ describe('M4 — the shared evidence contract holds for every panel', () => {
       'Average flow observed during support',
     ])
 
-    // Two textbook positions, both retained.
-    expect(conflict!.querySelectorAll('[data-conflict-position]')).toHaveLength(2)
-    const claims = conflict!.textContent ?? ''
-    expect(claims).toContain('3.8 L/min')
-    expect(claims).toContain('3.5 L/min')
-
-    // The semantics are not swapped: the manufacturer figures are not inside a disagreement, and
-    // the textbook figures are not inside a clarification.
+    // The manufacturer figures are not inside a disagreement.
     expect(clarification!.querySelector('[data-conflict-position]')).toBeNull()
-    expect(conflict!.querySelector('[data-clarified-quantity]')).toBeNull()
-    expect(clarification!.textContent ?? '').not.toContain('3.5 L/min')
 
     // Nothing is averaged. The mean of the two textbook figures never appears.
     expect(view.container.textContent ?? '').not.toContain('3.65')

@@ -519,7 +519,12 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     requiredInterventionIds: ['inhaled-pulmonary-vasodilator', 'pe-reperfusion'],
     unsafeInterventionIds: ['peep-up-unsafe', 'fluid-250'],
     successCriteria: [
-      { metric: 'cardiacIndexLMinM2', operator: 'at-least', value: 2, label: 'CI ≥ 2.0 L/min/m²' },
+      {
+        metric: 'cardiacIndexLMinM2',
+        operator: 'at-least',
+        value: 2.2,
+        label: 'CI ≥ 2.2 L/min/m²',
+      },
       mapRecoveryCriterion,
     ],
     guidedPrompt:
@@ -574,7 +579,12 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     requiredInterventionIds: ['inhaled-pulmonary-vasodilator', 'milrinone-up'],
     unsafeInterventionIds: ['fluid-250'],
     successCriteria: [
-      { metric: 'cardiacIndexLMinM2', operator: 'at-least', value: 2, label: 'CI ≥ 2.0 L/min/m²' },
+      {
+        metric: 'cardiacIndexLMinM2',
+        operator: 'at-least',
+        value: 2.2,
+        label: 'CI ≥ 2.2 L/min/m²',
+      },
       { metric: 'rapMmHg', operator: 'at-most', value: 14, label: 'RAP ≤ 14 mmHg' },
     ],
     guidedPrompt: `Pre-capillary physiology is mPAP >${pulmonaryHypertensionThresholds.meanPapMmHg} mmHg, PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg, and PVR >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU in current guidance.`,

@@ -113,9 +113,10 @@ function ClosingSetSummary({ results }: { results: Record<string, TripResult> })
 }
 
 /**
- * The lesions to plan and drive, by lobe. Each says how long its map is and, from this device's
- * own record, whether it has been reached and what did not land at its first check. A lesion is
- * named by its lobe and slice only: its segment is the first thing the learner works out.
+ * The lesions to plan and drive, by lobe. Each says, from this device's own record, whether it has
+ * been reached and what did not land at its first check, and once reached how many divisions its
+ * map has. A lesion is named by its lobe and slice only: its segment and its divisions are what
+ * the learner works out.
  */
 export function LesionPicker({ mode }: { mode: Mode }) {
   const router = useRouter()
@@ -156,7 +157,11 @@ export function LesionPicker({ mode }: { mode: Mode }) {
                 const key = navKey(mode, target.id)
                 const result = results[key] ?? null
                 const started = hydrated && Boolean(readNavEntry(key).entry)
-                const divisions = mappedForks(traceForTarget(target.id), target).length
+                // Counting the divisions is part of the exercise: the count is given only once
+                // the lesion has been reached, as part of what the last run showed.
+                const divisions = result
+                  ? mappedForks(traceForTarget(target.id), target).length
+                  : null
                 const state = result ? (everyStepFirst(result) ? 'first' : 'reached') : 'open'
                 return (
                   <li key={target.id}>
@@ -169,7 +174,9 @@ export function LesionPicker({ mode }: { mode: Mode }) {
                       <LobeThumb target={target} />
                       <span className={styles.lesionCardText}>
                         <strong>Lesion on slice {target.slice}</strong>
-                        <small data-lesion-divisions>{divisionsLine(divisions)}</small>
+                        {divisions !== null && (
+                          <small data-lesion-divisions>{divisionsLine(divisions)}</small>
+                        )}
                         <small data-lesion-result>
                           {result && (
                             <span aria-hidden="true" className={styles.lesionCardMark}>

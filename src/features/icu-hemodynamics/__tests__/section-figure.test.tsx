@@ -60,7 +60,7 @@ afterEach(() => {
 })
 
 describe('which steps name a section figure', () => {
-  it('is every task of the opening section, and the reading, questions and Explain cards of the flow and derived-values sections', () => {
+  it('is every task of the opening section, and the reading, questions and Explain cards of the flow and derived-values sections, and the Fick reading', () => {
     for (const sectionId of hemodynamicsSectionIds) {
       const lesson = hemodynamicsStageLesson(sectionId)
       for (const step of lesson.steps) {
@@ -72,12 +72,14 @@ describe('which steps name a section figure', () => {
             : sectionId === 'thermodilution-series' &&
                 (kind === 'read' || kind === 'prediction' || kind === 'explain')
               ? 'td-curve'
-              : sectionId === 'derived-hemodynamics' &&
-                  (kind === 'provenance-drill' || kind === 'prediction' || kind === 'explain')
-                ? 'derived-value'
-                : sectionId === 'waveform-interpretation' && kind === 'walk'
-                  ? 'normal-reference'
-                  : 'none'
+              : sectionId === 'thermodilution-series' && kind === 'observe'
+                ? 'fick-calculation'
+                : sectionId === 'derived-hemodynamics' &&
+                    (kind === 'provenance-drill' || kind === 'prediction' || kind === 'explain')
+                  ? 'derived-value'
+                  : sectionId === 'waveform-interpretation' && kind === 'walk'
+                    ? 'normal-reference'
+                    : 'none'
         expect({ step: step.id, named }).toEqual({ step: step.id, named: expected })
       }
     }
@@ -85,15 +87,15 @@ describe('which steps name a section figure', () => {
     expect(
       hemodynamicsStageLesson('why-measure').steps.some((step) => step.interaction.kind === 'case'),
     ).toBe(false)
-    // In the flow section: not the series the learner judges, the Fick reading, the comparison of
-    // the two methods or the case, each of which has its own screen.
+    // In the flow section: not the series the learner judges, the comparison of the two methods or
+    // the case, each of which has its own screen. The Fick reading has its own drawing.
     expect(
       hemodynamicsStageLesson('thermodilution-series')
         .steps.filter(
           (step) => hemodynamicsTaskPresentation('thermodilution-series', step).figure === 'none',
         )
         .map((step) => step.interaction.kind),
-    ).toEqual(['simulator-task', 'observe', 'disagreement', 'case'])
+    ).toEqual(['simulator-task', 'disagreement', 'case'])
   })
 })
 

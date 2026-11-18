@@ -80,12 +80,19 @@ describe('EBUS Guided teaching numbers', () => {
       )
     })
 
-    it('teaches needle movements as a description and a practice point, not a required count', () => {
+    // Owner ruling r2-554-approve (2026-11-15): keep ICS/IAB's at least 10, as technique.
+    it('teaches at least 10 needle movements as a practice point, not as proof of adequacy', () => {
       const text = copy('needle-safety')
+      expect(text).toMatch(
+        /move the needle back and forth at least 10 times on each pass, which ICS\/IAB 2023 recommends as a usual practice point/,
+      )
       expect(text).toMatch(/CHEST 2016 describes a pass as typically 5 to 15 movements/)
-      expect(text).toMatch(/ICS\/IAB 2023 advises at least 10/)
-      expect(text).toMatch(/neither sets a count you must reach/)
-      expect(text).not.toMatch(/back and forth 5 to 15 times/)
+      expect(text).toMatch(/a recommendation about technique, not proof of an adequate specimen/)
+      expect(text).toMatch(
+        /Adequacy depends on the material you obtain and on what the sample is for/,
+      )
+      expect(text).not.toMatch(/several times on each pass/)
+      expect(row('agitations-per-pass').note).toMatch(/recommends at least 10 agitations per pass/)
     })
 
     it('ties each clopidogrel interval to its own procedure, and neither to EBUS-TBNA', () => {
@@ -126,10 +133,31 @@ describe('EBUS Guided teaching numbers', () => {
         /^Healthy patients having an elective procedure/,
       )
       expect(text).toMatch(/healthy patients having an elective procedure/)
-      expect(text).toMatch(/may not apply to a patient at increased risk of aspiration/)
+      // Owner ruling r2-554-fasting (2026-11-15): individual assessment, not an automatic longer fast.
+      expect(text).toMatch(/significant uncontrolled gastroesophageal reflux/)
+      expect(text).not.toMatch(/gastric emptying, reflux,/)
+      expect(text).toMatch(/reasons to look closer, not automatic reasons for a longer fast/)
+      expect(text).toMatch(/needs an anesthesia and procedural plan made for them/)
+      expect(text).toMatch(/a longer fast alone may not remove the risk/)
       // BTS 2013's 4 hours is no longer the default taught for EBUS.
       expect(text).not.toMatch(/4 hours/)
       expect(lesson('preparation').sources).toContain('asa2017')
+    })
+
+    // Owner ruling r2-554-glp1 (2026-11-15): add, with a source, and never as a blanket rule.
+    it('asks about GLP-1 receptor agonists, with the multisociety guidance as its source', () => {
+      const text = copy('preparation')
+      expect(text).toMatch(/Ask about GLP-1 receptor agonists, which can delay gastric emptying/)
+      expect(text).toMatch(
+        /A recent dose increase, or nausea, vomiting or abdominal symptoms, raises the risk/,
+      )
+      expect(text).toMatch(/may change the diet beforehand or the anesthesia plan/)
+      expect(text).toMatch(/many continue the drug, and a longer fast is not automatic/)
+      expect(text).not.toMatch(/stop (the|every|all) GLP-1|must (stop|hold)/i)
+      expect(lesson('preparation').sources).toContain('glp1-multisociety2024')
+      const source = SOURCES.find((entry) => entry.id === 'glp1-multisociety2024')!
+      expect(source.title).toMatch(/Kindel TL, Wang AY, Wadhwa A/)
+      expect(source.url).toBe('https://doi.org/10.1007/s00464-024-11263-2')
     })
 
     it('links the manufacturer page behind every scope figure, for both scope models', () => {

@@ -1,5 +1,5 @@
 'use client'
-import { useMemo } from 'react'
+import { Fragment, useContext, useMemo } from 'react'
 import {
   AIRWAY_BRANCHES,
   AIRWAY_LOBE_KEYS,
@@ -18,6 +18,7 @@ import {
   lesionOutlineRadius,
   type AirwayShow,
 } from '../../lib/airwayTree'
+import { ImagePolarityContext } from '../../lib/displayPolarity'
 import {
   DEFAULT_GEOMETRY,
   LESION_CENTER,
@@ -64,6 +65,17 @@ export interface AirwayLabel {
   x: number
   y: number
 }
+
+/**
+ * Bronchi drawn without a colour of their own (the rest of the tree), per display polarity: light on
+ * bone bright's dark lung, dark on bone dark's grey lung, at about the same contrast against it.
+ */
+const DIM_STROKE = {
+  'bone-bright': { color: '#c9d6d2', opacity: 0.22 },
+  'bone-dark': { color: '#0b1a1f', opacity: 0.26 },
+} as const
+/** On bone dark, a coloured bronchus gets the dark edge the stems and labels already have. */
+const CASING = '#04141a'
 
 /** Type size in image units: the monitor is often drawn at half this size on screen. */
 const LABEL_SIZE = 21
@@ -171,6 +183,9 @@ export function AirwayOverlay({
   names?: boolean
   offset?: Point3
 }) {
+  const polarity = useContext(ImagePolarityContext)
+  const dim = DIM_STROKE[polarity]
+  const casing = polarity === 'bone-dark'
   const drawing = useMemo(() => {
     if (show === 'off') return null
     const frame = suiteFrame(orbit, tilt, geometry)
@@ -192,7 +207,7 @@ export function AirwayOverlay({
       if (!stroke)
         strokes.set(
           id,
-          (stroke = { key: branch.key, color: color ?? '#c9d6d2', width, dim: !color, d: '' }),
+          (stroke = { key: branch.key, color: color ?? '', width, dim: !color, d: '' }),
         )
       stroke.d += branch.points
         .map((point, index) => {
@@ -241,17 +256,27 @@ export function AirwayOverlay({
     >
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {drawing.strokes.map((stroke) => (
-          <path
-            key={`${stroke.key}:${stroke.width}`}
-            data-airway-key={stroke.key}
-            data-airway-dim={stroke.dim || undefined}
-            d={stroke.d}
-            stroke={stroke.color}
-            strokeWidth={stroke.dim ? Math.min(stroke.width, 2.5) : stroke.width}
-            strokeOpacity={
-              stroke.dim ? 0.22 : show === 'all' ? 0.62 : show === 'lesion' ? 0.8 : 0.5
-            }
-          />
+          <Fragment key={`${stroke.key}:${stroke.width}`}>
+            {casing && !stroke.dim && (
+              <path
+                data-airway-casing={stroke.key}
+                d={stroke.d}
+                stroke={CASING}
+                strokeWidth={stroke.width + 2}
+                strokeOpacity={0.5}
+              />
+            )}
+            <path
+              data-airway-key={stroke.key}
+              data-airway-dim={stroke.dim || undefined}
+              d={stroke.d}
+              stroke={stroke.dim ? dim.color : stroke.color}
+              strokeWidth={stroke.dim ? Math.min(stroke.width, 2.5) : stroke.width}
+              strokeOpacity={
+                stroke.dim ? dim.opacity : show === 'all' ? 0.62 : show === 'lesion' ? 0.8 : 0.5
+              }
+            />
+          </Fragment>
         ))}
         {drawing.ring && (
           <g data-airway-lesion-ring>
