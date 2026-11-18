@@ -80,6 +80,55 @@ function completeSafePath(caseIndex: number): HemodynamicSimulationState {
   return icuHemodynamicsReducer(state, { type: 'COMPLETE_CASE' })
 }
 
+/**
+ * Owner ruling 2026-11-14 (hd-ci-endpoint-2-vs-2-2): the case endpoints rise to the register's
+ * cardiogenic-shock boundary, CI 2.2 L/min/m², where the keyed path can reach it. Each case is
+ * played on its keyed path only — level, zero, every required intervention once, then time — and
+ * the cardiac index the criterion reads is checked against the endpoint.
+ */
+function keyedPathCardiacIndex(caseId: string, seconds: number): number {
+  const definition = hemodynamicCaseById.get(caseId)!
+  let state = createInitialHemodynamicState(definition, 'practice', 900)
+  state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
+  state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
+  for (const interventionId of definition.requiredInterventionIds) {
+    state = icuHemodynamicsReducer(state, {
+      type: 'APPLY_INTERVENTION',
+      intervention: definition.interventions.find((candidate) => candidate.id === interventionId)!,
+    })
+  }
+  return advanceHemodynamicSimulation(state, seconds).measurements.cardiacIndexLMinM2!
+}
+
+function cardiacIndexEndpoint(caseId: string): number | undefined {
+  return hemodynamicCaseById
+    .get(caseId)!
+    .successCriteria.find((criterion) => criterion.metric === 'cardiacIndexLMinM2')?.value
+}
+
+describe('cardiac-index endpoints against the keyed path', () => {
+  it.each(['HD-04', 'HD-05'])(
+    '%s reaches CI 2.2 on its keyed path and resolves there',
+    (caseId) => {
+      expect(cardiacIndexEndpoint(caseId)).toBe(2.2)
+      expect(keyedPathCardiacIndex(caseId, 300)).toBeGreaterThanOrEqual(2.2)
+    },
+  )
+
+  it('HD-03 and HD-07 already use 2.2', () => {
+    expect(cardiacIndexEndpoint('HD-03')).toBe(2.2)
+    expect(cardiacIndexEndpoint('HD-07')).toBe(2.2)
+  })
+
+  it('HD-06 stays at 2.0 because diuresis and one PEEP step do not reach 2.2', () => {
+    // The ruling raises an endpoint only where the keyed path reaches it; the engine and the case
+    // were not tuned. Dobutamine is what would carry this case past 2.2. If this starts to fail,
+    // the keyed path now reaches 2.2 and HD-06 can take the raised endpoint.
+    expect(cardiacIndexEndpoint('HD-06')).toBe(2)
+    expect(keyedPathCardiacIndex('HD-06', 300)).toBeLessThan(2.2)
+  })
+})
+
 describe('eight versioned management cases', () => {
   it('has eight unique, sourced, deterministic definitions with declared safe and unsafe paths', () => {
     expect(hemodynamicCases).toHaveLength(8)

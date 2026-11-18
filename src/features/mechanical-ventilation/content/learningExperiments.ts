@@ -1,7 +1,16 @@
 import { VENTILATION_NUMBERS } from './teachingNumbers'
-import type { VentilationAction, VentilatorControlKey } from '../engine/types'
+import { consoleTermToken, resolveConsoleWording } from './consoleWording'
+import { defaultVentilatorDeviceId } from './deviceProfiles'
+import type { VentilationAction, VentilatorControlKey, VentilatorDeviceId } from '../engine/types'
 
 const N = VENTILATION_NUMBERS.value
+/*
+ * The selected console's own names for these two controls, after the clinical term: "cycle-off
+ * threshold (ETS)" on the Hamilton, "(Insp term)" on the Evita (author's ruling, 2026-11-12,
+ * "Follow the console"). Resolved per console by `ventilationExperimentsForDevice` below.
+ */
+const CYCLE_OFF = consoleTermToken('etsPercent')
+const RISE_TIME = consoleTermToken('pRampMs')
 
 export type LabMetric =
   | 'peak'
@@ -107,7 +116,7 @@ function round(
   return { caseId: 'MV-LAB', seconds: 12, ...r }
 }
 const stiffVolume = round({
-  title: 'Change the lung, keep the volume',
+  title: 'A stiffer lung on volume control',
   hint: 'Volume control holds one of the two things you are comparing. Decide which trace the machine is holding, then ask what a stiffer system does to the other.',
   introduction:
     'This passive patient is on volume control. You will make the respiratory system stiffer; the ventilator settings stay as they are.',
@@ -155,7 +164,7 @@ const stiffPressure = round({
     'In pressure control the same stiffening shows up mainly as a smaller delivered tidal volume. The mode tells you which reading to watch.',
 })
 const resistance = round({
-  title: 'Find the pressure spent moving gas',
+  title: 'Peak and plateau after a resistance change',
   hint: 'A hold stops flow. Ask which part of the airway pressure exists only while gas is moving.',
   introduction:
     'This patient is passive: no respiratory effort. Compare airway pressure while gas is flowing with the pressure during an inspiratory hold.',
@@ -219,14 +228,12 @@ const timing = round({
     'More breaths per minute can leave less time to exhale. Read the expiratory flow trace itself: whether flow reaches zero before the next breath, not the rate setting, tells you whether the lung emptied.',
 })
 const earlierCycle = round({
-  title: 'Give expiration time back',
+  title: 'The cycle-off threshold on pressure support',
   hint: 'Inspiratory flow falls from its peak during a supported breath. Ask whether a higher percentage of that peak is reached earlier or later.',
   caseId: 'MV-10',
-  introduction:
-    'This patient has COPD and is on pressure support. The patient triggers each breath, and the ventilator cycles to expiration when inspiratory flow has decayed to a set percentage of its peak: the cycle-off threshold (expiratory trigger sensitivity, ETS).',
+  introduction: `This patient has COPD and is on pressure support. The patient triggers each breath, and the ventilator cycles to expiration when inspiratory flow has decayed to a set percentage of its peak: the ${CYCLE_OFF}, also called the expiratory trigger sensitivity.`,
   look: 'Compare where the machine breath ends with the patient’s effort trace, then look at expiratory flow.',
-  prompt:
-    'If you raise the cycle-off threshold (ETS) on these pressure-support breaths, what immediate change should you look for on the traces?',
+  prompt: `If you raise the ${CYCLE_OFF} on these pressure-support breaths, what immediate change should you look for on the traces?`,
   choices: [
     'A longer machine inspiration',
     'Shorter machine inspiration',
@@ -238,12 +245,12 @@ const earlierCycle = round({
     'A higher threshold is reached sooner as inspiratory flow decays, so support ends earlier — provided flow cycling, not the maximum inspiratory time, is what ends this breath. Watch the measured inspiratory time and expiratory flow, then reassess the patient.',
     'Ending support sooner gives the breath less time to fill, so the delivered tidal volume tends to fall, not rise.',
   ],
-  task: 'Raise the cycle-off threshold (ETS) to 50%, then compare the measured inspiratory time and expiratory flow.',
+  task: `Raise the ${CYCLE_OFF} to 50%, then compare the measured inspiratory time and expiratory flow.`,
   goals: [c('etsPercent', 50)],
   seconds: 25,
   watch: ['ti', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'Raising ETS changes the breath only when flow cycling, not the maximum inspiratory time, is what ends it. The response is this patient’s: the threshold used here suits this comparison and is not a setting for every patient.',
+    'Raising the cycle-off threshold changes the breath only when flow cycling, not the maximum inspiratory time, is what ends it. The response is this patient’s: the threshold used here suits this comparison and is not a setting for every patient.',
 })
 const flow = round({
   title: 'Move the gas faster',
@@ -270,7 +277,7 @@ const flow = round({
     'Flow is how fast gas moves; volume is how much has moved. At the same tidal volume, higher flow fills the breath sooner and shortens inspiratory time.',
 })
 const oxygen = round({
-  title: 'Separate oxygen from breath delivery',
+  title: 'What the FiO₂ setting changes',
   hint: 'Ask on which of the three traces — pressure, flow or volume — the oxygen setting appears at all.',
   asks: 'identify',
   introduction:
@@ -321,7 +328,8 @@ const effortHold = round({
     'Compare the hold’s validity flag and the effort trace with the passive hold in Part 1. A plateau read during an inspiratory effort can be falsely low: do not take it as reassuring lung mechanics.',
 })
 
-export const ventilationLearningExperiments: readonly LearningExperiment[] = [
+/** As authored: console names are still tokens. Resolve for a console before showing anything. */
+const authoredExperiments: readonly LearningExperiment[] = [
   {
     unitId: 'breathing-with-support',
     panelId: 'waveform-anatomy',
@@ -512,7 +520,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         relation: {
           kind: 'preview',
           unitId: 'triggering-and-cycling',
-          note: 'Pressure support and the cycle-off are taught in full there. Here the cycle-off is used for one thing only: giving expiration more time.',
+          note: 'Pressure support and the cycle-off are taught in full there. Here the cycle-off is used for one question only, in a patient who exhales slowly.',
         },
       },
     ],
@@ -522,7 +530,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'triggering-and-cycling',
     rounds: [
       round({
-        title: 'Trigger sensitivity and unanswered efforts',
+        title: 'Efforts without a machine breath',
         hint: 'Count the efforts on the dashed trace and count the machine breaths. The change is aimed at the efforts with no breath after them.',
         caseId: 'MV-07',
         introduction:
@@ -555,8 +563,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         introduction:
           'This patient triggers each pressure-support breath, but the ventilator cycles to expiration before the patient’s effort has ended.',
         look: 'Watch the effort that is still going when the ventilator cycles.',
-        prompt:
-          'If you lower the cycle-off threshold (ETS), and flow cycling is what ends these breaths, what changes?',
+        prompt: `If you lower the ${CYCLE_OFF}, and flow cycling is what ends these breaths, what changes?`,
         choices: [
           'A shorter machine inspiration',
           'A longer machine inspiration',
@@ -568,7 +575,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'A lower percentage of peak flow is reached later as flow decays, so support lasts longer, until another limit ends the breath.',
           'A breath that starts without an effort is a triggering problem. The cycle-off decides only when inspiration ends.',
         ],
-        task: 'Lower the cycle-off threshold (ETS) to 15%, then compare the measured inspiratory time and the tidal volume.',
+        task: `Lower the ${CYCLE_OFF} to 15%, then compare the measured inspiratory time and the tidal volume.`,
         goals: [c('etsPercent', 15)],
         seconds: 20,
         watch: ['ti', 'volume', 'dyspnea'],
@@ -719,7 +726,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     panelId: 'dyssynchrony-mechanisms',
     rounds: [
       round({
-        title: 'Rise time on pressure support',
+        title: 'Discomfort on pressure support',
         hint: 'Read the first part of each push: the pressure contour and the patient’s comfort together, not either one alone.',
         caseId: 'MV-11',
         introduction:
@@ -738,7 +745,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Larger tidal volumes alone do not show a better match to the patient’s demand.',
           'A faster rise that leaves the patient more comfortable fits a rise time that was too slow. Judge the early pressure shape and comfort together, and check for overshoot.',
         ],
-        task: 'Shorten the rise time (P-ramp) to 100 ms, then compare the early pressure contour and the patient’s dyspnea.',
+        task: `Shorten the ${RISE_TIME} to 100 ms, then compare the early pressure contour and the patient’s dyspnea.`,
         goals: [c('pRampMs', 100)],
         seconds: 20,
         watch: ['dyspnea', 'peak', 'volume'],
@@ -872,6 +879,62 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
     ],
   },
 ]
+
+function resolveRound(round: LabRound, deviceId: VentilatorDeviceId): LabRound {
+  const say = (text: string) => resolveConsoleWording(text, deviceId)
+  const three = (texts: readonly [string, string, string]) =>
+    [say(texts[0]), say(texts[1]), say(texts[2])] as const
+  return {
+    ...round,
+    title: say(round.title),
+    introduction: say(round.introduction),
+    look: say(round.look),
+    prompt: say(round.prompt),
+    choices: three(round.choices),
+    rationales: three(round.rationales),
+    task: say(round.task),
+    explanation: say(round.explanation),
+    hint: say(round.hint),
+    ...(round.relation ? { relation: { ...round.relation, note: say(round.relation.note) } } : {}),
+  }
+}
+
+const byDevice = new Map<VentilatorDeviceId, readonly LearningExperiment[]>()
+
+/** Every section's two rounds, in the words of one console. */
+export function ventilationExperimentsForDevice(
+  deviceId: VentilatorDeviceId,
+): readonly LearningExperiment[] {
+  let experiments = byDevice.get(deviceId)
+  if (!experiments) {
+    experiments = authoredExperiments.map((experiment) => ({
+      ...experiment,
+      rounds: [
+        resolveRound(experiment.rounds[0], deviceId),
+        resolveRound(experiment.rounds[1], deviceId),
+      ] as const,
+    }))
+    byDevice.set(deviceId, experiments)
+  }
+  return experiments
+}
+
+/** One section's rounds, in the words of one console. */
+export function ventilationExperimentForDevice(
+  unitId: string,
+  deviceId: VentilatorDeviceId,
+): LearningExperiment | undefined {
+  return ventilationExperimentsForDevice(deviceId).find(
+    (experiment) => experiment.unitId === unitId,
+  )
+}
+
+/**
+ * The rounds in the default console's words. Everything that does not know which console is on
+ * the screen reads these; the Learn host, its steps and its checklist read the selected console's.
+ */
+export const ventilationLearningExperiments: readonly LearningExperiment[] =
+  ventilationExperimentsForDevice(defaultVentilatorDeviceId)
 export const ventilationExperimentByUnit = new Map(
   ventilationLearningExperiments.map((experiment) => [experiment.unitId, experiment]),
 )

@@ -907,6 +907,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 acquisitionField={inputs.fieldPercent}
                 fieldProcessing={fieldProcessing}
                 boneDepthAid={boneDepthAid}
+                polarityControl={props.controlsEnabled && viewControls.length > 0}
+                ctConvention={isCbct}
                 showTool={inputs.showTool}
                 airways={
                   view.mode === 'projection'

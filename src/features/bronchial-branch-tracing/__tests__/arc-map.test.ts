@@ -7,6 +7,8 @@ import {
   gradeFrame,
   layoutArcMap,
   withGhost,
+  withReferences,
+  modelMapLevels,
   lungSide,
   mapTurnToScope,
   mappedForks,
@@ -22,6 +24,7 @@ import {
   type Sector,
 } from '../engine/arc-map'
 import { routeOption } from '../engine/nav-session'
+import { nextBranches } from '../geometry/astray'
 import { CT_TARGETS } from '../geometry/native-ct'
 import { stationCamera } from '../geometry/route-stations'
 import { TARGET_IDS, traceForTarget } from '../content/targets'
@@ -371,5 +374,61 @@ describe('the model’s arcs laid over the learner’s map', () => {
     expect(ghosts.slice(2).map((region) => region.parent)).toEqual(['0:0', '0:0'])
     // Without them the picture is exactly the learner's map.
     expect(overlaid.filter((region) => !region.ghost)).toEqual(plain)
+  })
+})
+
+describe('the next division inside each branch the route does not take', () => {
+  // Mortimer and Saghaie's tip: draw one generation inside the branches that do not lead to the
+  // lesion, so a turn into one shows a division the map does not expect.
+  it('is drawn on every finished map from the off-route geometry, and only inside off-route branches', () => {
+    let drawn = 0
+    for (const { id, target, trace, forks } of LESIONS) {
+      const model = modelMapLevels(trace, target, 0)
+      // One entry per daughter; empty for the route's own and where the airway model ends.
+      model.forEach((level, d) =>
+        level.references!.forEach((inside, daughter) => {
+          const option = trace.checkpoints[forks[d]].decision!.options[daughter]
+          const expected = daughter === level.route ? 0 : nextBranches(option.sourceEdgeId).length
+          expect([id, d, daughter, inside.length]).toEqual([
+            id,
+            d,
+            daughter,
+            expected >= 2 ? expected : 0,
+          ])
+        }),
+      )
+      const learner = model.map((level) => ({ angles: level.angles, route: level.route }))
+      const review = layoutArcMap(withGhost(withReferences(learner, model), model))
+      const refs = review.filter((region) => region.reference)
+      expect([id, refs.length]).toEqual([id, layoutArcMap(model).filter((r) => r.reference).length])
+      for (const ref of refs) {
+        const parent = review.find((region) => region.id === ref.parent)!
+        expect([id, ref.onRoute, ref.target, parent.onRoute, parent.reference]).toEqual([
+          id,
+          false,
+          false,
+          false,
+          undefined,
+        ])
+      }
+      // The learner's own arcs and the model's laid over them are exactly as before.
+      expect(review.filter((region) => !region.reference)).toEqual(
+        layoutArcMap(withGhost(learner, model)),
+      )
+      drawn += refs.length
+    }
+    expect(drawn).toBeGreaterThan(0)
+  })
+
+  it('follows the learner’s own branches, read as the daughters they fit best', () => {
+    const model = [{ angles: [270, 90], route: 0, references: [[], [0, 180]] }]
+    // Drawn the other way round: the off-route branch is the one on the left.
+    const learner = [{ angles: [90, 270], route: 1 }]
+    const [level] = withReferences(learner, model)
+    expect(level.references).toEqual([[0, 180], []])
+    // A division drawn with the wrong number of branches gets none.
+    expect(withReferences([{ angles: [0, 120, 240], route: 0 }], model)[0].references).toBe(
+      undefined,
+    )
   })
 })

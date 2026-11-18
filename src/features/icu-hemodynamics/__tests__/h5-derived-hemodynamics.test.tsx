@@ -215,6 +215,31 @@ describe('H5 canonical derived-metric model', () => {
     ).toThrow(/requiresBodySurfaceArea disagrees/i)
   })
 
+  it('marks only the PA pulse pressure as a difference a zero or level offset cancels', () => {
+    const cancelling = derivedMetricRecords.flatMap((metric) =>
+      metric.gradients
+        .filter((gradient) => gradient.offsetCancels)
+        .map((gradient) => `${metric.id}: ${gradient.label}`),
+    )
+    expect(cancelling).toEqual([
+      'pulmonaryArteryPulsatilityIndex: PA pulse pressure',
+      'pulmonaryArteryCompliance: PA pulse pressure',
+    ])
+  })
+
+  it('refuses an offset-cancelling input that the record also reads as an absolute value', () => {
+    const papi = requireDerivedMetric('pulmonaryArteryPulsatilityIndex')
+    expect(() =>
+      validateDerivedMetrics(
+        withMetric({
+          ...papi,
+          requiredPositiveInputIds: [...papi.requiredPositiveInputIds, 'papDiastolicMmHg'],
+        }),
+        derivedThresholdContexts,
+      ),
+    ).toThrow(/offset-cancelling but is also read as an absolute value/i)
+  })
+
   it('marks cardiac output, stroke volume, and body surface area as calculated quantities', () => {
     for (const inputId of ['cardiacOutputLMin', 'strokeVolumeMl', 'bodySurfaceAreaM2']) {
       expect(requireDerivedInputDefinition(inputId).isCalculated).toBe(true)

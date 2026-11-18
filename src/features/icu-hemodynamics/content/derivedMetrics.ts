@@ -244,6 +244,17 @@ export interface DerivedMetricGradient {
   readonly label: string
   /** True when a zero or negative difference makes the equation unusable, not merely zero. */
   readonly mustBePositive: boolean
+  /**
+   * True when both terms are read within one beat of one trace and the formula uses them only
+   * through this difference, so a zero or level error — one fixed offset on both — subtracts out.
+   * PA pulse pressure (PASP − PADP) is such a difference.
+   *
+   * False for a difference between two transducers (MAP − RAP), and for mPAP − PAWP: the wedge is
+   * a separate reading, often a stored one, and the offset it was read with need not be the offset
+   * on the PA trace now. Whether that gradient should also survive a zero or level error has not
+   * been ruled on; only PA compliance has (owner ruling 2026-11-14, "Allow, like PPV").
+   */
+  readonly offsetCancels: boolean
 }
 
 export interface DerivedMetricRecord {
@@ -281,6 +292,16 @@ export interface DerivedMetricRecord {
   readonly thresholdContextIds: readonly string[]
   readonly evidenceIds: readonly string[]
   readonly sourceLimitations: readonly string[]
+}
+
+/**
+ * The inputs a metric reads only as a within-beat difference on one trace, so a zero or level error
+ * cancels out of the result. Every other pressure input is read as an absolute value.
+ */
+export function offsetCancellingInputIds(metric: DerivedMetricRecord): readonly string[] {
+  return metric.gradients
+    .filter((gradient) => gradient.offsetCancels)
+    .flatMap((gradient) => [gradient.minuendInputId, gradient.subtrahendInputId])
 }
 
 const RESISTANCE_UNIT_CONVERSION =
@@ -428,6 +449,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'rapMmHg',
         label: 'MAP − RAP gradient',
         mustBePositive: true,
+        offsetCancels: false,
       },
     ],
     requiredPositiveInputIds: ['cardiacOutputLMin'],
@@ -476,6 +498,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'rapMmHg',
         label: 'MAP − RAP gradient',
         mustBePositive: true,
+        offsetCancels: false,
       },
     ],
     requiredPositiveInputIds: ['cardiacOutputLMin', 'bodySurfaceAreaM2'],
@@ -522,6 +545,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'pawpMeanMmHg',
         label: 'mPAP − PAWP transpulmonary gradient',
         mustBePositive: true,
+        offsetCancels: false,
       },
     ],
     requiredPositiveInputIds: ['cardiacOutputLMin'],
@@ -572,6 +596,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'pawpMeanMmHg',
         label: 'mPAP − PAWP transpulmonary gradient',
         mustBePositive: true,
+        offsetCancels: false,
       },
     ],
     requiredPositiveInputIds: ['cardiacOutputLMin', 'bodySurfaceAreaM2'],
@@ -650,6 +675,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'papDiastolicMmHg',
         label: 'PA pulse pressure',
         mustBePositive: true,
+        offsetCancels: true,
       },
     ],
     requiredPositiveInputIds: ['rapMmHg'],
@@ -694,6 +720,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'papDiastolicMmHg',
         label: 'PA pulse pressure',
         mustBePositive: true,
+        offsetCancels: true,
       },
     ],
     requiredPositiveInputIds: ['strokeVolumeMl'],
@@ -737,6 +764,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
         subtrahendInputId: 'pulsePressureMinMmHg',
         label: 'Pulse-pressure swing (PPmax − PPmin)',
         mustBePositive: false,
+        offsetCancels: false,
       },
     ],
     requiredPositiveInputIds: ['pulsePressureMaxMmHg', 'pulsePressureMinMmHg'],
@@ -1170,6 +1198,24 @@ export function validateDerivedMetrics(
         !dependencyIds.has(gradient.subtrahendInputId)
       ) {
         throw new Error(`${metric.id}: gradient "${gradient.label}" uses a non-dependency input.`)
+      }
+    }
+    /*
+     * An offset cancels only if the formula never reads either term on its own. A term that is also
+     * screened as an absolute value, or that sits in a gradient where the offset does not cancel,
+     * would let a zero or level error back in.
+     */
+    const absoluteUses = [
+      ...metric.requiredPositiveInputIds,
+      ...metric.gradients
+        .filter((gradient) => !gradient.offsetCancels)
+        .flatMap((gradient) => [gradient.minuendInputId, gradient.subtrahendInputId]),
+    ]
+    for (const inputId of offsetCancellingInputIds(metric)) {
+      if (absoluteUses.includes(inputId)) {
+        throw new Error(
+          `${metric.id}: ${inputId} is marked offset-cancelling but is also read as an absolute value.`,
+        )
       }
     }
     for (const positiveId of metric.requiredPositiveInputIds) {

@@ -139,7 +139,7 @@ export function hemodynamicsPathwayComposition(): HemodynamicsPathwayComposition
   }
 }
 
-/** "9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 193 min". */
+/** "9 sections · 1 orientation · 2 foundations · 4 mechanisms · 1 application · 1 capstone · 181 min". */
 export function hemodynamicsCompositionLine(): string {
   const composition = hemodynamicsPathwayComposition()
   const parts = composition.byStage.map(

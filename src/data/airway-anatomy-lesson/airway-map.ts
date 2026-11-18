@@ -484,7 +484,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'LB1+2 corresponds to the fused RB1 and RB2 of the right upper lobe.',
     ],
     pearls: [
-      'On the left, the apical and posterior segments share a common apicoposterior stem (LB1+2) — a fusion mirroring RB7+8 in the lower lobe.',
+      'On the left, the apical and posterior segments share a common apicoposterior stem (LB1+2) — a fusion mirroring LB7+8 in the lower lobe.',
     ],
     endoscopicView: {
       reference: { looking: 'left', top: 'superior' },
@@ -698,7 +698,7 @@ export const AIRWAY_NODES: AirwayNode[] = [
       'A single anteromedial basal orifice replacing the separate RB7 and RB8 of the right.',
     ],
     pearls: [
-      'The fusion of LB7 and LB8 is why the left lung has 8 (not 10) classically-numbered segments.',
+      'The fusion of LB7 and LB8, together with LB1+2 in the upper lobe, is why the left lung has 8 (not 10) classically-numbered segments.',
     ],
   },
   {

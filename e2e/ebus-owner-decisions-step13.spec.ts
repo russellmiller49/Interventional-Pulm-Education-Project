@@ -180,3 +180,20 @@ test('unchanged production H.264 gain example still decodes and produces a genui
   await expect(frame.locator('[data-recorded-held]')).toBeVisible()
   await page.screenshot({ path: test.info().outputPath('production-recorded-hold.png') })
 })
+
+test('station map is withheld on the staging prediction and returns once it is answered', async ({
+  page,
+}) => {
+  // Owner ruling of 2026-11-12, "Hide during predictions": the map's N-category view answers it.
+  await page.goto('/en/ebus-guided/learn?section=systematic-staging')
+  await expect(page.locator('[data-activity-kind="prediction"]')).toBeVisible()
+  const mapButton = page.getByRole('button', { name: 'Station map', exact: true })
+  await expect(mapButton).toHaveCount(0)
+  // Its space is kept by an invisible placeholder that cannot take focus.
+  await expect(page.locator('[data-station-map-withheld]')).toBeHidden()
+  await page.getByRole('radio').first().check()
+  await page.getByRole('button', { name: 'Check response', exact: true }).click()
+  await expect(page.locator('[data-station-map-withheld]')).toHaveCount(0)
+  await mapButton.click()
+  await expect(page.locator('[data-station-map-dialog]')).toBeVisible()
+})

@@ -158,7 +158,7 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
           ))}
           {stillAvailable.length > 0 ? (
             <p>
-              Still available, because they need none of these measurements:{' '}
+              Still available, because these faults do not change what they are calculated from:{' '}
               {stillAvailable.map((key) => hemodynamicDerivedValueGuides[key].label).join(', ')}.
             </p>
           ) : null}

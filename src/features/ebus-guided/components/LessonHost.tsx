@@ -529,6 +529,24 @@ function LessonSession({
   const reveal =
     current.image === 'held' &&
     (current.kind === 'debrief' || !!committed || !!(question && explanationOpen[question.id]))
+  /*
+   * A "Predict first" check is answered before any teaching, and the station map's N-category
+   * view answers the staging one. The owner's ruling of 2026-11-12: the map is withheld while a
+   * prediction is open, in every lesson. It returns as soon as the prediction is answered or its
+   * explanation is open (the gate the held-image labels use), and on any later screen, which is
+   * where "Continue without answering" leads. Reviewing a passed prediction keeps the map.
+   */
+  const stationMapWithheld =
+    !finished &&
+    !reviewId &&
+    current.kind === 'prediction' &&
+    !!question &&
+    !committed &&
+    !explanationOpen[question.id]
+  // A map left open when a prediction begins closes; it cannot be opened again until it is answered.
+  useEffect(() => {
+    if (stationMapWithheld) setDialog((open) => (open === 'stations' ? null : open))
+  }, [stationMapWithheld])
   const instruction =
     current.interaction === 'acquire'
       ? (runtimeLab?.instruction ?? current.instruction)
@@ -727,17 +745,33 @@ function LessonSession({
               >
                 Course outline
               </button>
-              <button
-                ref={stationsButton}
-                className={styles.secondary}
-                data-open-station-map
-                onClick={() => {
-                  setDialogTrigger('stations')
-                  setDialog('stations')
-                }}
-              >
-                Station map
-              </button>
+              {stationMapWithheld ? (
+                /*
+                 * Withheld during a prediction, not disabled: no dead control. Its space is kept
+                 * so Help and More do not shift when it returns; this placeholder is invisible,
+                 * hidden from assistive technology and cannot take focus.
+                 */
+                <span
+                  aria-hidden="true"
+                  className={styles.secondary}
+                  data-station-map-withheld
+                  style={{ visibility: 'hidden', fontSize: '0.8125rem' }}
+                >
+                  Station map
+                </span>
+              ) : (
+                <button
+                  ref={stationsButton}
+                  className={styles.secondary}
+                  data-open-station-map
+                  onClick={() => {
+                    setDialogTrigger('stations')
+                    setDialog('stations')
+                  }}
+                >
+                  Station map
+                </button>
+              )}
               <button
                 ref={helpButton}
                 className={styles.secondary}
@@ -1377,7 +1411,7 @@ function LessonSession({
           <SourceList ids={lesson.sources} />
         </div>
         <HelpDialog
-          open={dialog !== null}
+          open={dialog !== null && !(dialog === 'stations' && stationMapWithheld)}
           onClose={() => setDialog(null)}
           title={
             dialog === 'outline'
@@ -1394,7 +1428,7 @@ function LessonSession({
                 : helpButton
           }
         >
-          {dialog === 'stations' ? (
+          {dialog === 'stations' && !stationMapWithheld ? (
             // Opens on the stations view, not the N categories, so a staging check is not answered
             // by opening it; the learner can still switch views, as with any reference.
             <div className={styles.outline} data-station-map-dialog>

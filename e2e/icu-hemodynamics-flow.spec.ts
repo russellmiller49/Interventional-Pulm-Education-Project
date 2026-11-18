@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 
 // Use the full Chromium headless browser, also used for actual tab-zoom verification.
@@ -199,6 +199,34 @@ async function answer(page: Page, label: RegExp) {
   await page.locator('[data-prediction-choices]').getByRole('radio', { name: label }).check()
   await check(page)
   await primary(page)
+}
+/** WCAG contrast of an element's text against the nearest opaque background behind it. */
+async function contrastOnBackdrop(locator: Locator) {
+  return locator.evaluate((element) => {
+    const channels = (color: string) => (color.match(/[\d.]+/g) ?? []).map(Number)
+    const luminance = (rgb: number[]) =>
+      rgb.slice(0, 3).reduce((sum, channel, index) => {
+        const value = channel / 255
+        return (
+          sum +
+          [0.2126, 0.7152, 0.0722][index] *
+            (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+        )
+      }, 0)
+    let ancestor: Element | null = element
+    let background = [255, 255, 255]
+    while (ancestor) {
+      const candidate = channels(getComputedStyle(ancestor).backgroundColor)
+      if (candidate.length === 3 || candidate[3] === 1) {
+        background = candidate
+        break
+      }
+      ancestor = ancestor.parentElement
+    }
+    const foreground = luminance(channels(getComputedStyle(element).color))
+    const backdrop = luminance(background)
+    return (Math.max(foreground, backdrop) + 0.05) / (Math.min(foreground, backdrop) + 0.05)
+  })
 }
 async function readings(page: Page) {
   for (let i = 0; i < 20 && (await page.locator('[data-flow-reading]').count()); i++)
@@ -434,6 +462,14 @@ test('thermodilution ledger precedes Fick and keeps disagreement decisions separ
   await goalsMet(page)
   await capture(page, 'accepted-trial-ledger')
   await primary(page)
+  // Each of the six Fick pages: the card's own title reads on its white card (owner ruling
+  // 2026-11-15; it had inherited the dark shell's pale ink).
+  for (let fickPage = 0; fickPage < 6; fickPage++) {
+    const title = page.locator('[data-now-card] article > h3')
+    await expect(title).toHaveCount(1)
+    expect(await contrastOnBackdrop(title)).toBeGreaterThanOrEqual(4.5)
+    await primary(page)
+  }
   await readings(page)
   await page
     .getByRole('radio', { name: /Only the result whose oxygen uptake was measured/ })

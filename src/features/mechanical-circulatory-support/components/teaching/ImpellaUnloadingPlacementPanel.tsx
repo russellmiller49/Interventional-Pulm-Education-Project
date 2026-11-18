@@ -1,9 +1,5 @@
-import {
-  HeldDisagreement,
-  MeasurementClarification,
-} from '@/features/critical-care/components/teaching/EvidenceRenderers'
+import { MeasurementClarification } from '@/features/critical-care/components/teaching/EvidenceRenderers'
 import { criticalCareMeasurementClarificationById } from '@/features/critical-care/content/measurementClarifications'
-import { criticalCareSourceConflictById } from '@/features/critical-care/content/sourceConflicts'
 
 import { MCS_PRODUCT_FLOW_BOUNDARY } from '../../content/supportPathways'
 import type { McsTeachingPanelProps } from './panelProps'
@@ -46,17 +42,18 @@ import {
  * reaches the body. A learner who sees them as five independent readouts reaches for the setting;
  * a learner who sees them as a chain looks at the first link.
  *
- * The two Impella evidence surfaces sit at the bottom and mean different things. The manufacturer
- * figures are a *measurement clarification* — several numbers measuring different quantities. The
- * textbook pair is a *held disagreement* — one source contradicting itself. Neither is rendered as
- * the other, and nothing here averages anything.
+ * The Impella flows are taught from the instructions for use: the mean flow at each P-level, read
+ * from the register, beside the flow account. The evidence surface at the bottom is a *measurement
+ * clarification* — the manufacturer's several numbers measuring different quantities. Nothing here
+ * averages anything. One textbook's two Impella CP flows are not shown (owner ruling
+ * mcs-impella-cp-flow-conflict, 2026-11-12: "Teach the IFU P-level flows").
  */
 
 /**
- * The two evidence records this section is required to render, resolved at import.
+ * The evidence record this section is required to render, resolved at import.
  *
  * Resolved eagerly and loudly: a missing record would otherwise render as a silently absent
- * disclosure, and the absence of a held disagreement looks exactly like agreement.
+ * disclosure.
  */
 function requireClarification(id: string) {
   const record = criticalCareMeasurementClarificationById.get(id)
@@ -65,14 +62,7 @@ function requireClarification(id: string) {
   return record
 }
 
-function requireConflict(id: string) {
-  const record = criticalCareSourceConflictById.get(id)
-  if (!record) throw new Error(`MCS placement panel: source conflict ${id} is not registered`)
-  return record
-}
-
 const clarification = requireClarification('clarification.mcs.impella-cp-flow-measurands')
-const conflict = requireConflict('conflict.mcs.impella-cp-textbook-flow')
 
 interface ChainLink {
   readonly id: string
@@ -312,16 +302,8 @@ export function ImpellaUnloadingPlacementPanel({
             <MeasurementClarification clarification={clarification} headingLevel={5} />
             <p className="mt-3 text-xs leading-5" data-clarification-note>
               Three different quantities: a maximum mean flow, a peak flow in systole, and an
-              average observed during support. Compare a displayed flow with the mean, never with
-              the peak.
-            </p>
-          </AfterCommitment>
-
-          <AfterCommitment summary="One textbook gives two different maximum flows">
-            <HeldDisagreement conflict={conflict} headingLevel={5} />
-            <p className="mt-3 text-xs leading-5" data-conflict-note>
-              The textbook contradicts itself. Use the instructions for use for the device
-              specification.
+              average observed during support. Compare a displayed flow with the mean for the
+              P-level in use, never with the peak.
             </p>
           </AfterCommitment>
 
