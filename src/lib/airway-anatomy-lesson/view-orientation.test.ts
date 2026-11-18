@@ -13,6 +13,7 @@ import type { PatientDirection, ViewReference } from './types'
 import {
   CT_AXIAL_VIEW,
   CT_CORONAL_VIEW,
+  CT_SAGITTAL_VIEW,
   HEAD_OF_BED_LOOKING_DOWN,
   MODEL_CAMERA_POSITION,
   MODEL_FRONT_VIEW,
@@ -57,6 +58,14 @@ describe('the camera rule', () => {
     expect(patientRightSide(CT_AXIAL_VIEW)).toBe('left')
     expect(patientRightSide(CT_CORONAL_VIEW)).toBe('left')
     expect(patientRightSide(MODEL_FRONT_VIEW)).toBe('left')
+  })
+
+  it('draws sagittal CT with the head up and the front of the chest on the left', () => {
+    expect(clockOf(CT_SAGITTAL_VIEW, 'superior')).toBeCloseTo(12)
+    expect(clockOf(CT_SAGITTAL_VIEW, 'posterior')).toBeCloseTo(3)
+    expect(clockOf(CT_SAGITTAL_VIEW, 'anterior')).toBeCloseTo(9)
+    // Left and right run along the line of sight, so they have no side on a sagittal slice.
+    expect(clockOf(CT_SAGITTAL_VIEW, 'right')).toBeNull()
   })
 })
 

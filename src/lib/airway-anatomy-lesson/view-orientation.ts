@@ -28,6 +28,11 @@ export const HEAD_OF_BED_LOOKING_DOWN: ViewReference = { looking: 'inferior', to
 export const CT_AXIAL_VIEW: ViewReference = { looking: 'superior', top: 'anterior' }
 /** Coronal CT as radiology displays it: seen from the front, head at the top. */
 export const CT_CORONAL_VIEW: ViewReference = { looking: 'posterior', top: 'superior' }
+/**
+ * Sagittal CT as the linked viewer draws it (`makeSlicePlane`: image right is +y, posterior):
+ * seen from the patient's left side, head at the top, the front of the chest on the image left.
+ */
+export const CT_SAGITTAL_VIEW: ViewReference = { looking: 'right', top: 'superior' }
 /** The 3D models open seen from the front, head at the top (orbit controls then turn them). */
 export const MODEL_FRONT_VIEW: ViewReference = { looking: 'posterior', top: 'superior' }
 

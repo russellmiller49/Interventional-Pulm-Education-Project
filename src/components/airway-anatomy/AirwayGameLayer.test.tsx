@@ -220,7 +220,7 @@ describe('Bronch Quest branch debrief', () => {
     expect(debriefRegion()).not.toBeInTheDocument()
   })
 
-  it('shows no CT line for a fork the lesson gives only one direction', () => {
+  it('gives the basal trunk past RB6 a sagittal CT line (owner ruling sync-missing-ct-cues)', () => {
     const { rerender } = startRun()
     // Past the superior segment, the learner stays in the lower lobe's own continuation.
     driveThrough(rerender, [1, 4, 8, 16])
@@ -229,7 +229,10 @@ describe('Bronch Quest branch debrief', () => {
     expect(debrief).toHaveTextContent(
       "Scope Looking down the RLL, anterior at 12: RB6 posterior, 6 o'clock · RLL basal trunk continues ahead",
     )
-    expect(within(debrief).queryByText('CT')).not.toBeInTheDocument()
+    // Front-to-back against head-to-foot: only the sagittal slice separates the two.
+    expect(debrief).toHaveTextContent(
+      'CT Sagittal, anterior on the image left: RB6 toward the image right · RLL basal trunk toward the image bottom',
+    )
     expect(debrief).not.toHaveTextContent(/Axial|Coronal/)
   })
 
