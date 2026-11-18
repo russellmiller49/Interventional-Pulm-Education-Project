@@ -1,6 +1,7 @@
 import { CAPSTONE_CASES } from '../content/capstone'
 import { COURSE_FLOWS } from '../content/courseFlow'
-import { NUMBER_REGISTER } from '../content/numbers'
+import { NUMBER_REGISTER, resolveNumbers } from '../content/numbers'
+import { BRONCH_SECTIONS } from '../content/sections'
 import { section as bleeding } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as deterioration } from '../content/sections/deterioration'
@@ -203,21 +204,39 @@ describe('fasting, aligned with EBUS Guided (r2-554-bf-fasting, 2026-11-15)', ()
     expect(NUMBER_REGISTER['fasting-solids'].sources.map((source) => source.sourceId)).toEqual([
       'U25',
     ])
-    expect(fasting).toMatch(
-      /For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA guideline allows clear liquids until/,
+    // The sentences as the learner reads them, with the register's values in place.
+    const read = resolveNumbers(fasting)
+    expect(read).toMatch(
+      /For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA preoperative fasting guideline allows clear liquids until 2 hours before the procedure\./,
     )
-    expect(fasting).not.toMatch(/no food for/)
-    expect(JSON.stringify(sedation)).not.toMatch(/\b4 hours\b/)
+    expect(read).toMatch(
+      /Solid food: at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat\./,
+    )
+    // No section of the course still teaches the old rule.
+    for (const flowSection of BRONCH_SECTIONS) {
+      const all = resolveNumbers(JSON.stringify(flowSection))
+      expect(all).not.toMatch(/no food for/i)
+      expect(all).not.toMatch(
+        /\b(4|four) hours\b[^.]*\b(food|fast)|\b(food|fast)[^.]*\b(4|four) hours\b/i,
+      )
+    }
   })
 
   it('assesses aspiration risk for each patient, and defers to local policy', () => {
-    expect(fasting).toMatch(/Aspiration risk is assessed for each patient/)
+    expect(fasting).toMatch(/Assess aspiration risk in every patient/)
+    expect(fasting).toMatch(/settle the anesthesia and procedural plan for that patient beforehand/)
     expect(fasting).toMatch(/a longer fast alone may not remove it/)
     expect(fasting).toMatch(/Your anesthesia and procedural policy sets the fasting interval/)
   })
 
   it('keeps BTS 2013 as history in the register note, and signs nothing', () => {
-    expect(NUMBER_REGISTER['fasting-solids'].note).toMatch(/BTS 2013 \(grade D\) gave 4 hours/)
+    expect(NUMBER_REGISTER['fasting-solids'].note).toMatch(
+      /BTS 2013 \(grade D\) and ICS\/NCCP\(I\)\/IAB 2019 \(3A\) gave 4 hours/,
+    )
+    expect(NUMBER_REGISTER['fasting-solids'].note).toMatch(/neither was re-read/)
+    expect(block(sedation, 'before-and-after').sourceRefs.map((ref) => ref.sourceId)).toContain(
+      'U25',
+    )
     for (const id of ['fasting-solids', 'fasting-clear-fluids'] as const)
       expect(NUMBER_REGISTER[id].signedBy).toBeNull()
   })

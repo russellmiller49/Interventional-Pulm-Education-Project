@@ -14,8 +14,9 @@ import type {
  * frames. The monitoring teaching of the retired `shared-airway` section lives here.
  *
  * Sources: the course textbook (S1) and training manual (S2); the 2018 moderate-sedation guideline
- * (U1); the 2019 joint guideline (U2) and BTS 2013 (U14) through the numbers register (rows 1 to 6,
- * 10 and 19); the product labels for the reversal agents (U20, U21).
+ * (U1); the ASA 2017 fasting guideline (U25), the 2019 joint guideline (U2) and BTS 2013 (U14)
+ * through the numbers register (rows 1 to 6, 10 and 19); the product labels for the reversal agents
+ * (U20, U21).
  */
 const TOPICAL = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 74 } },
@@ -33,6 +34,9 @@ const SEDATION = [
 const MONITORING = [
   { sourceId: 'U1', location: { kind: 'section', label: 'monitoring recommendations' } },
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 75, to: 79 } },
+] as const
+const FASTING = [
+  { sourceId: 'U25', location: { kind: 'section', label: 'fasting recommendations, Table 1' } },
 ] as const
 const REVERSAL = [
   { sourceId: 'U1', location: { kind: 'section', label: 'reversal recommendations' } },
@@ -298,13 +302,13 @@ export const section: BronchSectionDefinition = {
       body: 'An empty stomach before. Drugs that are still working after. Your anesthesia and procedural policy sets the fasting interval.',
       pointsLabel: 'Fasting and going home',
       points: [
-        `For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA guideline allows clear liquids until ${num('fasting-clear-fluids')} before.`,
+        `For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA preoperative fasting guideline allows clear liquids until ${num('fasting-clear-fluids')} before the procedure.`,
         `Solid food: ${num('fasting-solids')}.`,
-        'Aspiration risk is assessed for each patient. Increased risk needs an anesthesia and procedural plan made for that patient; a longer fast alone may not remove it.',
+        'Assess aspiration risk in every patient. When it is increased, settle the anesthesia and procedural plan for that patient beforehand; a longer fast alone may not remove it.',
         `After any sedation: no driving, machinery or legal documents for ${num('post-sedation-restriction')}.`,
       ],
       claimClass: 'update',
-      sourceRefs: REVERSAL,
+      sourceRefs: [...FASTING, ...REVERSAL],
       localPolicyIds: ['sedation_policy', 'fasting_and_aspiration_policy'],
     },
     {

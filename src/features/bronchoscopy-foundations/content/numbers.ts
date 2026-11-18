@@ -165,7 +165,7 @@ const ROWS = {
     status: 'verified',
     sources: [ASA_FASTING('Recommendations for Solids and Nonhuman Milk; Table 1')],
     ...ASA_FASTING_CHECK,
-    note: 'Written for healthy patients having an elective procedure under general anesthesia, regional anesthesia or procedural sedation. BTS 2013 (grade D) gave 4 hours for food before diagnostic flexible bronchoscopy; that is earlier bronchoscopy guidance and no longer the default taught here.',
+    note: 'Written for healthy patients having an elective procedure under general anesthesia, regional anesthesia or procedural sedation. BTS 2013 (grade D) and ICS/NCCP(I)/IAB 2019 (3A) gave 4 hours for food before flexible bronchoscopy, as this row recorded them until 2026-11-14; neither was re-read for this change. That is earlier bronchoscopy guidance and no longer the default taught here.',
   },
   'fasting-clear-fluids': {
     row: 1,
