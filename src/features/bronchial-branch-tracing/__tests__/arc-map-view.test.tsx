@@ -83,6 +83,21 @@ describe('the map on screen', () => {
     expect(container.querySelectorAll('[data-arc-ghost][data-arc-route]')).toHaveLength(0)
   })
 
+  it('draws the next division off the route as its own faint kind of line, never the route', () => {
+    const levels = [{ angles: [270, 90], route: 0, references: [[], [0, 180]] }]
+    const { container } = render(<ArcMap rim={RIM} levels={levels} star label="Model map" />)
+    const refs = container.querySelectorAll('[data-arc-reference]')
+    expect(refs).toHaveLength(2)
+    for (const ref of Array.from(refs)) {
+      expect(ref).not.toHaveAttribute('data-arc-route')
+      expect(ref).not.toHaveAttribute('data-arc-pending')
+      expect(ref).not.toHaveAttribute('data-arc-ghost')
+    }
+    // They are numbered as nothing and carry no star.
+    expect(container.querySelectorAll('[data-arc-division]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-arc-star]')).toHaveLength(1)
+  })
+
   it('turns and zooms inside a frame that never changes, with its words kept upright', () => {
     const levels = [
       { angles: [270, 90], route: 0 },
