@@ -449,7 +449,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
     bridgeExitBoundary:
       'Durable support is a different decision from temporary support, not a longer version of it. Candidacy evaluation, implantation, anticoagulation, driveline care, and an agreed strategy — bridge to transplant, bridge to candidacy, or destination therapy — are settled before implantation. A patient arriving in the intensive-care unit with a durable pump already carries that strategy with them.',
     productReferences: [],
-    productReferenceBoundary: `HeartMate 3 speed in use: ${MCS_NUMBERS.value('heartmate3-speed-typical')}. Each patient has a baseline flow, power and pulsatility index; read every value against that baseline.`,
+    productReferenceBoundary: `HeartMate 3 typical operating speed: ${MCS_NUMBERS.value('heartmate3-speed-typical')}. The manufacturer’s adjustable range is ${MCS_NUMBERS.value('heartmate3-speed-range')}. Each patient has a baseline flow, power and pulsatility index; read every value against that baseline.`,
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: [

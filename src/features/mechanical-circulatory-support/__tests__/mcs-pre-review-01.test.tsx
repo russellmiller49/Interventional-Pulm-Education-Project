@@ -526,7 +526,7 @@ describe('F27 / F28 — the durable reference is named, and the estimator direct
     expect(reference.alarms.filter((alarm) => alarm.active)).toHaveLength(0)
     // The copy's claim is now true of the state it opens on.
     expect(section7.startingContext).toMatch(
-      /mean arterial pressure is in the goal range of 70–80 mm Hg/,
+      /mean arterial pressure is in the goal range of 75–90 mm Hg/,
     )
     expect(section7.startingContext).not.toMatch(/OD-0\d/)
     expect(section8.startingContext).not.toMatch(/OD-0\d/)

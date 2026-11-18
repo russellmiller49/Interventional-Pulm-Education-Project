@@ -116,7 +116,8 @@ describe('every number the echo teaching uses is a register row', () => {
       expect({ id, class: row.class, checkedOn: row.checkedOn }).toEqual({
         id,
         class: 'device',
-        checkedOn: '2026-11-03',
+        // First read on 2026-11-03; re-verified on 2026-11-18 for the owner's register ruling.
+        checkedOn: '2026-11-18',
       })
       expect(row.sources.length).toBeGreaterThan(0)
       for (const source of row.sources) {

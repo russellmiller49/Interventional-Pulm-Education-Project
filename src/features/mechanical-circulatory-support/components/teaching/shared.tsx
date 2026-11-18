@@ -179,6 +179,8 @@ const MCS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
   'erc-2025-special-circumstances': 'ERC guidelines',
   'aha-cpr-mcs-statement-2017': 'AHA scientific statement',
   'aha-2025-special-circumstances': 'AHA guidelines',
+  'ishlt-durable-mcs-2023': 'ISHLT guidelines',
+  'abbott-heartmate3-pump-parameters-card': 'Abbott HeartMate 3 parameter card',
 }
 
 /**

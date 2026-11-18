@@ -759,7 +759,7 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     expect(alarm!.explanation).not.toMatch(/^Elevated aortic pressure reduces/)
   })
 
-  it('keeps the speed-change authorization, and starts the reference patient inside the 70–80 mm Hg goal', () => {
+  it('keeps the speed-change authorization, and starts the reference patient inside the 75–90 mm Hg goal', () => {
     const unauthorized = mcsReplay({ id: 'authorization', device: 'lvad' }, [
       { id: 'arm', actions: [{ type: 'SET_LVAD_CONTROL', control: 'speedRpm', value: 5800 }] },
     ])
@@ -767,8 +767,8 @@ describe('MCS-PRE-REVIEW-02 · F27 and F28 — the durable pump’s measurands',
     expect(unauthorized.arms.arm.device).toMatchObject({ speedRpm: 5200 })
 
     const reference = mcsReplay({ id: 'reference-map', device: 'lvad' }, [{ id: 'arm' }])
-    expect(reference.arms.arm.metrics.mapMmHg).toBeGreaterThanOrEqual(70)
-    expect(reference.arms.arm.metrics.mapMmHg).toBeLessThanOrEqual(80)
+    expect(reference.arms.arm.metrics.mapMmHg).toBeGreaterThanOrEqual(75)
+    expect(reference.arms.arm.metrics.mapMmHg).toBeLessThanOrEqual(90)
     expect(reference.arms.arm.activeAlarmIds).toHaveLength(0)
   })
 })
