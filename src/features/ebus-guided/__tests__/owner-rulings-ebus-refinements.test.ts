@@ -69,7 +69,7 @@ describe('the scope lesson (ebus-scope-lesson-points)', () => {
     expect(text).toMatch(
       /Whether one is used depends on the equipment and the clinical circumstances/,
     )
-    expect(text).toMatch(/When it is used, clear the air from it first/)
+    expect(text).toMatch(/When it is used, clear the air from it before the procedure/)
   })
 
   it('keeps the larger, more rigid tip without giving every model the same bending', () => {
@@ -137,20 +137,22 @@ describe('the four review stems (ebus-review-stems)', () => {
     expect(item.prompt).toMatch(
       /The scope is in the right main bronchus\. Outline 3 is the azygos vein/,
     )
-    expect(item.prompt).toMatch(/on the side of the vein away from the orientation dot/)
+    expect(item.prompt).toMatch(
+      /Outline 2 lies wholly on the side of the vein away from the orientation dot, and outline 1 almost wholly/,
+    )
     expect(keyed(item).text).toBe('10R')
     expect(keyed(item).rationale).toMatch(/That border is the lower limit of 4R/)
-    expect(keyed(item).rationale).toMatch(/is given, not shown/)
+    expect(keyed(item).rationale).toMatch(/It cannot tell you which bronchus the scope is in/)
   })
 
   it('2L: keeps the upper margin of the arch, and says where the left side comes from', () => {
     const item = byId('review-report-2l')
-    expect(item.prompt).toMatch(/transducer turned to the left wall/)
+    expect(item.prompt).toMatch(/transducer turned toward the patient’s left/)
     expect(keyed(item).text).toBe('2L')
     expect(keyed(item).rationale).toMatch(
       /upper margin of the arch is the lower border of station 2L/,
     )
-    expect(keyed(item).rationale).toMatch(/which is given, not shown/)
+    expect(keyed(item).rationale).toMatch(/It cannot tell you they are on the left/)
   })
 
   it('necrosis: tells the supposed Doppler finding from the still, and does not call the sign diagnostic', () => {
@@ -160,13 +162,15 @@ describe('the four review stems (ebus-review-stems)', () => {
     expect(keyed(item).text).toMatch(
       /associated with malignancy, and not a substitute for a sample/,
     )
-    expect(keyed(item).rationale).toMatch(/the absent flow is supposed for the question/)
+    expect(keyed(item).rationale).toMatch(
+      /Doppler was not on, so the absent flow is an assumption here/,
+    )
     expect(keyed(item).rationale).toContain(EBUS_NUMBERS.value('cns-specificity'))
     const tab = FEATURE_TABS.find((entry) => entry.id === 'cns')!
     expect(tab.meaning).toMatch(/^Associated with malignancy/)
     expect(tab.meaning).toMatch(/It is not diagnostic/)
     const copy = [item.prompt, ...item.choices.flatMap((c) => [c.text, c.rationale]), tab.meaning]
-    expect(copy.join(' ')).not.toMatch(/most specific single feature/)
+    expect(copy.join(' ')).not.toMatch(/most specific/)
   })
 
   it('Doppler: keeps a path that avoids the vessel, and says why this vessel is in the way', () => {
@@ -196,7 +200,8 @@ describe('the needle lab (ebus-needle-lab-model)', () => {
   it('labels five movements as the exercise minimum, not as adequate sampling', () => {
     expect(unit.lab!.needleMovements).toBe(5)
     expect(text).toMatch(/asks for 5 movements within the node/)
-    expect(text).toMatch(/not the number that makes a sample adequate/)
+    expect(text).toMatch(/fewer than the at least 10 on each pass taught in the needle lesson/)
+    expect(text).toMatch(/no count of movements makes a sample adequate/)
   })
 
   it('presents no needle angle as required', () => {
@@ -206,6 +211,8 @@ describe('the needle lab (ebus-needle-lab-model)', () => {
   it('acknowledges the stylet without implying it can be skipped', () => {
     expect(text).toMatch(/The lab does not model the stylet/)
     expect(text).toMatch(/handling the stylet is part of the pass/)
+    expect(text).toMatch(/whether it is in place as the needle enters/)
+    expect(text).not.toMatch(/a step you can skip/)
     expect(text).toMatch(/follow the instructions for the needle you are using/)
     expect(unit.boundary).toMatch(/The stylet is not modelled/)
   })

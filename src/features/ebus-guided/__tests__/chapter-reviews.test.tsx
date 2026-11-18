@@ -160,7 +160,7 @@ describe('each question against the labels on its image', () => {
       'Aorta',
     ])
     expect(byId('review-report-2l').question.prompt).toMatch(
-      /Outline 4 is the aorta and outline 1 is the brachiocephalic trunk.*outlined 2 and 3/,
+      /Outline 4 is the aorta, at the arch, and outline 1 is the brachiocephalic trunk.*outlined 2 and 3/,
     )
     expect(keyed('review-report-2l').text).toBe('2L')
   })

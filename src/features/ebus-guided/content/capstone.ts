@@ -184,7 +184,7 @@ export const capstoneLessons: Lesson[] = [
         ],
         ['11Ri: malignant cells', 'N1 station involved on site'],
       ],
-      'Each station gets its own line: what was sampled and what it showed. A sample of blood alone is reported as nondiagnostic, not as negative, and the sample that follows it is judged on its own. Every line is provisional until final pathology.',
+      'Each station gets its own line: what was sampled and what it showed. A sample of blood alone does not represent the node: it is reported as nondiagnostic, not as negative, and the sample that follows it is judged on its own. Every line is provisional until final pathology.',
     ),
     transfer: q(
       'exam-report',
@@ -241,7 +241,7 @@ export const capstoneLessons: Lesson[] = [
       'On-site cytology from 4L: lymphocytes, no malignant cells. What does this settle?',
       [
         'The sample represents the node and shows no malignancy so far; final pathology is pending',
-        'Lymphocytes show that the needle sampled the node. An on-site reading is provisional and does not exclude malignancy, so the station is negative so far and the report says final pathology is pending.',
+        'Lymphocytes show that the needle sampled the node. No malignant cells on site does not exclude malignancy: report the station as sampled, without malignant cells on site, with final cytopathology pending.',
       ],
       [
         'N3 disease is excluded, and the report can say so now',
@@ -357,7 +357,7 @@ export const capstoneLessons: Lesson[] = [
     ),
     question: q(
       'exam-4r-result',
-      'The first passes at 4R return blood, with no lymphocytes and no malignant cells. What does that mean for 4R?',
+      'The first aspirate at 4R is blood only, with no lymphocytes and no malignant cells. What does that mean for 4R?',
       [
         'Nothing yet: a blood-only aspirate is nondiagnostic, so make further passes',
         'Blood alone does not show that the node was sampled, so it is nondiagnostic and is not a negative result. Further passes at 4R then return lymphocytes without malignant cells. That later sample is assessed on its own: representative, and negative on site pending final cytopathology.',
@@ -378,7 +378,10 @@ export const capstoneLessons: Lesson[] = [
         'One',
         'Count the stations with malignant cells: station 7 only. That is N2a for now. If final pathology finds tumor at 4R, it becomes N2b.',
       ],
-      ['Two, because two N2 stations were sampled', 'Sampled is not involved. Only 7 is involved.'],
+      [
+        'Two, because two N2 stations were sampled',
+        'Sampled is not involved. Only 7 has malignant cells on site.',
+      ],
       [
         'It depends on how many nodes at station 7 contained tumor',
         'The count is of stations, not of nodes or passes.',

@@ -26,11 +26,11 @@ type StepId = (typeof MODEL_STEPS.needle)[number]
 const STEP_TEXT: Record<StepId, { title: string; how: string }> = {
   sheath: {
     title: 'Bring the sheath out and lock it',
-    how: 'Move the sheath adjuster until the end of the sheath is seen beyond the scope tip, then lock it. The needle never leaves a sheath that is still inside the working channel.',
+    how: 'Move the sheath adjuster until the end of the sheath is just seen beyond the scope tip, then lock it. The needle never leaves a sheath that is still inside the working channel.',
   },
   stop: {
     title: 'Set the needle stop',
-    how: `The stop is a depth limit set from the size of the node and from what lies beyond it: here, a vessel. On the ultrasound picture, read the depth along the needle path to the far side of the node and set the stop to it. This lab accepts a stop up to ${NEEDLE_LAB.stopShortMm} mm short of the far side. That tolerance belongs to this drawn node; it is not a clinical threshold.`,
+    how: `The stop is a depth limit set from the size of the node and from what lies beyond it: here, a vessel. On the ultrasound picture, read the depth along the needle path to the far side of the node and set the stop to it. This lab accepts a stop up to ${NEEDLE_LAB.stopShortMm} mm short of the far side. That tolerance is this model’s, not a clinical threshold.`,
   },
   'in-node': {
     title: 'Advance the needle into the node',
@@ -42,11 +42,11 @@ const STEP_TEXT: Record<StepId, { title: string; how: string }> = {
   },
   agitate: {
     title: 'Move the needle within the node',
-    how: 'With the needle slider, draw the needle back toward the near side of the node and return it to the stop. Keep the tip inside the node and in the image. The count is the minimum for this exercise; it is not the number that makes a sample adequate.',
+    how: 'With the needle slider, draw the needle back toward the near side of the node and return it to the stop. Keep the tip inside the node and in the image. The count is this exercise’s minimum. No count of movements makes a sample adequate.',
   },
   'protected-removal': {
     title: 'Retract the needle fully',
-    how: 'Bring the needle slider all the way back so the whole needle is inside its sheath, and only then remove the assembly. An exposed needle is never drawn back through the working channel.',
+    how: 'Bring the needle slider all the way back so the whole needle is inside its sheath, with the sheath still locked, and only then remove the assembly. An exposed needle is never drawn back through the working channel.',
   },
 }
 const signed = (degrees: number) => (degrees > 0 ? '+' : '') + degrees + '°'

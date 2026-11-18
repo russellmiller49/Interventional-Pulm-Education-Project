@@ -109,10 +109,10 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'still', station: '10R' },
         q(
           'review-plan-10r',
-          'The scope is in the right main bronchus. Outline 3 is the azygos vein. The nodes outlined 1 and 2 lie on the side of the vein away from the orientation dot. Which station are they in?',
+          'The scope is in the right main bronchus. Outline 3 is the azygos vein. Outline 2 lies wholly on the side of the vein away from the orientation dot, and outline 1 almost wholly. Which station are they in?',
           [
             '10R',
-            'The dot marks the cephalad side of the image, so nodes on the far side of the azygos vein from it lie caudal to the vein, below its lower border. That border is the lower limit of 4R. Below it, beside the right main bronchus, the nodes are hilar: station 10R. The still shows which side of the vein the nodes are on; that the scope is in the right main bronchus is given, not shown.',
+            'The dot marks the cephalad side of the image, so nodes on the side of the azygos vein away from the dot lie caudal to the vein, below its lower border. That border is the lower limit of 4R. Below it, beside the right main bronchus, the nodes are hilar: station 10R. The still shows which side of the vein the nodes are on. It cannot tell you which bronchus the scope is in; you know that from where you drove it.',
           ],
           [
             '4R',
@@ -143,14 +143,14 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'clip', clip: 'doppler-node-vessels', stop: 'flow' },
         q(
           'review-plan-path',
-          'A frame with colour Doppler on, before a needle is passed into this node. Colour appears at the near margin of the node, on the side of the orientation dot. What does it change?',
+          'A frame with colour Doppler on, before a needle is passed into this node. Colour appears at the margin of the node on the side of the orientation dot. What does it change?',
           [
             'The needle path: choose a line into the node that avoids it',
-            'The colour is a small vessel at the margin of the node. The needle enters the image from the side of the dot and crosses the near margin first, so this vessel lies where a needle would enter. Doppler is part of assessing the path: choose a line into the node that is clear of the vessel, and confirm it before the needle leaves the sheath.',
+            'The colour is a small vessel at the margin of the node. The needle enters the image from the side of the dot, so this vessel lies where a needle would enter the node. Doppler is part of assessing the path: choose a line into the node that is clear of the vessel.',
           ],
           [
             'Nothing: colour outside the node does not matter',
-            'A vessel at the near margin, on the side the needle comes from, lies where a needle would enter the node. It matters to the path.',
+            'A vessel at the margin on the side the needle comes from lies where a needle would enter the node. It matters to the path.',
           ],
           [
             'The diagnosis: flow at the margin means the node is malignant',
@@ -205,7 +205,7 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
           'A grayscale still of a node at station 7 with well-defined dark areas inside it. No Doppler is shown on this frame. Suppose Doppler were then applied and showed no flow in those areas. What would the sign be, and how much would it weigh?',
           [
             'A coagulation necrosis sign: associated with malignancy, and not a substitute for a sample',
-            `A dark area inside the node with no flow on Doppler is a coagulation necrosis sign. On this still you can see only the dark areas; the absent flow is supposed for the question. The sign is associated with malignancy (specificity ${EBUS_NUMBERS.value('cns-specificity')} in pooled studies), but granulomatous disease such as tuberculosis can show it too, so it raises suspicion and the node is still sampled.`,
+            `A dark area inside the node with no flow on Doppler is a coagulation necrosis sign. On this still you can see only the dark areas: Doppler was not on, so the absent flow is an assumption here. The sign is associated with malignancy (specificity ${EBUS_NUMBERS.value('cns-specificity')} in a pooled analysis), but tuberculosis can show it too, so it raises suspicion and the node is still sampled.`,
           ],
           [
             'A central hilar structure: it favors a benign node',
@@ -271,10 +271,10 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'still', station: '2L' },
         q(
           'review-report-2l',
-          'The scope is in the trachea with the transducer turned to the left wall. Outline 4 is the aorta and outline 1 is the brachiocephalic trunk. The nodes outlined 2 and 3 lie on the side of the aorta nearer the orientation dot. Which station?',
+          'The scope is in the trachea with the transducer turned toward the patient’s left. Outline 4 is the aorta, at the arch, and outline 1 is the brachiocephalic trunk. The nodes outlined 2 and 3 lie on the side of the aorta nearer the orientation dot. Which station?',
           [
             '2L',
-            'The dot marks the cephalad side of the image, so these nodes lie above the aorta outlined here, which is the arch. The upper margin of the arch is the lower border of station 2L: a left paratracheal node above it is in 2L. The still shows that the nodes are above the arch; that they are left paratracheal comes from where the transducer is turned, which is given, not shown.',
+            'The dot marks the cephalad side of the image, so these nodes lie above the aortic arch. The upper margin of the arch is the lower border of station 2L: a left paratracheal node above it is in 2L. The still shows that the nodes are above the arch. It cannot tell you they are on the left; you know that from which way the transducer is turned.',
           ],
           [
             '4L',
