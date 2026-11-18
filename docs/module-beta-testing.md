@@ -193,45 +193,38 @@ Stored URLs exclude arbitrary query parameters such as auth tokens.
 ## Deployment
 
 The **main-site Supabase project** is `tqnhxlwvkkswuckszlee` (Endoreels), separate from
-IP_Literature. Read-only inspection on **2026-11-10 17:59:14 UTC** found the expected cumulative
-beta schema, but migration history does not match repository versions. See the exact comparison
-and launch evidence in [Beta launch PR 1](gap-remediation/beta-launch-pr1-2026-11-10.md).
-These files describe the expected schema; this list is **not** an instruction to reapply them:
+IP_Literature. All seven beta migrations below are live in production, and since the reviewed
+history repair of **2026-11-18** each is recorded in production migration history under its own
+checked-in version and name. Evidence and the repair record are in
+[Beta launch PR 1](gap-remediation/beta-launch-pr1-2026-11-10.md). This list is **not** an
+instruction to reapply them:
 
 1. `supabase/migrations/20260912234953_module_beta_feedback.sql`: feedback table, indexes,
    and private `module-beta-feedback` screenshot bucket.
 2. `supabase/migrations/20260925055243_expand_module_beta_feedback_catalog.sql`: permits EBUS
    Guided submissions. Historical Therapeutic Bronchoscopy records remain valid and reviewable, including local notes and exports.
 3. `supabase/migrations/20261004072344_add_eus_b_simulator_to_module_beta_feedback.sql`: permits
-   EUS-B Simulator submissions. Applied to Endoreels on 2026-10-07: source version
-   `20261004072344` is recorded in production migration history as
-   `20261007011957_add_eus_b_simulator_to_module_beta_feedback`. Verification at
+   EUS-B Simulator submissions. Applied to Endoreels on 2026-10-07; verification at
    **2026-10-07 01:19:58 UTC** confirmed that the prior 13 allowed module IDs were preserved,
-   EUS-B was added, and the PostgREST schema reload completed. **Live EUS-B feedback has not
-   yet been verified**; this migration record is not a successful tester submission or admin
-   review. No migration or database write was run for this documentation update.
+   EUS-B was added, and the PostgREST schema reload completed.
 4. `supabase/migrations/20261016025933_add_literature_atlas_to_module_beta_feedback.sql`: permits
-   Literature Atlas submissions, keeping all 14 earlier module IDs. The live constraint includes
-   `literature-atlas`, but neither this version nor migration name is recorded in production history.
+   Literature Atlas submissions, keeping all 14 earlier module IDs.
 5. `supabase/migrations/20261103180000_add_dolphin_bronchoscopy_to_module_beta_feedback.sql`:
-   permits Dolphin Bronchoscopy submissions, keeping every earlier module ID. The live constraint
-   includes `dolphin-bronchoscopy`, but neither this version nor name is recorded in production history.
+   permits Dolphin Bronchoscopy submissions, keeping every earlier module ID.
 6. `supabase/migrations/20261109120000_module_beta_reviews.sql`: the overall-review table, one
    row per reviewer per module, with the same service-role-only access as the feedback table.
-   The table exists and matches the columns, constraints, indexes, RLS and role permissions in
-   this SQL; it contains one review. Neither this version nor name is recorded in production history.
    Module IDs are checked by the API against the catalog, so adding a module needs no change to
    this table.
 7. `supabase/migrations/20261112130000_add_eus_b_guided_to_module_beta_feedback.sql`: permits
-   EUS-B Guided Course submissions, keeping every earlier module ID. Written with the module and
-   **not applied**: until it is, the hub lists the course and its feedback wrapper opens, but
-   saving feedback for it fails the module-ID check.
+   EUS-B Guided Course submissions, keeping every earlier module ID. Applied on 2026-11-12; the
+   live module-ID check lists exactly this file's 17 IDs.
 
-The first two are recorded in the main-site project on 2026-09-25 UTC as versions
-`20260925055413` and `20260925055423`, respectively. No production schema/history changes were
-made during the November 10 inspection. Never blindly reapply a `CREATE TABLE` migration when
-its table exists. Reconcile history only through a separately authorized plan after rechecking
-the live objects. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
+Never blindly reapply a `CREATE TABLE` migration when its table exists, and never run
+`supabase db push`, MCP `apply_migration` or the dashboard SQL editor against this database: it is
+shared with other applications whose history does not match this repository. A future beta
+migration is applied from the primary checkout with its history row recorded in the same step
+(see the repair record linked above). Follow the primary-checkout requirements in `AGENTS.md` for
+database operations.
 
 In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
 configuration. `NEXT_PUBLIC_MODULE_FEEDBACK_MODE` selects local development storage only; it never changes

@@ -123,6 +123,27 @@ effects arrived. Do not label these three effects absent, mark their migration f
 blindly rerun the `CREATE TABLE` SQL. History reconciliation needs a separately authorized,
 reviewed plan that first rechecks this inventory and the differently timestamped entries.
 
+### History reconciled, 2026-11-18
+
+The table above records the state on 2026-11-10. On **2026-11-18 03:52–03:58 UTC** the owner ran
+the authorized, independently reviewed repair (option R1) from the primary checkout with Supabase
+CLI 2.88.1 `migration repair`, one version per call. Only rows of
+`supabase_migrations.schema_migrations` changed; no migration SQL ran.
+
+| Step                                   | Versions                                                                                                                                    | History rows |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Recorded as applied, under own version | `20260912234953`, `20260925055243`, `20261004072344`, `20261016025933`, `20261103180000`, `20261109120000`, `20261112130000` (EUS-B Guided) | 42 → 49      |
+| Removed (byte-identical duplicates)    | `20260925055413` (was `20260912234953`), `20260925055423` (was `20260925055243`), `20261007011957` (was `20261004072344`)                   | 49 → 46      |
+
+Verified after every step and independently afterwards (read-only): the 39 history rows of other
+applications in this shared database are byte-identical to before; the beta tables' columns,
+constraints, indexes, RLS, role permissions, bucket and storage policy are identical to the
+pre-repair inspection; report, review and screenshot-reference counts are unchanged. A full backup
+of the history table and the exact reverse commands are kept in the owner's local records, outside
+Git. Production history now has every beta migration under its checked-in version, so the next
+beta migration can be applied and recorded in one step. The non-beta history drift of other
+applications is outside this repair and unchanged: `supabase db push` must still never be used.
+
 - **Reviews:** all 10 column names, types, nullability and defaults match: `id`, `user_id`,
   `tester_email`, `module_id`, `track`, `profile_snapshot`, `answers`, `form_version`,
   `created_at`, `updated_at`. Primary key, `ON DELETE SET NULL` user FK, bounded module-ID
@@ -309,19 +330,19 @@ environment files are part of the PR.
 
 ## Scenario matrix
 
-| Scenario                                                               | Automated/local result                                                 | Production result                                  |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
-| Verified non-admin complete learner + educator review                  | Passed, real auth helper + synthetic adapters                          | Untested                                           |
-| Edit same review; same ID and creation time, one row per user/module   | Passed, modeled upsert; browser edit/reload                            | Untested real persistence; unique index inspected  |
-| Forged account/email/profile/review ID cannot replace server identity  | Passed                                                                 | Untested authenticated request                     |
-| Reviewer B cannot read or overwrite A; all-review list admin-only      | Passed                                                                 | Untested with two accounts                         |
-| Annotated PNG failure preserves exact bytes and report ID on retry     | Passed in browser; API upload/retry tests passed                       | Untested                                           |
-| Upload/insert failure; delayed/lost commit response; overlapping retry | Passed, synthetic error injection; images retained after insert starts | Untested                                           |
-| Expired/revoked/missing admin grant denies image before storage read   | Passed, real auth helper + synthetic entitlement query                 | Untested authenticated request                     |
-| Current admin can retrieve an uncached PNG                             | Passed, synthetic storage                                              | Untested real retrieval                            |
-| Browser roles denied private table/bucket access                       | Live metadata matches intended rules                                   | Metadata passed; authenticated HTTP untested       |
-| Visible wrappers/catalog and standard route framing                    | Passed, all 11 local wrappers                                          | Signed-out gates and 11 standard routes passed     |
-| Migration ledger matches repository versions                           | Discrepancies documented                                               | **Failed ledger parity**, schema comparison passed |
+| Scenario                                                               | Automated/local result                                                 | Production result                                                                                                          |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Verified non-admin complete learner + educator review                  | Passed, real auth helper + synthetic adapters                          | Untested                                                                                                                   |
+| Edit same review; same ID and creation time, one row per user/module   | Passed, modeled upsert; browser edit/reload                            | Untested real persistence; unique index inspected                                                                          |
+| Forged account/email/profile/review ID cannot replace server identity  | Passed                                                                 | Untested authenticated request                                                                                             |
+| Reviewer B cannot read or overwrite A; all-review list admin-only      | Passed                                                                 | Untested with two accounts                                                                                                 |
+| Annotated PNG failure preserves exact bytes and report ID on retry     | Passed in browser; API upload/retry tests passed                       | Untested                                                                                                                   |
+| Upload/insert failure; delayed/lost commit response; overlapping retry | Passed, synthetic error injection; images retained after insert starts | Untested                                                                                                                   |
+| Expired/revoked/missing admin grant denies image before storage read   | Passed, real auth helper + synthetic entitlement query                 | Untested authenticated request                                                                                             |
+| Current admin can retrieve an uncached PNG                             | Passed, synthetic storage                                              | Untested real retrieval                                                                                                    |
+| Browser roles denied private table/bucket access                       | Live metadata matches intended rules                                   | Metadata passed; authenticated HTTP untested                                                                               |
+| Visible wrappers/catalog and standard route framing                    | Passed, all 11 local wrappers                                          | Signed-out gates and 11 standard routes passed                                                                             |
+| Migration ledger matches repository versions                           | Discrepancies documented                                               | **Failed ledger parity** on 2026-11-10, schema comparison passed; history reconciled 2026-11-18 (see "History reconciled") |
 
 ## Owner-run live verification checklist
 
@@ -358,7 +379,7 @@ profiles; no preview cookies, service keys or admin session for the reviewer ste
    fail. Creating/changing entitlements for a live test needs separate owner authorization.
 7. Record pass/fail/untested per step and the deployed SHA. Clean up only the explicitly authorized
    synthetic rows/objects. Stop distribution if real submission, edit, isolation or screenshot
-   retrieval fails. Record the owner's migration-history disposition separately; do not replay
+   retrieval fails. The migration-history disposition was recorded on 2026-11-18; do not replay
    `CREATE TABLE` or run a blanket migration push.
 
 Launch requires that owner-run evidence plus the existing per-module acceptance/owner gate in
