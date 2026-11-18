@@ -228,7 +228,8 @@ describe('EBUS Guided teaching numbers', () => {
         ['complications-recovery', 'application', 'sequence', ['observation']],
         ['desaturation-response', 'briefing', 'read', []],
         ['desaturation-response', 'application', 'sequence', ['question']],
-        ['complications-recovery', 'transfer', 'questions', ['transfer']],
+        // The closing question is drawn from the unit whose screen holds the after-procedure teaching.
+        ['desaturation-response', 'transfer', 'questions', ['transfer']],
       ])
       // The bleeding screen holds no desaturation teaching, and the other way round.
       expect(text).not.toMatch(/A falling saturation/)
@@ -252,11 +253,13 @@ describe('EBUS Guided teaching numbers', () => {
 
     it('takes the needle assembly out for suction only after complete retraction (r2-558-beyond 1)', () => {
       expect(text).toMatch(
-        /take the needle assembly out of the working channel, but only once the needle is completely retracted and locked, and handled as its instructions require/,
+        /take the assembly out, but only after the needle is completely retracted, and handle it as the device instructions require/,
       )
     })
 
     it('keeps the scope at the site conditionally, and limits suction', () => {
+      // Pressing is left to the paragraph that qualifies it (r2-558-approve 1).
+      expect(text).not.toMatch(/lets you suction and press on it/)
       expect(text).toMatch(/Stay while you can see the source and the airway is secure/)
       expect(text).toMatch(/the airway comes before the view/)
       expect(text).toMatch(/Suction as much as you need to see .* and no more/)
@@ -265,10 +268,12 @@ describe('EBUS Guided teaching numbers', () => {
 
     it('offers the local measures as options that depend on the bleeding and the patient (r2-558-approve 4)', () => {
       expect(text).toMatch(
-        /depends on how severe the bleeding is, where it is, the oxygenation and how the patient is/,
+        /depends on the severity and site of the bleeding, the oxygenation and the patient’s condition/,
       )
       expect(text).toMatch(/These are options, not a sequence/)
       expect(bleeding.sequence!.explanation).toMatch(/a choice, not a list to work through/)
+      expect(bleeding.sequence!.prompt).toMatch(/The steps overlap/)
+      expect(desaturation.sequence!.prompt).toMatch(/The steps overlap/)
       expect(bleeding.sequence!.steps.map((step) => step.text).join(' ')).not.toMatch(
         /cold saline|bleeding side down/i,
       )
@@ -290,7 +295,7 @@ describe('EBUS Guided teaching numbers', () => {
 
     it('names vasoconstrictors conditionally, with no drug or dose (r2-558-beyond 3)', () => {
       expect(text).toMatch(
-        /A topical vasoconstrictor is sometimes added: the evidence is limited, and no drug or dose suits every case/,
+        /A topical vasoconstrictor is sometimes added: the evidence is limited, and the agent and dose follow local protocol, not a universal recommendation/,
       )
       expect(everything).not.toMatch(/epinephrine|adrenaline|\bmg\b|\bmL\b|1:\d/i)
     })
@@ -313,6 +318,10 @@ describe('EBUS Guided teaching numbers', () => {
       expect(keyOf(bleeding.observation).text).toBe(
         'Inspect the puncture site and both main bronchi',
       )
+      // The screen teaches what the check asks.
+      expect(text).toMatch(
+        /When the bleeding has stopped, inspect the site and both main bronchi for clot before you decide whether more passes are worth taking/,
+      )
     })
 
     it('recognizes desaturation from the patient, and looks for the cause while treating', () => {
@@ -333,15 +342,16 @@ describe('EBUS Guided teaching numbers', () => {
 
     it('withdraws the scope promptly when the fall is significant or worsening (r2-558-approve 2)', () => {
       expect(breath).toMatch(
-        /When the fall is significant or getting worse, withdraw the scope promptly if that is what it takes to ventilate the patient and support the airway/,
+        /When the fall is significant or getting worse, withdraw the scope promptly if that is what it takes to ventilate the patient; do not sit through a long failed attempt at recovery with the scope in place/,
       )
-      expect(breath).toMatch(
-        /Do not sit through a long failed attempt at recovery with the scope in place/,
-      )
-      expect(breath).toMatch(/The exception is blood that you need the scope to clear/)
+      expect(breath).toMatch(/The one reason to keep it in is blood that only the scope can clear/)
+      expect(breath).toMatch(/Call for help early, not after these measures have failed/)
+      // What is published and what is practice (the owner's round-1 request).
+      expect(breath).toMatch(/This response is expert practice: ICS\/IAB 2023 says only that/)
+      expect(said(desaturation)).not.toMatch(/does not promptly return|Not recovering/)
       expect(said(desaturation)).not.toMatch(/if (it|recovery) (does not recover|is not prompt)/)
       expect(desaturation.checklist[2]).toBe(
-        'Significant or worsening: withdraw the scope promptly and ventilate.',
+        'Significant or worsening: withdraw the scope promptly when ventilation needs it.',
       )
       // No number anywhere in the desaturation response.
       const unitText = [
@@ -353,7 +363,7 @@ describe('EBUS Guided teaching numbers', () => {
         desaturation.question.prompt,
         ...desaturation.question.choices.flatMap((choice) => [choice.text, choice.rationale]),
       ]
-      for (const surface of unitText) expect(surface).not.toMatch(/\d/)
+      for (const surface of unitText) expect(surface.replace('ICS/IAB 2023', '')).not.toMatch(/\d/)
       expect(everything).not.toMatch(/100% oxygen/)
     })
 
@@ -368,8 +378,8 @@ describe('EBUS Guided teaching numbers', () => {
       expect(desaturation.sequence!.steps.map((step) => step.text)).toEqual([
         'Stop sampling, retract the needle and undo what set it off',
         'Give oxygen and support the airway while you find the cause',
-        'Significant or worsening: withdraw the scope and ventilate',
-        'Not recovering: escalate airway support and call for help',
+        'Significant or worsening: withdraw the scope when ventilation needs it',
+        'Escalate airway support until ventilation is restored',
       ])
     })
 
@@ -378,7 +388,10 @@ describe('EBUS Guided teaching numbers', () => {
       expect(breath).toMatch(/mediastinitis, is uncommon but important/)
       expect(breath).toMatch(/reasons to be seen the same day/)
       expect(flow.at(-1)!.kind).toBe('transfer')
-      expect(bleeding.transfer.prompt).toMatch(/after discharge following EBUS/)
+      expect(flow.at(-1)!.lessonId).toBe('desaturation-response')
+      expect(desaturation.transfer.prompt).toMatch(/after discharge following EBUS/)
+      // Its hint quotes the passage on that screen.
+      expect(desaturation.paragraphs.join(' ')).toContain(desaturation.transfer.hint!)
     })
 
     it('cites published sources that exist in the registry, with exact citations', () => {

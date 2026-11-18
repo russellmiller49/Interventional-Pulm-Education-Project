@@ -654,7 +654,8 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   /*
    * Bleeding, then desaturation: each has its own screen, ordering task and decision (owner ruling
-   * r2-558-split, 2026-11-15). The lesson still opens on one prediction and ends on its transfer.
+   * r2-558-split, 2026-11-15). The lesson still opens on one prediction and ends on one closing
+   * question, drawn from the desaturation unit because the after-procedure teaching is on its screen.
    */
   'complications-recovery': [
     predict('first-decision', 'Respond to bleeding during a pass'),
@@ -670,7 +671,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       ]),
       from: 'desaturation-response',
     },
-    transfer('Plan recovery and escalation'),
+    { ...transfer('Plan recovery and escalation'), from: 'desaturation-response' },
   ],
   'results-reporting': [
     predict('first-decision', 'Interpret a bloody aspirate'),
