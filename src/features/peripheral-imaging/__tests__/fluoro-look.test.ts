@@ -31,6 +31,10 @@ describe('the course’s bone weighting', () => {
       toneGamma: 1,
       depthTint: 0,
       depthSplitLps: [0, 0, 0],
+      // FluoroView draws denser brighter; only the course asks for the inverted display, and
+      // only the course's bone-dark curve changes it from a straight inversion.
+      invert: false,
+      invertCurve: [0, 1, 1],
     })
   })
 

@@ -1145,6 +1145,22 @@
   font-size: 0.75rem;
   line-height: 1.45;
 }
+/* Display polarity: one labelled pair of buttons, the chosen one pressed. */
+.displayPolarity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.8125rem;
+}
+.displayPolarity button {
+  justify-self: auto;
+}
+.imageAids button:focus-visible {
+  outline: 2px solid #7df0d8;
+  outline-offset: 2px;
+}
 .boneBehind {
   color: #f0bd72;
   font-weight: 600;
