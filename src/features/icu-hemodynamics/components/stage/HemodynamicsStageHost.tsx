@@ -1706,6 +1706,8 @@ function HemodynamicsStageSession({
               }
             : undefined
         }
+        // Numbers only beside the page that reads the same episode.
+        fickEpisodeId={readingPart?.startsWith('fick:') ? readingPart.slice(5) : undefined}
       />
     </div>
   ) : null
