@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { Link } from '@/i18n/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { VIEWER_PAGE_PATH } from '@/features/literature-atlas-viewer/paths'
 import { HandoffContent } from '@/i18n/handoff'
 
 /**
@@ -57,6 +59,10 @@ export default async function LiteratureAtlasPage({
                 <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
                   About this preview
                 </a>
+                <Button asChild size="sm" variant="outline">
+                  {/* Working-group preview: opens a password screen (features/literature-atlas-viewer). */}
+                  <Link href={VIEWER_PAGE_PATH}>Draft evidence</Link>
+                </Button>
                 <Button asChild size="sm" variant="outline">
                   <a href={REVIEW_PORTAL} target="_blank" rel="noreferrer">
                     Physician Review

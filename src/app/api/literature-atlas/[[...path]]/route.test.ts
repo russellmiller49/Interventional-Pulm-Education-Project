@@ -1,4 +1,6 @@
 /** @jest-environment node */
+import { issueSession, viewerConfig } from '@/features/literature-atlas-viewer/server/access'
+
 import { DOWNLOAD_LIMITS, resetDownloads } from './downloads'
 import { GET, HEAD, POST } from './route'
 
@@ -295,6 +297,57 @@ describe('Literature Atlas relay', () => {
         expect((await download(`203.0.113.${i % 250}.${Math.floor(i / 250)}`)).status).toBe(200)
       }
       expect((await download('192.0.2.99')).status).toBe(429)
+    })
+  })
+
+  describe('draft-evidence viewer note', () => {
+    const VIEWER_ENV = {
+      LITERATURE_ATLAS_VIEWER_HASH: `pbkdf2_sha256$100000$${'ab'.repeat(16)}$${'cd'.repeat(32)}`,
+      LITERATURE_ATLAS_VIEWER_SECRET: 'INVENTED-session-secret-for-tests-0123456789',
+      LITERATURE_ATLAS_RELAY_SECRET: 'INVENTED-relay-secret-for-tests-0123456789',
+    }
+    beforeEach(() => Object.assign(process.env, VIEWER_ENV))
+    afterEach(() => {
+      for (const key of Object.keys(VIEWER_ENV)) delete process.env[key]
+    })
+
+    async function sentHeaders(cookie?: string) {
+      const fetchMock = mockFetch(upstream('<html></html>'))
+      await GET(
+        request('/api/literature-atlas/evidence-domains', {
+          headers: { accept: 'text/html', ...(cookie ? { cookie } : {}) },
+        }),
+      )
+      return new Headers((fetchMock.mock.calls[0][1] as RequestInit).headers)
+    }
+
+    it('adds a signed, short-lived note only for a valid viewer session and never forwards the cookie', async () => {
+      const config = viewerConfig()!
+      const session = issueSession(config).value
+      const sent = await sentHeaders(`sb-access-token=secret; literature-atlas-viewer=${session}`)
+      expect([...sent.keys()].sort()).toEqual(['accept', 'x-atlas-evidence-viewer'])
+      const note = sent.get('x-atlas-evidence-viewer')!
+      expect(note).toMatch(/^v1\.\d+\.[A-Za-z0-9_-]+$/)
+      const expires = Number(note.split('.')[1])
+      expect(expires - Date.now() / 1000).toBeLessThanOrEqual(300)
+      expect(note).not.toContain(session)
+    })
+
+    it('adds nothing for a missing, forged or expired session, or when the viewer is not configured', async () => {
+      const config = viewerConfig()!
+      const old = issueSession(config, Date.now() - 13 * 60 * 60 * 1000).value
+      for (const cookie of [
+        undefined,
+        'literature-atlas-viewer=v1.1.2.3.4',
+        `literature-atlas-viewer=${old}`,
+      ]) {
+        expect([...(await sentHeaders(cookie)).keys()]).toEqual(['accept'])
+      }
+      const session = issueSession(config).value
+      delete process.env.LITERATURE_ATLAS_RELAY_SECRET
+      expect([...(await sentHeaders(`literature-atlas-viewer=${session}`)).keys()]).toEqual([
+        'accept',
+      ])
     })
   })
 
