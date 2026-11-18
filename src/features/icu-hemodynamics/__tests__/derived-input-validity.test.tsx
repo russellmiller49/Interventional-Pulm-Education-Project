@@ -96,7 +96,10 @@ function withheldResults(state: HemodynamicSimulationState): HemodynamicDerivedV
   })
 }
 
-/** Everything that reads an absolute pressure. PPV reads pulse pressures, which an offset leaves. */
+/**
+ * Everything that reads an absolute pressure. PPV and PA compliance read only pulse pressures, which
+ * an offset leaves. PAPi reads the PA pulse pressure over an absolute RAP, so it is here.
+ */
 const absolutePressureResults: readonly HemodynamicDerivedValueId[] = [
   'systemicVascularResistance',
   'systemicVascularResistanceIndex',
@@ -104,7 +107,6 @@ const absolutePressureResults: readonly HemodynamicDerivedValueId[] = [
   'pulmonaryVascularResistanceIndex',
   'cardiacPowerOutputW',
   'pulmonaryArteryPulsatilityIndex',
-  'pulmonaryArteryCompliance',
 ]
 
 describe('calculated results through the drawer', () => {
@@ -112,7 +114,7 @@ describe('calculated results through the drawer', () => {
     expect(withheldResults(cleanChain())).toEqual([])
   })
 
-  it('an unzeroed transducer takes down absolute pressures and leaves flow and PPV alone', () => {
+  it('an unzeroed transducer takes down absolute pressures and leaves flow, PA compliance and PPV alone', () => {
     const opened = createInitialHemodynamicState(cleanCase, 'practice', 3469)
     expect(opened.measurementSystem.zeroed).toBe(false)
     expect(withheldResults(acceptThree(storeWedge(opened)))).toEqual(absolutePressureResults)
@@ -129,7 +131,7 @@ describe('calculated results through the drawer', () => {
     const papi = results.get('pulmonaryArteryPulsatilityIndex')!
     expect(papi.querySelector('strong')).toBeNull()
     expect(papi.querySelector('p')?.textContent).toBe(
-      'Unreliable input: Right atrial pressure, PA systolic pressure, PA diastolic pressure (transducer not zeroed).',
+      'Unreliable input: Right atrial pressure (transducer not zeroed).',
     )
   })
 
@@ -243,6 +245,74 @@ describe('calculated results through the drawer', () => {
   })
 })
 
+/**
+ * The owner's rulings of 2026-11-14 on the three calls PR #432 left open, stated as behaviour.
+ */
+describe('owner rulings on #432 (2026-11-14)', () => {
+  /** A full chain with an accepted series and a stored wedge, carrying one zero or level error. */
+  const offsetFaultChains = [
+    [
+      'not zeroed',
+      () => acceptThree(storeWedge(createInitialHemodynamicState(cleanCase, 'practice', 3469))),
+    ],
+    ['off level', () => reduce(cleanChain(), { type: 'SET_TRANSDUCER_LEVEL', levelCm: -10 })],
+  ] as const
+
+  it('means on a damped line: SVR, PVR and CPO stay available ("Keep available")', () => {
+    for (const line of [undefined, 'systemic-arterial'] as const) {
+      cleanup()
+      const state = reduce(cleanChain(), {
+        type: 'SET_ARTIFACT',
+        artifact: 'overdamped',
+        ...(line ? { line } : {}),
+      })
+      const withheld = withheldResults(state)
+      for (const meanBased of [
+        'systemicVascularResistance',
+        'systemicVascularResistanceIndex',
+        'pulmonaryVascularResistance',
+        'pulmonaryVascularResistanceIndex',
+        'cardiacPowerOutputW',
+      ] as const) {
+        expect(withheld).not.toContain(meanBased)
+      }
+    }
+  })
+
+  it.each(offsetFaultChains)(
+    'PPV on a transducer %s stays available ("Keep available")',
+    (_name, build) => {
+      expect(withheldResults(build())).not.toContain('pulsePressureVariationPercent')
+    },
+  )
+
+  it.each(offsetFaultChains)(
+    'PA compliance on a transducer %s is shown like PPV ("Allow, like PPV")',
+    (_name, build) => {
+      const results = drawerResults(build())
+      const compliance = results.get('pulmonaryArteryCompliance')!
+      expect(compliance.querySelector('strong')).not.toBeNull()
+      expect(compliance.textContent).not.toMatch(/Unreliable input/)
+      const ppv = results.get('pulsePressureVariationPercent')!
+      expect(ppv.querySelector('strong')).not.toBeNull()
+      const summary = document.querySelector('[data-derived-signal-faults]')!
+      expect(summary.textContent).toMatch(/Pulse pressure is unchanged/)
+      expect(summary.textContent).toMatch(/Still available.*PA compliance, PPV\./)
+    },
+  )
+
+  it('PA compliance stays withheld on a damped PA line, which distorts systolic and diastolic', () => {
+    const results = drawerResults(
+      reduce(cleanChain(), { type: 'SET_ARTIFACT', artifact: 'overdamped' }),
+    )
+    const compliance = results.get('pulmonaryArteryCompliance')!
+    expect(compliance.querySelector('strong')).toBeNull()
+    expect(compliance.querySelector('p')?.textContent).toBe(
+      'Unreliable input: PA systolic pressure, PA diastolic pressure (PA line overdamped).',
+    )
+  })
+})
+
 describe('what the drawer says about a withheld result', () => {
   it('names the unreliable measurements and the fault on the result itself', () => {
     const results = drawerResults(
@@ -274,7 +344,9 @@ describe('what the drawer says about a withheld result', () => {
     expect(summary.textContent).toMatch(/10 cm below the phlebostatic axis/)
     expect(summary.textContent).toMatch(/Pulse pressure is unchanged/)
     expect(summary.textContent).toMatch(/Affects: Mean arterial pressure, Right atrial pressure/)
-    expect(summary.textContent).toMatch(/Still available.*CI, SV, SVI, PPV\./)
+    expect(summary.textContent).toMatch(
+      /Still available, because these faults do not change what they are calculated from: CI, SV, SVI, PA compliance, PPV\./,
+    )
   })
 
   it('shows no fault summary on a clean chain', () => {
