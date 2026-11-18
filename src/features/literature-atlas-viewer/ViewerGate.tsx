@@ -15,13 +15,13 @@ export function ViewerGate({ locale, state }: { locale: string; state: ViewerSta
         aria-labelledby="atlas-viewer-title"
         className="w-full rounded-xl border bg-card p-6 shadow-sm md:p-8"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/90">
           {words.course}
         </p>
         <h1 id="atlas-viewer-title" className="mt-1 text-2xl font-semibold">
           {words.title}
         </h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">{words.intro}</p>
+        <p className="mt-3 text-sm leading-6 text-foreground/90">{words.intro}</p>
         {state && (
           <p
             className={
@@ -50,7 +50,7 @@ export function ViewerGate({ locale, state }: { locale: string; state: ViewerSta
           />
           <Button type="submit">{words.open}</Button>
         </form>
-        <p className="mt-4 text-xs leading-5 text-muted-foreground">{words.help}</p>
+        <p className="mt-4 text-xs leading-5 text-foreground/90">{words.help}</p>
       </section>
     </main>
   )
@@ -63,7 +63,7 @@ export function ViewerUnavailable() {
         aria-labelledby="atlas-viewer-title"
         className="w-full rounded-xl border bg-card p-6 shadow-sm"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/90">
           {VIEWER_WORDS.course}
         </p>
         <h1 id="atlas-viewer-title" className="mt-1 text-2xl font-semibold">

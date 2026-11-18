@@ -59,7 +59,7 @@ export default async function LiteratureAtlasEvidencePage({
               <div className={simulatorPage.identity}>
                 <Badge
                   variant="warning"
-                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-300"
                 >
                   Machine draft
                 </Badge>
@@ -85,7 +85,7 @@ export default async function LiteratureAtlasEvidencePage({
                 </form>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground/90">
               Working-group preview. Machine-drafted analyses; not physician-verified, not accepted
               and not clinical guidance. Studies on hold from public release are shown and marked.
             </p>
@@ -99,12 +99,12 @@ export default async function LiteratureAtlasEvidencePage({
           </section>
 
           <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
+            <p className="max-w-3xl text-base leading-7 text-foreground/90 md:text-lg">
               Each clinical question gathers its studies from the Literature Atlas and shows the
               machine-drafted analyses of its reporting plan: direct comparisons, network
               meta-analysis and single-group proportions, with the studies on the Atlas map.
             </p>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            <p className="max-w-3xl text-sm leading-6 text-foreground/90">
               Every number is a machine draft. An independent audit of the research prototype that
               produced them did not accept it; corrections are awaiting re-audit. Physician review
               of these studies has not opened. This page is shared with a small working group by
