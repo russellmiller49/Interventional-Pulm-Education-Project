@@ -10,7 +10,11 @@ import { XR } from '@react-three/xr'
 
 import { createAnatomyXRStore } from '@/components/3d/xr/xrStore'
 import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
-import { ctIndexToLps, lpsToCtIndex } from '@/lib/airway-anatomy/geometry'
+import {
+  ctTipPlanePlacement,
+  xrCtOverlayOpacity,
+  xrCtOverlayStartsOn,
+} from '@/lib/airway-anatomy/xr-ct-overlay'
 import { renderOffscreen } from '@/lib/airway-anatomy/offscreen'
 import { buildScopePathLps } from '@/lib/airway-anatomy/scope-state'
 import {
@@ -24,7 +28,8 @@ import type {
   ScopePoseSnapshot,
   Vec3,
 } from '@/lib/airway-anatomy/types'
-import { XrButton, XrText } from './xr-widgets'
+import { XrText } from './xr-widgets'
+import { XR_DRIVE_CONTROLS_EXTENT, XrDriveControls } from './xr-drive-controls'
 import { XrGameHud, XrGameWorld } from './AirwayXRGameLayer'
 import type { AirwayGameController } from './AirwayGameLayer'
 
@@ -36,7 +41,6 @@ const WORLD_POSITION: Vec3 = [0, 1.35, -0.85]
 const FBO_WIDTH = 1024
 const FBO_HEIGHT = 768
 const BRONCH_FOV_DEG = 88
-const STEER_STEP_DEG = 3
 
 export interface AirwayXRSceneProps {
   manifest: AirwayAnatomyCaseManifest
@@ -47,7 +51,13 @@ export interface AirwayXRSceneProps {
   windowHigh: number
   ctPlaneOpacity: number
   stepMm: number
+  /** Queues an advance (positive mm) or withdrawal (negative mm), as the desktop buttons do. */
   onMove: (deltaMm: number) => void
+  /**
+   * Feeds queued Advance/Withdraw into the scope. Called from this scene's frame loop, which keeps
+   * running while a headset session presents; the page's own animation frames do not.
+   */
+  onDriveFrame: () => void
   onSteer: (dxUnit: number, dyUpUnit: number) => void
   onRecenter: () => void
   /** When present (challenge mode), overlays the "Bronch Quest VR" game layer. */
@@ -210,11 +220,15 @@ function AirwayXRWorld({
   ctPlaneOpacity,
   stepMm,
   onMove,
+  onDriveFrame,
   onSteer,
   onRecenter,
   game,
 }: AirwayXRSceneProps) {
   const worldRef = useRef<THREE.Group>(null)
+  // The CT overlay switch on the in-world panel; it starts where the desktop slider left the plane.
+  const [ctOverlayOn, setCtOverlayOn] = useState(() => xrCtOverlayStartsOn(ctPlaneOpacity))
+  const toggleCtOverlay = useCallback(() => setCtOverlayOn((on) => !on), [])
   const bounds = useMemo(() => boundsForGraph(graph), [graph])
   const worldScale = TARGET_RADIUS_M / bounds.radius
   const stlUrl =
@@ -229,6 +243,7 @@ function AirwayXRWorld({
 
   return (
     <>
+      <DriveClock onFrame={onDriveFrame} />
       <GrabbableGroup groupRef={worldRef} position={WORLD_POSITION}>
         {/* mm -> m, then recentre the tree on the graph centroid so it sits at WORLD_POSITION. */}
         <group scale={worldScale}>
@@ -240,7 +255,7 @@ function AirwayXRWorld({
               pose={pose}
               windowLow={windowLow}
               windowHigh={windowHigh}
-              opacity={ctPlaneOpacity}
+              opacity={xrCtOverlayOpacity(ctOverlayOn, ctPlaneOpacity)}
             />
             <ScopeProbe graph={graph} pose={pose} />
             {/* Game beacon / destination glow / celebration ride inside the LPS group so they
@@ -267,12 +282,24 @@ function AirwayXRWorld({
         onMove={onMove}
         onSteer={onSteer}
         onRecenter={onRecenter}
+        ctOverlayOn={ctOverlayOn}
+        onToggleCtOverlay={toggleCtOverlay}
       />
 
       {/* The spatial game HUD (start / stats / results) — world-fixed like the feed panel. */}
       {game ? <XrGameHud view={game.view} actions={game.actions} pose={pose} /> : null}
     </>
   )
+}
+
+/**
+ * Drains queued Advance/Withdraw from the canvas's frame loop. In a headset session three drives
+ * this loop from the XR session's frames, while the page's `requestAnimationFrame` (which drains the
+ * queue on the desktop) stops, so without this the drive buttons do nothing in VR.
+ */
+function DriveClock({ onFrame }: { onFrame: () => void }) {
+  useFrame(() => onFrame())
+  return null
 }
 
 /** Translucent airway lumen so the scope and CT plane are visible inside it. */
@@ -323,7 +350,8 @@ function CtTipPlane({
   windowHigh: number
   opacity: number
 }) {
-  const sliceIndex = Math.round(lpsToCtIndex(pose.tipLps, ct)[2])
+  const placement = ctTipPlanePlacement(ct, pose.tipLps)
+  const sliceIndex = placement.sliceIndex
   const texture = useMemo(() => {
     if (opacity <= 0.01) return null
     const canvas = document.createElement('canvas')
@@ -345,12 +373,9 @@ function CtTipPlane({
   useEffect(() => () => texture?.dispose(), [texture])
 
   if (!texture || opacity <= 0.01) return null
-  const center = ctIndexToLps([(ct.sizeXyz[0] - 1) / 2, (ct.sizeXyz[1] - 1) / 2, sliceIndex], ct)
-  const width = (ct.sizeXyz[0] - 1) * ct.spacingXyzMm[0]
-  const height = (ct.sizeXyz[1] - 1) * ct.spacingXyzMm[1]
   return (
-    <mesh position={center} scale={[1, -1, 1]}>
-      <planeGeometry args={[width, height]} />
+    <mesh position={placement.centerLps} scale={[1, -1, 1]}>
+      <planeGeometry args={[placement.widthMm, placement.heightMm]} />
       <meshBasicMaterial
         map={texture}
         transparent
@@ -423,6 +448,8 @@ function EndoluminalPanel({
   onMove,
   onSteer,
   onRecenter,
+  ctOverlayOn,
+  onToggleCtOverlay,
 }: {
   stlUrl: string | null
   pose: ScopePoseSnapshot
@@ -430,6 +457,8 @@ function EndoluminalPanel({
   onMove: (deltaMm: number) => void
   onSteer: (dxUnit: number, dyUpUnit: number) => void
   onRecenter: () => void
+  ctOverlayOn: boolean
+  onToggleCtOverlay: () => void
 }) {
   const groupRef = useRef<THREE.Group>(null)
   const placedRef = useRef(false)
@@ -539,9 +568,13 @@ function EndoluminalPanel({
     )
   }
 
-  // Panel is 0.5 m wide; the endoluminal feed is 4:3.
+  // Panel is 0.5 m wide; the endoluminal feed is 4:3, with the drive controls 2 cm beneath it.
   const panelWidth = 0.5
   const feedHeight = (panelWidth * FBO_HEIGHT) / FBO_WIDTH
+  const feedCenterY = 0.02
+  const controlsY = feedCenterY - feedHeight / 2 - 0.02 - XR_DRIVE_CONTROLS_EXTENT.top
+  const backingTop = feedHeight / 2 + 0.07
+  const backingBottom = controlsY - XR_DRIVE_CONTROLS_EXTENT.bottom - 0.02
 
   return (
     <group ref={groupRef} position={[0.55, 1.45, -0.5]}>
@@ -556,9 +589,9 @@ function EndoluminalPanel({
           )
         : null}
 
-      {/* Backing + draggable header */}
-      <mesh position={[0, 0, -0.004]}>
-        <planeGeometry args={[panelWidth + 0.04, feedHeight + 0.14]} />
+      {/* Backing (feed and controls) + draggable header */}
+      <mesh position={[0, (backingTop + backingBottom) / 2, -0.004]}>
+        <planeGeometry args={[panelWidth + 0.04, backingTop - backingBottom]} />
         <meshBasicMaterial color="#0f172a" toneMapped={false} />
       </mesh>
       <group
@@ -582,61 +615,20 @@ function EndoluminalPanel({
       </group>
 
       {/* Live endoluminal feed */}
-      <mesh position={[0, 0.02, 0]}>
+      <mesh position={[0, feedCenterY, 0]}>
         <planeGeometry args={[panelWidth, feedHeight]} />
         <meshBasicMaterial map={fbo.texture} toneMapped={false} />
       </mesh>
 
-      {/* Drive controls */}
-      <group position={[0, -feedHeight / 2 - 0.06, 0.002]}>
-        <XrButton
-          label="Withdraw"
-          position={[-0.17, 0, 0]}
-          size={[0.15, 0.06]}
-          repeat
-          onTrigger={() => onMove(-stepMm)}
-        />
-        <XrButton
-          label="Advance"
-          position={[0.17, 0, 0]}
-          size={[0.15, 0.06]}
-          primary
-          repeat
-          onTrigger={() => onMove(stepMm)}
-        />
-        <XrButton
-          label="↑"
-          position={[0, 0.07, 0]}
-          size={[0.06, 0.05]}
-          repeat
-          onTrigger={() => onSteer(0, STEER_STEP_DEG)}
-        />
-        <XrButton
-          label="↓"
-          position={[0, -0.07, 0]}
-          size={[0.06, 0.05]}
-          repeat
-          onTrigger={() => onSteer(0, -STEER_STEP_DEG)}
-        />
-        <XrButton
-          label="←"
-          position={[-0.08, 0.07, 0]}
-          size={[0.06, 0.05]}
-          repeat
-          onTrigger={() => onSteer(-STEER_STEP_DEG, 0)}
-        />
-        <XrButton
-          label="→"
-          position={[0.08, 0.07, 0]}
-          size={[0.06, 0.05]}
-          repeat
-          onTrigger={() => onSteer(STEER_STEP_DEG, 0)}
-        />
-        <XrButton
-          label="Recenter view"
-          position={[0, -0.15, 0]}
-          size={[0.2, 0.05]}
-          onTrigger={onRecenter}
+      {/* Drive controls: steering pad, Advance/Withdraw, Recenter, CT overlay switch */}
+      <group position={[0, controlsY, 0.002]}>
+        <XrDriveControls
+          stepMm={stepMm}
+          onMove={onMove}
+          onSteer={onSteer}
+          onRecenter={onRecenter}
+          ctOverlayOn={ctOverlayOn}
+          onToggleCtOverlay={onToggleCtOverlay}
         />
       </group>
     </group>

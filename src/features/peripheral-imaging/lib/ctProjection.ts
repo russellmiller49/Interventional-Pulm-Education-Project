@@ -13,7 +13,9 @@
  * - Appearance: `huToMu` and the display curve are FluoroView's (`fluoro-viewer/src/volume-drr.ts`:
  *   `huToMu` at its default 80 kVp, `uMuScale` 7.5) with the course's own weighting of bone and
  *   display curve (`lib/fluoroLook.ts`), at the settings the suite renders at (exposure gain 1,
- *   contrast boost 1, noise off). Denser is brighter, and ribs show, as on the suite's monitor.
+ *   contrast boost 1, noise off), computed denser-is-higher; ribs show, as on the suite's monitor.
+ *   How that is shown — bone dark or bone bright — is the display polarity, read from the one
+ *   setting in `lib/displayPolarity.ts` by both this twin's figures and the monitor.
  *   The one difference: the suite smooths its bone volume by a voxel and this twin ramps each
  *   sample, because a figure's scene can add things the CT does not hold (a catheter, an opacity).
  *
@@ -22,6 +24,7 @@
  */
 import { ANATOMY } from './anatomy'
 import { FLUORO_LOOK } from './fluoroLook'
+import { UNEXPOSED_ALPHA, applyPolarity, type FluoroPolarity } from './displayPolarity'
 import { DEFAULT_GEOMETRY, LESION_CENTER, projectToDetector, type Point3 } from './physics'
 import { detectorPoint, suiteFrame } from '../components/suite/suiteModel'
 
@@ -83,9 +86,17 @@ export function huToMu(hu: number): number {
 /** FluoroView's `uMuScale`: the line integral is Σ huToMu · ds · 7.5. */
 export const PROJECTION_MU_SCALE = 7.5
 
-/** The suite's display curve: denser reads brighter, 0–1. */
+/**
+ * The suite's display curve, denser-is-higher, 0–1. The teaching measures (mean brightness, the
+ * veil) are taken on this value; `displayedProjection` is what a learner sees.
+ */
 export function projectionDisplay(lineIntegral: number): number {
   return smoothstep(0.035, FLUORO_LOOK.toneHigh, lineIntegral) ** FLUORO_LOOK.toneGamma
+}
+
+/** The displayed gray, 0–1, in a display polarity: the shader's mapping, on the CPU. */
+export function displayedProjection(lineIntegral: number, polarity: FluoroPolarity): number {
+  return applyPolarity(projectionDisplay(lineIntegral), polarity)
 }
 
 export interface ProjectionRequest {
@@ -187,7 +198,11 @@ export function projectCt(sample: CtSampler, request: ProjectionRequest): CtProj
   return { sizePx, fieldMm, centreUv, lineIntegral }
 }
 
-/** RGBA pixels for a canvas: the display curve, with an optional mask drawn as the unexposed dark. */
+/**
+ * RGBA pixels for a canvas: the display curve (denser brighter), with an optional mask drawn as the
+ * unexposed dark. Unexposed pixels carry `UNEXPOSED_ALPHA` so that a figure drawn bone dark
+ * (`polarityPixels`) inverts the image and leaves them dark.
+ */
 export function projectionPixels(
   lineIntegral: Float32Array,
   options: { readonly exposed?: Uint8Array } = {},
@@ -197,7 +212,7 @@ export function projectionPixels(
     const inside = options.exposed ? options.exposed[i] === 1 : true
     const gray = inside ? Math.round(projectionDisplay(lineIntegral[i]) * 255) : 10
     pixels[i * 4] = pixels[i * 4 + 1] = pixels[i * 4 + 2] = gray
-    pixels[i * 4 + 3] = 255
+    pixels[i * 4 + 3] = inside ? 255 : UNEXPOSED_ALPHA
   }
   return pixels
 }

@@ -56,6 +56,11 @@ jest.mock(
     ),
   }),
 )
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationLabPage', () => ({
+  MechanicalVentilationLabPage: ({ locale }: { locale: string }) => (
+    <div data-testid="ventilation-lab" data-locale={locale} />
+  ),
+}))
 jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck', () => ({
   MechanicalVentilationCourseCheck: ({ kind }: { kind: string }) => (
     <div data-testid="ventilation-assess-setup" data-kind={kind} />
@@ -99,6 +104,7 @@ import MechanicalVentilationPage, { metadata as overviewMetadata } from './page'
 import MechanicalVentilationAssessPage, { metadata as assessMetadata } from './assess/page'
 import MechanicalVentilationLearnPage, { metadata as learnMetadata } from './learn/page'
 import MechanicalVentilationPracticePage, { metadata as practiceMetadata } from './practice/page'
+import MechanicalVentilationLabRoute, { metadata as labMetadata } from './practice/lab/page'
 
 describe('mechanical ventilation route family', () => {
   const localeMock = jest.mocked(setRequestLocale)
@@ -106,7 +112,13 @@ describe('mechanical ventilation route family', () => {
   beforeEach(() => localeMock.mockClear())
 
   it('keeps Overview, Learn, Practice, and Assess noindexed', () => {
-    for (const metadata of [overviewMetadata, learnMetadata, practiceMetadata, assessMetadata]) {
+    for (const metadata of [
+      overviewMetadata,
+      learnMetadata,
+      practiceMetadata,
+      labMetadata,
+      assessMetadata,
+    ]) {
       expect(metadata.robots).toEqual({ index: false, follow: false, noarchive: true })
     }
   })
@@ -115,6 +127,12 @@ describe('mechanical ventilation route family', () => {
     render(await MechanicalVentilationPage({ params: Promise.resolve({ locale }) }))
     expect(localeMock).toHaveBeenCalledWith(locale)
     expect(screen.getByTestId('ventilation-hub')).toHaveAttribute('data-locale', locale)
+  })
+
+  it.each(['en', 'es'])('opens the ventilator lab under Practice for %s', async (locale) => {
+    render(await MechanicalVentilationLabRoute({ params: Promise.resolve({ locale }) }))
+    expect(localeMock).toHaveBeenCalledWith(locale)
+    expect(screen.getByTestId('ventilation-lab')).toHaveAttribute('data-locale', locale)
   })
 
   it('opens a known focused lesson and safely falls back for an unknown lesson', async () => {

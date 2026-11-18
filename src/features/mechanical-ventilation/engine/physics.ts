@@ -743,7 +743,9 @@ function treatmentReachesNarrowing(
  * the full corrective score: a temporary mechanical hold answering a question it was never meant
  * to answer. 13 now keeps the held lung state and is outside the success range.
  *
- * What PEEP 13 (and 6–7) should actually do is owner decision D3, NOT REVIEWED.
+ * The rule, as the author decided it on 2026-11-12 (decision D3, "keep the containment"): PEEP 13
+ * holds the lung state reached at 12 and is outside the success range; PEEP 6–7 leaves the lung at
+ * its baseline state; 8–12 recruits and 14 and above overdistends, as the casebook authors them.
  */
 export type ArdsLungState = 'baseline' | 'recruited' | 'overdistended'
 export const ARDS_RECRUITED_FROM_PEEP_CMH2O = 8
@@ -1248,7 +1250,8 @@ export function isCaseResolved(
       return false // Exploratory fixture: its learning task, not a clinical outcome, defines completion.
     case 'ards-recruitment':
       // The authored success range, not the lung-state lookup: PEEP 13 holds the recruited lung as
-      // mechanical containment (D3) and is still outside "PEEP 8-12". See `ardsLungStateForPeep`.
+      // containment the author kept (D3, 2026-11-12) and is still outside "PEEP 8-12". See
+      // `ardsLungStateForPeep`.
       return (
         ardsPeepInAuthoredSuccessRange(settings.peepCmH2O) && m.relaxedPlateauPressureCmH2O <= 30
       )

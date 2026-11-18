@@ -265,7 +265,11 @@ describe('the self-paced boundary', () => {
         fs.readFileSync(file, 'utf8'),
       ),
     )
-    expect(storageWriters.map(relative)).toEqual([path.join('engine', 'selfPacedProgress.ts')])
+    // The one other writer is the fluoroscopy display setting (bone dark or bone bright, owner's
+    // ruling 2026-11-12): a display preference for the visit, never an answer or a record.
+    expect(storageWriters.map(relative).sort()).toEqual(
+      [path.join('engine', 'selfPacedProgress.ts'), path.join('lib', 'displayPolarity.ts')].sort(),
+    )
   })
 
   it('says nothing, in visible or accessible text, that grades, locks or keeps first answers', () => {

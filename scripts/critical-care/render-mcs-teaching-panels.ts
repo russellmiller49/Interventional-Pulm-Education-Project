@@ -415,23 +415,20 @@ function reviewCell(
     const hasClarification = markup.includes(
       'data-measurement-clarification="clarification.mcs.impella-cp-flow-measurands"',
     )
-    const hasConflict = markup.includes(
-      'data-held-disagreement="conflict.mcs.impella-cp-textbook-flow"',
-    )
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): "Teach the IFU P-level flows". The
+    // textbook's two Impella CP flows are no longer shown; the P-level mean-flow table is.
+    const hasConflict = markup.includes('data-held-disagreement=')
     if (!hasClarification) flag(where, 'the Impella measurement clarification is not rendered')
-    if (!hasConflict) flag(where, 'the Impella held disagreement is not rendered')
+    if (hasConflict) flag(where, 'a held disagreement is rendered on the Impella placement panel')
+    if (!markup.includes('data-teaching-number="impella-cp-flow-by-level"')) {
+      flag(where, 'the Impella CP mean flow by P-level is not rendered')
+    }
     if (hasClarification && count(markup, 'data-clarified-quantity') !== 3) {
       flag(where, 'the clarification does not render all three manufacturer measurands')
     }
-    if (hasConflict && count(markup, 'data-conflict-position') !== 2) {
-      flag(where, 'the held disagreement does not render both textbook positions')
-    }
     // The semantic reversal: manufacturer figures inside a disagreement, or textbook figures
     // presented as the current specification.
-    const clarificationBlock = markup.slice(
-      markup.indexOf('data-measurement-clarification'),
-      markup.indexOf('data-held-disagreement'),
-    )
+    const clarificationBlock = markup.slice(markup.indexOf('data-measurement-clarification'))
     if (clarificationBlock.includes('data-conflict-position')) {
       flag(where, 'the manufacturer figures are rendered as a held disagreement')
     }

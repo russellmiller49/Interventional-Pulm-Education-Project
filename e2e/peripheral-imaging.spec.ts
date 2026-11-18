@@ -16,6 +16,7 @@ import {
   LEGACY_IMAGING_RECORD_KEY_V2,
 } from '../src/features/peripheral-imaging/engine/learnProgress'
 import { IMAGING_PROGRESS_STORAGE_KEY } from '../src/features/peripheral-imaging/engine/selfPacedProgress'
+import { applyPolarity } from '../src/features/peripheral-imaging/lib/displayPolarity'
 
 /*
  * The peripheral-imaging course: actual lesson transitions, rendered image evidence, self-paced
@@ -3501,18 +3502,21 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   await page.setViewportSize({ width: 1440, height: 900 })
   const lesson = imagingStageLesson('signal')
   const ribs = lesson.steps.find((step) => step.id.endsWith(':ribs'))!
-  await openSection(page, 'signal')
-  for (let guard = 0; guard < 12; guard++) {
-    if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
-    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
-    await primary(page).click()
+  const toRibs = async () => {
+    await openSection(page, 'signal')
+    for (let guard = 0; guard < 12; guard++) {
+      if ((await page.locator('[data-stage]').getAttribute('data-stage')) === ribs.id) break
+      await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+      await primary(page).click()
+    }
+    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
+    await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
+      'data-projection-state',
+      'ready',
+      { timeout: 90000 },
+    )
   }
-  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', ribs.id)
-  await expect(page.locator('[data-current-image] [data-projection-state]')).toHaveAttribute(
-    'data-projection-state',
-    'ready',
-    { timeout: 90000 },
-  )
+  await toRibs()
   const canvas = page.locator('[data-current-image] canvas')
   await expectImageSignal(canvas)
   /** Pixels that are not grey, and the brightness of the lung beside the nodule. */
@@ -3538,6 +3542,53 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   expect(grey.swing).toBeGreaterThan(20)
   await capture(page, info, 'fluoro-ribs-grey.png')
 
+  // Owner's ruling, 2026-11-12: a display toggle, bone dark by default. The two settings draw the
+  // same image as inverses of each other (bone dark through its window and gamma, 2026-11-15), and
+  // the choice is kept when the page reloads.
+  const monitor = page.locator('[data-current-image] [data-projection-state]')
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-dark')
+  const display = page.getByRole('group', { name: 'Fluoroscopy display' })
+  await expect(display.getByRole('button', { name: 'Bone dark' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  /** The frame's grey levels, as a 256-bin histogram. */
+  const histogram = () =>
+    canvas.evaluate((node) => {
+      const c = node as HTMLCanvasElement
+      const gl = c.getContext('webgl2')!
+      const pixels = new Uint8Array(c.width * c.height * 4)
+      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+      const bins = new Array<number>(256).fill(0)
+      for (let i = 0; i < pixels.length; i += 4) bins[pixels[i]]++
+      return bins
+    })
+  const mean = (bins: number[], level: (value: number) => number = (value) => value) =>
+    bins.reduce((sum, count, value) => sum + count * level(value), 0) /
+    bins.reduce((sum, count) => sum + count, 0)
+  const darkMean = mean(await histogram())
+  await display.getByRole('button', { name: 'Bone bright' }).click()
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-bright')
+  // The bone-bright frame, drawn through the course's bone-dark mapping, has the bone-dark frame's
+  // mean: the shader and `applyPolarity` are one mapping.
+  await expect
+    .poll(async () =>
+      Math.abs(
+        mean(await histogram(), (value) => applyPolarity(value / 255, 'bone-dark') * 255) -
+          darkMean,
+      ),
+    )
+    .toBeLessThan(4)
+  // A new page load in the same visit keeps the choice.
+  await toRibs()
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-bright')
+  await page
+    .getByRole('group', { name: 'Fluoroscopy display' })
+    .getByRole('button', { name: 'Bone dark' })
+    .click()
+  await expect(monitor).toHaveAttribute('data-projection-state', 'ready', { timeout: 90000 })
+  await expect(monitor).toHaveAttribute('data-display-polarity', 'bone-dark')
+
   const toggle = page.locator('[data-bone-depth-toggle]')
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
   await toggle.click()
@@ -3558,6 +3609,7 @@ test('the fluoroscopic image draws the ribs, and bone is coloured by depth only 
   }
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', check.id)
   await expect(page.locator('[data-bone-depth-toggle]')).toHaveCount(0)
+  await expect(page.locator('[data-polarity-control]')).toHaveCount(0)
 })
 
 test('the bronchial tree is drawn and named on the frontal image, and withheld on its check', async ({

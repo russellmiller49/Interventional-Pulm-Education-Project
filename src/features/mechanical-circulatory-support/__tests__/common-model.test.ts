@@ -37,6 +37,7 @@ import {
 } from '../content'
 import { mcsModuleNavItems } from '../components/McsModuleNav'
 import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content/scenarios'
+import { MCS_NUMBERS } from '../content/teachingNumbers'
 
 const mcsPathway = criticalCareLearningPathway('mechanical-circulatory-support')
 
@@ -431,15 +432,20 @@ describe('standardized support-pathway cards', () => {
     ])
   })
 
-  it('wires the measurand clarification and the held disagreement to their own records', () => {
+  it('wires the measurand clarification to its own record and lists no textbook disagreement', () => {
     const left = mcsSupportPathwayCardById.get('impella-left-transvalvular')
 
     // Three manufacturer figures naming three measurands are NOT a disagreement.
     expect(left?.measurementClarificationIds).toEqual([
       'clarification.mcs.impella-cp-flow-measurands',
     ])
-    // One textbook contradicting itself IS a disagreement, and the id is the textbook one.
-    expect(left?.sourceConflictIds).toEqual(['conflict.mcs.impella-cp-textbook-flow'])
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): "Teach the IFU P-level flows". The
+    // textbook's two flows are not on the card; its first figure is the P-level table.
+    expect(left?.sourceConflictIds).toEqual([])
+    expect(left?.productReferences[0]).toMatchObject({
+      measurand: 'Mean flow at each P-level',
+      valueText: MCS_NUMBERS.value('impella-cp-flow-by-level'),
+    })
 
     for (const id of left?.measurementClarificationIds ?? []) {
       expect(criticalCareMeasurementClarificationById.has(id)).toBe(true)

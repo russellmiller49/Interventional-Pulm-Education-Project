@@ -405,7 +405,7 @@ for (const viewport of viewports) {
   check(
     v,
     'cycle-off is expanded where Section 7 first uses it',
-    /cycle-off threshold \(expiratory trigger sensitivity, ETS\)/.test(part2),
+    /cycle-off threshold \(ETS\), also called the expiratory trigger sensitivity/.test(part2),
   )
   await page.locator('[data-reinforcement]').getByRole('button', { name: 'Hint' }).click()
   check(

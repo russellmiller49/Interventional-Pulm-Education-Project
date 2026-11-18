@@ -85,6 +85,7 @@ export function ConspicuityComparison() {
             <p className={styles.panelTitle}>{panel.title}</p>
             <FigureCanvas
               pixels={pixelsFor(model, panel.id)}
+              fluoroscopic
               size={CONSPICUITY_SET.sizePx}
               label={PANEL_LABELS[panel.id]}
               overlay={

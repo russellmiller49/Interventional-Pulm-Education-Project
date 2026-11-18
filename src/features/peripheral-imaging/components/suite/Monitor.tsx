@@ -9,6 +9,15 @@ import {
   type FieldRect,
 } from '../../lib/fieldDisplay'
 import type { Point3 } from '../../lib/physics'
+import {
+  CT_CONVENTION,
+  FLUORO_POLARITY_LABELS,
+  ImagePolarityContext,
+  repolarizeTable,
+  setFluoroPolarity,
+  useFluoroPolarity,
+  type FluoroPolarity,
+} from '../../lib/displayPolarity'
 import { AirwayOverlay } from './AirwayOverlay'
 import { CatheterOverlay } from './CatheterOverlay'
 import { airwayLegend, isAirwayLobeShow, type AirwayShow } from '../../lib/airwayTree'
@@ -37,6 +46,12 @@ export interface StoredProjection {
    * acquisition: a stored frame keeps the processing it was read out with.
    */
   processing: FieldDisplay | null
+  /**
+   * The display polarity the pixels were read out in. Polarity is display, not acquisition: shown
+   * under the other setting, the stored frame is redrawn on screen through `repolarize` and its
+   * pixels stay as stored.
+   */
+  polarity: FluoroPolarity
   label: string
   id: string
   state: {
@@ -69,6 +84,8 @@ export function Monitor({
   fieldProcessing,
   wedgeDeg = 0,
   boneDepthAid = false,
+  polarityControl = false,
+  ctConvention = false,
   showTool = true,
   airways,
   catheter,
@@ -104,6 +121,16 @@ export function Monitor({
    * offered only where the learner is working the angles, never on a check.
    */
   boneDepthAid?: boolean
+  /**
+   * Offer the display control, bone dark or bone bright (owner's ruling, 2026-11-12). Offered on
+   * hands-on steps; elsewhere the image follows the setting the learner last chose.
+   */
+  polarityControl?: boolean
+  /**
+   * A cone-beam CT step: its scouts, spin and planes keep the CT convention (bone bright), and the
+   * monitor shows the same projection the same way, so the display control is not offered.
+   */
+  ctConvention?: boolean
   /** False where the step is about the anatomy alone and no tool is in the airway. */
   showTool?: boolean
   /** The bronchi drawn from the CT over the projection, and whether they are named. */
@@ -118,6 +145,9 @@ export function Monitor({
   const [processing, setProcessing] = useState<FieldDisplay | null>(null)
   const [boneDepth, setBoneDepth] = useState(false)
   const boneDepthOn = boneDepthAid && boneDepth
+  const chosenPolarity = useFluoroPolarity()
+  const polarity = ctConvention ? CT_CONVENTION : chosenPolarity
+  const showPolarityControl = polarityControl && !ctConvention
   const filterId = useId().replace(/:/g, '')
   const [baseline, setBaseline] = useState<StoredProjection | null>(
     viewMemory?.current.baseline ?? null,
@@ -204,6 +234,7 @@ export function Monitor({
       overlay: currentOverlay,
       mask,
       processing: readProcessing(),
+      polarity,
       label,
     }
     if (viewMemory) {
@@ -236,6 +267,9 @@ export function Monitor({
     // `state` is here so the choice is applied once the image is ready, not only when it changes.
   }, [boneDepthOn, state])
   useEffect(() => {
+    engine.current?.setPolarity(polarity)
+  }, [polarity, state])
+  useEffect(() => {
     setProcessing(readProcessing())
     // The frame on the canvas (its revision) and the field are the whole input.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -246,125 +280,169 @@ export function Monitor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comparison, state, baseline])
   return (
-    <div
-      className={comparison ? styles.comparison : undefined}
-      data-image-comparison={comparison ? 'available' : undefined}
-      data-has-baseline={comparison && baseline ? 'true' : undefined}
-    >
-      {/* Owner feedback, 2026-10-11 (slide 4): this asked the learner to freeze a baseline and
+    <ImagePolarityContext.Provider value={polarity}>
+      <div
+        className={comparison ? styles.comparison : undefined}
+        data-image-comparison={comparison ? 'available' : undefined}
+        data-has-baseline={comparison && baseline ? 'true' : undefined}
+      >
+        {/* Owner feedback, 2026-10-11 (slide 4): this asked the learner to freeze a baseline and
           change a control on steps that had no control. It is offered only where the step can change
           the image, and it says what the baseline is. */}
-      {comparison && captureEnabled && (
-        <div className={styles.toolbar} data-baseline-tools>
-          <button type="button" disabled={state !== 'ready'} onClick={captureBaseline}>
-            Save baseline image
-          </button>
-          {comparisonHint ? <span>{comparisonHint}</span> : null}
-        </div>
-      )}
-      {comparison && baseline && (
-        <figure data-baseline-image data-acquisition-id={baseline.id}>
-          <figcaption>Baseline · {baseline.label}</figcaption>
-          <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
-            <div className={styles.monitorImage} data-monitor-zoom={1}>
-              {/* A local canvas capture, retained with its own overlay and acquisition state. */}
-              {baseline.processing && (
-                <DisplayFilter id={`${filterId}-baseline`} display={baseline.processing} />
-              )}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={baseline.image}
-                alt=""
-                style={baseline.processing ? { filter: `url(#${filterId}-baseline)` } : undefined}
-              />
-              {baseline.overlay}
-              {baseline.mask}
-            </div>
-          </div>
-        </figure>
-      )}
-      <figure data-current-image data-display-gain={processing?.gain.toFixed(2)}>
-        {/* The acquisition context is always stated with the image: a fixed example has no
-            sliders to read it from. */}
-        <figcaption data-acquisition-context>
-          {comparison ? `Current · ${label}` : label}
-        </figcaption>
-        <div
-          className={styles.monitor}
-          data-projection-state={state}
-          hidden={hidden}
-          role="img"
-          aria-label="Fluoroscopic projection with the target lesion and the tool"
-        >
-          <div
-            className={styles.monitorImage}
-            style={{ transform: `scale(${zoom})` }}
-            data-monitor-zoom={zoom}
-          >
-            {processing && <DisplayFilter id={`${filterId}-current`} display={processing} />}
-            <canvas
-              ref={canvas}
-              aria-hidden="true"
-              style={processing ? { filter: `url(#${filterId}-current)` } : undefined}
-            />
-            {currentOverlay}
-            {mask}
-          </div>
-          {displayMask}
-          {state !== 'ready' && (
-            <p className={styles.imageStatus} role="status" data-image-status>
-              {state === 'failed'
-                ? 'The image could not be drawn. Reload to retry; the text remains available.'
-                : 'Preparing the projection…'}
-            </p>
-          )}
-        </div>
-        {airwayShow !== 'off' && (
-          <div className={styles.imageAids} data-airway-legend>
-            {(airways?.names ?? true) && (
-              <ul className={styles.airwayKey}>
-                {airwayLegend(airwayShow).map((entry) => (
-                  <li key={entry.key}>
-                    <span style={{ background: entry.color }} aria-hidden="true" />
-                    {entry.label}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p>
-              The bronchi are drawn from the CT of this patient. Fluoroscopy shows the trachea and
-              the main bronchi as lucent columns and no bronchus beyond them.
-              {isAirwayLobeShow(airwayShow) &&
-                ' The heavy line is the first two centimetres of each segmental bronchus, from the white dot where it arises.'}
-              {airwayShow === 'lesion' &&
-                ' These are the segmental bronchi that cross the outline of the nodule on the frontal image.'}
-            </p>
+        {comparison && captureEnabled && (
+          <div className={styles.toolbar} data-baseline-tools>
+            <button type="button" disabled={state !== 'ready'} onClick={captureBaseline}>
+              Save baseline image
+            </button>
+            {comparisonHint ? <span>{comparisonHint}</span> : null}
           </div>
         )}
-        {boneDepthAid && (
-          <div className={styles.imageAids} data-image-aids>
-            <button
-              type="button"
-              aria-pressed={boneDepth}
-              disabled={state !== 'ready'}
-              onClick={() => setBoneDepth((on) => !on)}
-              data-bone-depth-toggle
+        {comparison && baseline && (
+          <figure data-baseline-image data-acquisition-id={baseline.id}>
+            <figcaption>Baseline · {baseline.label}</figcaption>
+            <div className={styles.monitor} role="img" aria-label="Saved baseline projection">
+              <div className={styles.monitorImage} data-monitor-zoom={1}>
+                {/* A local canvas capture, retained with its own overlay and acquisition state. */}
+                {baseline.processing && (
+                  <DisplayFilter id={`${filterId}-baseline`} display={baseline.processing} />
+                )}
+                {baseline.polarity !== polarity && (
+                  <TableFilter
+                    id={`${filterId}-repolarize`}
+                    table={repolarizeTable(baseline.polarity, polarity)}
+                  />
+                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={baseline.image}
+                  alt=""
+                  style={baselineFilter(
+                    baseline.processing ? `url(#${filterId}-baseline)` : null,
+                    baseline.polarity !== polarity ? `url(#${filterId}-repolarize)` : null,
+                  )}
+                />
+                {baseline.overlay}
+                {baseline.mask}
+              </div>
+            </div>
+          </figure>
+        )}
+        <figure data-current-image data-display-gain={processing?.gain.toFixed(2)}>
+          {/* The acquisition context is always stated with the image: a fixed example has no
+            sliders to read it from. */}
+          <figcaption data-acquisition-context>
+            {comparison ? `Current · ${label}` : label}
+          </figcaption>
+          <div
+            className={styles.monitor}
+            data-projection-state={state}
+            data-display-polarity={polarity}
+            hidden={hidden}
+            role="img"
+            aria-label="Fluoroscopic projection with the target lesion and the tool"
+          >
+            <div
+              className={styles.monitorImage}
+              style={{ transform: `scale(${zoom})` }}
+              data-monitor-zoom={zoom}
             >
-              Colour bone by depth
-            </button>
-            {boneDepthOn && (
-              <p data-bone-depth-legend>
-                <span className={styles.boneBehind}>Amber</span>: bone the beam crosses before the
-                nodule, on the tube side. <span className={styles.boneFront}>Blue</span>: bone it
-                crosses after, on the detector side. Tilt the beam and the two slide opposite ways.
-                A fluoroscopic image carries no depth; the colouring comes from the CT.
+              {processing && <DisplayFilter id={`${filterId}-current`} display={processing} />}
+              <canvas
+                ref={canvas}
+                aria-hidden="true"
+                style={processing ? { filter: `url(#${filterId}-current)` } : undefined}
+              />
+              {currentOverlay}
+              {mask}
+            </div>
+            {displayMask}
+            {state !== 'ready' && (
+              <p className={styles.imageStatus} role="status" data-image-status>
+                {state === 'failed'
+                  ? 'The image could not be drawn. Reload to retry; the text remains available.'
+                  : 'Preparing the projection…'}
               </p>
             )}
           </div>
-        )}
-      </figure>
-    </div>
+          {airwayShow !== 'off' && (
+            <div className={styles.imageAids} data-airway-legend>
+              {(airways?.names ?? true) && (
+                <ul className={styles.airwayKey}>
+                  {airwayLegend(airwayShow).map((entry) => (
+                    <li key={entry.key}>
+                      <span style={{ background: entry.color }} aria-hidden="true" />
+                      {entry.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p>
+                The bronchi are drawn from the CT of this patient. Fluoroscopy shows the trachea and
+                the main bronchi as lucent columns and no bronchus beyond them.
+                {isAirwayLobeShow(airwayShow) &&
+                  ' The heavy line is the first two centimetres of each segmental bronchus, from the white dot where it arises.'}
+                {airwayShow === 'lesion' &&
+                  ' These are the segmental bronchi that cross the outline of the nodule on the frontal image.'}
+              </p>
+            </div>
+          )}
+          {(boneDepthAid || showPolarityControl) && (
+            <div className={styles.imageAids} data-image-aids>
+              {showPolarityControl && (
+                <div
+                  className={styles.displayPolarity}
+                  role="group"
+                  aria-label="Fluoroscopy display"
+                  data-polarity-control={polarity}
+                >
+                  <span aria-hidden="true">Display:</span>
+                  {(['bone-dark', 'bone-bright'] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={polarity === option}
+                      onClick={() => setFluoroPolarity(option)}
+                      data-polarity-option={option}
+                    >
+                      {FLUORO_POLARITY_LABELS[option]}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {boneDepthAid && (
+                <button
+                  type="button"
+                  aria-pressed={boneDepth}
+                  disabled={state !== 'ready'}
+                  onClick={() => setBoneDepth((on) => !on)}
+                  data-bone-depth-toggle
+                >
+                  Colour bone by depth
+                </button>
+              )}
+              {boneDepthOn && (
+                <p data-bone-depth-legend>
+                  <span className={styles.boneBehind}>Amber</span>: bone the beam crosses before the
+                  nodule, on the tube side. <span className={styles.boneFront}>Blue</span>: bone it
+                  crosses after, on the detector side. Tilt the beam and the two slide opposite
+                  ways. A fluoroscopic image carries no depth; the colouring comes from the CT.
+                </p>
+              )}
+            </div>
+          )}
+        </figure>
+      </div>
+    </ImagePolarityContext.Provider>
   )
+}
+
+/**
+ * A stored frame's CSS filter: its own display mapping, then, if the setting changed since it was
+ * stored, the redraw into the polarity now chosen.
+ */
+function baselineFilter(mapping: string | null, repolarize: string | null) {
+  const filter = [mapping, repolarize].filter(Boolean).join(' ')
+  return filter ? { filter } : undefined
 }
 
 /**
@@ -372,7 +450,12 @@ export function Monitor({
  * canvas: the detector texture in the 3D view and every stored pixel stay as acquired.
  */
 function DisplayFilter({ id, display }: { id: string; display: FieldDisplay }) {
-  const tableValues = display.table.join(' ')
+  return <TableFilter id={id} table={display.table} />
+}
+
+/** One grey-level table as an SVG filter: output for equally spaced inputs 0–1. */
+function TableFilter({ id, table }: { id: string; table: readonly number[] }) {
+  const tableValues = table.join(' ')
   return (
     <svg
       aria-hidden="true"

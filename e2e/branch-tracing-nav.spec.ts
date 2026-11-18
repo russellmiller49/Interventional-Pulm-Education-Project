@@ -20,12 +20,7 @@ const scope = (page: Page) => page.locator('[data-scope-view]')
 const now = (page: Page) => page.locator('[data-now-card]')
 const feedback = (page: Page) => page.locator('[data-bench-feedback]')
 
-/** Marks the primer as already seen, so it does not open over the bench. */
-const primerSeen = (page: Page) =>
-  page.addInitScript(() => localStorage.setItem('branch-tracing.primer-seen-v1', '1'))
-
 async function openBench(page: Page, path: string) {
-  await primerSeen(page)
   await page.goto(`${BASE}${path}`)
   await expect(page.locator('[data-bench]')).toBeVisible()
   await expect(ct(page)).toHaveAttribute('data-ct-ready', 'true')
@@ -172,23 +167,32 @@ test.describe('course', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Orientation check')
   })
 
-  test('the primer opens by itself the first time, then from its button', async ({ page }) => {
+  test('the primer never opens by itself; it opens from its button', async ({ page }) => {
+    // A first visit, with nothing on this device.
     await page.goto(`${BASE}/learn?lesson=carina-orientation`)
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await expect(ct(page)).toHaveAttribute('data-ct-ready', 'true')
     const dialog = page.locator('[data-stage-help-dialog]')
+    await expect(dialog).toBeHidden()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.locator('[data-bench-help]').click()
     await expect(dialog).toBeVisible()
     await expect(dialog).toContainText('What we are doing, and why')
-    await dialog.getByRole('button', { name: 'Close' }).click()
-    await expect(dialog).toBeHidden()
-    await page.reload()
-    await expect(page.locator('[data-bench]')).toBeVisible()
-    await expect(dialog).toBeHidden()
-    await page.locator('[data-bench-help]').click()
     await expect(dialog).toContainText('Plan:')
     await expect(dialog).toContainText('Map:')
     await expect(dialog).toContainText('Navigate:')
     await expect(dialog).toContainText('Mortimer and Saghaie')
     await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
     await expect(page.locator('[data-bench-help]')).toBeFocused()
+    // Nothing is kept about it: a reload opens the bench with the primer closed again.
+    await page.reload()
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await expect(dialog).toBeHidden()
+    // The planning bench is the same.
+    await page.goto(`${BASE}/learn?lesson=start-at-the-lesion`)
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 })
 
@@ -816,7 +820,6 @@ test.describe('the fly-through of the central airways', () => {
     page,
   }) => {
     test.setTimeout(120000)
-    await primerSeen(page)
     await page.goto(`${BASE}/practice`)
     const choice = page.locator('[data-cruise-choice] input')
     await expect(choice).not.toBeChecked()
@@ -902,7 +905,7 @@ test.describe('the method demonstrated', () => {
     page,
   }) => {
     test.setTimeout(180000)
-    // A first visit: the primer has not been seen, and it must not open over the demonstration.
+    // A first visit, with nothing on this device: no dialog opens over the demonstration.
     await page.goto(BASE)
     const poster = page.locator('[data-method-poster]')
     await expect(poster).toBeVisible()
@@ -961,7 +964,7 @@ test.describe('the method demonstrated', () => {
     await expect(shell(page)).toHaveAttribute('data-stage', '4:choose', { timeout: 60000 })
     await expect(page.locator('[data-demo-caption]')).toContainText('the map takes over')
     expect(await demo.innerText()).not.toMatch(BANNED)
-    // Nothing was saved: no place, no result, and the primer is still to be seen.
+    // Nothing was saved: no place and no result.
     expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([])
     await expect(page.locator('[data-demo-start]')).toHaveAttribute(
       'href',
@@ -971,6 +974,8 @@ test.describe('the method demonstrated', () => {
 
   test('the primer leads to it', async ({ page }) => {
     await page.goto(`${BASE}/learn?lesson=start-at-the-lesion`)
+    await expect(page.locator('[data-bench]')).toBeVisible()
+    await page.locator('[data-bench-help]').click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
     await expect(dialog.locator('[data-watch-method]')).toHaveAttribute(
@@ -985,7 +990,6 @@ test.describe('the scope has rolled', () => {
     page,
   }) => {
     test.setTimeout(240000)
-    await primerSeen(page)
     await page.setViewportSize({ width: 1600, height: 905 })
     await page.goto(BASE)
     const row = page.locator('[data-drill]')
@@ -1090,9 +1094,11 @@ test.describe('the scope has rolled', () => {
 test.describe('whole lesions', () => {
   test('Practice plans, maps and drives a lesion from the trachea', async ({ page }) => {
     test.setTimeout(180000)
-    await primerSeen(page)
     await page.goto(`${BASE}/practice`)
     await expect(page.locator('[data-lesion]')).toHaveCount(18)
+    // No card says how many divisions its map has before that lesion has been reached.
+    await expect(page.locator('[data-lesion-divisions]')).toHaveCount(0)
+    await expect(page.locator('[data-lesion-thumb]')).toHaveCount(18)
     await expect(page.locator('[data-lesion-picker]')).toContainText('teaching simulator')
     expect(await page.locator('[data-lesion-picker]').innerText()).not.toMatch(/RS8|RB8/)
     await page.locator('[data-lesion="r-anterior-basal"]').click()
@@ -1100,7 +1106,26 @@ test.describe('whole lesions', () => {
     await expect(page.locator('[data-bench]')).toBeVisible()
     await page.locator('[data-bench-restart]').click()
     await expectStage(page, 'plan:lesion')
+    // While the map is being drawn, nothing of the branches the route does not take is shown.
+    await showUntil(page, /^plan:arcs:1$/)
+    await expect(page.locator('[data-arc-map] [data-arc-reference]')).toHaveCount(0)
+    // The kicker names the division being drawn, never how many the map will have.
+    await expect(now(page)).toContainText('Division 2')
+    expect(await now(page).innerText()).not.toMatch(/Division \d+ of \d+/)
     await showUntil(page, /^plan:review$/)
+    // The finished map draws the next division inside each branch the route does not take, in
+    // the review's own map and on the model's.
+    const review = page.locator('[data-arc-map]')
+    await expect(review.locator('[data-arc-reference]')).toHaveCount(6)
+    await expect(review.locator('[data-arc-reference][data-arc-route]')).toHaveCount(0)
+    await expect(page.locator('[data-review-legend="reference"]')).toHaveText(
+      'next division off the route',
+    )
+    await page.locator('[data-review-show="mine"]').click()
+    await expect(review.locator('[data-arc-reference]')).toHaveCount(0)
+    await page.locator('[data-review-show="model"]').click()
+    await expect(review.locator('[data-arc-reference]')).toHaveCount(6)
+    await page.locator('[data-review-show="both"]').click()
     await nowButton(page, 'Drive to the lesion').click()
     // The central airways are flown through: the first choice is the fork that gives off RB8.
     await showUntil(page, /choose$/)
@@ -1148,9 +1173,11 @@ test.describe('whole lesions', () => {
     const card = page.locator('[data-lesion="r-anterior-basal"]')
     await expect(card).toHaveAttribute('data-lesion-state', /reached|first/)
     await expect(card.locator('[data-lesion-result]')).toContainText('Reached.')
+    // Once reached, the card gives the count; a lesion not yet attempted still does not.
     await expect(card.locator('[data-lesion-divisions]')).toHaveText(
       '2 divisions past the segmental ostium',
     )
+    await expect(page.locator('[data-lesion-divisions]')).toHaveCount(1)
     await expect(page.locator('[data-lesion="l-superior"]')).toHaveAttribute(
       'data-lesion-state',
       'new',
@@ -1199,7 +1226,6 @@ test.describe('whole lesions', () => {
     page,
   }) => {
     test.setTimeout(120000)
-    await primerSeen(page)
     // Asked to choose at every fork from the trachea, so the first fork is the carina.
     await everyFork(page)
     await page.goto(`${BASE}/assess`)

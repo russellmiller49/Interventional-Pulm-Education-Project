@@ -193,6 +193,11 @@ An AI review is not physician approval.
   names.
 - Open E2 tickets: MV-L4, MV-L6 to MV-L8 (and MV-L1, MV-L2 from Sections 1–5). MV-L3 and MV-L5
   were ruled on by the owner on 2026-10-15 (above).
+- 2026-11-14: MV-L6 ("Close them before commitment"), MV-L7 ("Neutral titles") and MV-L8 ("Follow
+  the console"), all ruled on 2026-11-12, built on branch `claude/mv-titles-consoles-panel`:
+  Section 7's "trapped gas" boundary and Part 2 shaping note, and Section 12's shaping note, wait
+  for the answer they bear on; Part 1 action titles in Sections 8, 11, 12 and 13 are neutral; the
+  cycle-off threshold and rise time carry the selected console's label (`content/consoleWording.ts`).
 - Remaining surfaces: the location questions, Section 9's comparison copy, the Practice and
   Applications copy.
 - PR: #408 (merged 2026-10-15); the MV-L3 and MV-L5 rulings in a follow-up PR.

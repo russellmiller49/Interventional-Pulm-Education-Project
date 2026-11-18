@@ -295,7 +295,9 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
     ],
     productReferenceBoundary: MCS_PRODUCT_FLOW_BOUNDARY,
     measurementClarificationIds: ['clarification.mcs.impella-cp-flow-measurands'],
-    sourceConflictIds: ['conflict.mcs.impella-cp-textbook-flow'],
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): teach the IFU P-level flows (the
+    // first product reference), not the textbook's two flows.
+    sourceConflictIds: [],
     sourceIds: [
       'master-hemodynamics-reference',
       'mcs-bedside-reference-supplied',

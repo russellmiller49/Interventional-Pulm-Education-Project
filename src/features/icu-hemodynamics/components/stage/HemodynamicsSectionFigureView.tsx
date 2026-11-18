@@ -5,6 +5,7 @@ import type { DerivedMetricId } from '../../content/derivedMetrics'
 import type { HemodynamicsSectionFigure } from '../../content/taskPresentation'
 import type { HemodynamicSimulationState } from '../../engine/types'
 import { DerivedValueFigure } from '../DerivedValueFigure'
+import { FickCalculationFigure } from '../FickCalculationFigure'
 import { PacComponentSchematic } from '../NormalWaveformAnatomyFigure'
 import { NormalWaveformReference } from '../NormalWaveformReference'
 import { ThermodilutionCurveFigure } from '../ThermodilutionTrialReview'
@@ -15,7 +16,12 @@ export function sectionFigureShows(
   figure: HemodynamicsSectionFigure,
   state: HemodynamicSimulationState,
 ): boolean {
-  if (figure === 'pac-parts' || figure === 'derived-value' || figure === 'normal-reference')
+  if (
+    figure === 'pac-parts' ||
+    figure === 'derived-value' ||
+    figure === 'fick-calculation' ||
+    figure === 'normal-reference'
+  )
     return true
   if (figure === 'td-curve') return state.thermodilutionTrials.length > 0
   return false
@@ -39,12 +45,15 @@ export function HemodynamicsSectionFigureView({
   state,
   answered,
   derived,
+  fickEpisodeId,
 }: {
   readonly figure: HemodynamicsSectionFigure
   readonly state: HemodynamicSimulationState
   readonly answered: boolean
   /** For `derived-value`: the value to draw, and the worked episode whose numbers fill it, if any. */
   readonly derived?: { readonly metricId: DerivedMetricId; readonly episodeId?: string }
+  /** For `fick-calculation`: the episode the reading page beside it reads, if any. */
+  readonly fickEpisodeId?: string
 }) {
   if (!sectionFigureShows(figure, state)) return null
   if (figure === 'pac-parts') return <PacComponentSchematic functions={answered} />
@@ -52,6 +61,7 @@ export function HemodynamicsSectionFigureView({
     return derived ? (
       <DerivedValueFigure metricId={derived.metricId} episodeId={derived.episodeId} />
     ) : null
+  if (figure === 'fick-calculation') return <FickCalculationFigure episodeId={fickEpisodeId} />
   if (figure === 'normal-reference') {
     // The chamber the walk is standing in; before the first chamber, the first one.
     const position = state.catheter.position === 'introducer' ? 'ra' : state.catheter.position

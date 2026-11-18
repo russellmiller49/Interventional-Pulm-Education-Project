@@ -1497,6 +1497,9 @@ g[data-locator-hot] .ctLocatorRing {
 .reviewLegend i[data-line='model'] {
   border-top: 2px dashed #7fe3ff;
 }
+.reviewLegend i[data-line='reference'] {
+  border-top: 1px dashed #8fa6ae;
+}
 /* How to work a step out, in the task card: open, and out of the way once read. */
 .teachBox {
   margin: 0.5rem 0 0.2rem;
