@@ -1,5 +1,6 @@
 import { CAPSTONE_CASES } from '../content/capstone'
 import { COURSE_FLOWS } from '../content/courseFlow'
+import { NUMBER_REGISTER } from '../content/numbers'
 import { section as bleeding } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as deterioration } from '../content/sections/deterioration'
@@ -188,6 +189,37 @@ describe('Section 3, sedation and topical anesthesia (bf-s03-sedation)', () => {
     expect(notRousing.choices.map((choice) => choice.label).join(' ')).not.toMatch(
       /reverse both drugs/,
     )
+  })
+})
+
+describe('fasting, aligned with EBUS Guided (r2-554-bf-fasting, 2026-11-15)', () => {
+  const fasting = words(sedation, 'before-and-after')
+
+  it('replaces the unconditional 4 hours with the ASA framework for the elective population', () => {
+    expect(NUMBER_REGISTER['fasting-solids'].value).toBe(
+      'at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat',
+    )
+    expect(NUMBER_REGISTER['fasting-clear-fluids'].value).toBe('2 hours')
+    expect(NUMBER_REGISTER['fasting-solids'].sources.map((source) => source.sourceId)).toEqual([
+      'U25',
+    ])
+    expect(fasting).toMatch(
+      /For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA guideline allows clear liquids until/,
+    )
+    expect(fasting).not.toMatch(/no food for/)
+    expect(JSON.stringify(sedation)).not.toMatch(/\b4 hours\b/)
+  })
+
+  it('assesses aspiration risk for each patient, and defers to local policy', () => {
+    expect(fasting).toMatch(/Aspiration risk is assessed for each patient/)
+    expect(fasting).toMatch(/a longer fast alone may not remove it/)
+    expect(fasting).toMatch(/Your anesthesia and procedural policy sets the fasting interval/)
+  })
+
+  it('keeps BTS 2013 as history in the register note, and signs nothing', () => {
+    expect(NUMBER_REGISTER['fasting-solids'].note).toMatch(/BTS 2013 \(grade D\) gave 4 hours/)
+    for (const id of ['fasting-solids', 'fasting-clear-fluids'] as const)
+      expect(NUMBER_REGISTER[id].signedBy).toBeNull()
   })
 })
 

@@ -92,7 +92,7 @@ export const section: BronchSectionDefinition = {
   authoringContract: 2,
   title: 'Topical anesthesia, sedation and monitoring',
   shortTitle: 'Sedation and monitoring',
-  minutes: 11,
+  minutes: 12,
   activityMinutes: 4,
   moduleIds: ['M04', 'M01'],
   objectives: [
@@ -295,10 +295,12 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'signals',
       heading: 'Before, and after',
-      body: 'An empty stomach before. Drugs that are still working after.',
+      body: 'An empty stomach before. Drugs that are still working after. Your anesthesia and procedural policy sets the fasting interval.',
       pointsLabel: 'Fasting and going home',
       points: [
-        `Fasting: no food for ${num('fasting-solids')}, and no clear fluids for ${num('fasting-clear-fluids')}.`,
+        `For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA guideline allows clear liquids until ${num('fasting-clear-fluids')} before.`,
+        `Solid food: ${num('fasting-solids')}.`,
+        'Aspiration risk is assessed for each patient. Increased risk needs an anesthesia and procedural plan made for that patient; a longer fast alone may not remove it.',
         `After any sedation: no driving, machinery or legal documents for ${num('post-sedation-restriction')}.`,
       ],
       claimClass: 'update',
