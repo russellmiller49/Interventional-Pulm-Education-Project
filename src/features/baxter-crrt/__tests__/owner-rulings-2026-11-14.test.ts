@@ -6,6 +6,7 @@
  */
 import { crrtAdvancedTasks } from '../content/advancedLessons'
 import { baxterCrrtCases } from '../content/completeCases'
+import { crrtFoundationTasks } from '../content/foundationLessons'
 import { resolveCrrtLearnerFacingSource } from '../content/learnerSourceMap'
 import { crrtOperationalTasks } from '../content/operationalLessons'
 import { CRRT_NUMBERS } from '../content/teachingNumbers'
@@ -182,6 +183,23 @@ describe('the three P-proposals', () => {
       /calls for a new set once the pump has been stopped for more than 10 minutes/,
     )
     expect(lessons).not.toMatch(/'Resume, then recheck/)
+  })
+})
+
+describe('crrt-conflict-prescribed-dose: both views', () => {
+  const foundation = JSON.stringify(crrtFoundationTasks)
+
+  it('teaches the 25–30 prescription and the AJKD view beside it, without a new number', () => {
+    expect(foundation).toMatch(
+      /KDIGO and the textbooks support 25–30 mL\/kg\/h, to cover the hours the circuit is down/,
+    )
+    expect(foundation).toMatch(
+      /a prescription above the top of the delivered range may be unnecessary/,
+    )
+    expect(foundation).toMatch(/the dose that counts is the one delivered/)
+    // The signed row is untouched.
+    expect(row('dose-prescribed').value).toBe('25–30 mL/kg/h')
+    expect(row('dose-prescribed').signedOn).toBe('2026-11-13')
   })
 })
 
