@@ -20,6 +20,12 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
     /*
      * Sections 2–8 end on a case, run inside the section (`practicePairing` in the module's
      * section specs); their minutes include the case's own (`minutes` on the case definition).
+     * The rest of each figure is the section's measured reading time (owner ruling 2026-11-14:
+     * task-card words at 200 a minute, `icu-hemodynamics/test-support/sectionReading.tsx`), held
+     * to the text by `icu-hemodynamics/__tests__/section-minutes.test.tsx`. The capstone
+     * (`pac-signal-validation`) is the one exception: its work is in the simulator, which reading
+     * time does not count, so its 20 minutes are set by hand (owner ruling 2026-11-15) and named
+     * in that test's `HAND_SET_MINUTES`.
      */
     arcSentence:
       'Ask why, trust the signal, read the waveform, advance the catheter, measure, and integrate',
@@ -28,7 +34,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'why-measure',
         shortTitle: 'Why measure',
         title: 'Why put a line in at all?',
-        minutes: 6,
+        minutes: 7,
         description:
           'What a pressure measured inside the circulation adds to the bedside picture, and the questions it cannot answer on its own.',
         stage: 'orientation',
@@ -48,7 +54,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-interpretation',
         shortTitle: 'Identify the chamber',
         title: 'Identify the chamber from the waveform',
-        minutes: 20,
+        minutes: 24,
         description:
           'Walk the four places the tip can sit — right atrium, right ventricle, pulmonary artery, the wedge — and learn to name each from its shape alone.',
         stage: 'mechanism',
@@ -58,7 +64,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'waveform-components',
         shortTitle: 'Read the waves',
         title: 'Atrial waves and descents',
-        minutes: 20,
+        minutes: 18,
         description:
           'Identify atrial waves and descents against the ECG, then interpret abnormal components in a confirmed chamber and clinical context.',
         stage: 'mechanism',
@@ -68,7 +74,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'catheter-advancement',
         shortTitle: 'Advance',
         title: 'Where is the tip?',
-        minutes: 25,
+        minutes: 21,
         description:
           'Work a simulated catheter from the introducer to the pulmonary artery, confirming each stop from the tracing rather than the depth, and stopping when the list says stop.',
         stage: 'foundation',
@@ -78,7 +84,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'pawp-capture',
         shortTitle: 'Wedge',
         title: 'Listening through a stopped branch',
-        minutes: 25,
+        minutes: 22,
         description:
           'From a confirmed pulmonary-artery position, take a brief end-expiratory wedge, judge whether it is plausible, and prove the occlusion has ended.',
         stage: 'mechanism',
@@ -88,7 +94,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'thermodilution-series',
         shortTitle: 'Measure flow',
         title: 'How much is flowing?',
-        minutes: 28,
+        minutes: 22,
         description:
           'Measure flow with a thermodilution series and a Fick calculation, judging each curve and each input before its number.',
         stage: 'mechanism',
@@ -98,7 +104,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
         id: 'derived-hemodynamics',
         shortTitle: 'Derive',
         title: 'Numbers made of numbers',
-        minutes: 25,
+        minutes: 23,
         description:
           'Trace each calculated value back to its equation and its inputs, and withhold only what an invalid input actually touches.',
         stage: 'application',

@@ -277,7 +277,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: [],
     evidenceIds: [...hemodynamicsEvidence, 'pac-review-2014'],
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
   },
   {
     sourceId: 'pressure-system',
@@ -305,7 +305,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
-    estimatedMinutes: 20,
+    estimatedMinutes: 24,
   },
   {
     // The flow rebuild split the waveform section in two: naming the place from its shape is one
@@ -319,7 +319,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:waveform-interpretation'],
     evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
-    estimatedMinutes: 20,
+    estimatedMinutes: 18,
   },
   {
     sourceId: 'catheter-advancement',
@@ -331,7 +331,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:waveform-components'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 25,
+    estimatedMinutes: 21,
   },
   {
     sourceId: 'pawp-capture',
@@ -343,7 +343,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
-    estimatedMinutes: 25,
+    estimatedMinutes: 22,
   },
   {
     sourceId: 'thermodilution-series',
@@ -355,7 +355,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion'],
     prerequisiteActivityIds: ['hemodynamics:learn:pawp-capture'],
     evidenceIds: hemodynamicsEvidence,
-    estimatedMinutes: 28,
+    estimatedMinutes: 22,
   },
   {
     sourceId: 'derived-hemodynamics',
@@ -367,7 +367,7 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
     prerequisiteActivityIds: ['hemodynamics:learn:thermodilution-series'],
     evidenceIds: hemodynamicsEvidence,
-    estimatedMinutes: 25,
+    estimatedMinutes: 23,
   },
   {
     sourceId: 'pac-signal-validation',
@@ -394,6 +394,8 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
       'monitor-workflow-supplied',
       'arterial-pressure-five-step-2020',
     ],
+    // Set by hand, not measured: the capstone's work is in the simulator, which reading time does
+    // not count (owner ruling 2026-11-15, "Keep the capstone at 20"; `section-minutes.test.tsx`).
     estimatedMinutes: 20,
     creditPolicy: 'competency-eligible',
     completionEvidenceAuthority: 'validated-interaction',
