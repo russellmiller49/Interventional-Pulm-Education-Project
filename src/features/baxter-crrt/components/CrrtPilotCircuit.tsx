@@ -1166,8 +1166,8 @@ export function CrrtPilotCircuit({
                   </div>
                   <p className={styles.panelNote}>
                     Where citrate acts and which sample answers which question. Post-filter ionized
-                    calcium target {CRRT_NUMBERS.value('postfilter-ica')}; a total-to-ionized ratio{' '}
-                    {CRRT_NUMBERS.value('calcium-ratio')} raises concern for accumulation.
+                    calcium target {CRRT_NUMBERS.value('postfilter-ica')}; a total-to-ionized ratio
+                    of {CRRT_NUMBERS.value('calcium-ratio')} raises concern for accumulation.
                   </p>
 
                   {/*

@@ -168,14 +168,14 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     paragraphs: [
       'Regional citrate is the first-choice anticoagulant for CRRT where it is available and not contraindicated, because it anticoagulates the circuit without raising the patient’s bleeding risk. Heparin is the alternative. The choice turns on bleeding risk, liver function and perfusion.',
       'Citrate makes that pairing concrete: it binds ionized calcium in the circuit, and some citrate–calcium complexes leave in effluent. Remaining citrate returns to the patient for metabolism. In this schematic, citrate enters before the blood pump and calcium replacement uses a separate patient line; actual infusion sites depend on the approved configuration. Circuit and systemic ionized calcium samples answer different questions, and neither substitutes for the other.',
-      `Two samples answer two questions. The post-filter ionized calcium tells you whether the circuit is anticoagulated: the target is ${N('postfilter-ica')}. Higher than that, the circuit is under-anticoagulated and the citrate dose goes up; lower, it comes down. The systemic ionized calcium tells you whether the patient is safe, and it sets the calcium replacement. Citrate the liver cannot clear accumulates: the systemic ionized calcium falls, the calcium requirement keeps rising, the total calcium climbs, and a total-to-ionized calcium ratio ${N('calcium-ratio')} raises concern; with a new metabolic acidosis and a climbing calcium requirement, accumulation is likely. The first move is to reduce or stop the citrate while you keep replacing calcium.`,
+      `Two samples answer two questions. The post-filter ionized calcium tells you whether the circuit is anticoagulated: the target is ${N('postfilter-ica')}. Higher than that, the circuit is under-anticoagulated and the citrate dose goes up; lower, it comes down. The systemic ionized calcium tells you whether the patient is safe, and it sets the calcium replacement. Citrate the liver cannot clear accumulates: the systemic ionized calcium falls, the calcium requirement keeps rising, the total calcium climbs, and a total-to-ionized calcium ratio of ${N('calcium-ratio')} raises concern; with a new metabolic acidosis and a climbing calcium requirement, accumulation is likely. The first move is to reduce or stop the citrate while you keep replacing calcium.`,
     ],
     bullets: [
       'Confirm the prescribed strategy and the monitoring plan before treatment.',
       'Say which compartment a result describes before saying what it means.',
       'Distinguish recurrent filter burden from an isolated pressure fluctuation.',
       `Post-filter ionized calcium ${N('postfilter-ica')} is the circuit; systemic ionized calcium is the patient.`,
-      `Total-to-ionized calcium ratio ${N('calcium-ratio')}: concern for accumulation. With the acid–base and the calcium requirement, reduce or stop citrate.`,
+      `Total-to-ionized calcium ratio of ${N('calcium-ratio')}: concern for accumulation. With the acid–base and the calcium requirement, reduce or stop citrate.`,
     ],
     sourceRecordIds: [
       'TEXT-CRRT-NEYRA-2026',

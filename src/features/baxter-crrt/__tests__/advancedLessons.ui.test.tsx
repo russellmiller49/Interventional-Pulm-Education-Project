@@ -150,7 +150,7 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
     if (plan !== 'defer') click('Record reassessment of this run')
     answer(/Report findings, actions, pump state/)
     expect(screen.queryByLabelText('Current run and recorded observations')).not.toBeInTheDocument()
-    answer(/Keep the effluent total and request/)
+    answer(/Take the delivered dose from the effluent total/)
     expect(screen.getByText('End of this lesson')).toBeInTheDocument()
     expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain(

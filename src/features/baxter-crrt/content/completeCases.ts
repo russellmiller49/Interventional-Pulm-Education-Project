@@ -1798,11 +1798,11 @@ function customizeReturnPressureCase(definition: MutableRuntimeCrrtCase): Mutabl
 
   const pause = bySuffix('pause-treatment')
   if (pause) {
-    pause.label = 'Keep the pump paused and flush or reposition the return lumen'
+    pause.label = 'Keep the pump paused and check the catheter by your unit’s procedure'
     pause.description =
       'For a line that is straight, unclamped and connected: the resistance is then at the catheter.'
     pause.response =
-      'Treatment stays paused while the return lumen is flushed or the catheter repositioned.'
+      'Treatment stays paused while the catheter is repositioned and the return lumen checked by the unit’s procedure, without forcing a flush.'
   }
 
   const correct = bySuffix('reposition-access')
@@ -1942,7 +1942,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     alternativeWhy: `Reasonable when a 12-lead cannot be done at once. KDIGO suggests calcium for a potassium ${N('calcium-without-ecg')} when an ECG or monitor is not immediately possible; UKKA gives calcium only for ECG changes. Get the ECG as soon as you can: it decides whether more calcium is needed.`,
     unsafeAction: 'Switch to intermittent hemodialysis to fix the numbers faster',
     unsafeWhy:
-      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. KDIGO suggests continuous therapy for patients with acute brain injury or raised intracranial pressure for this reason, and EASL says continuous RRT should always be used in the critically ill patient with acute liver failure. KDIGO suggests continuous therapy for hemodynamically unstable patients too, and this one has a MAP of 61 mmHg on a rising vasopressor dose.',
+      'Intermittent hemodialysis drops blood urea and osmolality in hours. In acute liver failure or brain injury that gradient moves water into the brain and can raise intracranial pressure. For that reason KDIGO 2012 suggests continuous rather than intermittent therapy in acute brain injury, raised intracranial pressure or generalized brain edema (recommendation 5.6.3, grade 2B), and EASL says continuous RRT should always be used in the critically ill patient with acute liver failure. The circulation is a second, separate reason: KDIGO suggests continuous therapy for hemodynamically unstable patients (recommendation 5.6.2, grade 2B), because fluid and solute come off slowly, and this patient has a MAP of 61 mmHg on a rising vasopressor dose. Both KDIGO statements are suggestions, not a rule that intermittent dialysis is never used in an unstable patient. Here the brain and the circulation point the same way.',
     secondUnsafe: {
       action: `Raise the dialysate so the dose reaches ${N('dose-delivered')}, then recheck potassium, pH and sodium in a few hours`,
       why: `The dose does need to come up, but CRRT removes potassium over hours and does nothing for the heart in the next few minutes. At this potassium the patient needs an ECG, calcium for any ECG change, and insulin with glucose now. UKKA gives calcium to dialysis patients with toxic ECG changes even when dialysis is immediately available, so a running machine is no reason to wait.`,
@@ -2005,7 +2005,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Your plan is recorded. The machine beside this case is an example that is already running; it does not model the pause before connection.',
     responseOptionLabel: 'Connection waits until the bag and the order agree',
     trendReview:
-      'Nothing on the screen would have warned you. PrisMax tracks each bag by weight, so the only safeguard against a wrong solution is a person reading the label against the order. After any correction, repeat the whole check, because the interruption is when the next item gets skipped.',
+      'Nothing on the screen would have warned you. PrisMax tracks each bag by weight. Its manual describes the barcode reader for the filter set, not for the solution bags; the solutions shown on screen come from the unit’s configuration or the selected profile; and it warns that the machine cannot detect every bag attached to the wrong line or hung on the wrong scale. So the safeguard against a wrong solution is a person reading the label against the order, by your unit’s double-check procedure. After any correction, repeat the whole check, because the interruption is when the next item gets skipped.',
     reassessment:
       'After the bag is corrected, repeat the whole check: set, every bag, lines, prime, prescription',
     openingFinding:
@@ -2029,8 +2029,9 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'A 120 kg patient is starting CRRT on the first day after an emergency laparotomy. The surgeons are worried about bleeding. Liver function is normal and lactate is 1.8 mmol/L. Hematocrit is 46%. The machine offers no anticoagulant, a heparin syringe, or regional citrate with calcium. The machine shown beside this case is an example circuit already running without anticoagulant.',
     learningObjectives: [
       'Choose regional citrate as the first option when there is no contraindication.',
-      'Name the two contraindications to check before citrate: severe liver failure and shock with a rising lactate.',
+      'Tell a contraindication to citrate from a higher risk of accumulation: weigh severe liver failure and shock with poor tissue perfusion, with lactate as a rough guide.',
       'State what has to be set and timed before a citrate circuit starts.',
+      'Say when heparin, or no anticoagulant, is the better choice.',
     ],
     goal: 'Keep the filter open without anticoagulating a patient who may bleed',
     goalDistractor: 'Get the longest possible filter life, whatever the method',
@@ -2042,25 +2043,25 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Choose regional citrate, then set the citrate and calcium rates and the first calcium sample times before starting',
     acceptedAlternative:
       'Run without anticoagulant, with a higher blood flow and pre-filter replacement, and accept a shorter filter life',
-    alternativeWhy: `A reasonable choice when citrate is not available or not safe. Higher blood flow (the usual range is ${N('blood-flow-range')}) and pre-filter replacement both reduce clotting. Expect more filter changes and more downtime.`,
+    alternativeWhy: `A reasonable choice when citrate is not available or not safe. For a patient at increased risk of bleeding KDIGO suggests citrate rather than no anticoagulant (recommendation 5.3.3.1, grade 2C), so running without is what remains when citrate cannot be used. Higher blood flow (the usual range is ${N('blood-flow-range')}) and pre-filter replacement both reduce clotting. Expect more filter changes and more downtime.`,
     unsafeAction: 'Start systemic heparin through the syringe pump',
     unsafeWhy:
-      'Systemic heparin anticoagulates the patient as well as the circuit, on the first day after a laparotomy. KDIGO suggests regional citrate over heparin when there is no contraindication to citrate, and this patient has none.',
+      'Systemic heparin anticoagulates the patient as well as the circuit, on the first day after a laparotomy. For a patient at increased risk of bleeding KDIGO suggests regional citrate, rather than no anticoagulant, when citrate is not contraindicated (recommendation 5.3.3.1, grade 2C), and this patient has no contraindication. Heparin has its place elsewhere: where the bleeding risk is not raised and citrate is contraindicated, KDIGO suggests it (5.3.2.3, grade 2C).',
     expectedResponse:
       'Your choice is recorded. The machine beside this case runs without anticoagulant and does not change.',
     responseOptionLabel: 'The filter stays open and the patient’s clotting is unchanged',
-    trendReview: `On citrate you follow two calcium values that answer two questions. Post-filter ionized calcium says whether the circuit is anticoagulated: the target is ${N('postfilter-ica')}, and a second text gives ${N('postfilter-ica-ceiling')}. Systemic ionized calcium says whether the patient is safe: the calcium infusion is titrated to ${N('systemic-ica')}. Check ${N('citrate-monitoring')}.`,
+    trendReview: `Citrate is not all or none. KDIGO 2012 names severely impaired liver function and shock with muscle hypoperfusion as its major contraindications, because both risk accumulation. Newer reports use citrate in liver disease under closer monitoring, and lactate is a rough guide to the risk: ${N('citrate-lactate-risk')}. This patient, with normal liver function and a lactate of 1.8 mmol/L, is at low risk. On citrate you follow two calcium values that answer two questions. Post-filter ionized calcium says whether the circuit is anticoagulated: the target is ${N('postfilter-ica')}, and a second text gives ${N('postfilter-ica-ceiling')}. Systemic ionized calcium says whether the patient is safe: the calcium infusion is titrated to ${N('systemic-ica')}. Check ${N('citrate-monitoring')}.`,
     reassessment: `Check post-filter and systemic ionized calcium on schedule: ${N('citrate-monitoring')}`,
     openingFinding:
       'First day after a laparotomy with a bleeding concern. Liver function normal, lactate 1.8 mmol/L. Three options on the machine.',
     causalChain: [
       'Bleeding risk rules out systemic heparin as the first choice.',
-      'Normal liver function and a normal lactate mean this patient can metabolize citrate.',
+      'Normal liver function and a lactate of 1.8 mmol/L put this patient at low risk of citrate accumulation.',
       'So citrate is the choice, and what makes it safe is the calcium monitoring you set up before you start.',
     ],
     transferQuestion:
       'The same patient has an ALT in the thousands and a lactate of 7 mmol/L. What changes, and what would you watch if citrate were used anyway?',
-    clinicalSourceIds: ['GUID-KDIGO-AKI-2012', 'GUID-RRT-ICU-2026'],
+    clinicalSourceIds: ['GUID-KDIGO-AKI-2012', 'GUID-RRT-ICU-2026', 'REVIEW-CKRT-CORE-2025'],
   },
   {
     id: 'CRRT-12',
@@ -2073,7 +2074,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     learningObjectives: [
       'List what a CRRT circuit removes or cools: phosphate, potassium, magnesium, heat, water-soluble drugs and amino acids.',
       'Replace the electrolytes and warm the circuit as the first moves.',
-      'Recognize antibiotic underdosing when a dose chosen for kidney failure is continued on CRRT.',
+      'Recognize that a drug dose chosen for kidney failure may be too low once CRRT is clearing the drug, and have it reviewed.',
     ],
     goal: 'Replace what the circuit is taking out, and dose drugs and feeding for a patient on CRRT',
     goalDistractor: 'Treat the low values as markers of worsening sepsis',
@@ -2089,12 +2090,12 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Also right, and it deals with the cause as well as the result. A phosphate-containing dialysate or replacement fluid stops the daily loss, where a bolus only repays it.',
     unsafeAction: 'Put the low values down to sepsis and repeat the bloods tomorrow',
     unsafeWhy:
-      'Every one of these has a circuit explanation and a fix. Severe hypophosphatemia weakens the diaphragm and delays weaning; a meropenem dose chosen for an anuric patient is too low once CRRT is clearing the drug; a temperature of 35.8 °C can hide a fever.',
+      'Every one of these has a circuit explanation and a fix. Severe hypophosphatemia weakens the diaphragm and delays weaning; a meropenem dose reduced for an anuric patient may be too low now that CRRT is clearing the drug, and nobody has looked at it since day 1; a temperature of 35.8 °C can hide a fever.',
     expectedResponse:
       'Your plan is recorded. The machine beside the case keeps running; its laboratory values are the case-start set and do not change.',
     responseOptionLabel: 'The electrolytes correct and stay corrected once the loss is replaced',
     trendReview:
-      'Read these as one pattern. Anything small and water-soluble crosses the membrane, so by day 3 the circuit has removed phosphate, potassium and magnesium, cleared a meaningful share of a renally excreted antibiotic, and taken amino acids with the effluent. Blood also loses heat in the circuit. Replace, warm, and re-dose: antibiotics for CRRT clearance with the pharmacist, protein raised with the dietitian.',
+      'Read these as one pattern. Anything small and water-soluble crosses the membrane, so by day 3 the circuit has removed phosphate, potassium and magnesium, cleared a meaningful share of a renally excreted antibiotic, and taken amino acids with the effluent. Blood also loses heat in the circuit. Replace and warm. Then have the two prescriptions reviewed. The antibiotic goes to an ICU pharmacist: the right dose depends on the drug, the effluent dose, the modality, any remaining kidney function and drug levels where they can be measured, so no single rule fits every drug. The feed goes to the dietitian, for the protein the circuit is removing.',
     reassessment:
       'Repeat phosphate, potassium and magnesium after replacement, and the temperature with the warmer on',
     openingFinding:
@@ -2102,7 +2103,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     causalChain: [
       'The circuit removes small solutes whether or not the patient can spare them.',
       'Replace the deficits and stop the loss where you can: phosphate-containing fluid, the blood warmer.',
-      'Then correct the two prescriptions written for a patient without clearance: the antibiotic dose and the protein in the feed.',
+      'Then have the two prescriptions written for a patient without clearance reviewed: the antibiotic dose and the protein in the feed.',
     ],
     transferQuestion:
       'The dose is raised from 25 to 35 mL/kg/h. Which of these problems get worse, and does the patient gain anything?',
@@ -2131,9 +2132,9 @@ const authoredNarratives: readonly CaseNarrative[] = [
     safeAction:
       'Pause, check the patient, then trace the return line from the chamber to the catheter',
     acceptedAlternative:
-      'Keep the pump paused and flush or reposition the return lumen when the line itself is clear',
+      'Keep the pump paused and check the catheter by your unit’s procedure when the line itself is clear',
     alternativeWhy:
-      'The next step when the line is straight, unclamped and connected: the resistance is then at the catheter. Flush the return lumen or reposition the patient or catheter, and swap the lumens only as a temporary measure.',
+      'The next step when the line is straight, unclamped and connected: the resistance is then at the catheter. Reposition the patient or the catheter and check the return lumen by your hospital’s catheter procedure; the PrisMax corrective action reads “flush or reposition the catheter according to hospital protocol”. Never force a flush against resistance or a suspected clot: it can dislodge the clot or injure the vessel. If the lumen does not flush easily, stop and follow that procedure. Swap the lumens only as a temporary measure.',
     unsafeAction: 'Increase blood flow to push through the resistance',
     unsafeWhy: `More flow through the same resistance raises the pressure further. Once return pressure is ${N('return-high-limit')} PrisMax stops the pump, and a forced return against a clot can dislodge it.`,
     expectedResponse:
@@ -2204,14 +2205,15 @@ const authoredNarratives: readonly CaseNarrative[] = [
     patientDescription:
       'A 68 kg patient in septic shock with ischemic hepatitis has been on regional citrate for 18 hours. The calcium infusion has been increased three times overnight. Now: systemic ionized calcium 0.88 mmol/L, total calcium 11.0 mg/dL (2.75 mmol/L), pH 7.22, bicarbonate 14 mmol/L with a widening anion gap, lactate 6.8 mmol/L and rising. Post-filter ionized calcium is 0.30 mmol/L.',
     learningObjectives: [
-      `Calculate the total-to-ionized calcium ratio in the same units, and read a ratio ${N('calcium-ratio')} with the acid–base and the calcium requirement.`,
+      `Calculate the total-to-ionized calcium ratio in the same units, and read a ratio of ${N('calcium-ratio')} with the acid–base and the calcium requirement.`,
       'Tell the two calcium samples apart: post-filter for the circuit, systemic for the patient.',
       'Reduce or stop citrate as the first move, and keep replacing calcium.',
+      'Tell citrate accumulation from the other causes of a metabolic acidosis in shock.',
     ],
-    goal: 'Stop citrate building up in a patient who cannot metabolize it',
+    goal: 'Stop citrate building up when the patient is not metabolizing it fast enough',
     goalDistractor: 'Get the systemic ionized calcium back into range with more calcium',
     mechanism:
-      'A liver in shock cannot convert citrate to bicarbonate. Citrate stays in the blood bound to calcium: total calcium rises, ionized calcium falls, and the missing bicarbonate shows as an anion-gap acidosis',
+      'When the liver and muscle are poorly perfused, citrate can arrive faster than it is metabolized. It then stays in the blood bound to calcium: total calcium rises, ionized calcium falls, and the unmetabolized citrate shows as an anion-gap acidosis',
     mechanismDistractor:
       'The circuit is removing too much calcium across the filter, so the calcium infusion is simply set too low',
     safeAction: 'Reduce or stop the citrate, keep replacing calcium, and recheck the ratio and pH',
@@ -2221,19 +2223,20 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'The same move in its graded form. Less blood flow needs less citrate, and more dialysate clears more of the citrate-calcium complex. If the ratio does not fall, stop citrate.',
     unsafeAction: 'Increase the calcium infusion again and leave the citrate rate alone',
     unsafeWhy:
-      'The fourth increase treats the number and feeds the problem. The ionized calcium is low because citrate is holding it, and an escalating calcium requirement is itself a sign of accumulation. The acidosis will keep worsening until the citrate load comes down.',
+      'The fourth increase treats the number and feeds the problem. The ionized calcium is low because citrate is holding it, and an escalating calcium requirement is itself a sign of accumulation. If this is accumulation, the acidosis is expected to keep worsening until the citrate load comes down. Calcium still has to be replaced, because the ionized calcium is low; it cannot be the only move.',
     expectedResponse:
       'Your plan is recorded. The machine beside the case keeps running; its laboratory values are the case-start set and do not change.',
-    responseOptionLabel: 'The ratio and the acidosis improve once the citrate load falls',
-    trendReview: `Do the ratio in the same units: 2.75 ÷ 0.88 is 3.1, ${N('calcium-ratio')}. With an anion-gap acidosis and a calcium infusion that keeps going up, that is citrate accumulation. The post-filter value of 0.30 mmol/L is inside its ${N('postfilter-ica')} target, which tells you the circuit is anticoagulated and tells you nothing about the patient. Cut the citrate load, replace calcium to keep systemic ionized calcium at ${N('systemic-ica')}, and repeat total and ionized calcium and a blood gas.`,
+    responseOptionLabel:
+      'The ratio should fall once the citrate load comes down, and the acidosis improves as far as citrate was its cause; repeat bloods confirm it',
+    trendReview: `Do the ratio in the same units: 2.75 ÷ 0.88 is 3.1, and ${N('calcium-ratio')} raises concern. A raised ratio, a calcium requirement that keeps climbing and an anion-gap metabolic acidosis together strongly suggest citrate accumulation. They are not proof on their own. This patient is in septic shock with a lactate of 6.8 mmol/L and rising, so lactic acidosis is contributing, and the other causes of an anion-gap acidosis still have to be excluded. Ischemic hepatitis raises the risk of accumulation; it does not mean citrate cannot be metabolized at all, and citrate is used in liver disease under closer monitoring. The post-filter value of 0.30 mmol/L is inside its ${N('postfilter-ica')} target, which tells you the circuit is anticoagulated and tells you nothing about the patient. Cut the citrate load, keep replacing calcium to hold systemic ionized calcium at ${N('systemic-ica')}, and repeat total and ionized calcium and a blood gas. The repeat values are what show whether the plan worked.`,
     reassessment:
       'Repeat total and ionized calcium, the ratio, pH and lactate after the citrate load is reduced',
     openingFinding:
       'Ionized calcium 0.88 mmol/L and total calcium 2.75 mmol/L after three increases in the calcium infusion; pH 7.22; lactate 6.8 mmol/L.',
     causalChain: [
-      'Shock liver stops citrate metabolism, so citrate-calcium complexes build up in the blood.',
+      'Shock and ischemic hepatitis slow citrate metabolism, so citrate-calcium complexes can build up in the blood.',
       'Total calcium rises while ionized calcium falls: the ratio is 3.1.',
-      'Citrate that is not metabolized yields no bicarbonate, so an anion-gap acidosis develops. The treatment is less citrate.',
+      'Citrate that is not metabolized yields no bicarbonate, so an anion-gap acidosis develops, here on top of the lactic acidosis of shock. The treatment is less citrate, with calcium replacement continued.',
     ],
     transferQuestion:
       'A different patient on citrate has a ratio of 2.1, pH 7.52 and bicarbonate 34 mmol/L. What is this, and which way do you move the citrate and the dialysate?',
@@ -2256,18 +2259,19 @@ const authoredNarratives: readonly CaseNarrative[] = [
     patientDescription:
       'Day 6 of CRRT in a 68 kg patient recovering from septic shock, now off vasopressors and 1.5 L negative over two days. Urine output has risen to 620 mL over the last 24 hours with no diuretic. Potassium and pH are normal on CRRT. The filter is due to be changed in a few hours.',
     learningObjectives: [
-      `Use urine output to judge readiness: ${N('liberation-urine-output')}.`,
+      'Use urine output as a predictor of coming off, not as a stopping rule, and know the two published thresholds.',
       'Explain why creatinine measured on CRRT does not show kidney recovery.',
+      'Check the rest before stopping: hemodynamics, fluid needs, potassium and acid–base, and whether the kidneys can hold them without the circuit.',
       'Plan a trial off CRRT: when to stop, what to measure, and when to restart.',
     ],
     goal: 'Decide whether the kidneys can take over, and test it',
     goalDistractor: 'Continue CRRT until the creatinine is back to baseline',
     mechanism:
-      'On CRRT the machine sets the creatinine, so it cannot show recovery. Urine output is the kidney’s own work, and it is the best predictor of staying off',
+      'On CRRT the machine sets the creatinine, so it cannot show recovery. Urine output is the kidney’s own work and the best single predictor of staying off, but it predicts; it does not prove the kidneys are ready',
     mechanismDistractor:
       'A creatinine that is falling on CRRT shows the kidneys are recovering, so it is the value to follow',
     safeAction:
-      'Stop at the filter change, leave the catheter in, and follow urine output, potassium and creatinine daily',
+      'Confirm the rest of the picture, then stop at the filter change, leave the catheter in, and follow urine output, potassium, bicarbonate and creatinine daily',
     acceptedAlternative:
       'Let this filter run to the end of its life without a replacement, then follow the same measurements',
     alternativeWhy: `The same trial with a different stopping point. PrisMax allows a set to run ${N('set-life')}; a planned stop at the end of the filter costs nothing.`,
@@ -2276,20 +2280,21 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Creatinine on CRRT reflects the dose, so this waits for a signal that will not come. Every extra day on the circuit is another day of a dialysis catheter, anticoagulation, immobility and lost phosphate, drugs and amino acids.',
     expectedResponse:
       'Your plan is recorded. The machine beside the case keeps running; this case does not model the days after stopping.',
-    responseOptionLabel: 'Off CRRT, urine output holds and potassium stays in range',
-    trendReview: `Urine output of 620 mL/day without a diuretic clears the bar that predicted sustained weaning in the BEST Kidney cohort: ${N('liberation-urine-output')}. Stop at a natural point, keep the catheter for a day or two, and measure what the kidneys now have to do alone: urine volume, potassium, bicarbonate, and the daily rise in creatinine. A creatinine that rises and then levels off is recovery. Restart for hyperkalemia, acidosis or fluid overload that medical treatment does not control.`,
+    responseOptionLabel:
+      'If the trial succeeds, urine output holds and potassium and bicarbonate stay in range off CRRT',
+    trendReview: `Urine output of 620 mL/day without a diuretic is above the without-diuretic figure in both published thresholds: ${N('liberation-urine-output')}. Both come from observational studies of who stayed off, so they tell you when a trial is worth making, not that it will succeed, and urine volume alone does not show the kidneys can clear potassium and acid. The rest of the picture here supports a trial: off vasopressors, 1.5 L negative over two days, and a potassium and pH that are normal, though normal with the circuit running. Stop at a natural point, keep the catheter for a day or two, and measure what the kidneys now have to do alone: urine volume, fluid balance, potassium, bicarbonate, and the daily change in creatinine. Expect creatinine to rise once the circuit stops clearing it. A rise that slows and levels off while urine output holds and potassium and bicarbonate stay controlled is consistent with recovery; a plateau in creatinine alone does not establish it. That is the expected course after stopping, not something this case simulates. Restart for hyperkalemia, acidosis or fluid overload that medical treatment does not control.`,
     reassessment:
       'Each day off: urine volume, fluid balance, potassium, bicarbonate and creatinine',
     openingFinding:
       'Urine output 620 mL in 24 hours without a diuretic, off vasopressors, filter change due.',
     causalChain: [
-      'Rising urine output without a diuretic is the kidney recovering.',
+      'Rising urine output without a diuretic suggests the kidneys are recovering.',
       'Creatinine cannot confirm it while the machine is clearing creatinine.',
-      'So the test is a trial off: stop, measure daily, and restart for potassium, acid or fluid the patient cannot handle.',
+      'So, with the patient off vasopressors and the fluid, potassium and acid–base controlled, the test is a trial off: stop, measure daily, and restart for potassium, acid or fluid the patient cannot handle.',
     ],
     transferQuestion:
       'Two days off CRRT: urine output 900 mL/day, potassium 5.9 mmol/L, creatinine still rising. Restart or wait, and why?',
-    clinicalSourceIds: ['GUID-NICE-NG148-2024', 'GUID-RRT-ICU-2026'],
+    clinicalSourceIds: ['GUID-NICE-NG148-2024', 'GUID-RRT-ICU-2026', 'REVIEW-CKRT-CORE-2025'],
     patient: { urineOutputMlPerHour: 26 },
   },
 ]

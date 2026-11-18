@@ -45,7 +45,6 @@ const SIGNED_ON_2026_11_13 = [
   'blood-leak-normalization-floor',
   // Corrected, then signed.
   'dose-prescribed',
-  'calcium-ratio',
   'return-disconnect-limit',
   'rebound-window',
   'insulin-repeat',
@@ -54,6 +53,13 @@ const SIGNED_ON_2026_11_13 = [
   'postfilter-ica',
   'postfilter-ica-ceiling',
 ] as const
+
+/**
+ * Signed on 2026-11-13 as "above 2.5", then changed to "2.5 or more" by the owner's written
+ * ruling of 2026-11-14 (`crrt-conflict-calcium-ratio`). The earlier signature does not cover the
+ * new value, so the row is signed under the 11/14 ruling; he confirmed that on 2026-11-18.
+ */
+const RESIGNED_ON_2026_11_14 = ['calcium-ratio'] as const
 
 /** Named by the owner for verification; the source did not settle the question. */
 const HELD = [
@@ -70,8 +76,21 @@ describe('the 2026-11-13 signatures', () => {
     const signed = CRRT_NUMBERS.rows.filter(({ signedBy }) => signedBy !== null).map(({ id }) => id)
     // The two filtration fraction ceilings are signed in their own pull request (#536).
     expect(signed.filter((id) => !id.startsWith('filtration-fraction-ceiling')).sort()).toEqual(
-      [...SIGNED_ON_2026_11_13].sort(),
+      [...SIGNED_ON_2026_11_13, ...RESIGNED_ON_2026_11_14].sort(),
     )
+  })
+
+  it('carry the calcium ratio under the ruling that set its present value', () => {
+    for (const id of RESIGNED_ON_2026_11_14) {
+      expect(row(id).value).toBe('2.5 or more')
+      expect(row(id).signedOn).toBe('2026-11-14')
+      expect(row(id).signedBy).toBe(
+        'Russell Miller, written decision of 2026-11-14 (sources checked by Claude)',
+      )
+      expect(row(id).checkedOn).toBe('2026-11-18')
+    }
+    // One row only: no other signature moved.
+    expect(CRRT_NUMBERS.rows.filter(({ signedOn }) => signedOn === '2026-11-14')).toHaveLength(1)
   })
 
   it('say who signed and how, on the date it happened', () => {
@@ -138,9 +157,11 @@ describe('learner copy after the corrections', () => {
     expect(copy).toContain('25–30 mL/kg/h is commonly prescribed')
   })
 
-  it('makes a calcium ratio above 2.5 a concern, not a diagnosis on its own', () => {
+  it('makes a calcium ratio of 2.5 or more a concern, not a diagnosis on its own', () => {
     expect(copy).not.toMatch(/2\.5[^.]{0,40}(signals accumulation|makes the diagnosis)/)
-    expect(copy).toContain('above 2.5 raises concern for accumulation')
+    // The owner's ruling of 2026-11-14 (crrt-conflict-calcium-ratio): 2.5 or more, not above 2.5.
+    expect(copy).toContain('ratio of 2.5 or more raises concern for accumulation')
+    expect(copy).not.toMatch(/above 2\.5/)
     expect(copy).toContain('Calculate the total-to-ionized calcium ratio in the same units')
   })
 

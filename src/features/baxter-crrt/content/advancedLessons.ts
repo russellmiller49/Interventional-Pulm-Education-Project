@@ -13,6 +13,9 @@ const choice = (
 ): CrrtFoundationChoice => ({ id, label, correct, feedback })
 
 /** Clinical vignettes are authored teaching applications, not engine laboratory outputs. */
+/** The line the ratio is read against, taken from the register row ("2.5 or more"). */
+const RATIO_LINE = N('calcium-ratio').replace(/ or more$/, '')
+
 export const crrtAdvancedTasks: Partial<
   Record<BaxterCrrtLearnLessonId, readonly CrrtFoundationTask[]>
 > = {
@@ -67,7 +70,7 @@ export const crrtAdvancedTasks: Partial<
           'accumulation-proven',
           'The circuit is anticoagulated, and citrate is starting to accumulate.',
           false,
-          `A low post-filter value is the target, not a warning. Accumulation shows on the patient’s side: a falling systemic ionized calcium, a rising calcium requirement, and a total-to-ionized calcium ratio ${N('calcium-ratio')}.`,
+          `A low post-filter value is the target, not a warning. Accumulation shows on the patient’s side: a falling systemic ionized calcium, a rising calcium requirement, and a total-to-ionized calcium ratio of ${N('calcium-ratio')}.`,
         ),
       ],
     },
@@ -106,19 +109,19 @@ export const crrtAdvancedTasks: Partial<
           'alkali-overload',
           'Lactic acidosis from shock; treat the shock and leave the citrate running.',
           false,
-          'Shock is the reason this is happening, not an alternative explanation. A poorly perfused liver cannot metabolize citrate, so it builds up, binds calcium and stops yielding bicarbonate. Leaving the citrate running adds to the load.',
+          'Lactic acidosis may be contributing, but it does not explain the climbing calcium requirement or the ratio. A poorly perfused liver may not metabolize citrate as fast as it arrives, so it builds up, binds calcium and stops yielding bicarbonate. Leaving the citrate running adds to the load.',
         ),
         choice(
           'circuit-dose',
           'Calcium lost in the effluent; raise the calcium infusion and continue the citrate.',
           false,
-          `Calcium is lost in the effluent, and the infusion covers that at a steady rate. A requirement that keeps climbing with a ratio ${N('calcium-ratio')} means calcium is being bound by citrate that is still in the blood. Keep the ionized calcium safe, but more calcium alone leaves the cause in place.`,
+          `Calcium is lost in the effluent, and the infusion covers that at a steady rate. A requirement that keeps climbing with a ratio of ${N('calcium-ratio')} means calcium is being bound by citrate that is still in the blood. Keep the ionized calcium safe, but more calcium alone leaves the cause in place.`,
         ),
         choice(
           'accumulation-concern',
           'Citrate accumulation; reduce or stop the citrate and keep replacing calcium.',
           true,
-          `A rising calcium requirement, a ratio ${N('calcium-ratio')} and a new metabolic acidosis in a patient who cannot metabolize citrate is accumulation. Reduce or stop the citrate first. Keep replacing calcium against the systemic ionized calcium, and decide how the circuit will be anticoagulated without citrate. Check that the total and ionized calcium came from the same systemic sample, both in mmol/L.`,
+          `A rising calcium requirement, a ratio of ${N('calcium-ratio')} and a new metabolic acidosis in a patient in worsening shock point to accumulation. Reduce or stop the citrate first. Keep replacing calcium against the systemic ionized calcium, and decide how the circuit will be anticoagulated without citrate. Check that the total and ionized calcium came from the same systemic sample, both in mmol/L.`,
         ),
       ],
     },
@@ -129,19 +132,19 @@ export const crrtAdvancedTasks: Partial<
       kind: 'question',
       instruction: 'Tell a net alkali problem apart from citrate that is not being metabolized.',
       teaching: [],
-      question: `Three days into regional citrate, a patient has a steadily rising bicarbonate and a metabolic alkalosis. The systemic ionized calcium is steady on an unchanged calcium infusion, and the total-to-ionized calcium ratio is not ${N('calcium-ratio')}. Which explanation fits?`,
+      question: `Three days into regional citrate, a patient has a steadily rising bicarbonate and a metabolic alkalosis. The systemic ionized calcium is steady on an unchanged calcium infusion, and the total-to-ionized calcium ratio is below ${RATIO_LINE}. Which explanation fits?`,
       choices: [
         choice(
           'net-alkali',
           'Citrate load exceeds effluent removal; metabolism is intact.',
           true,
-          `Metabolized citrate becomes bicarbonate. A steady ionized calcium on an unchanged infusion and a ratio that is not ${N('calcium-ratio')} show the citrate is being metabolized, so the alkalosis means more citrate is reaching the patient than the effluent removes. Three levers correct that balance: lower the blood flow and the citrate rate together, which keeps the circuit anticoagulated while cutting the citrate load; raise the citrate-free dialysate or replacement rate so the effluent carries more citrate away; or lower the bicarbonate in the other solutions. Your unit’s citrate protocol sets the size of each step. Look for other causes of alkalosis as well.`,
+          `Metabolized citrate becomes bicarbonate. A steady ionized calcium on an unchanged infusion and a ratio below ${RATIO_LINE} show the citrate is being metabolized, so the alkalosis means more citrate is reaching the patient than the effluent removes. Three levers correct that balance: lower the blood flow and the citrate rate together, which keeps the circuit anticoagulated while cutting the citrate load; raise the citrate-free dialysate or replacement rate so the effluent carries more citrate away; or lower the bicarbonate in the other solutions. Your unit’s citrate protocol sets the size of each step. Look for other causes of alkalosis as well.`,
         ),
         choice(
           'accumulation-certain',
           'Citrate is accumulating; the liver is no longer metabolizing it.',
           false,
-          `Accumulation is citrate that is not metabolized: ionized calcium falls, the calcium requirement climbs, the ratio goes ${N('calcium-ratio')} and the patient turns acidotic. Here the citrate is being turned into bicarbonate, which is the opposite problem.`,
+          `Accumulation is citrate that is not metabolized: ionized calcium falls, the calcium requirement climbs, the ratio reaches ${N('calcium-ratio')} and the patient turns acidotic. Here the citrate is being turned into bicarbonate, which is the opposite problem.`,
         ),
         choice(
           'circuit-failure',
@@ -404,7 +407,7 @@ export const crrtAdvancedTasks: Partial<
       instruction: 'Use the same reasoning on a different record. There is no run on this screen.',
       teaching: [],
       question:
-        'A handoff note gives the current pump settings and a total effluent volume, without saying what period the total covers. Urine, intake and interruption times are missing. What do you do with it?',
+        'A handoff note gives the current pump settings and the total effluent volume for the last 12 hours. Urine, intake and interruption times are missing. What do you do with it?',
       choices: [
         choice(
           'patient-equals-effluent',
@@ -416,13 +419,13 @@ export const crrtAdvancedTasks: Partial<
           'dose-from-settings',
           'Calculate the delivered dose from the current settings over the whole interval, then ask for the history.',
           false,
-          `Settings give the dose while running. Any downtime lowers what was delivered, and the note does not say how much there was. A calculation from settings can read ${N('dose-delivered')} when the patient received far less.`,
+          `Settings give the dose while running. Any downtime lowers what was delivered, and the note does not say how much there was. A calculation from settings can read ${N('dose-delivered')} when the patient received far less. The effluent total over its 12 hours already counts the downtime.`,
         ),
         choice(
           'request-history',
-          'Keep the effluent total and request the missing patient and delivery history before reconciling balance or dose.',
+          'Take the delivered dose from the effluent total over its 12 hours, and request intake, urine and interruptions before reconciling balance.',
           true,
-          'The effluent total is real data. Divide it by the weight and by the hours it covers and you have the delivered dose, so the first thing to get is the period. Balance needs the intake and the urine as well. Until you have them, report the total as it stands and leave the blanks as blanks.',
+          'The effluent total is real data, and with its period it gives the delivered dose: the total divided by the patient’s weight and by the 12 hours, whatever the settings read now. Balance is a different question. It needs the intake and the urine as well as the net removal, and the interruption times explain any shortfall in dose. Until you have them, report the dose and leave the balance blank.',
         ),
       ],
     },

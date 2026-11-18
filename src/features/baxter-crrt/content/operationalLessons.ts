@@ -173,9 +173,9 @@ export const crrtOperationalTasks: Partial<
       choices: [
         choice(
           'resume-verify',
-          'Resume, then recheck the patient, pressures, pump state and new delivery.',
+          'With the cause fixed and the machine’s restart conditions met, resume, then recheck patient, pressures, pumps and delivery.',
           true,
-          'The cause is fixed, so restart. Then prove it worked: access pressure back near its earlier value at the full 120 mL/min, both pumps running, and the effluent volume climbing again. The 10 minutes stopped stays in the delivery record.',
+          'Resume because the cause is fixed, not because the alarm was silenced. The machine has conditions of its own. For Access Extremely Negative the manual makes Continue available when access pressure is within normal limits. That is not proof of the fix: with the pump stopped the pressure settles whatever the cause. A stopped blood pump is also on a clock: the manual says to change the set if any clotting is visible, and calls for a new set once the pump has been stopped for more than 10 minutes. Then prove the restart worked: access pressure back near its earlier value at the full 120 mL/min, both pumps running, and the effluent volume climbing again. The 10 minutes stopped stays in the delivery record.',
         ),
         choice(
           'universal',
@@ -355,7 +355,7 @@ export const crrtOperationalTasks: Partial<
           'separate',
           'Turn net removal down; leave the dialysate and blood flow where they are.',
           true,
-          'Net removal is the one control that sets how much fluid the machine takes from the patient. Turn it down, to zero if the pressure is still falling, and keep dialysate running so clearance continues. Then recount every input and output and reset the fluid goal.',
+          'Net removal is the one control that sets how much fluid the machine takes from the patient. This patient is hypotensive on a rising vasopressor dose and already past the day’s fluid goal, so turn it down, to zero if the pressure is still falling, and keep dialysate running so clearance continues. Then recount every input and output and reset the fluid goal. A falling pressure on CRRT is not always the fluid removal: look for the other causes as well.',
         ),
         choice(
           'pump',
@@ -400,13 +400,13 @@ export const crrtOperationalTasks: Partial<
           'reassess',
           'Before any trial off, reassess the indication, fluid and solute/acid–base needs, native function and hemodynamics, and plan monitoring.',
           true,
-          `Go back to why CRRT was started and ask whether each reason has resolved: the fluid, the potassium and acid-base, and whether the kidneys can keep up with the ongoing intake. Urine output is the most useful single sign: ${N('liberation-urine-output')}, predicts coming off. If you then try time off, decide beforehand what you will measure, when, and what result puts the patient back on.`,
+          `Go back to why CRRT was started and ask whether each reason has resolved: the fluid, the potassium and acid-base, and whether the kidneys can keep up with the ongoing intake. Urine output is the most useful single sign, and two observational thresholds are quoted: ${N('liberation-urine-output')}. Either tells you when a trial is worth considering, not that it will succeed. If you then try time off, decide beforehand what you will measure, when, and what result puts the patient back on.`,
         ),
         choice(
           'fixed-threshold',
           'Continue unchanged until urine output reaches a fixed threshold, then stop.',
           false,
-          `A urine volume helps you choose when to try: ${N('liberation-urine-output')}, predicts coming off. It does not decide the question alone. Stopping at a number ignores the potassium and acid-base, and waiting for one can keep a recovering patient on the circuit longer than needed.`,
+          `A urine volume helps you choose when to try. Two observational thresholds are quoted: ${N('liberation-urine-output')}. Neither decides the question alone. Stopping at a number ignores the potassium and acid-base, and waiting for one can keep a recovering patient on the circuit longer than needed.`,
         ),
       ],
     },

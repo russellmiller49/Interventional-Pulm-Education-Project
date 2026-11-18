@@ -413,10 +413,13 @@ describe('CRRT universal educational circuit', () => {
       }
     }
 
-    // The three clinical-context records are no longer presented as support for any definition.
-    for (const id of ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
+    // The two records with no citrate passage are presented as support for no definition. The
+    // AJKD Core Curriculum is, where its pages 781–784 support the definition (owner's ruling,
+    // 2026-11-14).
+    for (const id of ['TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
       expect(terms.innerHTML).not.toContain(id)
     }
+    expect(terms.innerHTML).toContain('REVIEW-CKRT-CORE-2025')
     // The view states the two numbers the samples are read against, from the numbers register.
     expect(terms).toHaveTextContent(CRRT_NUMBERS.value('postfilter-ica'))
     expect(terms).toHaveTextContent(CRRT_NUMBERS.value('calcium-ratio'))

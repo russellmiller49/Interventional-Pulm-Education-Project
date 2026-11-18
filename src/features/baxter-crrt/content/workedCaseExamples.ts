@@ -554,7 +554,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         thisRun: (context) =>
           `Access pressure ${context.formatted['access-pressure']} at blood flow ${context.formatted['blood-flow']}; this case's access resistance is position dependent.`,
         canVerify: 'Yes: access pressure and delivered blood flow.',
-        decidedBy: `Reposition, flush or replace the catheter, then raise blood flow into the usual ${N('blood-flow-range')}.`,
+        decidedBy: `Reposition the catheter, or check and replace it by your unit’s catheter procedure, then raise blood flow into the usual ${N('blood-flow-range')}.`,
       },
       {
         id: 'filtration',
@@ -681,7 +681,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
     debrief: {
       summary:
         'Three early filter losses, worked cause by cause: the catheter and low blood flow explain them, and filtration fraction does not.',
-      trendReview: `Access: 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; 400 + 400 + 50 = 850 mL/h crosses the membrane; with the pre-filter fluid in the denominator the fraction is about 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling. Anticoagulation comes last, once the catheter works.`,
+      trendReview: `Access: 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; 400 + 400 + 50 = 850 mL/h crosses the membrane; with the pre-filter fluid in the denominator the fraction is about 16%, below the ${N('filtration-fraction-ceiling-range')} ceiling. That figure is a calculated estimate; the two filtration-fraction values on the PrisMax screen are defined differently. Anticoagulation comes last, once the catheter works.`,
       causalChain: [
         'The catheter cannot supply the set blood flow when the patient moves, so the pump stops repeatedly.',
         'Stopped blood clots in the fibers; each stop takes a little more of the filter.',

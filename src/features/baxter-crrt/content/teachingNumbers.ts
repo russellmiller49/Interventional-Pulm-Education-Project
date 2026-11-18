@@ -15,13 +15,9 @@ import {
  * 2026-11-13 Russell Miller approved rows by name in a written decision; Claude applied each
  * signature to its row alone, after checking the row against its source. The `checkedBy` line
  * says who read the source; the signature does not claim the owner re-read it. The shared CHECK
- * objects below stay unsigned, so no row is signed by inheritance.
+ * objects below stay unsigned, so no row is signed by inheritance. One constant carries that
+ * signature (`SIGNED_BY_OWNER_DECISION`, below).
  */
-const OWNER_DECISION_2026_11_13 = {
-  signedBy: 'Russell Miller, written decision of 2026-11-13 (sources checked by Claude)',
-  signedOn: '2026-11-13',
-} as const
-
 const CHECK = {
   checkedOn: '2026-10-08',
   checkedBy: 'Claude, against the source text',
@@ -37,7 +33,17 @@ const CHECK_CRRT_03 = {
   signedOn: null,
 } as const
 
-/** Rows read against the full text of the AJKD Core Curriculum 2025 (REVIEW-CKRT-CORE-2025). */
+/**
+ * Rows read against the full text of the AJKD Core Curriculum 2025 (REVIEW-CKRT-CORE-2025).
+ *
+ * The paper has a published erratum (Am J Kidney Dis 2025;86(3):422, PMID 40846440), read in full
+ * on 2026-11-18. It corrects two things: the dialysate rate in the first presentation of Case 3
+ * (p. 780; 2,000 mL/h, printed as mL/min) and the dose units in Table 2's example prescriptions
+ * (p. 772; mL/kg/h, printed as mL/kg/min). What the audit of 2026-11-18 found: no row in this
+ * register cites p. 772 or the first presentation of Case 3, and the numbers in the corrected
+ * table are those of the original, with the dose units changed. Whether anything else needs
+ * review is the owner's call. Draw any future row from the corrected table.
+ */
 const CHECK_AJKD = {
   checkedOn: '2026-11-09',
   checkedBy: 'Claude, against the full text of the AJKD Core Curriculum 2025',
@@ -83,6 +89,18 @@ const UKKA_RECHECK =
 const SIGNED_BY_OWNER_DECISION = {
   signedBy: 'Russell Miller, written decision of 2026-11-13 (sources checked by Claude)',
   signedOn: '2026-11-13',
+} as const
+
+/**
+ * The owner's signature for the one row whose value he changed in his written ruling of
+ * 2026-11-14 (`crrt-conflict-calcium-ratio`: "Use ≥2.5"). The row was signed on 2026-11-13 as
+ * "above 2.5"; that signature does not cover the new value, so the row carries this one. He
+ * confirmed on 2026-11-18 that the row is to be re-signed under the 11/14 ruling. No other row
+ * uses it.
+ */
+const SIGNED_BY_OWNER_DECISION_2026_11_14 = {
+  signedBy: 'Russell Miller, written decision of 2026-11-14 (sources checked by Claude)',
+  signedOn: '2026-11-14',
 } as const
 
 /** Sources cited by a number and not yet in `learnerSourceMap`. */
@@ -187,7 +205,7 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     checkedBy: 'Claude, against the source text. AJKD 2025 added 2026-11-09 from its full text',
     // Approved by name: 25% as the usual post-dilution CVVH maximum, Claure-Del Granado and Clark
     // 2021, section 3.4.2.
-    ...OWNER_DECISION_2026_11_13,
+    ...SIGNED_BY_OWNER_DECISION,
   },
   'filtration-fraction-ceiling-range': {
     label: 'Filtration fraction ceiling, as a range',
@@ -198,7 +216,7 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     ...CHECK_AJKD,
     // Approved by name: 20%–25% as source-specific guidance from Teixeira et al., AJKD Core
     // Curriculum 2025, Table 5, p. 778.
-    ...OWNER_DECISION_2026_11_13,
+    ...SIGNED_BY_OWNER_DECISION,
   },
   'postfilter-ica': {
     label: 'Post-filter ionized calcium on regional citrate',
@@ -220,7 +238,7 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
   },
   'calcium-ratio': {
     label: 'Total-to-ionized calcium ratio that raises concern for citrate accumulation',
-    value: 'above 2.5',
+    value: '2.5 or more',
     class: 'expert-reference',
     sources: [
       {
@@ -237,12 +255,12 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
       },
       ajkd('Complications of CKRT, p. 783, and Figure 2, p. 784'),
     ],
-    note: 'A concern, not a diagnosis by itself: read it with the trend in the ratio, a falling systemic ionized calcium, a rising calcium requirement and an anion-gap metabolic acidosis. Total and ionized calcium must be in the same molar units (mmol/L) from the same systemic sample; AJKD notes laboratories often report them in different units. Acute Nephrology gives a rise above 2.25–2.5, AJKD a ratio of 2.5 or more from a normal of about 2, and Schneider calls 2.5 the usual cut-off and counts a trend toward it.',
+    note: 'A concern, not a diagnosis by itself: read it with the trend in the ratio, a falling systemic ionized calcium, a rising calcium requirement and an anion-gap metabolic acidosis. Total and ionized calcium must be in the same molar units (mmol/L) from the same systemic sample; AJKD notes laboratories often report them in different units. Acute Nephrology gives a rise above 2.25–2.5, AJKD a ratio of 2.5 or more from a normal of about 2, and Schneider calls 2.5 the usual cut-off and counts a trend toward it. The value reads 2.5 or more, the AJKD wording, by the owner’s ruling of 2026-11-14; it read above 2.5 before.',
     ...CHECK,
-    ...RECHECKED,
+    checkedOn: '2026-11-18',
     checkedBy:
-      'Claude, against the textbook, the Schneider 2017 full text (PMC5694623) and AJKD 2025, 2026-11-13',
-    ...SIGNED_BY_OWNER_DECISION,
+      'Claude, against the textbook, the Schneider 2017 full text (PMC5694623) and AJKD 2025, 2026-11-13; AJKD 2025 p. 783 and Figure 2 re-read for the 2.5 or more wording, 2026-11-18',
+    ...SIGNED_BY_OWNER_DECISION_2026_11_14,
   },
   'tmp-alarm': {
     label: 'PrisMax TMP alarm',
@@ -399,8 +417,11 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
     checkedBy: 'Claude, against the handbook (Table 12.8, p. 163), 2026-11-13',
   },
   'liberation-urine-output': {
-    label: 'Urine output that predicts coming off CRRT',
-    value: 'more than 400–450 mL/day without diuretics, or more than 2,300 mL/day with them',
+    label: 'Urine output above which a trial off CRRT is more likely to succeed: two thresholds',
+    value:
+      'more than 400–450 mL/day without diuretics or 2,300 mL/day with them (BEST Kidney cohort); more than 500 mL/day without diuretics or 2 L/day with them (AJKD 2025)',
+    appliesTo:
+      'A patient with AKI on CRRT who is being considered for a trial off. Both are observational predictors, not criteria that settle the decision.',
     class: 'expert-reference',
     sources: [
       {
@@ -409,12 +430,13 @@ export const CRRT_NUMBERS = defineTeachingNumbers('baxter-crrt', {
         grade: 'observational (BEST Kidney)',
         locator: 'Chapter 12, p. 162',
       },
+      ajkd('Timing of CKRT Initiation and Discontinuation, p. 777'),
     ],
-    note: 'The chapter reports a better than 80% probability of sustained weaning above these volumes, from the BEST Kidney study. The primary analysis (Uchino et al., Crit Care Med 2009;37:2576–2582) defines success as no kidney replacement therapy for at least 7 days; its abstract names urine output as the strongest predictor, weaker with diuretics, and gives no cutoffs. Its full text was not read. Held for the owner (2026-11-13).',
+    note: 'Both taught, by the owner’s ruling of 2026-11-14. Acute Nephrology reports a better than 80% probability of sustained weaning above the first pair, from the BEST Kidney study. The primary analysis (Uchino et al., Crit Care Med 2009;37:2576–2582) defines success as no kidney replacement therapy for at least 7 days; its abstract names urine output as the strongest predictor, weaker with diuretics, and gives no cutoffs. Its full text was not read. AJKD 2025 calls the second pair "reasonable criteria for consideration of KRT discontinuation", from observational studies, and says no trial data guide de-escalation. Held for the owner (2026-11-13): unsigned.',
     ...CHECK,
-    ...RECHECKED,
+    checkedOn: '2026-11-18',
     checkedBy:
-      'Claude, against the textbook (p. 162) and the primary paper’s abstract (PubMed 19623048), 2026-11-13',
+      'Claude, against the textbook (p. 162) and the primary paper’s abstract (PubMed 19623048), 2026-11-13, and the AJKD 2025 full text (p. 777), 2026-11-18',
   },
   'gain-loss-window': {
     label: 'PrisMax unintended fluid gain or loss: the sliding window',
