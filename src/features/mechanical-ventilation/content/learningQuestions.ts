@@ -1,4 +1,7 @@
 import { ventilationUnitById, type VentilationObjective } from './learningCurriculum'
+import { VENTILATION_NUMBERS } from './teachingNumbers'
+
+const N = VENTILATION_NUMBERS.value
 
 export interface VentilationQuestion {
   readonly id: string
@@ -283,7 +286,7 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
       ],
       [
         'A valid plateau above the guideline limit',
-        'Oxygenation does not rule out injurious mechanical stress. ATS recommends plateau below 30 cmH₂O in adult ARDS.',
+        `Oxygenation does not rule out injurious mechanical stress. The plateau limit in adult ARDS is ${N('pplat-limit')} (ARDS Network protocol; the 2017 guideline says below 30).`,
       ],
     ],
   ),
@@ -539,7 +542,7 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
     [
       [
         'Give 100% oxygen, bag by hand, and check the tube and both lungs',
-        'Hand ventilation on 100% oxygen supports the patient and takes the ventilator out of the question in one move. Asymmetric breath sounds then leave two causes to separate at the bedside: a tube that has slipped into the right main bronchus, which you fix by checking the depth and pulling back, and a tension pneumothorax, which you decompress. Call for help as you start.',
+        'Hand ventilation on 100% oxygen supports the patient and takes the ventilator out of the question in one move. Asymmetric breath sounds then leave two causes to separate at the bedside: a tube that has slipped into the right main bronchus, which you fix by checking the depth and pulling back, and a tension pneumothorax, which you decompress. With new hypotension, suspect tension: the depth check takes seconds and must not delay the decompression. Call for help as you start.',
       ],
       [
         'Classify the waveform fully, then go to the bedside',
@@ -886,6 +889,7 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'Raise the alarm limit to match the current display',
         'Changing the monitoring boundary does not correct the cause.',
         true,
+        'A limit moved to fit an abnormal reading no longer warns of the problem it was set to catch, and this patient is still hypoxemic and distressed. On many ventilators the high-pressure limit also ends the breath when it is reached, so raising it allows a higher airway pressure to be delivered. Find and treat the cause, and set limits for the patient, not for the display.',
       ],
     ],
   ),
@@ -982,8 +986,8 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
         'A high-pressure alarm with abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise, and a patient this unstable may die within minutes if it is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one delays the decompression that comes first.',
       ],
       [
-        'Check the tube depth, then decompress the silent side',
-        'High pressure, abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise. A tube in the right main bronchus also silences one side but rarely drops the blood pressure like this, and the depth at the teeth rules it out in seconds. Decompress without waiting for a film.',
+        'Decompress the silent side now',
+        'High pressure, abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise: decompress without waiting for a film. A tube in the right main bronchus also silences one side but rarely drops the blood pressure like this. Glance at the depth at the teeth as you prepare, but do not let tube or equipment checks delay the decompression. It is a rescue; a chest drain follows.',
       ],
       [
         'Silence the alarm and wait for it to settle',

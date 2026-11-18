@@ -57,7 +57,7 @@ export const ventilationStations: readonly {
   {
     id: 'pressure-support-timing',
     label: 'Pressure-support timing & dose',
-    description: 'Premature cycling, P-ramp mismatch, and over-assistance.',
+    description: 'Premature cycling, rise-time mismatch, and over-assistance.',
     caseIds: stationCases['pressure-support-timing'],
   },
   {
@@ -257,9 +257,9 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
     label: 'Perform emergency decompression',
     category: 'procedure',
     description:
-      'Decompress the affected side at once, by needle or finger: the second intercostal space in the midclavicular line, or the fourth or fifth in the anterior axillary line.',
+      'Decompress the affected side at once, by needle or finger: the fifth intercostal space in the mid-axillary line, or the second in the midclavicular line. Site and technique depend on the patient, the equipment, who is at the bedside and the local protocol.',
     response:
-      'Compliance and blood pressure improve at once; the saturation follows over the next minute or two. A needle is temporary.',
+      'In this simulation the pressures fall first, then the blood pressure, then the saturation; at the bedside how much and how fast varies. Decompression is a rescue, and a needle is temporary: a chest drain is the definitive treatment.',
     effectId: 'decompress-pneumothorax',
     latencySeconds: 15,
   },
@@ -598,7 +598,7 @@ const caseProfiles: Record<string, CaseProfile> = {
     phenotype: 'rise-time-mismatch',
     mechanismLabel: 'Pressurization is too slow, then vulnerable to overshoot',
     priorityId: 'titrate-pramp',
-    priorityLabel: 'Titrate P-ramp to effort and comfort',
+    priorityLabel: 'Titrate the rise time to effort and comfort',
     responseId: 'smooth-pressurization',
     responseLabel: 'Effort falls without sustained pressure overshoot',
     interventionIds: ['assess-patient', 'review-waveforms', 'communicate-plan'],

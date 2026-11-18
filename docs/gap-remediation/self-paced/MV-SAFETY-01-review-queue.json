@@ -49,18 +49,19 @@
       "MV-SAFETY-01-05",
       "MV-SAFETY-01-06",
       "MV-SAFETY-01-07",
+      "MV-SAFETY-01-08",
       "MV-SAFETY-01-09",
       "MV-SAFETY-01-10"
     ],
     "already-adequate": [],
     "held-for-source-review": [],
-    "held-for-faculty-RT-review": ["MV-SAFETY-01-08"]
+    "held-for-faculty-RT-review": []
   },
   "openQuestions": [
     "Chapter 53’s “may die in minutes” is written about a patient suddenly fighting the ventilator whose cause is not found. Seven notes apply that time course to new hypoxemia with hypotension. Accept, or soften?",
     "Register Tobin chapter 44 (Barotrauma and Bronchopleural Fistula) for the link between hypotension and tension pneumothorax, or accept chapter 53’s partial support (items 09 and 10)?",
     "“Calling for help” rests on course wording and the unchecked AARC 2024 guideline (item 03). Check the guideline, or accept it as course wording?",
-    "One faculty/RT decision on alarm-limit teaching can resolve item 08 and the MV-03 alarm-limit note together."
+    "Item 08 now carries a safety note under the owner’s ruling of 2026-11-12 (unsafe, with a note); its wording is NOT REVIEWED. The MV-03 alarm-limit note is unchanged and could share the same sourced wording."
   ],
   "carriedHolds": [
     "The live case MV-03 stays excluded from public practice pending faculty/RT review of paired-breath intrinsic-PEEP measurement and settling (MV-01). Untouched here.",
@@ -933,11 +934,11 @@
       "id": "MV-SAFETY-01-08",
       "questionId": "safety-reassessment-and-human-factors:final",
       "choiceId": "2",
-      "status": "held-for-faculty-RT-review",
+      "status": "supported-feedback-added",
       "surface": {
         "route": "/mechanical-ventilation/assess",
         "picker": "Worked applications, item 5",
-        "where": "No safety note. The choice keeps its existing rationale after Compare my choice and inside “Compare the possibilities”."
+        "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
         "prompt": "After an intervention, the alarm becomes quieter but the patient remains hypoxemic and distressed. Which next step best assesses success?",
@@ -951,9 +952,9 @@
       },
       "learnerFacingSafety": {
         "previous": null,
-        "current": null
+        "current": "A limit moved to fit an abnormal reading no longer warns of the problem it was set to catch, and this patient is still hypoxemic and distressed. On many ventilators the high-pressure limit also ends the breath when it is reached, so raising it allows a higher airway pressure to be delivered. Find and treat the cause, and set limits for the patient, not for the display."
       },
-      "teachingPoint": "Proposed, not shown to learners: re-setting an alarm limit to the current abnormal reading while hypoxemia and distress persist stops the alarm warning at that value and treats nothing.",
+      "teachingPoint": "Re-setting an alarm limit to the current abnormal reading while hypoxemia and distress persist stops the alarm warning at that value and treats nothing; on many ventilators a higher high-pressure limit also lets a higher pressure be delivered.",
       "sourceLocators": [
         {
           "statement": "An alarm reflects a change in ventilator performance or in the patient; an abrupt rise in peak pressure can arise with endotracheal obstruction",
@@ -1054,6 +1055,16 @@
           "section": "LOW Vte alarm table (volume guarantee)",
           "finding": "narrows",
           "note": "Lists raising the high pressure limit as one action for a low exhaled-volume alarm in volume guarantee. Located by the subagent; not re-extracted."
+        },
+        {
+          "statement": "When peak airway pressure exceeds the alarm (safety) limit, inspiratory flow ends early and ventilation can be insufficient",
+          "evidenceId": "tobin-3e-setting-ventilator",
+          "sourceClass": "checked-published-source",
+          "document": "ch5",
+          "pdfPage": "20",
+          "section": "Asynchrony between the Patient’s Effort and Machine-Delivered Breaths",
+          "finding": "supports",
+          "note": "Re-read on 2026-11-17 in the local copy of the 3rd edition. Supports the note’s second sentence: the limit ends the breath, so a higher limit lets a higher pressure be delivered. With the HAMILTON-C6 and PB980 locators above (breath aborted or truncated at the limit) this is why the note says ‘on many ventilators’. No source describes harm from re-setting a limit in the stated situation; the first sentence rests on the manufacturer warnings above about limits that defeat the alarm."
         }
       ],
       "otherMaterialConsulted": [
@@ -1074,12 +1085,14 @@
         "The registered AARC 2024 guideline: text not available locally; not read.",
         "The registered HAMILTON-C6 INTELLiVENT-ASV manual: not found on this machine."
       ],
-      "decisionNeeded": "Faculty/RT decisions on: (1) which alarm and limit the stem means, since it names none; (2) wording that separates re-setting limits around verified, acceptable readings, which the HAMILTON-C6 and Evita manuals provide as an automatic function, from widening a limit around an unresolved abnormality; (3) whether to say that on several registered ventilators the high-pressure limit also caps or ends the breath, so raising it changes ventilation as well as the warning; (4) whether this choice and the MV-03 alarm-limit note should share one sourced wording. Until then no safety note is added and the existing rationale stays.",
+      "decisionNeeded": null,
       "notChecked": [
         "No source was found that describes harm from re-setting a limit in the stated situation.",
         "Pages located by the subagent and not re-extracted: HAMILTON-C6 93 and 109; AVEA 87; PB980 148."
       ],
-      "reviewQuestions": [],
+      "reviewQuestions": [
+        "Owner ruling mv-safety-alarm-limit-choice (2026-11-12): unsafe, with a note. The note’s wording was written on 2026-11-17 and has not been reviewed. It does not name which alarm the stem means; it treats the pressure limit as the example. Accept, or reword?"
+      ],
       "reviewerDecision": {
         "status": "NOT REVIEWED",
         "reviewer": null,

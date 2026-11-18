@@ -87,6 +87,14 @@ export function caseResponseModelNote(caseId: string): string | null {
   switch (caseId) {
     case 'MV-06':
       return 'In this simulation, releasing trapped gas lowers the trapped pressure at once, but the blood pressure recovers only after the full treatment has taken effect. At the bedside, expect the blood pressure to rise within seconds of disconnection.'
+    /*
+     * Owner ruling `mv-354-clinical-checks` (2026-11-14): the recovery these two cases show is the
+     * model's (shunt fractions chosen for the case), not a measured clinical course.
+     */
+    case 'MV-13':
+      return 'In this simulation, clearing the obstruction lowers the peak pressure at once and raises the saturation over the next minutes, by an amount the model sets. Relieving an obstruction can improve ventilation–perfusion matching and oxygenation; at the bedside how much, and how fast, varies with the cause and the lung behind it.'
+    case 'MV-14':
+      return 'In this simulation, decompression brings the pressures down at once, the blood pressure up within about a minute and the saturation up over several minutes; drainage then adds a further gain. Those sizes and times are set by the model, not measured in patients. At the bedside the improvement varies, and the relief from a needle can be lost until a drain is in.'
     case 'MV-12':
       return 'In this simulation the patient’s breathing drive does not respond to carbon dioxide. Lowering support reduces delivered ventilation and lets PaCO₂ rise; lightening sedation adds breaths, which moves it the other way.'
     default:

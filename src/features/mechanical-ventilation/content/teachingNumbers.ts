@@ -31,6 +31,12 @@ const ATS_2017: TeachingNumberCitation = {
   grade: 'strong recommendation, moderate confidence',
   locator: 'Abstract, Results',
 }
+/**
+ * Owner ruling `mv-354-clinical-checks` (2026-11-14): the asthma chapter's figures are not a strategy
+ * for every obstruction. What generalizes is the reasoning about gas trapping.
+ */
+const ASTHMA_SCOPE =
+  'Written for status asthmaticus on controlled ventilation. The reasoning generalizes wherever expiration does not finish (a faster rate or a shorter expiration traps more gas); the figure does not transfer to mucus plugging, an obstructed tube, or every patient with COPD.'
 const asthma: TeachingNumberCitation = {
   sourceId: 'tobin-3e-severe-asthma',
   year: 2013,
@@ -190,24 +196,27 @@ export const VENTILATION_NUMBERS = defineTeachingNumbers('mechanical-ventilation
     ...CHECK,
   },
   'obstruction-vt': {
-    label: 'Tidal volume in severe airflow obstruction',
+    label: 'Tidal volume in severe asthma',
     value: '7–9 mL/kg',
     class: 'expert-reference',
     sources: [asthma],
+    note: ASTHMA_SCOPE,
     ...CHECK,
   },
   'obstruction-rate': {
-    label: 'Respiratory rate in severe airflow obstruction',
+    label: 'Respiratory rate in severe asthma',
     value: '10–14 breaths/min',
     class: 'expert-reference',
     sources: [asthma],
+    note: ASTHMA_SCOPE,
     ...CHECK,
   },
   'obstruction-flow': {
-    label: 'Inspiratory flow in severe airflow obstruction',
+    label: 'Inspiratory flow in severe asthma',
     value: '60–70 L/min',
     class: 'expert-reference',
     sources: [asthma],
+    note: ASTHMA_SCOPE,
     ...CHECK,
   },
   'obstruction-peep': {
@@ -218,17 +227,19 @@ export const VENTILATION_NUMBERS = defineTeachingNumbers('mechanical-ventilation
     ...CHECK,
   },
   'obstruction-pplat': {
-    label: 'Plateau pressure goal in dynamic hyperinflation',
+    label: 'Plateau pressure goal in dynamic hyperinflation (severe asthma)',
     value: '<30 cmH₂O, ideally ≤25',
     class: 'expert-reference',
     sources: [asthma],
+    note: ASTHMA_SCOPE,
     ...CHECK,
   },
   'obstruction-ph': {
-    label: 'pH accepted in permissive hypercapnia for obstruction',
+    label: 'pH accepted in permissive hypercapnia in severe asthma',
     value: '≥7.20',
     class: 'expert-reference',
     sources: [asthma],
+    note: ASTHMA_SCOPE,
     ...CHECK,
   },
 })

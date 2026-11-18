@@ -225,7 +225,7 @@ const timing = round({
    */
   watch: ['rate', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'More breaths per minute can leave less time to exhale. Read the expiratory flow trace itself: whether flow reaches zero before the next breath, not the rate setting, tells you whether the lung emptied.',
+    'More breaths per minute can leave less time to exhale. Read the expiratory flow trace itself: whether flow reaches zero before the next breath, not the rate setting, tells you whether the lung emptied. The intrinsic PEEP reading is the model’s estimate of the pressure the unexhaled gas leaves behind: use it as a check on the trace, not in place of it.',
 })
 const earlierCycle = round({
   title: 'The cycle-off threshold on pressure support',
@@ -300,7 +300,7 @@ const oxygen = round({
   seconds: 30,
   watch: ['spo2', 'volume', 'rate', 'co2'],
   explanation:
-    'Changing FiO₂ changes the gas mixture, not the tidal volume or the rate. Oxygenation, CO₂ clearance and breath delivery each have their own reading.',
+    'Changing FiO₂ changes the gas mixture, not the tidal volume or the rate. Oxygenation, CO₂ clearance and breath delivery each have their own reading. The mixture changes at once; the patient’s oxygenation follows over time, at a pace set by the lung, the shunt, the circulation and the oximeter. Reassess after allowing time for a response: an immediate SpO₂ is not the whole effect. The 30 simulated seconds here are model time, not a clinical equilibration time.',
 })
 const effortHold = round({
   title: 'An inspiratory hold in a patient making efforts',
@@ -818,7 +818,7 @@ const authoredExperiments: readonly LearningExperiment[] = [
         seconds: 150,
         watch: ['pain', 'dyspnea', 'effort', 'rate'],
         explanation:
-          'Pain drives rate and effort. Treat it before you adjust the ventilator for a fast, effortful patient, then read the ventilator again.',
+          'In this patient, treat the pain first, then read the ventilator again before you change it.',
       }),
     ],
   },

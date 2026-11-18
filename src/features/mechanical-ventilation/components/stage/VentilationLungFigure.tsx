@@ -143,11 +143,33 @@ export function VentilationLungFigure({
             total lung volume. The airway’s width follows the fourth root of its resistance, as a
             tube’s does. It is not this patient’s anatomy.
           </p>
+          <p data-diaphragm-note>
+            The diaphragm moves down as the lungs are inflated; that alone does not show patient
+            effort.
+          </p>
+          {model.effort === null ? null : (
+            <p data-effort-note>
+              It moves further, and turns amber, while the patient is making an inspiratory effort.
+            </p>
+          )}
+          {model.stiffness === null ? null : (
+            <p data-stiffness-note>
+              Hatching marks reduced respiratory-system compliance, a stiffer system. It does not
+              show a change in the lung tissue.
+            </p>
+          )}
+          {model.airway === null ? null : (
+            <p data-airway-note>
+              The narrowed airway stands for higher resistance. That is not necessarily a fixed
+              narrowing: bronchospasm, secretions or the tube can each raise it.
+            </p>
+          )}
           {model.trapped === null ? null : (
             <p data-trapped-note>
               The shaded base of each lung is gas still in the lung when the next breath starts. Its
-              height follows the intrinsic PEEP reading beside the drawing; it is not a measured
-              volume.
+              height is a schematic of the model’s gas-trapping estimate, the intrinsic PEEP reading
+              beside the drawing. It does not show where the gas is trapped, and it is not a
+              measured volume.
             </p>
           )}
         </details>
