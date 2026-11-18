@@ -81,10 +81,16 @@ describe('MCS-03-01 and MCS-03-02 — manufacturer measurands and the textbook d
     }
     expect(clarification.reviewStatus).toBe('sme-review')
     expect(conflict.reviewStatus).toBe('sme-review')
+  })
 
+  it('keeps the textbook disagreement as provenance only: no learner surface lists it', () => {
+    // Owner ruling mcs-impella-cp-flow-conflict (2026-11-12): "Teach the IFU P-level flows".
     const card = mcsSupportPathwayCardById.get('impella-left-transvalvular')!
     expect(card.measurementClarificationIds).toEqual([clarification.id])
-    expect(card.sourceConflictIds).toEqual([conflict.id])
+    expect(card.sourceConflictIds).toEqual([])
+    // No concept id, so no critical-care concept page renders it either.
+    expect(conflict.conceptIds).toEqual([])
+    expect(conflict.handling).toMatch(/not shown to learners/i)
   })
 
   it('names the textbook chapter from its own title and copyright pages', () => {

@@ -22,10 +22,12 @@ import styles from './mechanical-circulatory-support.module.css'
  * boring, because "no blood enters this device" and "this reports no device flow" are the two most
  * useful rows on the counterpulsation card.
  *
- * The two evidence records are wired to their own renderers and not interchanged. The Impella CP
- * manufacturer figures are a *measurement clarification* — three numbers naming three measurands,
- * which do not contradict each other. The textbook pair is a *held disagreement* — one source
- * contradicting itself. Rendering either with the other's component inverts the authored position.
+ * The two kinds of evidence record are wired to their own renderers and not interchanged. The
+ * Impella CP manufacturer figures are a *measurement clarification* — three numbers naming three
+ * measurands, which do not contradict each other. A *held disagreement* is sources contradicting
+ * each other. Rendering either with the other's component inverts the authored position. No card
+ * lists a held disagreement today: the textbook's two Impella CP flows came off the Impella card
+ * by owner ruling (mcs-impella-cp-flow-conflict, 2026-11-12), which teaches the IFU P-level flows.
  */
 
 const displayedFlowValueTypeLabels = {
