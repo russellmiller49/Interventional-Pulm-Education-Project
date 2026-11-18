@@ -1800,7 +1800,7 @@ function customizeReturnPressureCase(definition: MutableRuntimeCrrtCase): Mutabl
   if (pause) {
     pause.label = 'Keep the pump paused and check the catheter by your unit’s procedure'
     pause.description =
-      'For a line that is straight, unclamped and connected: the resistance is then at the catheter.'
+      'For a line that is straight, unclamped and connected: the resistance is then at the catheter. Reposition the patient or the catheter and check the return lumen by your hospital’s catheter procedure. Never force a flush against resistance or a suspected clot: it can dislodge the clot or injure the vessel.'
     pause.response =
       'Treatment stays paused while the catheter is repositioned and the return lumen checked by the unit’s procedure, without forcing a flush.'
   }

@@ -91,6 +91,14 @@ describe('crrt-357-case-stems', () => {
       /Never force a flush against resistance or a suspected clot: it can dislodge the clot or injure the vessel/,
     )
     expect(text).toMatch(/check the catheter by your unit’s procedure/)
+    // And on the surface the learner acts from: the action's own description, under its button.
+    const action = caseOf('CRRT-14').interventions.find((entry) =>
+      /check the catheter by your unit’s procedure/.test(entry.label),
+    )!
+    expect(action.description).toMatch(
+      /Never force a flush against resistance or a suspected clot: it can dislodge the clot or injure the vessel/,
+    )
+    expect(action.response).toMatch(/without forcing a flush/)
     // The manufacturer's own corrective action is quoted as it is printed.
     expect(text).toMatch(/“flush or reposition the catheter according to hospital protocol”/)
   })
