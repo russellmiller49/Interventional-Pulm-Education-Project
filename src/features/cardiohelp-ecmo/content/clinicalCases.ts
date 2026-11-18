@@ -1348,10 +1348,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'differential-native-lung',
-          label: 'Raise ventilator FiO₂ and PEEP',
+          label: 'Raise ventilator support for the native lungs',
           category: 'resuscitation',
           description:
-            'The blood reaching the right arm, the brain and the coronaries came through the native lungs. Improve it with the ventilator first.',
+            'The blood reaching the right arm, the brain and the coronaries came through the native lungs. Treat the lung problem and adjust the ventilator for this patient first; FiO₂ and PEEP are individualized.',
           effect: 'supportive',
           response:
             'Right-arm oxygenation improves partially as native-lung gas exchange improves.',
@@ -1362,7 +1362,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Add a venous return limb (V-AV), or convert to VV',
           category: 'procedure',
           description:
-            'The right arm is still low on the ventilator. If the heart has recovered and the lungs have not, convert to VV; if both still need support, add a venous return limb (V-AV). Raising VA flow is only a temporary step, because it loads the recovering ventricle.',
+            'The right arm is still low on the ventilator. Weigh what that means for oxygen delivery to this patient’s brain and heart. If the heart has recovered and the lungs have not, consider converting to VV; if both still need support, a venous return limb (V-AV). These are decisions for the ECMO team and this patient. Raising VA flow is only a temporary step, because it loads the recovering ventricle.',
           effect: 'definitive',
           /*
            * Escalation is escalation. The response says so.
@@ -1420,7 +1420,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Confirm right-arm and cerebral oxygenation.',
         'Integrate native ejection, lung function, circuit performance, and the mixing region.',
-        'Raise ventilator FiO₂ and PEEP first. If the right arm stays low, convert to VV when the heart has recovered, or add a venous return limb (V-AV) when both heart and lungs still need support.',
+        'Treat the native lung problem and adjust the ventilator for this patient first. If the right arm stays low, consider converting to VV when the heart has recovered, or adding a venous return limb (V-AV) when both heart and lungs still need support.',
       ],
       safetyNotes: [
         'A femoral sample or a left-hand oximeter can read normal while the brain and the coronaries are hypoxemic. Monitor the right arm.',
@@ -1618,7 +1618,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'vasoplegia-pressors',
-          label: 'Start or raise norepinephrine to restore MAP',
+          label:
+            'Start or raise a vasopressor (norepinephrine in this vasodilated patient) to restore MAP',
           category: 'medication',
           description: 'Restore vascular tone while following perfusion endpoints.',
           effect: 'supportive',
@@ -1676,7 +1677,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Confirm native recovery, perfusion, and circuit adequacy.',
-        'Treat vascular tone with a vasopressor, norepinephrine first, and treat the cause.',
+        'Treat low vascular tone with a vasopressor chosen for this patient’s physiology (norepinephrine is a common choice in vasodilatory hypotension), and treat the cause.',
         'Reassess source control, antimicrobial exposure, lactate, and ongoing need for VA support.',
       ],
       safetyNotes: [
@@ -1727,7 +1728,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Perform bilateral limb and distal-perfusion assessment',
           category: 'assessment',
           description:
-            'Compare NIRS, temperature, color, capillary refill, Doppler signals, and catheter patency.',
+            'Compare both legs: temperature, color, capillary refill and distal Doppler signals, tissue oxygenation (NIRS) where it is available, and the patency of the distal-perfusion catheter.',
           effect: 'diagnostic',
           response: 'The distal-perfusion catheter is obstructed in the cannulated leg.',
           reveals: ['Regional limb ischemia is confirmed despite adequate systemic support.'],
@@ -1785,7 +1786,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       diagnosis: 'Distal-perfusion failure causing cannulated-limb ischemia',
       causalChain: [
         'Femoral arterial return can compromise downstream limb flow.',
-        'Global MAP and circuit flow do not exclude regional ischemia.',
+        'Normal ECMO flow, MAP and console readings do not show that the cannulated leg is perfused.',
         'Delayed restoration risks irreversible tissue injury.',
       ],
       correctWorkflow: [
@@ -1871,7 +1872,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Exchange the oxygenator or circuit',
           category: 'procedure',
           description:
-            'Start inotropes and vasopressors, clamp, swap to the primed backup circuit and restart flow.',
+            'Clamp, swap to the primed backup circuit and restart flow, supporting the patient with inotropes, vasopressors and the ventilator as needed.',
           effect: 'definitive',
           response: 'Resistance falls and systemic flow, MAP, and gas transfer recover.',
           prerequisites: ['va-oxygenator-prepare'],
@@ -1914,7 +1915,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Exchange the circuit and reassess MAP, flow, pressures, and oxygenation.',
       ],
       safetyNotes: [
-        `The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the console’s factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. On VA the exchange interrupts the circulation: start inotropes and vasopressors before the pump stops.`,
+        `The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the console’s factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. On VA the exchange interrupts the circulation: have inotropes, vasopressors and ventilator support ready, and use them as the patient needs while the circuit is restored.`,
       ],
     },
     evidenceIds: [
@@ -1997,7 +1998,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Call for help and the backup circuit; raise patient support',
           category: 'resuscitation',
           description:
-            'With the patient isolated, call for help and the primed backup circuit, and raise inotropes, vasopressors and the ventilator: the circuit’s share of the circulation is gone.',
+            'With the patient isolated, call for help and the primed backup circuit, and support the patient with inotropes, vasopressors and the ventilator as needed: the circuit’s share of the circulation is gone.',
           effect: 'supportive',
           response: 'MAP is temporarily supported conventionally while the circuit is cleared.',
           patch: { patient: { meanArterialPressure: 55 } },
@@ -2084,7 +2085,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Resuming flow before de-airing risks systemic arterial embolism.',
       ],
       correctWorkflow: [
-        'Clamp the arterial return limb, then the drainage limb, near the patient. Call for help and the backup circuit, and raise inotropes, vasopressors and the ventilator.',
+        'Clamp the arterial return limb, then the drainage limb, near the patient. Call for help and the backup circuit, and support the patient with inotropes, vasopressors and the ventilator as needed.',
         'Secure the connector, aspirate air from the arterial limb, and confirm the circuit is clear. Exchange the circuit if the air cannot be cleared quickly.',
         `${ECMO_AIR_RESUME_SENTENCE} Then reassess perfusion.`,
       ],

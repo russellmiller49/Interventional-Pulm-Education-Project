@@ -47,7 +47,7 @@ const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
   CORRECT_FAULT: 'Corrected scenario cause',
   START_INOTROPE: 'Started an inotrope',
   DRAW_RIGHT_RADIAL_GAS: 'Drew a right radial gas',
-  RAISE_VENTILATOR_SUPPORT: 'Raised ventilator FiO₂ and PEEP',
+  RAISE_VENTILATOR_SUPPORT: 'Raised ventilator support',
   PERFORM_CHECK: 'Performed circuit/device check',
   ROTARY_DELTA: 'Turned rotary control',
   SET_PUMP_MODE: 'Changed pump mode',

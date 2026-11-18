@@ -699,7 +699,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'diff-patient-correct',
             'Right-arm oxygenation improves while native ejection, lung function, systemic perfusion, and limb perfusion are reassessed.',
-            'Right-arm oxygenation improves as ventilator FiO₂ and PEEP are raised, while ejection, perfusion and the leg are reassessed. The change to V-AV or VV is planned with the ECMO team; it is not carried out in this case.',
+            'Right-arm oxygenation improves as ventilator support is raised, while ejection, perfusion and the leg are reassessed. The change to V-AV or VV is planned with the ECMO team; it is not carried out in this case.',
           ),
           option(
             'diff-patient-femoral',
@@ -728,7 +728,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'diff-action',
         title: 'Clue 2 · Treat the two-circulation mismatch',
-        text: 'Confirm with a right radial gas. Raise ventilator FiO₂ and PEEP first. Use more VA flow only as a temporary step, because it loads the recovering ventricle. If the right arm stays low, add a venous return limb (V-AV), or convert to VV if the heart has recovered.',
+        text: 'Confirm with a right radial gas. Treat the native lung problem and adjust the ventilator for this patient first. Use more VA flow only as a temporary step, because it loads the recovering ventricle. If the right arm stays low, consider a venous return limb (V-AV), or converting to VV if the heart has recovered.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1081,7 +1081,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-oxy-action',
         title: 'Clue 2 · Preserve perfusion during definitive correction',
-        text: 'Confirm the rising pressure drop and the failing post-oxygenator gas, start inotropes and vasopressors before the pump stops, call the perfusionist with the primed backup, then exchange the circuit and reassess both circulations.',
+        text: 'Confirm the rising pressure drop and the failing post-oxygenator gas, call the perfusionist with the primed backup, have inotropes, vasopressors and ventilator support ready and give them as the patient needs, then exchange the circuit and reassess both circulations.',
         penalty: 10,
         focusId: 'practice-treatment',
       },
@@ -1257,7 +1257,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       {
         id: 'va-air-action',
         title: 'Clue 2 · Isolate, de-air, then reset and reopen',
-        text: 'Clamp return then drainage; the bubble stop has already stopped the pump. Call for help and the backup circuit; raise inotropes and the ventilator. Secure the connector, aspirate the air and confirm clear. Then open the drainage clamp, reset the bubble stop, open the return clamp last, and reassess perfusion.',
+        text: 'Clamp return then drainage; the bubble stop has already stopped the pump. Call for help and the backup circuit; support the patient with inotropes and the ventilator as needed. Secure the connector, aspirate the air and confirm clear. Then open the drainage clamp, reset the bubble stop, open the return clamp last, and reassess perfusion.',
         penalty: 10,
         target: 'circuit',
         controlId: 'cardiohelp-clamp-drainage',

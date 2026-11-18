@@ -148,15 +148,14 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       caseScenarioIds: [],
     },
     {
-      // REVIEW: va-clinical-limb-ischemia is a cannulation-site perfusion
-      // complication rather than an emergency drill; it lives here so the
-      // vascular-complication case sits beside the other high-acuity content.
-      // Move it to va-3-afterload if you prefer grouping by hemodynamics.
+      // Owner ruling ecmo-limb-ischemia-placement (2026-11-14): the limb-ischemia case stays here,
+      // and the section is named for both of the things it holds. Limb ischemia is not an oxygenator
+      // or return-pressure problem, so it does not move to va-3-afterload. Ids are unchanged.
       id: 'va-6-complications',
       supportMode: 'va',
-      title: 'When the pump stops or the power goes, on VA',
+      title: 'VA ECMO: circuit emergencies and cannulation complications',
       summary:
-        'A bubble alarm stops the pump on a circuit the circulation depends on; later, the console is on battery mid-transport. Say what each stop costs and what still has to be done, then work the limb and the air emergency as cases.',
+        'Two kinds of trouble. Circuit emergencies: a bubble alarm stops the pump on a circuit the circulation depends on, the console is on battery mid-transport, and air is in the circuit. Cannulation complications: a leg that is not perfused beyond the arterial cannula while flow and the console look satisfactory. Say what each stop costs and what still has to be done, then work the limb and the air emergency as cases.',
       lessonScenarioIds: ['va-arterial-bubble-stop', 'va-transport-power-loss'],
       caseScenarioIds: ['va-clinical-limb-ischemia', 'va-clinical-circuit-air-embolism'],
     },
