@@ -266,10 +266,12 @@ export const artifactDefinitions = {
       'The rising, progressively nonpulsatile signal is not a valid PAWP. All displayed values are unreliable.',
     whyItMatters: `Inflating or flushing against an occluded distal branch can rupture the pulmonary artery; mortality is ${HEMODYNAMICS_NUMBERS.value('pa-rupture-mortality')}.`,
     actions: [
-      'Stop inflation immediately and allow passive balloon deflation.',
+      'Stop inflation immediately and allow passive balloon deflation. Do not flush.',
+      'Confirm that the pulmonary-artery waveform returns.',
       `Withdraw to a more proximal PA position: ${HEMODYNAMICS_NUMBERS.value('overwedge-volume')}.`,
       'Confirm that any wedge value is physiologically plausible relative to PA diastolic pressure.',
-      'Hemoptysis after a wedge means possible pulmonary-artery rupture: balloon down, affected side down, secure the airway, call for help.',
+      'New hemoptysis is a different problem: it suggests pulmonary-artery injury. Stop manipulating the catheter, secure and protect the airway, position the patient with the suspected bleeding lung down when appropriate, and get critical care, interventional and surgical help at once.',
+      'With established bleeding, what is done with the balloon depends on where and how the artery is injured and is a specialist decision. Balloon occlusion or tamponade proximal to the injury is sometimes used by the specialist team; do not reinflate a balloon in a distal, possibly injured artery.',
     ],
     doNot: [
       'Do not flush an overwedged catheter.',

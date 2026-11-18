@@ -550,7 +550,12 @@ function DeeperReference({
               </ol>
               <HemodynamicsReferenceValues
                 title="The balloon, in numbers"
-                ids={['balloon-volume', 'overwedge-volume', 'retract-distance']}
+                ids={[
+                  'balloon-volume',
+                  'overwedge-volume',
+                  'retract-distance',
+                  'wedge-inflation-limit',
+                ]}
               />
             </section>
           </StageBlock>

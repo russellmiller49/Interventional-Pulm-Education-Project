@@ -107,8 +107,7 @@ export const pawpCaptureSteps: readonly PawpCaptureStep[] = [
     order: 7,
     shortLabel: 'Deflate',
     question: 'Is the balloon down, by my action?',
-    whatYouDo:
-      'Keep the wedge brief: just long enough to read the value at end expiration. Then let the balloon deflate passively.',
+    whatYouDo: `Keep the wedge brief: just long enough to read the value at end expiration. Then let the balloon deflate passively. The Edwards Swan-Ganz instructions limit inflation to ${HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')}; the instructions for the catheter in use apply. That is an upper limit: deflate sooner once you have the value.`,
     whatItEstablishes: 'The occlusion ended when you chose.',
     whatItDoesNotEstablish: '',
     sourceIds: ['edwards-swan-ganz-ifu-2023', 'pac-waveforms-part-1-2021'],
@@ -339,7 +338,7 @@ export const pawpRecoveryCommitment: ClinicalLearningItem = item({
 })
 
 /** The balloon in numbers, beside the wedge controls. */
-export const PAWP_BALLOON_NUMBERS_BOUNDARY = `Inflate slowly with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} and stop as soon as the tracing wedges. ${capitalize(HEMODYNAMICS_NUMBERS.value('overwedge-volume'))}. Keep each inflation brief: just long enough to read the value at end expiration. The simulator releases the balloon itself if you leave it up.`
+export const PAWP_BALLOON_NUMBERS_BOUNDARY = `Inflate slowly with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} and stop as soon as the tracing wedges. ${capitalize(HEMODYNAMICS_NUMBERS.value('overwedge-volume'))}. Keep each inflation brief: just long enough to read the value at end expiration. The Edwards Swan-Ganz instructions limit inflation to ${HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')}; the instructions for the catheter in use apply. The simulator releases the balloon itself if you leave it up.`
 
 export const PAWP_BOUNDARY_NOTICE = pacPrebriefNotCoveredNotice
 

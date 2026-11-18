@@ -15,6 +15,7 @@ const HEMODYNAMICS_NUMBER_SOURCE_NAMES: Readonly<Record<string, string>> = {
   'pac-derived-part-2-2021': 'Bootsma, part 2',
   'pac-review-2014': 'Whitener',
   'emcrit-rhc-supplied-2026': 'EMCrit right heart catheterization',
+  'edwards-swan-ganz-ifu-2023': 'Edwards Swan-Ganz instructions for use',
   'TEXT-AHM-2021-CH6-PATD': 'Zitzmann, Advanced Hemodynamic Monitoring',
   'TEXT-AHM-2021-CH24-CS': 'Grigoryev, Advanced Hemodynamic Monitoring',
   'TEXT-ESICM-HM-2019-CH2-SHOCK': 'Pinsky, Hemodynamic Monitoring',

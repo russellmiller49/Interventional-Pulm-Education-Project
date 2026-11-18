@@ -151,7 +151,7 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
       traceStep(
         'hd05-orient',
         'Orient',
-        'High PAP and RAP, low output, and PAWP at or below the pre-capillary boundary.',
+        'Hypotension, high PAP and RAP, low output, and PAWP at or below the pre-capillary boundary.',
         'The dominant load is pulmonary vascular, with secondary right-heart failure.',
         'Preserve systemic pressure while testing selective RV afterload relief.',
       ),

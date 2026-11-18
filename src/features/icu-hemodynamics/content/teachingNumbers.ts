@@ -136,6 +136,23 @@ export const HEMODYNAMICS_NUMBERS = defineTeachingNumbers('icu-hemodynamics', {
     sources: [cite(BOOTSMA_1, 2022, '§2.3.4, p. 8')],
     ...CHECK,
   },
+  'wedge-inflation-limit': {
+    label: 'Longest the balloon stays inflated for a wedge',
+    value: 'two respiratory cycles, or 10 to 15 seconds',
+    class: 'device',
+    sources: [
+      cite(
+        'edwards-swan-ganz-ifu-2023',
+        2023,
+        '§12.3 Balloon inflation and wedge pressure measurement; §14.1 Perforation of the pulmonary artery',
+      ),
+    ],
+    note: 'An upper limit, not a time to aim for: deflate as soon as the end-expiratory value is read. The same wording is in the instructions for the standard thermodilution catheters (Edwards DOC-0073849A). The instructions for the catheter in use apply.',
+    checkedOn: '2026-11-17',
+    checkedBy: 'Claude, against the manufacturer documents (Edwards DOC-0222632A and DOC-0073849A)',
+    signedBy: null,
+    signedOn: null,
+  },
   'flotation-ectopy': {
     label: 'Ventricular ectopy while the tip crosses the right ventricle',
     value: 'premature ventricular beats in up to 70% of insertions',
