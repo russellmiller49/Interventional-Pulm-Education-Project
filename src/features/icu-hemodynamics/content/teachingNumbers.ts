@@ -147,7 +147,7 @@ export const HEMODYNAMICS_NUMBERS = defineTeachingNumbers('icu-hemodynamics', {
         '§12.3 Balloon inflation and wedge pressure measurement; §14.1 Perforation of the pulmonary artery',
       ),
     ],
-    note: 'An upper limit, not a time to aim for: deflate as soon as the end-expiratory value is read. The same wording is in the instructions for the standard thermodilution catheters (Edwards DOC-0073849A). The instructions for the catheter in use apply.',
+    note: 'An upper limit, not a time to aim for: deflate as soon as the end-expiratory value is read. The instructions for the catheter in use apply.',
     checkedOn: '2026-11-17',
     checkedBy: 'Claude, against the manufacturer documents (Edwards DOC-0222632A and DOC-0073849A)',
     signedBy: null,
