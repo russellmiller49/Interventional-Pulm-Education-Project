@@ -7,6 +7,7 @@ import type {
 import {
   CT_AXIAL_VIEW,
   CT_CORONAL_VIEW,
+  CT_SAGITTAL_VIEW,
   clockDistance,
   clockOf,
 } from '../airway-anatomy-lesson/view-orientation'
@@ -23,9 +24,17 @@ import type { AirwayAnatomyCaseManifest, CenterlineLabels } from './types'
  * Nothing here is new anatomy. The landmark is the Airway Anatomy lesson's endoscopic view of the
  * fork (`AIRWAY_NODES[].endoscopicView`): its reference, each opening's clock and patient direction,
  * and its wall features. The CT line projects those same directions through the lesson's
- * `CT_AXIAL_VIEW` / `CT_CORONAL_VIEW`, which match the linked CT's axes (patient's right on the
- * image left). A pair with no authored direction on one side, or whose directions both fall on
- * one plane's line of sight, gets no CT line.
+ * `CT_AXIAL_VIEW` / `CT_CORONAL_VIEW` / `CT_SAGITTAL_VIEW`, which match the linked CT's axes
+ * (patient's right on the image left; on sagittal, anterior on the image left). The first plane
+ * that separates the branches is used, so a pair the axial or coronal plane already separates
+ * keeps that line. A pair with no authored direction on one side gets no CT line.
+ *
+ * Owner ruling `sync-missing-ct-cues` (2026-11-12, "Supply cues"): the forks that had no CT line
+ * split front to back or head to back (the right upper lobe's three segments; RB6 and LB6 against
+ * the basal trunk), which only a sagittal slice separates, or pair a segment with the basal trunk
+ * that continues past it (RB7), which had no direction at all. The trunk's direction past each
+ * takeoff is `CONTINUATION_TOWARD`; every direction used here is checked against the case's own
+ * centrelines in `branch-debrief.test.ts`.
  */
 export interface BranchDebrief {
   /** The branch the learner entered, as the module names it ("RML", "the RLL basal trunk"). */
@@ -90,6 +99,23 @@ const LABEL_BY_LESSON_NODE: Record<string, string> = Object.fromEntries(
 const CONTINUATION_NAME: Record<string, string> = {
   rll: 'the RLL basal trunk',
   lll: 'the LLL basal trunk',
+}
+
+/**
+ * Where a lower-lobe basal trunk runs once a segment has left it, for the CT line only. Past the
+ * superior segment (RB6, LB6) it continues downward. Past the medial basal segment (RB7) what is
+ * left of the right trunk carries the anterior, lateral and posterior basal segments, so it runs
+ * down and laterally, away from RB7.
+ */
+const CONTINUATION_TOWARD: Record<
+  string,
+  {
+    ahead: PatientDirection | readonly PatientDirection[]
+    past?: Record<string, PatientDirection | readonly PatientDirection[]>
+  }
+> = {
+  rll: { ahead: 'inferior', past: { rb7: ['inferior', 'right'] } },
+  lll: { ahead: 'inferior' },
 }
 
 const CODE_LABEL = /^[A-Z]{2,}[0-9+]*$|^[RL]B\d/
@@ -174,6 +200,8 @@ function directionWords(
 const CT_PLANES = [
   { name: 'Axial', view: CT_AXIAL_VIEW },
   { name: 'Coronal', view: CT_CORONAL_VIEW },
+  // Sagittal is the less familiar display, so the line says which way it faces.
+  { name: 'Sagittal, anterior on the image left', view: CT_SAGITTAL_VIEW },
 ] as const
 
 const IMAGE_SIDES = [
@@ -211,15 +239,20 @@ function scopeLine(parent: AirwayNode, openings: DebriefOpening[], continuation:
   return `${reference}: ${parts.join(' · ')}`
 }
 
-function ctLine(openings: DebriefOpening[]) {
-  if (openings.length < 2 || openings.some(({ opening }) => !opening.toward)) return null
+interface CtBranch {
+  name: string
+  toward: PatientDirection | readonly PatientDirection[] | undefined
+}
+
+function ctLine(branches: CtBranch[]) {
+  if (branches.length < 2 || branches.some(({ toward }) => !toward)) return null
   for (const plane of CT_PLANES) {
-    const clocks = openings.map(({ opening }) => clockOf(plane.view, opening.toward!))
+    const clocks = branches.map(({ toward }) => clockOf(plane.view, toward!))
     if (clocks.some((clock) => clock === null)) continue
     const hours = clocks as number[]
     const separated = hours.some((hour) => hours.some((other) => clockDistance(hour, other) >= 1))
     if (!separated) continue
-    const parts = openings.map(({ name }, i) => {
+    const parts = branches.map(({ name }, i) => {
       const sector = Math.round((hours[i] % 12) / 1.5) % IMAGE_SIDES.length
       return `${name} toward the image ${IMAGE_SIDES[sector]}`
     })
@@ -288,9 +321,20 @@ export function buildBranchDebrief({
     if (!opening) return debrief
     openings.push({ name: placeOfNode(id), opening })
   }
+  const branches: CtBranch[] = openings.map(({ name, opening }) => ({
+    name,
+    toward: opening.toward,
+  }))
+  if (continuation) {
+    const trunk = CONTINUATION_TOWARD[forkId]
+    branches.push({
+      name: continuation.replace(/^the /, ''),
+      toward: trunk?.past?.[intendedId] ?? trunk?.ahead,
+    })
+  }
   return {
     ...debrief,
     scope: scopeLine(fork, openings, continuation),
-    ct: continuation ? null : ctLine(openings),
+    ct: ctLine(branches),
   }
 }
