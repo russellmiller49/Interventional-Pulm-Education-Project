@@ -231,7 +231,7 @@ export const section: BronchSectionDefinition = {
         'Seizure',
         'A new arrhythmia, or a falling blood pressure',
         'Benzocaine spray is different: methemoglobinemia, with gray-blue lips and a low saturation that oxygen does not fix.',
-        'Oversedation is different again: hard to rouse and breathing slowly, with none of these signs. It answers to rousing and airway support.',
+        'Oversedation is different again: hard to rouse and breathing slowly, without the neurological signs above. It answers to rousing and airway support.',
       ],
       claimClass: 'source',
       sourceRefs: TOXICITY,

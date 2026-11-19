@@ -231,7 +231,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Auto-PEEP: trapped gas',
-      body: 'With a scope in the tube, the breath out may not finish before the next one starts. Gas stacks up: dynamic hyperinflation. Plateau rises or delivered volume falls, and the blood pressure drops.',
+      body: 'With a scope in the tube, the breath out may not finish before the next one starts. Gas stacks up: dynamic hyperinflation. Plateau rises or delivered volume falls, and the blood pressure can drop.',
       pointsLabel: 'What to do about it',
       points: [
         'See it: flow has not reached zero when the next breath starts.',
@@ -253,7 +253,7 @@ export const section: BronchSectionDefinition = {
       points: [
         'Lung-protective limits still apply. Check the breath against predicted body weight, and check the plateau.',
         'If the breath out does not finish, a bigger breath stacks more gas.',
-        'Smaller breaths for a few minutes are often safer. The cost is a rising carbon dioxide.',
+        'Accepting a smaller delivered breath for a few minutes may be safer. The cost is a rising carbon dioxide.',
         'Taking the scope out restores the breath without touching the ventilator.',
       ],
       claimClass: 'synthesis',

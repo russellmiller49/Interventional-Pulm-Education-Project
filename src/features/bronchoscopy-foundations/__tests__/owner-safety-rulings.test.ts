@@ -85,7 +85,7 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
 
   it('images a pneumothorax first only when the whole patient allows it [5]', () => {
     const steps = block(deterioration, 'pneumothorax').steps ?? []
-    expect(steps[2]).toBe('Talking, pressure holding, not worsening: image now, keep watching.')
+    expect(steps[2]).toBe('No severe distress: image now, keep watching.')
     expect(steps[3]).toMatch(
       /Severe distress with a falling pressure or saturation: suspect tension, decompress first/,
     )
@@ -119,8 +119,10 @@ describe('Section 13, the eight first-move cards (bf-s13-deterioration)', () => 
     const c08 = deterioration.practice.find((entry) => entry.id === 'C08')!
     expect(keyOf(c08.item.choices).label).toMatch(/ultrasound or chest radiograph now/)
     expect(keyOf(c08.item.choices).rationale).toMatch(
-      /talking and not in distress, with an adequate pressure and saturation/,
+      /talks in full sentences, is not in severe distress, and his pressure and saturation are adequate/,
     )
+    expect(keyOf(c08.item.choices).rationale).toMatch(/not on pressure alone/)
+    expect(c08.situation).toMatch(/talking in full sentences/)
     expect(c08.item.explanation).toMatch(/Image first only when the whole patient allows it/)
     expect(c08.item.explanation).toMatch(/A normal pressure alone is not stability/)
   })

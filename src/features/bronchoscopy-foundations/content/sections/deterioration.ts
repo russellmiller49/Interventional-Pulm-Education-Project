@@ -280,7 +280,7 @@ export const section: BronchSectionDefinition = {
       steps: [
         'Stop sampling and take the scope out.',
         'Give high-flow oxygen.',
-        'Talking, pressure holding, not worsening: image now, keep watching.',
+        'No severe distress: image now, keep watching.',
         'Severe distress with a falling pressure or saturation: suspect tension, decompress first.',
         'Needle or finger, fifth intercostal space in the mid-axillary line, or second in the midclavicular.',
       ],
@@ -444,7 +444,7 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Scope out, high-flow oxygen, and ultrasound to the right chest',
               rationale:
-                'Sharp pain and breathlessness after a transbronchial biopsy mean a pneumothorax until imaging says otherwise. He still talks and his pressure holds, so image now and keep watching.',
+                'Sharp pain and breathlessness after a biopsy: a pneumothorax until imaging says otherwise. He is getting worse, so scan now, scope out and oxygen on. He is not in severe distress; watch for tension.',
               plausibility: 'best',
             },
             {
@@ -731,7 +731,7 @@ export const section: BronchSectionDefinition = {
       manifestCaseId: 'C08',
       presentationTitle: 'Chest pain in recovery',
       situation:
-        'A 48-year-old man is in recovery 40 minutes after a transbronchial biopsy. He has new sharp right chest pain and is more breathless. He is talking. SpO₂ is 93% on 2 L/min, heart rate 98, blood pressure 126/78.',
+        'A 48-year-old man is in recovery 40 minutes after a transbronchial biopsy. He has new sharp right chest pain and is more breathless. He is talking in full sentences. SpO₂ is 93% on 2 L/min, heart rate 98, blood pressure 126/78.',
       item: {
         id: 'C08',
         itemType: 'management-decision',
@@ -741,7 +741,7 @@ export const section: BronchSectionDefinition = {
             id: 'a',
             label: 'Examine him and get an ultrasound or chest radiograph now',
             rationale:
-              'This is a pneumothorax until imaging says otherwise. He is talking and not in distress, with an adequate pressure and saturation, so there is time to confirm it at the bedside.',
+              'A pneumothorax until imaging says otherwise. He talks in full sentences, is not in severe distress, and his pressure and saturation are adequate: taken together, not on pressure alone, there is time to confirm it.',
             plausibility: 'best',
           },
           {

@@ -44,7 +44,7 @@ describe('the ventilated patient, after the owner ruling of 2026-11-13', () => {
     expect(weigh).toMatch(/predicted body weight/)
     expect(weigh).toMatch(/plateau/)
     expect(weigh).toMatch(/breath out does not finish/)
-    expect(weigh).toMatch(/Smaller breaths for a few minutes are often safer/)
+    expect(weigh).toMatch(/Accepting a smaller delivered breath for a few minutes may be safer/)
     expect(weigh).toMatch(/Taking the scope out restores the breath/)
 
     // The settings list leaves the tidal volume alone.
@@ -105,7 +105,9 @@ describe('the ventilated patient, after the owner ruling of 2026-11-13', () => {
   it('teaches auto-PEEP by recognition, relief and time to breathe out [6]', () => {
     const trapped = words('auto-peep')
     expect(trapped).toMatch(/dynamic hyperinflation/)
-    expect(trapped).toMatch(/Plateau rises or delivered volume falls, and the blood pressure drops/)
+    expect(trapped).toMatch(
+      /Plateau rises or delivered volume falls, and the blood pressure can drop/,
+    )
     expect(trapped).toMatch(/flow has not reached zero when the next breath starts/)
     expect(trapped).toMatch(
       /Reduce the obstruction: clear secretions, and take the scope out if needed/,
