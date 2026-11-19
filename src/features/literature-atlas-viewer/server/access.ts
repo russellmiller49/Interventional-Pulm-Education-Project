@@ -11,6 +11,10 @@ import { createHmac, pbkdf2Sync, timingSafeEqual } from 'node:crypto'
  *
  *   LITERATURE_ATLAS_VIEWER_HASH     `pbkdf2_sha256$<iterations>$<salt hex>$<hash hex>` (the same
  *                                    format the Atlas uses; `python -m atlas_evidence.viewer hash`).
+ *   LITERATURE_ATLAS_VIEWER_HASH_2 … _5  optional further passwords in the same format (for example a
+ *                                    separate test password), each set or removed on its own. Any
+ *                                    malformed one keeps the viewer shut. Changing any hash ends every
+ *                                    session.
  *   LITERATURE_ATLAS_VIEWER_SECRET   at least 32 characters; signs viewer sessions. Rotating it, or
  *                                    changing the hash, ends every session.
  *   LITERATURE_ATLAS_RELAY_SECRET    at least 32 characters, shared with the Atlas service only
@@ -32,10 +36,17 @@ const MAX_ITERATIONS = 2_000_000
 
 type Env = Record<string, string | undefined>
 
-export interface ViewerConfig {
+export const EXTRA_HASH_VARS = [2, 3, 4, 5].map((n) => `LITERATURE_ATLAS_VIEWER_HASH_${n}`)
+
+export interface PasswordHash {
   readonly iterations: number
   readonly salt: Buffer
   readonly hash: Buffer
+}
+
+export interface ViewerConfig {
+  /** The accepted passwords' hashes: the main one first, then any set extras. */
+  readonly hashes: readonly PasswordHash[]
   readonly secret: string
   readonly relaySecret: string
   readonly fingerprint: string
@@ -56,23 +67,37 @@ export function parseHash(
 /** The configuration, or null when the viewer is not fully and correctly configured. */
 export function viewerConfig(env: Env = process.env): ViewerConfig | null {
   const parsed = parseHash(env.LITERATURE_ATLAS_VIEWER_HASH)
+  if (!parsed) return null
+  const hashes: PasswordHash[] = [parsed]
+  for (const name of EXTRA_HASH_VARS) {
+    const raw = env[name]?.trim()
+    if (!raw) continue
+    const extra = parseHash(raw)
+    if (!extra) return null // a malformed extra shuts the viewer rather than being silently ignored
+    hashes.push(extra)
+  }
   const secret = env.LITERATURE_ATLAS_VIEWER_SECRET?.trim() ?? ''
   const relaySecret = env.LITERATURE_ATLAS_RELAY_SECRET?.trim() ?? ''
-  if (!parsed || secret.length < MIN_SECRET_LENGTH || relaySecret.length < MIN_SECRET_LENGTH)
+  if (secret.length < MIN_SECRET_LENGTH || relaySecret.length < MIN_SECRET_LENGTH)
     return null
   if (secret === relaySecret) return null // two different keys, so one leaking does not give both
   const fingerprint = createHmac('sha256', secret)
-    .update(FINGERPRINT_DOMAIN + parsed.hash.toString('hex'))
+    .update(FINGERPRINT_DOMAIN + hashes.map((h) => h.hash.toString('hex')).join(','))
     .digest('base64url')
     .slice(0, 22)
-  return { ...parsed, secret, relaySecret, fingerprint }
+  return { hashes, secret, relaySecret, fingerprint }
 }
 
-/** Whether a password is the configured one (constant-time comparison of the derived keys). */
+/** Whether a password is one of the configured ones. Every hash is checked (no early exit), each
+ *  with a constant-time comparison of the derived keys. */
 export function checkPassword(config: ViewerConfig, password: string): boolean {
   if (typeof password !== 'string' || password.length === 0 || password.length > 200) return false
-  const derived = pbkdf2Sync(password, config.salt, config.iterations, 32, 'sha256')
-  return timingSafeEqual(derived, config.hash)
+  let ok = false
+  for (const h of config.hashes) {
+    const derived = pbkdf2Sync(password, h.salt, h.iterations, 32, 'sha256')
+    if (timingSafeEqual(derived, h.hash)) ok = true
+  }
+  return ok
 }
 
 function sign(secret: string, domain: string, value: string): string {

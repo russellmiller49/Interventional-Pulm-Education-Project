@@ -59,6 +59,29 @@ describe('Literature Atlas viewer access', () => {
     }
   })
 
+  it('accepts each of several configured passwords, each revocable on its own', () => {
+    const SECOND = 'INVENTED-second-pass'
+    const THIRD = 'INVENTED-third-pass'
+    const multi = { ...env, LITERATURE_ATLAS_VIEWER_HASH_2: hashOf(SECOND), LITERATURE_ATLAS_VIEWER_HASH_5: hashOf(THIRD) }
+    const config = viewerConfig(multi)!
+    expect(config.hashes).toHaveLength(3)
+    for (const ok of [PASSWORD, SECOND, THIRD]) expect(checkPassword(config, ok)).toBe(true)
+    expect(checkPassword(config, 'INVENTED-other-pass')).toBe(false)
+    // removing one password: it stops working, the others still do
+    const without = viewerConfig({ ...multi, LITERATURE_ATLAS_VIEWER_HASH_2: undefined })!
+    expect(checkPassword(without, SECOND)).toBe(false)
+    expect(checkPassword(without, PASSWORD)).toBe(true)
+    expect(checkPassword(without, THIRD)).toBe(true)
+    // blank extras are ignored; a malformed extra keeps the viewer shut
+    expect(viewerConfig({ ...env, LITERATURE_ATLAS_VIEWER_HASH_3: '  ' })).not.toBeNull()
+    expect(viewerConfig({ ...env, LITERATURE_ATLAS_VIEWER_HASH_3: 'sha256:abc' })).toBeNull()
+    // an extra alone, without the main password, does not open the viewer
+    expect(viewerConfig({ ...multi, LITERATURE_ATLAS_VIEWER_HASH: undefined })).toBeNull()
+    // changing any password changes the fingerprint, which ends existing sessions
+    expect(config.fingerprint).not.toBe(viewerConfig(env)!.fingerprint)
+    expect(config.fingerprint).not.toBe(without.fingerprint)
+  })
+
   it('issues sessions that expire, cannot be forged, and end when the password or secret changes', () => {
     const config = viewerConfig(env)!
     const now = 1_800_000_000_000

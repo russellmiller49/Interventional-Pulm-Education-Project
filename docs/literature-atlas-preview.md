@@ -160,6 +160,7 @@ direct-link page with one shared viewer password, separate from physician-review
 | Variable | Meaning |
 |---|---|
 | `LITERATURE_ATLAS_VIEWER_HASH` | `pbkdf2_sha256$<iterations>$<salt hex>$<hash hex>`, made with `python -m atlas_evidence.viewer hash` in the Atlas repository. In a `.env*` file escape each `$` as `\$` (Next.js expands `$NAME`); a host's variable editor needs no escaping |
+| `LITERATURE_ATLAS_VIEWER_HASH_2` … `_5` | Optional further viewer passwords, same format, each set or removed independently (for example a separate test password). A malformed one keeps the viewer shut; changing any hash ends every session |
 | `LITERATURE_ATLAS_VIEWER_SECRET` | At least 32 random characters. Signs viewer sessions; rotating it ends every session |
 | `LITERATURE_ATLAS_RELAY_SECRET` | At least 32 random characters, different from the session secret. Shared with the Atlas service only |
 | `LITERATURE_ATLAS_TRUSTED_PROXY_HOPS` | Optional, 1–5 (default 1). The password-attempt limit keys on the `X-Forwarded-For` entry this many places from the right (the address the host's proxy appended), never on the visitor-supplied first entry. Set it only if the host puts more than one trusted proxy in front of the site |
