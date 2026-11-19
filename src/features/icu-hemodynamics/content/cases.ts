@@ -538,12 +538,12 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
   },
   {
     id: 'HD-05',
-    version: '1.1.0',
+    version: '1.2.0',
     station: 'pulmonary-hypertension',
     title: 'Decompensated pre-capillary PH with RV failure',
     shortTitle: 'Precapillary PH crisis',
     minutes: 10,
-    presentation: `An adult with known pulmonary vascular disease has rising RAP, low output, high PAP, and PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg.`,
+    presentation: `An adult with known pulmonary vascular disease is hypotensive, with a mean arterial pressure near 50 mmHg, a rising RAP, low output, high PAP, and PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg.`,
     learningObjectives: [
       `Apply the current >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU pre-capillary definition.`,
       'Support RV flow while reducing afterload and avoiding systemic hypotension.',
@@ -573,6 +573,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       inhaledPulmonaryVasodilator,
       systemicPulmonaryVasodilator,
       milrinone,
+      norepinephrine,
       diuresis,
       fluidStep,
     ],

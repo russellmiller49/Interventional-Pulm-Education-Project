@@ -315,12 +315,14 @@ describe('H2 canonical normal waveform reference', () => {
     }
   })
 
-  it('teaches the balloon volume from the numbers register, and names no inflation time in seconds', () => {
-    // No source gives a limit in seconds, so none is taught.
+  it('teaches the balloon volume from the numbers register, and no inflation time but the register’s limit', () => {
+    // Owner ruling hd-363-unsourced-lines (2026-11-14): the one duration taught is the upper limit
+    // in the Edwards instructions, read from the register. No other time in seconds is typed.
     const inflationDuration =
       /\b(inflat|occlu|wedge|balloon)[^.]{0,80}\b\d+(\.\d+)?\s*(second|sec\b|s\b|minute)/i
+    const limit = HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')
     for (const text of newLearnerCopy()) {
-      expect(text).not.toMatch(inflationDuration)
+      expect(text.split(limit).join('the limit')).not.toMatch(inflationDuration)
     }
     // The volume is taught, and it is the register's value wherever it appears.
     const balloonVolume = HEMODYNAMICS_NUMBERS.value('balloon-volume')
@@ -783,11 +785,12 @@ describe('clinical-copy corrections', () => {
     expect(waveformAtlasById.get('rv-normal')!.summary).toMatch(/may climb gradually/i)
   })
 
-  it('names no inflation duration in seconds, and teaches the volume and the over-wedge sign', () => {
+  it('names no inflation duration but the register’s limit, and teaches the volume and the over-wedge sign', () => {
     const duration =
       /\b(inflat|occlu|wedge|balloon)[^.]{0,80}\b\d+(\.\d+)?\s*(second|sec\b|s\b|minute)/i
+    const limit = HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')
     for (const text of correctedClinicalCopy()) {
-      expect(text).not.toMatch(duration)
+      expect(text.split(limit).join('the limit')).not.toMatch(duration)
     }
     // Every millilitre figure in this copy is one of the two register rows, never a typed number.
     const taught = [

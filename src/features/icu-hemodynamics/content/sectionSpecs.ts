@@ -304,7 +304,7 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       /confirm (the )?PA return/i,
     ],
     modelBoundary:
-      'The simulator lets the balloon down by itself if you leave it up; that timing is the simulator’s, not a limit for a real catheter.',
+      'The simulator lets the balloon down by itself if you leave it up. That timing is the simulator’s; at the bedside the limit is the one in the catheter’s instructions.',
     practicePairing: { kind: 'mechanism-match', caseId: 'HD-06' },
     sourceIds: [
       'pac-waveforms-part-1-2021',

@@ -84,7 +84,7 @@ export const pacPrebriefStopConditions: readonly PacPrebriefStopCondition[] = [
     trigger:
       'You suspect a wedged catheter or pulmonary-artery injury, for example hemoptysis after a wedge.',
     response:
-      'Do not flush. For hemoptysis: deflate, turn the patient affected side down, secure the airway and call for help.',
+      'Do not flush. New hemoptysis suggests pulmonary-artery injury: stop manipulating the catheter, secure and protect the airway, position the patient with the suspected bleeding lung down when appropriate, and get critical care, interventional and surgical help at once. What is done with the balloon then depends on where and how the artery is injured and is a specialist decision; do not reinflate it in a distal, possibly injured artery.',
     sourceIds: ['monitor-workflow-supplied', 'edwards-swan-ganz-ifu-2023'],
   },
   {
@@ -99,7 +99,7 @@ export const pacPrebriefStopConditions: readonly PacPrebriefStopCondition[] = [
 export const pacPrebriefBalloonDiscipline: readonly string[] = [
   'Down inside the introducer; up only once a right-atrial waveform is confirmed.',
   `Inflate slowly with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, never liquid, and stop as soon as the tracing wedges.`,
-  `Keep each wedge brief: just long enough to read the value at end expiration. Deflate and confirm the pulmonary-artery tracing returns; if it does not, ${HEMODYNAMICS_NUMBERS.value('retract-distance')}.`,
+  `Keep each wedge brief: just long enough to read the value at end expiration. The Edwards Swan-Ganz instructions limit inflation to ${HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')}; the instructions for the catheter in use apply. That is a limit, not a target. Deflate and confirm the pulmonary-artery tracing returns; if it does not, ${HEMODYNAMICS_NUMBERS.value('retract-distance')}.`,
   'If the tracing will not wedge with the full volume, do not add more. Deflate and reposition.',
 ] as const
 

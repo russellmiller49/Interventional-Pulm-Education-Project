@@ -513,7 +513,7 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
           <span>Whether the balloon is up</span>
           <small>
             {occluding
-              ? `Up for ${elapsed.toFixed(0)} s. Keep it brief: just long enough to read end expiration. The simulator lets it down after ${WEDGE_AUTO_DEFLATION_SECONDS} s.`
+              ? `Up for ${elapsed.toFixed(0)} s. Keep it brief: just long enough to read end expiration. The Edwards Swan-Ganz instructions limit inflation to ${HEMODYNAMICS_NUMBERS.value('wedge-inflation-limit')}. The simulator lets it down after ${WEDGE_AUTO_DEFLATION_SECONDS} s.`
               : catheter.position === 'pa'
                 ? `Down. Inflate only from a confirmed artery tracing: slowly, ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, stopping as soon as it wedges.`
                 : 'Down. The tip must be in the pulmonary artery first.'}
