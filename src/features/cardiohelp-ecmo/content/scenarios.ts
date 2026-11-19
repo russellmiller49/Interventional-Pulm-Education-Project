@@ -816,7 +816,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         ECMO_OXYGENATOR_FAILURE_SENTENCE,
       ],
       safetyNotes: [
-        'On VA the exchange interrupts the circulation as well as gas exchange: have inotropes, vasopressors and the ventilator ready before the pump stops.',
+        'On VA the exchange interrupts the circulation as well as gas exchange: have inotropes, vasopressors and ventilator support ready, and use them as the patient needs while the circuit is restored.',
       ],
     },
     evidenceIds: [
@@ -918,7 +918,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Recognize that console flow and MAP do not establish adequate LV ejection.',
         'Assess pulse pressure, aortic-valve opening, LV size/stasis, lung findings, and systemic perfusion.',
         ...ECMO_LV_DISTENSION_MOVES.moves,
-        `In this lesson lower flow and the inotrope are carried out and the monitor shows their effect: ${ECMO_NUMBERS.value('lv-unloading-response')}. Volume removal and the vent are a recorded plan, so the congestion on the monitor is the patient before them.`,
+        `In this lesson lower flow and the inotrope are carried out and the monitor shows their effect in this simulated patient: ${ECMO_NUMBERS.value('lv-unloading-response')}. Those sizes are the model’s, not the response to expect. Volume removal and the vent are a recorded plan, so the congestion on the monitor is the patient before them.`,
       ],
       safetyNotes: [
         'A ventricle that does not eject stagnates: thrombus can form in the ventricle and the aortic root. Do not wait on a flow and a mean pressure that look acceptable.',

@@ -450,7 +450,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this setting. Oxygen fraction — not this setting: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No setting answers a mixing point from the console: sample the right arm, raise ventilator FiO₂ and PEEP first, and plan a venous return limb (V-AV) or conversion to VV if the right arm stays low.',
+        'Pump speed — not this setting, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this setting. Oxygen fraction — not this setting: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No setting answers a mixing point from the console: sample the right arm, treat the native lungs and adjust the ventilator for this patient first, and consider a venous return limb (V-AV) or conversion to VV if the right arm stays low.',
     },
     transferPrinciple:
       'The sampling site is part of the measurement: each arterial site reports its own territory, and one reassuring number describes one place.',
@@ -471,7 +471,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this setting alone. Raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against, and lowering it helps without opening the valve by itself. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading by itself: bring flow down to the least that perfuses, add an inotrope so the valve opens, and vent a ventricle that still does not eject.',
+        'Pump speed — not this setting alone. Raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against, and lowering it helps without opening the valve by itself. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading by itself: bring flow down to the least that perfuses, add an inotrope to help the ventricle eject, and vent a ventricle that still does not eject.',
     },
     transferPrinciple:
       'An acceptable flow and mean pressure do not establish ejection; pulsatility, the valve and the lungs do.',

@@ -70,7 +70,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         !circuit.returnClampClosed &&
         device.pumpRunning,
       detail:
-        'Only once the source is fixed and the circuit is free of bubbles. One press here stands for the reset and both clamps.',
+        'Only once the source is corrected and the whole circuit has been inspected and is free of bubbles. One press here stands for the reset and both clamps.',
     },
   ]
 
@@ -80,7 +80,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       supportMode="vv"
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
-        'De-airing and resumption are each one press here. At the bedside they take minutes, during which the patient is supported on the ventilator and with drugs; the saturation on this monitor does not show that time.',
+        'De-airing and resumption are each one press here: an abstraction, not training in the device sequence. At the bedside they take minutes, during which the patient is supported on the ventilator and with drugs; the saturation on this monitor does not show that time.',
       ]}
     >
       <SignalRegister
@@ -266,7 +266,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         <ThreeDomainResponse
           device="Alarm recognised rather than merely silenced; the bubble stop left latched until the circuit is free of air; then reset on the Interventions screen, which restarts the pump."
           circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then the drainage clamp opened, the bubble stop reset, and the return clamp opened last."
-          patient="Ventilator support raised, and inotropes on VA, while the circuit is off. Help and the primed backup circuit called as soon as the clamps are on."
+          patient="The patient supported on the ventilator, and with inotropes or vasopressors on VA as needed, while the circuit is off. Help and the primed backup circuit called as soon as the clamps are on."
         />
 
         <HarmfulReflex action="Getting the pump turning again before the air source has been dealt with.">

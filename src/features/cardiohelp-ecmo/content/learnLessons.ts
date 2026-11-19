@@ -1340,11 +1340,11 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         preferredCircuitView: 'bedside',
         title: 'Resume: reset the bubble stop, return clamp last',
         instruction: ECMO_AIR_RESUME_SENTENCE,
-        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. The return clamp comes off last: a running pump with the drainage side still clamped cavitates, and the return clamp is the last barrier between any missed air and the patient. Here the whole sequence is one press. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
+        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. Detection, inspection of the whole circuit, isolation and de-airing each protect the patient; the return clamp is one of them, not the only one, and it stays closed until the conditions for reopening are met. The drainage clamp opens first, because the manual does not allow the arterial clamp to be released on a running pump while the venous side is still clamped. Here the whole sequence is one press: an abstraction, not training in the device sequence. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
         actionLabel: ECMO_AIR_RESUME.label,
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
-          'The pump restarts with both limbs open; here that is one press',
+          'The pump restarts and both clamps are open, drainage first; here that is one press',
           'The bubble latch clears and the pump runs',
           'Drainage clamp open, bubble stop reset, return clamp open last',
         ],
@@ -1528,7 +1528,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         target: 'circuit',
         title: 'Confirm the failing oxygenator and exchange it',
         instruction:
-          'Check that pInt and pArt are plausible, confirm the rising pressure drop at an unchanged flow, send a post-oxygenator gas, then call for the primed backup and exchange the oxygenator. On VA, have inotropes and vasopressors running before the pump stops.',
+          'Check that pInt and pArt are plausible, confirm the rising pressure drop at an unchanged flow, send a post-oxygenator gas, then call for the primed backup and exchange the oxygenator. On VA the exchange interrupts the circulation: have inotropes, vasopressors and ventilator support ready, and give them as the patient needs while the circuit is restored.',
         rationale: `${ECMO_OXYGENATOR_FAILURE_SENTENCE} The exchange itself is not simulated: this one step takes the circuit to its state after the exchange.`,
         actionLabel: 'Call for the backup and exchange the oxygenator',
         actions: [{ type: 'CORRECT_FAULT', fault: 'oxygenator-resistance' }],
@@ -1582,10 +1582,10 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'raise-ventilator',
         target: 'patient-monitor',
         title: 'Treat the native lungs: raise the ventilator',
-        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Raise ventilator FiO₂ and PEEP. ELSO’s ECPR guidance says to consider a PEEP of ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
+        instruction: `Now treat. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]} Here, raise the ventilator’s support; at the bedside FiO₂ and PEEP are set for this patient. ELSO’s guidance for patients after ECPR says to consider a PEEP of ${ECMO_NUMBERS.value('va-peep-pulmonary-edema')} when pulmonary edema is part of the problem; it is not a rule for differential hypoxemia. Let six seconds run, then read the right arm and the femoral saturation side by side.`,
         rationale:
-          'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the ventilator is the first lever: FiO₂, PEEP and recruitment. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
-        actionLabel: 'Raise ventilator FiO₂ and PEEP and advance 6 seconds',
+          'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the native lungs are where treatment starts: find the cause (edema, pneumonia, atelectasis, a mucus plug) and set the ventilator for this patient’s lung problem, recruitment, hemodynamics and risk of overdistension. Too much PEEP or a recruitment maneuver can cost blood pressure or overdistend the lung. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
+        actionLabel: 'Raise ventilator support and advance 6 seconds',
         actions: [{ type: 'RAISE_VENTILATOR_SUPPORT' }, ...DIFFERENTIAL_VENTILATOR_SETTLE_ACTIONS],
         expectedResponse: [
           `Right-arm SpO₂ rises to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} and stays flagged low`,
@@ -1611,7 +1611,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'verify-and-escalate-mixing',
         target: 'patient-monitor',
         title: 'Plan for what the ventilator does not treat',
-        instruction: `The ventilator raises what the lungs can deliver. It does not treat why they are failing. Commit to the next moves: ${ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES.moves.join(' ')} If the right arm stays low, change the configuration. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.slice(2).join(' ')} None of these is carried out in this lesson, so this step records the plan and changes no reading.`,
+        instruction: `The ventilator raises what the lungs can deliver. It does not treat why they are failing. Commit to the next moves: ${ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES.moves.join(' ')} If the right arm stays low, weigh what that means for oxygen delivery to this patient’s brain and heart before the configuration is changed; one SpO₂ value is not an automatic trigger. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.slice(2).join(' ')} None of these is carried out in this lesson, so this step records the plan and changes no reading.`,
         rationale: `Confirming named the problem and the ventilator bought oxygen. Neither treated the cause. Ventilator support has a ceiling too: pushed far enough it injures the lungs it is meant to help. ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[1]}`,
         actionLabel: 'Record the plan for the lung cause and V-AV or VV',
         actions: [{ type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' }],
@@ -1653,7 +1653,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'lower-flow',
         target: 'console',
         title: 'Turn circuit flow down',
-        instruction: `Confirm on echo that the ventricle is not ejecting, then bring the pump down to ${LV_UNLOADING_SPEED_RPM} rpm. Flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')}. MAP is the check on how far it can go: keep it ${ECMO_NUMBERS.value('va-map-goal')}.`,
+        instruction: `Confirm on echo that the ventricle is not ejecting, then bring the pump down to ${LV_UNLOADING_SPEED_RPM} rpm. Flow falls to ${ECMO_NUMBERS.value('lv-unloading-flow')} in this simulated patient; that figure is not a goal. How far flow can come down is set by systemic perfusion: keep MAP ${ECMO_NUMBERS.value('va-map-goal')} and watch that the patient is still perfused.`,
         rationale:
           'More VA flow is more afterload for a ventricle that is not ejecting. Flow comes down to the lowest that still perfuses, so the pressure the valve has to open against falls.',
         actionLabel: `Lower pump speed to ${LV_UNLOADING_SPEED_RPM} rpm`,
@@ -1669,7 +1669,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Read what lower flow did by itself',
         instruction:
           'Let three seconds run, then read pulse pressure, aortic-valve opening, native output and MAP on the patient monitor.',
-        rationale: `Less afterload widens the pulse, but a ventricle this weak may still not open the valve. A pulse pressure still ${ECMO_NUMBERS.value('lv-vent-pulsatility')} says lower flow has not been enough.`,
+        rationale: `Less afterload widens the pulse, but a ventricle this weak may still not open the valve. A pulse pressure still ${ECMO_NUMBERS.value('lv-vent-pulsatility')} suggests lower flow has not been enough. Whether the valve opens is seen on echo; the pulse pressure does not prove it either way.`,
         actionLabel: 'Advance 3 seconds and read the ventricle',
         actions: LV_UNLOADING_SETTLE_ACTIONS,
         expectedResponse: [
@@ -1681,11 +1681,11 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'start-inotrope',
         target: 'patient-monitor',
-        title: 'Add an inotrope so the ventricle ejects',
+        title: 'Add an inotrope to help the ventricle eject',
         instruction:
           'Hold flow where it is and start an inotrope, then let three seconds run and read the same signals.',
         rationale:
-          'An inotrope raises contractility, so a ventricle that could not open the valve can now eject against the lower pressure. Some texts call this a chemical vent.',
+          'An inotrope raises contractility, so a ventricle that could not open the valve may now eject against the lower pressure. Some texts call this a chemical vent. It has a cost: more myocardial oxygen demand, and arrhythmia. In this simulated patient it takes both moves, and the monitor shows the valve opening as the pulse pressure passes 10 mmHg, which is the model’s shortcut. A real patient may respond to one move, to both, or to neither and need a mechanical vent.',
         actionLabel: 'Start an inotrope and advance 3 seconds',
         actions: [{ type: 'START_INOTROPE' }, ...LV_UNLOADING_SETTLE_ACTIONS],
         expectedResponse: [
@@ -1712,7 +1712,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     ],
     reassessment: {
       target: 'patient-monitor',
-      instruction: `Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow. The size and speed of this response belong to this simulation. A ventricle that stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')} is vented; do not wait for it to answer.`,
+      instruction: `Recheck on echo that the aortic valve opens, that the ventricle is not distended and that blood is not stagnating in the heart; recheck pulse pressure, pulmonary congestion, perfusion, and circuit flow. The size and speed of this response belong to this simulation. Here the valve reads as opening once the pulse pressure passes 10 mmHg; that is a simplification, and a pulse pressure above the line does not prove that the valve opens or that the ventricle is unloaded. A ventricle that stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')} is vented; do not wait for it to answer.`,
       expectedResponse: [
         `Pulse pressure stays ${ECMO_NUMBERS.value('lv-ejection-pulsatility')}`,
         'The aortic valve is observed to open',
@@ -1831,7 +1831,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Complete isolation: clamp the drainage limb',
         instruction: 'Close the drainage-limb clamp so the circuit is fully isolated.',
         rationale:
-          'With both limbs clamped the patient is off the circuit and has lost the circuit’s share of the circulation. Call for help and the primed backup circuit now, and raise inotropes, vasopressors and the ventilator.',
+          'With both limbs clamped the patient is off the circuit and has lost the circuit’s share of the circulation. Call for help and the primed backup circuit now, and support the patient with inotropes, vasopressors and the ventilator as needed.',
         actionLabel: 'Close the drainage-limb clamp',
         actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true }],
         expectedResponse: ['Drainage clamp CLOSED', 'Circuit isolated from the patient'],
@@ -1855,11 +1855,11 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         preferredCircuitView: 'bedside',
         title: 'Resume: reset the bubble stop, return clamp last',
         instruction: ECMO_AIR_RESUME_SENTENCE,
-        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. The return clamp comes off last: a running pump with the drainage side still clamped cavitates, and the return clamp is the last barrier between any missed air and the patient. Here the whole sequence is one press. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
+        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. Detection, inspection of the whole circuit, isolation and de-airing each protect the patient; the return clamp is one of them, not the only one, and it stays closed until the conditions for reopening are met. The drainage clamp opens first, because the manual does not allow the arterial clamp to be released on a running pump while the venous side is still clamped. Here the whole sequence is one press: an abstraction, not training in the device sequence. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
         actionLabel: ECMO_AIR_RESUME.label,
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
-          'The pump restarts with both limbs open; here that is one press',
+          'The pump restarts and both clamps are open, drainage first; here that is one press',
           'The bubble latch clears and the pump runs',
           'Drainage clamp open, bubble stop reset, return clamp open last',
         ],

@@ -163,18 +163,25 @@ export function EcmoAirFirstMoves({ supportMode }: { readonly supportMode: 'vv' 
   return (
     <section className={BOX_CLASS} data-first-moves="air">
       <h4 className="text-xs font-semibold">
-        {supportMode === 'va'
-          ? 'Massive air on VA: first moves, in order'
-          : 'Massive air on VV: first moves, in order'}
+        {supportMode === 'va' ? 'Massive air on VA: first moves' : 'Massive air on VV: first moves'}
       </h4>
       <OrderedMoves moves={moves} />
       <p className="mt-1">
         <small>{`(${citation([ECMO_AIR_FIRST_MOVES.source])}; ${ECMO_AIR_FIRST_MOVES.source.locator}. Air enters the circuit in ${ECMO_NUMBERS.value('air-entrainment-rate')}.)`}</small>
       </p>
+      <p className="mt-1" data-air-first-moves-note>
+        <small>{ECMO_AIR_FIRST_MOVES.note}</small>
+      </p>
       <h4 className="mt-2 text-xs font-semibold">Resuming on the CARDIOHELP</h4>
       <OrderedMoves moves={ECMO_AIR_RESUME.conditions} />
       <p className="mt-1">
         <small>{`(${citation(ECMO_AIR_RESUME.sources)}; ${ECMO_AIR_RESUME.sources.map((source) => source.locator).join('; ')})`}</small>
+      </p>
+      <p className="mt-1" data-air-resume-manufacturer-note>
+        <small>{ECMO_AIR_RESUME.manufacturerNote}</small>
+      </p>
+      <p className="mt-1" data-air-resume-simulator-note>
+        <small>{ECMO_AIR_RESUME.simulatorNote}</small>
       </p>
     </section>
   )

@@ -274,7 +274,7 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
     ...CHECK,
   },
   'lv-ejection-pulsatility': {
-    label: 'Arterial pulse pressure taken as adequate for left-ventricular ejection on VA ECMO',
+    label: 'Arterial pulse pressure used as a sign of left-ventricular ejection on VA ECMO',
     value: 'above 10 mmHg',
     class: 'expert-reference',
     sources: [
@@ -298,7 +298,7 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
     appliesTo: 'The lesson patient at 2,400 rpm, down from about 4.0 L/min at 3,200 rpm',
     class: 'teaching-convention',
     sources: [cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, pp. 84–85')],
-    note: 'A round figure chosen for this patient. The source gives the rule, the lowest acceptable flow, and no number.',
+    note: 'A round figure chosen for this simulated patient, not a goal or a safe flow for any other. The source gives the rule, the lowest flow that still perfuses, and no number.',
     ...CHECK_LV_UNLOADING,
   },
   'lv-unloading-response': {
@@ -312,7 +312,7 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
       cite(CLARIZIA, 2024, 'Ch. 32, Left Ventricular Distention, p. 329'),
       cite('ecmo-book-ch14', 2023, 'Ch. 14 Physiology of Retrograde Flow, venting options, p. 153'),
     ],
-    note: 'The sources give the direction and the 10 mmHg line, not a size or a rate. The values are set so that either move alone stays under the line and the two together cross it. A real ventricle may not respond.',
+    note: 'The sources give the direction and the 10 mmHg line, not a size or a rate. The values are set so that, in this simulated patient, either move alone stays under the line and the two together cross it. They are not the size of response to expect: a patient may respond to one move, to both, or to neither and need mechanical unloading. The model opens the aortic valve when the pulse pressure crosses the line, which is a simplification; at the bedside valve opening, distension and stasis are assessed on echo.',
     ...CHECK_LV_UNLOADING,
   },
   'mixing-point-pulse-pressure': {
@@ -357,12 +357,14 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
     value: 'at least 10 cmH₂O',
     class: 'guideline',
     sources: [cite(ELSO_ECPR, 2021, 'Further Care Within the First Few Hours')],
-    note: 'Written for patients after ECPR, as "consider". The nearest published PEEP for this decision. No source read gives a PEEP or FiO₂ for differential hypoxemia itself.',
+    appliesTo:
+      'Patients after ECPR, as "consider"; not a recommendation for differential hypoxemia',
+    note: 'Written for patients after ECPR, as "consider". No source read gives a PEEP or FiO₂ for differential hypoxemia itself: FiO₂ and PEEP are set for the patient’s lung problem, recruitment, hemodynamics and risk of overdistension.',
     ...CHECK_DIFFERENTIAL_HYPOXEMIA,
     checkedBy: 'Claude, against the full text in PubMed Central',
   },
   'differential-ventilator-right-arm': {
-    label: 'Simulated right-arm SpO₂ with the ventilator raised',
+    label: 'Illustrative right-arm SpO₂ in this simulation with the ventilator raised',
     value: '86%',
     appliesTo: 'The lesson patient, from 82%, and the Practice case patient, from 78%',
     class: 'teaching-convention',
@@ -375,7 +377,7 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
       cite(ELSO_DUAL_CIRCULATION, 2024, 'Implications for clinical management, Hypoxemia'),
       cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, p. 86'),
     ],
-    note: 'The sources give the direction, not a size or a rate. The value is set to improve and stay low, so the plan still has a reason, and it matches the ventilator card in the Practice case. A real shunt may not respond.',
+    note: 'The sources give the direction, not a size or a rate. The value is set to improve and stay low, so the plan still has a reason, and it matches the ventilator card in the Practice case. It is this model’s illustration: not a clinical target, and not the size of response to expect. A real shunt may not respond.',
     ...CHECK_DIFFERENTIAL_HYPOXEMIA,
   },
   'air-entrainment-rate': {
@@ -390,24 +392,29 @@ export const ECMO_NUMBERS = defineTeachingNumbers('cardiohelp-ecmo', {
 export type EcmoNumberId = (typeof ECMO_NUMBERS.rows)[number]['id']
 
 /**
- * First moves for air in the circuit, in the order the source's algorithm gives them.
- * Taha et al. 2024, Ch. 8, pp. 130–131.
+ * First moves for massive air in the circuit. Taha et al. 2024, Ch. 8, pp. 130–131 (text and
+ * algorithm), re-read 2026-11-18. Owner ruling `ecmo-365-assembled-and-unsourced-lines`
+ * (2026-11-14): VA and VV are told apart; where air threatens the return limb the patient is
+ * isolated at once, before the source is looked for (the source's VV column lists the search
+ * first); and support for the patient is given as the patient needs it, in parallel.
  */
 export const ECMO_AIR_FIRST_MOVES = Object.freeze({
   massiveVa: [
-    'Clamp the circuit and stop the pump.',
-    'Call for help and the backup circuit.',
-    'Aspirate air seen in the arterial limb.',
-    'Raise ventilator and inotropic support.',
+    'Clamp the arterial return limb and stop the pump, then clamp the drainage limb: on VA, air that passes goes to the systemic circulation.',
+    'Call for help at once: the ECMO team and the backup circuit.',
+    'Find and correct the source of the air; aspirate air seen in the arterial limb and de-air the circuit.',
+    'Support the patient while the circuit is down: ventilation, and inotropes or vasopressors as this patient needs.',
     'Exchange the circuit if the air cannot be cleared quickly.',
   ],
   massiveVv: [
-    'Find where the air is; if it is in the return limb, clamp at once.',
-    'Find and fix the source.',
-    'Call for help and the backup circuit.',
-    'Aspirate air seen in the arterial limb.',
+    'If air is in the return limb or heading for it, clamp the return limb at once. Protecting the patient comes before finding the source.',
+    'Call for help at once: the ECMO team and the backup circuit.',
+    'Find and correct the source of the air; aspirate air seen in the return limb and de-air the circuit.',
+    'Support the patient on the ventilator while extracorporeal flow is reduced or stopped.',
     'Exchange the circuit if the air cannot be cleared quickly.',
   ],
+  /** Printed under the list, because the list is not the source's order word for word. */
+  note: 'Adapted from the source’s algorithm: where air threatens the return limb the clamp comes before the search for the source, and support for the patient runs alongside.',
   source: cite(TAHA, 2024, 'Ch. 8 Complications and Emergencies, pp. 130–131'),
 } as const)
 
@@ -419,10 +426,10 @@ export const ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES = Object.freeze({
   recognize:
     'Measure oxygenation in the right arm (right radial PaO₂ or SpO₂) or with a forehead probe.',
   moves: [
-    'Improve native lung oxygenation with the ventilator.',
+    'Improve native lung oxygenation with the ventilator, set for this patient.',
     'Raising VA flow moves the mixing point but loads the recovering left ventricle; use it as a temporary step.',
-    'If the heart has recovered and the lungs have not, convert to VV.',
-    'If both heart and lungs still need support, add a venous return limb (V-AV).',
+    'If the heart has recovered and the lungs have not, consider converting to VV.',
+    'If both heart and lungs still need support, consider a venous return limb (V-AV). Both are decisions for the ECMO team and this patient.',
   ],
   source: cite(TAHA, 2024, 'Ch. 6 Physiology II: Venoarterial ECMO, p. 86'),
 } as const)
@@ -447,23 +454,42 @@ export const ECMO_DIFFERENTIAL_HYPOXEMIA_CAUSES = Object.freeze({
  * What the differential-hypoxemia lesson carries out and what it only plans. The drill's Explain is
  * its authored panel, so the panel and the scenario's debrief print this one sentence.
  */
-export const ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD = `In this lesson the right radial gas and the ventilator are carried out. The gas confirms the pattern and changes no reading. The ventilator lifts the right arm to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} while the femoral and post-oxygenator saturations stay high, because it acts on the native lungs. The lung cause and V-AV or VV are a recorded plan, so a right arm that stays low on the monitor is the patient before those moves.`
+export const ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD = `In this lesson the right radial gas and the ventilator are carried out. The gas confirms the pattern and changes no reading. The ventilator lifts this simulated patient’s right arm to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')} while the femoral and post-oxygenator saturations stay high, because it acts on the native lungs. That figure is the model’s illustration, not a target or the response to expect. Treating the lung cause and V-AV or VV are decisions made for the individual patient and are only a recorded plan here, so a right arm that stays low on the monitor is the patient before those moves.`
 
 /**
- * Resuming after an arterial bubble stop on the CARDIOHELP-i, in order.
- * Instructions for Use, revision 2.3: §6.4.2 Resetting the Bubble Stop, pp. 146–147, and
- * §2.2.4 Starting the Perfusion, p. 19. The manual prints the reset and the clamp rules in two
- * places; the order below puts them together and adds nothing to either.
+ * Resuming after an arterial bubble stop on the CARDIOHELP-i.
+ *
+ * Instructions for Use, revision 2.3 (2025-01), re-read 2026-11-18. What the manual prints:
+ * - §6.4.2 Resetting the Bubble Stop, pp. 146–147: the warning that the cause is corrected and the
+ *   system is free of bubbles before the sensor is reset; and the reset itself (Interventions,
+ *   Bubbles, Reset, Confirm), on which the pump starts again.
+ * - §2.2.4, pp. 18–19: before clamping, RPM mode, the clamp behind the pump and the speed to 0 rpm;
+ *   a clamp is opened only once pump pressure is 10 to 20 mmHg above the pressure behind it; the
+ *   arterial clamp is not released on a running pump while the venous side is still clamped; a
+ *   clamp is not opened at high speed.
+ * - pp. 20 and 134: after an active reset of the bubble alarm the pump returns to the speed last set.
+ * - The message tables: the remedy for a detected bubble is to clamp, de-air or replace the system.
+ * It prints no single sequence for resuming after air. The order below is assembled from those
+ * rules. Clamping, de-airing and the decision to reopen are general ECMO emergency practice and the
+ * unit's own protocol (owner ruling `ecmo-365-assembled-and-unsourced-lines`, 2026-11-14).
  */
 export const ECMO_AIR_RESUME = Object.freeze({
   /** The action label everywhere the one simulated resumption step is offered. */
   label: 'Reset the bubble stop; open the return clamp last',
   conditions: [
-    'The source of the air is fixed and the circuit is free of bubbles.',
+    'First: the source of the air is found and corrected, and the whole circuit has been inspected and is free of bubbles.',
+    'The return clamp stays closed until then.',
+    'In RPM mode, turn the set speed down: when the reset is confirmed the pump returns to the speed last set.',
     'Open the drainage clamp.',
-    'On the Interventions screen touch Bubbles, then Reset, then Confirm. The pump restarts.',
-    `Open the return clamp last, at low speed, once pump pressure is ${ECMO_NUMBERS.value('clamp-release-pressure')} above the pressure beyond the clamp. Then bring flow back up.`,
+    'On the Interventions screen touch Bubbles, then Reset, then Confirm. The pump restarts on Confirm.',
+    `Bring the speed up until pump pressure is ${ECMO_NUMBERS.value('clamp-release-pressure')} above the pressure beyond the return clamp, then open the return clamp last. Then bring flow back up and reassess the patient.`,
   ],
+  /** What is the manufacturer's and what is not, printed under the steps. */
+  manufacturerNote:
+    'From the CARDIOHELP instructions: the warning before a reset; the reset itself, after which the pump returns to the speed last set; and the clamp rules (RPM mode before clamping; the venous side open before the arterial clamp is released; the pressure margin; not at high speed). The instructions name the remedy for air (clamp, de-air or replace the system) and leave how to de-air to the disposable’s own instructions. They print no clamp order for resuming: this one is assembled from those rules. Follow your unit’s protocol.',
+  /** The simulator performs all of it with one control. */
+  simulatorNote:
+    'In this simulator the whole resumption is one button. That is an abstraction, not training in the device sequence.',
   sources: [
     cite('ifu-console-workflow', 2025, '§6.4.2 Resetting the Bubble Stop, pp. 146–147'),
     cite(IFU, 2025, '§2.2.4 Starting the Perfusion, p. 19'),
@@ -471,7 +497,7 @@ export const ECMO_AIR_RESUME = Object.freeze({
 } as const)
 
 /** The resume conditions as one sentence, for a rationale or a debrief line. */
-export const ECMO_AIR_RESUME_SENTENCE = `Resume only when the source is fixed and the circuit is free of bubbles: open the drainage clamp, reset the bubble stop on the Interventions screen (Bubbles, Reset, Confirm), which restarts the pump, and open the return clamp last, at low speed, once pump pressure is ${ECMO_NUMBERS.value('clamp-release-pressure')} above the pressure beyond the clamp.`
+export const ECMO_AIR_RESUME_SENTENCE = `Resume only when the source of the air is corrected and the whole circuit has been inspected and is free of bubbles; the return clamp stays closed until then. Then turn the set speed down, open the drainage clamp, reset the bubble stop on the Interventions screen (Bubbles, Reset, Confirm), which restarts the pump at the speed last set, and open the return clamp last, once pump pressure is ${ECMO_NUMBERS.value('clamp-release-pressure')} above the pressure beyond the clamp, by the manufacturer’s instructions and your unit’s protocol.`
 
 /**
  * Driving the disposable by hand when the console has failed.
@@ -501,7 +527,7 @@ export const ECMO_LV_DISTENSION_MOVES = Object.freeze({
     'Narrow or absent arterial pulsatility, an aortic valve that does not open on echo, a distended ventricle, and worsening pulmonary edema, with flow and mean pressure that look acceptable.',
   moves: [
     'Titrate VA flow down to the lowest that still perfuses.',
-    'Add or raise an inotrope so the ventricle ejects.',
+    'Add or raise an inotrope to help the ventricle eject.',
     'Take volume off with diuretics or renal replacement.',
     `Vent the ventricle if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}: an intra-aortic balloon pump or an Impella, an atrial septostomy, or a surgical vent.`,
   ],

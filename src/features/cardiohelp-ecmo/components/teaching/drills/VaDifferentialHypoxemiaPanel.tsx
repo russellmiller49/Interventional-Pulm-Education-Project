@@ -241,12 +241,12 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             {
               candidate: 'The native lungs, the ventilator, and the recovering ventricle',
               standing:
-                'The reason the upper-body stream is poorly oxygenated in the first place, and so the first thing to treat: ventilator FiO₂, PEEP and recruitment.',
+                'The reason the upper-body stream is poorly oxygenated in the first place, and so the first thing to treat: the lung problem itself, with the ventilator set for this patient.',
             },
             {
               candidate: 'Cannulation strategy',
               standing:
-                'The definitive answer when the ventilator is not enough: conversion to VV if the heart has recovered, or a venous return limb (V-AV) if both heart and lungs still need support.',
+                'Considered when the ventilator is not enough: conversion to VV if the heart has recovered, or a venous return limb (V-AV) if both heart and lungs still need support. A decision for the ECMO team and this patient.',
             },
           ]}
         />
@@ -263,7 +263,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
         <ThreeDomainResponse
           device="Circuit settings left alone while the pattern is established. Circuit flow and pArt are read as circuit quantities, neither of which reports systemic perfusion or patient arterial pressure."
           circuitOrGas="Circuit performance confirmed — membrane output, gradient, cannula position — so that the circuit can be excluded as the limitation rather than assumed adequate."
-          patient="Right radial blood gas obtained; native ejection and native lung function assessed; ventilator FiO₂ and PEEP raised; V-AV or conversion to VV planned if the right arm stays low."
+          patient="Right radial blood gas obtained; native ejection and native lung function assessed; ventilator support raised; V-AV or conversion to VV considered if the right arm stays low."
         />
 
         <HarmfulReflex action="Raising pump speed reflexively, because a saturation of this level is read as the patient being under-supported.">

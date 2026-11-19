@@ -484,10 +484,16 @@ describe('configuration is taught as five distinct changes, not one lever', () =
     expect(native.doesNotChange).toMatch(
       /content of the native stream rather than the position of the mixing point/i,
     )
-    // Teaching-first (2026-10-08): this is taught as the first move, with what the move is. It
-    // still carries no ventilator target: no number to reach.
-    expect(native.caution).toMatch(/first move/i)
-    expect(native.caution).toMatch(/ventilator FiO₂, PEEP and recruitment/i)
+    // Teaching-first (2026-10-08): this comes first, with what the move is, and no ventilator
+    // target. Owner rulings of 2026-11-14 (ecmo-365 point 3, ecmo-differential-hypoxemia-86 point 3):
+    // the lung problem is treated and the ventilator is set for the patient; no blanket
+    // "FiO₂, PEEP and recruitment".
+    expect(native.caution).toMatch(/This comes first/i)
+    expect(native.caution).toMatch(
+      /treat the native lung problem and set the ventilator for this patient/i,
+    )
+    expect(native.caution).toMatch(/FiO₂ and PEEP are individualized/i)
+    expect(native.caution).not.toMatch(/recruitment/i)
     expect(strategyText('improve-native-lung-zone')).not.toMatch(/tidal volume|driving pressure/i)
   })
 

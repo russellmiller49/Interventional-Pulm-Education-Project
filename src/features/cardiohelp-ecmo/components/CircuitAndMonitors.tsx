@@ -1791,7 +1791,7 @@ export function PatientMonitor({
             ) : null}
             {differentialResponse?.ventilatorRaised ? (
               <div data-differential-response="ventilator">
-                <span>Ventilator FiO₂ and PEEP</span>
+                <span>Ventilator support</span>
                 <strong>Raised</strong>
               </div>
             ) : null}

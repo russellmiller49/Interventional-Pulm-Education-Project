@@ -97,7 +97,7 @@ export const VA_CONFIGURATION_STRATEGIES: readonly VaConfigurationStrategy[] = [
     doesNotChange:
       'It does not change the cannulation topology and it does not move where the two streams meet. It addresses the content of the native stream rather than the position of the mixing point.',
     caution:
-      'This is the first move, because nothing about the cannulation has to change: ventilator FiO₂, PEEP and recruitment. It helps only as far as the native lungs can still exchange gas.',
+      'This comes first, because nothing about the cannulation has to change: treat the native lung problem and set the ventilator for this patient. FiO₂ and PEEP are individualized; more is not always better. It helps only as far as the native lungs can still exchange gas.',
     modelBoundary:
       'Not available as a manoeuvre here. This simulation authors the two arterial saturations from the loaded case rather than deriving them from what the native lungs are doing, so native-lung recovery cannot be applied and watched.',
     evidenceIds: [...DUAL_CIRCULATION_SOURCES, 'elso-adult-va-2021'],

@@ -351,12 +351,14 @@ describe('the resumption is taught from the register', () => {
   it('gives the order: source fixed, drainage clamp, reset, return clamp last', () => {
     const conditions = ECMO_AIR_RESUME.conditions
     const index = (pattern: RegExp) => conditions.findIndex((line) => pattern.test(line))
-    const cleared = index(/source of the air is fixed.*free of bubbles/i)
+    const cleared = index(/source of the air is found and corrected.*free of bubbles/i)
+    const held = index(/The return clamp stays closed until then/i)
     const drainage = index(/open the drainage clamp/i)
     const reset = index(/Bubbles, then Reset, then Confirm/i)
     const returnClamp = index(/open the return clamp last/i)
     expect(cleared).toBe(0)
-    expect(drainage).toBeGreaterThan(cleared)
+    expect(held).toBe(1)
+    expect(drainage).toBeGreaterThan(held)
     expect(reset).toBeGreaterThan(drainage)
     expect(returnClamp).toBeGreaterThan(reset)
     expect(returnClamp).toBe(conditions.length - 1)
@@ -364,7 +366,7 @@ describe('the resumption is taught from the register', () => {
     expect(conditions[returnClamp]).toContain(ECMO_NUMBERS.value('clamp-release-pressure'))
     expect(ECMO_AIR_RESUME_SENTENCE).toContain(ECMO_NUMBERS.value('clamp-release-pressure'))
     expect(ECMO_AIR_RESUME_SENTENCE).toMatch(
-      /source is fixed.*open the drainage clamp.*reset the bubble stop.*return clamp last/i,
+      /source of the air is corrected.*return clamp stays closed until then.*open the drainage clamp.*reset the bubble stop.*return clamp last/i,
     )
   })
 
@@ -424,7 +426,18 @@ describe('massive air is keyed on the first moves, in order', () => {
       expect(moves.some((move) => /clamp/i.test(move))).toBe(true)
       expect(moves.some((move) => /aspirate/i.test(move))).toBe(true)
     }
-    expect(ECMO_AIR_FIRST_MOVES.massiveVa[0]).toMatch(/clamp the circuit and stop the pump/i)
+    // IFU pp. 18–19: the arterial side is clamped and the pump brought to a stop before the venous side.
+    expect(ECMO_AIR_FIRST_MOVES.massiveVa[0]).toMatch(
+      /clamp the arterial return limb and stop the pump, then clamp the drainage limb/i,
+    )
+    // Owner ruling ecmo-365 point 5 (2026-11-14): on VV the patient is isolated before the search.
+    expect(ECMO_AIR_FIRST_MOVES.massiveVv[0]).toMatch(
+      /clamp the return limb at once\. Protecting the patient comes before finding the source/i,
+    )
+    const find = ECMO_AIR_FIRST_MOVES.massiveVv.findIndex((move) =>
+      /find and correct the source/i.test(move),
+    )
+    expect(find).toBeGreaterThan(0)
   })
 
   it.each(BUBBLE_SCENARIOS)('%s keys its prediction on clamping', (scenarioId) => {

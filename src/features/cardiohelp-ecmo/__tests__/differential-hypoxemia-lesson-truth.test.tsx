@@ -182,7 +182,7 @@ describe('each action the lesson offers', () => {
     const step = lessonStep('raise-ventilator')
     const after = dispatchAll(before, step.actions)
 
-    expect(step.actionLabel).toBe('Raise ventilator FiO₂ and PEEP and advance 6 seconds')
+    expect(step.actionLabel).toBe('Raise ventilator support and advance 6 seconds')
     expect(step.actions[0]).toEqual({ type: 'RAISE_VENTILATOR_SUPPORT' })
     expect(after.simulationTime - before.simulationTime).toBe(6)
 
@@ -201,7 +201,7 @@ describe('each action the lesson offers', () => {
 
     expect(monitorAlarms(after)).toContain(LOW_RIGHT_ARM_ALARM)
     expect(after.scenario.activeFaults).toContain(FAULT)
-    expect(after.history.map((entry) => entry.label)).toContain('Raised ventilator FiO₂ and PEEP')
+    expect(after.history.map((entry) => entry.label)).toContain('Raised ventilator support')
   })
 
   it('the right arm climbs over the clock and does not jump', () => {
@@ -456,9 +456,15 @@ describe('the copy and the register agree with the model', () => {
     const record = ECMO_DIFFERENTIAL_HYPOXEMIA_LESSON_RECORD
     expect(record).toContain('The gas confirms the pattern and changes no reading.')
     expect(record).toContain(
-      `The ventilator lifts the right arm to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}`,
+      `The ventilator lifts this simulated patient’s right arm to ${ECMO_NUMBERS.value('differential-ventilator-right-arm')}`,
     )
-    expect(record).toContain('The lung cause and V-AV or VV are a recorded plan')
+    // Owner ruling ecmo-differential-hypoxemia-86 (2026-11-14), points 1 and 6.
+    expect(record).toContain(
+      'That figure is the model’s illustration, not a target or the response to expect.',
+    )
+    expect(record).toContain(
+      'are decisions made for the individual patient and are only a recorded plan here',
+    )
     expect(cardiohelpScenarioById.get(SCENARIO_ID)?.debrief.correctWorkflow).toContain(record)
   })
 
@@ -607,7 +613,7 @@ describe('on the patient monitor', () => {
     render(<PatientMonitor state={fresh()} />)
     expect(monitorValue('Right-arm SpO₂')).toBe('82.0%')
     expect(monitorValue('Right radial gas')).toBeNull()
-    expect(monitorValue('Ventilator FiO₂ and PEEP')).toBeNull()
+    expect(monitorValue('Ventilator support')).toBeNull()
     expect(monitorValue('Lung cause, V-AV or VV')).toBeNull()
   })
 
@@ -615,7 +621,7 @@ describe('on the patient monitor', () => {
     render(<PatientMonitor state={walkTo('confirm-right-arm')} />)
     expect(monitorValue('Right-arm SpO₂')).toBe('82.0%')
     expect(monitorValue('Right radial gas')).toBe('SaO₂ 82.0% at 0 s')
-    expect(monitorValue('Ventilator FiO₂ and PEEP')).toBeNull()
+    expect(monitorValue('Ventilator support')).toBeNull()
   })
 
   it('renders every patient reading the steps promise', () => {
@@ -645,7 +651,7 @@ describe('on the patient monitor', () => {
     expect(monitorValue('Right-arm SpO₂')).toBe('86.0%')
     expect(monitorValue('Femoral arterial SpO₂')).toBe('98.5%')
     expect(monitorValue('Right radial gas')).toBe('SaO₂ 86.0% at 6 s')
-    expect(monitorValue('Ventilator FiO₂ and PEEP')).toBe('Raised')
+    expect(monitorValue('Ventilator support')).toBe('Raised')
     expect(monitorValue('Lung cause, V-AV or VV')).toBe('Planned, not carried out')
     expect(monitorValue('Pulse pressure')).toBe('22 mmHg')
     expect(screen.getByText('Attention: low simulated upper-body oxygenation')).toBeInTheDocument()
@@ -668,7 +674,7 @@ describe('on the real Learn stage', () => {
     expect(latestState().patient).toEqual(opening)
     expect(latestState().scenario.differentialResponse?.rightRadialGas?.saturation).toBe(82)
 
-    performAndAdvance(/Raise ventilator FiO₂ and PEEP and advance 6 seconds/i)
+    performAndAdvance(/Raise ventilator support and advance 6 seconds/i)
     expect(latestState().patient.rightRadialSpo2).toBe(86)
     expect(latestState().patient.femoralArterialSpo2).toBeGreaterThanOrEqual(98)
     expect(latestState().patient.pulsePressure).toBe(opening.pulsePressure)

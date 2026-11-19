@@ -5,7 +5,7 @@ import {
 
 import type { PredictionControl, PredictionDirection } from '../engine/types'
 
-import { ECMO_NUMBERS } from './teachingNumbers'
+import { ECMO_AIR_RESUME_SENTENCE, ECMO_NUMBERS } from './teachingNumbers'
 
 /**
  * The prediction a learner answers before acting, one for each of the twenty Learn lessons.
@@ -785,8 +785,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         },
       ],
       correctChoiceIds: ['isolate-then-eliminate-source'],
-      explanation:
-        'The bubble stop halts the pump; it does not clamp anything or remove air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit, support the patient on the ventilator, find and close the source, and aspirate the air; exchange the circuit if it cannot be cleared quickly. Resume only when the source is fixed and the circuit is free of bubbles: drainage clamp open, bubble stop reset on the Interventions screen (which restarts the pump), return clamp open last.',
+      explanation: `The bubble stop halts the pump; it does not clamp anything or remove air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit, support the patient with the ventilator and other measures as needed, find and close the source, and aspirate the air; exchange the circuit if it cannot be cleared quickly. ${ECMO_AIR_RESUME_SENTENCE}`,
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-anomaly-boundary',
@@ -1307,7 +1306,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       ],
       correctChoiceIds: ['verify-upper-body-and-read-both-circulations'],
       explanation:
-        'On femoral venoarterial support, oxygenated circuit blood travels up the aorta and meets blood the heart ejects from the native lungs. When the heart recovers before the lungs, the aortic arch gets the desaturated native blood, and only a right-arm reading shows it. Confirm with a right radial gas or saturation. First improve native lung oxygenation with the ventilator. Raising circuit flow moves the mixing point toward the aortic root but loads the recovering left ventricle, so use it as a temporary step. If the right arm stays low, convert to VV when the heart has recovered, or add a venous return limb (V-AV) when both heart and lungs still need support.',
+        'On femoral venoarterial support, oxygenated circuit blood travels up the aorta and meets blood the heart ejects from the native lungs. When the heart recovers before the lungs, the aortic arch gets the desaturated native blood, and only a right-arm reading shows it. Confirm with a right radial gas or saturation, and weigh what it means for oxygen delivery to the brain and heart. First treat the native lung problem and adjust the ventilator for this patient. Raising circuit flow moves the mixing point toward the aortic root but loads the recovering left ventricle, so use it as a temporary step. If the right arm stays low, consider converting to VV when the heart has recovered, or adding a venous return limb (V-AV) when both heart and lungs still need support: decisions for the ECMO team and this patient.',
       evidenceIds: [
         'elso-adult-va-2021',
         'elso-neuro-monitoring-2024',
@@ -1391,11 +1390,11 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Call for a mechanical vent of the left ventricle now on the flat arterial trace, and let the team work out the rest when they arrive.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The urgency is right and a vent may be needed. But a flat trace alone also fits a damped line, tamponade or a tension pneumothorax. Echo separates them in minutes, and lowering flow and adding an inotrope start before a vent arrives.',
+            'The urgency is right and a vent may be needed. But a flat trace alone also fits a damped line, tamponade or a tension pneumothorax. Echo separates them in minutes, and lowering flow or adding an inotrope can start before a vent arrives.',
         },
       ],
       correctChoiceIds: ['characterize-lv-loading-and-escalate'],
-      explanation: `Retrograde flow raises the pressure the left ventricle ejects against. A ventricle that cannot open the aortic valve fills, distends and backs up into the lungs while circuit flow and mean pressure look fine. Then, in order: titrate circuit flow down to the lowest that perfuses, add or raise an inotrope so the ventricle ejects, take volume off with diuretics or renal replacement, and vent the ventricle (IABP, Impella, septostomy or surgical vent) if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}.`,
+      explanation: `Retrograde flow raises the pressure the left ventricle ejects against. A ventricle that cannot open the aortic valve fills, distends and backs up into the lungs while circuit flow and mean pressure look fine. Echo shows whether the aortic valve opens and how distended the ventricle is. The options, chosen for this patient: titrate circuit flow down to the lowest that still perfuses, add or raise an inotrope to help the ventricle eject (it also raises myocardial oxygen demand), take volume off with diuretics or renal replacement, and vent the ventricle (IABP, Impella, septostomy or surgical vent) if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}. A patient may respond to one, several or none of these.`,
       evidenceIds: [
         'elso-adult-va-2021',
         'ecmo-book-ch9',
@@ -1648,7 +1647,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Start a vasopressor for the falling arterial pressure, and leave the circuit alone until the pressure has come back up.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'Pressure is falling because circuit flow stopped, not because tone changed. Vasopressors and inotropes belong in the sequence, after the clamps. Alone they leave air in an open arterial limb.',
+            'Pressure is falling because circuit flow stopped, not because tone changed. Vasopressors and inotropes may be needed alongside the clamps, not instead of them. Alone they leave air in an open arterial limb.',
         },
         {
           id: 'exchange-the-oxygenator',
@@ -1660,8 +1659,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         },
       ],
       correctChoiceIds: ['isolate-then-resolve-source'],
-      explanation:
-        'The bubble stop halts the pump; it does not clamp the circuit or remove the air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit. Support the patient with the ventilator, inotropes and vasopressors. Find and close the source and aspirate the air; exchange the circuit if it cannot be cleared quickly. Resume only when the source is fixed and the circuit is free of bubbles: drainage clamp open, bubble stop reset on the Interventions screen (which restarts the pump), return clamp open last.',
+      explanation: `The bubble stop halts the pump; it does not clamp the circuit or remove the air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit. Support the patient with the ventilator, inotropes and vasopressors as needed, alongside the work on the circuit. Find and close the source and aspirate the air; exchange the circuit if it cannot be cleared quickly. ${ECMO_AIR_RESUME_SENTENCE}`,
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-anomaly-boundary',
