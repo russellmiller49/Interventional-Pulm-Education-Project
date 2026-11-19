@@ -78,7 +78,11 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
       'citrate-calcium-leaves-in-effluent',
     ])
     for (const statement of sourced) {
-      expect(statement.claimSupport.supportingSourceIds).toEqual(['CITRATE-SIAARTI-2023-MECHANISM'])
+      // The AJKD Core Curriculum joined these two on the owner's ruling of 2026-11-14 (p. 781).
+      expect(statement.claimSupport.supportingSourceIds).toEqual([
+        'CITRATE-SIAARTI-2023-MECHANISM',
+        'REVIEW-CKRT-CORE-2025',
+      ])
       expect(statement.claimSupport.basis).toMatch(/literature/i)
     }
   })
@@ -103,7 +107,11 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
       expect(isResolvableCrrtSourceId(id)).toBe(true)
       expect(overlay.sourceIds).not.toContain(id)
       expect(crrtSourceSupportsClaim(id, 'circuit-topology')).toBe(false)
-      expect(crrtSourceSupportsClaim(id, 'citrate-pharmacology')).toBe(false)
+      // The AJKD Core Curriculum supports citrate pharmacology from its own text (p. 781), by the
+      // owner's ruling of 2026-11-14. The other two have no citrate passage registered.
+      expect(crrtSourceSupportsClaim(id, 'citrate-pharmacology')).toBe(
+        id === 'REVIEW-CKRT-CORE-2025',
+      )
     }
     // Whatever the overlay does cite must support what the overlay actually says.
     expect(unsupportedCrrtCitrateOverlayCitations()).toEqual([])

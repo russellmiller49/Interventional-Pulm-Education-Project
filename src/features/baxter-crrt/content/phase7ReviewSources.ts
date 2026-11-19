@@ -87,16 +87,16 @@ const candidateClinicalSources = [
   {
     id: 'GUID-KDIGO-AKI-2012',
     claim:
-      'The guideline frames RRT initiation around life-threatening fluid, electrolyte, or acid-base change and broader clinical context, and distinguishes prescribed from delivered dose with ongoing assessment.',
+      'The guideline frames RRT initiation around life-threatening fluid, electrolyte, or acid-base change and broader clinical context, and distinguishes prescribed from delivered dose with ongoing assessment. It suggests continuous rather than standard intermittent therapy for hemodynamically unstable patients (5.6.2, grade 2B) and for acute brain injury, raised intracranial pressure or generalized brain edema (5.6.3, grade 2B). For the circuit, where the bleeding risk is not increased it suggests regional citrate rather than heparin when citrate is not contraindicated (5.3.2.2, grade 2B) and heparin when it is (5.3.2.3, grade 2C); where the bleeding risk is increased it suggests citrate rather than no anticoagulant (5.3.3.1, grade 2C).',
     value:
       'Candidate clinical context only; no local workflow, device behavior, or patient-specific target is supplied.',
     sourceTitle: 'KDIGO Clinical Practice Guideline for Acute Kidney Injury',
     sourceType: 'guideline' as const,
     documentVersion: 'Kidney International Supplements. 2012;2:1–138',
     pageOrSection:
-      'Sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, and 5.8.4 · https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf',
+      'Sections 5.1.1, 5.1.2, 5.3.2.2, 5.3.2.3, 5.3.3.1, 5.6.2, 5.6.3, 5.8.1, 5.8.2, and 5.8.4 · https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf',
     implementationLocation:
-      'content/phase7ReviewCases.ts · CRRT-01, CRRT-02, CRRT-05, CRRT-06, CRRT-07, CRRT-11, and CRRT-15',
+      'content/phase7ReviewCases.ts · CRRT-01, CRRT-02, CRRT-05, CRRT-06, CRRT-07, CRRT-11, and CRRT-15 · content/completeCases.ts · CRRT-03 and CRRT-09',
     reviewer: null,
     reviewStatus: PENDING,
   },
@@ -184,14 +184,15 @@ const candidateClinicalSources = [
   {
     id: 'REVIEW-CKRT-CORE-2025',
     claim:
-      'The review describes diffusion, convection, ultrafiltration, adsorption, and continuous kidney-replacement modality concepts; when continuous therapy is preferred over intermittent therapy and how modality is chosen; timing of initiation and discontinuation; effluent dose, the gap between prescribed and delivered dose, filtration fraction and blood flow; vascular access; heparin and regional citrate anticoagulation and their complications; drug dosing, nutrition, and proposed CRRT quality indicators.',
+      'The review describes diffusion, convection, ultrafiltration, adsorption, and continuous kidney-replacement modality concepts; when continuous therapy is preferred over intermittent therapy and how modality is chosen; timing of initiation and discontinuation; effluent dose, the gap between prescribed and delivered dose, filtration fraction and blood flow; vascular access; heparin and regional citrate anticoagulation and their complications; drug dosing, nutrition, and proposed CRRT quality indicators. On regional citrate (pp. 781–784): citrate is given before the filter and chelates calcium to a low intra-filter ionized calcium; most leaves in the effluent and the rest is metabolized, mainly by the liver, to bicarbonate; calcium is replaced in the return limb or systemically; filter and systemic ionized calcium are followed to titrate citrate and calcium; lactate is a rough guide to the risk of accumulation; and accumulation (a total-to-ionized calcium ratio of 2.5 or more, later an anion gap) is told apart from the metabolic alkalosis of citrate excess.',
     value:
       'A core-curriculum review for nephrology trainees: it summarizes trials and expert practice and gives no graded recommendations. Its quality benchmarks are proposals the authors say need validation.',
     sourceTitle: 'Continuous Kidney Replacement Therapies: Core Curriculum 2025',
     sourceType: 'peer-reviewed' as const,
-    documentVersion: 'Am J Kidney Dis. 2025;85:767–786 · PMID 40072400',
+    documentVersion:
+      'Am J Kidney Dis. 2025;85:767–786 · PMID 40072400 · corrected by a published erratum: Am J Kidney Dis. 2025;86(3):422 · PMID 40846440',
     pageOrSection:
-      'DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004',
+      'DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004: in Case 3 (p. 780) the dialysate rate is 2,000 mL/h, and in Table 2 (p. 772) the example prescriptions are in mL/kg/h',
     implementationLocation:
       'content/learnLessons.ts · lessons 1, 3, 4, 6, 7 and 8 · content/teachingNumbers.ts',
     reviewer: null,

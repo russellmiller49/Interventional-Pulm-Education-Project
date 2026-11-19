@@ -114,6 +114,7 @@ describe('live pressure profile — provenance', () => {
   it('keeps citrate publication support separate from device pressure provenance', () => {
     expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([
       'CITRATE-SIAARTI-2023-MECHANISM',
+      'REVIEW-CKRT-CORE-2025',
     ])
     expect(crrtCitrateSourceGapTermIds()).toEqual([])
   })

@@ -43,10 +43,44 @@ describe('an evidence ID that resolves is not thereby a supporting ID', () => {
     expect(unresolvableCrrtSourceIds(CLINICAL_CONTEXT_IDS)).toEqual([])
   })
 
-  it('still refuses them as support for circuit topology or citrate pharmacology', () => {
+  it('still refuses them as support for circuit topology', () => {
     for (const id of CLINICAL_CONTEXT_IDS) {
       expect(crrtSourceSupportsClaim(id, 'circuit-topology')).toBe(false)
-      expect(crrtSourceSupportsClaim(id, 'citrate-pharmacology')).toBe(false)
+    }
+  })
+
+  it('refuses the two records with no citrate passage as support for citrate pharmacology', () => {
+    expect(crrtSourceSupportsClaim('TEXT-CRRT-NEYRA-2026', 'citrate-pharmacology')).toBe(false)
+    expect(crrtSourceSupportsClaim('GUID-RRT-ICU-2026', 'citrate-pharmacology')).toBe(false)
+  })
+
+  // Owner's ruling of 2026-11-14 (crrt-ajkd-citrate-mapping-erratum): the AJKD Core Curriculum is
+  // mapped to the citrate topics its full text supports (pp. 781–784), and to no other.
+  it('maps the AJKD Core Curriculum to the citrate topics its pages 781–784 support', () => {
+    for (const topic of [
+      'citrate-pharmacology',
+      'citrate-calcium-binding',
+      'citrate-effluent-removal',
+      'citrate-sampling',
+      'citrate-calcium-replacement',
+      'citrate-metabolic-patterns',
+    ] as const) {
+      expect([topic, crrtSourceSupportsClaim('REVIEW-CKRT-CORE-2025', topic)]).toEqual([
+        topic,
+        true,
+      ])
+    }
+    // Not the drawing, not a protocol, and not the definition that names muscle and kidney.
+    for (const topic of [
+      'circuit-topology',
+      'authored-citrate-teaching-structure',
+      'citrate-protocol-safety',
+      'citrate-metabolism',
+    ] as const) {
+      expect([topic, crrtSourceSupportsClaim('REVIEW-CKRT-CORE-2025', topic)]).toEqual([
+        topic,
+        false,
+      ])
     }
   })
 
@@ -83,21 +117,35 @@ describe('an evidence ID that resolves is not thereby a supporting ID', () => {
     expect(unsupported.map((citation) => citation.sourceId)).toEqual(['REVIEW-CKRT-CORE-2025'])
   })
 
-  it('supports pharmacology only through the newly registered claim-specific publication', () => {
+  it('supports pharmacology only through publications whose text was read for it', () => {
     expect(CRRT_CLAIM_TOPICS).toContain('citrate-pharmacology')
     expect(crrtSourcesSupportingClaim('citrate-pharmacology')).toEqual([
       'CITRATE-SIAARTI-2023-MECHANISM',
+      'REVIEW-CKRT-CORE-2025',
     ])
   })
 })
 
 describe('the citrate first-use terms', () => {
-  it('presents none of the three clinical-context records as support for any definition', () => {
+  it('presents the two records with no citrate passage as support for no definition', () => {
     for (const term of crrtCitrateCalciumTerms) {
-      for (const id of CLINICAL_CONTEXT_IDS) {
+      for (const id of ['TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
         expect(term.claimSupport.supportingSourceIds).not.toContain(id)
       }
     }
+  })
+
+  it('lists the AJKD Core Curriculum under the five definitions its text supports, and no other', () => {
+    const listed = crrtCitrateCalciumTerms
+      .filter((term) => term.claimSupport.supportingSourceIds.includes('REVIEW-CKRT-CORE-2025'))
+      .map((term) => term.id)
+    expect(listed).toEqual([
+      'circuit-anticoagulation',
+      'circuit-sample',
+      'systemic-sample',
+      'citrate-calcium-in-effluent',
+      'calcium-replacement',
+    ])
   })
 
   it('classifies topology separately from publication-supported physiology', () => {

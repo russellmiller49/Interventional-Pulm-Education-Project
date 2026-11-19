@@ -166,10 +166,32 @@ export type CrrtClaimTopic = (typeof CRRT_CLAIM_TOPICS)[number]
  * support for anything.
  */
 const claimTopicsBySourceId: ReadonlyMap<string, readonly CrrtClaimTopic[]> = new Map([
-  // Read in full 2026-11-09 (AJKD 2025;85:767–786). Its claim now names modality choice, timing of
+  // Read in full 2026-11-09 (AJKD 2025;85:767–786). Its claim names modality choice, timing of
   // initiation and discontinuation, prescribed versus delivered dose, access and fluid removal
-  // (pp. 768–780). Its anticoagulation and citrate passages (pp. 781–784) are not mapped to the
-  // citrate topics yet: that would list it under the citrate definitions, an owner decision.
+  // (pp. 768–780).
+  //
+  // Citrate topics, mapped on the owner's ruling of 2026-11-14 ("map the citrate topics its full
+  // text actually supports"), each against the passage re-read on 2026-11-18:
+  //   citrate-pharmacology         p. 781: citrate given pre-filter, typically to a blood citrate
+  //                                of 3–6 mmol/L; no systemic anticoagulant effect.
+  //   citrate-calcium-binding      p. 781: it chelates calcium, giving a low intra-filter ionized
+  //                                calcium (typically below 0.4 mmol/L) that inhibits clotting.
+  //   citrate-effluent-removal     p. 781: most citrate usually leaves in the effluent; a variable
+  //                                but substantial share reaches the patient.
+  //   citrate-sampling             p. 781: filter and systemic ionized calcium are both followed,
+  //                                the first to titrate citrate and the second to titrate calcium.
+  //   citrate-calcium-replacement  p. 781: calcium infused into the return limb or systemically,
+  //                                to reverse citrate and replace calcium lost as complexes.
+  //   citrate-metabolic-patterns   pp. 782–784 and Figure 2: alkalosis from citrate or buffer
+  //                                excess told apart from accumulation, with its total-to-ionized
+  //                                calcium ratio of 2.5 or more and a later anion gap.
+  // Not mapped: `circuit-topology` (the paper does not describe this module's drawing or any
+  // device's line layout); `citrate-protocol-safety` (it gives no protocol's rates or schedule
+  // beyond "total calcium at least daily"); and `citrate-metabolism`. The paper says citrate is
+  // metabolized mainly by the liver, each molecule to three of bicarbonate (pp. 781–782), but
+  // the one definition filed under that topic names liver, muscle and kidney and the release of
+  // bound calcium, which the paper does not state. Mapping the topic would print the paper under
+  // that sentence, so it waits for the owner.
   [
     'REVIEW-CKRT-CORE-2025',
     [
@@ -182,6 +204,12 @@ const claimTopicsBySourceId: ReadonlyMap<string, readonly CrrtClaimTopic[]> = ne
       'prescribed-versus-delivered',
       'vascular-access',
       'fluid-removal-tolerance',
+      'citrate-pharmacology',
+      'citrate-calcium-binding',
+      'citrate-effluent-removal',
+      'citrate-sampling',
+      'citrate-calcium-replacement',
+      'citrate-metabolic-patterns',
     ] as const,
   ],
   // "The chapter frames kidney-replacement decisions around patient-specific solute and
