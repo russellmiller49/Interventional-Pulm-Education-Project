@@ -1,5 +1,6 @@
 import { question as q } from './authoring'
 import type { NodeAnnotationLabel } from './node-feature-annotations.generated'
+import { EBUS_NUMBERS } from './teachingNumbers'
 import type { Question } from './types'
 
 /*
@@ -12,6 +13,14 @@ import type { Question } from './types'
  * only what those labels and the lesson it draws on support. The needle picture is the lab's own
  * simulated picture. Four chapters have a review; the first three end before the course has shown
  * an image with checked labels to ask about.
+ *
+ * Owner ruling `ebus-review-stems` (2026-11-14, "Correct named stems"), on four of these:
+ * a still shows a craniocaudal slice, so the 10R and 2L stems say what is given (the scope's
+ * position, the side) and what the picture shows (which side of the vessel the nodes lie on);
+ * the necrosis stem says the still is grayscale and that the absent flow is supposed, and gives
+ * the sign as associated with malignancy, not diagnostic; the Doppler stem says where the vessel
+ * lies relative to the needle's entry. He confirms the image-dependent details before any of the
+ * four is recorded as approved.
  */
 export type ReviewImage =
   /** A station's ultrasound still. Its outlines are numbered from the start and named after the answer. */
@@ -100,12 +109,15 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'still', station: '10R' },
         q(
           'review-plan-10r',
-          'Outline 3 is the azygos vein. The nodes outlined 1 and 2 lie below its lower border. Which station are they in?',
+          'The scope is in the right main bronchus. Outline 3 is the azygos vein. Outline 2 lies wholly on the side of the vein away from the orientation dot, and outline 1 almost wholly. Which station are they in?',
           [
             '10R',
-            'The lower border of the azygos vein is the lower border of 4R. Below it, beside the right main bronchus, the nodes are hilar: station 10R.',
+            'The dot marks the cephalad side of the image, so nodes on the side of the azygos vein away from the dot lie caudal to the vein, below its lower border. That border is the lower limit of 4R. Below it, beside the right main bronchus, the nodes are hilar: station 10R. The still shows which side of the vein the nodes are on. It cannot tell you which bronchus the scope is in; you know that from where you drove it.',
           ],
-          ['4R', 'Station 4R ends at the lower border of the azygos vein.'],
+          [
+            '4R',
+            'Station 4R ends at the lower border of the azygos vein. These nodes lie caudal to it.',
+          ],
           [
             '11Rs',
             'Station 11Rs is interlobar, between the right upper-lobe bronchus and the bronchus intermedius.',
@@ -131,14 +143,14 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'clip', clip: 'doppler-node-vessels', stop: 'flow' },
         q(
           'review-plan-path',
-          'A frame with colour Doppler on, before a needle is passed into this node. Colour appears at the near margin of the node. What does it change?',
+          'A frame with colour Doppler on, before a needle is passed into this node. Colour appears at the margin of the node on the side of the orientation dot. What does it change?',
           [
             'The needle path: choose a line into the node that avoids it',
-            'The colour is a small vessel at the margin of the node. Doppler is part of assessing the path, so the path is chosen to miss it.',
+            'The colour is a small vessel at the margin of the node. The needle enters the image from the side of the dot, so this vessel lies where a needle would enter the node. Doppler is part of assessing the path: choose a line into the node that is clear of the vessel.',
           ],
           [
             'Nothing: colour outside the node does not matter',
-            'A vessel at the margin lies where a needle would enter the node. It matters to the path.',
+            'A vessel at the margin on the side the needle comes from lies where a needle would enter the node. It matters to the path.',
           ],
           [
             'The diagnosis: flow at the margin means the node is malignant',
@@ -190,10 +202,10 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'node', slug: 'station-7-necrosis', layers: ['node', 'cns'] },
         q(
           'review-sample-necrosis',
-          'A node at station 7 with well-defined dark areas inside it. Suppose Doppler shows no flow in them. What is the sign, and how much does it weigh?',
+          'A grayscale still of a node at station 7 with well-defined dark areas inside it. No Doppler is shown on this frame. Suppose Doppler were then applied and showed no flow in those areas. What would the sign be, and how much would it weigh?',
           [
-            'A coagulation necrosis sign: the most specific single feature of malignancy',
-            'A dark area inside the node with no flow on Doppler is a coagulation necrosis sign. It is the most specific single feature, and it still does not replace a sample.',
+            'A coagulation necrosis sign: associated with malignancy, and not a substitute for a sample',
+            `A dark area inside the node with no flow on Doppler is a coagulation necrosis sign. On this still you can see only the dark areas: Doppler was not on, so the absent flow is an assumption here. The sign is associated with malignancy (specificity ${EBUS_NUMBERS.value('cns-specificity')} in a pooled analysis), but tuberculosis can show it too, so it raises suspicion and the node is still sampled.`,
           ],
           [
             'A central hilar structure: it favors a benign node',
@@ -201,7 +213,7 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
           ],
           [
             'Vessels within the node: the areas would fill with colour',
-            'With no flow on Doppler, the dark areas are not vessels.',
+            'With no flow on Doppler, as the question supposes, the dark areas are not vessels.',
           ],
         ),
       ),
@@ -259,12 +271,18 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
         { kind: 'still', station: '2L' },
         q(
           'review-report-2l',
-          'Outline 4 is the aorta and outline 1 is the brachiocephalic trunk. The nodes outlined 2 and 3 lie above the aortic arch on the left. Which station?',
-          ['2L', 'A left paratracheal node above the aortic arch is in station 2L.'],
-          ['4L', 'Station 4L lies lower, between the aortic arch and the left pulmonary artery.'],
+          'The scope is in the trachea with the transducer turned toward the patient’s left. Outline 4 is the aorta, at the arch, and outline 1 is the brachiocephalic trunk. The nodes outlined 2 and 3 lie on the side of the aorta nearer the orientation dot. Which station?',
+          [
+            '2L',
+            'The dot marks the cephalad side of the image, so these nodes lie above the aortic arch. The upper margin of the arch is the lower border of station 2L: a left paratracheal node above it is in 2L. The still shows that the nodes are above the arch. It cannot tell you they are on the left; you know that from which way the transducer is turned.',
+          ],
+          [
+            '4L',
+            'Station 4L lies lower, between the upper margin of the aortic arch and the left pulmonary artery.',
+          ],
           [
             '2R',
-            'Station 2R is on the right. Stations 2 and 4 are divided at the left lateral border of the trachea.',
+            'Station 2R is on the right. Right and left paratracheal stations are divided at the left lateral border of the trachea.',
           ],
         ),
       ),

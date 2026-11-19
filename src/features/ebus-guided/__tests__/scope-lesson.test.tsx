@@ -70,7 +70,7 @@ describe('the EBUS scope lesson', () => {
     expect(text).toContain(EBUS_NUMBERS.value('scope-field-of-view'))
     // The figure is tied to its scope model, and the text says other models differ.
     expect(text).toMatch(/Olympus BF-UC180F/)
-    expect(text).toMatch(/angle differs between scope models/)
+    expect(text).toMatch(/angle differs between scope models/i)
     expect(lesson.sources).toContain('olympus-uc180f')
   })
 
@@ -106,7 +106,7 @@ describe('the EBUS scope lesson', () => {
     // The lead sits above the lab; the rest of the reading follows it.
     expect(screen.getByText(lesson.paragraphs[0])).toBeVisible()
     expect(document.querySelector('[data-teaching-more]')).toHaveTextContent(
-      'keep the anterior commissure in view',
+      'Find the anterior commissure and keep track of it as you advance',
     )
     expect(primary()).toBeEnabled()
   })

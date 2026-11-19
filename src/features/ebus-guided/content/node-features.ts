@@ -174,8 +174,7 @@ export const FEATURE_TABS: FeatureTab[] = [
     title: 'Coagulation necrosis sign',
     definition:
       'A hypoechoic area inside the node with no flow on Doppler. On grayscale alone it is only suspected; Doppler confirms it.',
-    meaning:
-      'The most specific single feature of malignancy. Tuberculosis can show it too, so it does not replace tissue.',
+    meaning: `Associated with malignancy (specificity ${EBUS_NUMBERS.value('cns-specificity')} in a pooled analysis). It is not diagnostic: tuberculosis can show it too, so it does not replace tissue.`,
     examples: [
       {
         slug: 'station-7-necrosis',

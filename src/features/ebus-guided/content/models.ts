@@ -1,8 +1,13 @@
 import type { Lesson } from './types'
 import { question } from './authoring'
+import { NEEDLE_LAB } from '@/lib/ebus-model-contract'
 import { EBUS_NUMBERS } from './teachingNumbers'
 
-/** The lab asks for the low end of the sourced range of movements on one pass. */
+/**
+ * The lab asks for the low end of the sourced range of movements on one pass, as the minimum of
+ * this exercise only (owner ruling `ebus-needle-lab-model`, 2026-11-14: five is acceptable for the
+ * exercise and is not to be read as sufficient for diagnostic sampling).
+ */
 const NEEDLE_MOVEMENTS = Number.parseInt(EBUS_NUMBERS.value('agitations-per-pass'), 10)
 
 export const needleModel: Lesson = {
@@ -18,10 +23,13 @@ export const needleModel: Lesson = {
   paragraphs: [
     'Each control on the handle does one thing. The sheath adjuster moves the sheath, and the sheath lock holds it. The needle stop limits how far the needle can travel. The needle slider moves the needle. In the lab the handle is drawn above the scope tip and the ultrasound picture, at true size, with the length of the scope between them left out.',
     'The ultrasound picture shows only the part of the needle that lies in the imaging plane. A small turn of the scope can take the tip out of the image while part of the shaft stays in it. The line on the screen is then shorter than the needle.',
+    'Three things keep a pass safe, and the lab is built around them: keep the needle tip in view, keep its movement within the node you mean to sample, and do not let it travel beyond the node into what lies next to it. The stop is the mechanical limit for the third. Set it from the size of the node and from the vessels near it.',
+    `Two settings are this model’s, not a patient’s. It accepts a stop up to ${NEEDLE_LAB.stopShortMm} mm short of the far side of its drawn node, which is not a clinical safety threshold. It asks for ${NEEDLE_MOVEMENTS} movements within the node, fewer than the at least 10 on each pass taught earlier in this lesson, and no count of movements makes a sample adequate. The angle at which the needle crosses the picture is this model’s too: no single angle is required.`,
+    'The lab does not model the stylet. On a patient, handling the stylet is part of the pass: whether it is in place as the needle enters, and when it is moved and withdrawn, follow the instructions for the needle you are using. The lab leaves it out because it is not drawn, not because it does not matter.',
   ],
   checklist: [
     'Sheath out until it is seen beyond the scope tip, then locked.',
-    'Stop set to the far side of the node before the needle moves.',
+    'Stop set from the depth of the node and what lies beyond it, before the needle moves.',
     'Tip in the image for every movement; needle back in its sheath before the assembly comes out.',
   ],
   worked: {
@@ -93,10 +101,11 @@ export const needleModel: Lesson = {
   takeaways: [
     'Sheath, stop and needle are set in that order, and undone in reverse.',
     'A line on the screen is not the tip: hold the needle still until the tip is seen.',
+    'Tip in view, movement within the node, nothing beyond the node. The stop tolerance and the count of movements are this model’s settings.',
   ],
   sources: ['ics2023', 'chest2016', 'simulation'],
   boundary:
-    'A teaching model. Its depths and travel are for practising the steps and are not settings for a patient or for a particular needle.',
+    'A teaching model. Its depths, travel, needle angle, stop tolerance and number of movements are for practising the steps and are not settings for a patient or for a particular needle. The stylet is not modelled.',
 }
 export const contactModel: Lesson = {
   id: 'contact-cutaway-model',

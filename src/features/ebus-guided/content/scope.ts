@@ -1,6 +1,6 @@
 import type { Lesson } from './types'
 import { question as q, matching } from './authoring'
-import { EBUS_NUMBERS } from './teachingNumbers'
+import { BF_UC190F_VIEW_ANGLE, EBUS_NUMBERS } from './teachingNumbers'
 
 const N = EBUS_NUMBERS.value
 
@@ -15,10 +15,18 @@ const N = EBUS_NUMBERS.value
  *
  * Sources. The view angle and field are the project's recorded nominal optics for the Olympus
  * BF-UC180F (`BF_UC180F_NOMINAL`), which is also what the simulated lens uses; they match the
- * manufacturer's product page as read on 2026-11-14 (the BF-UC190F is 20°, same field). The statements
- * about passing the cords, the red-out on contact and clearing air from the balloon are practice
+ * manufacturer's product pages as read on 2026-11-14 and again on 2026-11-18 (BF-UC180F: 35°
+ * forward oblique, 80° field; BF-UC190F: 20° forward oblique, 80° field). The statements about
+ * passing the cords, the red-out on contact and clearing air from the balloon are practice
  * points written from the geometry and from the course's own procedural-technique module; none
- * is a guideline recommendation, and the owner reads them before they are signed.
+ * is a guideline recommendation.
+ *
+ * Owner ruling `ebus-scope-lesson-points` (2026-11-14, "Correct"): both scope models are named
+ * with their own figures; no single glottic approach or screen position is taught as holding for
+ * every scope model and rotation; a red view on contact is read with tip position, ultrasound
+ * contact and the patient, never as harmless by default; the balloon depends on the equipment and
+ * the case; tip size and stiffness are general, and bending differs between models. He reads the
+ * revised lesson before it is signed.
  */
 export const scopeLesson: Lesson = {
   id: 'ebus-scope',
@@ -31,15 +39,17 @@ export const scopeLesson: Lesson = {
     'A diagnostic bronchoscope looks straight ahead: what is centred on the screen is where the tip goes.',
   concept: 'One tip, three jobs, none of them straight ahead',
   paragraphs: [
-    `The lens of a convex EBUS scope does not look straight ahead. It sits behind the transducer and looks obliquely forward, toward the side the transducer faces: ${N('scope-view-angle')} from the long axis of the scope on the Olympus BF-UC180F, with an ${N('scope-field-of-view')} field. The angle differs between scope models; the consequence is the same. The tip travels below the centre of the white-light image.`,
-    'With the scope straight in the trachea you therefore see the anterior wall, and the airway ahead sits low in the picture. A small downward flexion brings the carina to the centre. Passing the vocal cords, a tip aimed at the middle of the glottis arrives posteriorly, at the arytenoids: keep the anterior commissure in view and let the tip pass through the posterior glottis.',
+    `The lens of a convex EBUS scope does not look straight ahead. It sits behind the transducer and looks obliquely forward, toward the side the transducer faces. The angle differs between scope models: on the Olympus BF-UC180F the direction of view is ${N('scope-view-angle')} forward oblique from the long axis of the scope, and on the newer BF-UC190F it is ${BF_UC190F_VIEW_ANGLE}; both have an ${N('scope-field-of-view')} field of view. The effect is the same in kind on both and greater on the BF-UC180F: the tip travels along the long axis of the scope, which points below the centre of the white-light image. Know which scope you are holding. The views in this lesson use the BF-UC180F figures.`,
+    'With the scope in its usual orientation the transducer faces anteriorly, so the lens looks forward and anteriorly. In the trachea you see more of the anterior wall, and the airway ahead sits low in the picture; a small downward flexion brings the carina toward the centre. The same offset matters at the vocal cords. The tip follows a line posterior to whatever is centred in the image, so a tip advanced on a centred glottic opening can meet the arytenoids. Find the anterior commissure and keep track of it as you advance, and steer by where the tip is travelling, not by what is centred. How far that line lies from the centre, and where the glottis sits on the screen, depend on the scope model and on how the scope is rotated in your hand: no single screen position holds for every scope.',
     'The transducer is at the very tip, on one side. It images only where that side touches the airway wall, as a thin slice along the length of the scope. Flexing the tip up presses it onto the wall: the ultrasound image appears, and the white-light view fills with mucosa and turns red. The two views trade places. White light takes you to the station; ultrasound takes over once the transducer is on the wall.',
-    'A balloon fits over the transducer and is filled with saline to bridge the gap where the tip cannot lie flat against the wall. Clear the air from it before the case: a bubble inside the balloon blocks ultrasound exactly as an air gap does. The distal end is also wider, longer and stiffer than the bronchoscope you are used to, and it bends less.',
+    'A red white-light view is expected while the transducer is in contact, but red alone does not tell you that all is well: blood on the lens looks the same, and so does contact somewhere you did not intend. Read it with where the tip is, whether the ultrasound image shows the contact you expect, and how the patient is doing.',
+    'A balloon can be fitted over the transducer and filled with saline to bridge the gap where the tip cannot lie flat against the wall. Whether one is used depends on the equipment and the clinical circumstances. When it is used, clear the air from it before the procedure: a bubble inside the balloon blocks ultrasound exactly as an air gap does. Because it carries the transducer, the distal end of a convex EBUS scope is larger and more rigid than the tip of a diagnostic bronchoscope. How far the tip bends differs between scope models, so check the specifications of the scope you use.',
   ],
   checklist: [
     'Expect the airway ahead low in the white-light image.',
-    'Through the cords, keep the anterior commissure in view.',
+    'At the cords, find the anterior commissure and steer by where the tip travels.',
     'Use white light to arrive and ultrasound once the transducer is on the wall.',
+    'Read a red view with tip position, the ultrasound image and the patient.',
   ],
   worked: {
     context:
@@ -53,7 +63,7 @@ export const scopeLesson: Lesson = {
       'You advance an EBUS scope toward the vocal cords with the glottic opening centred on the screen. The tip meets the arytenoids instead of passing through. What explains it?',
       [
         'The lens looks obliquely forward, so the tip travels below the centre of the image',
-        'The view is tilted toward the transducer side. What is centred on the screen lies above the line the tip follows, so a tip aimed at the middle of the glottis arrives posteriorly.',
+        'The view is tilted toward the transducer side. With the scope in its usual orientation, what is centred on the screen lies anterior to the line the tip follows, so a tip advanced on a centred glottis arrives posteriorly. How large the offset is depends on the scope model.',
       ],
       [
         'The image is inverted, so the top of the screen is posterior',
@@ -61,7 +71,7 @@ export const scopeLesson: Lesson = {
       ],
       [
         'The distal end is too wide for the glottis and has to be rotated a quarter turn to pass',
-        'The tip is wider than a diagnostic bronchoscope but passes an adult glottis without rotation. The tip went where it was pointed; it was pointed low.',
+        'The tip is wider than a diagnostic bronchoscope, but width is not what stopped it. The tip went where the scope was pointed, and that was posterior to the centred glottis.',
       ],
     ),
     imagePolicy: 'none',
@@ -83,7 +93,7 @@ export const scopeLesson: Lesson = {
       ],
       [
         'The balloon over the transducer',
-        'Saline bridges a gap to the wall; a bubble inside it blocks the image',
+        'When one is used, saline bridges a gap to the wall; a bubble inside it blocks the image',
       ],
     ],
     'Three things share one tip and none of them points straight ahead. The lens tells you where you are, the transducer shows what lies beside you, and the needle leaves between them into the plane the transducer is showing.',
@@ -93,12 +103,12 @@ export const scopeLesson: Lesson = {
       'scope-observe',
       'With the tip flexed up, the ultrasound image shows tissue and the white-light view is uniformly red. What does the white-light view tell you?',
       [
-        'The lens is against the wall, as expected once the transducer is in contact',
-        'Contact brings the lens onto the mucosa too. A red view with a good ultrasound image is the working position, not a lost airway.',
+        'Probably mucosal contact, to be checked against tip position, the ultrasound image and the patient',
+        'Contact brings the lens onto the mucosa too, so a red view with tissue on the ultrasound image is what the working position looks like. Red alone does not prove it: confirm that it appeared as the tip flexed onto the wall, that the ultrasound image is the one you expect, and that the patient is stable.',
       ],
       [
         'There is blood on the lens, and the scope should be withdrawn to clean it',
-        'Blood is possible, but a red view that appears as the tip flexes onto the wall and clears as it flexes away is contact.',
+        'Blood is possible and the colour alone does not exclude it. Here the red appeared as the tip flexed onto the wall and the ultrasound image shows contact; easing the flexion tells the two apart before you withdraw.',
       ],
       [
         'The light source has failed and the examination should stop',
@@ -157,8 +167,9 @@ export const scopeLesson: Lesson = {
       'Use Tip flexion only. First flex down until the airway ahead sits in the middle of the white-light view, and notice what happens to the ultrasound image. Then flex up until the wall fills the white-light view and tissue echoes return.',
   },
   takeaways: [
-    'The tip travels below the centre of the white-light image.',
+    'The tip travels below the centre of the white-light image, by an amount that depends on the scope model.',
     'White light to arrive; ultrasound once the transducer is on the wall.',
+    'A red view on contact is expected, and is still read with tip position, the ultrasound image and the patient.',
   ],
-  sources: ['olympus-uc180f', 'simulation'],
+  sources: ['olympus-uc180f', 'olympus-uc190f', 'simulation'],
 }

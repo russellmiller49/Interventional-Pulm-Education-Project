@@ -439,7 +439,9 @@ function needleReducer(s: NeedleState, a: ModelAction): NeedleState {
           'With the stop here the needle can pass the far side of the node, toward the vessel. Read the depth to the far border on the needle path and set the stop to it.'
       else if (s.stop > 0)
         s.notice =
-          'The stop is short of the far side of the node. Read the depth to the far border on the needle path and set the stop to it.'
+          'The stop is short of the far side of the node. This exercise asks for a stop within ' +
+          NEEDLE_LAB.stopShortMm +
+          ' mm of it: read the depth to the far border on the needle path and set the stop to it.'
     }
     return s
   }

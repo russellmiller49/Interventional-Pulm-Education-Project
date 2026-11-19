@@ -344,7 +344,7 @@ describe('EBUS Guided teaching numbers', () => {
       expect(breath).toMatch(
         /When the fall is significant or getting worse, withdraw the scope promptly if that is what it takes to ventilate the patient; do not sit through a long failed attempt at recovery with the scope in place/,
       )
-      expect(breath).toMatch(/The one reason to keep it in is blood that only the scope can clear/)
+      expect(breath).toMatch(/The main reason to keep it in is blood that only the scope can clear/)
       expect(breath).toMatch(/Call for help early, not after these measures have failed/)
       // What is published and what is practice (the owner's round-1 request).
       expect(breath).toMatch(/This response is expert practice: ICS\/IAB 2023 says only that/)
