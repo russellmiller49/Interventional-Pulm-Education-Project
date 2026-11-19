@@ -1331,7 +1331,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     ],
     explanation:
       'Nothing was done to the pump. A continuous-flow pump is afterload-sensitive: raising the pressure it ejects against lowered the flow crossing it, so displayed flow and delivery both fell. Power fell with the flow and the pulsatility index rose a little. The one value that rose is cardiac power, a pressure multiplied by a flow.',
-    pressureLevelExplanation: `Mean arterial pressure rose by tens of mm Hg. Read alone, that looks like an improving patient. On a continuous-flow pump the mean pressure is kept ${mapCeiling}.`,
+    pressureLevelExplanation: `Mean arterial pressure rose by tens of mm Hg. Read alone, that looks like an improving patient. On a continuous-flow pump a mean pressure ${mapCeiling} is generally avoided.`,
     flowLevelExplanation:
       'Displayed flow and effective systemic delivery both fell. The display followed the real flow here because power followed it.',
     oxygenDeliveryExplanation:
@@ -1495,7 +1495,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'A lower pulsatility index, mean pressure, effective delivery and mixed venous saturation',
     ],
 
-    explanation: `Power is measured; the displayed flow is calculated from it. Thrombus on the rotor adds drag, so the motor draws more power to hold its speed and the controller reports more flow. The pump is really moving less blood: the pulsatility index, the mean pressure and effective delivery all fell. Power elevation that suggests pump thrombosis is ${powerElevation}.`,
+    explanation: `Power is measured; the displayed flow is calculated from it. Thrombus on the rotor adds drag, so the motor draws more power to hold its speed and the controller reports more flow. The pump is really moving less blood: the pulsatility index, the mean pressure and effective delivery all fell. Power changes that raise suspicion of thrombosis are ${powerElevation}. They are warning signs: read them for this pump against this patient’s baseline, with the clinical picture, the hemolysis markers and the pump’s log, never alone.`,
     pressureLevelExplanation:
       'Mean arterial pressure fell a few mm Hg while the displayed flow rose. A pump that was really moving more blood would raise the pressure.',
     flowLevelExplanation:

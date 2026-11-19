@@ -358,8 +358,9 @@ export function LvadAlarmsEmergenciesPanel({
               : 'No high-power pattern is present.'}{' '}
             The controller measures power and calculates the displayed flow from it. Thrombus on the
             rotor adds drag: power rises, the displayed flow rises with it, and the real flow, the
-            pulsatility index and the patient fall. Power elevation that suggests thrombosis:{' '}
-            {MCS_NUMBERS.value('lvad-power-elevation')}.
+            pulsatility index and the patient fall. Power changes that raise suspicion of
+            thrombosis, read for this pump against this patient’s baseline, with the clinical
+            picture, and never alone: {MCS_NUMBERS.value('lvad-power-elevation')}.
           </p>
           <ul className="mt-3 grid gap-2 text-xs leading-5" data-high-power-boundaries>
             <li data-high-power-boundary="flow-unchanged">

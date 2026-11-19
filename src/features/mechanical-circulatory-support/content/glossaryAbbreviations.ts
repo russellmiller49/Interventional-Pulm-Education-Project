@@ -55,7 +55,7 @@ export const MCS_GLOSSARY_ABBREVIATIONS: readonly McsGlossaryAbbreviation[] = Ob
   {
     abbreviation: 'PI',
     expansion: 'Pulsatility index',
-    note: `How much the flow through the pump swings with each heartbeat: ${MCS_NUMBERS.value('lvad-pulsatility-index')}. It falls when the ventricle is underfilled or the speed is raised, and rises with afterload and as the ventricle recovers.`,
+    note: `How pulsatile the flow through the pump is. On a HeartMate 3 it is ${MCS_NUMBERS.value('lvad-pulsatility-index')}. It is read against the patient’s own baseline, not as a flow measurement. It falls when the ventricle is underfilled or the speed is raised, and rises with afterload and as the ventricle recovers.`,
   },
   {
     abbreviation: 'P-level',

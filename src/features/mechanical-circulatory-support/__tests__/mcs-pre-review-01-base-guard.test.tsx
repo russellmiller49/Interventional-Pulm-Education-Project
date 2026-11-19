@@ -193,10 +193,10 @@ describe('F18 / F27 / F28 — claims that have to match the screen and the devic
 
   it('opens the durable reference inside the goal range its copy names', () => {
     const reference = settle(createInitialMcsState('learn', 'lvad', null, 417))
-    expect(reference.metrics.mapMmHg).toBeGreaterThanOrEqual(70)
-    expect(reference.metrics.mapMmHg).toBeLessThanOrEqual(80)
+    expect(reference.metrics.mapMmHg).toBeGreaterThanOrEqual(75)
+    expect(reference.metrics.mapMmHg).toBeLessThanOrEqual(90)
     const section7 = mcsSectionLearningContractById.get('lvad-parameters-assessment')!
-    expect(section7.startingContext).toMatch(/goal range of 70–80 mm Hg/)
+    expect(section7.startingContext).toMatch(/goal range of 75–90 mm Hg/)
   })
 
   it('names the direction of the real controller’s flow estimate, with its source', () => {

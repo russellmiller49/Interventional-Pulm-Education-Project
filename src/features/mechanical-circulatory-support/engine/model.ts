@@ -48,8 +48,9 @@ const MAX_TREND_SECONDS = 120
 export const LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD = 0.58
 /**
  * Displayed mean arterial pressure above which the durable-support afterload alarm is raised.
- * Continuous-flow LVAD patients are generally kept below 90 mm Hg (Case-Based Device Therapy for
- * Heart Failure, 2021, pp. 99 and 116–117); see `content/teachingNumbers.ts`.
+ * A sustained mean above 90 mm Hg is generally avoided on a continuous-flow LVAD (2023 ISHLT
+ * guideline, p. e82; Case-Based Device Therapy for Heart Failure, 2021, pp. 124 and 126); see
+ * `content/teachingNumbers.ts`.
  */
 export const LVAD_HIGH_AFTERLOAD_MAP_MMHG = 90
 /**
@@ -61,7 +62,8 @@ export const LVAD_SUSPECTED_THROMBOSIS_POWER_W = 3.6
 export const LVAD_THROMBOSIS_FLOW_FRACTION = 0.5
 /**
  * Systemic vascular resistance of the durable-support reference patient. Chosen so the reference
- * state shows a mean arterial pressure inside the 70–80 mm Hg goal instead of a hypertensive one.
+ * state shows a mean arterial pressure inside the goal instead of a hypertensive one: 76 mm Hg,
+ * within the register's 75–90 mm Hg (it was chosen for the earlier 70–80 mm Hg goal and sits in both).
  */
 export const LVAD_REFERENCE_SVR_DYN_SEC_CM5 = 760
 /** Watts per L/min in the power relation; the flow estimate inverts the same relation. */

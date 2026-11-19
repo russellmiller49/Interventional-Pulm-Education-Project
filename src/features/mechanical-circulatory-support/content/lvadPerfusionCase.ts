@@ -1,6 +1,6 @@
 import { clinicalLearningItemSchema } from '@/features/learning-module/activity/clinicalLearningItem'
 
-import type { McsNumberId } from './teachingNumbers'
+import { MCS_NUMBERS, type McsNumberId } from './teachingNumbers'
 
 /**
  * Section 8, after the recap: two adults on a HeartMate 3 with no palpable pulse, one with an
@@ -69,7 +69,7 @@ export const MCS_LVAD_PERFUSION = {
       id: 'controller',
       term: 'Controller',
       finding:
-        'A normal display with no active alarm. The flow it shows is calculated from speed and power, not measured, so read it with the patient.',
+        'A normal display with no active alarm. The flow it shows is an estimate, calculated from speed, power and hematocrit, not measured, so read it with the patient.',
     },
     {
       id: 'hum',
@@ -78,13 +78,12 @@ export const MCS_LVAD_PERFUSION = {
     },
   ],
   numbersTitle: 'An adequate circulation on an LVAD, in numbers',
-  combining:
-    'The sources also combine the signs differently. AHA 2025 counts the circulation as adequate when any one is present: normal skin colour and temperature, a normal capillary refill, a MAP above 50 mm Hg or an end-tidal CO₂ above 20 mm Hg. The British guideline reads several together, with clinical judgement, and draws its MAP line at 60 mm Hg.',
+  combining: `The sources also combine the signs differently. AHA 2025 counts the circulation as adequate when any one is present: normal skin colour and temperature, a normal capillary refill, a MAP above 50 mm Hg or an end-tidal CO₂ above 20 mm Hg. The British guideline reads several together, with clinical judgement, and draws its MAP line at 60 mm Hg. Either way, one abnormal value does not define arrest: read it with mentation, skin and the other signs. These are lines for an adequate circulation in an emergency, not the pressure to treat toward: the goal on a continuous-flow LVAD is a mean of ${MCS_NUMBERS.value('lvad-map-goal')}.`,
   deferralTitle: 'When compressions start',
   sequenceTitle: 'When the circulation is inadequate',
   sequence: [
     'Call the arrest team and the VAD team. The on-call VAD coordinator can guide the device checks by phone.',
-    'The sources differ on timing. The British guideline allows CPR to wait at most 2 minutes while the pump is restored, and ERC 2025 keeps that delay for a rescuer working alone. AHA 2025 starts compressions at once, with the device worked alongside, and so does ERC 2025 when there are two or more of you.',
+    'With two or more of you, start compressions at once and work the device at the same time: that is AHA 2025, and ERC 2025 for a team. The sources differ only on a delay. The British guideline allows CPR to wait at most 2 minutes while the pump is restored, and ERC 2025 keeps that delay for a rescuer working alone.',
     'Controller: read the alarm. A blank HeartMate 3 screen can be normal, so press a button to wake it. A screen that stays blank means no power or a controller that has stopped working. Change the controller when that, or its own alarm, calls for it, with someone trained to do it.',
     'Power: the controller runs on two sources, two batteries or a battery and mains. Change a low or critical battery for a charged one, or connect mains power.',
     'Driveline: follow it from the controller to the exit site, under the binder and the dressing. On a HeartMate 3 the modular connector can come apart away from the controller.',

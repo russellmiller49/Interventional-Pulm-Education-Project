@@ -238,7 +238,9 @@ describe('each choice shows its reasoning', () => {
     const sequence = article.querySelector<HTMLElement>('[data-lvad-inadequate-sequence]')!
     expect(sequence).toHaveTextContent(/arrest team and the VAD team/)
     expect(sequence).toHaveTextContent(
-      /British guideline allows CPR to wait at most 2 minutes.*AHA 2025 starts compressions at once/,
+      // Owner's ruling of 2026-11-12: with two rescuers, compressions at once is taught first; the
+      // British 2-minute device-first period follows, in its own context.
+      /With two or more of you, start compressions at once and work the device at the same time.*British guideline allows CPR to wait at most 2 minutes.*ERC 2025 keeps that delay for a rescuer working alone/,
     )
     expect(sequence).toHaveTextContent(/blank HeartMate 3 screen can be normal/)
     expect(sequence).toHaveTextContent(/two sources, two batteries or a battery and mains/)
@@ -312,7 +314,8 @@ describe('every number the case uses is a register row', () => {
       expect({ id, class: row.class, checkedOn: row.checkedOn }).toEqual({
         id,
         class: 'guideline',
-        checkedOn: '2026-11-03',
+        // First read on 2026-11-03; re-verified on 2026-11-18 for the owner's register ruling.
+        checkedOn: '2026-11-18',
       })
       expect(row.sources.map((source) => source.sourceId)).toEqual(ROW_SOURCES[id])
       for (const source of row.sources) {
@@ -345,7 +348,10 @@ describe('every number the case uses is a register row', () => {
     const readings = Object.values(MCS_LVAD_CASE_READINGS).flatMap((patient) =>
       Object.values(patient),
     )
-    const allowed = new Set<number>([...registered, ...readings])
+    // The screen also names the treatment goal, to tell it apart from the emergency lines: that
+    // figure is the register's own lvad-map-goal row (owner's ruling of 2026-11-12).
+    const goal = figures(MCS_NUMBERS.value('lvad-map-goal'))
+    const allowed = new Set<number>([...registered, ...readings, ...goal])
     const used = learnerCopy.flatMap(figures)
     expect(used.length).toBeGreaterThan(10)
     expect(used.filter((figure) => !allowed.has(figure))).toEqual([])
