@@ -282,7 +282,7 @@ export const CHAPTER_REVIEWS: ChapterReview[] = [
           ],
           [
             '2R',
-            'Station 2R is on the right. Stations 2 and 4 are divided at the left lateral border of the trachea.',
+            'Station 2R is on the right. Right and left paratracheal stations are divided at the left lateral border of the trachea.',
           ],
         ),
       ),

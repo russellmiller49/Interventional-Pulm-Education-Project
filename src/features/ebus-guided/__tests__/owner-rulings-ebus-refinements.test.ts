@@ -44,7 +44,8 @@ describe('the scope lesson (ebus-scope-lesson-points)', () => {
   })
 
   it('says which model the simulated lens is', () => {
-    expect(text).toMatch(/simulation in this lesson uses the BF-UC180F figures/)
+    expect(text).toMatch(/views in this lesson use the BF-UC180F figures/)
+    expect(text).not.toMatch(/\bsimulation\b/i)
   })
 
   it('keeps the anterior commissure, and ties no single screen position to every scope', () => {
