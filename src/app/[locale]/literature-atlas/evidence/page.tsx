@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
@@ -12,6 +13,7 @@ import {
   viewerState,
 } from '@/features/literature-atlas-viewer/paths'
 import {
+  gateAll,
   sessionCookie,
   verifySession,
   viewerConfig,
@@ -47,6 +49,8 @@ export default async function LiteratureAtlasEvidencePage({
   if (!config) return <ViewerUnavailable />
   const store = await cookies()
   const unlocked = verifySession(config, store.get(sessionCookie().name)?.value)
+  // With the whole Atlas behind the password there is one way in: the main Atlas page's sign-in, which lands on its map.
+  if (!unlocked && gateAll()) redirect(`/${locale}/literature-atlas`)
   if (!unlocked)
     return <ViewerGate locale={locale} state={viewerState((await searchParams).viewer)} />
 

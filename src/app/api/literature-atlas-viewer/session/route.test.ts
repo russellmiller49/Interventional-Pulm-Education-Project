@@ -69,16 +69,16 @@ describe('Literature Atlas viewer session', () => {
       post('/api/literature-atlas-viewer/session', { password: 'wrong', locale: 'es' }),
     )
     expect(response.status).toBe(303)
-    expect(response.headers.get('location')).toBe('/es/literature-atlas/evidence?viewer=denied')
+    expect(response.headers.get('location')).toBe('/es/literature-atlas?viewer=denied')
     expect(response.headers.get('set-cookie')).toBeNull()
   })
 
-  it('sets a signed HttpOnly session for the right password and returns to the page', async () => {
+  it('sets a signed HttpOnly session for the right password and lands on the Atlas map page', async () => {
     const response = await POST(
       post('/api/literature-atlas-viewer/session', { password: PASSWORD, locale: 'xx' }),
     )
     expect(response.status).toBe(303)
-    expect(response.headers.get('location')).toBe('/en/literature-atlas/evidence')
+    expect(response.headers.get('location')).toBe('/en/literature-atlas')
     const cookie = response.headers.get('set-cookie') ?? ''
     expect(cookie).toMatch(/^literature-atlas-viewer=v1\./)
     expect(cookie).toMatch(/HttpOnly/i)
@@ -95,7 +95,7 @@ describe('Literature Atlas viewer session', () => {
     const response = await POST(
       post('/api/literature-atlas-viewer/session', { password: PASSWORD }),
     )
-    expect(response.headers.get('location')).toBe('/en/literature-atlas/evidence?viewer=limited')
+    expect(response.headers.get('location')).toBe('/en/literature-atlas?viewer=limited')
     expect(response.headers.get('set-cookie')).toBeNull()
   })
 
@@ -127,14 +127,14 @@ describe('Literature Atlas viewer session return target', () => {
   const where = async (fields: Record<string, string>) =>
     (await POST(post('/api/literature-atlas-viewer/session', fields))).headers.get('location')
 
-  it('returns to the Atlas page, the evidence page, or the evidence default for anything else', async () => {
+  it('returns to the evidence page only when asked, and to the Atlas page otherwise', async () => {
     expect(await where({ password: PASSWORD, locale: 'es', return: 'atlas' })).toBe(
       '/es/literature-atlas',
     )
     expect(await where({ password: PASSWORD, return: 'evidence' })).toBe(
       '/en/literature-atlas/evidence',
     )
-    expect(await where({ password: PASSWORD })).toBe('/en/literature-atlas/evidence')
+    expect(await where({ password: PASSWORD })).toBe('/en/literature-atlas')
     for (const bad of [
       'garbage',
       'https://evil.invented.test/',
@@ -142,7 +142,7 @@ describe('Literature Atlas viewer session return target', () => {
       '/x',
       '',
     ]) {
-      expect(await where({ password: PASSWORD, return: bad })).toBe('/en/literature-atlas/evidence')
+      expect(await where({ password: PASSWORD, return: bad })).toBe('/en/literature-atlas')
     }
   })
 
@@ -151,7 +151,7 @@ describe('Literature Atlas viewer session return target', () => {
       '/en/literature-atlas?viewer=denied',
     )
     expect(await where({ password: 'wrong', return: 'https://evil.invented.test' })).toBe(
-      '/en/literature-atlas/evidence?viewer=denied',
+      '/en/literature-atlas?viewer=denied',
     )
     for (let i = 0; i < 10; i++) await where({ password: 'wrong' })
     expect(await where({ password: PASSWORD, return: 'atlas' })).toBe(

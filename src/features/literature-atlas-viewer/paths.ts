@@ -15,8 +15,10 @@ export const EVIDENCE_ENTRY = '/api/literature-atlas/evidence-domains'
 /** Where the session form returns after sign-in; only these two values are ever accepted. */
 export type ViewerReturn = 'atlas' | 'evidence'
 
+/** Sign-in lands on the main Atlas page (its primary-studies map) unless the evidence page asked to come back to itself
+ *  (owner, 2026-11-19: open on the map, not on the evidence domains). */
 export function viewerReturn(value: FormDataEntryValue | string | null | undefined): ViewerReturn {
-  return value === 'atlas' ? 'atlas' : 'evidence'
+  return value === 'evidence' ? 'evidence' : 'atlas'
 }
 
 export type ViewerState = 'denied' | 'limited' | 'ended'
