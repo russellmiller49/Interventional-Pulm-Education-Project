@@ -652,19 +652,26 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     },
     transfer('Recognize the limit of the current window'),
   ],
-  /* Both checks stay: the first is the immediate response, the second a separate later decision. */
+  /*
+   * Bleeding, then desaturation: each has its own screen, ordering task and decision (owner ruling
+   * r2-558-split, 2026-11-15). The lesson still opens on one prediction and ends on one closing
+   * question, drawn from the desaturation unit because the after-procedure teaching is on its screen.
+   */
   'complications-recovery': [
     predict('first-decision', 'Respond to bleeding during a pass'),
-    brief(
-      'patient-response',
-      'Respond to the patient and communicate the limitation',
-      'case',
-      'none',
-    ),
-    apply('recovery-sequence', 'Prioritize the patient during deterioration', 'sequence', [
-      'observation',
-    ]),
-    transfer('Plan recovery and escalation'),
+    brief('patient-response', 'Bleeding: stop, see, control, escalate', 'case', 'none'),
+    apply('recovery-sequence', 'Order the priorities in bleeding', 'sequence', ['observation']),
+    {
+      ...brief('desaturation', 'Desaturation: restore oxygenation and ventilation', 'case', 'none'),
+      from: 'desaturation-response',
+    },
+    {
+      ...apply('desaturation-order', 'Order the response as the saturation falls', 'sequence', [
+        'question',
+      ]),
+      from: 'desaturation-response',
+    },
+    { ...transfer('Plan recovery and escalation'), from: 'desaturation-response' },
   ],
   'results-reporting': [
     predict('first-decision', 'Interpret a bloody aspirate'),

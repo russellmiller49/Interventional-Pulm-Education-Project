@@ -175,7 +175,7 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
     // them folded into others, plus the scope lesson added on 2026-11-10.
     // 23 since the capstone lesson of 2026-11-11, which is built from five units.
     expect(LESSONS).toHaveLength(23)
-    expect(CONTENT_LESSONS).toHaveLength(33)
+    expect(CONTENT_LESSONS).toHaveLength(34)
   })
 
   it('lists the chapters once on the Overview, under a picture of the lab', () => {
