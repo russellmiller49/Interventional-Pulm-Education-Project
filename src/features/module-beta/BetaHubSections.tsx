@@ -79,7 +79,6 @@ function TesterNote({ note }: { note: BetaTesterNote }) {
         )}
       </dl>
       <NoteList title="Where feedback helps most" items={note.lookFor} />
-      <NoteList title="Known limits" items={note.knownLimits} />
     </>
   )
 }
@@ -110,8 +109,7 @@ export function BetaHubSections({
               Ready for review
             </h2>
             <p className="text-muted-foreground">
-              Start here. Each card says who the module is for, where feedback helps most and its
-              known limits.
+              Start here. Each card says who the module is for and where feedback helps most.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">

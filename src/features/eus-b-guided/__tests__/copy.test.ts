@@ -103,7 +103,7 @@ describe('learner-facing wording', () => {
 
   it('keeps the tester note in the same plain register', () => {
     const note = betaRollout['eus-b-guided'].note!
-    for (const text of [note.audience, note.summary, ...note.lookFor, ...note.knownLimits])
+    for (const text of [note.audience, note.summary, ...note.lookFor])
       expect(text).not.toMatch(/\b(authored|preset|calibrated|synthetic)\b/i)
   })
 })

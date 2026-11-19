@@ -42,13 +42,15 @@ feedback stays reviewable and their wrapper addresses still open when typed.
 
 The hub separates **Ready for review** from **Still in development**. Ready cards appear first
 with a tester note: who the module is for, what it teaches, an estimated time where the module's
-own sections and cases support one, where feedback helps most, and known limits. The ready section
+own sections and cases support one, and where feedback helps most. The ready section
 is omitted when empty. All 12 listed modules currently remain `preview` under **Still in
 development**, grouped by Bronchoscopy and Critical care; empty groups are omitted. Every listed
 `preview` card carries the same note (see
 [Beta reviewer readiness](gap-remediation/beta-reviewer-readiness-2026-11-03.md); the notes for
 EUS-B, Branch Tracing, ECMO, CRRT, Hemodynamics and MCS were added on 2026-11-04 at the owner's
-request and list each module's open hold among its known limits).
+request). By the owner's request of 2026-11-19 the cards no longer list known limits; the open
+holds and unsigned teaching-number counts they carried are tracked in each module's register and
+in the owner-decision records, not on the hub.
 Readiness changes presentation only: every card keeps its
 **Test with feedback** wrapper link, with the same access and feedback behavior. The hub opens a
 module only in that wrapper. By the owner's decision of 2026-11-09 it no longer offers a

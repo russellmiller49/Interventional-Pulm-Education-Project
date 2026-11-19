@@ -37,9 +37,12 @@ describe('hub module sections', () => {
       if (note) {
         expect(within(card).getByText(note.summary)).toBeVisible()
         expect(within(card).getByText(note.audience)).toBeVisible()
-        for (const item of [...note.lookFor, ...note.knownLimits]) {
+        for (const item of note.lookFor) {
           expect(within(card).getByText(item)).toBeVisible()
         }
+        // The card keeps its description, audience, time and feedback prompts; known limits were
+        // taken off the hub (owner request, 2026-11-19).
+        expect(within(card).queryByText('Known limits')).not.toBeInTheDocument()
         if (note.estimate) {
           const basis = `from ${note.estimate.basis}`
           expect(
@@ -89,7 +92,6 @@ describe('hub module sections', () => {
           summary: 'A reference atlas of bronchoscopy devices.',
           estimate: { minutes: 20, basis: 'three search tasks' },
           lookFor: ['Whether a device is easy to find by type'],
-          knownLimits: ['Market status is unverified for some products'],
         },
       },
     }
@@ -100,7 +102,6 @@ describe('hub module sections', () => {
     expect(within(ready).getByText(/about 20 minutes, from three search tasks/)).toBeVisible()
     expect(within(ready).getByText('A reference atlas of bronchoscopy devices.')).toBeVisible()
     expect(within(ready).getByText('Whether a device is easy to find by type')).toBeVisible()
-    expect(within(ready).getByText('Market status is unverified for some products')).toBeVisible()
     // Marking a module ready changes where it is listed, not how it opens.
     expect(within(ready).getByRole('link', { name: /Test with feedback/ })).toHaveAttribute(
       'href',
