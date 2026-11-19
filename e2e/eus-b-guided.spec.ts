@@ -20,6 +20,13 @@ async function expectOneScreen(page: Page) {
   const size = page.viewportSize()!
   const shell = await page.locator('main').first().boundingBox()
   expect(shell!.y + shell!.height).toBeLessThanOrEqual(size.height + 1)
+  // The page itself does not scroll: nothing, the site footer included, lies below the lesson.
+  const document_ = await page.evaluate(() => ({
+    height: document.scrollingElement!.scrollHeight,
+    width: document.scrollingElement!.scrollWidth,
+  }))
+  expect(document_.height, 'page scroll height').toBeLessThanOrEqual(size.height + 1)
+  expect(document_.width, 'page scroll width').toBeLessThanOrEqual(size.width + 1)
   for (const selector of ['[data-now-primary]', 'iframe[title="EUS-B lab"]']) {
     const box = await page.locator(selector).boundingBox()
     expect(box, selector).not.toBeNull()
