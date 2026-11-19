@@ -1,4 +1,6 @@
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import type { EusbObservation } from '@/lib/eus-b-guided-bridge'
 import { LessonHost } from '../components/LessonHost'
@@ -387,5 +389,20 @@ describe('a lesson, task by task', () => {
     expect(container.querySelector('[data-survey-route]')).not.toBeNull()
     next()
     expect(container.querySelector('[data-reach-table]')).not.toBeNull()
+  })
+})
+
+describe('the lesson and the window', () => {
+  it('takes the whole window, so the site footer is not left under the lesson to scroll to', () => {
+    const { flow } = open()
+    // The shared activity-shell marker, directly in the shared frame's activity body.
+    expect(flow()).toHaveAttribute('data-critical-care-activity-shell', 'true')
+    expect(flow().parentElement?.parentElement).toHaveAttribute('data-activity-frame', 'true')
+    // For a page that carries it, the site stylesheet removes the footer and locks the page.
+    const site = readFileSync(join(process.cwd(), 'src/styles/globals.css'), 'utf8')
+    expect(site).toMatch(
+      /\[data-critical-care-activity-shell\]\s*\)\s*#main-content\s*\+\s*footer\s*\{\s*display: none;/,
+    )
+    expect(site).toMatch(/\[data-critical-care-activity-shell\]\s*\)\s*\{\s*overflow: hidden;/)
   })
 })

@@ -434,8 +434,15 @@ function LessonRun({
   const chapter = chapterOf(lesson.id)
   return (
     <EusbModuleFrame active="Learn" activity locale={locale}>
+      {/*
+       * The shared activity-shell marker hands the lesson the whole window in the fixed workspace
+       * (1024 x 700 and up): the site footer below it is removed and the page itself does not
+       * scroll (src/styles/globals.css). Without it the 478 px footer sat under the lesson and the
+       * page, or the course frame in the beta hub, scrolled by that much.
+       */}
       <div
         className={styles.lesson}
+        data-critical-care-activity-shell="true"
         data-eusb-flow
         data-arrange={arrange}
         data-activity-id={step ? lesson.id + ':' + step.id : lesson.id + ':finished'}
