@@ -208,7 +208,9 @@ describe('the lung drawing’s notes (mv-lung-figure-physician-check)', () => {
     expect(full.stiffness).toMatch(/does not\s+show a change in the lung tissue/)
     expect(full.airway).toMatch(/not necessarily a fixed\s+narrowing/)
     expect(full.airway).toMatch(/bronchospasm, secretions or the tube/)
-    expect(full.trapped).toMatch(/schematic of the model’s gas-trapping estimate/)
-    expect(full.trapped).toMatch(/does not show where the gas is trapped/)
+    expect(full.trapped).toMatch(/schematic of the model’s estimate of that gas/)
+    expect(full.trapped).toMatch(/does not show where in the lung that gas sits/)
+    // Section 7 bars /trap/ before commitment (mv-l6), and this note can show there.
+    expect(full.trapped).not.toMatch(/trap/i)
   })
 })

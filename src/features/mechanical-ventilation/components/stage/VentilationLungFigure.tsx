@@ -167,9 +167,9 @@ export function VentilationLungFigure({
           {model.trapped === null ? null : (
             <p data-trapped-note>
               The shaded base of each lung is gas still in the lung when the next breath starts. Its
-              height is a schematic of the model’s gas-trapping estimate, the intrinsic PEEP reading
-              beside the drawing. It does not show where the gas is trapped, and it is not a
-              measured volume.
+              height is a schematic of the model’s estimate of that gas, read from the intrinsic
+              PEEP beside the drawing. It does not show where in the lung that gas sits, and it is
+              not a measured volume.
             </p>
           )}
         </details>
