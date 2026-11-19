@@ -1,7 +1,7 @@
 import { betaRollout } from '@/features/module-beta/rollout'
 import { REACH_ROWS } from '../components/ReachTable'
 import { COURSE_OBJECTIVES, LESSONS, SURVEY_STOPS } from '../content/curriculum'
-import { STATIONS } from '../content/stations'
+import { STATIONS, SURVEY_VIEWS } from '../content/stations'
 import { EUSB_NUMBERS } from '../content/teachingNumbers'
 
 /** Everything a learner reads that is written in the content files. */
@@ -22,6 +22,11 @@ const authored: { where: string; text: string }[] = [
       station.sampled,
       ...station.landmarks.flatMap((landmark) => [landmark.name, landmark.where]),
     ].map((text) => ({ where: 'station table: ' + station.id, text })),
+  ),
+  ...SURVEY_VIEWS.flatMap((view) =>
+    [view.name, ...view.landmarks.flatMap((landmark) => [landmark.name, landmark.where])].map(
+      (text) => ({ where: 'survey stop: ' + view.id, text }),
+    ),
   ),
   ...LESSONS.flatMap((lesson) => [
     { where: lesson.id, text: lesson.title },

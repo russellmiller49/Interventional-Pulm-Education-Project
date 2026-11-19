@@ -23,7 +23,7 @@ const SHORT: Record<number, string> = {
   6: 'Station 4R',
 }
 
-/** "Stops 2, 3 and 6 are not yet taught …" for the stops no lesson teaches, or null. */
+/** "Stop 6 is not yet taught …" for the stops no lesson teaches, or null. */
 export function untaughtStopsNote(): string | null {
   const stops = SURVEY_STOPS.map(({ stop }) => stop).filter((stop) => !lessonForStop(stop))
   if (stops.length === 0) return null

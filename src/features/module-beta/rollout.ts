@@ -63,8 +63,8 @@ export const betaRollout: BetaRollout = {
       summary:
         'One systematic survey with the EBUS scope in the esophagus and stomach, taught landmark by landmark: predict, find the view yourself on a simulated image, mark the landmarks that identify it, then read it labeled.',
       estimate: {
-        minutes: 55,
-        basis: "7 lessons, by the course's own count; 8 more are being built",
+        minutes: 69,
+        basis: "9 lessons, by the course's own count; 6 more are being built",
       },
       lookFor: [
         'Whether the survey order, and the neighbors used to confirm each landmark, are the ones you teach.',
