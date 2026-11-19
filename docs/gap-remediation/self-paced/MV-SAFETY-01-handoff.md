@@ -86,6 +86,8 @@ The locators found that no registered chapter discusses acknowledging, documenti
 
 ## The hold: item 08
 
+**Update, 2026-11-17.** The owner ruled on 2026-11-12 (`mv-safety-alarm-limit-choice`): unsafe, with a note. The choice now carries a safety note, which is live and NOT REVIEWED: "A limit moved to fit an abnormal reading no longer warns of the problem it was set to catch, and this patient is still hypoxemic and distressed. On many ventilators the high-pressure limit also ends the breath when it is reached, so raising it allows a higher airway pressure to be delivered. Find and treat the cause, and set limits for the patient, not for the display." The queue item records it as `supported-feedback-added`, with the Tobin chapter 5 passage re-read that day. What follows is the record of why it was held.
+
 - **Choice.** `safety-reassessment-and-human-factors:final`, choice 2, "Raise the alarm limit to match the current display". The case: after an intervention the alarm is quieter, but the patient remains hypoxemic and distressed.
 - **Proposed teaching point (not shown).** Re-setting an alarm limit to the current abnormal reading, while hypoxemia and distress persist, stops the alarm warning at that value and treats nothing.
 - **Why it is held.** The registered manuals show that the consequence depends on which limit and which device:

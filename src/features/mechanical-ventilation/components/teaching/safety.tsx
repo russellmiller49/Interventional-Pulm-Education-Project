@@ -247,7 +247,8 @@ export function VentilationSafetyReassessment({
           </li>
           <li>
             Absent breath sounds on one side with a falling blood pressure is a tension pneumothorax
-            until proven otherwise. Decompress it; do not wait for a film.
+            until proven otherwise. Decompress it; do not wait for a film, and do not let the other
+            checks delay it. Decompression is the rescue; a chest drain is the definitive treatment.
           </li>
           <li>
             If the patient is easy to bag and improves off the ventilator, the fault is in the

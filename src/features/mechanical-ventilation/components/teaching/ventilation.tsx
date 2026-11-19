@@ -228,8 +228,10 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
         ids={['ph-goal', 'rate-maximum', 'ph-severe-acidosis', 'obstruction-ph']}
       >
         <p>
-          In ARDS, raise the rate first when pH falls under goal. In severe airflow obstruction a
-          faster rate traps more gas, so a lower pH is accepted instead.
+          In ARDS, raise the rate first when pH falls under goal. When expiration does not finish, a
+          faster rate traps more gas, whatever is obstructing the airway. In severe asthma, one
+          expert approach accepts a lower pH instead. That threshold comes from severe asthma: clear
+          a plugged or kinked tube, and treat other obstruction by its cause.
         </p>
       </ReferenceValues>
     </section>
