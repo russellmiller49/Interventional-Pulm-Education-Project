@@ -15,6 +15,13 @@ export const SOURCES = [
     type: 'Review and technique description',
   },
   {
+    id: 'shweihat2019',
+    title:
+      'Shweihat Y, Singh S. EUS-B for the interventional pulmonologist using the EBUS scope in the esophagus. In: Interventional Pulmonology and Pulmonary Hypertension: Updates on Specific Topics. IntechOpen 2019',
+    url: 'https://doi.org/10.5772/intechopen.84280',
+    type: 'Book chapter',
+  },
+  {
     id: 'nayahangan2022',
     title:
       'Nayahangan LJ, Clementsen PF, Doubleday A, Riddle J, Annema JT, Konge L. Developing a simulation-based training curriculum in transesophageal ultrasound with the use of the endobronchial ultrasound-endoscope. Endosc Ultrasound 2022',

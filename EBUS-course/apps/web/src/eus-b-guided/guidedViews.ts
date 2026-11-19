@@ -5,7 +5,11 @@ import type {
   EusScopeState,
 } from '@/features/eus-b-simulator/types';
 import { applyScopeChange } from '@/features/eus-b-simulator/useEusScopeSession';
-import type { EusbLabSpec, EusbStart } from '../../../../../src/lib/eus-b-guided-contract';
+import {
+  EUSB_VIEW_OFFSETS,
+  type EusbLabSpec,
+  type EusbStart,
+} from '../../../../../src/lib/eus-b-guided-contract';
 
 /**
  * Views that exist only for the guided course, by key. The case's own landmark views come first;
@@ -13,11 +17,22 @@ import type { EusbLabSpec, EusbStart } from '../../../../../src/lib/eus-b-guided
  */
 export const GUIDED_ONLY_VIEWS: Readonly<Record<string, EusScopeState>> = {};
 
-/** Scope position of a named view, or null when neither the case nor the course has it. */
+/**
+ * Scope position of a named view, or null when neither the case nor the course has it. A case view
+ * the course moves (`EUSB_VIEW_OFFSETS`) is returned moved.
+ */
 export function viewPose(manifest: EusCaseManifest, key: string): EusScopeState | null {
   const landmark = manifest.landmarks.find((entry) => entry.key === key);
-  if (landmark)
-    return { sMm: landmark.sMm, rollDeg: landmark.rollDeg, flexDeg: landmark.flexDeg };
+  if (landmark) {
+    const offset = Object.prototype.hasOwnProperty.call(EUSB_VIEW_OFFSETS, key)
+      ? EUSB_VIEW_OFFSETS[key]
+      : {};
+    return {
+      sMm: landmark.sMm + (offset.sMm ?? 0),
+      rollDeg: landmark.rollDeg + (offset.rollDeg ?? 0),
+      flexDeg: landmark.flexDeg + (offset.flexDeg ?? 0),
+    };
+  }
   return Object.prototype.hasOwnProperty.call(GUIDED_ONLY_VIEWS, key)
     ? GUIDED_ONLY_VIEWS[key]
     : null;

@@ -63,6 +63,14 @@ interface EusGuidedSectorProps {
    * already marked. Nothing else is tinted, and still nothing is named under the pointer.
    */
   tintKeys?: readonly string[];
+  /** A tinted structure drawn in another's color, by key: one asked for together with a landmark. */
+  tintColorOf?: Readonly<Record<string, string>>;
+  /**
+   * The pixels of this frame the beam reaches. Nothing outside them is tinted, outlined or named
+   * under the pointer: tissue behind air or bone is not in the picture. Until it is given, nothing
+   * is colored or named at all.
+   */
+  reach: Uint8Array | null;
   /**
    * When set, the image can be clicked: with the pointer, or with a crosshair moved by the arrow
    * keys and Enter or Space. It is told where.
@@ -87,6 +95,8 @@ export function EusGuidedSector({
   onKeyDown,
   drivable,
   tintKeys,
+  tintColorOf,
+  reach,
   onPick,
   children,
 }: EusGuidedSectorProps) {
@@ -164,11 +174,13 @@ export function EusGuidedSector({
 
   // Read from the current frame, so the name stays right while the picture changes under a
   // still pointer. Nothing is read at all while names are withheld.
+  const shows = !!frame && !!reach && reach.length === frame.width * frame.height;
   const pointed = useMemo(() => {
-    if (!frame || !pointer || !named) return null;
-    const raw = frame.labelImage[pointer.y * frame.width + pointer.x];
-    return raw === 0 ? null : (labels[raw === 255 ? 0 : raw] ?? null);
-  }, [frame, pointer, named, labels]);
+    if (!frame || !pointer || !named || !shows) return null;
+    const pixel = pointer.y * frame.width + pointer.x;
+    const raw = frame.labelImage[pixel];
+    return raw === 0 || !reach![pixel] ? null : (labels[raw === 255 ? 0 : raw] ?? null);
+  }, [frame, pointer, named, labels, shows, reach]);
   const pointedKey = pointed?.reportable ? pointed.key : null;
 
   useEffect(() => {
@@ -190,11 +202,14 @@ export function EusGuidedSector({
   const tintList = named ? '' : (tintKeys ?? []).join(' ');
   const tintOnly = useMemo(() => {
     if (!tintList) return null;
-    const ids = new Set(tintList.split(' ').map((key) => labelIds.get(key)));
-    return labels.map((label) =>
-      ids.has(label.id) ? (labelColors[label.id] ?? ([255, 255, 255] as [number, number, number])) : null,
-    );
-  }, [tintList, labelIds, labels, labelColors]);
+    const keys = new Set(tintList.split(' '));
+    return labels.map((label) => {
+      if (!keys.has(label.key)) return null;
+      const colorKey = tintColorOf?.[label.key];
+      const id = colorKey === undefined ? label.id : (labelIds.get(colorKey) ?? label.id);
+      return labelColors[id] ?? ([255, 255, 255] as [number, number, number]);
+    });
+  }, [tintList, tintColorOf, labelIds, labels, labelColors]);
   useEffect(() => {
     const element = overlay.current;
     if (!element || !frame) return;
@@ -205,15 +220,20 @@ export function EusGuidedSector({
     const context = element.getContext('2d');
     if (!context) return;
     const image = context.createImageData(frame.width, frame.height);
-    paintEusOverlay(image.data, volume, frame, {
-      colors: tintOnly ?? labelColors,
-      tint: named || !!tintOnly,
-      activeId: null,
-      highlightId,
-      fillHighlight: true,
-    });
+    if (shows) {
+      paintEusOverlay(image.data, volume, frame, {
+        colors: tintOnly ?? labelColors,
+        tint: named || !!tintOnly,
+        activeId: null,
+        highlightId,
+        fillHighlight: true,
+      });
+      // Only what the beam reaches keeps its color.
+      for (let pixel = 0; pixel < reach!.length; pixel++)
+        if (!reach![pixel]) image.data[pixel * 4 + 3] = 0;
+    }
     context.putImageData(image, 0, 0);
-  }, [frame, named, labelColors, tintOnly, highlightId, volume]);
+  }, [frame, named, labelColors, tintOnly, highlightId, volume, shows, reach]);
 
   const pickAt = (fx: number, fy: number) => {
     if (!frame || !onPick) return;

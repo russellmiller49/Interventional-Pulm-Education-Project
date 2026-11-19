@@ -56,11 +56,11 @@ import {
   type IdentifyState,
 } from './guidedIdentify';
 import {
-  clickHits,
+  clickedLandmark,
   clickTolerancePx,
-  labelUnder,
   landmarkPoint,
   pointFraction,
+  reachedLabelIds,
 } from './guidedLandmarks';
 import {
   buildObservation,
@@ -451,14 +451,22 @@ function GuidedLab({
   const frameReady =
     !!frame && !!frameTag && frameTag.labKey === labKey && sameImage(frameTag, scope, depthMm, gainDb);
 
-  // ---- Landmarks in the image on screen ----------------------------------------------------------
-  // Read only from an image that is this lab's and current, and only when landmarks are drawn or
-  // asked for: on a labeled image, and in a mark-the-landmarks task.
-  const landmarkFrame = frameReady && landmarks.length > 0 && (named || identifying) ? frame : null;
+  // ---- What the beam reaches in the image on screen -------------------------------------------
+  // Read only from an image that is this lab's and current, and only where something is named or
+  // asked for: on a labeled image, and in a mark-the-landmarks task. Behind air or bone nothing is
+  // named, tinted, numbered or clickable, because the image does not show it.
+  const shownFrame = frameReady && (named || identifying) ? frame : null;
   const reached = useMemo(
-    () => (landmarkFrame ? reachMask(landmarkFrame, blocking) : null),
-    [landmarkFrame, blocking],
+    () => (shownFrame ? reachMask(shownFrame, blocking) : null),
+    [shownFrame, blocking],
   );
+  const reachedIds = useMemo(
+    () => (shownFrame && reached ? reachedLabelIds(shownFrame, reached) : null),
+    [shownFrame, reached],
+  );
+
+  // ---- Landmarks in the image on screen ----------------------------------------------------------
+  const landmarkFrame = landmarks.length > 0 ? shownFrame : null;
   /** Where each landmark of the lab lies in this image, as fractions of it. Absent: not in it. */
   const landmarkAt = useMemo(() => {
     const points = new Map<string, { x: number; y: number }>();
@@ -473,18 +481,19 @@ function GuidedLab({
 
   const pick = (at: SectorPick) => {
     if (!identifying || !landmarkFrame || !reached || !asked) return;
-    const askedId = session.labelIds.get(asked);
-    let key: string | null = null;
-    if (
-      askedId !== undefined &&
-      clickHits(landmarkFrame, reached, askedId, at, clickTolerancePx(landmarkFrame))
-    )
-      key = asked;
-    else {
-      const under = labelUnder(landmarkFrame, reached, at);
-      const label = under === null ? undefined : volume.metadata.labels[under];
-      key = label?.reportable ? label.key : null;
-    }
+    // A landmark asked for together with the structure beside it is hit on either.
+    const labelIds = [asked, ...(lab.together?.[asked]?.with ?? [])].flatMap((key) => {
+      const id = session.labelIds.get(key);
+      return id === undefined ? [] : [id];
+    });
+    const key = clickedLandmark(
+      landmarkFrame,
+      reached,
+      { key: asked, labelIds },
+      at,
+      clickTolerancePx(landmarkFrame),
+      volume.metadata.labels,
+    );
     dispatchIdentify({ type: 'click', labKey, landmarks, key, at: at.fraction });
   };
 
@@ -605,6 +614,11 @@ function GuidedLab({
       key.replace(/_/g, ' '),
     [session.structures, volume],
   );
+  /** How a landmark is asked for: by its name, or with the structure it is asked for together. */
+  const askedLabel = (key: string) => {
+    const together = lab.together?.[key]?.name.replace(/^the /, '');
+    return together ? together.charAt(0).toUpperCase() + together.slice(1) : structureLabel(key);
+  };
   const structureColor = useCallback(
     (key: string) => {
       const id = session.labelIds.get(key);
@@ -615,9 +629,11 @@ function GuidedLab({
   );
 
   const legend = useMemo(() => {
-    if (!named || !frame) return [];
+    if (!named || !shownFrame || !reachedIds) return [];
     const labels = volume.metadata.labels;
-    const rows = [...frame.structures]
+    const rows = [...shownFrame.structures]
+      // Inside the sector is not enough: the beam has to reach it.
+      .filter((entry) => reachedIds.has(entry.id))
       .sort((a, b) => b.count - a.count)
       .map((entry) => {
         const label = labels[entry.id];
@@ -636,7 +652,7 @@ function GuidedLab({
     const lead = target ? rows.findIndex((row) => row.key === target.key) : -1;
     if (lead > 0) rows.unshift(...rows.splice(lead, 1));
     return rows;
-  }, [named, frame, volume, session.structures, session.labelColors, target, landmarks]);
+  }, [named, shownFrame, reachedIds, volume, session.structures, session.labelColors, target, landmarks]);
   /** The view's landmarks in their own order, each with its number, whether or not it is in the image. */
   const landmarkRows = useMemo(
     () =>
@@ -673,6 +689,20 @@ function GuidedLab({
         })
       : [];
   const askRows = identifying ? identifyRows(marked, landmarks) : [];
+  // A marked landmark is tinted with the structure it was asked for together with, in its color.
+  const tintKeys = [...marked.keys, ...marked.shown].flatMap((key) => [
+    key,
+    ...(lab.together?.[key]?.with ?? []),
+  ]);
+  const tintColorOf = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(lab.together ?? {}).flatMap(([key, together]) =>
+          together.with.map((other) => [other, key] as const),
+        ),
+      ),
+    [lab],
+  );
 
   const level = eusLevelAt(manifest, scope.sMm);
   const facing = session.pose ? describeFacing(session.pose.depthAxisLps) : '';
@@ -702,7 +732,9 @@ function GuidedLab({
         named={named}
         highlightKey={legendKey ?? badgeKey}
         onPointStructure={setPointedKey}
-        tintKeys={identifying ? [...marked.keys, ...marked.shown] : undefined}
+        tintKeys={identifying ? tintKeys : undefined}
+        tintColorOf={tintColorOf}
+        reach={reached}
         onPick={identifying && !allMarked ? pick : undefined}
         drivable={showControls && interactive}
         onKeyDown={(event) => {
@@ -833,7 +865,7 @@ function GuidedLab({
               <p className="eusg-ask__now" aria-live="polite" data-eusg-ask-now>
                 {asked ? (
                   <>
-                    Click: <strong>{structureLabel(asked)}</strong>
+                    Click: <strong>{askedLabel(asked)}</strong>
                   </>
                 ) : (
                   'All landmarks marked.'
@@ -845,7 +877,7 @@ function GuidedLab({
                     <span className="eusg-ask__number" aria-hidden="true">
                       {row.number}
                     </span>
-                    <span>{structureLabel(row.key)}</span>
+                    <span>{askedLabel(row.key)}</span>
                     <span className="eusg-ask__state">
                       {row.state === 'done'
                         ? '✓ Marked'
@@ -871,7 +903,7 @@ function GuidedLab({
               )}
               <p className="eusg-ask__result" role="status" data-eusg-identify-result>
                 {asked && marked.lastMiss === asked
-                  ? `Not ${inSentence(structureLabel(asked))}. Try again.`
+                  ? `Not ${inSentence(askedLabel(asked))}. Try again.`
                   : ''}
               </p>
               {asked && (

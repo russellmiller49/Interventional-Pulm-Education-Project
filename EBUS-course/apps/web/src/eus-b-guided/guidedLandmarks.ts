@@ -88,6 +88,42 @@ export function clickHits(
   return false;
 }
 
+/**
+ * What a click in a mark-the-landmarks task lands on: the landmark being asked for when the click
+ * is on it, or on a structure asked for together with it, or within the tolerance of either;
+ * otherwise the named structure under the click, or null.
+ */
+export function clickedLandmark(
+  frame: Pick<LabelFrame, 'labelImage' | 'width' | 'height'>,
+  reach: Uint8Array,
+  asked: { key: string; labelIds: readonly number[] },
+  at: FramePoint,
+  tolerancePx: number,
+  labels: readonly { key: string; reportable?: boolean }[],
+): string | null {
+  if (asked.labelIds.some((id) => clickHits(frame, reach, id, at, tolerancePx))) return asked.key;
+  const under = labelUnder(frame, reach, at);
+  const label = under === null ? undefined : labels[under];
+  return label?.reportable ? label.key : null;
+}
+
+/**
+ * The labels the beam reaches somewhere in an image. Only these may be named or tinted on it: a
+ * structure behind air or bone is not in the picture, whatever lies inside the sector.
+ */
+export function reachedLabelIds(
+  frame: Pick<LabelFrame, 'labelImage'>,
+  reach: Uint8Array,
+): Set<number> {
+  const ids = new Set<number>();
+  const { labelImage } = frame;
+  for (let at = 0; at < labelImage.length; at++) {
+    const raw = labelImage[at];
+    if (raw !== 0 && reach[at]) ids.add(raw === 255 ? 0 : raw);
+  }
+  return ids;
+}
+
 /** The label id under a point where the beam reaches it, or null outside the image or in shadow. */
 export function labelUnder(
   frame: Pick<LabelFrame, 'labelImage' | 'width' | 'height'>,

@@ -50,12 +50,13 @@ export const STATIONS: Station[] = [
     called: 'Paraesophageal, below the carina',
     lesson: 'station-8',
     view: 'station-8-view',
-    scope: 'Lower esophagus, between the diaphragm and the left atrium. Facing forward.',
+    scope:
+      'Lower esophagus, behind or below the left atrium, down to the diaphragm. Facing forward.',
     landmarks: [
       {
         key: 'left_atrium',
         name: 'Left atrium',
-        where: 'Right of the image. It lies above the station.',
+        where: 'Right of the image. In this patient it lies above the node.',
       },
       {
         key: 'right_atrium',
@@ -89,7 +90,8 @@ export const STATIONS: Station[] = [
       {
         key: 'pulmonary_veins',
         name: 'Pulmonary vein',
-        where: 'Just beyond the node. The station begins below the inferior pulmonary vein.',
+        where:
+          'Beyond the node. The image names the pulmonary veins together; the landmark is the inferior vein, and the station begins below it.',
       },
       {
         key: 'station_9',
@@ -126,7 +128,7 @@ export const STATIONS: Station[] = [
       },
     ],
     mistakenFor:
-      'Station 8, which lies lower, with the left atrium above it. Station 10R can be in the same image, deeper, beyond the pulmonary artery.',
+      'Station 8, which lies lower, behind or below the left atrium. Station 10R can be in the same image, deeper, beyond the pulmonary artery.',
     sampled: 'Yes. It is reached from either route.',
   },
   {

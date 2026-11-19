@@ -5,7 +5,7 @@ import { betaRollout } from '@/features/module-beta/rollout'
 import { EUSB_LABS, EUSB_LAB_IDS, eusbLab } from '@/lib/eus-b-guided-contract'
 import { StationTable, stationsTaught } from '../components/StationLandmarks'
 import { REACH_ROWS } from '../components/ReachTable'
-import { SurveyRoute } from '../components/SurveyRoute'
+import { SurveyRoute, untaughtStopsNote } from '../components/SurveyRoute'
 import {
   CHAPTERS,
   GUIDED_MINUTES,
@@ -54,7 +54,9 @@ describe('course registry', () => {
     const note = betaRollout['eus-b-guided'].note!
     expect(note.estimate!.minutes).toBe(GUIDED_MINUTES)
     expect(note.estimate!.basis).toContain(`${LESSONS.length} lessons`)
-    expect(note.knownLimits.join(' ')).toContain(`${EUSB_NUMBERS.rows.length} sourced numbers`)
+    expect(note.knownLimits.join(' ')).toContain(
+      `${EUSB_NUMBERS.rows.length} sourced teaching numbers`,
+    )
   })
 
   it('cites only registered sources, and every number can be traced', () => {
@@ -151,14 +153,16 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
       const lab = eusbLab(step.lab)
       expect(lab.kind).toBe('identify')
       expect(lab.controls).toEqual([])
+      // The task may ask for the first few of the still's landmarks; each keeps its number.
+      const asked = JSON.stringify(lab.landmarks)
       const taught = lesson.steps.slice(0, at).some((earlier) => {
         if (earlier.kind !== 'brief' || !earlier.view || !earlier.station) return false
         const still = eusbLab(earlier.view)
+        const listed = stationById(earlier.station)!.landmarks.map((entry) => entry.key)
         return (
           JSON.stringify(still.start) === JSON.stringify(lab.start) &&
-          JSON.stringify(still.landmarks) === JSON.stringify(lab.landmarks) &&
-          JSON.stringify(stationById(earlier.station)!.landmarks.map((entry) => entry.key)) ===
-            JSON.stringify(lab.landmarks)
+          JSON.stringify(still.landmarks) === JSON.stringify(listed) &&
+          JSON.stringify(listed.slice(0, lab.landmarks!.length)) === asked
         )
       })
       expect(taught).toBe(true)
@@ -331,6 +335,16 @@ describe('the survey route', () => {
     expect(container.querySelector('[data-route-stop="4"]')).toHaveAttribute('data-current', 'true')
     expect(listed[3]).toHaveAttribute('aria-current', 'step')
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('names the stops no lesson teaches yet, and only where asked to', () => {
+    expect(untaughtStopsNote()).toBe('Stops 2, 3 and 6 are not yet taught in this course.')
+    const plain = render(<SurveyRoute current={4} />)
+    expect(plain.container.querySelector('[data-survey-untaught]')).toBeNull()
+    const noted = render(<SurveyRoute current={4} noteUntaught />)
+    expect(noted.container.querySelector('[data-survey-untaught]')).toHaveTextContent(
+      untaughtStopsNote()!,
+    )
   })
 })
 

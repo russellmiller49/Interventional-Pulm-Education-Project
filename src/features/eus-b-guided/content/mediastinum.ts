@@ -69,7 +69,7 @@ export const stationSeven: Lesson = {
       ],
       points: [
         'Deepest: the superior vena cava.',
-        'The second, deeper node is station 10R. It is visible from here, with the pulmonary artery in front of it.',
+        'In this patient a station 10R node can also show in the far field, beyond the pulmonary artery. Hilar nodes are not a target from the esophagus.',
       ],
       station: 'station-7',
     },
@@ -139,7 +139,7 @@ export const stationEight: Lesson = {
       title: 'A station the airway does not reach',
       body: [
         'Station 8 is the paraesophageal station: nodes against the esophageal wall below the level of station 7. From the esophagus it is in the near field.',
-        'The heart gives its level. The left atrium is above the station; the right atrium and the inferior vena cava are below and in front of it.',
+        'Station 8 runs from below the subcarinal station to the diaphragm, so a node may lie behind the left atrium or below it. In this patient it lies below the atrium, where the inferior vena cava enters the right atrium.',
       ],
       view: 'station-8-view',
       station: 'station-8',
@@ -195,10 +195,10 @@ export const stationEight: Lesson = {
   ],
   takeaways: [
     'Station 8 lies against the esophageal wall below the level of station 7.',
-    'The left atrium above it, and the right atrium and inferior vena cava below it, give the level.',
+    'A node beside the esophagus with the left atrium above it is below station 7.',
     'It is examined from the esophagus; the airway route does not reach it.',
   ],
-  sources: ['bugalho2018', 'combined2015'],
+  sources: ['bugalho2018', 'shweihat2019', 'combined2015'],
 }
 
 export const stationNine: Lesson = {
@@ -212,7 +212,7 @@ export const stationNine: Lesson = {
       kind: 'predict',
       id: 'where-nine-begins',
       title: 'Where station 9 begins',
-      stem: 'Station 8 is in the image. The CT report describes a second node lower in the chest, in the right pulmonary ligament.',
+      stem: 'Station 8 is in the image. The CT report describes a second node beside the lower esophagus, in the right pulmonary ligament.',
       question: question(
         'where-nine-begins',
         'Which structure marks the upper border of the station you are now looking for?',
@@ -226,7 +226,7 @@ export const stationNine: Lesson = {
         ],
         [
           'The upper border of the left atrium',
-          'The left atrium separates station 7 above it from station 8 beside the esophagus below. It does not bound the pulmonary ligament.',
+          'From the esophagus, the upper border of the left atrium is about where station 7 ends and station 8 begins. It does not bound the pulmonary ligament.',
         ],
       ),
     },
@@ -236,7 +236,7 @@ export const stationNine: Lesson = {
       title: 'Toward the lung, below the vein',
       body: [
         'Station 9 is the nodes in the pulmonary ligament. The transducer faces the lung on the side examined, here the patient’s right.',
-        'Two things identify it: a pulmonary vein beside the node, and lung beyond it. The bright line where the image ends is the surface of the lung.',
+        'Two things identify it: a pulmonary vein beside the node, and lung beyond it. The ligament itself does not show on ultrasound; the vein and the lung place the node. The lung begins where the tissue ends beyond the vein; the lines deeper in the black are reverberation.',
       ],
       view: 'station-9-view',
       station: 'station-9',
@@ -264,6 +264,7 @@ export const stationNine: Lesson = {
       of: 'find-station-9',
       body: [
         'Most of the image is lost in lung. That is expected here: the ligament runs out toward the lung, and the node lies in the short stretch of tissue before it.',
+        'Near the inferior pulmonary vein, stations 8 and 9 are hard to tell apart. Either is N2 on the tumor’s side and N3 on the other, so for a single node the name does not change the N category.',
       ],
       station: 'station-9',
     },
@@ -295,7 +296,7 @@ export const stationNine: Lesson = {
     'A pulmonary vein beside the node and lung beyond it identify the station.',
     'There is a ligament on each side: face the lung on the side of the node.',
   ],
-  sources: ['bugalho2018', 'combined2015'],
+  sources: ['bugalho2018', 'shweihat2019', 'combined2015'],
 }
 
 export const stationFourL: Lesson = {

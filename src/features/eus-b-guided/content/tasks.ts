@@ -47,12 +47,14 @@ export function eusbRequirements(
     const done = live?.identified
     return (lab.landmarks ?? []).map((key) => {
       const shown = !!done?.shown.includes(key)
+      // A landmark asked for together with the structure beside it is named with it; that name
+      // has a comma in it, so it is closed with one inside the sentence.
+      const name = lab.together?.[key]?.name ?? structureName(key)
+      const inline = name.includes(',') ? name + ',' : name
       return {
         id: 'mark-' + key,
         met: shown || !!done?.keys.includes(key),
-        text: shown
-          ? `You were shown ${structureName(key)}.`
-          : `Click ${structureName(key)} in the image.`,
+        text: shown ? `You were shown ${name}.` : `Click ${inline} in the image.`,
       }
     })
   }

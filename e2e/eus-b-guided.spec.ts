@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { LESSONS, lessonById } from '../src/features/eus-b-guided/content/curriculum'
-import { eusbLab } from '../src/lib/eus-b-guided-contract'
+import { EUSB_VIEW_OFFSETS, eusbLab } from '../src/lib/eus-b-guided-contract'
 import { stationById } from '../src/features/eus-b-guided/content/stations'
 import { goToActivity, lab } from './eus-b-guided-steps'
 
@@ -13,7 +13,16 @@ const manifest = JSON.parse(
     'utf8',
   ),
 ) as { landmarks: { key: string; sMm: number; rollDeg: number }[] }
-const viewOf = (key: string) => manifest.landmarks.find((landmark) => landmark.key === key)!
+/** The course's view of a structure: the case's, moved where the course moves it. */
+const viewOf = (key: string) => {
+  const view = manifest.landmarks.find((landmark) => landmark.key === key)!
+  const offset = EUSB_VIEW_OFFSETS[key] ?? {}
+  return {
+    ...view,
+    sMm: view.sMm + (offset.sMm ?? 0),
+    rollDeg: view.rollDeg + (offset.rollDeg ?? 0),
+  }
+}
 
 /** Everything the learner needs for the task is inside the window, and neither page scrolls. */
 async function expectOneScreen(page: Page) {
