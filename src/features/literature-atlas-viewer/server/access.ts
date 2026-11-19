@@ -182,9 +182,26 @@ export function resetAttempts(): void {
   overall = { start: 0, count: 0 }
 }
 
-/** The client address as the host's proxy reports it; the first forwarded address wins. */
-export function clientOf(headers: Headers): string {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() || headers.get('x-real-ip') || 'unknown'
-  )
+/**
+ * The client address that keys the attempt limit. A visitor can send its own `X-Forwarded-For`, so the
+ * first (left-most) entry is the visitor's choice and is never trusted: rotating it would spread guesses
+ * over many keys. Each trusted proxy appends the address it saw, so the entry `hops` places from the right
+ * is the one the host's own proxy recorded (default 1: the last entry; set
+ * `LITERATURE_ATLAS_TRUSTED_PROXY_HOPS` when the host adds more than one trusted hop). With no usable
+ * forwarded chain, `X-Real-IP` is used, else one shared key, so an unknown client is limited, never exempt.
+ * The overall cap in `mayAttempt` still bounds every attempt, whatever the key.
+ */
+export function clientOf(headers: Headers, hops: number = trustedProxyHops()): string {
+  const chain = (headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+  if (hops >= 1 && chain.length >= hops) return chain[chain.length - hops]!
+  return headers.get('x-real-ip')?.trim() || 'unknown'
+}
+
+/** Trusted proxy hops in front of the site: a whole number from 1 to 5, else 1. */
+export function trustedProxyHops(env: Record<string, string | undefined> = process.env): number {
+  const value = Number(env.LITERATURE_ATLAS_TRUSTED_PROXY_HOPS ?? '1')
+  return Number.isInteger(value) && value >= 1 && value <= 5 ? value : 1
 }

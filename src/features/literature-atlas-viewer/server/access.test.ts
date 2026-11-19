@@ -4,6 +4,7 @@ import { pbkdf2Sync, randomBytes } from 'node:crypto'
 import {
   RELAY_NOTE_SECONDS,
   checkPassword,
+  clientOf,
   cookieValue,
   issueSession,
   mayAttempt,
@@ -12,6 +13,7 @@ import {
   relayNote,
   resetAttempts,
   sessionCookie,
+  trustedProxyHops,
   verifySession,
   viewerConfig,
 } from './access'
@@ -111,5 +113,33 @@ describe('Literature Atlas viewer access', () => {
     expect(mayAttempt('client-b', now)).toBe(true)
     expect(mayAttempt('client-a', now + 16 * 60 * 1000)).toBe(true)
     resetAttempts()
+  })
+
+  it('keys attempts on the address the host proxy recorded, not one the visitor forged', () => {
+    const headers = (value: Record<string, string>) => new Headers(value)
+    // a forged first entry is ignored: the proxy-appended last entry is the key
+    expect(clientOf(headers({ 'x-forwarded-for': '203.0.113.9, 198.51.100.20' }), 1)).toBe('198.51.100.20')
+    expect(clientOf(headers({ 'x-forwarded-for': 'forged-1, 198.51.100.20' }), 1)).toBe(
+      clientOf(headers({ 'x-forwarded-for': 'forged-2, 198.51.100.20' }), 1),
+    )
+    expect(clientOf(headers({ 'x-forwarded-for': '198.51.100.20' }), 1)).toBe('198.51.100.20')
+    // two trusted hops: the second entry from the right
+    expect(clientOf(headers({ 'x-forwarded-for': 'forged, 198.51.100.20, 10.0.0.1' }), 2)).toBe('198.51.100.20')
+    // no usable chain: X-Real-IP, else one shared key (limited, never exempt)
+    expect(clientOf(headers({ 'x-forwarded-for': '10.0.0.1' }), 2)).toBe('unknown')
+    expect(clientOf(headers({ 'x-real-ip': '198.51.100.7' }), 1)).toBe('198.51.100.7')
+    expect(clientOf(headers({}), 1)).toBe('unknown')
+    // rotating forged entries cannot spread guesses over many keys
+    resetAttempts()
+    const now = 1_800_000_000_000
+    for (let i = 0; i < 10; i++) recordFailure(clientOf(headers({ 'x-forwarded-for': `forged-${i}, 198.51.100.20` }), 1), now)
+    expect(mayAttempt(clientOf(headers({ 'x-forwarded-for': 'forged-new, 198.51.100.20' }), 1), now)).toBe(false)
+    resetAttempts()
+  })
+
+  it('reads the trusted hop count from configuration, within bounds', () => {
+    expect(trustedProxyHops({})).toBe(1)
+    expect(trustedProxyHops({ LITERATURE_ATLAS_TRUSTED_PROXY_HOPS: '2' })).toBe(2)
+    for (const bad of ['0', '-1', '9', 'x', '1.5']) expect(trustedProxyHops({ LITERATURE_ATLAS_TRUSTED_PROXY_HOPS: bad })).toBe(1)
   })
 })
