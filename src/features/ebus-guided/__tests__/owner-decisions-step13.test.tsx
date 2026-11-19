@@ -95,10 +95,13 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
     expect(lesson('scope-orientation').paragraphs).toContain(
       'The green orientation dot at the upper right of the ultrasound image marks the proximal (cephalad) side of the view. Image right is toward the patient’s head, image left is toward the tip of the scope, and the needle enters the image from the side of the dot.',
     )
-    // The approved sentence stands; the teaching-first rules of 2026-10-08 add the interval after it.
-    expect(lesson('preparation').paragraphs.join(' ')).toContain(
-      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for 4 hours and clear fluids until 2 hours before (BTS 2013).',
+    // The approved sentence stands. The interval after it is anesthesia guidance since the owner's
+    // ruling of 2026-11-12, which rejected BTS 2013's 4 hours as the default for EBUS.
+    const preparation = lesson('preparation').paragraphs.join(' ')
+    expect(preparation).toContain(
+      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. For healthy patients having an elective procedure under general anesthesia or procedural sedation, the ASA preoperative fasting guideline allows clear liquids until 2 hours before. For solid food it gives at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat.',
     )
+    expect(preparation).not.toMatch(/4 hours/)
   })
 
   it('OD-11 lists the approved core reference', () => {

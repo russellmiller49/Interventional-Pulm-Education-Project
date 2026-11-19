@@ -17,7 +17,7 @@ export const sampleLessons: Lesson[] = [
       'Check the needle–scope compatibility and the current manufacturer instructions. Before insertion or removal through the working channel, visually confirm that the needle is retracted into its sheath and secured as specified for the device.',
       'Protected needle/assembly preparation may occur according to the device and local workflow. Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately before needle exposure and advancement.',
       'Confirm the target and path on live ultrasound. Advance and sample with the needle tip continuously identified in the imaging plane. If you lose the tip, stop moving the needle. Bring it back into the plane with small rotations of the scope, not by advancing.',
-      `Set the needle stop to the depth you measured to the far side of the node, so the needle cannot travel beyond it. Within the node, move the needle back and forth ${N('agitations-per-pass')} times on each pass (CHEST 2016; ICS/IAB 2023 suggests at least 10). Suction and the stylet are both optional (ICS/IAB 2023). Resistance means stop and reassess, not push.`,
+      `Set the needle stop to the depth you measured to the far side of the node, so the needle cannot travel beyond it. Within the node, move the needle back and forth at least 10 times on each pass, which ICS/IAB 2023 recommends as a usual practice point; the older CHEST 2016 guideline describes a pass as typically ${N('agitations-per-pass')} movements. This is a recommendation about technique, not proof of an adequate specimen. Adequacy depends on the material you obtain and on what the sample is for. Suction and the stylet are both optional (ICS/IAB 2023). Resistance means stop and reassess, not push.`,
     ],
     checklist: [
       'Confirm device compatibility and protected needle position.',
@@ -227,8 +227,8 @@ export const sampleLessons: Lesson[] = [
     concept: 'Adequacy is specific to the task',
     paragraphs: [
       'Rapid on-site evaluation (ROSE) provides immediate feedback about the submitted material and may guide further acquisition or allocation. It does not replace final pathology and does not automatically establish adequacy for all molecular or ancillary tests.',
-      `For suspected malignancy, the 2024 CHEST guideline recommends ${N('passes-per-station')} needle passes per station rather than three or fewer (a strong recommendation on very low certainty evidence), and suggests ROSE where it is available. Four passes do not guarantee enough material for every assay.`,
-      `The same guideline suggests a ${N('needle-gauge')} needle for suspected malignancy. Needle choice does not make up for poor targeting or the wrong container. When molecular testing is planned, take additional passes for cell block. PD-L1 immunohistochemistry and next-generation sequencing often draw on that same cell block, although some laboratories run ancillary tests on smears or other preparations, and how material is processed and allocated follows the laboratory’s own protocol. Material that was enough for the diagnosis can run out before the last assay, so tell the laboratory which tests are needed before the case, not after the report.`,
+      `CHEST and AABIP each give a number of passes. For suspected malignancy, the 2024 CHEST guideline recommends ${N('passes-per-station')} needle passes at each sampling site rather than three or fewer (a strong recommendation on very low certainty evidence), and suggests ROSE where it is available. The 2025 AABIP guideline sets at least three passes, or ROSE, at each nodal station as the minimum standard for systematic staging, and notes that in practice this means at least three, and often four or more. The older CHEST 2016 guideline suggested at least three passes when ROSE was not available; that figure is now historical. Enough material for a diagnosis is not always enough for molecular testing: four passes do not guarantee material for every assay.`,
+      `The 2024 CHEST guideline also suggests a ${N('needle-gauge')} needle for suspected malignancy. Needle choice does not make up for poor targeting or the wrong container. When molecular testing is planned, take additional passes for cell block. PD-L1 immunohistochemistry and next-generation sequencing often draw on that same cell block, although some laboratories run ancillary tests on smears or other preparations, and how material is processed and allocated follows the laboratory’s own protocol. Material that was enough for the diagnosis can run out before the last assay, so tell the laboratory which tests are needed before the case, not after the report.`,
     ],
     checklist: [
       'Ask what the on-site finding establishes.',
@@ -306,7 +306,7 @@ export const sampleLessons: Lesson[] = [
       'ROSE, final diagnosis, and molecular adequacy are distinct.',
       'A pass-count recommendation does not replace judgment.',
     ],
-    sources: ['chest2024', 'ics2023'],
+    sources: ['chest2024', 'aabip2025', 'chest2016', 'ics2023'],
   },
   {
     id: 'specimen-triage',

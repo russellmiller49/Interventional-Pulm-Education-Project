@@ -143,8 +143,16 @@ export const prepareLessons: Lesson[] = [
     recall: 'The clinical question and likely specimen requirements should already be defined.',
     concept: 'Prepare the patient, team, and equipment',
     paragraphs: [
-      `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel the sources differ: ACCP 2022 says ${N('clopidogrel-accp')} a procedure, BTS 2013 says ${N('clopidogrel-bts')} a biopsy, and ICS/IAB 2023 allows continuing it for EBUS-TBNA when the risk of thrombosis outweighs the risk of bleeding. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
-      `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
+      `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel, no interval is a rule for EBUS-TBNA. ICS/IAB 2023, which is written for EBUS-TBNA, allows continuing it when the risk of thrombosis outweighs the risk of bleeding, after an individual assessment. The two intervals you will hear quoted were written for other procedures: ACCP 2022 says ${N('clopidogrel-accp')} elective noncardiac surgery, and BTS 2013 says ${N('clopidogrel-bts')} an endobronchial or transbronchial lung biopsy. Decide from the procedure planned, including any biopsy added in the same session, and from the patient’s bleeding and thrombotic risk. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
+      `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. For healthy patients having an elective procedure under general anesthesia or procedural sedation, the ASA preoperative fasting guideline allows clear liquids until ${N('fasting-clear-fluids')} before. For solid food it gives ${N('fasting-solids')}. Assess aspiration risk in every patient. Delayed gastric emptying, significant uncontrolled gastroesophageal reflux, obesity, pregnancy and other aspiration risks call for an individual assessment, not automatically a longer fast. When the risk is increased, settle the anesthesia and procedural plan for that patient beforehand; a longer fast alone may not remove the risk.`,
+      /*
+       * GLP-1 receptor agonists (owner ruling r2-554-glp1, 2026-11-15: add, with a source). From the
+       * 2024 multisociety guidance (Kindel et al.), read in full: risk rises in the escalation phase,
+       * at higher and weekly doses and with gastrointestinal symptoms; the drug may be continued in
+       * patients without elevated risk; mitigation is diet modification or a change of anesthesia
+       * plan. The document calls itself guidance, not an evidence-based guideline.
+       */
+      'Ask about GLP-1 receptor agonists, which can delay gastric emptying. A recent dose increase, or nausea, vomiting or abdominal symptoms, raises the risk and may change the diet beforehand or the anesthesia plan. The 2024 multisociety guidance is to assess each patient with the anesthesia team: the drug may be continued when the risk is not elevated, and neither stopping it nor a longer fast is automatic.',
       `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
       /*
        * Sedation and airway (owner decision of 2026-11-10 to add them). The owner verified the CHEST
@@ -179,8 +187,8 @@ export const prepareLessons: Lesson[] = [
         'The risk is low, not zero, and an unidentified anticoagulant has not been accounted for.',
       ],
       [
-        'Apply the clopidogrel hold without identifying the medication',
-        'The intervals in this lesson are for clopidogrel. An anticoagulant is held on a different schedule.',
+        'Apply a clopidogrel interval without identifying the medication',
+        'The intervals quoted in this lesson are clopidogrel intervals written for other procedures. An anticoagulant is held on a different schedule.',
       ],
       true,
     ),
@@ -228,9 +236,17 @@ export const prepareLessons: Lesson[] = [
     ),
     takeaways: [
       'Unresolved readiness issues require a pause.',
-      'Know the antiplatelet intervals, and identify any anticoagulant before you start.',
+      'Decide clopidogrel from the procedure and the patient’s bleeding and thrombotic risk, not from a fixed interval. Identify any anticoagulant before you start.',
     ],
-    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f', 'chest2016'],
+    sources: [
+      'ics2023',
+      'accp2022',
+      'bts2013',
+      'asa2017',
+      'glp1-multisociety2024',
+      'olympus-uc190f',
+      'chest2016',
+    ],
   },
   {
     id: 'scope-orientation',

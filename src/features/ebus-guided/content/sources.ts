@@ -90,8 +90,24 @@ export const SOURCES = [
     id: 'aquire2013',
     title:
       'Eapen GA, et al. Complications, consequences, and practice patterns of EBUS-TBNA: the AQuIRE registry. Chest 2013;143:1044-1053',
-    url: 'https://pubmed.ncbi.nlm.nih.gov/23117878/',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3616680/',
     type: 'Registry',
+  },
+  {
+    id: 'asa2017',
+    title:
+      'American Society of Anesthesiologists. Practice guidelines for preoperative fasting and the use of pharmacologic agents to reduce the risk of pulmonary aspiration: application to healthy patients undergoing elective procedures. Anesthesiology 2017;126:376-393',
+    url: 'https://doi.org/10.1097/ALN.0000000000001452',
+    type: 'Guideline',
+  },
+  // GLP-1 receptor agonists before a procedure (2026-11-17). Read in full in PubMed Central
+  // (PMC11666732); co-published in Surg Obes Relat Dis 2024;20:1183-1186 and Clin Gastroenterol Hepatol.
+  {
+    id: 'glp1-multisociety2024',
+    title:
+      'Kindel TL, Wang AY, Wadhwa A, et al. Multi-society clinical practice guidance for the safe use of glucagon-like peptide-1 receptor agonists in the perioperative period (AGA, ASMBS, ASA, ISPCOP, SAGES). Surg Endosc 2025;39:180-183 (online 2024)',
+    url: 'https://doi.org/10.1007/s00464-024-11263-2',
+    type: 'Multisociety guidance',
   },
   {
     id: 'olympus-uc180f',
@@ -101,8 +117,9 @@ export const SOURCES = [
   },
   {
     id: 'olympus-uc190f',
-    title: 'Olympus BF-UC190F ultrasound bronchoscope: product brochure (2021)',
-    url: '',
+    title:
+      'Olympus BF-UC190F ultrasound bronchoscope: specifications (product page; product brochure, 2021)',
+    url: 'https://medical.olympusamerica.com/products/bf-uc190f',
     type: 'Manufacturer source',
   },
   // Needle technique within the node (2026-11-11): the trials behind "the stylet and suction are

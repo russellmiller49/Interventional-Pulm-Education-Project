@@ -14,7 +14,8 @@ const N = EBUS_NUMBERS.value
  * the image back), followed by the matching.
  *
  * Sources. The view angle and field are the project's recorded nominal optics for the Olympus
- * BF-UC180F (`BF_UC180F_NOMINAL`), which is also what the simulated lens uses. The statements
+ * BF-UC180F (`BF_UC180F_NOMINAL`), which is also what the simulated lens uses; they match the
+ * manufacturer's product page as read on 2026-11-14 (the BF-UC190F is 20°, same field). The statements
  * about passing the cords, the red-out on contact and clearing air from the balloon are practice
  * points written from the geometry and from the course's own procedural-technique module; none
  * is a guideline recommendation, and the owner reads them before they are signed.
