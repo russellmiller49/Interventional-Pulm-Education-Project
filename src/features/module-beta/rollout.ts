@@ -27,8 +27,6 @@ export interface BetaTesterNote {
   readonly estimate?: { readonly minutes: number; readonly basis: string }
   /** Where a reviewer's feedback helps most. */
   readonly lookFor: readonly string[]
-  /** Anything known to be unchecked or unfinished that a reviewer should weigh. */
-  readonly knownLimits: readonly string[]
 }
 
 export type BetaRolloutEntry =
@@ -55,12 +53,6 @@ export const betaRollout: BetaRollout = {
         'The bleeding and desaturation first moves: their priorities, the conditional wording, and the numbers attached to them.',
         'The find-the-structure task: whether it asks for the structures you would expect a fellow to identify, and whether the hint after a wrong pick helps.',
       ],
-      knownLimits: [
-        'Its 26 sourced teaching numbers are not yet signed off by the author.',
-        "The bleeding and desaturation first moves are the author's practice; the supporting measures cite published series and reviews, none of them a guideline recommendation for EBUS-TBNA.",
-        'The needle lab draws the needle steeper than it lies on recorded procedures: 60° against about 35°.',
-        'The labs need a desktop or tablet; below about 1,100 px wide they fall back to a reading layout.',
-      ],
     },
   },
   'eus-b-guided': {
@@ -80,12 +72,6 @@ export const betaRollout: BetaRollout = {
         'Whether the first lesson gives an EBUS operator the right picture of what the esophagus adds and what it does not.',
         'The station lessons and the station table: whether the landmarks listed for each nodal station are the ones you use to identify it.',
       ],
-      knownLimits: [
-        'Seven of 15 planned lessons are open: what the esophagus adds, the left lobe of the liver, and stations 8, 9, 7, 4L and 2L. The abdominal landmarks, station 4R, the complete survey, sampling and the cases are still being built.',
-        'The author has reviewed the lesson text. Its 5 sourced teaching numbers are signed off by the author; each was checked against its article’s abstract.',
-        'It is one CT case, and the ultrasound image is simulated from CT, not recorded ultrasound.',
-        'The scope tasks need a desktop or tablet.',
-      ],
     },
   },
   'eus-b-simulator': {
@@ -100,11 +86,6 @@ export const betaRollout: BetaRollout = {
         'Whether the transducer orientation and the image read the way your EUS-B images do.',
         'Whether the views below the diaphragm (liver, celiac trunk, left adrenal) belong in a module for bronchoscopists.',
       ],
-      knownLimits: [
-        'The ultrasound image and the controls that move the scope do not fit on one screen at common laptop and phone sizes; expect to scroll between them.',
-        'It is one CT case, and the image is simulated from CT, not recorded ultrasound; the page lists the model’s other limits.',
-        'There are no lessons, cases or scored questions yet: it is a free-exploration simulator.',
-      ],
     },
   },
   'synchronized-anatomy': {
@@ -116,11 +97,6 @@ export const betaRollout: BetaRollout = {
       lookFor: [
         'Whether the scope view, the 3D tree and the CT agree at each branch point, and whether the orientation reads the way you hold the scope.',
         'Bronch Quest: after a wrong turn, whether the debrief names the fork and the landmark you would use to recover.',
-      ],
-      knownLimits: [
-        'The VR view has not been confirmed in a headset since the Quest 3 black-screen fix.',
-        'At four forks (LB7+8, RB8, RB5 and LB4), the CT cue after a wrong turn gives the textbook direction, which differs from this patient’s CT by 90° or more.',
-        'The Scope Tracker toggle is for a physical scope controller; leave it off.',
       ],
     },
   },
@@ -141,9 +117,6 @@ export const betaRollout: BetaRollout = {
         'Lesson 4, the drive: whether flying through the central airways and starting the choices where the segment’s bronchus leaves is where you want the work to begin, and whether backing out of a branch that leads away looks and feels like what you do at the scope.',
         'Whether the lesions in Practice are ones you would plan a navigation route to.',
       ],
-      knownLimits: [
-        'Only lessons 1 and 2 ask for the openings to be marked on the CT; on whole routes the CT is read while planning, and each fork asks only for the branch.',
-      ],
     },
   },
   'live-anatomy': { stage: 'withheld' },
@@ -160,11 +133,6 @@ export const betaRollout: BetaRollout = {
         'The angle rules and the Section 20 wedge run-through, taken from the AABIP imaging session.',
         'Whether the simulated check images in Sections 4 and 17 look like what your suite produces.',
         'The Practice drill: from the catheter tip in a neighboring bronchus, whether the nodule lies anterior or posterior, medial or lateral.',
-      ],
-      knownLimits: [
-        'Its 14 sourced teaching numbers are not yet signed off by the author.',
-        'The CONFIRM, VESPA and radial EBUS yield figures were checked against abstracts only, and the nodule-visibility figure comes from percutaneous, not bronchoscopic, biopsy.',
-        'Radial EBUS views are taught in text and a table, without images.',
       ],
     },
   },
@@ -183,10 +151,6 @@ export const betaRollout: BetaRollout = {
         'Sedation and topical anesthesia in Section 3: the lidocaine ceiling and the monitoring it teaches.',
         "The orientation rule and the landmark clock table at the head of the bed (RUL 3, RML 12, LUL 9 o'clock).",
         'Sections 13 and 15, the deteriorating and the ventilated patient: are the first moves the ones you want a fellow to make?',
-      ],
-      knownLimits: [
-        '51 of its 75 teaching numbers, the lidocaine ceiling among them, are not yet signed off by the author.',
-        'The orientation rule and the clock table are derived for the bedside views; no published source states them.',
       ],
     },
   },
@@ -209,10 +173,6 @@ export const betaRollout: BetaRollout = {
         'The VA track’s two circulations and differential hypoxemia: where the gas is drawn, and what is changed first.',
         'Whether any simulated response looks implausible to you.',
       ],
-      knownLimits: [
-        'Its 33 sourced teaching numbers are not yet signed off by the author.',
-        'For a loaded left ventricle on VA, lower flow and an inotrope are simulated; volume removal and a vent are recorded as a plan, not simulated.',
-      ],
     },
   },
   'baxter-crrt': {
@@ -231,11 +191,6 @@ export const betaRollout: BetaRollout = {
         'Lesson 2, reading the access, return, filter and effluent pressures by cause: is it taught the way you would teach it?',
         'Lesson 6, anticoagulation and citrate safety: are the monitoring and the first moves the ones you want a fellow to make?',
         'Whether the prescriptions and delivered doses in the cases look realistic.',
-      ],
-      knownLimits: [
-        'Of its 54 sourced teaching numbers, 32 are signed off by the author and 22 are not yet.',
-        'Several recorded disagreements between sources and the simulation are not yet settled by the author.',
-        'The machine steps follow one PrisMax software version (2.xx).',
       ],
     },
   },
@@ -256,10 +211,6 @@ export const betaRollout: BetaRollout = {
         'Thermodilution and derived values (Sections 7 and 8): the numbers and how they are worked out.',
         'Whether any simulated response looks implausible to you.',
       ],
-      knownLimits: [
-        'Its 26 sourced teaching numbers are not yet signed off by the author.',
-        'Case HD-06 cannot yet reach its cardiac-index endpoint on the recommended actions alone.',
-      ],
     },
   },
   'mechanical-ventilation': {
@@ -276,12 +227,6 @@ export const betaRollout: BetaRollout = {
       lookFor: [
         'Driving pressure: whether plateau minus total PEEP, and the evidence behind the reference value, are taught the way you would teach them.',
         'Whether any simulated response looks implausible to you; one case reaches an intrinsic PEEP near 34 cmH₂O.',
-      ],
-      knownLimits: [
-        'Its 20 sourced teaching numbers are not yet signed off by the author.',
-        'Driving pressure is worked out for you (plateau minus total PEEP) only in Section 6, after an inspiratory hold; the console itself has no readout.',
-        'The text does not yet separate the pressure-control setting (ΔPcontrol) from driving pressure (ΔP).',
-        'The chest-wall contribution to driving pressure (obesity, raised abdominal pressure) is not taught.',
       ],
     },
   },
@@ -301,9 +246,6 @@ export const betaRollout: BetaRollout = {
         'Balloon timing (Section 3): whether early and late inflation and deflation read the way you teach them.',
         'Impella position and suction (Sections 5 and 6), and the pulseless LVAD patient at the end of Section 8.',
         'Whether any simulated response looks implausible to you.',
-      ],
-      knownLimits: [
-        'Of its 19 sourced teaching numbers, 14 are signed off by the author and 5 are not yet.',
       ],
     },
   },
