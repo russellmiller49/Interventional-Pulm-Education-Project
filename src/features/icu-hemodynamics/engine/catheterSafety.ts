@@ -161,13 +161,30 @@ export function occlusionReleasedByLearner(state: HemodynamicSimulationState): b
  * The capstone opens with the tip sitting distally on a deflated balloon, which blocks the
  * pulmonary-artery flush; the notice says why, and what to do, where the block bites.
  */
+/**
+ * A suspected spontaneous wedge: the tip has migrated into a distal branch and is occluding it with
+ * the balloon down. Owner ruling `hd-r1-false-wedge-fault` (2026-11-14): a fault of position, not
+ * the same thing as an incomplete balloon occlusion (the `false-wedge` artifact, balloon up).
+ *
+ * It holds through the withdrawal, until the tip has arrived back in the artery, and it is never
+ * true of a wedge the learner took or of a teaching view set straight to the wedge position.
+ */
+export function isSpontaneousWedge(state: HemodynamicSimulationState): boolean {
+  return (
+    state.catheter.spontaneousWedge === true &&
+    state.catheter.position === 'wedge' &&
+    !state.catheter.balloonInflated
+  )
+}
+
+export const SPONTANEOUS_WEDGE_NOTICE =
+  'Suspected spontaneous wedge: a wedge tracing with the balloon down. The tip may be occluding a distal branch. Do not read the value as a PAWP. Confirm the balloon is fully deflated, do not flush or inflate, and withdraw until the pulmonary-artery tracing returns.'
+
 export function catheterSimulationNotice(state: HemodynamicSimulationState): string | null {
   const catheter = state.catheter
-  const falseWedge = state.measurementSystem.artifact === 'false-wedge'
+  if (isSpontaneousWedge(state)) return SPONTANEOUS_WEDGE_NOTICE
   if (catheter.position === 'wedge' && !catheter.balloonInflated) {
-    return falseWedge
-      ? 'The tip sits too far out with the balloon down, and the tracing is part wedge, part pulmonary artery: its displayed value is not an occlusion pressure. Withdraw until a clean pulmonary-artery tracing returns, and do not flush until it does.'
-      : 'The tip is wedged with the balloon down. Withdraw until the pulmonary-artery tracing returns, and do not flush until it does.'
+    return 'The tip is wedged with the balloon down. Withdraw until the pulmonary-artery tracing returns, and do not flush until it does.'
   }
   if (catheter.balloonInflated) {
     return 'The balloon is up and occluding a branch. Do not flush the pulmonary-artery line until it is down.'

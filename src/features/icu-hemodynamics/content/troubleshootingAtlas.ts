@@ -198,13 +198,16 @@ export const artifactDefinitions = {
       'Confirm that the balloon is completely deflated and assess for distal catheter migration.',
       `Do not flush. ${capitalize(HEMODYNAMICS_NUMBERS.value('retract-distance'))} at a time until a clear PA waveform returns.`,
       'If the PA waveform does not return, get a chest film and help.',
+      'Take another wedge only after a pulmonary-artery tracing is confirmed.',
     ],
     doNot: [
       'Do not fast-flush the distal lumen when spontaneous wedge is suspected.',
       'Do not label the new waveform as a merely damped PA signal.',
+      'Do not record the tracing as a wedge pressure, and do not inflate the balloon.',
     ],
     callouts: [{ id: 'wedge-transition', label: 'PA → wedge transition', timeSeconds: 1.2 }],
-    warning: 'Suspected spontaneous wedge: do not fast-flush the distal lumen.',
+    warning:
+      'Suspected spontaneous wedge: do not fast-flush the distal lumen or inflate the balloon.',
     sourceIds: [
       'pac-waveforms-part-1-2021',
       'edwards-swan-ganz-ifu-2023',
@@ -220,7 +223,6 @@ export const artifactDefinitions = {
     appearance: [
       'Residual PA pulsatility remains superimposed on a lower-amplitude atrial-type contour.',
       'The mean does not fall plausibly below PA diastolic pressure, and the pulmonic-closure contour may remain partly visible.',
-      'The capstone uses this same waveform.',
     ],
     causes: [
       'Incomplete balloon occlusion leaves communication with the proximal pulmonary artery.',
@@ -421,7 +423,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     checks:
       'Balloon state, depth, waveform transition, patient position, and radiographic position when indicated.',
     action: `Confirm the balloon is down, then ${HEMODYNAMICS_NUMBERS.value('retract-distance')} at a time until PA morphology returns.`,
-    warning: 'Do not flush.',
+    warning: 'Do not flush, inflate, or record the value as a wedge.',
   },
   {
     id: 'false-wedge',

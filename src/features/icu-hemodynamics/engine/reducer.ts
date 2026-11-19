@@ -248,6 +248,8 @@ function reduceHemodynamicAction(
           storedWedge: null,
           storedAtEndExpiration: false,
           forcedSafetyRecovery: false,
+          // A position set directly is a teaching view of that chamber, not a migration.
+          spontaneousWedge: false,
         },
       }
     case 'ADVANCE_CATHETER': {
@@ -330,7 +332,7 @@ function reduceHemodynamicAction(
             ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
             : state.signalValidationChecks,
           responseMessage: retractingFromWedge
-            ? 'Catheter withdrawn from the false-wedge position; the PA waveform is restored and confirmed.'
+            ? 'Catheter withdrawn from the wedged position; the PA waveform is restored and confirmed.'
             : `Catheter retracted to ${nextPosition.toUpperCase()}. Confirm the waveform before moving again.`,
         })
       }
@@ -355,7 +357,7 @@ function reduceHemodynamicAction(
           ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
           : state.signalValidationChecks,
         responseMessage: retractingFromWedge
-          ? 'Catheter withdrawing from the false-wedge position toward PA; confirm return of the PA waveform on arrival.'
+          ? 'Catheter withdrawing from the wedged position toward PA; confirm return of the PA waveform on arrival.'
           : `Catheter retracting toward ${nextPosition.toUpperCase()}; the monitor retains the confirmed ${normalizedPosition.toUpperCase()} waveform until arrival.`,
       })
     }

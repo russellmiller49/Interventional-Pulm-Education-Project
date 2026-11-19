@@ -251,9 +251,9 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
       traceStep(
         'hd08-localize',
         'Localize',
-        'The transducer is off level, dynamic response is abnormal, and the catheter is not in a confirmed PA position.',
-        'Independent faults can compound, so fixing one display value does not validate the system.',
-        'Restore level and zero, classify dynamic response, then restore catheter position.',
+        'The transducer is off level, dynamic response is abnormal, and the distal lumen shows a wedge-shaped tracing while the balloon is down.',
+        'Independent faults can compound, so fixing one display value does not validate the system. The wedge tracing with the balloon down is a suspected spontaneous wedge: the tip has migrated and may be occluding a distal branch. It is not an incomplete balloon occlusion, which keeps pulmonary-artery pulsatility with the balloon up; not wall contact, which damps or flattens the tracing without giving it a wedge shape; and not an overdamped line, which blunts systolic and diastolic on every tracing from that line and shows on the fast-flush test.',
+        'Restore level and zero. Do not read the distal value as a PAWP: confirm the balloon is fully deflated, do not flush or inflate, withdraw until the pulmonary-artery tracing returns, and confirm it before another wedge. Then classify dynamic response.',
       ),
       traceStep(
         'hd08-remeasure',
@@ -443,11 +443,11 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
     whatHappened:
       'The catheter returned to a confirmed PA position and a pulsatile PA morphology reappeared.',
     whyItHappened:
-      'Catheter position determines the pressure compartment and waveform being measured; wall contact or false wedge invalidates the interpretation.',
+      'Catheter position determines the pressure compartment and waveform being measured. In a spontaneous wedge the tip reads a different compartment, and its value is not a validated PAWP.',
     likelyFrame:
       'If the displayed PAWP looked like a direct filling-pressure measurement, that is reasonable until morphology and position contradict it.',
     theCue:
-      'The waveform shape and position state do not agree with a valid occlusion measurement.',
+      'A wedge-shaped tracing with the balloon down is a tip too far out, not a wedge you took.',
     conceptIds: ['cc.measurement.measurand', 'cc.troubleshooting.access-position'],
     evidenceIds: ['pac-waveforms-part-1-2021', 'monitor-workflow-supplied'],
   },

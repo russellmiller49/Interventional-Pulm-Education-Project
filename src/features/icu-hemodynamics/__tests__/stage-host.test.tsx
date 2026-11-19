@@ -571,7 +571,7 @@ describe('the wedge section', () => {
 describe('the capstone', () => {
   it('restores the line, the tip and the series in order, reassesses, then reads a different line', () => {
     const { lesson } = mountSection('pac-signal-validation')
-    // HD-08 as authored: the tip reads a false wedge on a line that is high, unzeroed and ringing.
+    // HD-08 as authored: a spontaneous wedge on a line that is high, unzeroed and ringing.
     expect(document.querySelector('[data-dock]')).toBeNull()
     expect(document.querySelector('[data-catheter-map]')).toBeNull()
     clickPrimary()
