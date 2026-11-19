@@ -77,7 +77,7 @@ export function lessonForStop(stop: number): Lesson | undefined {
 
 export const COURSE_OBJECTIVES = [
   'Say what an examination from the esophagus adds to airway EBUS, and what stays with the airway.',
-  'Find each landmark of the survey on ultrasound and confirm it by its neighbors.',
+  'Find the left lobe of the liver, station 7 and station 4L on ultrasound and confirm each by its neighbors.',
   'Name each nodal station seen from the esophagus by the landmarks around it.',
   'Use rotation to move around the scope at one level, and advancing or withdrawing to change level.',
 ]

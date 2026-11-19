@@ -21,11 +21,13 @@ import {
   type IdentifyState,
 } from './guidedIdentify';
 import {
+  clickedLandmark,
   clickHits,
   clickTolerancePx,
   labelUnder,
   landmarkPoint,
   pointFraction,
+  reachedLabelIds,
 } from './guidedLandmarks';
 import { buildObservation, type GuidedFrameTag } from './guidedObservation';
 import { labReviewPose } from './guidedViews';
@@ -174,6 +176,16 @@ describe('a click on the image', () => {
     expect(labelUnder(frame, mask, hidden)).toBeNull();
   });
 
+  it('lists among the reached labels only those with a pixel the beam reaches', () => {
+    const behind = synthetic((depth, across) =>
+      depth > 0.2 && depth < 0.3 ? BONE : depth > 0.5 && across < 0.4 ? TARGET : 0,
+    );
+    const shadow = reachMask(behind, BLOCKING);
+    expect(behind.labelImage.includes(TARGET)).toBe(true);
+    expect(reachedLabelIds(behind, shadow).has(TARGET)).toBe(false);
+    expect(reachedLabelIds(frame, mask).has(TARGET)).toBe(true);
+  });
+
   it('lands on nothing outside the image', () => {
     expect(labelUnder(frame, mask, { x: -3, y: 4 })).toBeNull();
     expect(labelUnder(frame, mask, { x: 0, y: 0 })).toBeNull();
@@ -239,16 +251,66 @@ describe('the landmarks of every lab, on the shipped case', () => {
 
 describe('every mark-the-landmarks task, on the shipped case', () => {
   /** What the lab resolves a click to, as the workbench does. */
-  function clickedKey(frame: LabelFrame, mask: Uint8Array, asked: string, point: { x: number; y: number }) {
-    if (clickHits(frame, mask, labelId(asked), point, clickTolerancePx(frame))) return asked;
-    const under = labelUnder(frame, mask, point);
-    const label = under === null ? undefined : volume.metadata.labels[under];
-    return label?.reportable ? label.key : null;
+  function clickedKey(
+    frame: LabelFrame,
+    mask: Uint8Array,
+    asked: string,
+    point: { x: number; y: number },
+    together: readonly string[] = [],
+  ) {
+    return clickedLandmark(
+      frame,
+      mask,
+      { key: asked, labelIds: [asked, ...together].map(labelId) },
+      point,
+      clickTolerancePx(frame),
+      volume.metadata.labels,
+    );
   }
+
+  it.each(identifyLabs)('%s asks for the first landmarks of its view, so each keeps its number', (labId) => {
+    const lab = eusbLab(labId);
+    const view = eusbLab(labId.replace(/-landmarks$/, '-view') as EusbLabId);
+    expect(view.kind, labId).toBe('explore');
+    expect(view.start).toEqual(lab.start);
+    expect(lab.landmarks).toEqual(view.landmarks!.slice(0, lab.landmarks!.length));
+    // A structure asked for together with a landmark is one of the view's landmarks too.
+    for (const [key, together] of Object.entries(lab.together ?? {})) {
+      expect(lab.landmarks).toContain(key);
+      for (const other of together.with) expect(view.landmarks).toContain(other);
+    }
+  });
+
+  it('does not ask for a node drawn at the transducer: stations 8, 9 and 2L', () => {
+    expect(eusbLab('station-8-landmarks').landmarks).not.toContain('station_8');
+    expect(eusbLab('station-9-landmarks').landmarks).not.toContain('station_9');
+    expect(eusbLab('station-2l-landmarks').landmarks).not.toContain('station_2l');
+    // The labeled image still numbers the node.
+    expect(eusbLab('station-8-view').landmarks).toContain('station_8');
+    expect(eusbLab('station-9-view').landmarks).toContain('station_9');
+    expect(eusbLab('station-2l-view').landmarks).toContain('station_2l');
+  });
+
+  it('counts a click on the inferior vena cava for the right atrium at station 8', () => {
+    const lab = eusbLab('station-8-landmarks');
+    const together = lab.together!.right_atrium.with;
+    expect(together).toEqual(['inferior_vena_cava']);
+    const frame = frameAt(labReviewPose(manifest, path, lab)!, 384);
+    const mask = reachMask(frame, blocking);
+    const cava = landmarkPoint(frame, mask, labelId('inferior_vena_cava'))!;
+    expect(clickedKey(frame, mask, 'right_atrium', cava)).toBe('inferior_vena_cava');
+    expect(clickedKey(frame, mask, 'right_atrium', cava, together)).toBe('right_atrium');
+    const atrium = landmarkPoint(frame, mask, labelId('right_atrium'))!;
+    expect(clickedKey(frame, mask, 'right_atrium', atrium, together)).toBe('right_atrium');
+    // The left atrium is still a miss.
+    const left = landmarkPoint(frame, mask, labelId('left_atrium'))!;
+    expect(clickedKey(frame, mask, 'right_atrium', left, together)).not.toBe('right_atrium');
+  });
 
   it.each(identifyLabs)('%s can be finished by clicking each landmark, and reports as the bridge expects', (labId: EusbLabId) => {
     const lab = eusbLab(labId);
     const landmarks = lab.landmarks!;
+    const withOf = (key: string) => lab.together?.[key]?.with ?? [];
     const labKey = `session|${labId}`;
     const pose = labReviewPose(manifest, path, lab)!;
     const frame = frameAt(pose, 384);
@@ -307,7 +369,7 @@ describe('every mark-the-landmarks task, on the shipped case', () => {
     // A click on another landmark of the view is a miss too.
     if (landmarks.length > 1) {
       const other = landmarkPoint(frame, mask, labelId(landmarks[1]))!;
-      const key = clickedKey(frame, mask, landmarks[0], other);
+      const key = clickedKey(frame, mask, landmarks[0], other, withOf(landmarks[0]));
       expect(key, labId).not.toBe(landmarks[0]);
       state = identifyReducer(state, { type: 'click', key }, landmarks);
       expect(state.keys).toEqual([]);
@@ -321,7 +383,11 @@ describe('every mark-the-landmarks task, on the shipped case', () => {
       const point = landmarkPoint(frame, mask, labelId(key))!;
       state = identifyReducer(
         state,
-        { type: 'click', key: clickedKey(frame, mask, key, point), at: pointFraction(frame, point) },
+        {
+          type: 'click',
+          key: clickedKey(frame, mask, key, point, withOf(key)),
+          at: pointFraction(frame, point),
+        },
         landmarks,
       );
       expect(state.keys[state.keys.length - 1], `${labId} ${key}`).toBe(key);
@@ -337,5 +403,19 @@ describe('every mark-the-landmarks task, on the shipped case', () => {
       shown = identifyReducer(shown, { type: 'show' }, landmarks);
     expect(identifyDone(shown, landmarks)).toBe(true);
     expect(report(shown).identified).toEqual({ keys: [], shown: [...landmarks], wrong: 0 });
+  });
+});
+
+describe('names on a labeled image', () => {
+  it('leave out what lies inside the sector but behind lung: the station 9 still', () => {
+    const lab = eusbLab('station-9-view');
+    const frame = frameAt(labReviewPose(manifest, path, lab)!, 384);
+    const reached = reachedLabelIds(frame, reachMask(frame, blocking));
+    const inSector = new Set(frame.structures.map((entry) => entry.id));
+    for (const key of ['station_11ri', 'pulmonary_artery']) {
+      expect(inSector.has(labelId(key)), key).toBe(true);
+      expect(reached.has(labelId(key)), key).toBe(false);
+    }
+    for (const key of lab.landmarks!) expect(reached.has(labelId(key)), key).toBe(true);
   });
 });

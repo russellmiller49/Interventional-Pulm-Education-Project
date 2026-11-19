@@ -1,4 +1,4 @@
-import { SURVEY_STOPS } from '../content/curriculum'
+import { lessonForStop, SURVEY_STOPS } from '../content/curriculum'
 import styles from './eus-b-guided.module.css'
 
 /** Where each stop is drawn, seen from the front: the patient's right is on the left. */
@@ -23,14 +23,34 @@ const SHORT: Record<number, string> = {
   6: 'Station 4R',
 }
 
+/** "Stops 2, 3 and 6 are not yet taught …" for the stops no lesson teaches, or null. */
+export function untaughtStopsNote(): string | null {
+  const stops = SURVEY_STOPS.map(({ stop }) => stop).filter((stop) => !lessonForStop(stop))
+  if (stops.length === 0) return null
+  const list =
+    stops.length === 1
+      ? `Stop ${stops[0]} is`
+      : `Stops ${stops.slice(0, -1).join(', ')} and ${stops[stops.length - 1]} are`
+  return `${list} not yet taught in this course.`
+}
+
 /**
  * The course's one map: the path of the scope down the esophagus into the stomach, and the six
  * landmarks of the survey in the order they are examined.
  *
  * The drawing is decorative to assistive technology; the ordered list under it says the same
  * thing in words, so the two cannot disagree without a test noticing (`course.test.tsx`).
+ *
+ * `noteUntaught`: say under the drawing which stops no lesson teaches yet (the course page).
  */
-export function SurveyRoute({ current }: { current?: number }) {
+export function SurveyRoute({
+  current,
+  noteUntaught = false,
+}: {
+  current?: number
+  noteUntaught?: boolean
+}) {
+  const untaught = noteUntaught ? untaughtStopsNote() : null
   return (
     <figure className={styles.route} data-survey-route>
       <svg viewBox="-80 0 500 430" aria-hidden="true" focusable="false">
@@ -75,6 +95,12 @@ export function SurveyRoute({ current }: { current?: number }) {
       <figcaption>
         The survey, seen from the front as on a coronal CT: the patient’s right is on the left.
         Stops 1 to 3 are examined from the stomach, stops 4 to 6 as the scope is withdrawn.
+        {untaught && (
+          <>
+            {' '}
+            <span data-survey-untaught>{untaught}</span>
+          </>
+        )}
       </figcaption>
       <ol className={styles.srOnly} data-survey-route-list>
         {SURVEY_STOPS.map(({ stop, name, region }) => (

@@ -82,7 +82,7 @@ export function CoursePage({
                 {reviewed} of {LESSONS.length} lessons reviewed · {opened} opened
               </p>
             </div>
-            <SurveyRoute current={next?.stop} />
+            <SurveyRoute current={next?.stop} noteUntaught />
           </div>
         ) : (
           <>

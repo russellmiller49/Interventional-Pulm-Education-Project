@@ -7,7 +7,7 @@
  */
 
 /** Raise when a lab's meaning changes, so a lab build from before the change says so. */
-export const EUSB_CONTRACT_REVISION = 3 as const
+export const EUSB_CONTRACT_REVISION = 4 as const
 
 export const EUSB_CONTROLS = ['advance', 'rotate', 'flex', 'depth', 'gain'] as const
 export type EusbControl = (typeof EUSB_CONTROLS)[number]
@@ -41,6 +41,12 @@ export const EUSB_POSE_LIMITS = {
   gainDb: [-15, 15],
 } as const
 
+/** Landmarks asked for as one area, because the image shows no border between them. */
+export interface EusbTogether {
+  with: readonly string[]
+  name: string
+}
+
 /** A named view of the case, optionally moved from it, or a fixed position. */
 export type EusbStart = { view: string; offset?: Partial<EusbPose> } | { pose: EusbPose }
 
@@ -62,21 +68,46 @@ export interface EusbLabSpec {
    * numbered in this order; an identify lab asks for them in this order. Every one of them is in
    * the image of the lab's reference view (the target's view for a reach or a rotate, the start
    * for the rest), where the beam reaches it.
+   *
+   * An identify lab may ask for only the first few of its view's landmarks, so each keeps its
+   * number. A node drawn in the first millimetres under the transducer has the texture of the wall
+   * and no visible edge there; it is not asked for, and the labeled image after the task shows it.
    */
   landmarks?: readonly string[]
+  /**
+   * identify: a landmark the image does not separate from a structure beside it, asked for as one
+   * area. A click on either counts for the landmark, and `name` is how the ask reads in a sentence.
+   */
+  together?: Readonly<Record<string, EusbTogether>>
   /** View keys in survey order (survey). */
   stops?: readonly string[]
   /** Help offered while the learner looks for the target (reach, rotate). None when left out. */
   help?: readonly EusbHelp[]
 }
 
+/**
+ * The course's view of a structure, where it differs from the case's own view of that name: moved
+ * from it by this much. Every lab that names the view, and every reach for the structure, uses the
+ * moved view.
+ *
+ * station_7: 6 mm further down than the case's view, where the left atrium is a chamber below the
+ * node instead of a strip at the edge of the image, and station 7 keeps nearly all of its area
+ * (physician review of 2026-11-19).
+ */
+export const EUSB_VIEW_OFFSETS: Readonly<Record<string, Partial<EusbPose>>> = {
+  station_7: { sMm: 6 },
+}
+
 /*
- * The landmarks of each station view, landmarks first and the node last. The still, the
- * find-the-view task and the mark-the-landmarks task of a station share one list, so the numbers
- * on a labeled image always mean the same structures.
+ * The landmarks of each station view, landmarks first and the node last. The still and the
+ * find-the-view task of a station share one list, so the numbers on a labeled image always mean
+ * the same structures. A mark-the-landmarks task asks for the first few of the same list.
  */
 const STATION_8_LANDMARKS = ['left_atrium', 'right_atrium', 'inferior_vena_cava', 'station_8']
+/** The right atrium and the inferior vena cava entering it are one echo-free area in the image. */
+const STATION_8_ASKED = ['left_atrium', 'right_atrium']
 const STATION_9_LANDMARKS = ['pulmonary_veins', 'station_9']
+const STATION_9_ASKED = ['pulmonary_veins']
 const STATION_7_LANDMARKS = ['left_atrium', 'pulmonary_artery', 'station_7']
 const STATION_4L_LANDMARKS = ['aorta', 'pulmonary_artery', 'station_4l']
 const STATION_2L_LANDMARKS = [
@@ -85,6 +116,7 @@ const STATION_2L_LANDMARKS = [
   'left_common_carotid_artery',
   'station_2l',
 ]
+const STATION_2L_ASKED = ['aorta', 'left_subclavian_artery', 'left_common_carotid_artery']
 
 export const EUSB_LABS = {
   /** The first image below the diaphragm, as a still. */
@@ -118,7 +150,13 @@ export const EUSB_LABS = {
     kind: 'identify',
     start: { view: 'station_8' },
     controls: [],
-    landmarks: STATION_8_LANDMARKS,
+    landmarks: STATION_8_ASKED,
+    together: {
+      right_atrium: {
+        with: ['inferior_vena_cava'],
+        name: 'the right atrium, with the inferior vena cava entering it',
+      },
+    },
   },
 
   /** Station 9: in the pulmonary ligament, below the inferior pulmonary vein. */
@@ -140,7 +178,7 @@ export const EUSB_LABS = {
     kind: 'identify',
     start: { view: 'station_9' },
     controls: [],
-    landmarks: STATION_9_LANDMARKS,
+    landmarks: STATION_9_ASKED,
   },
 
   /** The subcarinal view from the esophagus, as a still. */
@@ -222,7 +260,7 @@ export const EUSB_LABS = {
     kind: 'identify',
     start: { view: 'station_2l' },
     controls: [],
-    landmarks: STATION_2L_LANDMARKS,
+    landmarks: STATION_2L_ASKED,
   },
 } as const satisfies Record<string, EusbLabSpec>
 

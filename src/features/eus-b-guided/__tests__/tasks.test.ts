@@ -85,12 +85,12 @@ describe('what a scope task asks for', () => {
 
   it.each(identifyLabs)('%s: one line per landmark, and every line is the gate', (labId) => {
     const landmarks = [...eusbLab(labId).landmarks!]
-    expect(landmarks.length).toBeGreaterThan(1)
+    expect(landmarks.length).toBeGreaterThan(0)
     const none = eusbRequirements(labId, marking(labId))
     expect(none.map((item) => item.id)).toEqual(landmarks.map((key) => 'mark-' + key))
     expect(none.every((item) => !item.met)).toBe(true)
     for (const item of none)
-      expect(item.text).toMatch(/^Click (the [a-z ]+|station \d+[A-Z]?) in the image\.$/)
+      expect(item.text).toMatch(/^Click (the [a-z ,]+|station \d+[A-Z]?) in the image\.$/)
     expect(eusbTaskMet(labId, marking(labId))).toBe(false)
     expect(eusbTaskMet(labId, null)).toBe(false)
 
@@ -115,6 +115,17 @@ describe('what a scope task asks for', () => {
         list.filter((item) => !item.met).map((item) => item.text),
       )
     }
+  })
+
+  it('asks for the right atrium at station 8 together with the inferior vena cava entering it', () => {
+    expect(
+      eusbRequirements('station-8-landmarks', marking('station-8-landmarks')).map(
+        (item) => item.text,
+      ),
+    ).toEqual([
+      'Click the left atrium in the image.',
+      'Click the right atrium, with the inferior vena cava entering it, in the image.',
+    ])
   })
 
   it('asks nothing of a still image, and a still image is never "done"', () => {

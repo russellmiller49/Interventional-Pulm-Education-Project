@@ -21,6 +21,15 @@ const openRows = (container: HTMLElement) =>
     row.getAttribute('data-station-row'),
   )
 
+describe('the survey on the course page', () => {
+  it('says which stops no lesson teaches yet', () => {
+    const { container } = render(<CoursePage />)
+    expect(container.querySelector('[data-survey-untaught]')).toHaveTextContent(
+      'Stops 2, 3 and 6 are not yet taught in this course.',
+    )
+  })
+})
+
 describe('the station table on the course page', () => {
   it('lists every station and fills none in before its lesson has been reviewed', () => {
     const { container } = render(<CoursePage />)

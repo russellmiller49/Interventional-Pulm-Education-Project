@@ -3,19 +3,24 @@ import { defineTeachingNumbers } from '../../learning-module/numbers/teachingNum
 /**
  * Every clinical number the EUS-B guided course teaches, with its source.
  *
- * Each value was read from the article's PubMed abstract on 2026-11-12; no full text was read.
- * None is signed yet: `npm run numbers:signoff -- eus-b-guided`.
+ * Each value was read from the article's PubMed abstract on 2026-11-12 and read again on
+ * 2026-11-18; no full text was read. The owner approved all five in the physician review packet
+ * of 2026-11-19, the first as percentage points, and they are signed with that decision.
  */
 const ABSTRACT = {
-  checkedOn: '2026-11-12',
-  signedBy: null,
-  signedOn: null,
+  checkedOn: '2026-11-18',
+} as const
+
+/** Spread into each row the owner approved by name; never into a shared check object. */
+const SIGNED_BY_OWNER_DECISION_2026_11_19 = {
+  signedBy: 'Russell Miller, review-packet decision of 2026-11-19 (sources checked by Claude)',
+  signedOn: '2026-11-19',
 } as const
 
 export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
   'added-sensitivity-eus': {
     label: 'Gain in sensitivity for N2/N3 disease from adding the esophageal route to EBUS',
-    value: '0.12 (95% CI 0.08 to 0.18)',
+    value: '12 percentage points (95% CI 8 to 18)',
     appliesTo: 'Mediastinal nodal staging of lung cancer; pooled across studies',
     class: 'expert-reference',
     sources: [
@@ -27,8 +32,9 @@ export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
       },
     ],
     ...ABSTRACT,
+    ...SIGNED_BY_OWNER_DECISION_2026_11_19,
     checkedBy: 'PubMed abstract (PMID 27773666); full text not read',
-    note: 'The 2024 randomised trial below found a smaller difference that was not statistically significant; the lesson shows both.',
+    note: 'The abstract reports an absolute increase of 0.12 (95% CI 0.08 to 0.18), written here as percentage points. The 2024 randomised trial below found a smaller difference that was not statistically significant; the lesson shows both.',
   },
   'trial-sensitivity-ebus-alone': {
     label: 'Sensitivity for N2/N3 disease with EBUS alone in the randomised trial',
@@ -39,6 +45,7 @@ export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
       { sourceId: 'oki2024', year: 2024, grade: 'randomised trial', locator: 'Abstract, Results' },
     ],
     ...ABSTRACT,
+    ...SIGNED_BY_OWNER_DECISION_2026_11_19,
     checkedBy: 'PubMed abstract (PMID 39624385); full text not read',
   },
   'trial-sensitivity-combined': {
@@ -50,6 +57,7 @@ export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
       { sourceId: 'oki2024', year: 2024, grade: 'randomised trial', locator: 'Abstract, Results' },
     ],
     ...ABSTRACT,
+    ...SIGNED_BY_OWNER_DECISION_2026_11_19,
     checkedBy: 'PubMed abstract (PMID 39624385); full text not read',
     note: 'The difference from EBUS alone was not statistically significant (p = 0.698).',
   },
@@ -67,6 +75,7 @@ export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
       },
     ],
     ...ABSTRACT,
+    ...SIGNED_BY_OWNER_DECISION_2026_11_19,
     checkedBy: 'PubMed abstract (PMID 37827042); full text not read',
   },
   'adrenal-seen-eus': {
@@ -84,6 +93,7 @@ export const EUSB_NUMBERS = defineTeachingNumbers('eus-b-guided', {
       },
     ],
     ...ABSTRACT,
+    ...SIGNED_BY_OWNER_DECISION_2026_11_19,
     checkedBy: 'PubMed abstract (PMID 37827042); full text not read',
   },
 })
