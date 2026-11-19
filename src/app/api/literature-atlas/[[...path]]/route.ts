@@ -12,14 +12,17 @@
  * Contract and go-live steps: docs/literature-atlas-preview.md.
  */
 
+import { ATLAS_PAGE_PATH } from '@/features/literature-atlas-viewer/paths'
 import {
   RELAY_HEADER,
   cookieValue,
+  gateAll,
   relayNote,
   sessionCookie,
   verifySession,
   viewerConfig,
 } from '@/features/literature-atlas-viewer/server/access'
+import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 
 import { clientOf, takeDownload } from './downloads'
 
@@ -83,6 +86,45 @@ function cacheControl(upstreamPath: string, mediaType: string) {
   return 'no-store'
 }
 
+const HEALTH_PATH = '/health'
+
+/** The main Atlas page in the visitor's locale (from the referer's first path segment), else the default. */
+function atlasPageFor(request: Request): string {
+  let locale: string = defaultLocale
+  try {
+    const referer = request.headers.get('referer')
+    const first = referer ? new URL(referer).pathname.split('/')[1] : undefined
+    if (isActiveLocale(first)) locale = first
+  } catch {
+    // an unparsable referer means the default locale
+  }
+  return `/${locale}${ATLAS_PAGE_PATH}`
+}
+
+/**
+ * The whole-Atlas gate (LITERATURE_ATLAS_GATE_ALL=1). Returns a response to send instead of
+ * proxying, or null to continue. Health stays open for monitoring.
+ */
+function gateResponse(
+  request: Request,
+  method: 'GET' | 'HEAD',
+  upstreamPath: string,
+  viewer: ReturnType<typeof viewerConfig>,
+): Response | null {
+  if (!gateAll() || upstreamPath === HEALTH_PATH) return null
+  if (!viewer) return plain('Not available', 503)
+  if (verifySession(viewer, cookieValue(request.headers.get('cookie'), sessionCookie().name)))
+    return null
+  const wantsHtml = (request.headers.get('accept') ?? '').toLowerCase().includes('text/html')
+  if (wantsHtml && (method === 'GET' || method === 'HEAD')) {
+    return new Response(null, {
+      status: 303,
+      headers: relayHeaders({ Location: atlasPageFor(request), 'Cache-Control': 'no-store' }),
+    })
+  }
+  return plain('Sign in required', 401)
+}
+
 async function relay(request: Request, method: 'GET' | 'HEAD') {
   const origin = atlasOrigin()
   if (!origin) return plain('Not found.', 404)
@@ -93,6 +135,10 @@ async function relay(request: Request, method: 'GET' | 'HEAD') {
   // String concatenation, not URL resolution, so a path such as `//host/x` stays on the origin.
   const target = new URL(`${origin}${upstreamPath}${search}`)
   if (target.origin !== origin) return plain('Not found.', 404)
+
+  const viewer = viewerConfig()
+  const gated = gateResponse(request, method, upstreamPath, viewer)
+  if (gated) return gated
 
   const isDownload = upstreamPath.startsWith(EXPORT_PATH)
   if (isDownload) {
@@ -105,7 +151,6 @@ async function relay(request: Request, method: 'GET' | 'HEAD') {
   }
 
   const headers: Record<string, string> = { Accept: request.headers.get('accept') ?? '*/*' }
-  const viewer = viewerConfig()
   if (
     viewer &&
     verifySession(viewer, cookieValue(request.headers.get('cookie'), sessionCookie().name))

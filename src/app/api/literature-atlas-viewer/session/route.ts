@@ -7,6 +7,7 @@ import {
   sessionCookie,
   viewerConfig,
 } from '@/features/literature-atlas-viewer/server/access'
+import { viewerReturn } from '@/features/literature-atlas-viewer/paths'
 import {
   backToViewer,
   isSameSite,
@@ -29,16 +30,17 @@ export async function POST(request: Request): Promise<Response> {
   }
   const form = await request.formData().catch(() => null)
   const locale = localeFrom(form?.get('locale'))
+  const returnTo = viewerReturn(form?.get('return'))
   const client = clientOf(request.headers)
-  if (!mayAttempt(client)) return backToViewer(locale, 'limited')
+  if (!mayAttempt(client)) return backToViewer(locale, 'limited', returnTo)
   const password = form?.get('password')
   if (typeof password !== 'string' || !checkPassword(config, password)) {
     recordFailure(client)
-    return backToViewer(locale, 'denied')
+    return backToViewer(locale, 'denied', returnTo)
   }
   const session = issueSession(config)
   const cookie = sessionCookie()
-  const response = backToViewer(locale)
+  const response = backToViewer(locale, undefined, returnTo)
   response.cookies.set(cookie.name, session.value, { ...cookie.options, maxAge: session.maxAge })
   return response
 }

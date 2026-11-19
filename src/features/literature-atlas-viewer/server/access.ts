@@ -17,6 +17,8 @@ import { createHmac, pbkdf2Sync, timingSafeEqual } from 'node:crypto'
  *                                    session.
  *   LITERATURE_ATLAS_VIEWER_SECRET   at least 32 characters; signs viewer sessions. Rotating it, or
  *                                    changing the hash, ends every session.
+ *   LITERATURE_ATLAS_GATE_ALL        "1" (exactly) puts the whole Atlas behind the viewer password, not only
+ *                                    the draft-evidence pages; anything else leaves the rest open.
  *   LITERATURE_ATLAS_RELAY_SECRET    at least 32 characters, shared with the Atlas service only
  *                                    (`ATLAS_RELAY_VIEWER_SECRET` there); signs the short-lived note
  *                                    the relay adds to its Atlas requests for a verified viewer.
@@ -37,6 +39,11 @@ const MAX_ITERATIONS = 2_000_000
 type Env = Record<string, string | undefined>
 
 export const EXTRA_HASH_VARS = [2, 3, 4, 5].map((n) => `LITERATURE_ATLAS_VIEWER_HASH_${n}`)
+
+/** Whether the whole Atlas (not only the draft evidence) requires the viewer password. Only "1" turns it on. */
+export function gateAll(env: Env = process.env): boolean {
+  return env.LITERATURE_ATLAS_GATE_ALL === '1'
+}
 
 export interface PasswordHash {
   readonly iterations: number
@@ -78,8 +85,7 @@ export function viewerConfig(env: Env = process.env): ViewerConfig | null {
   }
   const secret = env.LITERATURE_ATLAS_VIEWER_SECRET?.trim() ?? ''
   const relaySecret = env.LITERATURE_ATLAS_RELAY_SECRET?.trim() ?? ''
-  if (secret.length < MIN_SECRET_LENGTH || relaySecret.length < MIN_SECRET_LENGTH)
-    return null
+  if (secret.length < MIN_SECRET_LENGTH || relaySecret.length < MIN_SECRET_LENGTH) return null
   if (secret === relaySecret) return null // two different keys, so one leaking does not give both
   const fingerprint = createHmac('sha256', secret)
     .update(FINGERPRINT_DOMAIN + hashes.map((h) => h.hash.toString('hex')).join(','))

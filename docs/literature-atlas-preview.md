@@ -163,6 +163,7 @@ direct-link page with one shared viewer password, separate from physician-review
 | `LITERATURE_ATLAS_VIEWER_HASH_2` … `_5` | Optional further viewer passwords, same format, each set or removed independently (for example a separate test password). A malformed one keeps the viewer shut; changing any hash ends every session |
 | `LITERATURE_ATLAS_VIEWER_SECRET` | At least 32 random characters. Signs viewer sessions; rotating it ends every session |
 | `LITERATURE_ATLAS_RELAY_SECRET` | At least 32 random characters, different from the session secret. Shared with the Atlas service only |
+| `LITERATURE_ATLAS_GATE_ALL` | Optional. Exactly `1` puts the whole Atlas (main page and relay), not only the draft evidence, behind the viewer password; anything else leaves it as before. Without a working viewer configuration the relay answers `503` and the page shows "not available"; `/health` stays open |
 | `LITERATURE_ATLAS_TRUSTED_PROXY_HOPS` | Optional, 1–5 (default 1). The password-attempt limit keys on the `X-Forwarded-For` entry this many places from the right (the address the host's proxy appended), never on the visitor-supplied first entry. Set it only if the host puts more than one trusted proxy in front of the site |
 
 - **Atlas configuration:**

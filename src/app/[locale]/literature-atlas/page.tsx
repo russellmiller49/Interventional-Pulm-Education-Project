@@ -1,11 +1,19 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { Link } from '@/i18n/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { VIEWER_PAGE_PATH } from '@/features/literature-atlas-viewer/paths'
+import { VIEWER_PAGE_PATH, viewerState } from '@/features/literature-atlas-viewer/paths'
+import {
+  gateAll,
+  sessionCookie,
+  verifySession,
+  viewerConfig,
+} from '@/features/literature-atlas-viewer/server/access'
+import { ViewerGate, ViewerUnavailable } from '@/features/literature-atlas-viewer/ViewerGate'
 import { HandoffContent } from '@/i18n/handoff'
 
 /**
@@ -21,6 +29,9 @@ const ATLAS_ENTRY = '/api/literature-atlas'
  */
 const REVIEW_PORTAL = 'https://review.interventionalpulm.org/review'
 
+/** Rendered per request: with the whole-Atlas gate on, the page depends on this browser's session. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Literature Atlas (tester preview)',
   description:
@@ -34,11 +45,29 @@ export const metadata: Metadata = {
 
 export default async function LiteratureAtlasPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
   setRequestLocale(locale)
+
+  // Whole-Atlas gate (LITERATURE_ATLAS_GATE_ALL=1): never show the open Atlas without a session.
+  if (gateAll()) {
+    const config = viewerConfig()
+    if (!config) return <ViewerUnavailable returnTo="atlas" />
+    const store = await cookies()
+    if (!verifySession(config, store.get(sessionCookie().name)?.value)) {
+      return (
+        <ViewerGate
+          locale={locale}
+          state={viewerState((await searchParams).viewer)}
+          returnTo="atlas"
+        />
+      )
+    }
+  }
 
   return (
     <HandoffContent>

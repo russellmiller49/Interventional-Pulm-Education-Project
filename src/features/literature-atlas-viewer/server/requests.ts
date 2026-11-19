@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 
-import { VIEWER_PAGE_PATH, type ViewerState } from '../paths'
+import { ATLAS_PAGE_PATH, VIEWER_PAGE_PATH, type ViewerReturn, type ViewerState } from '../paths'
 
 /**
  * Helpers the viewer's form endpoints share (as in the manufacturer preview): a same-site check for
@@ -31,11 +31,16 @@ export function localeFrom(value: FormDataEntryValue | null | undefined): string
   return typeof value === 'string' && isActiveLocale(value) ? value : defaultLocale
 }
 
-export function backToViewer(locale: string, state?: ViewerState): NextResponse {
+export function backToViewer(
+  locale: string,
+  state?: ViewerState,
+  returnTo: ViewerReturn = 'evidence',
+): NextResponse {
+  const page = returnTo === 'atlas' ? ATLAS_PAGE_PATH : VIEWER_PAGE_PATH
   return new NextResponse(null, {
     status: 303,
     headers: {
-      Location: `/${locale}${VIEWER_PAGE_PATH}${state ? `?viewer=${state}` : ''}`,
+      Location: `/${locale}${page}${state ? `?viewer=${state}` : ''}`,
       'Cache-Control': 'no-store',
     },
   })
