@@ -47,17 +47,18 @@ export const betaRollout: BetaRollout = {
       summary:
         'A systematic approach to EBUS-TBNA: get the image, find the station, plan the sample, and read what the result can and cannot tell you.',
       estimate: {
-        minutes: 227,
-        basis: "26 lessons (202 minutes by the course's own count) and about 25 minutes of cases",
+        minutes: 272,
+        basis: "23 lessons (247 minutes by the course's own count) and about 25 minutes of cases",
       },
       lookFor: [
         'Whether the landmarks used to call each station are the ones you teach at the bedside.',
-        'The bleeding and desaturation first moves: their order and the numbers attached to them.',
+        'The bleeding and desaturation first moves: their priorities, the conditional wording, and the numbers attached to them.',
         'The find-the-structure task: whether it asks for the structures you would expect a fellow to identify, and whether the hint after a wrong pick helps.',
       ],
       knownLimits: [
         'Its 26 sourced teaching numbers are not yet signed off by the author.',
-        'The bleeding sequence is written from practice rather than a cited source, and the AQuIRE figures were checked against the abstract only.',
+        "The bleeding and desaturation first moves are the author's practice; the supporting measures cite published series and reviews, none of them a guideline recommendation for EBUS-TBNA.",
+        'The needle lab draws the needle steeper than it lies on recorded procedures: 60° against about 35°.',
         'The labs need a desktop or tablet; below about 1,100 px wide they fall back to a reading layout.',
       ],
     },
@@ -118,7 +119,7 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'The VR view has not been confirmed in a headset since the Quest 3 black-screen fix.',
-        'After a wrong turn, some forks have no CT cue yet: RB1 against RB2 and RB3, RB6, RB7 against the basal trunk, and LB6.',
+        'At four forks (LB7+8, RB8, RB5 and LB4), the CT cue after a wrong turn gives the textbook direction, which differs from this patient’s CT by 90° or more.',
         'The Scope Tracker toggle is for a physical scope controller; leave it off.',
       ],
     },
@@ -142,7 +143,6 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Only lessons 1 and 2 ask for the openings to be marked on the CT; on whole routes the CT is read while planning, and each fork asks only for the branch.',
-        "The model map does not yet draw the next generation inside the branches the route does not take, the method's tip for recognizing a branch that leads away.",
       ],
     },
   },
@@ -159,6 +159,7 @@ export const betaRollout: BetaRollout = {
         'Section 4, setting up before the first image: routine recruitment with anesthesia, and positioning the lesion side up.',
         'The angle rules and the Section 20 wedge run-through, taken from the AABIP imaging session.',
         'Whether the simulated check images in Sections 4 and 17 look like what your suite produces.',
+        'The Practice drill: from the catheter tip in a neighboring bronchus, whether the nodule lies anterior or posterior, medial or lateral.',
       ],
       knownLimits: [
         'Its 14 sourced teaching numbers are not yet signed off by the author.',
@@ -175,7 +176,7 @@ export const betaRollout: BetaRollout = {
       summary:
         'One adult flexible bronchoscopy in fifteen short sections: plan it, prepare the scope and the patient, drive to the carina, survey both lungs, sample, and respond when something goes wrong.',
       estimate: {
-        minutes: 152,
+        minutes: 155,
         basis: "15 sections, by the module's own count; the eight integrated cases are extra",
       },
       lookFor: [
@@ -184,7 +185,7 @@ export const betaRollout: BetaRollout = {
         'Sections 13 and 15, the deteriorating and the ventilated patient: are the first moves the ones you want a fellow to make?',
       ],
       knownLimits: [
-        '62 of its 75 teaching numbers, the lidocaine ceiling among them, are not yet signed off by the author.',
+        '51 of its 75 teaching numbers, the lidocaine ceiling among them, are not yet signed off by the author.',
         'The orientation rule and the clock table are derived for the bedside views; no published source states them.',
       ],
     },
@@ -246,7 +247,7 @@ export const betaRollout: BetaRollout = {
       summary:
         'Nine sections on the pulmonary-artery catheter, each on a live simulated patient: whether a number can be trusted, the waveform of each chamber, where the tip sits, the wedge, cardiac output and derived values, and a screen that does not fit the patient.',
       estimate: {
-        minutes: 193,
+        minutes: 181,
         basis:
           "9 sections, by the module's own count, including the case that ends Sections 2 to 8",
       },
@@ -256,8 +257,8 @@ export const betaRollout: BetaRollout = {
         'Whether any simulated response looks implausible to you.',
       ],
       knownLimits: [
-        'Its 25 sourced teaching numbers are not yet signed off by the author.',
-        'Which fault the closing case and case HD-08 demonstrate is not yet settled by the author.',
+        'Its 26 sourced teaching numbers are not yet signed off by the author.',
+        'Case HD-06 cannot yet reach its cardiac-index endpoint on the recommended actions alone.',
       ],
     },
   },
@@ -301,7 +302,9 @@ export const betaRollout: BetaRollout = {
         'Impella position and suction (Sections 5 and 6), and the pulseless LVAD patient at the end of Section 8.',
         'Whether any simulated response looks implausible to you.',
       ],
-      knownLimits: ['Its 19 sourced teaching numbers are not yet signed off by the author.'],
+      knownLimits: [
+        'Of its 19 sourced teaching numbers, 14 are signed off by the author and 5 are not yet.',
+      ],
     },
   },
 }
