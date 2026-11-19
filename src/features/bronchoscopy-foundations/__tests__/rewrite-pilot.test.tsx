@@ -213,8 +213,9 @@ describe('the numbers the pilot teaches', () => {
     const firstMoves = bronchSection('bleeding-priorities').blocks.find(
       (block) => block.role === 'first-moves',
     )!
-    expect(firstMoves.steps?.[3]).toBe(
-      'Instil a topical vasoconstrictor: the agent and concentration in your local protocol.',
+    // Since the owner's ruling of 2026-11-13 the card names the clot before the saline.
+    expect(firstMoves.steps?.[4]).toBe(
+      'A topical vasoconstrictor: the agent and concentration in your local protocol.',
     )
   })
 

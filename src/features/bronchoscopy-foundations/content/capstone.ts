@@ -94,9 +94,9 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
         },
         {
           id: 'b',
-          label: 'Move her to theatre, with anesthesia and a rigid bronchoscope ready',
+          label: 'Stop, and plan her airway first: the right room, team and rescue plan',
           rationale:
-            'A scope and sedation can close a critically narrowed trachea. Plan the airway first, in a room that can secure it.',
+            'A scope and sedation can close a critically narrowed trachea. Decide where, with whom, and how the airway is rescued before anyone instruments it.',
           plausibility: 'best',
         },
         {
@@ -110,12 +110,12 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'd',
           label: 'Look in the suite with her awake, on topical lidocaine alone',
           rationale:
-            'Leaving out the sedation helps. The scope can still obstruct her, and the suite cannot rescue the airway if it does.',
+            'Leaving out the sedation helps. The scope can still obstruct her, and nobody has planned the rescue.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       explanation:
-        'Stridor at rest means little lumen is left. Decide where, and with whom, before you decide how to look: theatre, anesthesia, and rigid bronchoscopy to hand. The inspection is the smallest part of the plan.',
+        'Stridor at rest means little lumen is left. Decide where, and with whom, before you decide how to look: a room equipped for a lost airway, people experienced in managing one, and a rescue plan everyone has heard. Rigid bronchoscopy should be available when the stenosis may need it. The anesthetic is chosen for her, not by rule.',
       objectiveIds: ['M01-O4', 'M02-O2', 'M01-O2'],
       claimClass: 'synthesis',
       sourceRefs: [S1(111), S1(115), S1(154, 158), S1(71, 83)],
@@ -138,7 +138,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'a',
           label: 'Take the scope out, open his airway and ventilate by bag and mask',
           rationale:
-            'He is oversedated and barely breathing. The lavage ends here: remove the scope, breathe for him, then reverse the drugs.',
+            'He is oversedated and barely breathing. The lavage ends here: remove the scope and breathe for him. Then choose a reversal agent by the drugs given.',
           plausibility: 'best',
         },
         {
@@ -163,7 +163,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation: `Act at ${num('oxygen-trigger')}. Stop, say it, and look at him: he is not breathing enough. Scope out, airway open, bag and mask, then naloxone and flumazenil.`,
+      explanation: `He is clearly worse, so act now: ${num('oxygen-trigger')} is the latest point, not the signal. Stop, say it, and look at him. Scope out, airway open, bag and mask. Then one reversal agent, chosen from the doses and how he looks.`,
       objectiveIds: ['M15-O1', 'M04-O3', 'M12-O6', 'M15-O4'],
       claimClass: 'synthesis',
       sourceRefs: [
@@ -356,13 +356,13 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
         },
         {
           id: 'd',
-          label: 'RB7 to RB10 not reachable, larynx not seen, and the bleed graded',
+          label: 'The obstruction seen, RB7 to RB10 and larynx not seen, bleed graded',
           rationale:
-            'A report says what was seen, what could not be, and what happened. The template claims a survey you did not do.',
+            'A report says what was seen, what was not and why, and what happened. You saw the obstruction, not the airways beyond it. The template claims a survey you never did.',
           plausibility: 'best',
         },
       ],
-      explanation: `Each airway is seen, not seen or not reachable, and the report says which. A bleed is graded by what stopped it. Grade 2 is ${num('nashville-grade-2')}.`,
+      explanation: `Describe the obstruction you saw. The airways beyond it were not seen: the scope could not pass. Not reachable means an opening you saw and could not enter. Record the biopsies and how the bleeding stopped. Grade 2 is ${num('nashville-grade-2')}.`,
       objectiveIds: ['M17-O2', 'M10-O2', 'M10-O4'],
       claimClass: 'synthesis',
       sourceRefs: [S2(161, 163), S1(61, 70), S2(103, 107)],
@@ -382,9 +382,9 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
       choices: [
         {
           id: 'a',
-          label: 'Treat it as a washing, and repeat a wedged lavage if it matters',
+          label: 'Read it as a washing; repeat a lavage only if it would change care',
           rationale:
-            'With no wedge and this little saline, the sample is airway washings. The lavage threshold does not apply to it.',
+            'With no wedge and this little saline, the sample is airway washings, and the lavage threshold does not apply. A repeat is worth it only if the answer would change his treatment.',
           plausibility: 'best',
         },
         {
@@ -398,7 +398,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'c',
           label: 'Start antibiotics for Klebsiella, as any growth counts',
           rationale:
-            'Ventilated airways are colonized. Growth alone does not separate colonization from pneumonia.',
+            'Ventilated airways are often colonized. Growth alone does not separate colonization from pneumonia.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -409,7 +409,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation: `A lavage is wedged and uses ${num('bal-total-volume')}. The threshold of ${num('vap-bal-threshold')} applies to that sample only. Name a specimen by how it was taken.`,
+      explanation: `A lavage is wedged and uses ${num('bal-total-volume')}. The threshold of ${num('vap-bal-threshold')} applies to that sample only. Name a specimen by how it was taken. A repeat lavage is a decision, not a rule: it depends on the question, his condition and whether it would change management.`,
       objectiveIds: ['M12-O5', 'M12-O6', 'M02-O1'],
       claimClass: 'synthesis',
       sourceRefs: [

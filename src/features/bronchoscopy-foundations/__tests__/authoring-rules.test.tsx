@@ -115,6 +115,7 @@ describe('the numbers register', () => {
 
   it('names each source once for the line under a card', () => {
     expect(numberSourceNames(['fasting-solids', 'fasting-clear-fluids'])).toEqual([
+      'ASA 2017',
       'BTS 2013',
       'ICS/NCCP(I)/IAB 2019',
     ])
@@ -546,9 +547,11 @@ describe('what the rules add to the shared surfaces', () => {
     render(<BlockCard listId="card" role="framing" block={block} />)
     const note = document.querySelector('[data-number-sources]')
     expect(note?.textContent).toBe(
-      'Sources: BTS 2013; ICS/NCCP(I)/IAB 2019. Check your local protocol.',
+      'Sources: ASA 2017; BTS 2013; ICS/NCCP(I)/IAB 2019. Check your local protocol.',
     )
-    expect(document.body.textContent).toContain('Food 4 hours before; clear fluids 2 hours before.')
+    expect(document.body.textContent).toContain(
+      'Food at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat before; clear fluids 2 hours before.',
+    )
     expect(document.body.textContent?.match(/local protocol/g)).toHaveLength(1)
   })
 

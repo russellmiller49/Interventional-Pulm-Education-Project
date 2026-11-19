@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -181,6 +181,7 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U22: 'A reference textbook of mechanical ventilation, used for trapped gas and for pneumothorax in a ventilated patient. It names one site for a needle; a newer text names another.',
   U23: 'A critical care protocols handbook, used only for where and how a tension pneumothorax is decompressed and the drain that follows.',
   U24: 'A review of the pig as a model for lung research, used only for how brushes and forceps are built and handled; it is not a clinical guideline.',
+  U25: 'Anesthesia fasting guidance written for healthy patients having elective procedures; it says it may not apply, or may need modifying, when gastric emptying is altered or the airway may be difficult.',
 }
 
 /**
@@ -340,6 +341,21 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     reviewedScope:
       'Bronchial brushing and endobronchial biopsy (page 340): the brush sheath advanced and retracted by the assistant on request, the protected specimen brush in two telescoping catheters, and toothed, cupped and needle forceps',
     accessedDate: '2026-11-03',
+    transcript: null,
+  },
+  {
+    id: 'U25',
+    kind: 'primary society guideline',
+    title:
+      'Practice guidelines for preoperative fasting and the use of pharmacologic agents to reduce the risk of pulmonary aspiration: application to healthy patients undergoing elective procedures',
+    authors: 'American Society of Anesthesiologists Task Force on Preoperative Fasting',
+    organization: 'American Society of Anesthesiologists',
+    year: 2017,
+    doi: '10.1097/ALN.0000000000001452',
+    url: 'https://doi.org/10.1097/ALN.0000000000001452',
+    reviewedScope:
+      'Fasting intervals for clear liquids, a light meal, and fried or fatty food or meat before elective procedures under general anesthesia, regional anesthesia or procedural sedation; the population the guideline is written for',
+    accessedDate: '2026-11-14',
     transcript: null,
   },
 ]

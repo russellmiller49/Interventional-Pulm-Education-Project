@@ -14,8 +14,9 @@ import type {
  * frames. The monitoring teaching of the retired `shared-airway` section lives here.
  *
  * Sources: the course textbook (S1) and training manual (S2); the 2018 moderate-sedation guideline
- * (U1); the 2019 joint guideline (U2) and BTS 2013 (U14) through the numbers register (rows 1 to 6,
- * 10 and 19); the product labels for the reversal agents (U20, U21).
+ * (U1); the ASA 2017 fasting guideline (U25), the 2019 joint guideline (U2) and BTS 2013 (U14)
+ * through the numbers register (rows 1 to 6, 10 and 19); the product labels for the reversal agents
+ * (U20, U21).
  */
 const TOPICAL = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 74 } },
@@ -33,6 +34,9 @@ const SEDATION = [
 const MONITORING = [
   { sourceId: 'U1', location: { kind: 'section', label: 'monitoring recommendations' } },
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 75, to: 79 } },
+] as const
+const FASTING = [
+  { sourceId: 'U25', location: { kind: 'section', label: 'fasting recommendations, Table 1' } },
 ] as const
 const REVERSAL = [
   { sourceId: 'U1', location: { kind: 'section', label: 'reversal recommendations' } },
@@ -92,7 +96,7 @@ export const section: BronchSectionDefinition = {
   authoringContract: 2,
   title: 'Topical anesthesia, sedation and monitoring',
   shortTitle: 'Sedation and monitoring',
-  minutes: 11,
+  minutes: 12,
   activityMinutes: 4,
   moduleIds: ['M04', 'M01'],
   objectives: [
@@ -183,14 +187,15 @@ export const section: BronchSectionDefinition = {
       id: 'topical',
       kind: 'pattern',
       role: 'framing',
-      heading: 'Numb the airway in three places',
+      heading: 'Numb the airway where the scope will touch',
       body: 'Topical anesthesia stops the cough. Sedation does not. Put lidocaine where the scope will touch, then wait for it to work.',
-      pointsLabel: 'Where, and with what',
+      pointsLabel: 'By the route you take',
       points: [
-        'Nose: lidocaine gel, for a nasal approach.',
-        'Throat: lidocaine spray.',
-        `Cords and trachea: spray as you go through the scope, with ${num('lidocaine-spray-concentration')} lidocaine.`,
+        'Nasal approach: gel to the nose, and throat spray if needed.',
+        'Oral approach: lidocaine spray to the throat.',
+        `Either way: spray as you go onto the cords and trachea, with ${num('lidocaine-spray-concentration')} lidocaine.`,
         `Nebulized lidocaine is ${num('nebulized-lidocaine')}.`,
+        'Every site adds to one running total.',
       ],
       claimClass: 'update',
       sourceRefs: TOPICAL,
@@ -221,11 +226,12 @@ export const section: BronchSectionDefinition = {
       body: 'The early signs of lidocaine toxicity are neurological, and sedation can hide them. If you see one, stop the lidocaine and call for help.',
       pointsLabel: 'Signs',
       points: [
-        'Tinnitus, or a metallic taste',
+        'Numb lips, tinnitus, or a metallic taste',
         'Restlessness or confusion',
         'Seizure',
         'A new arrhythmia, or a falling blood pressure',
-        'Benzocaine spray is different: it can cause methemoglobinemia, a low saturation that oxygen does not fix.',
+        'Benzocaine spray is different: methemoglobinemia, with gray-blue lips and a low saturation that oxygen does not fix.',
+        'Oversedation is different again: hard to rouse and breathing slowly, without the neurological signs above. It answers to rousing and airway support.',
       ],
       claimClass: 'source',
       sourceRefs: TOXICITY,
@@ -236,14 +242,15 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Sedation: a small dose, then wait',
-      body: 'Sedation eases anxiety. It does not numb the airway. Titrate to a patient who is calm and still answers you.',
+      body: 'Sedation eases anxiety, not the cough.\n\nChoose drugs for this patient: age, weight, heart and lung disease. Titrate to a patient who is calm and still answers you.',
       pointsLabel: 'The drugs',
       points: [
-        'Midazolam calms and gives amnesia. It does not treat pain or cough.',
-        'An opioid such as fentanyl treats pain and suppresses cough. It slows breathing.',
-        'Together they depress breathing more than either alone. Wait for each dose to act.',
+        'Midazolam: calm and amnesia. No effect on pain or cough.',
+        'An opioid such as fentanyl treats pain and cough, and slows breathing.',
+        'Together they depress breathing more than either alone. Wait for each dose.',
         `Draw up no more than ${num('midazolam-draw-up-under-70')} of midazolam at the start, or ${num('midazolam-draw-up-over-70')} for a patient over seventy.`,
-        'Propofol: only with staff trained to rescue deep sedation.',
+        'Propofol: only with trained staff, full monitoring, and someone free to manage deep sedation and the airway.',
+        'Any drug: the means to ventilate, and someone who can, in the room.',
       ],
       claimClass: 'source',
       sourceRefs: SEDATION,
@@ -270,21 +277,38 @@ export const section: BronchSectionDefinition = {
       reviewItemIds: ['R11', 'R12'],
     },
     {
+      id: 'reversal',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Reversal agents',
+      body: 'Have both in the room. Give the one that matches the drug, never both by routine. Each wears off before the sedative, so sedation can return.\n\nAfter both drugs: BTS advises flumazenil first, unless the opioid dose was large.',
+      pointsLabel: 'The two agents',
+      points: [
+        `Naloxone reverses the opioid: ${num('naloxone-dose')}. It can bring back pain and a surge in pulse and pressure.`,
+        `Flumazenil reverses midazolam: ${num('flumazenil-first-dose')}, then ${num('flumazenil-repeat')}. It can cause a seizure in a daily benzodiazepine user.`,
+        'Neither replaces ventilation. Open the airway and ventilate first.',
+        `After either, watch for ${num('reversal-discharge-wait')} before discharge.`,
+      ],
+      claimClass: 'update',
+      sourceRefs: REVERSAL,
+      localPolicyIds: ['sedation_policy'],
+      reviewItemIds: ['R11'],
+    },
+    {
       id: 'before-and-after',
       kind: 'pattern',
       role: 'signals',
       heading: 'Before, and after',
-      body: 'Have both reversal agents in the room before the first dose. Each wears off before the sedative does.',
-      pointsLabel: 'Fasting, reversal and going home',
+      body: 'An empty stomach before. Drugs that are still working after. Your anesthesia and procedural policy sets the fasting interval.',
+      pointsLabel: 'Fasting and going home',
       points: [
-        `Fasting: no food for ${num('fasting-solids')}, and no clear fluids for ${num('fasting-clear-fluids')}.`,
-        `Naloxone reverses the opioid: ${num('naloxone-dose')}.`,
-        `Flumazenil reverses midazolam: ${num('flumazenil-first-dose')}, then ${num('flumazenil-repeat')}.`,
-        `After a reversal agent, watch for ${num('reversal-discharge-wait')} before discharge.`,
+        `For a healthy patient having an elective bronchoscopy under sedation or anesthesia, the ASA preoperative fasting guideline allows clear liquids until ${num('fasting-clear-fluids')} before the procedure.`,
+        `Solid food: ${num('fasting-solids')}.`,
+        'Assess aspiration risk in every patient. When it is increased, settle the anesthesia and procedural plan for that patient beforehand; a longer fast alone may not remove it.',
         `After any sedation: no driving, machinery or legal documents for ${num('post-sedation-restriction')}.`,
       ],
       claimClass: 'update',
-      sourceRefs: REVERSAL,
+      sourceRefs: [...FASTING, ...REVERSAL],
       localPolicyIds: ['sedation_policy', 'fasting_and_aspiration_policy'],
     },
     {
@@ -473,7 +497,7 @@ export const section: BronchSectionDefinition = {
             choices: [
               {
                 id: 'a',
-                label: 'Rouse him and open his airway',
+                label: 'Give no more sedative, rouse him and open his airway',
                 rationale:
                   'He is deeper than you planned and breathing less. Oxygen is holding the saturation up for now.',
                 plausibility: 'best',
@@ -543,9 +567,9 @@ export const section: BronchSectionDefinition = {
             choices: [
               {
                 id: 'a',
-                label: 'Remove the scope, ventilate by bag and mask, and reverse both drugs',
+                label: 'Scope out, ventilate by bag and mask, then one reversal agent',
                 rationale:
-                  'He is not breathing enough despite an open airway. Ventilate him, and give naloxone and flumazenil.',
+                  'He is not breathing enough despite an open airway, so ventilate first. Then give one agent, chosen from the doses and how he looks, and reassess before adding the other.',
                 plausibility: 'best',
               },
               {
@@ -569,7 +593,7 @@ export const section: BronchSectionDefinition = {
                 id: 'c',
                 label: 'Give flumazenil alone: midazolam was the last drug',
                 rationale:
-                  'The opioid is what slows breathing most. Reverse it too, and ventilate while you do.',
+                  'He needs ventilating now, before any drug. And the last drug given does not decide which agent comes first.',
                 plausibility: 'incorrect-mechanism',
                 consequence: {
                   situation: 'He stirs but still breathes 6 times a minute.',
@@ -639,7 +663,7 @@ export const section: BronchSectionDefinition = {
     id: 'sedation-and-monitoring-transfer',
     itemType: 'management-decision',
     situation:
-      'Recovery. A 72-year-old man had midazolam 4 mg and fentanyl 75 mcg, then flumazenil at the end of the procedure. Forty minutes later he is hard to rouse and takes 8 breaths a minute. SpO₂ is 95% on 3 L/min. His son is waiting to drive him home.',
+      'Recovery. A 72-year-old man had midazolam 4 mg and fentanyl 75 mcg, then flumazenil when he was slow to wake. Forty minutes later he is hard to rouse and takes 8 breaths a minute. SpO₂ is 95% on 3 L/min. His son is waiting to drive him home.',
     stem: 'What do you do about his discharge?',
     choices: choices(
       [

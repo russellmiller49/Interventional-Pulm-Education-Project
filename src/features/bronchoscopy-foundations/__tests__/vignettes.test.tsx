@@ -129,7 +129,9 @@ describe('the vignettes with numbers', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check my answer' }))
     const verdict = document.querySelector('[data-answer-verdict]')!
     expect(verdict).toHaveTextContent(key.rationale)
-    expect(verdict).toHaveTextContent('A lavage needs 20,000/µL. A biopsy needs 50,000/µL.')
+    expect(verdict).toHaveTextContent(
+      'The usual thresholds are 20,000/µL for a lavage and 50,000/µL for a biopsy.',
+    )
     expect(localStorage.length).toBe(0)
   })
 })

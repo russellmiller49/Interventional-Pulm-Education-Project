@@ -11,6 +11,12 @@ import type { BronchSectionDefinition, MonitorReading, MonitorTrend } from '../t
  * Faculty decision, 2026-10-10: the cards name the rescue drugs and print no dose. Lipid emulsion
  * is named and its dose is left to the checklist, so review-register R14 stands as it was.
  *
+ * Owner ruling of 2026-11-13 (`bf-s13-deterioration`): act on a patient who is clearly worse
+ * without waiting for a saturation number; laryngospasm drugs and intubation are conditional
+ * escalation; reversal agents are chosen by the drug given; hypotension is treated by cause;
+ * imaging before decompression only when the whole patient allows it; methemoglobinemia is judged
+ * on co-oximetry and severity together. Rescue drugs stay named with no dose.
+ *
  * Sources: the course textbook (S1) and the training manual (S2) for the events, the sedation
  * guideline (U1) for reversal, the local anesthetic toxicity checklist (U4) and the
  * methemoglobinemia recommendations (U17).
@@ -173,7 +179,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'framing',
       heading: 'Three moves before you know the cause',
-      body: `Every event opens the same way. Act at ${num('oxygen-trigger')}, and sooner if the patient looks worse.`,
+      body: `Every event opens the same way. Act as soon as the patient is clearly worse. Do not wait for a number: ${num('oxygen-trigger')} is the latest point, not the signal.`,
       pointsLabel: 'The opening',
       points: [
         'Stop. Thumb off the suction. No advancing, no instilling, no sampling.',
@@ -194,9 +200,9 @@ export const section: BronchSectionDefinition = {
         'Stop suctioning. Withdraw to the trachea.',
         'Turn the oxygen up and lift the jaw.',
         'Check for breathing: chest, airflow, capnography.',
-        'Still low: take the scope out and ventilate by bag and mask.',
+        'Still low: scope out, and ventilate by bag and mask.',
       ],
-      callForHelp: 'when the saturation has not recovered with the scope out.',
+      callForHelp: 'when it has not recovered with the scope out.',
       claimClass: 'synthesis',
       sourceRefs: RECOGNITION,
     },
@@ -208,9 +214,9 @@ export const section: BronchSectionDefinition = {
       body: 'The patient will not rouse, or breathes slowly.',
       steps: [
         'Give no more sedative and take the scope out.',
-        'Rouse the patient, open the airway and give oxygen.',
-        'No breath: ventilate by bag and mask.',
-        'Reverse: naloxone for the opioid, flumazenil for the benzodiazepine.',
+        'Rouse, open the airway and give oxygen.',
+        'Breathing too little: ventilate by bag and mask.',
+        'Reverse the drug given: naloxone for an opioid, flumazenil for a benzodiazepine. Never both by routine.',
       ],
       callForHelp: 'now if there is no breath. Sedation can return as the reversal fades.',
       claimClass: 'synthesis',
@@ -225,12 +231,12 @@ export const section: BronchSectionDefinition = {
       heading: 'First moves: laryngospasm',
       body: 'The cords close. You see effort or hear stridor, with no airflow and a flat capnography trace.',
       steps: [
-        'Withdraw the scope above the cords.',
+        'Stop stimulating. Withdraw the scope above the cords.',
         'Give high-flow oxygen with a jaw thrust.',
         'Hold continuous positive pressure by mask.',
-        'Not breaking: propofol, then a muscle relaxant and a tube.',
+        'Persistent or severe: propofol. Still closed: a muscle relaxant and a tube.',
       ],
-      callForHelp: 'at once, for someone who can intubate.',
+      callForHelp: 'early, for anesthesia or someone who can intubate.',
       claimClass: 'synthesis',
       sourceRefs: SPASM,
     },
@@ -244,7 +250,7 @@ export const section: BronchSectionDefinition = {
         'Stop instilling and suctioning. Withdraw to the trachea.',
         'Turn the oxygen up.',
         'Give albuterol, nebulized or by inhaler.',
-        'Not easing: take the scope out.',
+        'Severe or not easing: scope out, more albuterol, get help.',
       ],
       callForHelp: 'when the wheeze or the saturation has not improved after albuterol.',
       claimClass: 'synthesis',
@@ -257,12 +263,11 @@ export const section: BronchSectionDefinition = {
       heading: 'First moves: the blood pressure falls',
       body: 'Sedation is the usual cause. Check for the others.',
       steps: [
-        'Recheck the pressure and give no more sedative.',
-        'Look for the cause: sedation, bleeding, a tension pneumothorax, an arrhythmia.',
-        'Lay the patient flat and run intravenous fluid.',
-        'Still low: give a vasopressor.',
+        'Recheck it. Give no more sedative.',
+        'Find the cause: sedation, bleeding, tension pneumothorax, arrhythmia.',
+        'Treat the cause. Add fluid, a vasopressor or both as it requires.',
       ],
-      callForHelp: 'when fluid has not restored the pressure, or the rhythm has changed.',
+      callForHelp: 'when the pressure has not recovered, or the rhythm has changed.',
       claimClass: 'synthesis',
       sourceRefs: RECOGNITION,
     },
@@ -275,8 +280,8 @@ export const section: BronchSectionDefinition = {
       steps: [
         'Stop sampling and take the scope out.',
         'Give high-flow oxygen.',
-        'Stable: confirm with ultrasound or radiograph.',
-        'Low pressure, fast pulse: tension. Decompress before imaging.',
+        'No severe distress: image now, keep watching.',
+        'Severe distress with a falling pressure or saturation: suspect tension, decompress first.',
         'Needle or finger, fifth intercostal space in the mid-axillary line, or second in the midclavicular.',
       ],
       callForHelp: 'at once for tension and the drain.',
@@ -288,13 +293,13 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'first-moves',
       heading: 'First moves: local anesthetic toxicity',
-      body: 'It starts with numb lips, a metallic taste, ringing ears or agitation. Seizure, arrhythmia and collapse follow.',
+      body: 'Numb lips, a metallic taste, ringing ears or agitation come first. Seizure, arrhythmia and collapse follow.',
       steps: [
-        'Give no more lidocaine.',
-        'Send for the toxicity kit and its checklist.',
-        'Give oxygen and support the airway.',
+        'Stop the lidocaine.',
+        'Send for the toxicity kit and checklist.',
+        'Oxygen, and support the airway.',
         'Treat a seizure with a benzodiazepine.',
-        'Give lipid emulsion as the checklist directs.',
+        'Lipid emulsion, as the checklist directs.',
       ],
       callForHelp: 'at the first sign, before a seizure.',
       claimClass: 'synthesis',
@@ -307,14 +312,14 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'first-moves',
       heading: 'First moves: methemoglobinemia',
-      body: `It follows benzocaine or another topical agent. The lips turn gray-blue and the saturation sits at ${num('methb-oximeter-plateau')} whatever oxygen you give.`,
+      body: `It follows benzocaine or another topical agent. Lips gray-blue, blood chocolate brown, and a saturation stuck at ${num('methb-oximeter-plateau')} whatever oxygen you give.`,
       steps: [
-        'Give no more of the topical agent.',
-        'Give high-flow oxygen.',
-        'Send blood for co-oximetry. It looks chocolate brown.',
-        `Methemoglobin ${num('methb-treat-symptomatic')} with symptoms, or ${num('methb-treat-asymptomatic')} without: give methylene blue.`,
+        'Stop the topical agent.',
+        'High-flow oxygen.',
+        'Send co-oximetry: the oximeter cannot give the level.',
+        `Level and patient decide. Methylene blue: usually at ${num('methb-treat-symptomatic')} with symptoms, ${num('methb-treat-asymptomatic')} without, sooner with heart or lung disease.`,
       ],
-      callForHelp: 'when oxygen does not lift the saturation.',
+      callForHelp: 'when oxygen does not lift it.',
       claimClass: 'synthesis',
       sourceRefs: METHEMOGLOBIN,
       localPolicyIds: ['topical_anesthetic_policy'],
@@ -439,7 +444,7 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Scope out, high-flow oxygen, and ultrasound to the right chest',
               rationale:
-                'Sharp pain and breathlessness after a transbronchial biopsy is a pneumothorax until imaging says otherwise.',
+                'Sharp pain and breathlessness after a biopsy: a pneumothorax until imaging says otherwise. He is getting worse, so scan now, scope out and oxygen on. He is not in severe distress; watch for tension.',
               plausibility: 'best',
             },
             {
@@ -726,7 +731,7 @@ export const section: BronchSectionDefinition = {
       manifestCaseId: 'C08',
       presentationTitle: 'Chest pain in recovery',
       situation:
-        'A 48-year-old man is in recovery 40 minutes after a transbronchial biopsy. He has new sharp right chest pain and is more breathless. He is talking. SpO₂ is 93% on 2 L/min, heart rate 98, blood pressure 126/78.',
+        'A 48-year-old man is in recovery 40 minutes after a transbronchial biopsy. He has new sharp right chest pain and is more breathless. He is talking in full sentences. SpO₂ is 93% on 2 L/min, heart rate 98, blood pressure 126/78.',
       item: {
         id: 'C08',
         itemType: 'management-decision',
@@ -736,14 +741,14 @@ export const section: BronchSectionDefinition = {
             id: 'a',
             label: 'Examine him and get an ultrasound or chest radiograph now',
             rationale:
-              'This is a pneumothorax until imaging says otherwise. His pressure is holding, so there is time to confirm it.',
+              'A pneumothorax until imaging says otherwise. He talks in full sentences, is not in severe distress, and his pressure and saturation are adequate: taken together, not on pressure alone, there is time to confirm it.',
             plausibility: 'best',
           },
           {
             id: 'b',
             label: 'Decompress the right chest with a needle straight away',
             rationale:
-              'A needle is for tension. His pressure and heart rate are holding, so confirm it first.',
+              'A needle is for suspected tension. Nothing here suggests it: he is talking, and his pressure and saturation are adequate.',
             plausibility: 'incorrect-mechanism',
           },
           {
@@ -762,7 +767,7 @@ export const section: BronchSectionDefinition = {
           },
         ],
         explanation:
-          'A pneumothorax can appear after the procedure has ended. With a steady pressure, confirm it and size it. A falling pressure and a rising heart rate change that: decompress first.',
+          'A pneumothorax can appear after the procedure has ended. Image first only when the whole patient allows it: talking, not distressed, pressure and saturation holding. A normal pressure alone is not stability. Severe distress with a falling pressure or saturation means decompress first.',
         objectiveIds: ['M15-O3'],
         outcomeIds: ['first-moves'],
         claimClass: 'source',
@@ -809,7 +814,7 @@ export const section: BronchSectionDefinition = {
           },
         ],
         explanation:
-          'Bronchospasm moves some air and you hear it. Laryngospasm moves none: effort, silence and a flat trace. Come off the cords, give oxygen and hold pressure by mask.',
+          'Bronchospasm moves some air and you hear it. Laryngospasm moves none: effort, silence and a flat trace. Come off the cords, give oxygen, hold pressure by mask and call for anesthesia help early. Drugs and a tube are for a spasm that does not break.',
         objectiveIds: ['M15-O3'],
         outcomeIds: ['name-the-event'],
         claimClass: 'source',
@@ -835,7 +840,7 @@ export const section: BronchSectionDefinition = {
           },
           {
             id: 'b',
-            label: 'Give naloxone and flumazenil for oversedation',
+            label: 'Give a reversal agent for oversedation',
             rationale:
               'He is alert and breathing well, with a normal trace. Reversal treats a problem he does not have.',
             plausibility: 'incorrect-mechanism',
@@ -855,7 +860,7 @@ export const section: BronchSectionDefinition = {
             plausibility: 'incorrect-mechanism',
           },
         ],
-        explanation: `Methemoglobin cannot carry oxygen, and the oximeter reads ${num('methb-oximeter-plateau')} whatever you give. Stop the agent, measure the level and treat with methylene blue.`,
+        explanation: `Methemoglobin cannot carry oxygen, and the oximeter reads ${num('methb-oximeter-plateau')} whatever you give. Stop the agent and measure the level by co-oximetry. Whether to give methylene blue rests on that level and on how he is, not on the oximeter.`,
         objectiveIds: ['M15-O3'],
         outcomeIds: ['name-the-event'],
         claimClass: 'update',

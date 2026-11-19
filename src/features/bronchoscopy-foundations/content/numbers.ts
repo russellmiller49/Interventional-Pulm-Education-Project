@@ -89,6 +89,17 @@ const VAP = (grade: string, locator: string): NumberCitation => ({ sourceId: 'U7
 const VAP_NOTE =
   'The guideline suggests withholding antibiotics when an invasive quantitative culture grows less than this. It prefers noninvasive sampling with semiquantitative culture to diagnose VAP (Section I; weak recommendation, low-quality evidence).'
 const ASA = (locator: string): NumberCitation => ({ sourceId: 'U1', grade: null, locator })
+const ASA_FASTING = (locator: string): NumberCitation => ({
+  sourceId: 'U25',
+  grade: null,
+  locator,
+})
+/** Read from the journal's own full text on 2026-11-14; it waits for the signature. */
+const ASA_FASTING_CHECK = {
+  checkedOn: '2026-11-14',
+  checkedBy: 'Claude, against the journal full text (Anesthesiology 2017;126:376–393)',
+  signedBy: null,
+} as const
 const ASA_COPY = 'a hosted copy of the journal PDF (Anesthesiology 2018;128:437–479)'
 const LAST_GLYPH_NOTE =
   'The checklist prints this with a combined comparison sign (≥ or ≤) that a text extract flattens; check it against the printed card when signing.'
@@ -140,23 +151,31 @@ const SCOPE_ROW = (model: string) =>
 
 const ROWS = {
   // 1 · Fasting
+  /*
+   * Fasting (owner ruling r2-554-bf-fasting, 2026-11-15): the unconditional 4 hours for food is
+   * replaced by the ASA framework for the elective population, as in EBUS Guided. BTS 2013's 4
+   * hours stays here as history, in the note.
+   */
   'fasting-solids': {
     row: 1,
-    label: 'Fasting before bronchoscopy: food',
-    value: '4 hours',
+    label: 'Fasting before elective sedation or anesthesia: solid food',
+    value:
+      'at least 6 hours after a light meal, and typically 8 hours or more after fried or fatty food or meat',
     class: 'guideline',
     status: 'verified',
-    sources: [BTS('D'), U2('3A')],
-    ...PLAN,
+    sources: [ASA_FASTING('Recommendations for Solids and Nonhuman Milk; Table 1')],
+    ...ASA_FASTING_CHECK,
+    note: 'Written for healthy patients having an elective procedure under general anesthesia, regional anesthesia or procedural sedation. BTS 2013 (grade D) and ICS/NCCP(I)/IAB 2019 (3A) gave 4 hours for food before flexible bronchoscopy, as this row recorded them until 2026-11-14; neither was re-read for this change. That is earlier bronchoscopy guidance and no longer the default taught here.',
   },
   'fasting-clear-fluids': {
     row: 1,
-    label: 'Fasting before bronchoscopy: clear fluids',
+    label: 'Fasting before elective sedation or anesthesia: clear liquids',
     value: '2 hours',
     class: 'guideline',
     status: 'verified',
-    sources: [BTS('D'), U2('3A')],
-    ...PLAN,
+    sources: [ASA_FASTING('Recommendations for Clear Liquids; Table 1'), BTS('D'), U2('3A')],
+    ...ASA_FASTING_CHECK,
+    note: 'The same 2 hours is in BTS 2013 and ICS/NCCP(I)/IAB 2019, which were not re-read for this row.',
   },
   // 2 · Oxygen trigger
   'oxygen-trigger': {
@@ -941,6 +960,7 @@ const SOURCE_SHORT_NAMES: Partial<Readonly<Record<BronchSourceId, string>>> = {
   U19: 'Olympus specifications',
   U20: 'flumazenil label',
   U21: 'naloxone label',
+  U25: 'ASA 2017',
 }
 
 export function numberSourceName(sourceId: BronchSourceId): string {
