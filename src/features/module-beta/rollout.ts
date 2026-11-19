@@ -82,7 +82,7 @@ export const betaRollout: BetaRollout = {
       ],
       knownLimits: [
         'Seven of 15 planned lessons are open: what the esophagus adds, the left lobe of the liver, and stations 8, 9, 7, 4L and 2L. The abdominal landmarks, station 4R, the complete survey, sampling and the cases are still being built.',
-        'The author has not yet reviewed the lesson text. Its 5 sourced numbers were checked against abstracts only and are not signed off.',
+        'The author has reviewed the lesson text. Its 5 sourced teaching numbers are signed off by the author; each was checked against its article’s abstract.',
         'It is one CT case, and the ultrasound image is simulated from CT, not recorded ultrasound.',
         'The scope tasks need a desktop or tablet.',
       ],

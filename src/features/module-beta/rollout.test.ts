@@ -3,6 +3,7 @@ import { CRRT_NUMBERS } from '@/features/baxter-crrt/content/teachingNumbers'
 import { NUMBER_REGISTER as BRONCH_NUMBER_REGISTER } from '@/features/bronchoscopy-foundations/content/numbers'
 import { ECMO_NUMBERS } from '@/features/cardiohelp-ecmo/content/teachingNumbers'
 import { EBUS_NUMBERS } from '@/features/ebus-guided/content/teachingNumbers'
+import { EUSB_NUMBERS } from '@/features/eus-b-guided/content/teachingNumbers'
 import { HEMODYNAMICS_NUMBERS } from '@/features/icu-hemodynamics/content/teachingNumbers'
 import { MCS_NUMBERS } from '@/features/mechanical-circulatory-support/content/teachingNumbers'
 import { VENTILATION_NUMBERS } from '@/features/mechanical-ventilation/content/teachingNumbers'
@@ -128,6 +129,18 @@ describe('hub readiness record', () => {
       expect({ id, signed: rows.filter((row) => row.signedBy).length }).toEqual({ id, signed: 0 })
       expect(
         limitMatching(id, /^Its (\d+) sourced teaching numbers are not yet signed off/),
+      ).toEqual({ id, counts: [rows.length] })
+    }
+
+    // Registers with every row signed: "Its N sourced teaching numbers are signed off by the author".
+    const signed: readonly [BetaModule['id'], Rows][] = [['eus-b-guided', EUSB_NUMBERS.rows]]
+    for (const [id, rows] of signed) {
+      expect({ id, unsigned: rows.filter((row) => !row.signedBy).length }).toEqual({
+        id,
+        unsigned: 0,
+      })
+      expect(
+        limitMatching(id, /^.*Its (\d+) sourced teaching numbers are signed off by the author;/),
       ).toEqual({ id, counts: [rows.length] })
     }
 

@@ -54,7 +54,9 @@ describe('course registry', () => {
     const note = betaRollout['eus-b-guided'].note!
     expect(note.estimate!.minutes).toBe(GUIDED_MINUTES)
     expect(note.estimate!.basis).toContain(`${LESSONS.length} lessons`)
-    expect(note.knownLimits.join(' ')).toContain(`${EUSB_NUMBERS.rows.length} sourced numbers`)
+    expect(note.knownLimits.join(' ')).toContain(
+      `${EUSB_NUMBERS.rows.length} sourced teaching numbers`,
+    )
   })
 
   it('cites only registered sources, and every number can be traced', () => {
