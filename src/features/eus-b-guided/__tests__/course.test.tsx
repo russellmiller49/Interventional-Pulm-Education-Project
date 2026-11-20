@@ -20,7 +20,7 @@ import {
 } from '../content/curriculum'
 import { structureName } from '../content/names'
 import { SOURCE_IDS } from '../content/sources'
-import { STATIONS, stationById } from '../content/stations'
+import { STATIONS, SURVEY_VIEWS, landmarkSetById, stationById } from '../content/stations'
 import { EUSB_NUMBERS } from '../content/teachingNumbers'
 import type { Question } from '../content/types'
 
@@ -127,7 +127,7 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
   it('keeps text that sits beside the image short enough to read without scrolling', () => {
     // The landmark list under the text is read beside the image too, so it counts.
     const listed = (station?: string) =>
-      (stationById(station ?? '')?.landmarks ?? []).map(
+      (landmarkSetById(station ?? '')?.landmarks ?? []).map(
         (landmark) => landmark.name + ' ' + landmark.where,
       )
     for (const step of lesson.steps) {
@@ -155,7 +155,7 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
       const taught = lesson.steps.slice(0, at).some((earlier) => {
         if (earlier.kind !== 'brief' || !earlier.view || !earlier.station) return false
         const still = eusbLab(earlier.view)
-        const listed = stationById(earlier.station)!.landmarks.map((entry) => entry.key)
+        const listed = landmarkSetById(earlier.station)!.landmarks.map((entry) => entry.key)
         return (
           JSON.stringify(still.start) === JSON.stringify(lab.start) &&
           JSON.stringify(still.landmarks) === JSON.stringify(listed) &&
@@ -169,7 +169,7 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
   it('lists a station’s landmarks only beside an image that numbers the same structures', () => {
     for (const step of lesson.steps) {
       if (!('station' in step) || !step.station) continue
-      const station = stationById(step.station)
+      const station = landmarkSetById(step.station)
       expect(station).toBeDefined()
       const lab =
         step.kind === 'brief'
@@ -335,7 +335,7 @@ describe('the survey route', () => {
   })
 
   it('names the stops no lesson teaches yet, and only where asked to', () => {
-    expect(untaughtStopsNote()).toBe('Stops 2, 3 and 6 are not yet taught in this course.')
+    expect(untaughtStopsNote()).toBe('Stop 6 is not yet taught in this course.')
     const plain = render(<SurveyRoute current={4} />)
     expect(plain.container.querySelector('[data-survey-untaught]')).toBeNull()
     const noted = render(<SurveyRoute current={4} noteUntaught />)
@@ -354,4 +354,29 @@ describe('what each route reaches', () => {
       expect(row.esophagus).toMatch(/^(Yes|No|Not routinely|Often hidden)/)
     }
   })
+})
+
+describe('the survey stops below the diaphragm', () => {
+  it('lists each once, taught by the lesson of its stop, and not as a nodal station', () => {
+    expect(new Set(SURVEY_VIEWS.map((view) => view.id)).size).toBe(SURVEY_VIEWS.length)
+    for (const view of SURVEY_VIEWS) {
+      const lesson = lessonById(view.lesson)
+      expect(lesson).toBeDefined()
+      expect(`stop-${lesson!.stop}`).toBe(view.id)
+      expect(lesson!.steps.some((step) => 'station' in step && step.station === view.id)).toBe(
+        true,
+      )
+      expect(stationById(view.id)).toBeUndefined()
+      expect(view.landmarks.length).toBeGreaterThan(1)
+    }
+  })
+
+  it.each(SURVEY_VIEWS)(
+    '$id: its landmarks are the ones the lab list numbers on its still, in the same order',
+    (view) => {
+      const still = eusbLab(view.view)
+      expect(still.kind).toBe('explore')
+      expect(still.landmarks).toEqual(view.landmarks.map((entry) => entry.key))
+    },
+  )
 })

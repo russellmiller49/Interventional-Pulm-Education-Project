@@ -43,7 +43,10 @@ export type Step =
       figure?: FigureKind
       /** A labeled still shown beside the text. */
       view?: EusbLabId
-      /** A station whose numbered landmarks are listed under the text, as on the still. */
+      /**
+       * A station, or a survey stop below the diaphragm (`stop-2`), whose numbered landmarks are
+       * listed under the text, as on the still.
+       */
       station?: string
     }
   | { kind: 'lab'; id: string; title: string; instruction: string; lab: EusbLabId }
@@ -57,7 +60,7 @@ export type Step =
       of: string
       body: string[]
       points?: string[]
-      /** A station whose numbered landmarks are listed under the text, as on the image. */
+      /** A station or survey stop whose numbered landmarks are listed under the text, as on the image. */
       station?: string
     }
   | {

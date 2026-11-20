@@ -7,7 +7,7 @@
  */
 
 /** Raise when a lab's meaning changes, so a lab build from before the change says so. */
-export const EUSB_CONTRACT_REVISION = 4 as const
+export const EUSB_CONTRACT_REVISION = 5 as const
 
 export const EUSB_CONTROLS = ['advance', 'rotate', 'flex', 'depth', 'gain'] as const
 export type EusbControl = (typeof EUSB_CONTROLS)[number]
@@ -93,10 +93,27 @@ export interface EusbLabSpec {
  * station_7: 6 mm further down than the case's view, where the left atrium is a chamber below the
  * node instead of a strip at the edge of the image, and station 7 keeps nearly all of its area
  * (physician review of 2026-11-19).
+ *
+ * celiac_trunk: 4 mm further in, where the aorta, the celiac trunk and the superior mesenteric
+ * artery are in one image (the view the physician chose on 2026-11-19).
+ *
+ * left_adrenal: turned 24° further clockwise, where the left kidney fills the middle of the image
+ * beyond the gland. Nearer the gland's own view the kidney is a corner of the image with no edge
+ * a learner could click.
  */
 export const EUSB_VIEW_OFFSETS: Readonly<Record<string, Partial<EusbPose>>> = {
   station_7: { sMm: 6 },
+  celiac_trunk: { sMm: 4 },
+  left_adrenal: { rollDeg: 24 },
 }
+
+/*
+ * The landmarks of the two views below the diaphragm after the liver, the structure a task looks
+ * for last. Stop 2 reads from the deepest vessel to the nearest: the aorta, the superior mesenteric
+ * artery, the celiac trunk. Stop 3: the left kidney, then the gland.
+ */
+const STOP_2_LANDMARKS = ['aorta', 'superior_mesenteric_artery', 'celiac_trunk']
+const STOP_3_LANDMARKS = ['left_kidney', 'left_adrenal']
 
 /*
  * The landmarks of each station view, landmarks first and the node last. The still and the
@@ -128,6 +145,52 @@ export const EUSB_LABS = {
     controls: ['advance', 'rotate'],
     target: 'liver',
     help: EUSB_HELP,
+  },
+
+  /** Stop 2: the abdominal aorta with the celiac trunk and the superior mesenteric artery. */
+  'celiac-view': {
+    kind: 'explore',
+    start: { view: 'celiac_trunk' },
+    controls: [],
+    landmarks: STOP_2_LANDMARKS,
+  },
+  /** From the left lobe of the liver at the same level, by rotation alone. */
+  'celiac-rotate': {
+    kind: 'rotate',
+    start: { view: 'celiac_trunk', offset: { rollDeg: -66 } },
+    controls: ['rotate'],
+    target: 'celiac_trunk',
+    landmarks: STOP_2_LANDMARKS,
+    help: EUSB_HELP,
+  },
+  'celiac-landmarks': {
+    kind: 'identify',
+    start: { view: 'celiac_trunk' },
+    controls: [],
+    landmarks: STOP_2_LANDMARKS,
+  },
+
+  /** Stop 3: the left adrenal gland, with the left kidney beyond it. */
+  'adrenal-view': {
+    kind: 'explore',
+    start: { view: 'left_adrenal' },
+    controls: [],
+    landmarks: STOP_3_LANDMARKS,
+  },
+  /** From the celiac trunk: a little further in, and turned on past the aorta. */
+  'adrenal-reach': {
+    kind: 'reach',
+    start: { view: 'celiac_trunk' },
+    controls: ['advance', 'rotate'],
+    target: 'left_adrenal',
+    landmarks: STOP_3_LANDMARKS,
+    help: EUSB_HELP,
+  },
+  'adrenal-landmarks': {
+    kind: 'identify',
+    start: { view: 'left_adrenal' },
+    controls: [],
+    landmarks: STOP_3_LANDMARKS,
   },
 
   /** Station 8: beside the lower esophagus, between the left atrium and the right atrium. */

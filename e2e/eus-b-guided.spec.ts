@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { LESSONS, lessonById } from '../src/features/eus-b-guided/content/curriculum'
 import { EUSB_VIEW_OFFSETS, eusbLab } from '../src/lib/eus-b-guided-contract'
-import { stationById } from '../src/features/eus-b-guided/content/stations'
+import { landmarkSetById } from '../src/features/eus-b-guided/content/stations'
 import { goToActivity, lab } from './eus-b-guided-steps'
 
 const manifest = JSON.parse(
@@ -113,8 +113,9 @@ for (const size of [
       const primary = page.locator('[data-now-primary]')
       await expect(primary).toBeDisabled()
       await expect(page.locator('[data-requirement]')).toHaveAttribute('data-met', 'false')
-      // Only the two movements the task offers are drawn.
-      await expect(frame.locator('input[type=range]')).toHaveCount(2)
+      // Only the movements the task offers are drawn.
+      const offered = eusbLab(task.lab).controls
+      await expect(frame.locator('input[type=range]')).toHaveCount(offered.length)
       // The white light view is beside the image, and it does not say which organ the scope is in.
       const whiteLight = frame.locator('[data-eusg-view="endoscope"]')
       await expect(whiteLight).toBeVisible()
@@ -127,7 +128,8 @@ for (const size of [
       await expect(frame.locator('[data-eusg-view="anatomy"]')).toHaveCount(0)
 
       await frame.getByRole('slider', { name: /Rotate the shaft/ }).fill(String(target.rollDeg))
-      await frame.getByRole('slider', { name: /Advance or withdraw/ }).fill(String(target.sMm))
+      if (offered.includes('advance'))
+        await frame.getByRole('slider', { name: /Advance or withdraw/ }).fill(String(target.sMm))
       await expect(root).toHaveAttribute('data-found', 'true', { timeout: 15_000 })
       await expect(page.locator('[data-requirement]')).toHaveAttribute('data-met', 'true')
       await expect(primary).toBeEnabled()
@@ -178,7 +180,7 @@ for (const size of [
       await expect(page.locator('[data-debrief-reference]')).toHaveCount(0)
       // The numbered landmarks beside the text are the numbered landmarks on the image.
       if (debrief.kind === 'debrief' && debrief.station) {
-        const keys = stationById(debrief.station)!.landmarks.map((landmark) => landmark.key)
+        const keys = landmarkSetById(debrief.station)!.landmarks.map((landmark) => landmark.key)
         const listed = page.locator('[data-station-landmarks] [data-landmark]')
         await expect(listed).toHaveCount(keys.length)
         const onImage = frame.locator('[data-eusg-landmarks] li[data-structure]')
@@ -188,7 +190,7 @@ for (const size of [
           await expect(onImage.nth(at)).toHaveAttribute('data-structure', key)
           await expect(onImage.nth(at)).toHaveAttribute('data-number', String(at + 1))
         }
-        // The station itself was held, so its badge is on the image.
+        // The structure the task looked for was held, so its badge is on the image.
         await expect(frame.locator(`[data-eusg-marker="${keys.at(-1)}"]`)).toBeVisible()
       }
       await expectOneScreen(page)

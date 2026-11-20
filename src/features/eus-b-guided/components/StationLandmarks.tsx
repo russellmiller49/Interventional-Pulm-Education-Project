@@ -1,14 +1,15 @@
 import { Link } from '@/i18n/navigation'
 import { lessonById, lessonHref, lessonNumber } from '../content/curriculum'
-import { STATIONS, stationById, type Station } from '../content/stations'
+import { STATIONS, landmarkSetById, type Station } from '../content/stations'
 import styles from './eus-b-guided.module.css'
 
 /**
- * The landmarks of one station as a numbered list. Beside a labeled image the numbers are the
- * numbers on the image: both come from the same list, in the same order.
+ * The landmarks of one station, or of a survey stop below the diaphragm, as a numbered list.
+ * Beside a labeled image the numbers are the numbers on the image: both come from the same list,
+ * in the same order.
  */
 export function StationLandmarkList({ station }: { station: string }) {
-  const entry = stationById(station)
+  const entry = landmarkSetById(station)
   if (!entry) return null
   return (
     <section className={styles.landmarks} data-station-landmarks={entry.id}>

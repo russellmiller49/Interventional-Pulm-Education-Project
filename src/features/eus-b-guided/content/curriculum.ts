@@ -1,4 +1,4 @@
-import { liver } from './abdomen'
+import { celiacTrunk, leftAdrenal, liver } from './abdomen'
 import { stationEight, stationFourL, stationNine, stationSeven, stationTwoL } from './mediastinum'
 import { whatEusBAdds } from './orientation'
 import type { Chapter, Lesson, Step } from './types'
@@ -8,7 +8,7 @@ export const BASE = '/eus-b-guided'
 /** The sole course-order registry. Every list, count and link is derived from it. */
 export const CHAPTERS: Chapter[] = [
   { id: 'from-ebus', title: 'From EBUS to EUS-B', lessons: [whatEusBAdds] },
-  { id: 'abdomen', title: 'Below the diaphragm', lessons: [liver] },
+  { id: 'abdomen', title: 'Below the diaphragm', lessons: [liver, celiacTrunk, leftAdrenal] },
   {
     id: 'mediastinum',
     title: 'The mediastinum on the way out',
@@ -77,7 +77,7 @@ export function lessonForStop(stop: number): Lesson | undefined {
 
 export const COURSE_OBJECTIVES = [
   'Say what an examination from the esophagus adds to airway EBUS, and what stays with the airway.',
-  'Find the left lobe of the liver, station 7 and station 4L on ultrasound and confirm each by its neighbors.',
+  'Find the left lobe of the liver, the celiac trunk, the left adrenal gland, station 7 and station 4L on ultrasound and confirm each by its neighbors.',
   'Name each nodal station seen from the esophagus by the landmarks around it.',
   'Use rotation to move around the scope at one level, and advancing or withdrawing to change level.',
 ]

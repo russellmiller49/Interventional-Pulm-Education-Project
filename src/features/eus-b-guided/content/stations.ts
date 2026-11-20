@@ -276,3 +276,74 @@ export type StationId = (typeof STATIONS)[number]['id']
 export function stationById(id: string): Station | undefined {
   return STATIONS.find((station) => station.id === id)
 }
+
+/**
+ * The survey stops below the diaphragm that have landmarks of their own, listed the same way as a
+ * station's: numbered beside the labeled image, in the order the lab list numbers them on it.
+ * They are not nodal stations, so the station table does not list them.
+ *
+ * Sources: Bugalho et al. 2018 (the aorta followed to the celiac trunk and superior mesenteric
+ * artery; the left adrenal gland behind them, with the kidney beside it). Where a landmark is
+ * described by its place in the image, that is what this course's case shows.
+ */
+export interface SurveyView {
+  id: string
+  name: string
+  /** Lesson that teaches it. */
+  lesson: string
+  /** The labeled still of the stop. */
+  view: EusbLabId
+  /** Landmarks first, the structure the find-the-view task looks for last. */
+  landmarks: StationLandmark[]
+}
+
+export const SURVEY_VIEWS: SurveyView[] = [
+  {
+    id: 'stop-2',
+    name: 'Stop 2',
+    lesson: 'celiac-trunk',
+    view: 'celiac-view',
+    landmarks: [
+      {
+        key: 'aorta',
+        name: 'Aorta',
+        where:
+          'The deepest of the three: echo-free at the bottom left, running off the image, with a fainter band rising from it toward the SMA.',
+      },
+      {
+        key: 'superior_mesenteric_artery',
+        name: 'Superior mesenteric artery',
+        where: 'In the middle of the image, between the aorta and the celiac trunk.',
+      },
+      {
+        key: 'celiac_trunk',
+        name: 'Celiac trunk',
+        where: 'The nearest of the three to the transducer.',
+      },
+    ],
+  },
+  {
+    id: 'stop-3',
+    name: 'Stop 3',
+    lesson: 'left-adrenal',
+    view: 'adrenal-view',
+    landmarks: [
+      {
+        key: 'left_kidney',
+        name: 'Left kidney',
+        where:
+          'Beyond the gland, filling the middle of the image: a large organ, a little darker than the tissue between it and the gland.',
+      },
+      {
+        key: 'left_adrenal',
+        name: 'Left adrenal gland',
+        where: 'In the near field, between the gastric wall and the kidney: a thin, darker band.',
+      },
+    ],
+  },
+]
+
+/** A station or a survey stop whose landmarks are numbered beside a labeled image. */
+export function landmarkSetById(id: string): Station | SurveyView | undefined {
+  return stationById(id) ?? SURVEY_VIEWS.find((view) => view.id === id)
+}
