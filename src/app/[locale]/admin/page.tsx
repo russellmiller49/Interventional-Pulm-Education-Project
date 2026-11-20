@@ -993,18 +993,18 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     sessionsResult,
     podcastListensResult,
   ] = await Promise.all([
-    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
-    supabaseAdmin
+    admin.auth.admin.listUsers({ page: 1, perPage: 500 }),
+    admin
       .from('site_profiles')
       .select(
         'id,email,first_name,last_name,professional_role,institution,country,agreement_accepted_at,agreement_version,performance_research_consent,onboarding_completed_at,created_at',
       )
       .order('created_at', { ascending: false }),
-    supabaseAdmin
+    admin
       .from('learner_profiles')
       .select('id,email,full_name,institution,approval_status,approved_at,onboarding_completed_at')
       .order('updated_at', { ascending: false }),
-    supabaseAdmin
+    admin
       .from('site_entitlements')
       .select('user_id,entitlement,status,granted_at,expires_at,notes')
       .order('granted_at', { ascending: false }),
@@ -1028,7 +1028,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
         .order('id')
         .range(from, to),
     ),
-    supabaseAdmin
+    admin
       .from('journal_club_podcast_listens')
       .select(
         'user_id,episode_id,episode_title,primary_hub,language,started_at,last_event_at,completed_at,listened_seconds,duration_seconds,max_percent_complete,play_count',
