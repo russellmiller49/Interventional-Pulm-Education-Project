@@ -24,6 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { betaModuleForPath } from '@/features/module-beta/catalog'
 import { professionalRoleOptions } from '@/lib/site-auth/profile-options'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { supabaseServer } from '@/lib/supabase/server'
@@ -172,6 +173,7 @@ interface LegacyEbusProfileRow {
 }
 
 interface UserUsageSummary {
+  betaModules: BetaModuleUsageDetail[]
   completedModules: number
   completedPodcasts: number
   lastActivityAt: string | null
@@ -180,6 +182,13 @@ interface UserUsageSummary {
   podcastListenSeconds: number
   podcastSessionCount: number
   podcasts: UserPodcastUsageDetail[]
+  totalSeconds: number
+}
+
+interface BetaModuleUsageDetail {
+  title: string
+  lastActivityAt: string | null
+  sessionCount: number
   totalSeconds: number
 }
 
@@ -558,6 +567,7 @@ function compareLatestDates(a: string | null, b: string | null) {
 
 function getDefaultUsageSummary(): UserUsageSummary {
   return {
+    betaModules: [],
     completedModules: 0,
     completedPodcasts: 0,
     lastActivityAt: null,
@@ -933,8 +943,25 @@ async function updateSiteEntitlementAction(formData: FormData) {
   )
 }
 
+async function readModuleUsagePages<Row>(
+  readPage: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: Row[] | null; error: { message: string } | null }>,
+) {
+  const pageSize = 1000
+  const rows: Row[] = []
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await readPage(from, from + pageSize - 1)
+    if (error || !data) return { data: rows, error }
+    rows.push(...data)
+    if (data.length < pageSize) return { data: rows, error: null }
+  }
+}
+
 async function loadAdminDashboardData(filters: AdminDashboardFilters) {
-  if (!supabaseAdmin) {
+  const admin = supabaseAdmin
+  if (!admin) {
     return {
       error: 'Supabase service-role client is not configured.',
       filterOptions: {
@@ -966,30 +993,42 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     sessionsResult,
     podcastListensResult,
   ] = await Promise.all([
-    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
-    supabaseAdmin
+    admin.auth.admin.listUsers({ page: 1, perPage: 500 }),
+    admin
       .from('site_profiles')
       .select(
         'id,email,first_name,last_name,professional_role,institution,country,agreement_accepted_at,agreement_version,performance_research_consent,onboarding_completed_at,created_at',
       )
       .order('created_at', { ascending: false }),
-    supabaseAdmin
+    admin
       .from('learner_profiles')
       .select('id,email,full_name,institution,approval_status,approved_at,onboarding_completed_at')
       .order('updated_at', { ascending: false }),
-    supabaseAdmin
+    admin
       .from('site_entitlements')
       .select('user_id,entitlement,status,granted_at,expires_at,notes')
       .order('granted_at', { ascending: false }),
-    supabaseAdmin
-      .from('site_module_progress')
-      .select('user_id,module_id,percent_complete,total_time_seconds,completed_at,last_visited_at')
-      .limit(5000),
-    supabaseAdmin
-      .from('site_module_sessions')
-      .select('user_id,module_id,route_path,duration_seconds,started_at,last_heartbeat_at,ended_at')
-      .limit(5000),
-    supabaseAdmin
+    readModuleUsagePages<SiteModuleProgressRow>((from, to) =>
+      admin
+        .from('site_module_progress')
+        .select(
+          'user_id,module_id,percent_complete,total_time_seconds,completed_at,last_visited_at',
+        )
+        .order('user_id')
+        .order('module_id')
+        .range(from, to),
+    ),
+    readModuleUsagePages<SiteModuleSessionRow>((from, to) =>
+      admin
+        .from('site_module_sessions')
+        .select(
+          'user_id,module_id,route_path,duration_seconds,started_at,last_heartbeat_at,ended_at',
+        )
+        .order('started_at')
+        .order('id')
+        .range(from, to),
+    ),
+    admin
       .from('journal_club_podcast_listens')
       .select(
         'user_id,episode_id,episode_title,primary_hub,language,started_at,last_event_at,completed_at,listened_seconds,duration_seconds,max_percent_complete,play_count',
@@ -1027,8 +1066,8 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     (legacyEbusProfilesResult.data ?? []) as LegacyEbusProfileRow[]
   ).filter(Boolean)
   const entitlements = ((entitlementsResult.data ?? []) as SiteEntitlementRow[]).filter(Boolean)
-  const progressRows = ((progressResult.data ?? []) as SiteModuleProgressRow[]).filter(Boolean)
-  const sessionRows = ((sessionsResult.data ?? []) as SiteModuleSessionRow[]).filter(Boolean)
+  const progressRows = progressResult.data
+  const sessionRows = sessionsResult.data
   const podcastListenRows = ((podcastListensResult.data ?? []) as PodcastListenRow[]).filter(
     Boolean,
   )
@@ -1039,6 +1078,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
   const entitlementsByUser = new Map<string, SiteEntitlementRow[]>()
   const usageByUser = new Map<string, UserUsageSummary>()
   const moduleUsageByUserAndModule = new Map<string, Map<string, ModuleUsageAccumulator>>()
+  const betaUsageByUser = new Map<string, Map<string, BetaModuleUsageDetail>>()
   const podcastUsageByUserAndPodcast = new Map<string, Map<string, PodcastUsageAccumulator>>()
 
   for (const entitlement of entitlements) {
@@ -1076,10 +1116,26 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     accumulator.routePaths.add(session.route_path)
     accumulator.sessionCount += 1
     accumulator.sessionSeconds += session.duration_seconds ?? 0
-    accumulator.lastActivityAt = getLatestDate(
-      accumulator.lastActivityAt,
-      session.ended_at ?? session.last_heartbeat_at ?? session.started_at,
-    )
+    const lastActivityAt = session.ended_at ?? session.last_heartbeat_at ?? session.started_at
+    accumulator.lastActivityAt = getLatestDate(accumulator.lastActivityAt, lastActivityAt)
+
+    // The route distinguishes beta modules that share a site analytics module ID.
+    const betaModule = betaModuleForPath(session.route_path)
+    if (betaModule) {
+      const betaModules =
+        betaUsageByUser.get(session.user_id) ?? new Map<string, BetaModuleUsageDetail>()
+      const detail = betaModules.get(betaModule.id) ?? {
+        title: betaModule.title,
+        lastActivityAt: null,
+        sessionCount: 0,
+        totalSeconds: 0,
+      }
+      detail.sessionCount += 1
+      detail.totalSeconds += session.duration_seconds ?? 0
+      detail.lastActivityAt = getLatestDate(detail.lastActivityAt, lastActivityAt)
+      betaModules.set(betaModule.id, detail)
+      betaUsageByUser.set(session.user_id, betaModules)
+    }
   }
 
   for (const [userId, modulesByUser] of moduleUsageByUserAndModule.entries()) {
@@ -1096,6 +1152,9 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
 
     usageByUser.set(userId, {
       ...getDefaultUsageSummary(),
+      betaModules: Array.from(betaUsageByUser.get(userId)?.values() ?? []).sort((a, b) =>
+        compareLatestDates(a.lastActivityAt, b.lastActivityAt),
+      ),
       completedModules,
       lastActivityAt,
       moduleCount: modules.length,
@@ -1979,43 +2038,71 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                                 <summary className="cursor-pointer text-xs font-medium text-foreground">
                                   Module detail
                                 </summary>
-                                <ul className="mt-2 space-y-2">
-                                  {user.usage.modules.slice(0, 6).map((moduleDetail) => {
-                                    const completed =
-                                      moduleDetail.completedAt ||
-                                      moduleDetail.percentComplete >= 100
-
-                                    return (
-                                      <li key={moduleDetail.moduleId} className="space-y-0.5">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <span className="font-medium text-foreground">
-                                            {formatModuleLabel(moduleDetail.moduleId)}
-                                          </span>
-                                          {completed ? (
-                                            <Badge variant="success" size="sm">
-                                              <CheckCircle2 className="h-3 w-3" aria-hidden />
-                                              Done
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="outline" size="sm">
-                                              {formatPercent(moduleDetail.percentComplete)}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <p>
-                                          {formatDuration(moduleDetail.totalSeconds)} across{' '}
-                                          {moduleDetail.sessionCount} sessions
-                                        </p>
-                                        <p>Last used: {formatDate(moduleDetail.lastActivityAt)}</p>
-                                      </li>
-                                    )
-                                  })}
-                                </ul>
-                                {user.usage.modules.length > 6 ? (
-                                  <p className="mt-2 text-xs">
-                                    +{user.usage.modules.length - 6} more modules
-                                  </p>
+                                {user.usage.betaModules.length > 0 ? (
+                                  <div className="mt-3 space-y-2">
+                                    <h3 className="font-medium text-foreground">Beta modules</h3>
+                                    <p>
+                                      Includes signed-in visits from the beta hub and direct links.
+                                    </p>
+                                    <ul className="space-y-2">
+                                      {user.usage.betaModules.map((module) => (
+                                        <li key={module.title} className="space-y-0.5">
+                                          <p className="font-medium text-foreground">
+                                            {module.title}
+                                          </p>
+                                          <p>
+                                            {formatDuration(module.totalSeconds)} across{' '}
+                                            {module.sessionCount}{' '}
+                                            {module.sessionCount === 1 ? 'session' : 'sessions'}
+                                          </p>
+                                          <p>Last used: {formatDate(module.lastActivityAt)}</p>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
                                 ) : null}
+                                <details
+                                  className="mt-3"
+                                  open={user.usage.betaModules.length === 0}
+                                >
+                                  <summary className="cursor-pointer text-xs font-medium text-foreground">
+                                    All modules ({user.usage.modules.length})
+                                  </summary>
+                                  <ul className="mt-2 space-y-2">
+                                    {user.usage.modules.map((moduleDetail) => {
+                                      const completed =
+                                        moduleDetail.completedAt ||
+                                        moduleDetail.percentComplete >= 100
+
+                                      return (
+                                        <li key={moduleDetail.moduleId} className="space-y-0.5">
+                                          <div className="flex items-start justify-between gap-2">
+                                            <span className="font-medium text-foreground">
+                                              {formatModuleLabel(moduleDetail.moduleId)}
+                                            </span>
+                                            {completed ? (
+                                              <Badge variant="success" size="sm">
+                                                <CheckCircle2 className="h-3 w-3" aria-hidden />
+                                                Done
+                                              </Badge>
+                                            ) : (
+                                              <Badge variant="outline" size="sm">
+                                                {formatPercent(moduleDetail.percentComplete)}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <p>
+                                            {formatDuration(moduleDetail.totalSeconds)} across{' '}
+                                            {moduleDetail.sessionCount} sessions
+                                          </p>
+                                          <p>
+                                            Last used: {formatDate(moduleDetail.lastActivityAt)}
+                                          </p>
+                                        </li>
+                                      )
+                                    })}
+                                  </ul>
+                                </details>
                               </details>
                             ) : null}
                             {user.usage.podcasts.length > 0 ? (
