@@ -141,3 +141,32 @@ Downloads stay off on the Atlas until the relay that allows them (CSV, the downl
 the per-client limit) is deployed; then set `ATLAS_EXPORTS=1` on the Atlas Railway service.
 
 To withdraw the preview, unset `LITERATURE_ATLAS_ORIGIN`: the relay returns `404` at once.
+
+## Draft evidence for the working group (2026-11-18)
+
+The owner asked for the Atlas's draft evidence pages (machine-drafted meta-analyses per clinical question) to open from a
+direct-link page with one shared viewer password, separate from physician-reviewer sign-in and without a site account.
+
+- **Page:** `/[locale]/literature-atlas/evidence`. It is unlisted like the rest of `/literature-atlas`: direct link only,
+  noindex, not in the sitemap. The Literature Atlas page has a "Draft evidence" button to it.
+- **Password:** posted to `/api/literature-atlas-viewer/session`.
+  - A correct password sets a signed HttpOnly session cookie for 12 hours (`__Host-` prefixed in production).
+  - Attempts are limited per client and overall. The form is same-site only.
+  - "Leave" posts to `/session/end`.
+- **Relay:** the relay still forwards no visitor cookies or credentials. For a valid viewer session it adds its own
+  five-minute signed note, `x-atlas-evidence-viewer: v1.<expires>.<HMAC>`, which the Atlas verifies.
+- **Website configuration** (server environment; anything missing or malformed keeps the page shut):
+
+| Variable | Meaning |
+|---|---|
+| `LITERATURE_ATLAS_VIEWER_HASH` | `pbkdf2_sha256$<iterations>$<salt hex>$<hash hex>`, made with `python -m atlas_evidence.viewer hash` in the Atlas repository. In a `.env*` file escape each `$` as `\$` (Next.js expands `$NAME`); a host's variable editor needs no escaping |
+| `LITERATURE_ATLAS_VIEWER_HASH_2` … `_5` | Optional further viewer passwords, same format, each set or removed independently (for example a separate test password). A malformed one keeps the viewer shut; changing any hash ends every session |
+| `LITERATURE_ATLAS_VIEWER_SECRET` | At least 32 random characters. Signs viewer sessions; rotating it ends every session |
+| `LITERATURE_ATLAS_RELAY_SECRET` | At least 32 random characters, different from the session secret. Shared with the Atlas service only |
+| `LITERATURE_ATLAS_TRUSTED_PROXY_HOPS` | Optional, 1–5 (default 1). The password-attempt limit keys on the `X-Forwarded-For` entry this many places from the right (the address the host's proxy appended), never on the visitor-supplied first entry. Set it only if the host puts more than one trusted proxy in front of the site |
+
+- **Atlas configuration:**
+  - `ATLAS_EVIDENCE_PACKAGES`: the folder of draft-evidence packages.
+  - `ATLAS_RELAY_VIEWER_SECRET`: the same value as the website's relay secret.
+  - `ATLAS_EVIDENCE_UNLOCK_URL=/en/literature-atlas/evidence`: the Atlas's own unlock page then links back here.
+- **Not deployed.** Going live needs the owner's approval of both branches and the variables above set on both services.

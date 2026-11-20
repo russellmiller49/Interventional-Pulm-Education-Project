@@ -5,9 +5,21 @@
  * asset, fetch and redirect under this route's prefix. The relay strips the prefix and forwards
  * the rest of the path and the query unchanged, never forwards the visitor's cookies or
  * credentials, and returns only the response headers it sets itself. Unset origin → 404.
+ * One addition: when this site has verified the draft-evidence viewer password (a valid viewer
+ * session cookie, read here and not forwarded), the relay adds its own short-lived signed note
+ * (`x-atlas-evidence-viewer`) so the Atlas shows its draft-evidence pages. The note names no one.
  * Downloads (`/export/…`) are limited per client and keep the Atlas's attachment file name.
  * Contract and go-live steps: docs/literature-atlas-preview.md.
  */
+
+import {
+  RELAY_HEADER,
+  cookieValue,
+  relayNote,
+  sessionCookie,
+  verifySession,
+  viewerConfig,
+} from '@/features/literature-atlas-viewer/server/access'
 
 import { clientOf, takeDownload } from './downloads'
 
@@ -92,11 +104,20 @@ async function relay(request: Request, method: 'GET' | 'HEAD') {
     }
   }
 
+  const headers: Record<string, string> = { Accept: request.headers.get('accept') ?? '*/*' }
+  const viewer = viewerConfig()
+  if (
+    viewer &&
+    verifySession(viewer, cookieValue(request.headers.get('cookie'), sessionCookie().name))
+  ) {
+    headers[RELAY_HEADER] = relayNote(viewer)
+  }
+
   let upstream: Response
   try {
     upstream = await fetch(target, {
       method,
-      headers: { Accept: request.headers.get('accept') ?? '*/*' },
+      headers,
       credentials: 'omit',
       redirect: 'manual',
       cache: 'no-store',
