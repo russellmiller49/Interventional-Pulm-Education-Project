@@ -43,10 +43,18 @@ describe('Literature Atlas main page', () => {
   const saved = { ...process.env }
   beforeEach(() => {
     cookieValue = undefined
+    delete process.env.RAILWAY_ENVIRONMENT_NAME
+    delete process.env.LITERATURE_ATLAS_STAGING_TRIAL_REVIEW_URL
     Object.assign(process.env, ENV)
   })
   afterEach(() => {
-    for (const key of [...Object.keys(ENV), 'LITERATURE_ATLAS_GATE_ALL']) delete process.env[key]
+    for (const key of [
+      ...Object.keys(ENV),
+      'LITERATURE_ATLAS_GATE_ALL',
+      'RAILWAY_ENVIRONMENT_NAME',
+      'LITERATURE_ATLAS_STAGING_TRIAL_REVIEW_URL',
+    ])
+      delete process.env[key]
     Object.assign(process.env, saved)
   })
 
@@ -84,5 +92,35 @@ describe('Literature Atlas main page', () => {
     expect(html).not.toContain('<iframe')
     expect(html).not.toContain('type="password"')
     expect(html).toContain('not available')
+  })
+
+  it('offers independent staging review sign-ins without opening the Atlas iframe', async () => {
+    process.env.RAILWAY_ENVIRONMENT_NAME = 'staging'
+    process.env.LITERATURE_ATLAS_GATE_ALL = '1'
+    process.env.LITERATURE_ATLAS_STAGING_TRIAL_REVIEW_URL =
+      'https://review-staging-staging.up.railway.app/review/trials'
+    for (const signedIn of [false, true]) {
+      cookieValue = signedIn ? issueSession(viewerConfig()!).value : undefined
+      const html = await render()
+      expect(html).toContain('href="https://review.interventionalpulm.org/review"')
+      expect(html).toContain('Verify Article Data')
+      expect(html).toContain('(live WS1 portal)')
+      expect(html).toContain('href="https://review-staging-staging.up.railway.app/review/trials"')
+      expect(html).toContain('Classify Clinical Trials')
+      expect(html.includes('<iframe')).toBe(signedIn)
+    }
+  })
+
+  it.each([
+    ['production', 'https://review-staging-staging.up.railway.app/review/trials'],
+    ['staging', 'https://review.interventionalpulm.org/review/trials'],
+    ['staging', 'https://review-staging-staging.up.railway.app/review'],
+  ])('keeps trial classification hidden for %s with %s', async (environment, url) => {
+    process.env.RAILWAY_ENVIRONMENT_NAME = environment
+    process.env.LITERATURE_ATLAS_STAGING_TRIAL_REVIEW_URL = url
+    const html = await render()
+    expect(html).not.toContain('Classify Clinical Trials')
+    expect(html).toContain('href="https://review.interventionalpulm.org/review"')
+    if (environment === 'production') expect(html).toContain('Physician Review')
   })
 })

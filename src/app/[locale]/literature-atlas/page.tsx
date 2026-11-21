@@ -28,6 +28,7 @@ const ATLAS_ENTRY = '/api/literature-atlas'
  * (the Atlas's IP_Literature Supabase project, not this site's accounts). Linked, never framed or relayed.
  */
 const REVIEW_PORTAL = 'https://review.interventionalpulm.org/review'
+const STAGING_TRIAL_REVIEW = 'https://review-staging-staging.up.railway.app/review/trials'
 
 /** Rendered per request: with the whole-Atlas gate on, the page depends on this browser's session. */
 export const dynamic = 'force-dynamic'
@@ -52,6 +53,25 @@ export default async function LiteratureAtlasPage({
 }) {
   const { locale } = await params
   setRequestLocale(locale)
+  const isStaging = process.env.RAILWAY_ENVIRONMENT_NAME === 'staging'
+  const trialReview =
+    isStaging && process.env.LITERATURE_ATLAS_STAGING_TRIAL_REVIEW_URL === STAGING_TRIAL_REVIEW
+  const reviewActions = isStaging ? (
+    <>
+      <Button asChild size="sm" variant="outline">
+        <a href={REVIEW_PORTAL} target="_blank" rel="noreferrer">
+          Verify Article Data <span>(live WS1 portal)</span>
+        </a>
+      </Button>
+      {trialReview && (
+        <Button asChild size="sm" variant="outline">
+          <a href={STAGING_TRIAL_REVIEW} target="_blank" rel="noreferrer">
+            Classify Clinical Trials
+          </a>
+        </Button>
+      )}
+    </>
+  ) : null
 
   // Whole-Atlas gate (LITERATURE_ATLAS_GATE_ALL=1): never show the open Atlas without a session.
   if (gateAll()) {
@@ -60,11 +80,16 @@ export default async function LiteratureAtlasPage({
     const store = await cookies()
     if (!verifySession(config, store.get(sessionCookie().name)?.value)) {
       return (
-        <ViewerGate
-          locale={locale}
-          state={viewerState((await searchParams).viewer)}
-          returnTo="atlas"
-        />
+        <>
+          <ViewerGate
+            locale={locale}
+            state={viewerState((await searchParams).viewer)}
+            returnTo="atlas"
+          />
+          {reviewActions && (
+            <div className="flex flex-wrap justify-center gap-2">{reviewActions}</div>
+          )}
+        </>
       )
     }
   }
@@ -92,11 +117,13 @@ export default async function LiteratureAtlasPage({
                   {/* Working-group preview: opens a password screen (features/literature-atlas-viewer). */}
                   <Link href={VIEWER_PAGE_PATH}>Draft evidence</Link>
                 </Button>
-                <Button asChild size="sm" variant="outline">
-                  <a href={REVIEW_PORTAL} target="_blank" rel="noreferrer">
-                    Physician Review
-                  </a>
-                </Button>
+                {reviewActions ?? (
+                  <Button asChild size="sm" variant="outline">
+                    <a href={REVIEW_PORTAL} target="_blank" rel="noreferrer">
+                      Physician Review
+                    </a>
+                  </Button>
+                )}
                 <Button asChild size="sm">
                   <a href={ATLAS_ENTRY} target="_blank" rel="noreferrer">
                     Open Full Window
@@ -143,7 +170,9 @@ export default async function LiteratureAtlasPage({
                 rel="noreferrer"
                 className="font-medium text-foreground underline underline-offset-4"
               >
-                Sign in to Physician Review
+                {isStaging
+                  ? 'Verify Article Data (live WS1 portal)'
+                  : 'Sign in to Physician Review'}
               </a>{' '}
               (invitation only; this site&apos;s accounts do not apply).
             </p>
